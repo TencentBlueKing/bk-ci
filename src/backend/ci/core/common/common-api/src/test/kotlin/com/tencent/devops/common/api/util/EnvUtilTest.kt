@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.api.util
 
-import org.junit.Assert
 import org.junit.Test
 
 class EnvUtilTest {

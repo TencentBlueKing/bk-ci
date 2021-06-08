@@ -31,7 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.agent.utils.KillBuildProcessTree
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
-import com.tencent.devops.common.log.Ansi
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.SLAVE_AGENT_START_FILE
@@ -76,7 +76,7 @@ object WorkRunner {
 
             Runner.run(object : WorkspaceInterface {
                 val workspace = buildInfo.workspace
-                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
+                override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
                     val replaceWorkspace = if (workspace.isNotBlank()) {
                         ReplacementUtils.replace(workspace, object : ReplacementUtils.KeyReplacement {
                             override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
@@ -90,11 +90,12 @@ object WorkRunner {
                     } else {
                         workspace
                     }
-                    val dir = WorkspaceUtils.getPipelineWorkspace(pipelineId, replaceWorkspace)
-                    if (!dir.exists()) {
-                        dir.mkdirs()
+                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(pipelineId, replaceWorkspace)
+                    if (!workspaceDir.exists()) {
+                        workspaceDir.mkdirs()
                     }
-                    return dir
+                    val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
+                    return Pair(workspaceDir, logPathDir)
                 }
             }, false)
             exitProcess(0)

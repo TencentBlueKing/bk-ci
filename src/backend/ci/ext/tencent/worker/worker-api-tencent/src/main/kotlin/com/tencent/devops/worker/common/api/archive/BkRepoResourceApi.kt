@@ -39,6 +39,7 @@ import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_FULL_IMAGE
@@ -133,13 +134,13 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         destFullPath: String,
         token: String,
         buildVariables: BuildVariables,
-        parseAppData: Boolean = true
+        parseAppMetadata: Boolean = true
     ) {
         val url = "/generic/temporary/upload/$projectId/$repoName$destFullPath?token=$token"
         val request = buildPut(
             url,
             RequestBody.create(MediaType.parse("application/octet-stream"), file),
-            getUploadHeader(file, buildVariables, parseAppData),
+            getUploadHeader(file, buildVariables, parseAppMetadata),
             useFileGateway = true
         )
         val response = request(request, "上传文件失败")
@@ -147,7 +148,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             val obj = JsonParser().parse(response).asJsonObject
             if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
         } catch (e: Exception) {
-            AbstractBuildResourceApi.logger.error(e.message ?: "")
+            logger.error(e.message ?: "")
         }
     }
 
@@ -166,10 +167,112 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         download(request, destPath)
     }
 
+    private fun directDownloadBkRepoFile(
+        user: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        destPath: File
+    ) {
+        val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullPath"
+        var header = HashMap<String, String>()
+        header.set("X-BKREPO-UID", user)
+        val request = buildGet(url, header, true)
+        download(request, destPath)
+    }
+
+    fun uploadBkRepoFile(
+        file: File,
+        repoName: String,
+        destFullPath: String,
+        tokenAuthPath: String,
+        buildVariables: BuildVariables,
+        parseAppMetadata: Boolean
+    ) {
+        if (tokenAccess()) {
+            val token = createBkRepoTemporaryToken(
+                projectId = buildVariables.projectId,
+                repoName = repoName,
+                path = tokenAuthPath,
+                type = TokenType.UPLOAD
+            )
+            uploadFileByToken(
+                file = file,
+                projectId = buildVariables.projectId,
+                repoName = repoName,
+                destFullPath = destFullPath,
+                token = token,
+                buildVariables = buildVariables,
+                parseAppMetadata = parseAppMetadata
+            )
+        } else {
+            directUploadBkRepoFile(
+                file = file,
+                projectId = buildVariables.projectId,
+                repoName = repoName,
+                destFullPath = destFullPath,
+                buildVariables = buildVariables,
+                parseAppMetadata = parseAppMetadata
+            )
+        }
+    }
+
+    fun downloadBkRepoFile(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        destPath: File
+    ) {
+        if (tokenAccess()) {
+            val token = createBkRepoTemporaryToken(
+                projectId = projectId,
+                repoName = repoName,
+                path = fullPath,
+                type = TokenType.DOWNLOAD
+            )
+            downloadFileByToken(
+                userId = userId,
+                projectId = projectId,
+                repoName = repoName,
+                fullPath = fullPath,
+                token = token,
+                destPath = destPath
+            )
+        } else {
+            directDownloadBkRepoFile(userId, projectId, repoName, fullPath, destPath)
+        }
+    }
+
+    private fun directUploadBkRepoFile(
+        file: File,
+        projectId: String,
+        repoName: String,
+        destFullPath: String,
+        buildVariables: BuildVariables,
+        parseAppMetadata: Boolean = false
+    ) {
+        AbstractBuildResourceApi.logger.info("upload file >>> ${file.name}")
+        val url = "/bkrepo/api/build/generic/$projectId/$repoName$destFullPath"
+        val request = buildPut(
+            url,
+            RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            getUploadHeader(file, buildVariables, parseAppMetadata),
+            useFileGateway = true
+        )
+        val response = request(request, "上传文件失败")
+        try {
+            val obj = JsonParser().parse(response).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+        } catch (e: Exception) {
+            AbstractBuildResourceApi.logger.error(e.message ?: "")
+        }
+    }
+
     fun getUploadHeader(
         file: File,
         buildVariables: BuildVariables,
-        parseAppData: Boolean = true
+        parseAppMetadata: Boolean = true
     ): HashMap<String, String> {
         val header = Maps.newHashMap<String, String>()
         header[BKREPO_UID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
@@ -183,7 +286,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         metadata[ARCHIVE_PROPS_BUILD_NO] = buildVariables.variables[PIPELINE_BUILD_NUM] ?: ""
         metadata[ARCHIVE_PROPS_SOURCE] = "pipeline"
         metadata[ARCHIVE_PROPS_TASK_ID] = TaskUtil.getTaskId()
-        if (parseAppData) {
+        if (parseAppMetadata) {
             metadata.putAll(getAppMetadata(file))
         }
         header[BKREPO_METADATA] = Base64.getEncoder().encodeToString(buildMetadataHeader(metadata).toByteArray())
@@ -240,7 +343,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
                 }
             }
         } catch (e: Exception) {
-            AbstractBuildResourceApi.logger.warn("get metadata from file(${file.absolutePath}) failed", e)
+            logger.warn("get metadata from file(${file.absolutePath}) failed", e)
             return mapOf()
         }
     }

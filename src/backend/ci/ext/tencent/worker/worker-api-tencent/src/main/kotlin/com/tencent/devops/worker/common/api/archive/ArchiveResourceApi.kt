@@ -132,7 +132,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                 destFullPath = destFullPath,
                 token = token,
                 buildVariables = buildVariables,
-                parseAppData = true
+                parseAppMetadata = true
             )
         } else {
             uploadBkRepoCustomize(file, destPath, buildVariables)
@@ -155,7 +155,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                 destFullPath,
                 token,
                 buildVariables,
-                parseAppData = true
+                parseAppMetadata = true
             )
         } else {
             uploadBkRepoPipeline(file, buildVariables)
@@ -180,6 +180,17 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         } catch (e: Exception) {
             logger.error(e.message ?: "")
         }
+    }
+
+    override fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables) {
+        bkrepoResourceApi.uploadBkRepoFile(
+            file = file,
+            repoName = "log",
+            destFullPath = destFullPath,
+            tokenAuthPath = "/",
+            buildVariables = buildVariables,
+            parseAppMetadata = false
+        )
     }
 
     private fun downloadBkRepoFile(

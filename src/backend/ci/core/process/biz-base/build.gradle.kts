@@ -32,7 +32,7 @@ dependencies {
     api(project(":core:common:common-client")) // 其他微服务调用
 //    api(project(":core:common:common-redis"))
     api(project(":core:common:common-archive"))
-//    api(project(":core:common:common-log"))
+//    api(project(":core:log:api-log"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-websocket")) // 依赖websocket枚举
 //    api(project(":core:store:api-store"))
