@@ -40,8 +40,6 @@ import com.tencent.devops.auth.service.AuthDeptServiceImpl
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
-import com.tencent.devops.auth.service.permission.empty.EmptyPermissionProjectServiceImpl
-import com.tencent.devops.auth.service.permission.empty.EmptyPermissionServiceImpl
 import com.tencent.devops.auth.service.permission.iam.TxPermissionProjectServiceImpl
 import com.tencent.devops.auth.service.permission.iam.TxPermissionServiceImpl
 import com.tencent.devops.common.client.Client

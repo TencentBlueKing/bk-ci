@@ -43,6 +43,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -60,6 +61,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ImageUtil
@@ -72,6 +74,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 
+@Suppress("ALL")
 @Service
 class TxProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
@@ -91,9 +94,11 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val managerService: ManagerService
+    private val managerService: ManagerService,
+    private val projectIamV0Service: ProjectIamV0Service,
+    private val tokenService: ClientTokenService
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
-    
+
     @Value("\${iam.v0.url:#{null}}")
     private var v0IamUrl: String = ""
 
@@ -194,7 +199,10 @@ class TxProjectServiceImpl @Autowired constructor(
 //        val projectEnglishNames = projectPermissionService.getUserProjects(userId!!)
         val iamV0List = getV0UserProject(userId, accessToken)
         logger.info("$userId V0 project: $iamV0List")
-        val iamV3List = client.get(ServiceProjectAuthResource::class).getUserProjects(userId!!).data
+        val iamV3List = client.get(ServiceProjectAuthResource::class).getUserProjects(
+            userId = userId!!,
+            token = tokenService.getSystemToken(null)!!
+        ).data
         logger.info("$userId V3 project: $iamV3List")
         val projectList = mutableSetOf<String>()
         projectList.addAll(iamV0List)
@@ -243,11 +251,6 @@ class TxProjectServiceImpl @Autowired constructor(
         return
     }
 
-    override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
-        // TODO: V0,V3有不同实现
-        return false
-    }
-
     fun getInfoByEnglishName(englishName: String): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         return ProjectUtils.packagingBean(record, grayProjectSet())
@@ -280,7 +283,7 @@ class TxProjectServiceImpl @Autowired constructor(
             englishName = projectCreateInfo.englishName
         )
     }
-    
+
     private fun getV0UserProject(userId: String?, accessToken: String?): List<String>{
         val url = "$v0IamUrl/projects?access_token=$accessToken"
         logger.info("Start to get auth projects - ($url)")
@@ -298,6 +301,17 @@ class TxProjectServiceImpl @Autowired constructor(
         return result.data!!.map {
             it.project_code
         }
+    }
+
+    override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
+        projectIamV0Service.createUser2Project(
+            createUser = createInfo.createUserId,
+            projectCode = projectId,
+            roleName = createInfo.roleName,
+            roleId = createInfo.roleId,
+            userIds = createInfo.userIds!!
+        )
+        return true
     }
 
     companion object {
