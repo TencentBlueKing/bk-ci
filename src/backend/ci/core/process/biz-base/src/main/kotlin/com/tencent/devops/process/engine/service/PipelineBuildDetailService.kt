@@ -425,7 +425,7 @@ class PipelineBuildDetailService @Autowired constructor(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, buildStatus)
+        }, BuildStatus.RUNNING)
     }
 
     fun buildEnd(buildId: String, buildStatus: BuildStatus, cancelUser: String? = null): List<BuildStageStatus> {
@@ -438,6 +438,18 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (!container.status.isNullOrBlank() && BuildStatus.valueOf(container.status!!).isRunning()) {
                     container.status = buildStatus.name
                     update = true
+
+                    var containerElapsed = 0L
+                    run lit@{
+                        stage.containers.forEach {
+                            containerElapsed += it.elementElapsed ?: 0
+                            if (it == container) {
+                                return@lit
+                            }
+                        }
+                    }
+
+                    stage.elapsed = containerElapsed
                 }
                 return Traverse.CONTINUE
             }
@@ -452,6 +464,11 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (!stage.status.isNullOrBlank() && BuildStatus.valueOf(stage.status!!).isRunning()) {
                     stage.status = buildStatus.name
                     update = true
+                    if (stage.startEpoch == null) {
+                        stage.elapsed = 0
+                    } else {
+                        stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
+                    }
                 }
                 return Traverse.CONTINUE
             }
@@ -460,7 +477,22 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (!e.status.isNullOrBlank() && BuildStatus.valueOf(e.status!!).isRunning()) {
                     e.status = buildStatus.name
                     update = true
+                    if (e.startEpoch != null) {
+                        e.elapsed = System.currentTimeMillis() - e.startEpoch!!
+                    }
+
+                    var elementElapsed = 0L
+                    run lit@{
+                        c.elements.forEach {
+                            elementElapsed += it.elapsed ?: 0
+                            if (it == e) {
+                                return@lit
+                            }
+                        }
+                    }
+                    c.elementElapsed = elementElapsed
                 }
+
                 return Traverse.CONTINUE
             }
 

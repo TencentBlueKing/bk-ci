@@ -37,7 +37,6 @@ import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
-import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
@@ -190,20 +189,14 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
         gitCIBasicSetting: GitCIBasicSetting,
         pipelineId: String
     ): String {
-        val triggerLock = GitCITriggerLock(redisOperation, gitCIBasicSetting.gitProjectId, pipelineId)
-        try {
-            triggerLock.lock()
-            processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipelineId, model, channelCode)
-            return client.get(ServiceBuildResource::class).manualStartup(
-                userId = event.userId,
-                projectId = gitCIBasicSetting.projectCode!!,
-                pipelineId = pipelineId,
-                values = mapOf(),
-                channelCode = channelCode
-            ).data!!.id
-        } finally {
-            triggerLock.unlock()
-        }
+        processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipelineId, model, channelCode)
+        return client.get(ServiceBuildResource::class).manualStartup(
+            userId = event.userId,
+            projectId = gitCIBasicSetting.projectCode!!,
+            pipelineId = pipelineId,
+            values = mapOf(),
+            channelCode = channelCode
+        ).data!!.id
     }
 
     private fun needReCreate(

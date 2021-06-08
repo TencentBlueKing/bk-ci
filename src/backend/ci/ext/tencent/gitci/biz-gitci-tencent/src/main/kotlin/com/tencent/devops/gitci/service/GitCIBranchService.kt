@@ -30,7 +30,6 @@ package com.tencent.devops.gitci.service
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
@@ -38,6 +37,7 @@ import com.tencent.devops.gitci.pojo.BranchBuildHistory
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.enums.BranchType
 import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
@@ -50,7 +50,7 @@ import javax.ws.rs.core.Response
 class GitCIBranchService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitCISettingDao: GitCISettingDao,
+    private val gitCIBasicSettingService: GitCIBasicSettingService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val pipelineResourceDao: GitPipelineResourceDao
@@ -64,7 +64,8 @@ class GitCIBranchService @Autowired constructor(
     fun getBranchBuildList(userId: String, gitProjectId: Long, defaultBranch: String?): List<BranchBuildHistory> {
         val default = (defaultBranch ?: "master").removePrefix("refs/heads/")
         logger.info("get branch build list, gitProjectId: $gitProjectId")
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+            ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
 
         val branchBuildsList = gitRequestEventBuildDao.getBranchBuildList(dslContext, gitProjectId)
         if (branchBuildsList.isEmpty()) {

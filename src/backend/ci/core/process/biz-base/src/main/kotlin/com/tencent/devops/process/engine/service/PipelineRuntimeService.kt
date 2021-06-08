@@ -66,7 +66,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
@@ -90,6 +89,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.StartBuildContext
 import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
+import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
@@ -746,7 +746,8 @@ class PipelineRuntimeService @Autowired constructor(
         fullModel: Model,
         startParamsWithType: List<BuildParameters>,
         buildNo: Int? = null,
-        buildNumRule: String? = null
+        buildNumRule: String? = null,
+        acquire: Boolean? = false
     ): String {
         val params = startParamsWithType.associate { it.key to it.value }
         val startBuildStatus: BuildStatus = BuildStatus.QUEUE // 默认都是排队状态
@@ -772,6 +773,7 @@ class PipelineRuntimeService @Autowired constructor(
         val updateContainerExistsRecord: MutableList<TPipelineBuildContainerRecord> = mutableListOf()
 
         var currentBuildNo = buildNo
+        var buildNoType: BuildNoType? = null
         // --- 第1层循环：Stage遍历处理 ---
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
 //            val stageId = stage.id!!
@@ -796,25 +798,34 @@ class PipelineRuntimeService @Autowired constructor(
                 if (container is TriggerContainer) { // 寻找触发点
                     val buildNoObj = container.buildNo
                     if (buildNoObj != null && context.actionType == ActionType.START) {
-                        val buildNoType = buildNoObj.buildNoType
-                        if (buildNoType == BuildNoType.CONSISTENT) {
-                            if (currentBuildNo != null) {
-                                // 只有用户勾选中"锁定构建号"这种类型才允许指定构建号
+                        buildNoType = buildNoObj.buildNoType
+                        val buildNoLock = if (acquire != true) PipelineBuildNoLock(
+                            redisOperation = redisOperation,
+                            pipelineId = pipelineId
+                        ) else null
+                        try {
+                            buildNoLock?.lock()
+                            if (buildNoType == BuildNoType.CONSISTENT) {
+                                if (currentBuildNo != null) {
+                                    // 只有用户勾选中"锁定构建号"这种类型才允许指定构建号
+                                    updateBuildNo(pipelineId, currentBuildNo!!)
+                                    logger.info("[$pipelineId] buildNo was changed to [$currentBuildNo]")
+                                }
+                            } else if (buildNoType == BuildNoType.EVERY_BUILD_INCREMENT) {
+                                val buildSummary = getBuildSummaryRecord(pipelineId)
+                                // buildNo根据数据库的记录值每次新增1
+                                currentBuildNo = if (buildSummary == null || buildSummary.buildNo == null) {
+                                    1
+                                } else buildSummary.buildNo + 1
                                 updateBuildNo(pipelineId, currentBuildNo!!)
-                                logger.info("[$pipelineId] buildNo was changed to [$currentBuildNo]")
                             }
-                        } else if (buildNoType == BuildNoType.EVERY_BUILD_INCREMENT) {
-                            val buildSummary = getBuildSummaryRecord(pipelineId)
-                            // buildNo根据数据库的记录值每次新增1
-                            currentBuildNo = if (buildSummary == null || buildSummary.buildNo == null) {
-                                1
-                            } else buildSummary.buildNo + 1
-                            updateBuildNo(pipelineId, currentBuildNo!!)
-                        }
-                        // 兼容“以每次成功构建加1”方式调用子流水线等方式buildNo为空的情况
-                        if (currentBuildNo == null) {
-                            currentBuildNo = getBuildSummaryRecord(pipelineId)?.buildNo
-                                ?: buildNoObj.buildNo
+                            // 兼容buildNo为空的情况
+                            if (currentBuildNo == null) {
+                                currentBuildNo = getBuildSummaryRecord(pipelineId)?.buildNo
+                                    ?: buildNoObj.buildNo
+                            }
+                        } finally {
+                            buildNoLock?.unlock()
                         }
                     }
                     container.executeCount = context.retryCount + 1
@@ -1188,7 +1199,9 @@ class PipelineRuntimeService @Autowired constructor(
                         buildStatus = BuildStatus.QUEUE
                     )
                     // 写入BuildNo
-                    if (currentBuildNo != null && context.actionType == ActionType.START) {
+                    if (buildNoType != BuildNoType.SUCCESS_BUILD_INCREMENT && currentBuildNo != null &&
+                        context.actionType == ActionType.START
+                    ) {
                         buildVariableService.setVariable(
                             projectId = pipelineInfo.projectId,
                             pipelineId = pipelineId,
@@ -1242,7 +1255,8 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 taskId = context.firstTaskId,
                 status = startBuildStatus,
-                actionType = context.actionType
+                actionType = context.actionType,
+                buildNoType = buildNoType
             ), // 监控事件
             PipelineBuildMonitorEvent(
                 source = "startBuild",
@@ -1703,11 +1717,10 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
             val remark = buildVariableService.getVariable(buildId, PIPELINE_BUILD_REMARK)
-            val finalStatus = BuildStatusSwitcher.forceFinish(status)
             pipelineBuildDao.finishBuild(
                 dslContext = dslContext,
                 buildId = buildId,
-                buildStatus = finalStatus,
+                buildStatus = status,
                 executeTime = executeTime,
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,

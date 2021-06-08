@@ -53,6 +53,7 @@ object AgentEnv {
     private const val DOCKER_GATEWAY = "devops_gateway"
     private const val AGENT_ENV = "landun.env"
     private const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
+    private const val MACOS_WORKSPACE = "DEVOPS_MACOS_DIR"
 
     private var projectId: String? = null
     private var agentId: String? = null
@@ -61,6 +62,7 @@ object AgentEnv {
     private var os: OSType? = null
     private var env: Env? = null
     private var logMode: LogMode? = null
+    private var macOSWorkspace: String? = null
 
     private var property: Properties? = null
 
@@ -95,6 +97,23 @@ object AgentEnv {
             }
         }
         return agentId!!
+    }
+
+    fun getMacOSWorkspace(): String {
+        if (macOSWorkspace.isNullOrBlank()) {
+            synchronized(this) {
+                if (macOSWorkspace.isNullOrBlank()) {
+                    macOSWorkspace = getProperty(MACOS_WORKSPACE)
+                    if (macOSWorkspace.isNullOrBlank()) {
+                        logger.error("Empty macOSWorkspace. set default: /Volumes/data")
+                        macOSWorkspace = "/Volumes/data"
+                    } else {
+                        logger.info("Get the macOSWorkspace($macOSWorkspace)")
+                    }
+                }
+            }
+        }
+        return macOSWorkspace!! + "/workspace"
     }
 
     fun getEnv(): Env {
