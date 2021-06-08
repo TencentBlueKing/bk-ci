@@ -31,7 +31,6 @@ import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.model.log.tables.TLogStatus
 import com.tencent.devops.model.log.tables.records.TLogStatusRecord
 import org.jooq.DSLContext
-import org.jooq.InsertOnDuplicateSetMoreStep
 import org.jooq.Result
 import org.jooq.UpdateConditionStep
 import org.springframework.stereotype.Repository

@@ -83,7 +83,7 @@ class LogStatusService @Autowired constructor(
         tag: String,
         executeCount: Int
     ): QueryLogStatus {
-        val record =  logStatusDao.getStorageMode(
+        val record = logStatusDao.getStorageMode(
             dslContext = dslContext,
             buildId = buildId,
             tag = tag,

@@ -30,12 +30,8 @@ package com.tencent.devops.log.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.log.pojo.ILogEvent
-import com.tencent.devops.common.log.pojo.LogBatchEvent
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
