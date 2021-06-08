@@ -34,9 +34,7 @@ import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
-import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import org.slf4j.LoggerFactory
-import java.util.Properties
 import javax.ws.rs.core.Response
 
 interface LogService {
