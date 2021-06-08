@@ -383,5 +383,10 @@ export const actions = {
     // 获取开发语言
     getDevelopLanguage () {
         return vue.$ajax.get(`${prefix}/user/market/desk/atom/language`)
+    },
+
+    // 获取适用机器
+    fetchAgentTypes () {
+        return vue.$ajax.get(`${prefix}/user/market/image/agentType/list`)
     }
 }

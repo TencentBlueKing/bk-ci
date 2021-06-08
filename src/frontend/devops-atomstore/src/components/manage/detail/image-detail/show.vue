@@ -23,6 +23,10 @@
                     <label-list :label-list="(detail.labelList || []).map(x => x.labelName)"></label-list>
                 </li>
                 <li class="detail-item">
+                    <span class="detail-label">{{ $t('store.适用机器') }}：</span>
+                    <label-list :label-list="detail.agentTypeScope" :formatter="agentFilter"></label-list>
+                </li>
+                <li class="detail-item">
                     <span class="detail-label">{{ $t('store.简介') }}：</span>
                     <span>{{ detail.summary || '--' }}</span>
                 </li>

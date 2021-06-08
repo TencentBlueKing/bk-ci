@@ -38,6 +38,14 @@
         </bk-row>
         <bk-row>
             <bk-col :span="12" class="g-progress-item">
+                <span class="g-progress-label">{{ $t('store.适用机器') }} :</span>
+                <section class="g-progress-content label-list">
+                    <span class="label-card" v-for="(agent, index) in detail.agentTypeScope" :key="index">{{ agent | agentFilter }}</span>
+                </section>
+            </bk-col>
+        </bk-row>
+        <bk-row>
+            <bk-col :span="12" class="g-progress-item">
                 <span class="g-progress-label">{{ $t('store.简介') }} :</span>
                 <span class="g-progress-content">{{detail.summary}}</span>
             </bk-col>
