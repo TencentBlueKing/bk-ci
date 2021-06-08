@@ -40,6 +40,7 @@ import com.tencent.devops.gitci.v2.template.pojo.ParametersTemplateNull
 import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
 import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.gitci.v2.template.pojo.NoReplaceTemplate
 import org.slf4j.LoggerFactory
 
