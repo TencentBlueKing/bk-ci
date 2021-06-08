@@ -245,7 +245,6 @@ class ExperienceDownloadService @Autowired constructor(
             bundleIdentifier = experienceRecord.bundleIdentifier,
             platform = experienceRecord.platform
         )
-        experiencePublicDao.addDownloadTimeByRecordId(dslContext, experienceRecord.id)
 
         // 更新最近下载记录
         experienceLastDownloadDao.upset(

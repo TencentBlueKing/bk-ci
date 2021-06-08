@@ -38,4 +38,22 @@ class ExperienceDownloadDetailDao {
             ).execute()
         }
     }
+
+    fun countForHot(
+        dslContext: DSLContext,
+        projectId: String,
+        bundleIdentifier: String,
+        platform: String,
+        hotDaysAgo: LocalDateTime
+    ): Int {
+        with(TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .and(PLATFORM.eq(platform))
+                .and(CREATE_TIME.gt(hotDaysAgo))
+                .fetchAny()?.value1() ?: 0
+        }
+    }
 }
