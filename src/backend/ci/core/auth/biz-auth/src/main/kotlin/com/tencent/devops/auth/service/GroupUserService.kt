@@ -43,12 +43,12 @@ class GroupUserService @Autowired constructor(
     val groupService: GroupService,
     val groupUserDao: AuthGroupUserDao
 ) {
-    fun addUser2Group(userId: String, groupId: String): Result<Boolean> {
+    fun addUser2Group(userId: String, groupId: Int): Result<Boolean> {
         logger.info("addUser2Group |$userId| $groupId")
         val groupUserRecord = groupUserDao.get(
             dslContext = dslContext,
             userId = userId,
-            groupId = groupId
+            groupId = groupId.toString()
         )
         if (groupUserRecord != null) {
             logger.warn("addUser2Group user $userId already in this group $groupId")
@@ -64,7 +64,7 @@ class GroupUserService @Autowired constructor(
         groupUserDao.create(
             dslContext = dslContext,
             userId = userId,
-            groupId = groupId
+            groupId = groupId.toString()
         )
         return Result(true)
     }
