@@ -35,14 +35,13 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
-import com.tencent.devops.model.auth.tables.records.TAuthGroupRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class GroupService @Autowired constructor(
+class AuthGroupService @Autowired constructor(
     val dslContext: DSLContext,
     val groupDao: AuthGroupDao
 ) {
@@ -114,6 +113,6 @@ class GroupService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(GroupService::class.java)
+        val logger = LoggerFactory.getLogger(AuthGroupService::class.java)
     }
 }
