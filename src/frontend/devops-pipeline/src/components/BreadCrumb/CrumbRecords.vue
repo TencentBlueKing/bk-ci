@@ -1,7 +1,7 @@
 <template>
     <div class="record-list" v-if="records.length">
         <div class="search-area">
-            <input v-bk-focus="1" @input="handleInput" v-model.trim="searchValue" />
+            <input v-bk-focus="1" :disabled="searching" @input="handleInput" v-model.trim="searchValue" />
             <i class="devops-icon icon-search"></i>
         </div>
         <div class="record-list-searching-icon" v-if="searching">
