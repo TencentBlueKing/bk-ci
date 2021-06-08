@@ -28,14 +28,50 @@
 package com.tencent.devops.artifactory
 
 import com.tencent.devops.artifactory.service.JFrogArchiveFileServiceImpl
+import com.tencent.devops.artifactory.service.permission.DefaultPipelineServiceImpl
+import com.tencent.devops.artifactory.service.permission.GitCIPipelineServiceImpl
+import com.tencent.devops.artifactory.service.permission.TxV3ArtPipelineServiceImpl
+import com.tencent.devops.common.auth.api.BSAuthPermissionApi
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 
 @Configuration
-class TencentServiceConfig {
+class ArtifactoryTencentServiceConfig {
 
     @Bean
     @Primary
     fun archiveFileService() = JFrogArchiveFileServiceImpl()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    fun defaultPipelineService(
+        client: Client,
+        pipelineAuthServiceCode: BSPipelineAuthServiceCode,
+        bkAuthPermissionApi: BSAuthPermissionApi,
+        authProjectApi: BSAuthProjectApi,
+        artifactoryAuthServiceCode: BSRepoAuthServiceCode
+    ) = DefaultPipelineServiceImpl(
+        client, pipelineAuthServiceCode, bkAuthPermissionApi, authProjectApi, artifactoryAuthServiceCode
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    fun gitCIPipelineService(
+        client: Client,
+        tokenCheckService: ClientTokenService
+    ) = GitCIPipelineServiceImpl(client, tokenCheckService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun txV3ArtPipelineServiceImpl(
+        client: Client,
+        tokenCheckService: ClientTokenService
+    ) = TxV3ArtPipelineServiceImpl(client, tokenCheckService)
 }
