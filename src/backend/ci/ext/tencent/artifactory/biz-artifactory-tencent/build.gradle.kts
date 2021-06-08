@@ -44,4 +44,5 @@ dependencies {
     api(project(":ext:tencent:experience:api-experience-tencent"))
     api(project(":core:notify:api-notify"))
     api(project(":ext:tencent:project:api-project-tencent"))
+    api(project(":core:auth:api-auth"))
 }

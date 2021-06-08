@@ -45,7 +45,7 @@ data class ContainerParams(
 
 enum class Action(private val action: String) {
     START("start"),
-    STOP("start"),
+    STOP("stop"),
     RECREATE("recreate"),
     SCALE("scale"),
     DELETE("delete");

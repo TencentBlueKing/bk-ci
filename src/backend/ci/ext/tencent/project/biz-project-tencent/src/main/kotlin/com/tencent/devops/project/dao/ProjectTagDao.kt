@@ -57,7 +57,7 @@ class ProjectTagDao {
     ) {
         with(Tables.T_PROJECT) {
             dslContext.update(this).set(OTHER_ROUTER_TAGS, routerTag)
-                .where(ENGLISH_NAME.eq(ENGLISH_NAME)).execute()
+                .where(ENGLISH_NAME.eq(projectCode)).execute()
         }
     }
 
