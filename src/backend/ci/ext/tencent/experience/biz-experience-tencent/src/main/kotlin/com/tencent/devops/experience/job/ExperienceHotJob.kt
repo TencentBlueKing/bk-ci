@@ -27,7 +27,7 @@ class ExperienceHotJob @Autowired constructor(
     @Value("\${recommend.hot.days:7}")
     private var hotDays: Long = 7
 
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 5 0 * * ?")
     @SuppressWarnings("MagicNumber")
     fun jobHot() {
         if (profile.isProd() && !profile.isProdGray()) {
