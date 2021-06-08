@@ -308,7 +308,7 @@ object LoggerService {
             logger.info("Finished archiving log $archivedCount files")
 
             // 同步所有存储状态到
-            logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), jobId, executeCount)
+            logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), executeCount)
             logger.info("Finished update mode to log service.")
         } catch (t: Throwable) {
             logger.warn("Fail to archive log files", t)

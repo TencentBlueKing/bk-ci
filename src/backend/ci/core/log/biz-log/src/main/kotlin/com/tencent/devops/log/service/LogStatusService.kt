@@ -57,14 +57,13 @@ class LogStatusService @Autowired constructor(
             subTags = subTag,
             jobId = jobId,
             executeCount = executeCount,
-            logStorageMode = logStorageMode,
+            logStorageMode = logStorageMode ?: LogStorageMode.UPLOAD,
             finish = finish
         )
     }
 
     fun updateStorageMode(
         buildId: String,
-        jobId: String,
         executeCount: Int,
         propertyList: List<TaskBuildLogProperty>
     ) {
@@ -74,7 +73,6 @@ class LogStatusService @Autowired constructor(
         logStatusDao.updateStorageMode(
             dslContext = dslContext,
             buildId = buildId,
-            jobId = jobId,
             executeCount = executeCount,
             modeList = modeList
         )
@@ -85,7 +83,7 @@ class LogStatusService @Autowired constructor(
         tag: String,
         executeCount: Int
     ): QueryLogStatus {
-        val record =  logStatusDao.getStorageMode(
+        val record = logStatusDao.getStorageMode(
             dslContext = dslContext,
             buildId = buildId,
             tag = tag,

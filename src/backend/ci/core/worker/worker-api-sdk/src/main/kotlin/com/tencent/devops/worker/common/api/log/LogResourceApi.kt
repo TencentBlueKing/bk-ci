@@ -77,12 +77,10 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
 
     override fun updateStorageMode(
         propertyList: List<TaskBuildLogProperty>,
-        jobId: String,
         executeCount: Int
     ): Result<Boolean> {
         val path = StringBuilder("/log/api/build/logs/mode")
-        path.append("?jobId=$jobId")
-        path.append("&executeCount=$executeCount")
+        path.append("?executeCount=$executeCount")
         val requestBody = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             objectMapper.writeValueAsString(propertyList)

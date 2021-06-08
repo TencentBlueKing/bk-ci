@@ -31,7 +31,6 @@ import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.model.log.tables.TLogStatus
 import com.tencent.devops.model.log.tables.records.TLogStatusRecord
 import org.jooq.DSLContext
-import org.jooq.InsertOnDuplicateSetMoreStep
 import org.jooq.Result
 import org.jooq.UpdateConditionStep
 import org.springframework.stereotype.Repository
@@ -46,7 +45,7 @@ class LogStatusDao {
         subTags: String?,
         jobId: String?,
         executeCount: Int?,
-        logStorageMode: LogStorageMode?,
+        logStorageMode: LogStorageMode,
         finish: Boolean
     ) {
         with(TLogStatus.T_LOG_STATUS) {
@@ -66,10 +65,10 @@ class LogStatusDao {
                 jobId,
                 executeCount ?: 1,
                 finish,
-                logStorageMode?.name ?: LogStorageMode.UPLOAD.name
+                logStorageMode.name
             ).onDuplicateKeyUpdate()
                 .set(FINISHED, finish)
-                .set(MODE, logStorageMode?.name ?: LogStorageMode.UPLOAD.name)
+                .set(MODE, logStorageMode.name)
                 .execute()
         }
     }
@@ -77,7 +76,6 @@ class LogStatusDao {
     fun updateStorageMode(
         dslContext: DSLContext,
         buildId: String,
-        jobId: String,
         executeCount: Int,
         modeList: Map<String, LogStorageMode>
     ) {
@@ -90,7 +88,6 @@ class LogStatusDao {
                         .set(MODE, mode.name)
                         .where(BUILD_ID.eq(buildId))
                         .and(TAG.eq(tag))
-                        .and(JOB_ID.eq(jobId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 )
             }
@@ -138,7 +135,6 @@ class LogStatusDao {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TAG.eq(tag))
-                .and(SUB_TAG.isNull)
                 .and(EXECUTE_COUNT.eq(executeCount ?: 1))
                 .fetchAny()
         }

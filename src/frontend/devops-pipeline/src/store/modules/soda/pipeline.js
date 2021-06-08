@@ -273,7 +273,7 @@ export const actions = {
         })
     },
     requestExternalUrl: async ({ commit }, { projectId, artifactoryType, path }) => {
-        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${artifactoryType}/externalUrl?path=${path}`).then(response => {
+        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${artifactoryType}/externalUrl?path=${encodeURIComponent(path)}`).then(response => {
             return response.data
         })
     },

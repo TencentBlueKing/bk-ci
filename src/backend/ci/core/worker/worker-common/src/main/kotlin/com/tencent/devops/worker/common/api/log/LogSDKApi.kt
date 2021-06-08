@@ -46,7 +46,6 @@ interface LogSDKApi : WorkerRestApiSDK {
 
     fun updateStorageMode(
         propertyList: List<TaskBuildLogProperty>,
-        jobId: String,
         executeCount: Int
     ): Result<Boolean>
 }

@@ -44,5 +44,4 @@ class UserLogFileResourceImpl : UserLogFileResource {
     ): Result<Url> {
         TODO("not implemented")
     }
-
 }

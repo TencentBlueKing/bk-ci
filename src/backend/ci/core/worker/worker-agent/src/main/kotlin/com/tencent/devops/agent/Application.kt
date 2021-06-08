@@ -67,7 +67,7 @@ fun main(args: Array<String>) {
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
-                    val workspaceDir = File("./$pipelineId/src")
+                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(pipelineId, "")
                     if (workspaceDir.exists()) {
                         if (!workspaceDir.isDirectory) {
                             throw RuntimeException("Work space directory conflict: ${workspaceDir.canonicalPath}")
