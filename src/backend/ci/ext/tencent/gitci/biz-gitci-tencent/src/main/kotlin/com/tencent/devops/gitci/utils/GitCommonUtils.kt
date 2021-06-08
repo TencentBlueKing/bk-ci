@@ -39,15 +39,23 @@ object GitCommonUtils {
 //    private const val dockerHubUrl = "https://index.docker.io/v1/"
     private const val dockerHubUrl = ""
 
+    private const val projectPrefix = "git_"
+
     fun getRepoOwner(httpUrl: String): String {
         return when {
             httpUrl.startsWith("http://") -> {
-                httpUrl.removePrefix("http://")
-                    .split("/")[1]
+                val urls = httpUrl.removePrefix("http://")
+                    .split("/").toMutableList()
+                urls.removeAt(0)
+                urls.removeAt(urls.lastIndex)
+                urls.joinToString("/")
             }
             httpUrl.startsWith("https://") -> {
-                httpUrl.removePrefix("https://")
-                    .split("/")[1]
+                val urls = httpUrl.removePrefix("https://")
+                    .split("/").toMutableList()
+                urls.removeAt(0)
+                urls.removeAt(urls.lastIndex)
+                urls.joinToString("/")
             }
             else -> ""
         }
@@ -124,7 +132,8 @@ object GitCommonUtils {
                 try {
                     val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.sourceGitProjectId!!).data!!
                     logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, token: $gitToken")
-                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
+                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken
+                        .accessToken, gitRequestEvent.sourceGitProjectId!!).data
                     realEvent = gitRequestEvent.copy(
                         // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
                         branch = if (sourceRepositoryConf != null) {
@@ -147,7 +156,8 @@ object GitCommonUtils {
             try {
                 val gitToken = client.getScm(ServiceGitResource::class).getToken(sourceGitProjectId).data!!
                 logger.info("get token for gitProjectId[$sourceGitProjectId] form scm, token: $gitToken")
-                val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, sourceGitProjectId).data
+                val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken
+                    .accessToken, sourceGitProjectId).data
                 // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
                 return if (sourceRepositoryConf != null) {
                     "${sourceRepositoryConf.pathWithNamespace.split("/")[0]}:$branch"
@@ -159,5 +169,17 @@ object GitCommonUtils {
             }
         }
         return branch
+    }
+
+    fun getGitProjectId(projectId: String): Long {
+        if (projectId.startsWith(projectPrefix)) {
+            try {
+                return projectId.removePrefix(projectPrefix).toLong()
+            } catch (e: Exception) {
+                throw RuntimeException("蓝盾项目ID不正确")
+            }
+        } else {
+            throw RuntimeException("蓝盾项目ID不正确")
+        }
     }
 }

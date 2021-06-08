@@ -76,6 +76,7 @@ class PipelineBuildDao {
         buildMsg: String?,
         buildNumAlias: String? = null
     ) {
+
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.insertInto(
                 this,

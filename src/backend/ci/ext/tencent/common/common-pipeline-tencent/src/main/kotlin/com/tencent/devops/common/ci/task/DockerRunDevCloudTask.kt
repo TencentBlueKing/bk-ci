@@ -59,7 +59,8 @@ data class DockerRunDevCloudTask(
         val devCloudInput = DockerRunDevCloudInput(
             alias = "dockerRun-" + System.currentTimeMillis(),
             image = "$imageName:$imageTag",
-            registry = jacksonObjectMapper().writeValueAsString(Registry(host, inputs.userName ?: "", inputs.password ?: "")),
+            registry = jacksonObjectMapper().writeValueAsString(Registry(host, inputs.userName ?: "", inputs.password
+                ?: "")),
             cpu = config.cpu.toString(),
             memory = config.memory,
             params = jacksonObjectMapper().writeValueAsString(Params(

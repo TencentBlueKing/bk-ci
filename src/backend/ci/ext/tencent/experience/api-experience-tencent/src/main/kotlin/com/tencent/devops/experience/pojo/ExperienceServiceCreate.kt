@@ -44,7 +44,7 @@ data class ExperienceServiceCreate(
     @ApiModelProperty("内部名单", required = true)
     val innerUsers: Set<String>,
     @ApiModelProperty("外部名单", required = true)
-    val outerUsers: String,
+    val outerUsers: Set<String>,
     @ApiModelProperty("通知类型", required = true)
     val notifyTypes: Set<NotifyType>,
     @ApiModelProperty("是否开启企业微信群", required = true)

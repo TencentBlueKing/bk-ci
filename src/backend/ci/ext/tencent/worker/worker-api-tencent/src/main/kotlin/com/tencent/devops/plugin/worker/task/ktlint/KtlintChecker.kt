@@ -549,13 +549,13 @@ class KtlintChecker constructor(path: File) {
                     }
                     if (!skipClasspathCheck) {
                         if (result.any { it.toString().substringAfterLast("/").startsWith("ktlint-core-") }) {
-                            LoggerService.addRedLine("\"$artifact\" appears to have a runtime/compile dependency on \"ktlint-core\".\n" +
+                            LoggerService.addRedLine("\"$artifact\" appears to have a runtime/api(dependency on \"ktlint-core\".\n" +
                                     "Please inform the author that \"com.github.shyiko:ktlint*\" should be marked " +
                                     "compileOnly (Gradle) / provided (Maven).\n" +
                                     "(to suppress this warning use --skip-classpath-check)")
                         }
                         if (result.any { it.toString().substringAfterLast("/").startsWith("kotlin-stdlib-") }) {
-                            LoggerService.addRedLine("\"$artifact\" appears to have a runtime/compile dependency on \"kotlin-stdlib\".\n" +
+                            LoggerService.addRedLine("\"$artifact\" appears to have a runtime/api(dependency on \"kotlin-stdlib\".\n" +
                                     "Please inform the author that \"org.jetbrains.kotlin:kotlin-stdlib*\" should be marked " +
                                     "compileOnly (Gradle) / provided (Maven).\n" +
                                     "(to suppress this warning use --skip-classpath-check)")

@@ -196,13 +196,13 @@ class ServiceItemDao {
 
     fun countByName(dslContext: DSLContext, name: String): Int {
         with(TServiceItem.T_SERVICE_ITEM) {
-            return dslContext.selectCount().from(this).where(ITEM_NAME.eq(name)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(ITEM_NAME.eq(name)).fetchOne(0, Int::class.java)!!
         }
     }
 
     fun countByHtmlPath(dslContext: DSLContext, htmlPath: String): Int {
         with(TServiceItem.T_SERVICE_ITEM) {
-            return dslContext.selectCount().from(this).where(HTML_PATH.eq(htmlPath)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(HTML_PATH.eq(htmlPath)).fetchOne(0, Int::class.java)!!
         }
     }
 

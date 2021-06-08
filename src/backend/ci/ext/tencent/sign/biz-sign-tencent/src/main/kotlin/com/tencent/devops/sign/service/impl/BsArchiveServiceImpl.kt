@@ -74,18 +74,24 @@ class BsArchiveServiceImpl @Autowired constructor(
                     properties["appIcon"] = url
                 }
             }
-        } catch (ignored: Exception) {
+        } catch (ignored: Throwable) {
+            logger.warn("load icon of ipa failed with error.", ignored)
         }
 
-        directBkRepoClient.uploadLocalFile(
-            userId = ipaSignInfo.userId,
-            projectId = ipaSignInfo.projectId,
-            repoName = ipaSignInfo.archiveType.toLowerCase(),
-            path = path,
-            file = signedIpaFile,
-            metadata = properties ?: mapOf(),
-            override = true
-        )
+        try {
+            directBkRepoClient.uploadLocalFile(
+                userId = ipaSignInfo.userId,
+                projectId = ipaSignInfo.projectId,
+                repoName = ipaSignInfo.archiveType.toLowerCase(),
+                path = path,
+                file = signedIpaFile,
+                metadata = properties ?: mapOf(),
+                override = true
+            )
+        } catch (e: Exception) {
+            logger.error("archive upload file with error. path:$path", e)
+            return false
+        }
         return true
     }
 

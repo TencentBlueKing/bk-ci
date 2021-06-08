@@ -101,7 +101,16 @@ class ExtServiceVersionLogDao {
         logId: String
     ): TExtensionServiceVersionLogRecord {
         with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
-            return dslContext.selectFrom(this).where(ID.eq(logId)).fetchOne()
+            return dslContext.selectFrom(this).where(ID.eq(logId)).fetchOne()!!
+        }
+    }
+
+    fun getVersionLogsByServiceIds(
+        dslContext: DSLContext,
+        serviceIds: List<String>
+    ): Result<TExtensionServiceVersionLogRecord>? {
+        with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
+            return dslContext.selectFrom(this).where(SERVICE_ID.`in`(serviceIds)).fetch()
         }
     }
 
@@ -110,7 +119,11 @@ class ExtServiceVersionLogDao {
         serviceId: String
     ): TExtensionServiceVersionLogRecord? {
         with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
-            return dslContext.selectFrom(this).where(SERVICE_ID.eq(serviceId)).orderBy(CREATE_TIME.desc()).limit(0, 1).fetchOne()
+            return dslContext.selectFrom(this)
+                .where(SERVICE_ID.eq(serviceId))
+                .orderBy(CREATE_TIME.desc())
+                .limit(0, 1)
+                .fetchOne()
         }
     }
 
@@ -128,7 +141,7 @@ class ExtServiceVersionLogDao {
         serviceId: String
     ): Int {
         with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
-            return dslContext.selectCount().from(this).where(SERVICE_ID.eq(serviceId)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(SERVICE_ID.eq(serviceId)).fetchOne(0, Int::class.java)!!
         }
     }
 }

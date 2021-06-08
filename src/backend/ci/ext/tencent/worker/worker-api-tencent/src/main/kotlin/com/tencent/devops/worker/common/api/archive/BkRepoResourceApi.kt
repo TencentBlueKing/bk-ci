@@ -28,23 +28,253 @@
 package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.common.collect.Maps
+import com.google.gson.JsonParser
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.query.enums.OperationType
 import com.tencent.bkrepo.common.query.model.PageLimit
 import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_FULL_IMAGE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_IMAGE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
+import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
+import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+import com.tencent.devops.worker.common.api.pojo.FileGatewayInfo
 import com.tencent.devops.worker.common.api.pojo.QueryData
 import com.tencent.devops.worker.common.api.pojo.QueryNodeInfo
+import com.tencent.devops.worker.common.utils.IosUtils
+import com.tencent.devops.worker.common.utils.TaskUtil
+import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType
 import okhttp3.RequestBody
+import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
+import java.io.File
+import java.net.URLEncoder
+import java.util.Base64
+import java.util.Locale
 
 class BkRepoResourceApi : AbstractBuildResourceApi() {
-    companion object {
-        private val logger = LoggerFactory.getLogger(BkRepoResourceApi::class.java)
+
+    private fun getFileGateway(): String? {
+        return try {
+            val path = "/artifactory/api/build/fileGateway/get"
+            val request = buildGet(path)
+            val response = request(request, "获取构建机基本信息失败")
+            val fileGatewayResult = objectMapper.readValue<Result<FileGatewayInfo>>(response)
+            fileGatewayResult.data!!.fileGateway
+        } catch (e: Exception) {
+            logger.warn("get file gateway exception", e)
+            null
+        }
+    }
+
+    fun tokenAccess(): Boolean {
+        if (CommonEnv.fileGateway == null) {
+            CommonEnv.fileGateway = getFileGateway()
+        }
+        return CommonEnv.fileGateway != null && CommonEnv.fileGateway!!.contains("bkrepo", true)
+    }
+
+    fun createBkRepoTemporaryToken(projectId: String, repoName: String, path: String, type: TokenType): String {
+        val url = "/bkrepo/api/build/generic/temporary/token/create"
+        val requestData = mapOf(
+            "projectId" to projectId,
+            "repoName" to repoName,
+            "fullPathSet" to listOf(path),
+            "authorizedUserSet" to listOf<String>(),
+            "authorizedIpSet" to listOf<String>(),
+            "expireSeconds" to 86400,
+            "permits" to null,
+            "type" to type.name
+        )
+        val request = buildPost(
+            url,
+            RequestBody.create(
+                MediaType.parse("application/json; charset=utf-8"),
+                objectMapper.writeValueAsString(requestData)
+            )
+        )
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("http request failed, code: ${response.code()}, responseContent: $responseContent")
+                throw RuntimeException("http request failed")
+            }
+
+            val responseData = objectMapper.readValue<BkRepoResponse<List<BkRepoAccessToken>>>(responseContent)
+            if (responseData.isNotOk()) {
+                throw RuntimeException("request failed: ${responseData.message}")
+            }
+
+            return responseData.data!![0].token
+        }
+    }
+
+    fun uploadFileByToken(
+        file: File,
+        projectId: String,
+        repoName: String,
+        destFullPath: String,
+        token: String,
+        buildVariables: BuildVariables,
+        parseAppData: Boolean = true
+    ) {
+        val url = "/generic/temporary/upload/$projectId/$repoName$destFullPath?token=$token"
+        val request = buildPut(
+            url,
+            RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            getUploadHeader(file, buildVariables, parseAppData),
+            useFileGateway = true
+        )
+        val response = request(request, "上传文件失败")
+        try {
+            val obj = JsonParser().parse(response).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+        } catch (e: Exception) {
+            AbstractBuildResourceApi.logger.error(e.message ?: "")
+        }
+    }
+
+    fun downloadFileByToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        token: String,
+        destPath: File
+    ) {
+        val url = "/generic/temporary/download/$projectId/$repoName$fullPath?token=$token"
+        var header = HashMap<String, String>()
+        header.set("X-BKREPO-UID", userId)
+        val request = buildGet(url, header, useFileGateway = true)
+        download(request, destPath)
+    }
+
+    fun getUploadHeader(
+        file: File,
+        buildVariables: BuildVariables,
+        parseAppData: Boolean = true
+    ): HashMap<String, String> {
+        val header = Maps.newHashMap<String, String>()
+        header[BKREPO_UID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
+        header[BKREPO_OVERRIDE] = "true"
+
+        val metadata = mutableMapOf<String, String>()
+        metadata[ARCHIVE_PROPS_PROJECT_ID] = buildVariables.projectId
+        metadata[ARCHIVE_PROPS_PIPELINE_ID] = buildVariables.pipelineId
+        metadata[ARCHIVE_PROPS_BUILD_ID] = buildVariables.buildId
+        metadata[ARCHIVE_PROPS_USER_ID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
+        metadata[ARCHIVE_PROPS_BUILD_NO] = buildVariables.variables[PIPELINE_BUILD_NUM] ?: ""
+        metadata[ARCHIVE_PROPS_SOURCE] = "pipeline"
+        metadata[ARCHIVE_PROPS_TASK_ID] = TaskUtil.getTaskId()
+        if (parseAppData) {
+            metadata.putAll(getAppMetadata(file))
+        }
+        header[BKREPO_METADATA] = Base64.getEncoder().encodeToString(buildMetadataHeader(metadata).toByteArray())
+        return header
+    }
+
+    private fun buildMetadataHeader(metadata: Map<String, String>): String {
+        return StringUtils.join(
+            metadata.map {
+                "${urlEncode(it.key)}=${urlEncode(it.value)}"
+            },
+            "&"
+        )
+    }
+
+    private fun urlEncode(str: String?): String {
+        return if (str.isNullOrBlank()) {
+            ""
+        } else {
+            URLEncoder.encode(str, "UTF-8")
+        }
+    }
+
+    private fun getAppMetadata(file: File): Map<String, String> {
+        try {
+            return when {
+                file.name.endsWith(".ipa") -> {
+                    val map = IosUtils.getIpaInfoMap(file)
+                    val result = mutableMapOf(
+                        ARCHIVE_PROPS_APP_VERSION to (map["bundleVersion"] ?: ""),
+                        ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER to (map["bundleIdentifier"] ?: ""),
+                        ARCHIVE_PROPS_APP_APP_TITLE to (map["appTitle"] ?: ""),
+                        ARCHIVE_PROPS_APP_IMAGE to (map["image"] ?: ""),
+                        ARCHIVE_PROPS_APP_FULL_IMAGE to (map["fullImage"] ?: ""),
+                        ARCHIVE_PROPS_APP_SCHEME to (map["scheme"] ?: ""),
+                        ARCHIVE_PROPS_APP_NAME to (map["appName"] ?: "")
+                    )
+                    result
+                }
+                file.name.endsWith(".apk") -> {
+                    val apkFile = ApkFile(file)
+                    apkFile.preferredLocale = Locale.SIMPLIFIED_CHINESE
+                    val meta = apkFile.apkMeta
+                    val result = mutableMapOf(
+                        ARCHIVE_PROPS_APP_VERSION to meta.versionName,
+                        ARCHIVE_PROPS_APP_APP_TITLE to meta.name,
+                        ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER to meta.packageName,
+                        ARCHIVE_PROPS_APP_NAME to (meta.label ?: "")
+                    )
+                    result
+                }
+                else -> {
+                    mapOf()
+                }
+            }
+        } catch (e: Exception) {
+            AbstractBuildResourceApi.logger.warn("get metadata from file(${file.absolutePath}) failed", e)
+            return mapOf()
+        }
+    }
+
+    fun setPipelineMetadata(repoName: String, buildVariables: BuildVariables) {
+        try {
+            val projectId = buildVariables.projectId
+            val pipelineId = buildVariables.pipelineId
+            val pipelineName = buildVariables.variables[BK_CI_PIPELINE_NAME]
+            val buildId = buildVariables.buildId
+            val buildNum = buildVariables.variables[BK_CI_BUILD_NUM]
+            if (!pipelineName.isNullOrBlank()) {
+                val pipelineNameRequest = buildPost(
+                    "/bkrepo/api/build/repository/api/metadata/$projectId/$repoName/$pipelineId",
+                    RequestBody.create(
+                        MediaType.parse("application/json; charset=utf-8"),
+                        JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to pipelineName)))
+                    )
+                )
+                request(pipelineNameRequest, "set pipeline displayName failed")
+            }
+            if (!buildNum.isNullOrBlank()) {
+                val buildNumRequest = buildPost(
+                    "/bkrepo/api/build/repository/api/metadata/$projectId/$repoName/$pipelineId/$buildId",
+                    RequestBody.create(
+                        MediaType.parse("application/json; charset=utf-8"),
+                        JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to buildNum)))
+                    )
+                )
+                request(buildNumRequest, "set build displayName failed")
+            }
+        } catch (e: Exception) {
+            logger.warn("set pipeline metadata error: ${e.message}")
+        }
     }
 
     fun queryByPathEqOrNameMatchOrMetadataEqAnd(
@@ -62,15 +292,23 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
         var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
         if (filePaths.isNotEmpty()) {
-            val filePathRule = Rule.NestedRule(filePaths.map { Rule.QueryRule("path", it, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            val filePathRule = Rule.NestedRule(
+                filePaths.map { Rule.QueryRule("path", it, OperationType.EQ) }.toMutableList(),
+                Rule.NestedRule.RelationType.OR
+            )
             ruleList.add(filePathRule)
         }
         if (fileNames.isNotEmpty()) {
-            val fileNameRule = Rule.NestedRule(fileNames.map { Rule.QueryRule("name", it, OperationType.MATCH) }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            val fileNameRule = Rule.NestedRule(
+                fileNames.map { Rule.QueryRule("name", it, OperationType.MATCH) }.toMutableList(),
+                Rule.NestedRule.RelationType.OR
+            )
             ruleList.add(fileNameRule)
         }
         if (metadata.isNotEmpty()) {
-            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.AND)
+            val metadataRule =
+                Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }
+                    .toMutableList(), Rule.NestedRule.RelationType.AND)
             ruleList.add(metadataRule)
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
@@ -112,5 +350,16 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
 
             return responseData.data!!.records
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BkRepoResourceApi::class.java)
+        private const val BKREPO_METADATA = "X-BKREPO-META"
+        private const val BKREPO_UID = "X-BKREPO-UID"
+        private const val BKREPO_OVERRIDE = "X-BKREPO-OVERWRITE"
+
+        private const val BK_CI_PIPELINE_NAME = "BK_CI_PIPELINE_NAME"
+        private const val BK_CI_BUILD_NUM = "BK_CI_BUILD_NUM"
+        private const val METADATA_DISPLAY_NAME = "displayName"
     }
 }

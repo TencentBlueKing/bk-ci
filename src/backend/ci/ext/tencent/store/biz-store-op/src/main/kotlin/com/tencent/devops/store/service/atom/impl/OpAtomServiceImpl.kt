@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
@@ -58,6 +59,7 @@ import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
+import com.tencent.devops.store.utils.StoreUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -82,7 +84,8 @@ class OpAtomServiceImpl @Autowired constructor(
     private val atomQualityService: AtomQualityService,
     private val atomNotifyService: AtomNotifyService,
     private val marketAtomCommonService: MarketAtomCommonService,
-    private val storeWebsocketService: StoreWebsocketService
+    private val storeWebsocketService: StoreWebsocketService,
+    private val redisOperation: RedisOperation
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
@@ -257,12 +260,12 @@ class OpAtomServiceImpl @Autowired constructor(
                         latestUpgradeTime = pubTime
                     )
                 )
-                // 处理post操作缓存
-                marketAtomCommonService.handleAtomPostCache(
+                // 处理插件缓存
+                marketAtomCommonService.handleAtomCache(
                     atomId = atomId,
                     atomCode = atomCode,
                     version = atom.version,
-                    atomStatus = atomStatus
+                    releaseFlag = true
                 )
             }
 
@@ -276,6 +279,13 @@ class OpAtomServiceImpl @Autowired constructor(
                 latestFlag = latestFlag,
                 pubTime = pubTime
             )
+
+            // 更新默认插件缓存
+            if (approveReq.defaultFlag) {
+                redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
+            } else {
+                redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
+            }
 
             // 更新质量红线信息
             atomQualityService.updateQualityInApprove(approveReq.atomCode, atomStatus)

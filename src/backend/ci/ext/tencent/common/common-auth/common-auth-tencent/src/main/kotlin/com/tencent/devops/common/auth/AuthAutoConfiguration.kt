@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.code.BSArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.code.BSBcsAuthServiceCode
 import com.tencent.devops.common.auth.code.BSCodeAuthServiceCode
+import com.tencent.devops.common.auth.code.BSCommonAuthServiceCode
 import com.tencent.devops.common.auth.code.BSEnvironmentAuthServiceCode
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
@@ -64,8 +65,8 @@ import org.springframework.jmx.export.MBeanExporter
 
 @Configuration
 @ConditionalOnWebApplication
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
 class AuthAutoConfiguration {
 
     @Bean
@@ -145,6 +146,8 @@ class AuthAutoConfiguration {
     @Bean
     fun artifactoryAuthServiceCode() = BSArtifactoryAuthServiceCode()
 
+    @Bean
+    fun commonAuthServiceCode() = BSCommonAuthServiceCode()
 
     @Value("\${auth.url:}")
     val iamBaseUrl = ""

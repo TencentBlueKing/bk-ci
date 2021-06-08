@@ -233,7 +233,9 @@ interface ServiceTxProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
         @ApiParam(value = "项目信息", required = true)
-        projectCreateInfo: ProjectCreateInfo
+        projectCreateInfo: ProjectCreateInfo,
+        @QueryParam("routerTag")
+        routerTag: String?
     ): Result<String>
 
     @GET

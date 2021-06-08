@@ -46,7 +46,7 @@ import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.user.UserReportResource
+import com.tencent.devops.process.api.user.TXUserReportResource
 import com.tencent.devops.process.pojo.Report
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.jooq.DSLContext
@@ -221,8 +221,16 @@ class GitCIDetailService @Autowired constructor(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
-
-        return client.get(UserReportResource::class).get(userId, conf.projectCode!!, pipelineId, buildId).data!!
+        val reportList = client.get(TXUserReportResource::class)
+            .getGitCI(userId, conf.projectCode!!, pipelineId, buildId)
+            .data!!.toMutableList()
+        // 更换域名来支持工蜂的页面
+        reportList.forEachIndexed { index, report ->
+            reportList[index] = report.copy(
+                indexFileUrl = reportPrefix + report.indexFileUrl
+            )
+        }
+        return reportList.toList()
     }
 
     fun getPipelineWithId(

@@ -72,6 +72,7 @@ class ExperienceDao {
         projectId: String,
         bundleIdentifier: String,
         platform: String?,
+        recordIds: Set<Long>? = null,
         offset: Int,
         limit: Int
     ): Result<TExperienceRecord> {
@@ -81,6 +82,9 @@ class ExperienceDao {
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .let {
+                    if (null == recordIds) it else it.and(ID.`in`(recordIds))
                 }
                 .orderBy(CREATE_TIME.desc())
                 .limit(offset, limit)
@@ -118,7 +122,6 @@ class ExperienceDao {
         endDate: LocalDateTime,
         experienceGroups: String,
         innerUsers: String,
-        outerUsers: String,
         notifyTypes: String,
         enableWechatGroup: Boolean,
         wechatGroups: String,
@@ -131,7 +134,8 @@ class ExperienceDao {
         category: Int,
         productOwner: String,
         logoUrl: String,
-        size: Long
+        size: Long,
+        scheme: String
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -164,7 +168,8 @@ class ExperienceDao {
                 CATEGORY,
                 PRODUCT_OWNER,
                 LOGO_URL,
-                SIZE
+                SIZE,
+                SCHEME
             ).values(
                 projectId,
                 name,
@@ -178,7 +183,7 @@ class ExperienceDao {
                 endDate,
                 experienceGroups,
                 innerUsers,
-                outerUsers,
+                "",
                 notifyTypes,
                 enableWechatGroup,
                 wechatGroups,
@@ -193,10 +198,11 @@ class ExperienceDao {
                 category,
                 productOwner,
                 logoUrl,
-                size
+                size,
+                scheme
             )
                 .returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }
@@ -222,7 +228,6 @@ class ExperienceDao {
         endDate: LocalDateTime,
         experienceGroups: String,
         innerUsers: String,
-        outerUsers: String,
         notifyTypes: String,
         enableWechatGroup: Boolean,
         wechatGroups: String,
@@ -240,7 +245,7 @@ class ExperienceDao {
                 .set(END_DATE, endDate)
                 .set(EXPERIENCE_GROUPS, experienceGroups)
                 .set(INNER_USERS, innerUsers)
-                .set(OUTER_USERS, outerUsers)
+                .set(OUTER_USERS, "")
                 .set(NOTIFY_TYPES, notifyTypes)
                 .set(ENABLE_WECHAT_GROUPS, enableWechatGroup)
                 .set(WECHAT_GROUPS, wechatGroups)
@@ -295,7 +300,7 @@ class ExperienceDao {
                 .where(PROJECT_ID.eq(PROJECT_ID))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .and(PLATFORM.eq(platform))
-                .fetchOne().value1()
+                .fetchOne()!!.value1()
         }
     }
 
@@ -306,12 +311,14 @@ class ExperienceDao {
         expireTime: LocalDateTime,
         online: Boolean,
         offset: Int,
-        limit: Int
+        limit: Int,
+        experienceName: String?
     ): Result<TExperienceRecord> {
         return with(TExperience.T_EXPERIENCE) {
             dslContext.selectFrom(this)
                 .where(ID.`in`(ids))
                 .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
+                .let { if (null == experienceName) it else it.and(EXPERIENCE_NAME.like("%$experienceName%")) }
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
                 .orderBy(CREATE_TIME.desc())
@@ -348,7 +355,7 @@ class ExperienceDao {
 
     fun countByIds(
         dslContext: DSLContext,
-        ids: MutableSet<Long>,
+        ids: Set<Long>,
         platform: String?,
         expireTime: LocalDateTime,
         online: Boolean
@@ -359,7 +366,7 @@ class ExperienceDao {
                 .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
-                .fetchOne().value1()
+                .fetchOne()!!.value1()
         }
     }
 

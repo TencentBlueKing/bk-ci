@@ -34,49 +34,32 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildArtifactoryResourceImpl @Autowired constructor(
-    private val artifactoryService: ArtifactoryService,
     private val bkRepoService: BkRepoService,
-    private val artifactoryDownloadService: ArtifactoryDownloadService,
     private val bkRepoDownloadService: BkRepoDownloadService,
-    private val jfrogService: JfrogService,
     private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
     private val gray: Gray
 ) : BuildArtifactoryResource {
 
     override fun getOwnFileList(userId: String, projectId: String): Result<FileInfoPage<FileInfo>> {
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            val result = bkRepoService.getOwnFileList(userId, projectId, 0, -1)
-            Result(FileInfoPage(0L, 1, -1, result.second, result.first))
-        } else {
-            val result = artifactoryService.getOwnFileList(userId, projectId, 0, -1)
-            Result(FileInfoPage(0L, 1, -1, result.second, result.first))
-        }
+        val result = bkRepoService.getOwnFileList(userId, projectId, 0, -1)
+        return Result(FileInfoPage(0L, 1, -1, result.second, result.first))
     }
 
     override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
         checkParam(projectId, path)
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoService.check(projectId, artifactoryType, path))
-        } else {
-            Result(artifactoryService.check(projectId, artifactoryType, path))
-        }
+        return Result(bkRepoService.check(projectId, artifactoryType, path))
     }
 
     override fun setProperties(
@@ -86,11 +69,7 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         properties: Map<String, String>
     ): Result<Boolean> {
         checkParam(projectId, path)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoService.setProperties(projectId, artifactoryType, path, properties)
-        } else {
-            artifactoryService.setProperties(projectId, artifactoryType, path, properties)
-        }
+        bkRepoService.setProperties(projectId, artifactoryType, path, properties)
         return Result(true)
     }
 
@@ -100,11 +79,7 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<List<Property>> {
         checkParam(projectId, path)
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoService.getProperties(projectId, artifactoryType, path))
-        } else {
-            Result(artifactoryService.getProperties(projectId, artifactoryType, path))
-        }
+        return Result(bkRepoService.getProperties(projectId, artifactoryType, path))
     }
 
     override fun getPropertiesByRegex(
@@ -117,33 +92,18 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         crossPipineId: String?,
         crossBuildNo: String?
     ): Result<List<FileDetail>> {
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(
-                bkRepoService.getPropertiesByRegex(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    artifactoryType,
-                    path,
-                    crossProjectId,
-                    crossPipineId,
-                    crossBuildNo
-                )
+        return Result(
+            bkRepoService.getPropertiesByRegex(
+                projectId,
+                pipelineId,
+                buildId,
+                artifactoryType,
+                path,
+                crossProjectId,
+                crossPipineId,
+                crossBuildNo
             )
-        } else {
-            Result(
-                artifactoryService.getPropertiesByRegex(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    artifactoryType,
-                    path,
-                    crossProjectId,
-                    crossPipineId,
-                    crossBuildNo
-                )
-            )
-        }
+        )
     }
 
     override fun getThirdPartyDownloadUrl(
@@ -159,37 +119,20 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         region: String?
     ): Result<List<String>> {
         checkParam(projectId, path)
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(
-                bkRepoDownloadService.getThirdPartyDownloadUrl(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    artifactoryType,
-                    path,
-                    ttl,
-                    crossProjectId,
-                    crossPipineId,
-                    crossBuildNo,
-                    region
-                )
+        return Result(
+            bkRepoDownloadService.getThirdPartyDownloadUrl(
+                projectId,
+                pipelineId,
+                buildId,
+                artifactoryType,
+                path,
+                ttl,
+                crossProjectId,
+                crossPipineId,
+                crossBuildNo,
+                region
             )
-        } else {
-            Result(
-                artifactoryDownloadService.getThirdPartyDownloadUrl(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    artifactoryType,
-                    path,
-                    ttl,
-                    crossProjectId,
-                    crossPipineId,
-                    crossBuildNo,
-                    region
-                )
-            )
-        }
+        )
     }
 
     override fun getFileDownloadUrl(
@@ -207,11 +150,7 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
             artifactoryType == ArtifactoryType.CUSTOM_DIR,
             1
         )
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoService.getFileDownloadUrl(param))
-        } else {
-            Result(jfrogService.getFileDownloadUrl(param))
-        }
+        return Result(bkRepoService.getFileDownloadUrl(param))
     }
 
     private fun checkParam(projectId: String, path: String) {
@@ -237,15 +176,11 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         targetPath: String
     ): Result<Count> {
         checkParam(projectId)
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoService.acrossProjectCopy(projectId, artifactoryType, path, targetProjectId, targetPath))
-        } else {
-            Result(artifactoryService.acrossProjectCopy(projectId, artifactoryType, path, targetProjectId, targetPath))
-        }
+        return Result(bkRepoService.acrossProjectCopy(projectId, artifactoryType, path, targetProjectId, targetPath))
     }
 
     override fun checkRepoGray(projectId: String): Result<Boolean> {
-        return Result(repoGray.isGray(projectId, redisOperation))
+        return Result(true)
     }
 
     override fun checkGrayProject(projectId: String): Result<Boolean> {

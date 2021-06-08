@@ -34,7 +34,7 @@ import java.io.File
 import java.nio.charset.Charset
 
 @Service("ATOM_FILE_HANDLE")
-class AtomFileHandleService : AbstractFileHandleService() {
+class AtomFileHandleService : AbstractFileHandleService {
 
     /**
      * 处理task.json文件

@@ -75,6 +75,7 @@ import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 
+@Suppress("ALL")
 @Service
 class BkRepoService @Autowired constructor(
     val pipelineService: PipelineService,
@@ -450,6 +451,8 @@ class BkRepoService @Autowired constructor(
                         ""
                     }
 
+                    logger.info("pipelineHasPermissionList.contains(pipelineId):" +
+                        " ${(!checkPermission || pipelineHasPermissionList.contains(pipelineId))}")
                     if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
                     ) {
@@ -636,7 +639,8 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return StringUtil.chineseUrlEncode("${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)}/bkrepo/api/external/repository$shareUri")
+        return StringUtil.chineseUrlEncode("${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
+        }/bkrepo/api/external/repository$shareUri&download=true")
     }
 
     fun internalDownloadUrl(
@@ -656,7 +660,8 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/bkrepo/api/external/repository$shareUri"
+        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}" +
+            "/bkrepo/api/external/repository$shareUri&download=true"
     }
 
     fun internalTemporaryAccessDownloadUrls(
