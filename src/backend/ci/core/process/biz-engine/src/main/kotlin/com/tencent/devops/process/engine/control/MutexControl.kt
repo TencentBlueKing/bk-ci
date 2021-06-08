@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
-import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.Timeout
@@ -347,7 +346,7 @@ class MutexControl @Autowired constructor(
         if (buildId.isNullOrBlank() || containerId.isNullOrBlank()) {
             return false
         }
-        val container = pipelineRuntimeService.getContainer(buildId!!, stageId = null, containerId = containerId!!)
-        return container == null || BuildStatusSwitcher.finish(container.status) == container.status
+        val container = pipelineRuntimeService.getContainer(buildId, stageId = null, containerId = containerId)
+        return container == null || container.status.isFinish()
     }
 }

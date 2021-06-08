@@ -45,6 +45,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
@@ -57,7 +58,8 @@ class StartActionTaskContainerCmd(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineTaskService: PipelineTaskService
+    private val pipelineTaskService: PipelineTaskService,
+    private val pipelineContextService: PipelineContextService
 ) : ContainerCmd {
 
     companion object {
@@ -119,12 +121,15 @@ class StartActionTaskContainerCmd(
                 // 如果是要终止，则需要拿出当前任务进行终止
                 toDoTask = findRunningTask(containerContext, currentTask = t)
             } else if (t.status.isFailure() || t.status.isCancel()) {
+                needTerminate = needTerminate || TaskUtils.isStartVMTask(t) // #4301 构建机启动失败，就需要终止[P0]
                 // 当前任务已经失败or取消，并且没有设置[失败继续]的， 设置给容器最终FAILED状态
                 if (!ControlUtils.continueWhenFailure(t.additionalOptions)) {
                     containerContext.buildStatus = BuildStatus.FAILED
-                    needTerminate = needTerminate || TaskUtils.isStartVMTask(t) // 构建机启动失败，就需要终止
                 } else {
                     hasFailedTaskInSuccessContainer = true
+                    if (needTerminate) { // #4301 强制终止的标志为失败，不管是不是设置了失败继续[P0]
+                        containerContext.buildStatus = BuildStatus.FAILED
+                    }
                 }
             } else if (t.status.isReadyToRun()) {
                 // 拿到按序号排列的第一个必须要执行的插件
@@ -189,6 +194,7 @@ class StartActionTaskContainerCmd(
     ): PipelineBuildTask? {
         val source = containerContext.event.source
         var toDoTask: PipelineBuildTask? = null
+        val contextMap = pipelineContextService.buildContext(buildId, containerId, containerContext.variables)
         when { // [post action] 包含对应的关机任务，优先开机失败startVMFail=true
             additionalOptions?.elementPostInfo != null -> { // 如果是[post task], elementPostInfo必不为空
                 toDoTask = additionalOptions?.elementPostInfo?.findPostActionTask(
@@ -218,7 +224,7 @@ class StartActionTaskContainerCmd(
                 buildId = buildId,
                 additionalOptions = additionalOptions,
                 containerFinalStatus = containerContext.buildStatus,
-                variables = containerContext.variables,
+                variables = containerContext.variables.plus(contextMap),
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
                 buildLogPrinter = buildLogPrinter
             ) -> { // 检查条件跳过

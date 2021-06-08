@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
+import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
@@ -47,6 +48,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
+import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
@@ -63,6 +65,7 @@ import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -205,9 +208,11 @@ class BuildStartControl @Autowired constructor(
         }
 
         if (canStart) {
-            buildLogPrinter.addLine(message = "Build #${buildInfo.buildNum} preparing",
+            buildLogPrinter.addLine(
+                message = "Build #${buildInfo.buildNum} preparing",
                 buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
             )
+            handleBuildNo()
             pipelineRuntimeService.startLatestRunningBuild(
                 latestRunningBuild = LatestRunningBuild(
                     projectId = projectId,
@@ -224,6 +229,29 @@ class BuildStartControl @Autowired constructor(
         }
 
         return canStart
+    }
+
+    private fun PipelineBuildStartEvent.handleBuildNo() {
+        if (buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
+            // 防止"每次构建成功+1"读取到相同buildNo的情况正式启动前为var表设置最新的buildNo
+            val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
+            try {
+                buildNoLock.lock()
+                val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId = pipelineId)
+                val buildNo = buildSummary?.buildNo
+                if (buildNo != null) {
+                    buildVariableService.setVariable(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        varName = BUILD_NO,
+                        varValue = buildNo
+                    )
+                }
+            } finally {
+                buildNoLock.unlock()
+            }
+        }
     }
 
     private fun PipelineBuildStartEvent.broadcastStartEvent(buildInfo: BuildInfo) {

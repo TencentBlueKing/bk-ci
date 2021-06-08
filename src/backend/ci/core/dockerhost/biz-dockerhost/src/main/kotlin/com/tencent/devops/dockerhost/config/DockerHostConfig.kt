@@ -187,6 +187,9 @@ class DockerHostConfig {
     @Value("\${dockerhost.mode:#{null}}")
     var dockerhostMode: String? = null
 
+    @Value("\${dockerhost.dispatch.urlPrefix:ms/dispatch-docker}")
+    var dispatchUrlPrefix: String? = "ms/dispatch-docker"
+
     @Value("\${dockerhost.localIp:#{null}}")
     var dockerhostLocalIp: String? = null
 

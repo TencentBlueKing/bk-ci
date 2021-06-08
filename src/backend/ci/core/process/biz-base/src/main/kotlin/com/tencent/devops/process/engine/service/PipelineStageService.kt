@@ -222,6 +222,14 @@ class PipelineStageService @Autowired constructor(
                 dslContext = context, buildId = buildStage.buildId,
                 oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
             )
+
+            // #4255 stage审核超时恢复运行状态需要将运行状态+1，即使直接结束也会在finish阶段减回来
+            pipelineBuildSummaryDao.updateRunningCount(
+                dslContext = context,
+                pipelineId = buildStage.pipelineId,
+                buildId = buildStage.buildId,
+                runningIncrement = 1
+            )
         }
         // #3138 Stage Cancel 需要走finally Stage流程
         pipelineEventDispatcher.dispatch(
