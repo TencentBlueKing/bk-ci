@@ -135,7 +135,7 @@
             <div style="padding: 10px 0px 20px">{{ $t('template.updateDialogContent') }}</div>
             <div slot="footer" class="container-footer">
                 <div class="footer-wrapper">
-                    <bk-button theme="primary" @click="toInstanceManage">
+                    <bk-button theme="primary" @click="toInstanceManage(true)">
                         {{ $t('confirm') }}
                     </bk-button>
                 </div>
@@ -227,6 +227,9 @@
             if (this.hashVal) {
                 this.requestPipelineParams(this.hashVal, this.curVersionId)
             }
+            if (this.$route.query.useTemplateSettings === 'true') {
+                this.isTemplateSetting = true
+            }
         },
         methods: {
             async requestTemplateDatail (versionId) {
@@ -239,6 +242,12 @@
                         templateId: this.templateId,
                         versionId: versionId
                     })
+                    if (res && res.template && res.template.tips) {
+                        this.$showTips({
+                            message: res.template.tips,
+                            theme: 'error'
+                        })
+                    }
                     this.template.templateName = res.templateName
                     this.template.creator = res.creator
                     this.template.description = res.description
@@ -345,8 +354,18 @@
                 })
                 this.currentPipelineParams = this.pipelineNameList[0]
             },
-            toInstanceManage () {
-                this.$router.back()
+            toInstanceManage (isUpdate = false) {
+                const route = {
+                    name: 'templateInstance',
+                    params: {
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId
+                    }
+                }
+                if (isUpdate) {
+                    route.query = this.$route.query
+                }
+                this.$router.push(route)
             },
             changeVersion (newVal) {
                 this.requestTemplateDatail(newVal)

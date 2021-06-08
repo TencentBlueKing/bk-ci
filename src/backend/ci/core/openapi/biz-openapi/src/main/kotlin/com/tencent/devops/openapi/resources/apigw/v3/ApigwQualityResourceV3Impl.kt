@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.openapi.resources.apigw.v3
 
 import com.tencent.devops.common.api.pojo.Page
@@ -19,23 +46,69 @@ class ApigwQualityResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwQualityResourceV3 {
 
-    override fun listRule(appCode: String?, apigwType: String?, projectId: String, userId: String, page: Int?, pageSize: Int?): Result<Page<QualityRuleSummaryWithPermission>> {
+    override fun listRule(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<QualityRuleSummaryWithPermission>> {
         return client.get(ServiceQualityRuleResource::class).list(userId, projectId, page, pageSize)
     }
 
-    override fun createRule(appCode: String?, apigwType: String?, projectId: String, userId: String, rule: RuleCreateRequest): Result<String> {
+    override fun createRule(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        rule: RuleCreateRequest
+    ): Result<String> {
         return client.get(ServiceQualityRuleResource::class).create(userId, projectId, rule)
     }
 
-    override fun updateRule(appCode: String?, apigwType: String?, projectId: String, userId: String, ruleHashId: String, rule: RuleUpdateRequest): Result<Boolean> {
+    override fun updateRule(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        ruleHashId: String,
+        rule: RuleUpdateRequest
+    ): Result<Boolean> {
         return client.get(ServiceQualityRuleResource::class).update(userId, projectId, ruleHashId, rule)
     }
 
-    override fun deleteRule(appCode: String?, apigwType: String?, projectId: String, userId: String, ruleHashId: String): Result<Boolean> {
+    override fun deleteRule(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        ruleHashId: String
+    ): Result<Boolean> {
         return client.get(ServiceQualityRuleResource::class).delete(userId, projectId, ruleHashId)
     }
 
-    override fun listIntercepts(appCode: String?, apigwType: String?, projectId: String, userId: String, pipelineId: String?, ruleHashId: String?, interceptResult: RuleInterceptResult?, startTime: Long?, endTime: Long?, page: Int?, pageSize: Int?): Result<Page<RuleInterceptHistory>> {
-        return client.get(ServiceQualityInterceptResource::class).list(userId, projectId, pipelineId, ruleHashId, interceptResult, startTime, endTime, page, pageSize)
+    override fun listIntercepts(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        pipelineId: String?,
+        ruleHashId: String?,
+        interceptResult: RuleInterceptResult?,
+        startTime: Long?,
+        endTime: Long?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<RuleInterceptHistory>> {
+        return client.get(ServiceQualityInterceptResource::class).list(userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            ruleHashId = ruleHashId,
+            interceptResult = interceptResult,
+            startTime = startTime,
+            endTime = endTime,
+            page = page,
+            pageSize = pageSize)
     }
 }

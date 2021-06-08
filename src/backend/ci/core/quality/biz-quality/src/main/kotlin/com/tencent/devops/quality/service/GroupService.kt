@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -32,9 +33,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -60,16 +59,15 @@ class GroupService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val groupDao: GroupDao,
     private val bkAuthProjectApi: AuthProjectApi,
-    private val bkAuthPermissionApi: AuthPermissionApi,
-    private val bkAuthResourceApi: AuthResourceApi,
-    private val serviceCode: QualityAuthServiceCode
+    private val serviceCode: QualityAuthServiceCode,
+    private val qualityPermissionService: QualityPermissionService
 ) {
 
     private val resourceType = AuthResourceType.QUALITY_GROUP
     private val regex = Pattern.compile("[,;]")
 
     fun list(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<GroupSummaryWithPermission>> {
-        val groupPermissionListMap = filterGroup(
+        val groupPermissionListMap = qualityPermissionService.filterGroup(
             user = userId,
             projectId = projectId,
             authPermissions = setOf(AuthPermission.EDIT, AuthPermission.DELETE)
@@ -135,7 +133,7 @@ class GroupService @Autowired constructor(
             creator = userId,
             updator = userId
         )
-        createResource(userId, projectId, groupId, group.name)
+        qualityPermissionService.createGroupResource(userId, projectId, groupId, group.name)
     }
 
     fun get(userId: String, projectId: String, groupHashId: String): Group {
@@ -182,7 +180,7 @@ class GroupService @Autowired constructor(
 
     fun edit(userId: String, projectId: String, groupHashId: String, group: GroupUpdate) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
-        validatePermission(
+        qualityPermissionService.validateGroupPermission(
             userId = userId,
             projectId = projectId,
             groupId = groupId,
@@ -221,12 +219,12 @@ class GroupService @Autowired constructor(
             remark = group.remark,
             updator = userId
         )
-        modifyResource(projectId = projectId, groupId = groupId, groupName = group.name)
+        qualityPermissionService.modifyGroupResource(projectId = projectId, groupId = groupId, groupName = group.name)
     }
 
     fun delete(userId: String, projectId: String, groupHashId: String) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
-        validatePermission(
+        qualityPermissionService.validateGroupPermission(
             userId = userId,
             projectId = projectId,
             groupId = groupId,
@@ -234,76 +232,8 @@ class GroupService @Autowired constructor(
             message = "用户没有用户组的删除权限"
         )
 
-        deleteResource(projectId = projectId, groupId = groupId)
+        qualityPermissionService.deleteGroupResource(projectId = projectId, groupId = groupId)
         groupDao.delete(dslContext, groupId)
-    }
-
-    private fun validatePermission(userId: String, projectId: String, groupId: Long, authPermission: AuthPermission, message: String) {
-        if (!bkAuthPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = serviceCode,
-                resourceType = resourceType,
-                projectCode = projectId,
-                resourceCode = HashUtil.encodeLongId(groupId),
-                permission = authPermission
-            )) {
-            logger.error(message)
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias
-            )
-            throw ErrorCodeException(
-                statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = QualityMessageCode.NEED_USER_GROUP_X_PERMISSION,
-                defaultMessage = message,
-                params = arrayOf(permissionMsg))
-        }
-    }
-
-    private fun createResource(userId: String, projectId: String, groupId: Long, groupName: String) {
-        bkAuthResourceApi.createResource(
-            user = userId,
-            serviceCode = serviceCode,
-            resourceType = resourceType,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(groupId),
-            resourceName = groupName
-        )
-    }
-
-    private fun modifyResource(projectId: String, groupId: Long, groupName: String) {
-        bkAuthResourceApi.modifyResource(
-            serviceCode = serviceCode,
-            resourceType = resourceType,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(groupId),
-            resourceName = groupName
-        )
-    }
-
-    private fun deleteResource(projectId: String, groupId: Long) {
-        bkAuthResourceApi.deleteResource(
-            serviceCode = serviceCode,
-            resourceType = resourceType,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(groupId)
-        )
-    }
-
-    private fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
-        val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(
-            user = user,
-            serviceCode = serviceCode,
-            resourceType = resourceType,
-            projectCode = projectId,
-            permissions = authPermissions,
-            supplier = null
-        )
-        val map = mutableMapOf<AuthPermission, List<Long>>()
-        permissionResourceMap.forEach { (key, value) ->
-            map[key] = value.map { HashUtil.decodeIdToLong(it) }
-        }
-        return map
     }
 
     companion object {

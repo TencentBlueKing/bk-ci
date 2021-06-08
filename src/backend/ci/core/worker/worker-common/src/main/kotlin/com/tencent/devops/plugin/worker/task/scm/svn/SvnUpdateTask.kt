@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -62,6 +63,7 @@ import java.nio.file.Files
 import java.util.LinkedList
 import java.util.Queue
 
+@Suppress("ALL")
 open class SvnUpdateTask constructor(
     protected open val svnUrl: SVNURL,
     protected open val projectName: String,
@@ -136,7 +138,8 @@ open class SvnUpdateTask constructor(
 
                 // 如果都是HTTP协议，那么就不用转化， http:// https://
                 val url = formatUrl(
-                    if (!SvnUtils.isSSHProtocol(svnUrl.protocol) && !SvnUtils.isSSHProtocol(external.externalURL.protocol)) {
+                    if (!SvnUtils.isSSHProtocol(svnUrl.protocol) &&
+                        !SvnUtils.isSSHProtocol(external.externalURL.protocol)) {
                         external.externalURL
                     } else if (svnUrl.protocol != external.externalURL.protocol) {
                         convertUrl(external.externalURL)
@@ -148,8 +151,6 @@ open class SvnUpdateTask constructor(
                 val c = m.updateClient
                 registerEvent(c)
                 registerExternalHandler(c, externalQueue)
-                // client.doExport(url, external.externalPath, external.externalPegRevision, external.externalRevision, null, true, svnDepth)
-                // update(m, c, external.externalPath, external.externalRevision, true)
                 try {
                     pullCode(
                         m,
@@ -172,7 +173,13 @@ open class SvnUpdateTask constructor(
                         true,
                         svnDepth
                     )
-                    update(m, c, external.externalPath, external.externalRevision, true, true, false)
+                    update(manager = m,
+                        client = c,
+                        workspace = external.externalPath,
+                        revision = external.externalRevision,
+                        shouldRetry = true,
+                        printLog = true,
+                        cleanup = false)
                 }
             }
         } else {
@@ -235,28 +242,40 @@ open class SvnUpdateTask constructor(
     ): Long {
         try {
             return if (!update || !workspace.exists()) {
-                checkout(client, workspace, svnUrl, pegRevision, targetRevision, true, printLog)
+                checkout(client = client,
+                    workspace = workspace,
+                    svnUrl = svnUrl,
+                    pegRevision = pegRevision,
+                    revision = targetRevision,
+                    shouldRetry = true,
+                    printLog = printLog)
             } else {
                 if (!File(workspace, ".svn").exists()) {
                     LoggerService.addNormalLine("Clean the workspace($workspace) as there is no .svn file")
                     cleanupWorkspace(workspace)
-                    checkout(client, workspace, svnUrl, pegRevision, targetRevision, true, printLog)
+                    checkout(client = client,
+                        workspace = workspace,
+                        svnUrl = svnUrl,
+                        pegRevision = pegRevision,
+                        revision = targetRevision,
+                        shouldRetry = true,
+                        printLog = printLog)
                 } else {
                     update(
-                        manager,
-                        client,
-                        workspace,
-                        targetRevision,
-                        true,
-                        printLog,
-                        strategy != CodePullStrategy.INCREMENT_UPDATE
+                        manager = manager,
+                        client = client,
+                        workspace = workspace,
+                        revision = targetRevision,
+                        shouldRetry = true,
+                        printLog = printLog,
+                        cleanup = strategy != CodePullStrategy.INCREMENT_UPDATE
                     ) // Increment update don't clean up the workspace
                 }
             }
         } catch (t: Throwable) {
             logger.warn("Fail to pull the svn($svnUrl) update task", t)
             if (printLog) {
-                LoggerService.addNormalLine(Ansi().fgRed().a("Fail to pull svn($svnUrl) code because of ${t.message}").reset().toString())
+                LoggerService.addRedLine("Fail to pull svn($svnUrl) code because of ${t.message}")
             }
             throw t
         }
@@ -273,20 +292,20 @@ open class SvnUpdateTask constructor(
     ): Long {
         try {
             return switch(
-                manager,
-                client,
-                workspace,
-                svnUrl,
-                pegRevision,
-                targetRevision,
-                true,
-                printLog,
-                strategy != CodePullStrategy.INCREMENT_UPDATE
+                manager = manager,
+                client = client,
+                workspace = workspace,
+                svnUrl = svnUrl,
+                pegRevision = pegRevision,
+                revision = targetRevision,
+                shouldRetry = true,
+                printLog = printLog,
+                cleanup = strategy != CodePullStrategy.INCREMENT_UPDATE
             )
         } catch (t: Throwable) {
             logger.warn("Fail to switch the svn($svnUrl) update task", t)
             if (printLog) {
-                LoggerService.addNormalLine(Ansi().fgRed().a("Fail to switch svn($svnUrl) code because of ${t.message}").reset().toString())
+                LoggerService.addRedLine("Fail to switch svn($svnUrl) code because of ${t.message}")
             }
             throw t
         }
@@ -304,7 +323,8 @@ open class SvnUpdateTask constructor(
         val svnOperationFactory = client.operationsFactory
         try {
             if (svnVersion != null) {
-                LoggerService.addNormalLine("Start to checkout the code($svnUrl) to workspace(${workspace.path}) with svn version $svnVersion")
+                LoggerService.addNormalLine(
+                    "Start to checkout the code($svnUrl) to workspace(${workspace.path}) with svn version $svnVersion")
             } else {
                 LoggerService.addNormalLine("Start to checkout the code($svnUrl) to workspace(${workspace.path})")
             }
@@ -326,12 +346,12 @@ open class SvnUpdateTask constructor(
         } catch (e: SVNException) {
             if (shouldRetry) {
                 if (printLog) {
-                    LoggerService.addNormalLine(Ansi().fgYellow().a("Warning: fail to checkout code because of ${e.message}, retry").reset().toString())
+                    LoggerService.addYellowLine("Warning: fail to checkout code because of ${e.message}, retry")
                 }
                 return checkout(client, workspace, svnUrl, pegRevision, revision, false, printLog)
             } else {
                 if (printLog) {
-                    LoggerService.addNormalLine(Ansi().fgRed().a("Error: fail to checkout the code because of ${e.message}").reset().toString())
+                    LoggerService.addRedLine("Error: fail to checkout the code because of ${e.message}")
                 }
                 throw e
             }
@@ -354,7 +374,8 @@ open class SvnUpdateTask constructor(
         val svnOperationFactory = client.operationsFactory
         try {
             if (svnVersion != null) {
-                LoggerService.addNormalLine("Start to switch the code($svnUrl) to workspace(${workspace.path}) with svn version $svnVersion")
+                LoggerService.addNormalLine(
+                    "Start to switch the code($svnUrl) to workspace(${workspace.path}) with svn version $svnVersion")
             } else {
                 LoggerService.addNormalLine("Start to switch the code($svnUrl) to workspace(${workspace.path})")
             }
@@ -374,16 +395,23 @@ open class SvnUpdateTask constructor(
         } catch (e: SVNException) {
             if (shouldRetry) {
                 if (printLog) {
-                    LoggerService.addNormalLine(Ansi().fgYellow().a("Warning: fail to switch code because of ${e.message}, retry").reset().toString())
+                    LoggerService.addYellowLine("Warning: fail to switch code because of ${e.message}, retry")
                 }
                 if (cleanup) {
                     LoggerService.addNormalLine("Clean up the workspace")
                     SvnUtil.deleteWcLockAndCleanup(manager.wcClient, workspace)
                 }
-                return switch(manager, client, workspace, svnUrl, pegRevision, revision, false, printLog)
+                return switch(manager = manager,
+                    client = client,
+                    workspace = workspace,
+                    svnUrl = svnUrl,
+                    pegRevision = pegRevision,
+                    revision = revision,
+                    shouldRetry = false,
+                    printLog = printLog)
             } else {
                 if (printLog) {
-                    LoggerService.addNormalLine(Ansi().fgRed().a("Error: fail to switch the code because of ${e.message}").reset().toString())
+                    LoggerService.addRedLine("Error: fail to switch the code because of ${e.message}")
                 }
                 throw e
             }
@@ -411,7 +439,7 @@ open class SvnUpdateTask constructor(
         } catch (e: SVNException) {
             if (shouldRetry && isSVNErrorShouldRetry(e.errorMessage.errorCode)) {
                 if (printLog) {
-                    LoggerService.addNormalLine(Ansi().fgYellow().a("Warning: fail to update code because of ${e.message}, retry").reset().toString())
+                    LoggerService.addYellowLine("Warning: fail to update code because of ${e.message}, retry")
                 }
                 if (cleanup) {
                     LoggerService.addNormalLine("Clean up the workspace")
@@ -420,7 +448,7 @@ open class SvnUpdateTask constructor(
                 return update(manager, client, workspace, revision, false, printLog, cleanup)
             } else {
                 if (printLog) {
-                    LoggerService.addNormalLine(Ansi().fgRed().a("Error: fail to update the code").reset().toString())
+                    LoggerService.addRedLine("Error: fail to update the code")
                 }
                 throw e
             }
@@ -461,27 +489,41 @@ open class SvnUpdateTask constructor(
             override fun handleEvent(event: SVNEvent, progress: Double) {
                 val action = event.action
                 if (action == SVNEventAction.UPDATE_ADD || action == SVNEventAction.ADD) {
-                    LoggerService.addNormalLine(Ansi().fgGreen().a("A").reset().a("\t").a(event.file.path).reset().toString())
+                    LoggerService.addNormalLine(Ansi().fgGreen().a("A").reset()
+                        .a("\t").a(event.file.path).reset().toString())
                 } else if (action == SVNEventAction.UPDATE_DELETE || action == SVNEventAction.DELETE) {
-                    LoggerService.addNormalLine(Ansi().fgRed().a("D").reset().a("\t").a(event.file.path).reset().toString())
+                    LoggerService.addNormalLine(Ansi().fgRed().a("D").reset()
+                        .a("\t").a(event.file.path).reset().toString())
                 } else if (action == SVNEventAction.UPDATE_UPDATE) {
                     when (event.contentsStatus) {
-                        SVNStatusType.CHANGED ->
-                            LoggerService.addNormalLine(Ansi().fgBrightCyan().a("U").reset().a("\t").a(event.file.path).reset().toString())
-                        SVNStatusType.CONFLICTED ->
-                            LoggerService.addNormalLine(Ansi().fgBrightRed().a("C").reset().a("\t").a(event.file.path).reset().toString())
-                        SVNStatusType.MERGED ->
-                            LoggerService.addNormalLine(Ansi().fgBrightYellow().a("G").reset().a("\t").a(event.file.path).reset().toString())
+                        SVNStatusType.CHANGED -> {
+                            LoggerService.addNormalLine(
+                                Ansi().fgBrightCyan().a("U").reset().a("\t").a(event.file.path)
+                                    .reset().toString())
+                        }
+                        SVNStatusType.CONFLICTED -> {
+                            LoggerService.addNormalLine(
+                                Ansi().fgBrightRed().a("C").reset().a("\t").a(event.file.path)
+                                    .reset().toString())
+                        }
+                        SVNStatusType.MERGED -> {
+                            LoggerService.addNormalLine(
+                                Ansi().fgBrightYellow().a("G").reset().a("\t").a(event.file.path)
+                                    .reset().toString())
+                        }
                     }
                 } else if (action == SVNEventAction.UPDATE_EXTERNAL) {
                     LoggerService.addNormalLine("Fetching external item into '${event.file.path}'")
-                    LoggerService.addNormalLine(Ansi().a("External at revision ").fgBrightCyan().a(event.revision).reset().toString())
+                    LoggerService.addNormalLine(
+                        Ansi().a("External at revision ").fgBrightCyan().a(event.revision).reset().toString())
                 } else if (action == SVNEventAction.UPDATE_COMPLETED) {
-                    LoggerService.addNormalLine(Ansi().a("At revision ").fgCyan().a(event.revision).reset().toString())
+                    LoggerService.addNormalLine(
+                        Ansi().a("At revision ").fgCyan().a(event.revision).reset().toString())
                 } else if (action == SVNEventAction.LOCKED) {
-                    LoggerService.addNormalLine(Ansi().fgMagenta().a("L").reset().a("\t").a(event.file.path).reset().toString())
+                    LoggerService.addNormalLine(
+                        Ansi().fgMagenta().a("L").reset().a("\t").a(event.file.path).reset().toString())
                 } else if (action == SVNEventAction.LOCK_FAILED) {
-                    LoggerService.addNormalLine(Ansi().fgYellow().a("Failed to lock ${event.file.path}").reset().toString())
+                    LoggerService.addYellowLine("Failed to lock ${event.file.path}")
                 }
             }
 
@@ -491,7 +533,12 @@ open class SvnUpdateTask constructor(
     }
 
     private fun registerExternalHandler(client: SVNUpdateClient, externalQueue: Queue<External>) =
-        client.setExternalsHandler { externalPath: File, externalURL: SVNURL, externalRevision: SVNRevision, externalPegRevision: SVNRevision, externalsDefinition: String, externalsWorkingRevision: SVNRevision ->
+        client.setExternalsHandler { externalPath: File,
+                                     externalURL: SVNURL,
+                                     externalRevision: SVNRevision,
+                                     externalPegRevision: SVNRevision,
+                                     externalsDefinition: String,
+                                     externalsWorkingRevision: SVNRevision ->
             if ("http" == externalURL.protocol || "https" == externalURL.protocol) {
                 LoggerService.addNormalLine("Need to convert the http svn url to ssh - $externalURL")
             } else {
@@ -499,12 +546,12 @@ open class SvnUpdateTask constructor(
             }
             externalQueue.add(
                 External(
-                    externalPath,
-                    externalURL,
-                    externalRevision,
-                    externalPegRevision,
-                    externalsDefinition,
-                    externalsWorkingRevision
+                    externalPath = externalPath,
+                    externalURL = externalURL,
+                    externalRevision = externalRevision,
+                    externalPegRevision = externalPegRevision,
+                    externalsDefinition = externalsDefinition,
+                    externalsWorkingRevision = externalsWorkingRevision
                 )
             )
             ISVNExternalsHandler.DEFAULT.handleExternal(
@@ -518,9 +565,9 @@ open class SvnUpdateTask constructor(
         }
 
     private fun isSVNErrorShouldRetry(svnErrorCode: SVNErrorCode?) =
-        svnErrorCode != null && (SVN_ERROR_CATEGORIES_SHOULD_RETRY.contains(svnErrorCode.category) || SVN_ERROR_CODES_SHOULD_RETRY.contains(
-            svnErrorCode.code
-        ))
+        svnErrorCode != null &&
+            (SVN_ERROR_CATEGORIES_SHOULD_RETRY.contains(svnErrorCode.category) ||
+                SVN_ERROR_CODES_SHOULD_RETRY.contains(svnErrorCode.code))
 
     private fun checkLocalSvnRepo() {
         if (!workspace.exists()) {

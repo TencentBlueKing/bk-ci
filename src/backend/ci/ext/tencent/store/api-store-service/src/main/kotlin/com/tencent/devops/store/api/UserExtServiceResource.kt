@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,6 +30,7 @@ package com.tencent.devops.store.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.ServiceBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.dto.ExtSubmitDTO
@@ -36,7 +38,7 @@ import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
-import com.tencent.devops.store.pojo.vo.ServiceVersionListResp
+import com.tencent.devops.store.pojo.vo.ServiceVersionListItem
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -132,8 +134,14 @@ interface UserExtServiceResource {
         userId: String,
         @ApiParam("serviceCode", required = true)
         @QueryParam("serviceCode")
-        serviceCode: String
-    ): Result<ServiceVersionListResp>
+        serviceCode: String,
+        @ApiParam("页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 10
+    ): Result<Page<ServiceVersionListItem>>
 
     @ApiOperation("添加媒体信息、可见范围")
     @POST

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,6 +28,9 @@ package com.tencent.devops.openapi.service.apigw
 
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.consul.ConsulConstants
+import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
@@ -43,7 +47,7 @@ import org.springframework.stereotype.Service
 @Service
 class ApigwProjectService(
     private val client: Client,
-    private val organizationProjectService: OrganizationProjectService
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
@@ -58,7 +62,8 @@ class ApigwProjectService(
         centerName: String?,
         interfaceName: String? = "ApigwProjectService"
     ): List<ProjectVO>? {
-        logger.info("$interfaceName:getListByOrganizationId:Input($userId,$organizationType,$organizationId,$deptName,$centerName)")
+        logger.info("$interfaceName:getListByOrganizationId:Input(" +
+            "$userId,$organizationType,$organizationId,$deptName,$centerName)")
         return client.get(ServiceTxProjectResource::class).getProjectByName(
             userId = userId,
             organizationType = organizationType,
@@ -113,8 +118,13 @@ class ApigwProjectService(
         organizationId: Long,
         createInfo: ProjectCreateUserDTO
     ): Boolean? {
-        logger.info("createProjectUserByApp:organizationType[$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createProjectUserByApp(organizationType, organizationId, createInfo).data
+        logger.info("createProjectUserByApp:organizationType[" +
+            "$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
+        return client.get(ServiceTxProjectResource::class).createProjectUserByApp(
+            organizationType = organizationType,
+            organizationId = organizationId,
+            createInfo = createInfo
+        ).data
     }
 
     fun createPipelinePermissionByUser(
@@ -122,8 +132,13 @@ class ApigwProjectService(
         accessToken: String,
         createInfo: PipelinePermissionInfo
     ): Boolean? {
-        logger.info("createPipelinePermission:createUserId[$createUserId],accessToken[$accessToken],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByUser(createUserId, accessToken, createInfo).data
+        logger.info("createPipelinePermission:createUserId[" +
+            "$createUserId],accessToken[$accessToken],createInfo[$createInfo]")
+        return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByUser(
+            accessToken = createUserId,
+            createUser = accessToken,
+            createInfo = createInfo
+        ).data
     }
 
     fun createPipelinePermissionByApp(
@@ -131,8 +146,13 @@ class ApigwProjectService(
         organizationId: Long,
         createInfo: PipelinePermissionInfo
     ): Boolean? {
-        logger.info("createPipelinePermission:organizationType[$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByApp(organizationType, organizationId, createInfo).data
+        logger.info("createPipelinePermission:organizationType[" +
+            "$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
+        return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByApp(
+            organizationType = organizationType,
+            organizationId = organizationId,
+            createInfo = createInfo
+        ).data
     }
 
     fun getProjectRoles(
@@ -140,7 +160,21 @@ class ApigwProjectService(
         organizationId: Long,
         projectCode: String
     ): List<BKAuthProjectRolesResources>? {
-        logger.info("createPipelinePermission:organizationType[$organizationType],organizationId[$organizationId],projectCode[$projectCode]")
-        return client.get(ServiceTxProjectResource::class).getProjectRoles(projectCode, organizationType, organizationId).data
+        logger.info("createPipelinePermission:organizationType[" +
+            "$organizationType],organizationId[$organizationId],projectCode[$projectCode]")
+        return client.get(ServiceTxProjectResource::class).getProjectRoles(
+            projectCode = projectCode,
+            organizationType = organizationType,
+            organizationId = organizationId
+        ).data
+    }
+
+    fun setProjectRouteType(
+        projectCode: String
+    ) {
+        val projectRouteTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectCode)
+        if (!projectRouteTag.isNullOrBlank()) {
+            ConsulContent.setConsulContent(projectRouteTag)
+        }
     }
 }

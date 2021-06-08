@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,6 +34,7 @@ import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
+import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvironmentId
@@ -40,7 +42,6 @@ import com.tencent.devops.environment.pojo.enums.NodeSource
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.utils.BcsVmParamCheckUtils
 import com.tencent.devops.environment.utils.NodeStringIdUtils
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,7 +64,6 @@ class BcsVmEnvCreatorImpl @Autowired constructor(
     }
 
     override fun createEnv(projectId: String, userId: String, envCreateInfo: EnvCreateInfo): EnvironmentId {
-
         val now = LocalDateTime.now()
 
         // 创建 BCSVM 节点
@@ -84,28 +84,19 @@ class BcsVmEnvCreatorImpl @Autowired constructor(
             resMemory = vmCreateInfoP.third
         )
         val nodeList = bcsVmList.map {
-            TNodeRecord(
-                null,
-                "",
-                projectId,
-                it.ip,
-                it.name,
-                it.status,
-                NodeType.BCSVM.name,
-                it.clusterId,
-                projectId,
-                userId,
-                now,
-                now.plusDays(envCreateInfo.bcsVmParam!!.validity.toLong()),
-                it.osName,
-                null,
-                null,
-                false,
-                "",
-                "",
-                null,
-                now,
-                userId
+            CreateNodeModel(
+                nodeStringId = "",
+                projectId = projectId,
+                nodeIp = it.ip,
+                nodeName = it.name,
+                nodeStatus = it.status,
+                nodeType = NodeType.BCSVM.name,
+                nodeClusterId = it.clusterId,
+                nodeNamespace = projectId,
+                createdUser = userId,
+                expireTime = now.plusDays(envCreateInfo.bcsVmParam!!.validity.toLong()),
+                osName = it.osName,
+                agentStatus = false
             )
         }
 

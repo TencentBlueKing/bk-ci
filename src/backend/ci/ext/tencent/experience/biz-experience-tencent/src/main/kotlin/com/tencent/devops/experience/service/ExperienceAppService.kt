@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -32,17 +33,22 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.experience.constant.ExperienceConstant
+import com.tencent.devops.experience.constant.ExperienceConditionEnum
+import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
+import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
+import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
+import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -54,8 +60,8 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.Executors
 
 @Service
@@ -63,9 +69,11 @@ class ExperienceAppService(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val experienceDao: ExperienceDao,
+    private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val experienceGroupDao: ExperienceGroupDao,
+    private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val client: Client
 ) {
 
@@ -76,101 +84,48 @@ class ExperienceAppService(
         offset: Int,
         limit: Int,
         groupByBundleId: Boolean,
-        platform: Int? = null
+        platform: Int? = null,
+        organization: String? = null
     ): Pagination<AppExperience> {
-        val expireTime = DateUtil.today()
-
-        var recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
-
-        if (groupByBundleId) {
-            recordIds = experienceDao.listIdsGroupByBundleId(
-                dslContext,
-                recordIds,
-                expireTime,
-                true
-            ).map { it.value1() }.toMutableSet()
-        }
-
-        val platformStr = PlatformEnum.of(platform)?.name
-
-        val records = experienceDao.listByIds(
-            dslContext,
-            recordIds,
-            platformStr,
-            expireTime,
-            true,
-            offset,
-            limit
+        return experienceBaseService.list(
+            userId = userId,
+            offset = offset,
+            limit = limit,
+            groupByBundleId = groupByBundleId,
+            platform = platform,
+            isOuter = organization == ORGANIZATION_OUTER
         )
+    }
 
-        // 同步图片
-        syncIcon(records)
+    @SuppressWarnings("ComplexMethod")
+    fun detail(
+        userId: String,
+        experienceHashId: String,
+        platform: Int,
+        appVersion: String?,
+        organization: String?
+    ): AppExperienceDetail {
+        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
+        val isOuter = organization == ORGANIZATION_OUTER
 
-        val result = records.map {
-            AppExperience(
-                experienceHashId = HashUtil.encodeLongId(it.id),
-                platform = PlatformEnum.valueOf(it.platform),
-                source = Source.valueOf(it.source),
-                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                name = it.projectId,
-                version = it.version,
-                bundleIdentifier = it.bundleIdentifier,
-                experienceName = it.experienceName ?: it.projectId,
-                versionTitle = it.versionTitle ?: it.name,
-                categoryId = if (it.category == null || it.category < 0) ProductCategoryEnum.LIFE.id else it.category,
-                productOwner = objectMapper.readValue(it.productOwner),
-                size = it.size,
-                createDate = it.createTime.timestampmilli()
+        val isPublic = experienceBaseService.isPublic(experienceId)
+        val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
+
+        val experience = experienceDao.get(dslContext, experienceId)
+
+        // 新版本且没权限
+        if (!isOldVersion && !isPublic && !isInPrivate) {
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "请联系产品负责人：\n${experience.creator} 授予体验权限。",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
             )
         }
 
-        val hasNext = if (result.size < limit) {
-            false
-        } else {
-            experienceDao.countByIds(dslContext, recordIds, platformStr, expireTime, true) > offset + limit
-        }
-
-        return Pagination(hasNext, result)
-    }
-
-    private fun syncIcon(records: Result<TExperienceRecord>) {
-        // 同步图片
-        val projectToIcon = mutableMapOf<String, String>()
-        val unSyncIconProjectIds = mutableSetOf<String>()
-        records.forEach {
-            if (StringUtils.isBlank(it.logoUrl)) {
-                unSyncIconProjectIds.add(it.projectId)
-            } else {
-                projectToIcon[it.projectId] = it.logoUrl
-            }
-        }
-        if (unSyncIconProjectIds.isNotEmpty()) {
-            val projectList =
-                client.get(ServiceProjectResource::class).listByProjectCode(unSyncIconProjectIds).data ?: listOf()
-            projectList.forEach {
-                projectToIcon[it.projectCode] = it.logoAddr ?: ""
-            }
-            unSyncIconProjectIds.forEach {
-                experienceDao.updateIconByProjectIds(dslContext, it, projectToIcon[it] ?: "")
-            }
-
-            records.forEach {
-                if (StringUtils.isBlank(it.logoUrl)) {
-                    it.logoUrl = projectToIcon[it.projectId] ?: ""
-                }
-            }
-        }
-    }
-
-    fun detail(userId: String, experienceHashId: String, platform: Int, appVersion: String?): AppExperienceDetail {
-        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        val experience = experienceDao.get(dslContext, experienceId)
         val projectId = experience.projectId
         val bundleIdentifier = experience.bundleIdentifier
-
         val isExpired = DateUtil.isExpired(experience.endDate)
-        val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
-
         val logoUrl = UrlUtil.toOuterPhotoAddr(experience.logoUrl)
         val projectName = experience.projectId
         val version = experience.version
@@ -182,11 +137,20 @@ class ExperienceAppService(
         val versionTitle =
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
-        val publicExperience = experienceGroupDao.count(dslContext, experience.id, ExperienceConstant.PUBLIC_GROUP) > 0
+        val isPrivate = experienceBaseService.isPrivate(experienceId, isOuter)
+        val experienceCondition = getExperienceCondition(isPublic, isPrivate, isInPrivate)
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
 
-        val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val changeLog = if (isOldVersion) {
-            getChangeLog(projectId, bundleIdentifier, null, 1, 1000, true)
+            getChangeLog(
+                userId = userId,
+                projectId = projectId,
+                bundleIdentifier = bundleIdentifier,
+                platform = null,
+                page = 1,
+                pageSize = 1000,
+                isOldVersion = true
+            )
         } else {
             emptyList() // 新版本使用changeLog接口
         }
@@ -204,7 +168,7 @@ class ExperienceAppService(
             platform = PlatformEnum.valueOf(experience.platform),
             version = version,
             expired = isExpired,
-            canExperience = canExperience,
+            canExperience = isPublic || isInPrivate,
             online = experience.online,
             changeLog = changeLog,
             experienceName = experienceName,
@@ -213,28 +177,53 @@ class ExperienceAppService(
             productOwner = objectMapper.readValue(experience.productOwner),
             createDate = experience.updateTime.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
             endDate = experience.endDate.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
-            publicExperience = publicExperience,
+            publicExperience = isPublic,
             remark = experience.remark,
-            bundleIdentifier = experience.bundleIdentifier
+            bundleIdentifier = experience.bundleIdentifier,
+            experienceCondition = experienceCondition.id,
+            appScheme = experience.scheme,
+            lastDownloadHashId = lastDownloadMap[experience.projectId +
+                    experience.bundleIdentifier +
+                    experience.platform]
+                ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
         )
+    }
+
+    private fun getExperienceCondition(
+        isPublic: Boolean,
+        isPrivate: Boolean,
+        isInPrivate: Boolean
+    ): ExperienceConditionEnum {
+        return if (isPublic && !isPrivate) {
+            ExperienceConditionEnum.JUST_PUBLIC
+        } else if (!isPublic && isPrivate) {
+            ExperienceConditionEnum.JUST_PRIVATE
+        } else if (isInPrivate) {
+            ExperienceConditionEnum.BOTH_WITH_PRIVATE
+        } else {
+            ExperienceConditionEnum.BOTH_WITHOUT_PRIVATE
+        }
     }
 
     fun changeLog(
         userId: String,
         experienceHashId: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        organization: String?
     ): Pagination<ExperienceChangeLog> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
         val changeLog =
             getChangeLog(
-                experience.projectId,
-                experience.bundleIdentifier,
-                experience.platform,
-                if (page <= 0) 1 else page,
-                if (pageSize <= 0) 10 else pageSize,
-                false
+                userId = userId,
+                projectId = experience.projectId,
+                bundleIdentifier = experience.bundleIdentifier,
+                platform = experience.platform,
+                page = if (page <= 0) 1 else page,
+                pageSize = if (pageSize <= 0) 10 else pageSize,
+                isOldVersion = false,
+                isOuter = organization == ORGANIZATION_OUTER
             )
         val hasNext = if (changeLog.size < pageSize) {
             false
@@ -251,21 +240,37 @@ class ExperienceAppService(
     }
 
     private fun getChangeLog(
+        userId: String,
         projectId: String,
         bundleIdentifier: String,
         platform: String?,
         page: Int,
         pageSize: Int,
-        isOldVersion: Boolean
+        isOldVersion: Boolean,
+        isOuter: Boolean = false
     ): List<ExperienceChangeLog> {
+        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE, isOuter)
+        val now = LocalDateTime.now()
+        val lastDownloadRecord = platform?.let {
+            experienceLastDownloadDao.get(
+                dslContext,
+                userId = userId,
+                bundleId = bundleIdentifier,
+                projectId = projectId,
+                platform = it
+            )
+        }
+
         val experienceList = experienceDao.listByBundleIdentifier(
-            dslContext,
-            projectId,
-            bundleIdentifier,
-            platform,
-            (page - 1) * pageSize,
-            pageSize
+            dslContext = dslContext,
+            projectId = projectId,
+            bundleIdentifier = bundleIdentifier,
+            platform = platform,
+            recordIds = recordIds,
+            offset = (page - 1) * pageSize,
+            limit = pageSize
         )
+
         return experienceList.map {
             ExperienceChangeLog(
                 experienceHashId = HashUtil.encodeLongId(it.id),
@@ -274,9 +279,17 @@ class ExperienceAppService(
                 createDate = it.createTime.run { if (isOldVersion) timestamp() else timestampmilli() },
                 changelog = it.remark ?: "",
                 experienceName = it.experienceName,
-                size = it.size
+                size = it.size,
+                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
+                bundleIdentifier = it.bundleIdentifier,
+                appScheme = it.scheme,
+                expired = now.isAfter(it.endDate),
+                lastDownloadHashId = lastDownloadRecord?.let { last ->
+                    HashUtil.encodeLongId(last.lastDonwloadRecordId)
+                } ?: "",
+                versionTitle = it.versionTitle
             )
-        }
+        }.toList()
     }
 
     private fun syncExperienceSize(
@@ -297,9 +310,13 @@ class ExperienceAppService(
         }
     }
 
-    fun downloadUrl(userId: String, experienceHashId: String): DownloadUrl {
+    fun downloadUrl(userId: String, experienceHashId: String, organization: String?): DownloadUrl {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        return experienceDownloadService.getExternalDownloadUrl(userId, experienceId)
+        return experienceDownloadService.getExternalDownloadUrl(
+            userId = userId,
+            experienceId = experienceId,
+            isOuter = organization == ORGANIZATION_OUTER
+        )
     }
 
     fun history(userId: String, appVersion: String?, projectId: String): List<AppExperienceSummary> {

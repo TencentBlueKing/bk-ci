@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -45,11 +46,26 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
                 variables = variables
             )
         )
+        params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
+            ""
+        } else {
+            EnvUtils.parseEnv(element.excludeUsers!!.joinToString(","), variables)
+        }
         if (element.branchName == null) {
             return null
         }
         params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
         params.codeType = CodeType.GITLAB
+        params.eventType = element.eventType
+        params.block = element.block ?: false
+        params.eventType = element.eventType
+        params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
+        params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
+        params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
+        params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
+        params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
+        params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
+        params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
         return params
     }
 }

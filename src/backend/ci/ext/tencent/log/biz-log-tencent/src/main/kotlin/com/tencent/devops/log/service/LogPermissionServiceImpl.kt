@@ -1,14 +1,3 @@
-package com.tencent.devops.log.service
-
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -21,12 +10,13 @@ import org.springframework.stereotype.Service
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,13 +25,27 @@ import org.springframework.stereotype.Service
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Service
+package com.tencent.devops.log.service
+
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import org.springframework.beans.factory.annotation.Autowired
+
 class LogPermissionServiceImpl @Autowired constructor(
     private val authPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val managerService: ManagerService
 ) : LogPermissionService {
-    override fun verifyUserLogPermission(projectCode: String, pipelineId: String, userId: String): Boolean {
+    override fun verifyUserLogPermission(
+        projectCode: String,
+        pipelineId: String,
+        userId: String,
+        permission: AuthPermission?
+    ): Boolean {
         if (authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,

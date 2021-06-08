@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -45,6 +46,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_REPO_NAME
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_REPO_NAME
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -198,7 +200,7 @@ class GitWebHookStartParam(
                 gitCommit.added?.forEachIndexed { innerIndex, file ->
                     startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
                     count++
-                    if (count > MAX_VARITABLE_COUNT) return@run
+                    if (count > MAX_VARIABLE_COUNT) return@run
                 }
             }
 
@@ -206,7 +208,7 @@ class GitWebHookStartParam(
                 gitCommit.modified?.forEachIndexed { innerIndex, file ->
                     startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
                     count++
-                    if (count > MAX_VARITABLE_COUNT) return@run
+                    if (count > MAX_VARIABLE_COUNT) return@run
                 }
             }
 
@@ -214,20 +216,26 @@ class GitWebHookStartParam(
                 gitCommit.removed?.forEachIndexed { innerIndex, file ->
                     startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
                     count++
-                    if (count > MAX_VARITABLE_COUNT) return@run
+                    if (count > MAX_VARIABLE_COUNT) return@run
                 }
             }
         }
     }
 
+    @Suppress("ALL")
     private fun mrStartParam(startParams: MutableMap<String, Any>) {
-        val mrRequestId = matcher.getMergeRequestId()
+        val gitMrEvent = matcher.event as GitMergeRequestEvent
+        val mrRequestId = if (repo is CodeGitlabRepository) {
+            gitMrEvent.object_attributes.iid
+        } else {
+            gitMrEvent.object_attributes.id
+        }
         // MR提交人
         val gitScmService = SpringContextUtil.getBean(GitScmService::class.java)
         val mrInfo = gitScmService.getMergeRequestInfo(projectId, mrRequestId, repo)
         val reviewers = gitScmService.getMergeRequestReviewersInfo(projectId, mrRequestId, repo)?.reviewers
 
-        startParams[PIPELINE_WEBHOOK_MR_ID] = mrRequestId!!
+        startParams[PIPELINE_WEBHOOK_MR_ID] = mrRequestId
         startParams[PIPELINE_WEBHOOK_MR_COMMITTER] = mrInfo?.author?.username ?: ""
 
         startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = mrInfo?.author?.username ?: ""
@@ -235,10 +243,8 @@ class GitWebHookStartParam(
         startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = matcher.getHookSourceUrl() ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = mrInfo?.createTime ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = mrInfo?.updateTime ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
-            DateTimeUtil.zoneDateToTimestamp(mrInfo?.createTime)
-        startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
-            DateTimeUtil.zoneDateToTimestamp(mrInfo?.updateTime)
+        startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] = DateTimeUtil.zoneDateToTimestamp(mrInfo?.createTime)
+        startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] = DateTimeUtil.zoneDateToTimestamp(mrInfo?.updateTime)
         startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo?.mrId ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo?.mrNumber ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrInfo?.description ?: ""
@@ -251,7 +257,7 @@ class GitWebHookStartParam(
     }
 
     companion object {
-        private const val MAX_VARITABLE_COUNT = 32
+        private const val MAX_VARIABLE_COUNT = 32
         private val logger = LoggerFactory.getLogger(GitWebHookStartParam::class.java)
     }
 }

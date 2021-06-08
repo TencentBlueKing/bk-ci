@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,25 +27,31 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.BusTypeEnum
 import com.tencent.devops.common.api.enums.TaskStatusEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceHistoryDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.template.TemplateService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 @Service
 class PipelineAtomRollBackCronService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -52,7 +59,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
     private val pipelineAtomReplaceItemDao: PipelineAtomReplaceItemDao,
     private val pipelineAtomReplaceHistoryDao: PipelineAtomReplaceHistoryDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val templateService: TemplateService,
+    private val templateFacadeService: TemplateFacadeService,
     private val redisOperation: RedisOperation
 ) {
     companion object {
@@ -62,8 +69,15 @@ class PipelineAtomRollBackCronService @Autowired constructor(
         private const val HISTORY_PAGE_SIZE = 100
     }
 
+    @Value("\${pipeline.atom.replaceSwitch:true}")
+    private val switch: Boolean = true
+
     @Scheduled(cron = "0 0/1 * * * ?")
     fun pipelineAtomRollBack() {
+        if (!switch) {
+            // 开关关闭，则不替换回滚
+            return
+        }
         val lock = RedisLock(redisOperation, LOCK_KEY, 3000)
         try {
             if (!lock.tryLock()) {
@@ -209,11 +223,36 @@ class PipelineAtomRollBackCronService @Autowired constructor(
     private fun rollBackPipelineReplaceHistory(pipelineReplaceHistory: TPipelineAtomReplaceHistoryRecord) {
         val historyId = pipelineReplaceHistory.id
         val pipelineId = pipelineReplaceHistory.busId
-        val sourceModel =
-            pipelineRepositoryService.getModel(pipelineId = pipelineId, version = pipelineReplaceHistory.sourceVersion)
-                ?: return
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId = pipelineId) ?: return
         try {
+            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId = pipelineId)
+            if (pipelineInfo == null) {
+                val params = arrayOf(pipelineId)
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = params,
+                    defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                        messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                        params = params
+                    )
+                )
+            }
+            val sourceVersion = pipelineReplaceHistory.sourceVersion
+            val sourceModel =
+                pipelineRepositoryService.getModel(pipelineId = pipelineId, version = sourceVersion)
+            if (sourceModel == null) {
+                val params = arrayOf("$pipelineId+$sourceVersion")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = params,
+                    defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                        messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                        params = params
+                    )
+                )
+            }
+            sourceModel.latestVersion = 0 // latestVersion置为0以便适配修改流水线的校验逻辑
             pipelineRepositoryService.deployPipeline(
                 model = sourceModel,
                 projectId = pipelineReplaceHistory.projectId,
@@ -244,14 +283,14 @@ class PipelineAtomRollBackCronService @Autowired constructor(
         val historyId = templateReplaceHistory.id
         val templateId = templateReplaceHistory.busId
         val projectId = templateReplaceHistory.projectId
-        val template = templateService.getTemplate(
+        val template = templateFacadeService.getTemplate(
             projectId = templateReplaceHistory.projectId,
             userId = templateReplaceHistory.creator,
             templateId = templateId,
             version = templateReplaceHistory.sourceVersion.toLong()
         )
         try {
-            templateService.updateTemplate(
+            templateFacadeService.updateTemplate(
                 projectId = projectId,
                 userId = template.creator,
                 templateId = templateId,

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
@@ -57,6 +59,7 @@ import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
+import com.tencent.devops.store.utils.StoreUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -81,7 +84,8 @@ class OpAtomServiceImpl @Autowired constructor(
     private val atomQualityService: AtomQualityService,
     private val atomNotifyService: AtomNotifyService,
     private val marketAtomCommonService: MarketAtomCommonService,
-    private val storeWebsocketService: StoreWebsocketService
+    private val storeWebsocketService: StoreWebsocketService,
+    private val redisOperation: RedisOperation
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
@@ -145,8 +149,7 @@ class OpAtomServiceImpl @Autowired constructor(
      */
     override fun getPipelineAtom(atomCode: String, version: String): Result<Atom?> {
         logger.info("the atomCode is: $atomCode,version is:$version")
-        val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version.replace("*", ""))
-        logger.info("the pipelineAtomRecord is :$pipelineAtomRecord")
+        val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version)
         return Result(
             if (pipelineAtomRecord == null) {
                 null
@@ -257,12 +260,12 @@ class OpAtomServiceImpl @Autowired constructor(
                         latestUpgradeTime = pubTime
                     )
                 )
-                // 处理post操作缓存
-                marketAtomCommonService.handleAtomPostCache(
+                // 处理插件缓存
+                marketAtomCommonService.handleAtomCache(
                     atomId = atomId,
                     atomCode = atomCode,
                     version = atom.version,
-                    atomStatus = atomStatus
+                    releaseFlag = true
                 )
             }
 
@@ -276,6 +279,13 @@ class OpAtomServiceImpl @Autowired constructor(
                 latestFlag = latestFlag,
                 pubTime = pubTime
             )
+
+            // 更新默认插件缓存
+            if (approveReq.defaultFlag) {
+                redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
+            } else {
+                redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
+            }
 
             // 更新质量红线信息
             atomQualityService.updateQualityInApprove(approveReq.atomCode, atomStatus)

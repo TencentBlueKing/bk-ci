@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,6 +30,8 @@ package com.tencent.devops.gitci.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.pojo.RtxCustomProperty
+import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -41,7 +44,8 @@ import org.springframework.stereotype.Service
 class GitRepositoryConfService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val gitCISettingDao: GitCISettingDao
+    private val gitCISettingDao: GitCISettingDao,
+    private val gitCIBasicSettingService: GitCIBasicSettingService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitRepositoryConfService::class.java)
@@ -64,7 +68,11 @@ class GitRepositoryConfService @Autowired constructor(
                     createTime = null,
                     updateTime = null,
                     projectCode = null,
-                    limitConcurrentJobs = null
+                    limitConcurrentJobs = null,
+                    rtxCustomProperty = RtxCustomProperty(true, setOf()),
+                    rtxGroupProperty = null,
+                    emailProperty = null,
+                    onlyFailedNotify = true
                 )
             )
         } else {
@@ -105,7 +113,29 @@ class GitRepositoryConfService @Autowired constructor(
     }
 
     fun getGitCIConf(gitProjectId: Long): GitRepositoryConf? {
-        return gitCISettingDao.getSetting(dslContext, gitProjectId)
+        val repo = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: return null
+        with(repo) {
+            return GitRepositoryConf(
+                gitProjectId = gitProjectId,
+                name = name,
+                url = url,
+                homepage = homepage,
+                gitHttpUrl = gitHttpUrl,
+                gitSshUrl = gitSshUrl,
+                enableCi = enableCi,
+                buildPushedBranches = buildPushedBranches,
+                limitConcurrentJobs = null,
+                buildPushedPullRequest = buildPushedPullRequest,
+                env = null,
+                projectCode = projectCode,
+                rtxCustomProperty = null,
+                emailProperty = null,
+                rtxGroupProperty = null,
+                enableMrBlock = enableMrBlock,
+                createTime = createTime,
+                updateTime = updateTime
+            )
+        }
     }
 
     fun saveGitCIConf(userId: String, repositoryConf: GitRepositoryConf): Boolean {

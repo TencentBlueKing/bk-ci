@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,8 +36,8 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.MacOSGray
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
@@ -44,15 +45,20 @@ import com.tencent.devops.project.dao.ProjectLocalDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
+import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.SystemEnums
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
+import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import org.springframework.util.CollectionUtils
@@ -69,22 +75,27 @@ class OpProjectServiceImpl @Autowired constructor(
     private val paasCCService: ProjectPaasCCService,
     private val bkAuthProjectApi: AuthProjectApi,
     private val bsAuthTokenApi: AuthTokenApi,
-    repoGray: RepoGray,
     macosGray: MacOSGray,
     private val tofService: TOFService,
-    private val bsPipelineAuthServiceCode: AuthServiceCode
+    private val bsPipelineAuthServiceCode: AuthServiceCode,
+    private val projectTagService: ProjectTagService
 ) : AbsOpProjectServiceImpl(
     dslContext,
     projectDao,
     projectLabelRelDao,
     redisOperation,
     gray,
-    repoGray,
     macosGray,
     projectDispatcher
 ) {
 
     private final val redisProjectKey = "BK:PROJECT:INFO:"
+
+    @Value("\${prod.tag:#{null}}")
+    private val prodTag: String? = null
+
+    @Value("\${gray.tag:#{null}}")
+    private val grayTag: String? = null
 
     override fun updateProjectFromOp(
         userId: String,
@@ -131,7 +142,11 @@ class OpProjectServiceImpl @Autowired constructor(
                 projectId = projectId,
                 labelIdList = labelIdList!!
             )
-
+            if (!projectInfoRequest.secrecyFlag) {
+                redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, dbProjectRecord.englishName)
+            } else {
+                redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, dbProjectRecord.englishName)
+            }
             projectDispatcher.dispatch(
                 ProjectUpdateBroadCastEvent(
                     userId = userId,
@@ -292,5 +307,49 @@ class OpProjectServiceImpl @Autowired constructor(
         logger.warn("syn fail list: $failList")
         logger.info("syn project time: ${endTime - startTime}, syn project count: ${synProject.size} ")
         return Result(synProject)
+    }
+
+    override fun setGrayExt(projectCodeList: List<String>, operateFlag: Int, system: SystemEnums) {
+        val routerTag = when (operateFlag) {
+            grayLable -> {
+                grayTag
+            }
+            prodLable -> {
+                prodTag
+            }
+            else -> {
+                null
+            }
+        }
+
+        if (routerTag.isNullOrEmpty()) {
+            return
+        }
+
+        if (system == SystemEnums.CI) {
+            val projectTagUpdateDTO = ProjectTagUpdateDTO(
+                routerTag = routerTag!!,
+                bgId = null,
+                deptId = null,
+                centerId = null,
+                projectCodeList = projectCodeList,
+                channel = null
+            )
+            projectTagService.updateTagByProject(projectTagUpdateDTO)
+        } else if (system == SystemEnums.CODECC || system == SystemEnums.REPO) {
+            val projectTagUpdateDTO = ProjectExtSystemTagDTO(
+                routerTag = routerTag!!,
+                projectCodeList = projectCodeList,
+                system = system.name
+            )
+            projectTagService.updateExtSystemRouterTag(projectTagUpdateDTO)
+        } else {
+            return
+        }
+    }
+
+    companion object {
+        final const val grayLable = 1
+        final const val prodLable = 2
     }
 }

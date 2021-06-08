@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -40,6 +41,7 @@ import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
 @Repository
+@Suppress("ALL")
 class ThirdPartyAgentDao {
 
     fun add(
@@ -73,7 +75,7 @@ class ThirdPartyAgentDao {
                 fileGateway ?: ""
             )
                 .returning(ID)
-                .fetchOne().id
+                .fetchOne()!!.id
         }
     }
 
@@ -109,14 +111,15 @@ class ThirdPartyAgentDao {
                     ip ?: ""
                 )
                 .returning(ID)
-                .fetchOne().id
+                .fetchOne()!!.id
         }
     }
 
-    fun updateGateway(dslContext: DSLContext, agentId: Long, gateway: String) {
+    fun updateGateway(dslContext: DSLContext, agentId: Long, gateway: String, fileGateway: String? = null) {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.update(this)
                 .set(GATEWAY, gateway)
+                .set(FILE_GATEWAY, fileGateway ?: gateway)
                 .where(ID.eq(agentId))
                 .execute()
         }
@@ -164,7 +167,7 @@ class ThirdPartyAgentDao {
                 .and(NODE_ID.`in`(nodeIds))
                 .and(STATUS.eq(status.status))
                 .and(OS.eq(os.name))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -424,7 +427,7 @@ class ThirdPartyAgentDao {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(AGENT_ID.eq(agentId))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,17 +32,16 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.model.quality.tables.records.TQualityMetadataRecord
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicatorMetadata
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
-import com.tencent.devops.quality.dao.v2.QualityMetadataDao
 import com.tencent.devops.quality.api.v2.pojo.op.ElementNameData
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
+import com.tencent.devops.quality.dao.v2.QualityMetadataDao
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service@Suppress("ALL")
 class QualityMetadataService @Autowired constructor(
     val dslContext: DSLContext,
     val metadataDao: QualityMetadataDao
@@ -123,7 +123,11 @@ class QualityMetadataService @Autowired constructor(
         return metadataDao.listByIds(metadataIds, dslContext)
     }
 
-    fun serviceSetTestMetadata(userId: String, elementType: String, metadataList: List<QualityMetaData>): Map<String, Long> {
+    fun serviceSetTestMetadata(
+        userId: String,
+        elementType: String,
+        metadataList: List<QualityMetaData>
+    ): Map<String, Long> {
         val data = metadataDao.listByElementType(dslContext, elementType)?.filter { it.extra == "IN_READY_TEST" }
         val lastMetadataIdMap = data?.map { it.dataId to it.id }?.toMap() ?: mapOf()
         val newDataId = metadataList.map { it.dataId!! }
@@ -227,9 +231,5 @@ class QualityMetadataService @Autowired constructor(
 
     fun deleteMetadata(metadataId: Long) {
         metadataDao.delete(listOf(metadataId), dslContext)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(QualityMetadataService::class.java)
     }
 }

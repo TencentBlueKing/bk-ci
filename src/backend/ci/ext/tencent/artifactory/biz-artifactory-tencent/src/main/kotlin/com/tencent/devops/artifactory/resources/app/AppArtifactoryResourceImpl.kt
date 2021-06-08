@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,39 +37,39 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryAppService
-import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryService
+import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoAppService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
+import com.tencent.devops.artifactory.util.UrlUtil
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.PlatformEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
+import org.apache.commons.lang3.math.NumberUtils
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.BadRequestException
 
 @RestResource
 class AppArtifactoryResourceImpl @Autowired constructor(
-    private val artifactoryService: ArtifactoryService,
     private val bkRepoService: BkRepoService,
-    private val artifactorySearchService: ArtifactorySearchService,
     private val bkRepoSearchService: BkRepoSearchService,
-    private val artifactoryAppService: ArtifactoryAppService,
     private val bkRepoAppService: BkRepoAppService,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
+    private val pipelineService: PipelineService,
     private val client: Client
 ) : AppArtifactoryResource {
 
@@ -79,11 +80,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<List<FileInfo>> {
         checkParameters(userId, projectId, path)
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoService.list(userId, projectId, artifactoryType, path))
-        } else {
-            Result(artifactoryService.list(userId, projectId, artifactoryType, path))
-        }
+        return Result(bkRepoService.list(userId, projectId, artifactoryType, path))
     }
 
     override fun getOwnFileList(
@@ -96,13 +93,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            val result = bkRepoService.getOwnFileList(userId, projectId, limit.offset, limit.limit)
-            Result(FileInfoPage(0L, pageNotNull, pageSizeNotNull, result.second, result.first))
-        } else {
-            val result = artifactoryService.getOwnFileList(userId, projectId, limit.offset, limit.limit)
-            Result(FileInfoPage(0L, pageNotNull, pageSizeNotNull, result.second, result.first))
-        }
+        val result = bkRepoService.getOwnFileList(userId, projectId, limit.offset, limit.limit)
+        return Result(FileInfoPage(0L, pageNotNull, pageSizeNotNull, result.second, result.first))
     }
 
     override fun getBuildFileList(
@@ -119,12 +111,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        val data = if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoService.getBuildFileList(userId, projectId, pipelineId, buildId)
-        } else {
-            artifactoryService.getBuildFileList(userId, projectId, pipelineId, buildId)
-        }
-
+        val data = bkRepoService.getBuildFileList(userId, projectId, pipelineId, buildId)
         val isNewVersion = VersionUtil.compare(appVersion, "2.0.0") >= 0
         if (isNewVersion) {
             data.forEach {
@@ -143,19 +130,10 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         searchProps: SearchProps
     ): Result<FileInfoPage<FileInfo>> {
         checkParameters(userId, projectId)
-
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            val pageNotNull = page ?: 0
-            val pageSizeNotNull = pageSize ?: 10000
-            val result = bkRepoSearchService.search(userId, projectId, searchProps, pageNotNull, pageSizeNotNull)
-            Result(FileInfoPage(0L, pageNotNull, pageSizeNotNull, result.second, result.first))
-        } else {
-            val pageNotNull = page ?: 0
-            val pageSizeNotNull = pageSize ?: -1
-            val offset = if (pageSizeNotNull == -1) 0 else (pageNotNull - 1) * pageSizeNotNull
-            val result = artifactorySearchService.search(userId, projectId, searchProps, offset, pageSizeNotNull)
-            Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
-        }
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 10000
+        val result = bkRepoSearchService.search(userId, projectId, searchProps, pageNotNull, pageSizeNotNull)
+        return Result(FileInfoPage(0L, pageNotNull, pageSizeNotNull, result.second, result.first))
     }
 
     override fun searchFileAndProperty(
@@ -164,13 +142,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         searchProps: SearchProps
     ): Result<FileInfoPage<FileInfo>> {
         checkParameters(userId, projectId)
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            val result = bkRepoSearchService.searchFileAndProperty(userId, projectId, searchProps)
-            Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
-        } else {
-            val result = artifactorySearchService.searchFileAndProperty(userId, projectId, searchProps)
-            Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
-        }
+        val result = bkRepoSearchService.searchFileAndProperty(userId, projectId, searchProps)
+        return Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
     }
 
     override fun show(
@@ -180,11 +153,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<FileDetail> {
         checkParameters(userId, projectId, path)
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoService.show(userId, projectId, artifactoryType, path))
-        } else {
-            Result(artifactoryService.show(userId, projectId, artifactoryType, path))
-        }
+        return Result(bkRepoService.show(userId, projectId, artifactoryType, path))
     }
 
     override fun detail(
@@ -194,37 +163,43 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<FileDetailForApp> {
         checkParameters(userId, projectId, path)
-        val fileDetail = if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoService.show(userId, projectId, artifactoryType, path)
-        } else {
-            artifactoryService.show(projectId, artifactoryType, path)
-        }
-
+        val fileDetail = bkRepoService.show(userId, projectId, artifactoryType, path)
         val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
         val pipelineInfo = if (pipelineId != StringUtils.EMPTY) {
             client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data
         } else {
             null
         }
+
+        if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
+            logger.error("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
+            throw ErrorCodeException(
+                statusCode = 403,
+                errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
+                defaultMessage = "访问构件请联系流水线负责人：\n${pipelineInfo?.creator ?: ""} 授予流水线权限。"
+            )
+        }
+
         val backUpIcon = lazy { client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!! }
 
         return Result(
             FileDetailForApp(
                 name = fileDetail.name,
-                platform = if (fileDetail.name.endsWith(".apk")) "ANDROID" else "iPhone、iPad",
+                platform = if (fileDetail.name.endsWith(".apk")) PlatformEnum.ANDROID.name else PlatformEnum.IOS.name,
                 size = fileDetail.size,
                 createdTime = fileDetail.createdTime,
                 projectName = projectId,
                 pipelineName = pipelineInfo?.pipelineName ?: StringUtils.EMPTY,
                 creator = fileDetail.meta[ARCHIVE_PROPS_USER_ID] ?: StringUtils.EMPTY,
                 bundleIdentifier = fileDetail.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: StringUtils.EMPTY,
-                logoUrl = fileDetail.meta[ARCHIVE_PROPS_APP_ICON] ?: backUpIcon.value,
+                logoUrl = UrlUtil.toOuterPhotoAddr(fileDetail.meta[ARCHIVE_PROPS_APP_ICON] ?: backUpIcon.value),
                 path = fileDetail.path,
                 fullName = fileDetail.fullName,
                 fullPath = fileDetail.fullPath,
                 artifactoryType = artifactoryType,
                 modifiedTime = fileDetail.modifiedTime,
-                md5 = fileDetail.checksums.md5
+                md5 = fileDetail.checksums.md5,
+                buildNum = NumberUtils.toInt(fileDetail.meta[ARCHIVE_PROPS_BUILD_NO], 0)
             )
         )
     }
@@ -236,11 +211,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<List<Property>> {
         checkParameters(userId, projectId, path)
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoService.getProperties(projectId, artifactoryType, path))
-        } else {
-            Result(artifactoryService.getProperties(projectId, artifactoryType, path))
-        }
+        return Result(bkRepoService.getProperties(projectId, artifactoryType, path))
     }
 
     override fun externalUrl(
@@ -254,26 +225,11 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
 
-        var result = if (repoGray.isGray(projectId, redisOperation)) {
-            if (path.endsWith(".ipa")) {
-                bkRepoAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, false)
-            } else {
-                // jfrog 对 android app 只有 derected方式
-                bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, true)
-            }
+        var result = if (path.endsWith(".ipa")) {
+            bkRepoAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, false)
         } else {
-            if (path.endsWith(".ipa")) {
-                artifactoryAppService.getExternalPlistDownloadUrl(
-                    userId,
-                    projectId,
-                    artifactoryType,
-                    path,
-                    24 * 3600,
-                    false
-                )
-            } else {
-                artifactoryAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, false)
-            }
+            // jfrog 对 android app 只有 derected方式
+            bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, true)
         }
         return Result(result)
     }
@@ -289,19 +245,10 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (!path.endsWith(".ipa")) {
             throw BadRequestException("Path must end with ipa")
         }
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoAppService.getPlistFile(userId, projectId, artifactoryType, path, 24 * 3600, false, experienceHashId)
-        } else {
-            artifactoryAppService.getPlistFile(
-                userId,
-                projectId,
-                artifactoryType,
-                path,
-                24 * 3600,
-                false,
-                experienceHashId
-            )
-        }
+        return bkRepoAppService.getPlistFile(
+            userId, projectId, artifactoryType, path, 24 * 3600, false,
+            experienceHashId
+        )
     }
 
     override fun downloadUrl(
@@ -314,20 +261,12 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
             throw BadRequestException("Path must end with ipa or apk")
         }
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, true))
-        } else {
-            Result(
-                artifactoryAppService.getExternalDownloadUrl(
-                    userId,
-                    projectId,
-                    artifactoryType,
-                    path,
-                    24 * 3600,
-                    true
-                )
+        return Result(
+            bkRepoAppService.getExternalDownloadUrl(
+                userId, projectId, artifactoryType, path, 24 * 3600,
+                true
             )
-        }
+        )
     }
 
     private fun checkParameters(userId: String, projectId: String) {
@@ -349,5 +288,9 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AppArtifactoryResourceImpl::class.java)
     }
 }

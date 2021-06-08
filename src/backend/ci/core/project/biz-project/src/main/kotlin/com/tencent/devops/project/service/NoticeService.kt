@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -43,10 +44,12 @@ class NoticeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val noticeDao: NoticeDao
 ) {
-    private val LOG = LoggerFactory.getLogger(NoticeService::class.java)
+    companion object {
+        private val LOG = LoggerFactory.getLogger(NoticeService::class.java)
+    }
 
     fun getValidNotice(): Notice? {
-        var notice = noticeDao.getValidNotice(dslContext)
+        val notice = noticeDao.getValidNotice(dslContext)
         return if (notice == null) {
             null
         } else {
@@ -74,13 +77,13 @@ class NoticeService @Autowired constructor(
 
     fun getAllNotice(): List<Notice> {
         val noticeList = mutableListOf<Notice>()
-        var notices = noticeDao.getAllNotice(dslContext)
+        val notices = noticeDao.getAllNotice(dslContext)
         handleNoticeList(notices, noticeList)
         return noticeList
     }
 
     fun getNotice(id: Long): Notice? {
-        var notice = noticeDao.getNotice(dslContext, id)
+        val notice = noticeDao.getNotice(dslContext, id)
         LOG.info("the notice is :{}", JsonUtil.getObjectMapper().writeValueAsString(notice))
         return if (notice == null) {
             null

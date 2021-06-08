@@ -10,10 +10,10 @@ interface OpenSourceTaskService {
     /**
      * 启用代码扫描任务
      */
-    fun startTask(taskId : Long, userName: String)
+    fun startTask(taskId: Long, userName: String)
 
     /**
      * 更新映射表的commitid字段
      */
-    fun updateBuildCommitId(buildId : String, commitId : String)
+    fun updateBuildCommitId(buildId: String, commitId: String)
 }

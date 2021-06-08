@@ -52,5 +52,7 @@
     "SVN": "SVN",
     "Github": "Github",
     "Gitlab": "Gitlab",
-    "TGit": "TGit"
+    "TGit": "TGit",
+    "authType": "Authorization method",
+    "authIdentity": "Authorized identity"
 }

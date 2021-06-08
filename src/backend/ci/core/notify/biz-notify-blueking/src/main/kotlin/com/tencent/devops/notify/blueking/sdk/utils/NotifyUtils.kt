@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -43,6 +44,7 @@ import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
+@Suppress("ALL")
 @Component
 class NotifyUtils constructor(
     notifyProperties: NotifyProperties
@@ -77,7 +79,7 @@ class NotifyUtils constructor(
 
     // 处理请求结果
     private fun doRequest(request: Request): ApiResp {
-        var resultBean: ApiResp = ApiResp()
+        var resultBean = ApiResp()
         try {
             val response = okHttpClient.newCall(request).execute()
             if (response.isSuccessful) {
@@ -91,10 +93,11 @@ class NotifyUtils constructor(
                 logger.error("notify send msg failed , message: ${resultBean.message}")
             }
             return resultBean
-        } catch (e: Exception) {
+        } catch (ignore: Exception) {
+            logger.error("notify send msg failed , message: ${ignore.message}")
             throw ErrorCodeException(
                 errorCode = ERROR_NOTIFY_SEND_FAIL,
-                defaultMessage = "notify send msg failed"
+                defaultMessage = "notify send msg failed: ${ignore.message}"
             )
         }
     }
@@ -119,7 +122,7 @@ class NotifyUtils constructor(
         .writeTimeout(30L, TimeUnit.SECONDS)
         .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
         .hostnameVerifier { _, _ -> true }
-        .build()!!
+        .build()
 
     private fun sslSocketFactory(): SSLSocketFactory {
         try {

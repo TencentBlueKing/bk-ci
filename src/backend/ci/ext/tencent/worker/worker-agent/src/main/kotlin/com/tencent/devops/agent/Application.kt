@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -43,6 +44,7 @@ import com.tencent.devops.worker.common.task.TaskFactory
 import java.io.File
 import java.lang.RuntimeException
 import com.tencent.devops.worker.common.utils.ExecutorUtil.runCommand
+import com.tencent.devops.worker.common.utils.WorkspaceUtils
 
 fun main(args: Array<String>) {
     EnumLoader.enumModified()
@@ -68,7 +70,7 @@ fun main(args: Array<String>) {
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
-                    val dir = File("./$pipelineId/src")
+                    val dir = WorkspaceUtils.getPipelineWorkspace(pipelineId = pipelineId, workspace = "")
                     if (dir.exists()) {
                         if (!dir.isDirectory) {
                             throw RuntimeException("Work space directory conflict: ${dir.canonicalPath}")
@@ -152,13 +154,9 @@ fun main(args: Array<String>) {
 
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
-                    val workspace = System.getProperty("devops_workspace")
-
-                    val dir = if (workspace.isNullOrBlank()) {
-                        File("/Users/bkdevops/Landun/workspace") // v1 内部版用的/data/landun/workspace 保持一致
-                    } else {
-                        File(workspace)
-                    }
+                    val workspace = AgentEnv.getMacOSWorkspace()
+                    System.out.println("MacOS workspace: $workspace")
+                    val dir = File(workspace)
                     dir.mkdirs()
                     return dir
                 }

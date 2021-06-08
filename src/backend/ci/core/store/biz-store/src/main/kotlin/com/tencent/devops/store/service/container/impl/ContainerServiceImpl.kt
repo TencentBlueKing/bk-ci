@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -64,6 +65,7 @@ import org.springframework.util.StringUtils
  *
  * since: 2018-12-20
  */
+@Suppress("ALL")
 abstract class ContainerServiceImpl @Autowired constructor() : ContainerService {
 
     @Autowired
@@ -117,7 +119,9 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             val defaultBuildResourceRecord =
                 buildResourceDao.getBuildResourceByContainerId(dslContext, containerId, true)
             val defaultBuildResourceObject =
-                if (null != defaultBuildResourceRecord && defaultBuildResourceRecord.size > 0) defaultBuildResourceRecord[0] else null
+                if (null != defaultBuildResourceRecord && defaultBuildResourceRecord.size > 0) {
+                    defaultBuildResourceRecord[0]
+                } else null
             val defaultPublicBuildResource: String? = defaultBuildResourceObject?.get("buildResourceCode") as? String
             var appList: List<ContainerAppWithVersion>? = null
             val resources = HashMap<BuildType, ContainerResource>()
@@ -247,7 +251,6 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         containerOS: OS,
         buildType: BuildType
     ): Result<ContainerResource?> {
-        logger.info("the userId is :$userId,projectCode is :$projectCode, os: $containerOS, containerId is :$containerId, buildType is :$buildType")
         return try {
             Result(getResource(userId, projectCode, containerId, containerOS, buildType).first)
         } catch (e: Exception) {

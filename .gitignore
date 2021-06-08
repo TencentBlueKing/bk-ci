@@ -28,6 +28,7 @@ src/backend/ci/.setting
 out
 **version.txt
 /src/backend/ci/.settings/
-
-.vscode
-scripts/ci_env.properties
+.prebuild.yml
+.temp
+.history
+/src/backend/ci/core/sign/biz-sign/test.ipa

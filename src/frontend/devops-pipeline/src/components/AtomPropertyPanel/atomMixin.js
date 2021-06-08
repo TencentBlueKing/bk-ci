@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions, mapGetters, mapState } from 'vuex'
 import Accordion from '@/components/atomFormField/Accordion'
 import EnumInput from '@/components/atomFormField/EnumInput'
 import VuexInput from '@/components/atomFormField/VuexInput'
@@ -48,8 +48,6 @@ import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
 import AutoComplete from '@/components/atomFormField/AutoComplete'
 import { urlJoin, rely } from '../../utils/util'
-import { CHECK_PARAM_LIST, CHECK_DEFAULT_PARAM } from '@/store/modules/atom/paramsConfig'
-import { deepCopy } from '@/utils/util'
 
 const atomMixin = {
     props: {
@@ -97,18 +95,21 @@ const atomMixin = {
     },
     computed: {
         ...mapGetters('atom', [
-            'isThirdPartyContainer'
+            'isThirdPartyContainer',
+            'atomVersionChangedKeys'
+        ]),
+        ...mapState('atom', [
+            'pipelineCommonSetting'
         ]),
         isThirdParty () {
             return this.isThirdPartyContainer(this.container)
         },
-        paramsList () {
-            return CHECK_PARAM_LIST.map(item => {
-                return {
-                    id: item.id,
-                    name: this.$t(`storeMap.${item.name}`)
-                }
-            })
+        atomInputLimit () {
+            try {
+                return this.pipelineCommonSetting.stageCommonSetting.jobCommonSetting.taskCommonSetting.inputComponentCommonSettings || []
+            } catch (error) {
+                return []
+            }
         }
     },
     methods: {
@@ -162,31 +163,6 @@ const atomMixin = {
                 [name]: value
             })
         },
-        handleParamTypeChange (payload) {
-            const params = this.element['params']
-
-            const { value, paramIndex } = payload
-            const newParams = [
-                ...params.slice(0, paramIndex),
-                {
-                    ...deepCopy(CHECK_DEFAULT_PARAM[value]),
-                    key: params[paramIndex].key,
-                    paramIdKey: params[paramIndex].paramIdKey
-                },
-                ...params.slice(paramIndex + 1)
-            ]
-
-            this.handleUpdateElement('params', newParams)
-        },
-        handleUpdateParam (payload) {
-            const { key, value, paramIndex } = payload
-            const param = this.element['params']
-            param[paramIndex][key] = value
-            this.handleUpdateElement('params', param)
-        },
-        handleUpdateParamId (payload) {
-            this.handleUpdateParam(payload)
-        },
         handlePath (path = '', getFileName = false) {
             if (path.startsWith('./')) {
                 path = path.slice(2)
@@ -236,6 +212,14 @@ const atomMixin = {
         },
         rely (obj, element) {
             return rely(obj, element)
+        },
+        /**
+         * 获取每种类型最大长度限制
+         */
+        getMaxLengthByType (type) {
+            const defaultLength = 1024
+            const componentItem = this.atomInputLimit.find(item => item.componentType === type) || {}
+            return componentItem.maxSize || defaultLength
         }
     }
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -39,21 +40,33 @@ import com.tencent.devops.experience.pojo.ExperienceUpdate
 import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.Url
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
+import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import com.tencent.devops.experience.service.ExperienceDownloadService
+import com.tencent.devops.experience.service.ExperienceOuterService
 import com.tencent.devops.experience.service.ExperienceService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserExperienceResourceImpl @Autowired constructor(
     private val experienceService: ExperienceService,
-    private val experienceDownloadService: ExperienceDownloadService
+    private val experienceDownloadService: ExperienceDownloadService,
+    private val experienceOuterService: ExperienceOuterService
 ) : UserExperienceResource {
-    override fun hasArtifactoryPermission(userId: String, projectId: String, path: String, artifactoryType: ArtifactoryType): Result<Boolean> {
+    override fun hasArtifactoryPermission(
+        userId: String,
+        projectId: String,
+        path: String,
+        artifactoryType: ArtifactoryType
+    ): Result<Boolean> {
         checkParam(userId, projectId)
         return Result(experienceService.hasArtifactoryPermission(userId, projectId, path, artifactoryType))
     }
 
-    override fun list(userId: String, projectId: String, expired: Boolean?): Result<List<ExperienceSummaryWithPermission>> {
+    override fun list(
+        userId: String,
+        projectId: String,
+        expired: Boolean?
+    ): Result<List<ExperienceSummaryWithPermission>> {
         checkParam(userId, projectId)
         return Result(experienceService.list(userId, projectId, expired))
     }
@@ -69,7 +82,12 @@ class UserExperienceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate): Result<Boolean> {
+    override fun edit(
+        userId: String,
+        projectId: String,
+        experienceHashId: String,
+        experience: ExperienceUpdate
+    ): Result<Boolean> {
         checkParam(userId, projectId, experienceHashId)
         experienceService.edit(userId, projectId, experienceHashId, experience)
         return Result(true)
@@ -87,12 +105,19 @@ class UserExperienceResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun downloadUserCount(userId: String, projectId: String, experienceHashId: String, page: Int?, pageSize: Int?): Result<Page<ExperienceUserCount>> {
+    override fun downloadUserCount(
+        userId: String,
+        projectId: String,
+        experienceHashId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<ExperienceUserCount>> {
         checkParam(userId, projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
         val offset = if (pageSizeNotNull == -1) -1 else (pageNotNull - 1) * pageSizeNotNull
-        val result = experienceDownloadService.downloadUserCount(userId, projectId, experienceHashId, pageNotNull, offset)
+        val result =
+            experienceDownloadService.downloadUserCount(userId, projectId, experienceHashId, pageNotNull, offset)
         return Result(Page(pageNotNull, pageSizeNotNull, result.first, result.second))
     }
 
@@ -106,6 +131,10 @@ class UserExperienceResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         val url = experienceService.downloadUrl(userId, projectId, experienceHashId)
         return Result(Url(url))
+    }
+
+    override fun outerList(userId: String, projectId: String): Result<List<OuterSelectorVO>> {
+        return Result(experienceOuterService.outerList(projectId).map { OuterSelectorVO(it) })
     }
 
     fun checkParam(userId: String, projectId: String) {

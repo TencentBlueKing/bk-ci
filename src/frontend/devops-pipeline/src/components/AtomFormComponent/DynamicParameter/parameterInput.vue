@@ -198,17 +198,10 @@
                 }
 
                 if (typeof this.url === 'string' && this.url !== '') { // 只有存在url字段时才去请求
-                    let url = this.url
-                    let isErrorParam = false
-                    this.queryKey = []
-                    url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
-                        this.queryKey.push(key)
-                        const value = this.paramValues[key]
-                        if (typeof value === 'undefined') isErrorParam = true
-                        return value
-                    })
+                    const [url, queryKey] = this.generateReqUrl(this.url, this.paramValues)
+                    this.queryKey = queryKey
 
-                    if (isErrorParam) return
+                    if (!url) return
                     this.loading = true
                     this.$ajax.get(url).then((res) => {
                         const list = this.getResponseData(res, this.dataPath)

@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.task.api;
 
 import com.tencent.bk.codecc.task.vo.PlatformVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -51,7 +51,7 @@ public interface ServicePlatformRestResource
     @ApiOperation("获取所有的platform")
     @Path("/list/toolName/{toolName}")
     @GET
-    CodeCCResult<List<PlatformVO>> getPlatformByToolName(
+    Result<List<PlatformVO>> getPlatformByToolName(
             @ApiParam(value = "工具名称", required = true)
             @PathParam("toolName")
                     String toolName);
@@ -59,7 +59,7 @@ public interface ServicePlatformRestResource
     @ApiOperation("获取任务的platform")
     @Path("/taskId/{taskId}/toolName/{toolName}")
     @GET
-    CodeCCResult<String> getPlatformIp(
+    Result<String> getPlatformIp(
             @ApiParam(value = "任务ID", required = true)
             @PathParam("taskId")
                     long taskId,
@@ -70,7 +70,7 @@ public interface ServicePlatformRestResource
     @ApiOperation("根据工具名和IP获取platform")
     @Path("/taskId/{taskId}/toolName/{toolName}/ip/{ip}")
     @GET
-    CodeCCResult<PlatformVO> getPlatformByToolNameAndIp(
+    Result<PlatformVO> getPlatformByToolNameAndIp(
             @ApiParam(value = "任务ID", required = true)
             @PathParam("taskId")
                     long taskId,

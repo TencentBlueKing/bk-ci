@@ -1,0 +1,32 @@
+{
+  "system_id": "bk_codecc",
+  "operations": [
+    {
+      "operation": "upsert_system",
+      "data":{
+        "id": "bk_codecc",
+        "name": "代码扫描平台",
+        "name_en": "bkcodecc",
+        "clients": "bkcpdecc",
+        "provider_config": {
+          "host": "http://ci-auth.service.consul:21936",
+          "auth": "basic",
+          "healthz": "/api/v1/healthz"
+        }
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "codecc_task",
+        "name": "代码检查",
+        "name_en": "CodeCCTask",
+        "parents": [{"system_id": "bk_codecc", "id": "project"}],
+        "provider_config": {
+          "path": "/api/service/auth/resource/instances/list"
+        },
+        "version": 1
+      }
+    }
+  ]
+}

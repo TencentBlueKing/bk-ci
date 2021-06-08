@@ -17,5 +17,5 @@ then
     cat docker.jar >> /data/devops/logs/docker.log
 fi
 
-/usr/local/jre/bin/java -Dfile.encoding=UTF-8 -DLC_CTYPE=UTF-8 -Dlandun.env=prod -Dbuild.type=DOCKER -Ddevops.gateway=${devops_gateway}  -jar docker.jar $@ >> /data/devops/logs/docker.log 2>&1
+/usr/local/jre/bin/java -Dfile.encoding=UTF-8 -DLC_CTYPE=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlandun.env=prod -Dbuild.type=DOCKER -Ddevops.gateway=${devops_gateway}  -jar docker.jar $@ >> /data/devops/logs/docker.log 2>&1
 #/usr/local/jre/bin/java -Dfile.encoding=UTF-8 -DLC_CTYPE=UTF-8 -Dlandun.env=dev -jar docker.jar $@ >> /data/devops/logs/docker.log

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -75,7 +76,7 @@ interface UserExtServiceProjectResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模版代码", required = true)
+        @ApiParam("微扩展代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<List<InstalledProjRespItem>>
@@ -90,7 +91,7 @@ interface UserExtServiceProjectResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模版代码", required = true)
+        @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<ExtServiceRespItem>>
@@ -108,7 +109,7 @@ interface UserExtServiceProjectResource {
         @ApiParam("服务Code", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @ApiParam("服务Code", required = true)
+        @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
         @ApiParam("卸载扩展请求包体", required = true)

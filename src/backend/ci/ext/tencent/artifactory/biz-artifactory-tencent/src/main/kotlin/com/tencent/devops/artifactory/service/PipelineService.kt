@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,33 +30,27 @@ package com.tencent.devops.artifactory.service
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.util.JFrogUtil
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.api.pojo.JFrogFileInfo
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceJfrogResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@Service
-class PipelineService @Autowired constructor(
-    private val client: Client,
-    private val pipelineAuthServiceCode: BSPipelineAuthServiceCode,
-    private val bkAuthPermissionApi: BSAuthPermissionApi,
-    private val authProjectApi: BSAuthProjectApi,
-    private val artifactoryAuthServiceCode: BSRepoAuthServiceCode
+abstract class PipelineService @Autowired constructor(
+    private val client: Client
 ) {
     private val resourceType = AuthResourceType.PIPELINE_DEFAULT
-    fun getRootPathFileList(userId: String, projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>): List<FileInfo> {
+    fun getRootPathFileList(
+        userId: String,
+        projectId: String,
+        path: String,
+        jFrogFileInfoList: List<JFrogFileInfo>
+    ): List<FileInfo> {
         val hasPermissionList = filterPipeline(userId, projectId)
         val pipelineIdToNameMap = getPipelineNames(projectId, hasPermissionList.toSet())
 
@@ -74,7 +69,8 @@ class PipelineService @Autowired constructor(
                         fullPath = fullPath,
                         size = it.size,
                         folder = it.folder,
-                        modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                        modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME)
+                            .timestamp(),
                         artifactoryType = ArtifactoryType.PIPELINE
                     )
                 )
@@ -104,7 +100,8 @@ class PipelineService @Autowired constructor(
                         fullPath = fullPath,
                         size = it.size,
                         folder = it.folder,
-                        modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                        modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME)
+                            .timestamp(),
                         artifactoryType = ArtifactoryType.PIPELINE
                     )
                 )
@@ -208,7 +205,13 @@ class PipelineService @Autowired constructor(
         return path.replaceFirst("/$pipelineId", "/$pipelineName")
     }
 
-    fun getFullName(path: String, pipelineId: String, pipelineName: String, buildId: String, buildName: String): String {
+    fun getFullName(
+        path: String,
+        pipelineId: String,
+        pipelineName: String,
+        buildId: String,
+        buildName: String
+    ): String {
         return path.replaceFirst("/$pipelineId/$buildId", "/$pipelineName/$buildName")
     }
 
@@ -246,7 +249,7 @@ class PipelineService @Autowired constructor(
                 setOf(pipelineId)
             ).data!![pipelineId]!!
         } finally {
-            logger.info("getPipelineName [$projectId, $pipelineId] cost ${System.currentTimeMillis() - startTimestamp}ms")
+            logger.info("getPipelineName[$projectId,$pipelineId] cost${System.currentTimeMillis() - startTimestamp}ms")
         }
     }
 
@@ -256,7 +259,9 @@ class PipelineService @Autowired constructor(
             if (pipelineIds.isEmpty()) return emptyMap()
             return client.get(ServiceJfrogResource::class).getPipelineNameByIds(projectId, pipelineIds).data!!
         } finally {
-            logger.info("getPipelineNames [$projectId, $pipelineIds] cost ${System.currentTimeMillis() - startTimestamp}ms")
+            logger.info(
+                "getPipelineNames[$projectId, $pipelineIds] cost${System.currentTimeMillis() - startTimestamp}ms"
+            )
         }
     }
 
@@ -279,42 +284,22 @@ class PipelineService @Autowired constructor(
         }
     }
 
-    fun validatePermission(userId: String, projectId: String, pipelineId: String? = null, permission: AuthPermission? = null, message: String? = null) {
-        if (!hasPermission(userId, projectId, pipelineId, permission)) {
-            throw PermissionForbiddenException(message ?: "permission denied")
-        }
-    }
+    abstract fun validatePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String? = null,
+        permission: AuthPermission? = null,
+        message: String? = null
+    )
 
-    fun hasPermission(userId: String, projectId: String, pipelineId: String? = null, permission: AuthPermission? = null): Boolean {
-        return if (pipelineId == null) {
-            authProjectApi.isProjectUser(userId, artifactoryAuthServiceCode, projectId, null)
-        } else {
-            bkAuthPermissionApi.validateUserResourcePermission(
-                userId,
-                pipelineAuthServiceCode,
-                AuthResourceType.PIPELINE_DEFAULT,
-                projectId,
-                pipelineId,
-                permission ?: AuthPermission.DOWNLOAD
-            )
-        }
-    }
+    abstract fun hasPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String? = null,
+        permission: AuthPermission? = null
+    ): Boolean
 
-    fun filterPipeline(user: String, projectId: String): List<String> {
-        val startTimestamp = System.currentTimeMillis()
-        try {
-            return bkAuthPermissionApi.getUserResourceByPermission(
-                user,
-                pipelineAuthServiceCode,
-                resourceType,
-                projectId,
-                AuthPermission.LIST,
-                null
-            )
-        } finally {
-            logger.info("filterPipeline cost ${System.currentTimeMillis() - startTimestamp}ms")
-        }
-    }
+    abstract fun filterPipeline(user: String, projectId: String): List<String>
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineService::class.java)

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -43,7 +44,6 @@ import java.util.BitSet;
  * 另外，对于空格" "， {@link java.net.URLEncoder} 中依照<CODE>application/x-www-form-urlencoded</CODE>将其转为"+"，
  * 但 COS 平台应是转为 "%20"，故需如 <CODE>UrlEncoderLowercase.encode(str, "UTF-8").replace("+", "%20") </CODE> 形式调用。
  * 参考 http://stackoverflow.com/questions/4737841/urlencoder-not-able-to-translate-space-character
- * 妈蛋搞死人
  */
 public class UrlEncoderLowercase {
     static BitSet dontNeedEncoding;

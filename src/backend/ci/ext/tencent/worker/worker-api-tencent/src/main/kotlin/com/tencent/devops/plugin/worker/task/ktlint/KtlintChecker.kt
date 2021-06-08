@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -548,13 +549,13 @@ class KtlintChecker constructor(path: File) {
                     }
                     if (!skipClasspathCheck) {
                         if (result.any { it.toString().substringAfterLast("/").startsWith("ktlint-core-") }) {
-                            LoggerService.addRedLine("\"$artifact\" appears to have a runtime/compile dependency on \"ktlint-core\".\n" +
+                            LoggerService.addRedLine("\"$artifact\" appears to have a runtime/api(dependency on \"ktlint-core\".\n" +
                                     "Please inform the author that \"com.github.shyiko:ktlint*\" should be marked " +
                                     "compileOnly (Gradle) / provided (Maven).\n" +
                                     "(to suppress this warning use --skip-classpath-check)")
                         }
                         if (result.any { it.toString().substringAfterLast("/").startsWith("kotlin-stdlib-") }) {
-                            LoggerService.addRedLine("\"$artifact\" appears to have a runtime/compile dependency on \"kotlin-stdlib\".\n" +
+                            LoggerService.addRedLine("\"$artifact\" appears to have a runtime/api(dependency on \"kotlin-stdlib\".\n" +
                                     "Please inform the author that \"org.jetbrains.kotlin:kotlin-stdlib*\" should be marked " +
                                     "compileOnly (Gradle) / provided (Maven).\n" +
                                     "(to suppress this warning use --skip-classpath-check)")

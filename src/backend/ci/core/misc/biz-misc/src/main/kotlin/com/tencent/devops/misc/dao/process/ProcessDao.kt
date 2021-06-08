@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,6 +29,7 @@ package com.tencent.devops.misc.dao.process
 
 import com.tencent.devops.model.process.tables.TPipelineBuildHisDataClear
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
+import com.tencent.devops.model.process.tables.TPipelineDataClear
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -62,6 +64,27 @@ class ProcessDao {
         }
     }
 
+    fun addPipelineDataClear(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
+        with(TPipelineDataClear.T_PIPELINE_DATA_CLEAR) {
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                PIPELINE_ID
+            )
+                .values(
+                    projectId,
+                    pipelineId
+                ).onDuplicateKeyUpdate()
+                .set(PROJECT_ID, projectId)
+                .set(PIPELINE_ID, pipelineId)
+                .execute()
+        }
+    }
+
     fun getPipelineIdListByProjectId(
         dslContext: DSLContext,
         projectId: String
@@ -80,7 +103,7 @@ class ProcessDao {
             return dslContext.select(DSL.max(BUILD_NUM))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -95,7 +118,7 @@ class ProcessDao {
             return dslContext.select(DSL.max(BUILD_NUM))
                 .from(this)
                 .where(conditions)
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -135,6 +158,24 @@ class ProcessDao {
                 baseStep.limit(totalHandleNum, handlePageSize)
             }
             return baseStep.fetch()
+        }
+    }
+
+    fun getClearDeletePipelineIdList(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIdList: List<String>,
+        gapDays: Long
+    ): Result<out Record>? {
+        with(TPipelineInfo.T_PIPELINE_INFO) {
+            return dslContext.select(PIPELINE_ID).from(this)
+                .where(
+                    PROJECT_ID.eq(projectId)
+                        .and(DELETE.eq(true))
+                        .and(UPDATE_TIME.lt(LocalDateTime.now().minusDays(gapDays)))
+                        .and(PIPELINE_ID.`in`(pipelineIdList))
+                )
+                .fetch()
         }
     }
 }

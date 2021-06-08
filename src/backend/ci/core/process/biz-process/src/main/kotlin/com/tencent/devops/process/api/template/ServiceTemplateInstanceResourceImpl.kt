@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,7 +29,7 @@ package com.tencent.devops.process.api.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.template.TemplateService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
@@ -37,13 +38,11 @@ import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * deng
- * 2019-01-08
- */
+@Suppress("ALL")
 @RestResource
-class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val templateService: TemplateService) :
-    ServiceTemplateInstanceResource {
+class ServiceTemplateInstanceResourceImpl @Autowired constructor(
+    private val templateFacadeService: TemplateFacadeService
+) : ServiceTemplateInstanceResource {
 
     override fun createTemplateInstances(
         userId: String,
@@ -53,15 +52,25 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val tem
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
-        return templateService.createTemplateInstances(projectId, userId, templateId, version, useTemplateSettings, instances)
+        return templateFacadeService.createTemplateInstances(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            version = version,
+            useTemplateSettings = useTemplateSettings,
+            instances = instances
+        )
     }
 
     override fun countTemplateInstance(projectId: String, templateIds: Collection<String>): Result<Int> {
-        return Result(templateService.serviceCountTemplateInstances(projectId, templateIds))
+        return Result(templateFacadeService.serviceCountTemplateInstances(projectId, templateIds))
     }
 
-    override fun countTemplateInstanceDetail(projectId: String, templateIds: Collection<String>): Result<Map<String, Int>> {
-        return Result(templateService.serviceCountTemplateInstancesDetail(projectId, templateIds))
+    override fun countTemplateInstanceDetail(
+        projectId: String,
+        templateIds: Collection<String>
+    ): Result<Map<String, Int>> {
+        return Result(templateFacadeService.serviceCountTemplateInstancesDetail(projectId, templateIds))
     }
 
     override fun updateTemplate(
@@ -72,13 +81,13 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val tem
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
-        return templateService.updateTemplateInstances(
-                projectId = projectId,
-                userId = userId,
-                templateId = templateId,
-                version = version,
-                useTemplateSettings = useTemplateSettings,
-                instances = instances
+        return templateFacadeService.updateTemplateInstances(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            version = version,
+            useTemplateSettings = useTemplateSettings,
+            instances = instances
         )
     }
 
@@ -90,13 +99,13 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val tem
         pageSize: Int?,
         searchKey: String?
     ): Result<TemplateInstancePage> {
-        return Result(templateService.listTemplateInstancesInPage(
-                projectId = projectId,
-                userId = userId,
-                templateId = templateId,
-                page = page,
-                pageSize = checkPageSize(pageSize),
-                searchKey = searchKey)
+        return Result(templateFacadeService.listTemplateInstancesInPage(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            page = page,
+            pageSize = checkPageSize(pageSize),
+            searchKey = searchKey)
         )
     }
 
@@ -107,8 +116,14 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val tem
         version: Long,
         pipelineIds: List<PipelineId>
     ): Result<Map<String, TemplateInstanceParams>> {
-        return Result(templateService.listTemplateInstancesParams(userId, projectId, templateId, version, pipelineIds.map { it.id }.toSet()))
+        return Result(templateFacadeService.listTemplateInstancesParams(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            pipelineIds = pipelineIds.map { it.id }.toSet()
+        ))
     }
 
-    private fun checkPageSize(pageSize: Int?) = if (pageSize != null && pageSize>30) 30 else pageSize
+    private fun checkPageSize(pageSize: Int?) = if (pageSize != null && pageSize > 30) 30 else pageSize
 }

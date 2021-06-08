@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperienceResource
+import com.tencent.devops.experience.filter.annotions.AllowOuter
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -39,7 +41,9 @@ import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceLastParams
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
+import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import com.tencent.devops.experience.service.ExperienceAppService
+import com.tencent.devops.experience.service.ExperienceOuterService
 import com.tencent.devops.experience.service.ExperienceService
 import com.tencent.devops.experience.service.GroupService
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,7 +52,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class AppExperienceResourceImpl @Autowired constructor(
     private val experienceAppService: ExperienceAppService,
     private val experienceService: ExperienceService,
-    private val groupService: GroupService
+    private val groupService: GroupService,
+    private val experienceOuterService: ExperienceOuterService
 ) : AppExperienceResource {
     override fun list(userId: String, page: Int?, pageSize: Int?): Result<List<AppExperience>> {
         checkParam(userId)
@@ -59,38 +64,50 @@ class AppExperienceResourceImpl @Autowired constructor(
         return Result(result.records)
     }
 
-    override fun listV2(userId: String, platform: Int, page: Int, pageSize: Int): Result<Pagination<AppExperience>> {
+    @AllowOuter
+    override fun listV2(
+        userId: String,
+        platform: Int,
+        organization: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Pagination<AppExperience>> {
         checkParam(userId)
         val offset = if (pageSize == -1) 0 else (page - 1) * pageSize
-        val result = experienceAppService.list(userId, offset, pageSize, false, platform)
+        val result = experienceAppService.list(userId, offset, pageSize, false, platform, organization)
         return Result(result)
     }
 
+    @AllowOuter
     override fun detail(
         userId: String,
         platform: Int,
         appVersion: String?,
+        organization: String?,
         experienceHashId: String
     ): Result<AppExperienceDetail> {
         checkParam(userId, experienceHashId)
-        val result = experienceAppService.detail(userId, experienceHashId, platform, appVersion)
+        val result = experienceAppService.detail(userId, experienceHashId, platform, appVersion, organization)
         return Result(result)
     }
 
+    @AllowOuter
     override fun changeLog(
         userId: String,
+        organization: String?,
         experienceHashId: String,
         page: Int,
         pageSize: Int
     ): Result<Pagination<ExperienceChangeLog>> {
         checkParam(userId, experienceHashId)
-        val result = experienceAppService.changeLog(userId, experienceHashId, page, pageSize)
+        val result = experienceAppService.changeLog(userId, experienceHashId, page, pageSize, organization)
         return Result(result)
     }
 
-    override fun downloadUrl(userId: String, experienceHashId: String): Result<DownloadUrl> {
+    @AllowOuter
+    override fun downloadUrl(userId: String, organization: String?, experienceHashId: String): Result<DownloadUrl> {
         checkParam(userId, experienceHashId)
-        val result = experienceAppService.downloadUrl(userId, experienceHashId)
+        val result = experienceAppService.downloadUrl(userId, experienceHashId, organization)
         return Result(result)
     }
 
@@ -116,6 +133,10 @@ class AppExperienceResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         experienceService.create(userId, projectId, experience)
         return Result(true)
+    }
+
+    override fun outerList(userId: String, projectId: String): Result<List<OuterSelectorVO>> {
+        return Result(experienceOuterService.outerList(projectId).map { OuterSelectorVO(it) })
     }
 
     override fun lastParams(

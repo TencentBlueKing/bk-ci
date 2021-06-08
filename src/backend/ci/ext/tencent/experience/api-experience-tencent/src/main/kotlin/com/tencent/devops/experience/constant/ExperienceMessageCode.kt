@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -25,6 +26,7 @@
  */
 
 package com.tencent.devops.experience.constant
+
 /**
  * 流水线微服务模块请求返回状态码
  * 返回码制定规则（除开0代表成功外，为了兼容历史接口成功状态都是返回0）：
@@ -51,6 +53,10 @@ object ExperienceMessageCode {
     const val EXP_REMOVED = "2106006" // 体验：体验已下架
     const val EXP_FILE_NOT_FOUND = "2106007" // 体验：体验的文件不存在
     const val EXP_NOT_EXISTS = "2106008" // 体验：体验不存在
+    const val OUTER_LOGIN_ERROR = "2106009" // 外部用户登录错误
+    const val OUTER_ACCESS_FAILED = "2106010" // 外部用户访问失败
+    const val EXPERIENCE_NEED_PERMISSION = "2106011" // 需要用户权限
+
     const val USER_NEED_EXP_X_PERMISSION = "2101009" // 体验: 用户没有体验的{0}权限
     const val USER_NEED_EXP_GROUP_X_PERMISSION = "2101010" // 体验：用户没有体验组的{0}权限
     const val EXP_META_DATA_PIPELINE_ID_NOT_EXISTS = "2101011" // 体验：体验未与流水线绑定

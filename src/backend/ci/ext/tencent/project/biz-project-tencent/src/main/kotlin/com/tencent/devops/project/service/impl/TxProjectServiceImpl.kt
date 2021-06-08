@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -17,7 +44,6 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -26,6 +52,7 @@ import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.AuthProjectForList
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -33,6 +60,7 @@ import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ImageUtil
@@ -45,6 +73,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.util.ArrayList
 
+@Suppress("ALL")
 @Service
 class TxProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
@@ -53,7 +82,6 @@ class TxProjectServiceImpl @Autowired constructor(
     private val s3Service: S3Service,
     private val tofService: TOFService,
     private val bkRepoClient: BkRepoClient,
-    private val repoGray: RepoGray,
     private val projectPaasCCService: ProjectPaasCCService,
     private val bkAuthProperties: BkAuthProperties,
     private val bsAuthProjectApi: AuthProjectApi,
@@ -65,7 +93,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val managerService: ManagerService
+    private val managerService: ManagerService,
+    private val projectIamV0Service: ProjectIamV0Service
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
@@ -100,17 +129,16 @@ class TxProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
-    override fun list(userId: String, accessToken: String?): List<ProjectVO> {
+    override fun list(userId: String, accessToken: String?, enabled: Boolean?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
 
             val projects = getProjectFromAuth(userId, accessToken).toSet()
-            if (projects == null || projects.isEmpty()) {
+            if (projects.isEmpty()) {
                 return emptyList()
             }
-            logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.list(dslContext, projects).map {
+            projectDao.list(dslContext, projects, enabled).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             return list
@@ -131,10 +159,10 @@ class TxProjectServiceImpl @Autowired constructor(
         if (!accessToken.isNullOrEmpty() && projectCreateExtInfo.needAuth!!) {
             // 添加paas项目
             projectPaasCCService.createPaasCCProject(
-                    userId = userId,
-                    projectId = projectId,
-                    accessToken = accessToken!!,
-                    projectCreateInfo = projectCreateInfo
+                userId = userId,
+                projectId = projectId,
+                accessToken = accessToken!!,
+                projectCreateInfo = projectCreateInfo
             )
         }
     }
@@ -224,6 +252,41 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun hasCreatePermission(userId: String): Boolean {
+        return true
+    }
+
+    override fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo {
+        val bgId = if (projectCreateInfo.bgId == 0L) userDeptDetail.bgId.toLong() else projectCreateInfo.bgId
+        val deptId = if (projectCreateInfo.deptId == 0L) userDeptDetail.deptId.toLong() else projectCreateInfo.deptId
+        val centerId = if (projectCreateInfo.centerId == 0L) userDeptDetail.centerId.toLong() else projectCreateInfo.centerId
+        val bgName = if (projectCreateInfo.bgName.isNullOrEmpty()) userDeptDetail.bgName else projectCreateInfo.bgName
+        val deptName = if (projectCreateInfo.deptName.isNullOrEmpty()) userDeptDetail.deptName else projectCreateInfo.deptName
+        val centerName = if (projectCreateInfo.centerName.isNullOrEmpty()) userDeptDetail.centerName else projectCreateInfo.centerName
+
+        return ProjectCreateInfo(
+            projectName = projectCreateInfo.projectName,
+            projectType = projectCreateInfo.projectType,
+            secrecy = projectCreateInfo.secrecy,
+            description = projectCreateInfo.description,
+            kind = projectCreateInfo.kind,
+            bgId = bgId,
+            bgName = bgName,
+            centerId = centerId,
+            centerName = centerName,
+            deptId = deptId,
+            deptName = deptName,
+            englishName = projectCreateInfo.englishName
+        )
+    }
+
+    override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
+        projectIamV0Service.createUser2Project(
+            createUser = createInfo.createUserId,
+            projectCode = projectId,
+            roleName = createInfo.roleName,
+            roleId = createInfo.roleId,
+            userIds = createInfo.userIds!!
+        )
         return true
     }
 

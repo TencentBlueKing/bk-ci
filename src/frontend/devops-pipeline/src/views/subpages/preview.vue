@@ -253,7 +253,7 @@
                 this.buildNo.buildNo = value
             },
             editTrigger () {
-                const url = `${WEB_URL_PIRFIX}/pipeline/${this.projectId}/${this.pipelineId}/edit#manualTrigger`
+                const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/${this.pipelineId}/edit#manualTrigger`
                 window.open(url, '_blank')
             }
         }

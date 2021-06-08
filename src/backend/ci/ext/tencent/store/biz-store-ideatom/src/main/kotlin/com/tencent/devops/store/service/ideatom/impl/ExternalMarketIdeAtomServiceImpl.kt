@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -42,8 +43,8 @@ import com.tencent.devops.store.pojo.ideatom.InstallIdeAtomResp
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
 import com.tencent.devops.store.pojo.ideatom.enums.MarketIdeAtomSortTypeEnum
 import com.tencent.devops.store.service.common.OperationLogService
+import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.ideatom.ExternalMarketIdeAtomService
-import com.tencent.devops.store.service.ideatom.MarketIdeAtomStatisticService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,7 +58,7 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
     private val marketIdeAtomDao: MarketIdeAtomDao,
     private val ideAtomEnvInfoDao: IdeAtomEnvInfoDao,
     private val storeStatisticDao: StoreStatisticDao,
-    private val marketIdeAtomStatisticService: MarketIdeAtomStatisticService,
+    private val storeTotalStatisticService: StoreTotalStatisticService,
     private val operationLogService: OperationLogService
 ) : ExternalMarketIdeAtomService {
     private val logger = LoggerFactory.getLogger(ExternalMarketIdeAtomServiceImpl::class.java)
@@ -110,20 +111,18 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
                 pageSize = pageSize
         ) ?: return ExternalIdeAtomResp(0, page, pageSize, results)
 
-        logger.info("[list]get atoms: $atoms")
-
         val atomCodeList = atoms.map {
             it["ATOM_CODE"] as String
         }.toList()
-        // 获取热度
-        val statField = mutableListOf<String>()
-        statField.add("DOWNLOAD")
-        val atomStatisticData = marketIdeAtomStatisticService.getStatisticByCodeList(atomCodeList, statField).data
-        logger.info("[list]get atomStatisticData")
+        val storeType = StoreTypeEnum.IDE_ATOM
+        val atomStatisticData = storeTotalStatisticService.getStatisticByCodeList(
+            storeType = storeType.type.toByte(),
+            storeCodeList = atomCodeList
+        )
 
         atoms.forEach {
             val atomCode = it["ATOM_CODE"] as String
-            val statistic = atomStatisticData?.get(atomCode)
+            val statistic = atomStatisticData[atomCode]
             results.add(
                     ExternalIdeAtomItem(
                             atomId = it["ID"] as String,
@@ -140,8 +139,6 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
                     )
             )
         }
-
-        logger.info("[list]end")
         return ExternalIdeAtomResp(count, page, pageSize, results)
     }
 

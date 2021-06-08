@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,6 +32,7 @@ import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.misc.dao.environment.EnvironmentThirdPartyAgentDao
+import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,9 +62,29 @@ class AgentUpgradeService @Autowired constructor(
             return
         }
 
+        val canUpgradeAgents = listCanUpdateAgents(
+            currentVersion = currentVersion,
+            currentMasterVersion = currentMasterVersion,
+            maxParallelCount = maxParallelCount
+        )
+
+        if (canUpgradeAgents.isNotEmpty()) {
+            agentGrayUtils.setCanUpgradeAgents(canUpgradeAgents.map { it.id })
+        }
+    }
+
+    private fun listCanUpdateAgents(
+        currentVersion: String?,
+        currentMasterVersion: String?,
+        maxParallelCount: Int
+    ): List<TEnvironmentThirdpartyAgentRecord> {
+
         val grayProjects = gray.grayProjectSet(redisOperation)
         val gray = gray.isGray()
-        val importOKAgents = environmentThirdPartyAgentDao.listByStatus(dslContext, setOf(AgentStatus.IMPORT_OK)).toSet()
+        val importOKAgents = environmentThirdPartyAgentDao.listByStatus(
+            dslContext = dslContext,
+            status = setOf(AgentStatus.IMPORT_OK)
+        ).toSet()
         val needUpgradeAgents = importOKAgents.filter {
             when {
                 it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false
@@ -75,12 +97,12 @@ class AgentUpgradeService @Autowired constructor(
                 else -> false
             }
         }
-        val canUpgraderAgent = if (needUpgradeAgents.size > maxParallelCount) {
+
+        return if (needUpgradeAgents.size > maxParallelCount) {
             needUpgradeAgents.subList(0, maxParallelCount)
         } else {
             needUpgradeAgents
         }
-        agentGrayUtils.setCanUpgradeAgents(canUpgraderAgent.map { it.id })
     }
 
     fun setMaxParallelUpgradeCount(count: Int) {

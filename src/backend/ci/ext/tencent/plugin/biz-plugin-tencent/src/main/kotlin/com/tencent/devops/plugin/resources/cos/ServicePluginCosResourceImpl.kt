@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,14 +31,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.cos.COSClientConfig
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.service.gray.RepoGray
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.cos.COSClientConfig
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.api.cos.ServicePluginCosResource
 import com.tencent.devops.plugin.pojo.cos.CdnUploadFileInfo
 import com.tencent.devops.plugin.pojo.cos.SpmFile
@@ -60,7 +60,6 @@ class ServicePluginCosResourceImpl @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val buildLogPrinter: BuildLogPrinter,
-    private val repoGray: RepoGray,
     private val bkrepoClient: BkRepoClient
 ) : ServicePluginCosResource {
 
@@ -102,17 +101,15 @@ class ServicePluginCosResourceImpl @Autowired constructor(
             cdnUploadFileInfo.customize, cosAppInfo.bucket, cdnPath, cosAppInfo.domain, cosClientConfig
         )
 
-        val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        buildLogPrinter.addLine(
-            buildId = buildId,
-            message = "use bkrepo: $isRepoGray",
-            tag = elementId,
-            jobId = containerId,
-            executeCount = executeCount
+        val uploadCosCdnThread = UploadCosCdnThread(
+            gatewayUrl = gatewayUrl!!,
+            buildLogPrinter = buildLogPrinter,
+            cosService = cosService,
+            redisOperation = redisOperation,
+            uploadCosCdnParam = uploadCosCdnParam,
+            isRepoGray = true,
+            bkRepoClient = bkrepoClient
         )
-
-        val uploadCosCdnThread =
-            UploadCosCdnThread(gatewayUrl!!, buildLogPrinter, cosService, redisOperation, uploadCosCdnParam, isRepoGray, bkrepoClient)
         val uploadThread = Thread(uploadCosCdnThread, uploadTaskKey)
         buildLogPrinter.addLine(
             buildId = buildId,

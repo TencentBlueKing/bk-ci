@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,10 +31,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
 import com.tencent.devops.common.auth.api.pojo.BkAuthTokenCreate
 import com.tencent.devops.common.auth.api.pojo.BkAuthTokenCreateRequest
+import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSAuthServiceCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -108,7 +109,7 @@ class BSAuthTokenApi @Autowired constructor(
             .post(requestBody)
             .build()
 
-        logger.info("[$appCode|$appSecret] Start to create the access token with url($url) and body($bkAuthTokenRequest)")
+        logger.info("[$appCode|$appSecret]|createAccessToken|url($url) and body($bkAuthTokenRequest)")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -141,10 +142,14 @@ class BSAuthTokenApi @Autowired constructor(
         secretMap[BSAuthServiceCode.WETEST.value] = bkAuthProperties.wetestSecret
         secretMap[BSAuthServiceCode.PROJECT.value] = bkAuthProperties.pipelineSecret
 
-        secretMap.forEach { key, value ->
+        secretMap.forEach { (key, value) ->
             logger.info("[secretMap] key: $key , value: $value")
         }
         logger.info("auth.url: ${bkAuthProperties.url}")
+    }
+
+    override fun checkToken(token: String): Boolean {
+        return true
     }
 
     private fun getAppCodeAndSecret(serviceCode: AuthServiceCode): Pair<String, String> {

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,6 +36,7 @@ import org.springframework.stereotype.Repository
 import com.fasterxml.jackson.module.kotlin.readValue
 
 @Repository
+@Suppress("ALL")
 class SignIpaInfoDao {
 
     fun saveSignInfo(
@@ -95,35 +97,36 @@ class SignIpaInfoDao {
         with(TSignIpaInfo.T_SIGN_IPA_INFO) {
             val record = dslContext.selectFrom(this)
                 .where(RESIGN_ID.eq(resignId))
-                .fetchOne()
-            return if (record == null) {
-                null
-            } else {
-                IpaSignInfo(
-                    certId = record.certId,
-                    archiveType = record.archiveType,
-                    projectId = record.projectId,
-                    pipelineId = record.pipelineId,
-                    buildId = record.buildId,
-                    archivePath = record.archivePath,
-                    mobileProvisionId = record.mobileProvisionId,
-                    universalLinks = if (record.universalLinks != null) {
-                        JsonUtil.getObjectMapper().readValue<MutableList<String>>(record.universalLinks!!)
-//                        jacksonObjectMapper().readValue(record.universalLinks!!)
-                    } else null,
-                    keychainAccessGroups = if (record.keychainAccessGroups != null) {
-//                        jacksonObjectMapper().readValue(record.keychainAccessGroups!!)
-                        JsonUtil.getObjectMapper().readValue<MutableList<String>>(record.keychainAccessGroups!!)
-                    } else null,
-                    replaceBundleId = record.replaceBundle,
-                    appexSignInfo = if (record.appexSignInfo != null) JsonUtil.getObjectMapper().readValue<MutableList<AppexSignInfo>>(record.appexSignInfo!!) else null,
-                    fileName = record.filename,
-                    fileSize = record.fileSize,
-                    md5 = record.fileMd5,
-                    userId = record.userId,
-                    wildcard = record.wildcard
-                )
-            }
+                .fetchOne() ?: return null
+
+            val universalLinks = if (record.universalLinks != null) {
+                JsonUtil.getObjectMapper().readValue<MutableList<String>>(record.universalLinks!!)
+            } else null
+            val keychainAccessGroups = if (record.keychainAccessGroups != null) {
+                JsonUtil.getObjectMapper().readValue<MutableList<String>>(record.keychainAccessGroups!!)
+            } else null
+            val appexSignInfo = if (record.appexSignInfo != null) {
+                JsonUtil.getObjectMapper().readValue<MutableList<AppexSignInfo>>(record.appexSignInfo!!)
+            } else null
+
+            return IpaSignInfo(
+                certId = record.certId,
+                archiveType = record.archiveType,
+                projectId = record.projectId,
+                pipelineId = record.pipelineId,
+                buildId = record.buildId,
+                archivePath = record.archivePath,
+                mobileProvisionId = record.mobileProvisionId,
+                universalLinks = universalLinks,
+                keychainAccessGroups = keychainAccessGroups,
+                replaceBundleId = record.replaceBundle,
+                appexSignInfo = appexSignInfo,
+                fileName = record.filename,
+                fileSize = record.fileSize,
+                md5 = record.fileMd5,
+                userId = record.userId,
+                wildcard = record.wildcard
+            )
         }
     }
 

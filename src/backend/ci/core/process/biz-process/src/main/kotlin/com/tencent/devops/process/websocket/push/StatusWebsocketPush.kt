@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,8 +39,8 @@ import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.PageUtils
 import com.tencent.devops.common.websocket.utils.RedisUtlis
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.PipelineStatus
+import com.tencent.devops.process.service.pipeline.PipelineStatusService
 import org.slf4j.LoggerFactory
 
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
@@ -56,17 +57,17 @@ data class StatusWebsocketPush(
 ) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
-        private val pipelineService = SpringContextUtil.getBean(PipelineService::class.java)
+        private val pipelineStatusService = SpringContextUtil.getBean(PipelineStatusService::class.java)
     }
 
     override fun findSession(page: String): List<String>? {
-        if (page == "") {
+        if (page.isBlank()) {
             logger.warn("page empty: buildId[$buildId],projectId:[$projectId],pipelineId:[$pipelineId],page:[$page]")
         }
 
-        val pageList = PageUtils.createAllTagPage(page!!)
+        val pageList = PageUtils.createAllTagPage(page)
 
-        var sessionList = mutableListOf<String>()
+        val sessionList = mutableListOf<String>()
         pageList.forEach {
             val redisSession = RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, it)
             if (redisSession != null) {
@@ -77,7 +78,8 @@ data class StatusWebsocketPush(
     }
 
     override fun buildMqMessage(): SendMessage? {
-        return PipelineMessage(
+        return if (page != null) {
+            PipelineMessage(
                 buildId = buildId,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -86,21 +88,18 @@ data class StatusWebsocketPush(
                 page = page,
                 sessionList = findSession(page!!),
                 startTime = System.currentTimeMillis()
-        )
+            )
+        } else null
     }
 
     override fun buildNotifyMessage(message: SendMessage) {
-        val notifyPost = message.notifyPost
 
-        val status = pipelineService.getSinglePipelineStatusNew(userId, projectId, pipelineId)
+        val status = pipelineStatusService.getPipelineStatus(projectId = projectId, pipelineId = pipelineId)
 
         if (status != null) {
-            if (notifyPost != null) {
-                val result = mutableMapOf<String, PipelineStatus>()
-                result[pipelineId] = status
-                notifyPost.message = objectMapper.writeValueAsString(result)
-//                logger.info("StatusWebsocketPush message: $notifyPost")
-            }
+            val result = mutableMapOf<String, PipelineStatus>()
+            result[pipelineId] = status
+            message.notifyPost.message = objectMapper.writeValueAsString(result)
         }
     }
 }

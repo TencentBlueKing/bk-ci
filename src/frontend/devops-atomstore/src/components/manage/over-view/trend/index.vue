@@ -1,17 +1,17 @@
 <template>
-    <common></common>
+    <component v-bind="$props" :is="type"></component>
 </template>
 
 <script>
-    import common from './common'
+    import atom from './atom'
 
     export default {
         components: {
-            common
+            atom
         },
 
         props: {
-            datail: Object,
+            detail: Object,
             type: String
         }
     }

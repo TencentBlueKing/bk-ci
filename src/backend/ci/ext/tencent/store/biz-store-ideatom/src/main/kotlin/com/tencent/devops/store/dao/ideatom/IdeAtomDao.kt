@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -40,6 +41,7 @@ import com.tencent.devops.store.pojo.ideatom.IdeAtomCreateRequest
 import com.tencent.devops.store.pojo.ideatom.IdeAtomUpdateRequest
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -52,15 +54,22 @@ import java.time.LocalDateTime
 @Repository
 class IdeAtomDao {
 
-    fun countByName(dslContext: DSLContext, atomName: String): Long {
+    fun countByName(dslContext: DSLContext, atomName: String, atomCode: String? = null): Long {
         with(TIdeAtom.T_IDE_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_NAME.eq(atomName)).fetchOne(0, Long::class.java)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_NAME.eq(atomName))
+            if (atomCode != null) {
+                conditions.add(ATOM_CODE.eq(atomCode))
+            }
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
         }
     }
 
     fun countByCode(dslContext: DSLContext, atomCode: String): Long {
         with(TIdeAtom.T_IDE_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode)).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -70,7 +79,7 @@ class IdeAtomDao {
                 .from(this)
                 .where(ID.eq(atomId))
                 .and(ATOM_CODE.eq(atomCode))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -85,7 +94,7 @@ class IdeAtomDao {
     fun getIdeAtom(dslContext: DSLContext, atomCode: String, version: String): TIdeAtomRecord? {
         return with(TIdeAtom.T_IDE_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(VERSION.like("$version%")))
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -163,7 +172,7 @@ class IdeAtomDao {
         with(TIdeAtom.T_IDE_ATOM) {
             return dslContext.selectCount().from(this)
                 .where(ID.eq(atomId).and(ATOM_STATUS.eq(IdeAtomStatusEnum.RELEASED.status.toByte())))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -357,7 +366,7 @@ class IdeAtomDao {
             baseStep.join(d).on(a.ID.eq(d.ATOM_ID))
             conditions.add(d.LABEL_ID.`in`(labelIdList))
         }
-        return baseStep.where(conditions).fetchOne(0, Long::class.java)
+        return baseStep.where(conditions).fetchOne(0, Long::class.java)!!
     }
 
     fun listOpIdeAtoms(
@@ -458,7 +467,7 @@ class IdeAtomDao {
                     IdeAtomStatusEnum.INIT.status.toByte(),
                     IdeAtomStatusEnum.AUDITING.status.toByte()
                 )
-                conditions.add(t.field("atomStatus").`in`(atomStatusList))
+                conditions.add(t.field("atomStatus")!!.`in`(atomStatusList))
             } else {
                 val atomStatusList = listOf(
                     IdeAtomStatusEnum.AUDIT_REJECT.status.toByte(),
@@ -466,7 +475,7 @@ class IdeAtomDao {
                     IdeAtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
                     IdeAtomStatusEnum.UNDERCARRIAGED.status.toByte()
                 )
-                conditions.add(t.field("atomStatus").`in`(atomStatusList))
+                conditions.add(t.field("atomStatus")!!.`in`(atomStatusList))
             }
         }
         return conditions
@@ -507,7 +516,7 @@ class IdeAtomDao {
         with(TIdeAtom.T_IDE_ATOM) {
             return dslContext.selectCount().from(this)
                 .where(ATOM_STATUS.eq(IdeAtomStatusEnum.RELEASED.status.toByte()).and(CLASSIFY_ID.eq(classifyId)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }

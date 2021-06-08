@@ -74,6 +74,11 @@
                 return ((this.reviewInfo || {}).stageControlOption || {}).reviewParams || []
             }
         },
+        watch: {
+            reviewParams (val) {
+                val && this.handleChangeParams('reviewParams', val)
+            }
+        },
         methods: {
             ...mapActions('atom', [
                 'toggleReviewDialog',

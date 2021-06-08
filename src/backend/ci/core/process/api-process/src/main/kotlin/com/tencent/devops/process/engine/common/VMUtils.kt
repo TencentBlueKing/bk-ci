@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,27 +31,28 @@ package com.tencent.devops.process.engine.common
  *
  * @version 1.0
  */
+@Suppress("ALL")
 object VMUtils {
 
     fun genStageId(seq: Int) = "stage-$seq"
 
-    fun genStopVMTaskId(seq: Int) = "stopVM-$seq"
+    fun genStopVMTaskId(seq: Int) = "${getStopVmLabel()}$seq"
 
-    fun genEndPointTaskId(seq: Int) = "end-$seq"
+    fun genEndPointTaskId(seq: Int) = "${getEndLabel()}$seq"
 
     fun genVMSeq(containerSeq: Int, taskSeq: Int): Int = containerSeq * 1000 + taskSeq
 
-    fun genStartVMTaskId(containerSeq: String) = "startVM-$containerSeq"
+    fun genStartVMTaskId(containerSeq: String) = "${getStartVmLabel()}$containerSeq"
 
     fun getStopVmLabel() = "stopVM-"
 
-    fun getCleanVmLable() = "Clean_Job#"
+    fun getCleanVmLabel() = "Clean_Job#"
 
-    fun getStartVmLabel() = "startVM"
+    fun getStartVmLabel() = "startVM-"
 
-    fun getPrepareVmLable() = "Prepare_Job#"
+    fun getPrepareVmLabel() = "Prepare_Job#"
 
-    fun getWaitLable() = "Wait_Finish_Job#"
+    fun getWaitLabel() = "Wait_Finish_Job#"
 
-    fun getEndLable() = "end-"
+    fun getEndLabel() = "end-"
 }

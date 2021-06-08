@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,14 +30,18 @@ package com.tencent.devops.gitci.dao
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.gitci.pojo.EmailProperty
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.pojo.RtxCustomProperty
+import com.tencent.devops.gitci.pojo.RtxGroupProperty
 import com.tencent.devops.model.gitci.tables.TRepositoryConf
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class GitCISettingDao {
 
@@ -49,11 +54,12 @@ class GitCISettingDao {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 val record = context.selectFrom(this)
-                        .where(ID.eq(conf.gitProjectId))
-                        .fetchOne()
+                    .where(ID.eq(conf.gitProjectId))
+                    .fetchOne()
                 val now = LocalDateTime.now()
                 if (record == null) {
-                    context.insertInto(this,
+                    context.insertInto(
+                        this,
                         ID,
                         NAME,
                         URL,
@@ -69,8 +75,13 @@ class GitCISettingDao {
                         ENV,
                         CREATE_TIME,
                         UPDATE_TIME,
-                        PROJECT_CODE
-                        )
+                        PROJECT_CODE,
+                        RTX_CUSTOM_PROPERTY,
+                        RTX_GROUP_PROPERTY,
+                        EMAIL_PROPERTY,
+                        ONLY_FAILED_NOTIFY,
+                        ENABLE_MR_BLOCK
+                    )
                         .values(
                             conf.gitProjectId,
                             conf.name,
@@ -84,24 +95,75 @@ class GitCISettingDao {
                             conf.buildPushedPullRequest,
                             conf.autoCancelBranchBuilds,
                             conf.autoCancelPullRequestBuilds,
-                            if (conf.env == null) { "" } else { JsonUtil.toJson(conf.env!!) },
+                            if (conf.env == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.env!!)
+                            },
                             LocalDateTime.now(),
                             LocalDateTime.now(),
-                            projectCode
+                            projectCode,
+                            if (conf.rtxCustomProperty == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.rtxCustomProperty!!)
+                            },
+                            if (conf.rtxGroupProperty == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.rtxGroupProperty!!)
+                            },
+                            if (conf.emailProperty == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.emailProperty!!)
+                            },
+                            conf.onlyFailedNotify,
+                            conf.enableMrBlock
                         ).execute()
                 } else {
                     context.update(this)
                         .set(ENABLE_CI, conf.enableCi)
-                            .set(BUILD_PUSHED_BRANCHES, conf.buildPushedBranches)
-                            .set(LIMIT_CONCURRENT_JOBS, conf.limitConcurrentJobs)
-                            .set(BUILD_PUSHED_PULL_REQUEST, conf.buildPushedPullRequest)
-                            .set(AUTO_CANCEL_BRANCH_BUILDS, conf.autoCancelBranchBuilds)
-                            .set(AUTO_CANCEL_PULL_REQUEST_BUILDS, conf.autoCancelPullRequestBuilds)
-                            .set(ENV, if (conf.env == null) { "" } else { JsonUtil.toJson(conf.env!!) })
-                            .set(UPDATE_TIME, now)
-                            .set(PROJECT_CODE, projectCode)
-                            .where(ID.eq(conf.gitProjectId))
-                            .execute()
+                        .set(BUILD_PUSHED_BRANCHES, conf.buildPushedBranches)
+                        .set(LIMIT_CONCURRENT_JOBS, conf.limitConcurrentJobs)
+                        .set(BUILD_PUSHED_PULL_REQUEST, conf.buildPushedPullRequest)
+                        .set(AUTO_CANCEL_BRANCH_BUILDS, conf.autoCancelBranchBuilds)
+                        .set(AUTO_CANCEL_PULL_REQUEST_BUILDS, conf.autoCancelPullRequestBuilds)
+                        .set(
+                            ENV, if (conf.env == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.env!!)
+                            }
+                        )
+                        .set(UPDATE_TIME, now)
+                        .set(PROJECT_CODE, projectCode)
+                        .set(
+                            RTX_CUSTOM_PROPERTY, if (conf.rtxCustomProperty == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.rtxCustomProperty!!)
+                            }
+                        )
+                        .set(
+                            RTX_GROUP_PROPERTY,
+                            if (conf.rtxGroupProperty == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.rtxGroupProperty!!)
+                            }
+                        )
+                        .set(
+                            EMAIL_PROPERTY, if (conf.emailProperty == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.emailProperty!!)
+                            }
+                        )
+                        .set(ONLY_FAILED_NOTIFY, conf.onlyFailedNotify)
+                        .set(ENABLE_MR_BLOCK, conf.enableMrBlock)
+                        .where(ID.eq(conf.gitProjectId))
+                        .execute()
                 }
             }
         }
@@ -139,6 +201,30 @@ class GitCISettingDao {
             if (conf == null) {
                 return null
             } else {
+                val rtxCustomProperty = try {
+                    if (!conf.rtxCustomProperty.isNullOrBlank()) {
+                        JsonUtil.getObjectMapper().readValue(conf.rtxCustomProperty) as RtxCustomProperty
+                    } else null
+                } catch (e: Exception) {
+                    null
+                }
+
+                val emailProperty = try {
+                    if (!conf.emailProperty.isNullOrBlank()) {
+                        JsonUtil.getObjectMapper().readValue(conf.emailProperty) as EmailProperty
+                    } else null
+                } catch (e: Exception) {
+                    null
+                }
+
+                val rtxGroupProperty = try {
+                    if (!conf.rtxGroupProperty.isNullOrBlank()) {
+                        JsonUtil.getObjectMapper().readValue(conf.rtxGroupProperty) as RtxGroupProperty
+                    } else null
+                } catch (e: Exception) {
+                    null
+                }
+
                 return GitRepositoryConf(
                     gitProjectId = conf.id,
                     name = conf.name,
@@ -159,8 +245,13 @@ class GitCISettingDao {
                     },
                     createTime = conf.createTime.timestampmilli(),
                     updateTime = conf.updateTime.timestampmilli(),
-                    projectCode = conf.projectCode
-                        )
+                    projectCode = conf.projectCode,
+                    rtxCustomProperty = rtxCustomProperty,
+                    emailProperty = emailProperty,
+                    rtxGroupProperty = rtxGroupProperty,
+                    onlyFailedNotify = conf.onlyFailedNotify,
+                    enableMrBlock = conf.enableMrBlock
+                )
             }
         }
     }

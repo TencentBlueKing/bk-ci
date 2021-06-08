@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,6 +29,8 @@ package com.tencent.devops.misc.service.process
 
 import com.tencent.devops.misc.dao.process.ProcessDao
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -55,15 +58,21 @@ class ProcessService @Autowired constructor(
             maxBuildNum = maxBuildNum,
             maxStartTime = maxStartTime
         )
-        return if (historyBuildIdRecords == null) {
-            null
-        } else {
-            val buildIdList = mutableListOf<String>()
-            historyBuildIdRecords.forEach { historyBuildIdRecord ->
-                buildIdList.add(historyBuildIdRecord.getValue(0, String::class.java))
-            }
-            buildIdList
-        }
+        return generateIdList(historyBuildIdRecords)
+    }
+
+    fun getClearDeletePipelineIdList(
+        projectId: String,
+        pipelineIdList: List<String>,
+        gapDays: Long
+    ): List<String>? {
+        val pipelineIdRecords = processDao.getClearDeletePipelineIdList(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIdList = pipelineIdList,
+            gapDays = gapDays
+        )
+        return generateIdList(pipelineIdRecords)
     }
 
     fun getPipelineIdListByProjectId(projectId: String): List<String>? {
@@ -71,14 +80,18 @@ class ProcessService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId
         )
-        return if (pipelineIdRecords == null) {
+        return generateIdList(pipelineIdRecords)
+    }
+
+    private fun generateIdList(records: Result<out Record>?): MutableList<String>? {
+        return if (records == null) {
             null
         } else {
-            val pipelineIdList = mutableListOf<String>()
-            pipelineIdRecords.forEach { pipelineIdRecord ->
-                pipelineIdList.add(pipelineIdRecord.getValue(0, String::class.java))
+            val idList = mutableListOf<String>()
+            records.forEach { record ->
+                idList.add(record.getValue(0, String::class.java))
             }
-            pipelineIdList
+            idList
         }
     }
 

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,6 +39,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
@@ -58,7 +60,6 @@ import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitBranchCommit
-import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
@@ -67,10 +68,12 @@ import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.OwnerInfo
@@ -105,6 +108,7 @@ class GitService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(GitService::class.java)
         private val gitOauthApi = GitOauthApi()
+        private const val MAX_FILE_SIZE = 1 * 1024 * 1024
     }
 
     @Value("\${gitCI.clientId}")
@@ -415,7 +419,37 @@ class GitService @Autowired constructor(
         return false
     }
 
-    fun getGitCIFileContent(gitProjectId: Long, filePath: String, token: String, ref: String): String {
+    fun getGitCIUserId(rtxId: String, gitProjectId: String): String? {
+        try {
+            val token = getToken(gitProjectId)
+            val url = "$gitCIOauthUrl/api/v3/users/$rtxId?access_token=${token.accessToken}"
+
+            logger.info("[$rtxId]|[$gitProjectId]| Get gitUserId: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use { response ->
+                val body = response.body()!!.string()
+                logger.info("[$rtxId]|[$gitProjectId]| Get gitUserId response body: $body")
+                val userInfo = JsonUtil.to(body, Map::class.java)
+                val gitUserId = userInfo["id"].toString()
+                return gitUserId
+            }
+        } catch (e: Exception) {
+            logger.error("get git project member fail! gitProjectId: $gitProjectId", e)
+            return null
+        }
+
+        return null
+    }
+
+    fun getGitCIFileContent(
+        gitProjectId: Long,
+        filePath: String,
+        token: String,
+        ref: String
+    ): String {
         logger.info("[$gitProjectId|$filePath|$ref] Start to get the git file content")
         val startEpoch = System.currentTimeMillis()
         try {
@@ -503,8 +537,8 @@ class GitService @Autowired constructor(
 
     fun getCommits(
         gitProjectId: Long,
-        filePath: String,
-        branch: String,
+        filePath: String?,
+        branch: String?,
         token: String,
         since: String?,
         until: String?,
@@ -514,13 +548,28 @@ class GitService @Autowired constructor(
         logger.info("[$gitProjectId|$filePath|$branch|$since|$until] Start to get the git commits")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits" +
-                    "?ref_name=${URLEncoder.encode(branch, "UTF-8")}" +
-                    "&path=${URLEncoder.encode(filePath, "UTF-8")}" +
-                    if (since != null) { "&since=${since.replace("+", "%2B")}" } else { "" } +
-                    if (until != null) { "&until=${until.replace("+", "%2B")}" } else { "" } +
-                    "&page=$page" + "&per_page=$perPage" +
-                    "&access_token=$token"
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits?access_token=$token" +
+                    if (branch != null) {
+                        "&ref_name=${URLEncoder.encode(branch, "UTF-8")}"
+                    } else {
+                        ""
+                    } +
+                    if (filePath != null) {
+                        "&path=${URLEncoder.encode(filePath, "UTF-8")}"
+                    } else {
+                        ""
+                    } +
+                    if (since != null) {
+                        "&since=${since.replace("+", "%2B")}"
+                    } else {
+                        ""
+                    } +
+                    if (until != null) {
+                        "&until=${until.replace("+", "%2B")}"
+                    } else {
+                        ""
+                    } +
+                    "&page=$page" + "&per_page=$perPage"
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -533,6 +582,25 @@ class GitService @Autowired constructor(
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git commits")
+        }
+    }
+
+    fun gitCodeCreateFile(gitProjectId: String, token: String, gitCICreateFile: GitCICreateFile): Boolean {
+        val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/files?access_token=$token"
+        val request = Request.Builder()
+            .url(url)
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"),
+                    JsonUtil.toJson(gitCICreateFile)
+                )
+            )
+            .build()
+        logger.info("request: $request Start to create file")
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            if (!it.isSuccessful) throw RuntimeException("fail to create file: $data")
+            return true
         }
     }
 
@@ -557,7 +625,12 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun getGitCIFileTree(gitProjectId: Long, path: String, token: String, ref: String): List<GitFileInfo> {
+    fun getGitCIFileTree(
+        gitProjectId: Long,
+        path: String,
+        token: String,
+        ref: String
+    ): List<GitFileInfo> {
         logger.info("[$gitProjectId|$path|$ref] Start to get the git file tree")
         val startEpoch = System.currentTimeMillis()
         try {
@@ -598,11 +671,24 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun getGitFileContent(repoName: String, filePath: String, authType: RepoAuthType?, token: String, ref: String): String {
-        logger.info("[$repoName|$filePath|$authType|$ref] Start to get the git file content")
+    @Suppress("ALL")
+    fun getGitFileContent(
+        repoUrl: String? = null,
+        repoName: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        token: String,
+        ref: String
+    ): String {
+        val apiUrl = if (repoUrl.isNullOrBlank()) {
+            gitConfig.gitApiUrl
+        } else {
+            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl!!)
+        }
+        logger.info("[$repoName|$filePath|$authType|$ref] Start to get the git file content from $apiUrl")
         val startEpoch = System.currentTimeMillis()
         try {
-            var url = "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/repository/blobs/" +
+            var url = "$apiUrl/projects/${URLEncoder.encode(repoName, "UTF-8")}/repository/blobs/" +
                 "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}"
             val request = if (authType == RepoAuthType.OAUTH) {
                 url += "&access_token=$token"
@@ -618,7 +704,7 @@ class GitService @Autowired constructor(
                     .build()
             }
             OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
+                val data = it.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
                 if (!it.isSuccessful) throw RuntimeException("fail to get git file content with: $url($data)")
                 return data
             }
@@ -627,8 +713,19 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun getGitlabFileContent(repoName: String, filePath: String, ref: String, accessToken: String): String {
-        logger.info("[$repoName|$filePath|$ref|$accessToken] Start to get the gitlab file content")
+    fun getGitlabFileContent(
+        repoUrl: String?,
+        repoName: String,
+        filePath: String,
+        ref: String,
+        accessToken: String
+    ): String {
+        val apiUrl = if (repoUrl.isNullOrBlank()) {
+            gitConfig.gitlabApiUrl
+        } else {
+            GitUtils.getGitApiUrl(gitConfig.gitlabApiUrl, repoUrl!!)
+        }
+        logger.info("[$repoName|$filePath|$ref|$accessToken] Start to get the gitlab file content from $apiUrl")
         val startEpoch = System.currentTimeMillis()
         try {
             val headers = mapOf("PRIVATE-TOKEN" to accessToken)
@@ -636,10 +733,10 @@ class GitService @Autowired constructor(
             val encodeFilePath = URLEncoder.encode(filePath, "utf-8")
             val encodeRef = URLEncoder.encode(ref, "utf-8")
             val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
-            val projectFileUrl = "${gitConfig.gitlabApiUrl}/projects/$encodeProjectName/repository/files/$encodeFilePath?ref=$encodeRef"
+            val projectFileUrl = "$apiUrl/projects/$encodeProjectName/repository/files/$encodeFilePath?ref=$encodeRef"
             logger.info(projectFileUrl)
             OkhttpUtils.doGet(projectFileUrl, headers).use { response ->
-                val body = response.body()!!.string()
+                val body = response.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
                 val fileInfo = objectMapper.readValue(body, GitlabFileInfo::class.java)
                 return String(Base64.getDecoder().decode(fileInfo.content))
             }
@@ -1009,17 +1106,26 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun getGitCIProjectInfo(gitProjectId: String, token: String): Result<GitCIProjectInfo?> {
+    fun getGitCIProjectInfo(
+        gitProjectId: String,
+        token: String,
+        useAccessToken: Boolean = true
+    ): Result<GitCIProjectInfo?> {
         logger.info("[gitProjectId=$gitProjectId]|getGitCIProjectInfo")
         val encodeId = URLEncoder.encode(gitProjectId, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
-        val url = StringBuilder("$gitCIUrl/api/v3/projects/$encodeId?access_token=$token")
+        val str = "$gitCIUrl/api/v3/projects/$encodeId?" + if (useAccessToken) {
+            "access_token=$token"
+        } else {
+            "private_token=$token"
+        }
+        val url = StringBuilder(str)
         val request = Request.Builder()
             .url(url.toString())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use {
             val response = it.body()!!.string()
-            logger.info("[gitProjectId=$gitProjectId]|getGitCIProjectInfo with response=$response")
+            logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             return Result(JsonUtil.to(response, GitCIProjectInfo::class.java))
         }
@@ -1300,6 +1406,26 @@ class GitService @Autowired constructor(
             )
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to unlock webhook lock")
+        }
+    }
+
+    fun clearToken(token: String): Boolean {
+        logger.info("Start to clear the token: $token")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val tokenUrl = "$gitCIOauthUrl/oauth/token" +
+                "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&access_token=$token"
+            val request = Request.Builder()
+                .url(tokenUrl)
+                .delete(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
+                .build()
+
+            OkhttpUtils.doHttp(request).use { response ->
+                logger.info("Clear token response code: ${response.code()}")
+                return response.isSuccessful
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to clear the token")
         }
     }
 }

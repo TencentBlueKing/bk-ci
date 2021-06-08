@@ -1,9 +1,8 @@
 <template>
     <article v-bkloading="{ isLoading }" class="image-progress-home">
         <bread-crumbs :bread-crumbs="navList" type="image">
-            <a class="g-title-work" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
+            <a class="g-title-work" target="_blank" :href="docsLink"> {{ $t('store.镜像指引') }} </a>
         </bread-crumbs>
-
         <main v-if="!isLoading" class="image-progress-main">
             <section class="image-progress-section">
                 <h3>
@@ -95,6 +94,7 @@
 
         data () {
             return {
+                docsLink: `${DOCS_URL_PREFIX}/store/ci-images/image-build`,
                 isLoading: false,
                 isTestLoading: false,
                 progressStatus: [],

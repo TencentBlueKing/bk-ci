@@ -1,23 +1,50 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.common.service.utils
 
 import com.tencent.devops.common.api.util.Watcher
 import org.slf4j.LoggerFactory
 
 object LogUtils {
-    private val logger = LoggerFactory.getLogger(LogUtils::class.java)
 
-    fun costTime(message: String, startTime: Long) {
-        val endTime = System.currentTimeMillis()
-        val cost = endTime - startTime
-        when (cost) {
-            in 0..999 -> {
-                logger.info("$message cost $cost ms")
+    private val LOG = LoggerFactory.getLogger(LogUtils::class.java)
+
+    fun costTime(message: String, startTime: Long, warnThreshold: Long = 1000, errorThreshold: Long = 5000) {
+        val cost = System.currentTimeMillis() - startTime
+        when {
+            cost < warnThreshold -> {
+                LOG.info("$message cost $cost ms")
             }
-            in 1000..5000 -> {
-                logger.warn("$message cost $cost ms")
+            cost in warnThreshold until errorThreshold -> {
+                LOG.warn("$message cost $cost ms")
             }
             else -> {
-                logger.error("$message cost $cost ms")
+                LOG.error("$message cost $cost ms")
             }
         }
     }
@@ -28,13 +55,12 @@ object LogUtils {
      */
     fun printCostTimeWE(watcher: Watcher, warnThreshold: Long = 1000, errorThreshold: Long = 5000) {
         watcher.stop()
-        val endTime = System.currentTimeMillis()
-        val cost = endTime - watcher.createTime
+        val cost = System.currentTimeMillis() - watcher.createTime
         if (cost >= warnThreshold) {
             if (cost > errorThreshold) {
-                logger.error("$watcher cost $cost ms")
+                LOG.error("$watcher cost $cost ms")
             } else {
-                logger.warn("$watcher cost $cost ms")
+                LOG.warn("$watcher cost $cost ms")
             }
         }
     }

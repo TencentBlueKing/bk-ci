@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,7 +35,6 @@ import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.MobileProvisionService
 import com.tencent.devops.ticket.api.ServiceCertResource
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
@@ -46,7 +46,6 @@ class MobileProvisionServiceImpl @Autowired constructor(
 ) : MobileProvisionService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(MobileProvisionServiceImpl::class.java)
         private val pairKey = DHUtil.initKey()
         private val privateKey = pairKey.privateKey
         private val publicKey = String(Base64.getEncoder().encode(pairKey.publicKey))
@@ -54,7 +53,10 @@ class MobileProvisionServiceImpl @Autowired constructor(
 
     override fun downloadMobileProvision(mobileProvisionDir: File, projectId: String, mobileProvisionId: String): File {
         // 从ticket模块获取描述文件
-        val mpInfo = client.getGateway(ServiceCertResource::class, GatewayType.DEVNET_PROXY).getEnterprise(projectId, mobileProvisionId, publicKey).data
+        val mpInfo = client.getGateway(
+            clz = ServiceCertResource::class,
+            gatewayType = GatewayType.DEVNET_PROXY
+        ).getEnterprise(projectId = projectId, certId = mobileProvisionId, publicKey = publicKey).data
                 ?: throw ErrorCodeException(errorCode = SignMessageCode.ERROR_MP_NOT_EXIST, defaultMessage = "描述文件不存在。")
         val publicKeyServer = Base64.getDecoder().decode(mpInfo.publicKey)
         val mpContent = Base64.getDecoder().decode(mpInfo.mobileProvisionContent)
@@ -64,8 +66,7 @@ class MobileProvisionServiceImpl @Autowired constructor(
         return mobileProvisionFile
     }
 
-    override fun handleEntitlement(entitlementFile: File) {
-    }
+    override fun handleEntitlement(entitlementFile: File) = Unit
 
     override fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): File? {
         return null

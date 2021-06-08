@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -42,41 +43,49 @@ class PrebuildProjectDao {
         owner: String,
         yaml: String,
         pipelineId: String,
-        workspace: String
+        workspace: String,
+        ideVersion: String?,
+        pluginVersion: String?
     ) {
         with(TPrebuildProject.T_PREBUILD_PROJECT) {
             dslContext.insertInto(
-                    this,
-                    PREBUILD_PROJECT_ID,
-                    PROJECT_ID,
-                    OWNER,
-                    DESC,
-                    CREATE_TIME,
-                    CREATOR,
-                    UPDATE_TIME,
-                    LAST_MODIFY_USER,
-                    YAML,
-                    PIPELINE_ID,
-                    WORKSPACE
+                this,
+                PREBUILD_PROJECT_ID,
+                PROJECT_ID,
+                OWNER,
+                DESC,
+                CREATE_TIME,
+                CREATOR,
+                UPDATE_TIME,
+                LAST_MODIFY_USER,
+                YAML,
+                PIPELINE_ID,
+                WORKSPACE,
+                IDE_VERSION,
+                PLUGIN_VERSION
             ).values(
-                    prebuildProjectId,
-                    projectId,
-                    owner,
-                    "",
-                    LocalDateTime.now(),
-                    owner,
-                    LocalDateTime.now(),
-                    owner,
-                    yaml,
-                    pipelineId,
-                    workspace
+                prebuildProjectId,
+                projectId,
+                owner,
+                "",
+                LocalDateTime.now(),
+                owner,
+                LocalDateTime.now(),
+                owner,
+                yaml,
+                pipelineId,
+                workspace,
+                ideVersion,
+                pluginVersion
             ).onDuplicateKeyUpdate()
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .set(LAST_MODIFY_USER, owner)
-                    .set(YAML, yaml)
-                    .set(PIPELINE_ID, pipelineId)
-                    .set(WORKSPACE, workspace)
-                    .execute()
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(LAST_MODIFY_USER, owner)
+                .set(YAML, yaml)
+                .set(PIPELINE_ID, pipelineId)
+                .set(WORKSPACE, workspace)
+                .set(IDE_VERSION, ideVersion)
+                .set(PLUGIN_VERSION, pluginVersion)
+                .execute()
         }
     }
 
@@ -161,10 +170,10 @@ class PrebuildProjectDao {
     ): TPrebuildProjectRecord? {
         with(TPrebuildProject.T_PREBUILD_PROJECT) {
             return dslContext.selectFrom(this)
-                    .where(PREBUILD_PROJECT_ID.eq(prebuildProjectId))
-                    .and(OWNER.eq(userId))
-                    .and(WORKSPACE.eq(workspace))
-                    .fetchAny()
+                .where(PREBUILD_PROJECT_ID.eq(prebuildProjectId))
+                .and(OWNER.eq(userId))
+                .and(WORKSPACE.eq(workspace))
+                .fetchAny()
         }
     }
 

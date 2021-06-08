@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -52,6 +53,7 @@ import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -293,10 +295,10 @@ interface ServiceGitResource {
         gitProjectId: Long,
         @ApiParam(value = "filePath")
         @QueryParam("filePath")
-        filePath: String,
+        filePath: String?,
         @ApiParam(value = "branch")
         @QueryParam("branch")
-        branch: String,
+        branch: String?,
         @ApiParam(value = "token")
         @QueryParam("token")
         token: String,
@@ -313,6 +315,20 @@ interface ServiceGitResource {
         @QueryParam("perPage")
         perPage: Int
     ): Result<List<Commit>>
+
+    @ApiOperation("工蜂创建文件")
+    @POST
+    @Path("/gitci/create/file")
+    fun gitCICreateFile(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "创建文件内容")
+        gitCICreateFile: GitCICreateFile
+    ): Result<Boolean>
 
     @ApiOperation("获取当前commit记录所属")
     @GET
@@ -345,6 +361,9 @@ interface ServiceGitResource {
     @GET
     @Path("/getGitFileContent")
     fun getGitFileContent(
+        @ApiParam(value = "仓库url")
+        @QueryParam("repoUrl")
+        repoUrl: String? = null,
         @ApiParam(value = "仓库名字")
         @QueryParam("repoName")
         repoName: String,
@@ -366,6 +385,9 @@ interface ServiceGitResource {
     @GET
     @Path("/getGitlabFileContent")
     fun getGitlabFileContent(
+        @ApiParam(value = "仓库url")
+        @QueryParam("repoUrl")
+        repoUrl: String? = null,
         @ApiParam(value = "仓库名字")
         @QueryParam("repoName")
         repoName: String,

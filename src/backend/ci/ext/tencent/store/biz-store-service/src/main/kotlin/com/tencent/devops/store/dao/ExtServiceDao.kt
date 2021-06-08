@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -44,6 +45,7 @@ import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -207,7 +209,7 @@ class ExtServiceDao {
             .leftJoin(b)
             .on(a.SERVICE_CODE.eq(b.STORE_CODE))
             .where(conditions)
-            .fetchOne(0, Int::class.java)
+            .fetchOne(0, Int::class.java)!!
     }
 
     fun countReleaseServiceByCode(dslContext: DSLContext, serviceCode: String): Int {
@@ -216,7 +218,7 @@ class ExtServiceDao {
                 SERVICE_CODE.eq(serviceCode).and(DELETE_FLAG.eq(false)).and(
                     SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())
                 )
-            ).fetchOne(0, Int::class.java)
+            ).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -298,7 +300,19 @@ class ExtServiceDao {
     fun countByCode(dslContext: DSLContext, serviceCode: String): Int {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.selectCount().from(this).where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countByName(dslContext: DSLContext, serviceName: String, serviceCode: String? = null): Int {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(SERVICE_NAME.eq(serviceName))
+            conditions.add(DELETE_FLAG.eq(false))
+            if (serviceCode != null) {
+                conditions.add(SERVICE_CODE.eq(serviceCode))
+            }
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -332,7 +346,7 @@ class ExtServiceDao {
     fun getExtService(dslContext: DSLContext, serviceCode: String, version: String): TExtensionServiceRecord? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.selectFrom(this)
-                .where(SERVICE_CODE.eq(serviceCode).and(VERSION.like("$version%")))
+                .where(SERVICE_CODE.eq(serviceCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -480,11 +494,11 @@ class ExtServiceDao {
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(ta.SERVICE_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
-            conditions.add(t.field("STORE_TYPE", Byte::class.java).eq(storeType))
+            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
+            conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType))
         }
 
-        return baseStep.where(conditions).fetchOne(0, Int::class.java)
+        return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     /**
@@ -581,9 +595,9 @@ class ExtServiceDao {
         }
         val realSortType = a.field(sortType)
         val orderByStep = if (desc != null && desc) {
-            realSortType.desc()
+            realSortType!!.desc()
         } else {
-            realSortType.asc()
+            realSortType!!.asc()
         }
         val t = selectField.where(conditions).orderBy(orderByStep)
         val baseStep = dslContext.select().from(t)
@@ -640,13 +654,13 @@ class ExtServiceDao {
                 conditions.add(a.SERVICE_STATUS.notEqual(ExtServiceStatusEnum.AUDITING.status.toByte()))
             }
         }
-        return selectFeild.where(conditions).fetchOne(0, Int::class.java)
+        return selectFeild.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     fun getLatestFlag(dslContext: DSLContext, serviceCode: String): Boolean {
         with(TExtensionService.T_EXTENSION_SERVICE) {
             val count = dslContext.selectCount().from(this).where(SERVICE_CODE.eq(serviceCode).and(SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
             if (count > 0) {
                 return false
             }
@@ -680,6 +694,8 @@ class ExtServiceDao {
             ta.LOGO_URL,
             ta.PUBLISHER,
             ta.SUMMARY,
+            ta.MODIFIER,
+            ta.UPDATE_TIME,
             taf.RECOMMEND_FLAG,
             taf.PUBLIC_FLAG
         ).from(ta)
@@ -717,8 +733,8 @@ class ExtServiceDao {
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(ta.SERVICE_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
-            conditions.add(t.field("STORE_TYPE", Byte::class.java).eq(storeType))
+            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
+            conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType))
         }
 
         if (null != sortType) {
@@ -737,9 +753,9 @@ class ExtServiceDao {
             }
 
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType.desc())
+                baseStep.where(conditions).orderBy(realSortType!!.desc())
             } else {
-                baseStep.where(conditions).orderBy(realSortType.asc())
+                baseStep.where(conditions).orderBy(realSortType!!.asc())
             }
         } else {
             baseStep.where(conditions)

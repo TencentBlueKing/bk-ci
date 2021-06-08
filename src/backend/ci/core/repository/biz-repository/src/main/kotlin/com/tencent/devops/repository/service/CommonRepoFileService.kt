@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,33 +37,38 @@ import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ALL")
 class CommonRepoFileService @Autowired constructor(
     private val gitService: IGitService,
     private val gitTokenDao: GitTokenDao,
     private val dslContext: DSLContext
 ) {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(CommonRepoFileService::class.java)
-    }
-
     @Value("\${aes.git:#{null}}")
     private val aesKey: String = ""
 
-    fun getGitFileContent(repoUrl: String, filePath: String, ref: String?, token: String, authType: RepoAuthType?, subModule: String?): String {
+    fun getGitFileContent(
+        repoUrl: String,
+        filePath: String,
+        ref: String?,
+        token: String,
+        authType: RepoAuthType?,
+        subModule: String?
+    ): String {
         val projectName = if (subModule.isNullOrBlank()) GitUtils.getProjectName(repoUrl) else subModule
         return gitService.getGitFileContent(
-                repoName = projectName!!,
-                filePath = filePath.removePrefix("/"),
-                authType = authType,
-                token = token,
-                ref = ref ?: "master")
+            repoUrl = repoUrl,
+            repoName = projectName!!,
+            filePath = filePath.removePrefix("/"),
+            authType = authType,
+            token = token,
+            ref = ref ?: "master"
+        )
     }
 
     fun getGitFileContentOauth(userId: String, repoName: String, filePath: String, ref: String?): Result<String> {
@@ -72,6 +78,7 @@ class CommonRepoFileService @Autowired constructor(
                 ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
         )
         return Result(gitService.getGitFileContent(
+            repoUrl = null,
             repoName = repoName,
             filePath = filePath.removePrefix("/"),
             authType = RepoAuthType.OAUTH,
@@ -85,7 +92,11 @@ class CommonRepoFileService @Autowired constructor(
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
                 ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
         )
-        return Result(gitService.getRepoMembers(accessToken = token, userId = userId, repoName = GitUtils.getProjectName(repoUrl)))
+        return Result(data = gitService.getRepoMembers(
+            accessToken = token,
+            userId = userId,
+            repoName = GitUtils.getProjectName(repoUrl)
+        ))
     }
 
     fun getGitProjectAllMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
@@ -94,6 +105,10 @@ class CommonRepoFileService @Autowired constructor(
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
                 ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
         )
-        return Result(gitService.getRepoAllMembers(accessToken = token, userId = userId, repoName = GitUtils.getProjectName(repoUrl)))
+        return Result(data = gitService.getRepoAllMembers(
+            accessToken = token,
+            userId = userId,
+            repoName = GitUtils.getProjectName(repoUrl)
+        ))
     }
 }

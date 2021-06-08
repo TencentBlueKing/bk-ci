@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,26 +31,25 @@ import com.tencent.devops.artifactory.api.user.UserPipelineResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.artifactory.service.PipelineService
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryPipelineDirService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoPipelineDirService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPipelineResourceImpl @Autowired constructor(
     val pipelineService: PipelineService,
-    val bkRepoPipelineDirService: BkRepoPipelineDirService,
-    val artifactoryPipelineDirService: ArtifactoryPipelineDirService,
-    val redisOperation: RedisOperation,
-    val repoGray: RepoGray
+    val bkRepoPipelineDirService: BkRepoPipelineDirService
 ) : UserPipelineResource {
 
-    override fun hasPermissionList(userId: String, projectId: String, path: String, permission: Permission): Result<List<FileInfo>> {
+    override fun hasPermissionList(
+        userId: String,
+        projectId: String,
+        path: String,
+        permission: Permission
+    ): Result<List<FileInfo>> {
         checkParam(userId, projectId, path)
         val bkAuthPermission = when (permission) {
             Permission.VIEW -> AuthPermission.VIEW
@@ -58,11 +58,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             Permission.LIST -> AuthPermission.LIST
             Permission.EXECUTE -> AuthPermission.EXECUTE
         }
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoPipelineDirService.list(userId, projectId, path, bkAuthPermission))
-        } else {
-            Result(artifactoryPipelineDirService.list(userId, projectId, path, bkAuthPermission))
-        }
+        return Result(bkRepoPipelineDirService.list(userId, projectId, path, bkAuthPermission))
     }
 
     private fun checkParam(userId: String, projectId: String) {

@@ -29,16 +29,17 @@ package com.tencent.bk.codecc.task.service.impl;
 import com.tencent.bk.codecc.defect.api.ServiceCheckerSetRestResource;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.service.AbstractTaskRegisterService;
-import com.tencent.bk.codecc.task.utils.CommonKafkaClient;
 import com.tencent.bk.codecc.task.vo.BatchRegisterVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.TaskIdVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
+import com.tencent.devops.common.api.checkerset.CheckerSetVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.auth.api.external.AuthExRegisterApi;
-import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.ComConstants.Tool;
 import com.tencent.devops.common.constant.CommonMessageCode;
+import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -64,20 +65,24 @@ public class DevopsTaskRegisterServiceImpl extends AbstractTaskRegisterService
     @Autowired
     private AuthExRegisterApi authExRegisterApi;
 
-    @Autowired
-    private CommonKafkaClient commonKafkaClient;
-
     @Override
     public TaskIdVO registerTask(TaskDetailVO taskDetailVO, String userName)
     {
+        // 添加 CLOC 工具
+        CheckerSetVO clocCheckerSet = new CheckerSetVO();
+        clocCheckerSet.setCheckerSetId("standard_cloc");
+        clocCheckerSet.setToolList(Collections.singleton(Tool.CLOC.name()));
+        clocCheckerSet.setVersion(Integer.MAX_VALUE);
+        clocCheckerSet.setCodeLang(1073741824L);
+        taskDetailVO.getCheckerSetList().add(clocCheckerSet);
+        taskDetailVO.setCodeLang(taskDetailVO.getCodeLang() + 1073741824L);
+
         // 注册任务
         taskDetailVO.setCreateFrom(ComConstants.BsTaskCreateFrom.BS_CODECC.value());
         String nameEn = getTaskStreamName(taskDetailVO.getProjectId(), taskDetailVO.getNameCn(), taskDetailVO.getCreateFrom());
         taskDetailVO.setNameEn(nameEn);
         taskDetailVO.setAtomCode(ComConstants.AtomCode.CODECC_V3.code());
         TaskInfoEntity taskInfoEntity = createTask(taskDetailVO, userName);
-        //推送任务信息至数据平台
-        commonKafkaClient.pushTaskDetailToKafka(taskInfoEntity);
 
         // 将任务注册到权限中心
         try
@@ -141,7 +146,6 @@ public class DevopsTaskRegisterServiceImpl extends AbstractTaskRegisterService
                 }
             });
         }
-
 
         BatchRegisterVO batchRegisterVO = new BatchRegisterVO();
         BeanUtils.copyProperties(taskDetailVO, batchRegisterVO);

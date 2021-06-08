@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,8 +27,7 @@
 
 package com.tencent.devops.log.client.impl
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.redis.RedisLock
@@ -65,22 +65,18 @@ class MultiESLogClient constructor(
         }
     }
 
-    private val cache = CacheBuilder.newBuilder()
+    private val cache = Caffeine.newBuilder()
         .maximumSize(300000)
         .expireAfterWrite(2, TimeUnit.DAYS)
         .build<String/*buildId*/, String/*ES NAME*/>()
 
     // The cache store the bad ES
-    private val inactiveESCache = CacheBuilder.newBuilder()
-            .maximumSize(10)
-            .expireAfterWrite(1, TimeUnit.MINUTES)
-            .build<String/*ES Name*/, Boolean>(
-                object : CacheLoader<String, Boolean>() {
-                    override fun load(esName: String): Boolean {
-                        return getInactiveESFromRedis().contains(esName)
-                    }
-                }
-            )
+    private val inactiveESCache = Caffeine.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String/*ES Name*/, Boolean> { esName ->
+            getInactiveESFromRedis().contains(esName)
+        }
 
     private val notifyExecutor = Executors.newSingleThreadExecutor()
 
@@ -123,11 +119,11 @@ class MultiESLogClient constructor(
     }
 
     fun getInactiveClients(): List<ESClient> {
-        return clients.filter { inactiveESCache.get(it.clusterName) }
+        return clients.filter { inactiveESCache.get(it.clusterName) ?: false }
     }
 
     override fun getActiveClients(): List<ESClient> {
-        return clients.filter { !inactiveESCache.get(it.clusterName) }
+        return clients.filter { inactiveESCache.get(it.clusterName) != true }
     }
 
     /**

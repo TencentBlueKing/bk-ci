@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,9 +32,7 @@ import com.tencent.devops.artifactory.pojo.MtpDownloadInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
@@ -41,26 +40,23 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceMtpResourceImpl @Autowired constructor(
-    private val commonConfig: CommonConfig,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray
+    private val commonConfig: CommonConfig
 ) : ServiceMtpResource {
-    override fun mtpDownload(userId: String?, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<MtpDownloadInfo> {
-        logger.info("mtpDownload, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
+    override fun mtpDownload(
+        userId: String?,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<MtpDownloadInfo> {
+        logger.info("mtpDownload, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType," +
+            " path: $path")
         val gatewayUrl = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
-        val mtpDownloadInfo = if (repoGray.isGray(projectId, redisOperation)) {
-            MtpDownloadInfo(1, "$gatewayUrl/bkrepo/api/service/generic/$projectId/${RepoUtils.getRepoByType(artifactoryType)}/${path.removePrefix("/")}")
-        } else {
-            if (artifactoryType == ArtifactoryType.PIPELINE) {
-                MtpDownloadInfo(0, "$gatewayUrl/jfrog/storage/service/archive/$projectId/${path.removePrefix("/")}")
-            } else {
-                MtpDownloadInfo(0, "$gatewayUrl/jfrog/storage/service/custom/$projectId/${path.removePrefix("/")}")
-            }
-        }
+        val mtpDownloadInfo = MtpDownloadInfo(1, "$gatewayUrl/bkrepo/api/service/generic/" +
+            "$projectId/${RepoUtils.getRepoByType(artifactoryType)}/${path.removePrefix("/")}")
         return Result(mtpDownloadInfo)
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ServiceMtpResourceImpl::class.java)
     }
 }

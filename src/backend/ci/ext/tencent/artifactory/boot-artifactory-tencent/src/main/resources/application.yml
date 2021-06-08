@@ -1,9 +1,9 @@
 spring:
   application:
     name: artifactory
-    desc: DevOps Dispatch Service
+    desc: DevOps Artifactory Service
     version: 4.0.0
-    packageName: com.tencent.devops.dispatch
+    packageName: com.tencent.devops.artifactory
 
 server:
   port: 21922

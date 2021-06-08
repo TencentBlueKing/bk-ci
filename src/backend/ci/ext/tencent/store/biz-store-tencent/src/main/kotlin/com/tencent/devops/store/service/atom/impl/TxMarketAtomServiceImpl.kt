@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -62,8 +63,6 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
         visibleList: MutableList<Int>?,
         userDeptList: List<Int>
     ): Boolean {
-        logger.info("generateInstallFlag defaultFlag is:$defaultFlag,members is:$members,userId is:$userId")
-        logger.info("generateInstallFlag visibleList is:$visibleList,userDeptList is:$userDeptList")
         return if (defaultFlag || (members != null && members.contains(userId))) {
             true
         } else {
@@ -72,20 +71,17 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
     }
 
     override fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?> {
-        logger.info("getRepositoryInfo projectCode is :$projectCode,repositoryHashId is :$repositoryHashId")
         var repositoryInfo: Repository? = null
         // 历史插件没有代码库，不需要获取代码库信息
         if (!projectCode.isNullOrEmpty() && !repositoryHashId.isNullOrEmpty()) {
             val getGitRepositoryResult =
                 client.get(ServiceRepositoryResource::class).get(projectCode!!, repositoryHashId!!, RepositoryType.ID)
-            logger.info("the getGitRepositoryResult is :$getGitRepositoryResult")
             if (getGitRepositoryResult.isOk()) {
                 repositoryInfo = getGitRepositoryResult.data
             } else {
                 Result(getGitRepositoryResult.status, getGitRepositoryResult.message, null)
             }
         }
-        logger.info("the repositoryInfo is :$repositoryInfo")
         return Result(repositoryInfo)
     }
 

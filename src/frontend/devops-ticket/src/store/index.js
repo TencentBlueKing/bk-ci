@@ -39,6 +39,20 @@ const store = {
                     modelName: 'v1'
                 }
             },
+            MULTI_LINE_PASSWORD: {
+                v1: {
+                    label: 'ticket.credential.password',
+                    component: 'vue-textarea',
+                    rules: 'required',
+                    rule: { required: true },
+                    required: true,
+                    default: '',
+                    placeholder: 'ticket.credential.passwordPlaceholder',
+                    errorMsg: 'ticket.credential.passwordRequired',
+                    type: 'multiLinePassword',
+                    modelName: 'v1'
+                }
+            },
             USERNAME_PASSWORD: {
                 v1: {
                     label: 'ticket.credential.username',
@@ -209,6 +223,11 @@ const store = {
             {
                 id: 'PASSWORD',
                 name: 'password',
+                desc: 'passwordDesc'
+            },
+            {
+                id: 'MULTI_LINE_PASSWORD',
+                name: 'multiLinePassword',
                 desc: 'passwordDesc'
             },
             {

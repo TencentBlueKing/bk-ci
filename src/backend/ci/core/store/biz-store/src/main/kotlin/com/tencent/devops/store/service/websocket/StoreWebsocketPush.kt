@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -64,7 +65,7 @@ data class StoreWebsocketPush(
             pageList.add(associationPage)
         }
         val sessionList = mutableListOf<String>()
-        if (pageList != null && pageList.size > 0) {
+        if (pageList.size > 0) {
             pageList.forEach {
                 val pageSession = RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, it)
                 if (pageSession != null) {
@@ -90,12 +91,10 @@ data class StoreWebsocketPush(
         val notifyPost = message.notifyPost
         try {
             val modelDetail = atomReleaseService.getProcessInfo(userId, atomId).data
-            if (notifyPost != null) {
-                notifyPost.message = objectMapper.writeValueAsString(modelDetail)
-                logger.info("StoreWebsocketPush message: $notifyPost")
-            }
-        } catch (e: Exception) {
-            logger.error("StoreWebsocketPush:getProcessInfo error. message:${e.message}")
+            notifyPost.message = objectMapper.writeValueAsString(modelDetail)
+            logger.info("StoreWebsocketPush message: $notifyPost")
+        } catch (ignored: Exception) {
+            logger.error("StoreWebsocketPush:getProcessInfo error. message:${ignored.message}")
         }
     }
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -54,7 +55,7 @@ import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
 import java.util.Date
 
-@Service
+@Service@Suppress("ALL")
 class CodeccService @Autowired constructor(
     private val client: Client,
     private val pluginCodeccDao: PluginCodeccDao,
@@ -130,7 +131,7 @@ class CodeccService @Autowired constructor(
         val resultMap = mutableMapOf<String, CodeccBuildInfo>()
         val buildNoMap = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(buildId).data ?: mapOf()
         val buildInfoMap = client.get(ServiceBuildResource::class).batchServiceBasic(buildId).data ?: mapOf()
-        buildInfoMap.values.groupBy { it.projectId }.forEach { projectId, infoList ->
+        buildInfoMap.values.groupBy { it.projectId }.forEach { (projectId, infoList) ->
             val buildStatusList = client.get(ServiceBuildResource::class).getBatchBuildStatus(
                 projectId,
                 infoList.map { it.buildId }.toSet(),
@@ -151,7 +152,6 @@ class CodeccService @Autowired constructor(
     fun callback(callback: CodeccCallback): String {
         // 创建元数据
         try {
-            logger.info("codecc callback: " + callback.toString())
             val toolSnapshot = callback.toolSnapshotList[0]
             val metadatas = mutableListOf<Property>()
             // 遗留告警数
@@ -222,9 +222,10 @@ class CodeccService @Autowired constructor(
 
     fun queryCodeccTaskDetailUrl(projectId: String, pipelineId: String, buildId: String): String {
         val taskId = redisOperation.get("code_cc_${projectId}_${pipelineId}_${buildId}_done")
-        return if (taskId != null && taskId != "" && taskId != "null")
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/procontrol/prodesc/?proj_id=$taskId'>查看详情</a>"
-        else ""
+        return if (taskId != null && taskId != "" && taskId != "null") {
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/procontrol/prodesc/" +
+                "?proj_id=$taskId'>查看详情</a>"
+        } else ""
     }
 
     fun getCodeccTaskResult(

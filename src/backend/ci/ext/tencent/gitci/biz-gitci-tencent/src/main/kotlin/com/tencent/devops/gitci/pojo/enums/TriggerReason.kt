@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,19 +28,21 @@
 package com.tencent.devops.gitci.pojo.enums
 
 enum class TriggerReason(val detail: String) {
-    TRIGGER_SUCCESS("trigger success"),
-    GIT_CI_DISABLE("git ci config is disabled"),
-    BUILD_PUSHED_BRANCHES_DISABLE("build pushed branches is disabled"),
-    BUILD_PUSHED_PULL_REQUEST_DISABLE("build pushed pull request is disabled"),
-    GIT_CI_YAML_NOT_FOUND("git ci yaml file not found"),
-    GIT_CI_YAML_INVALID("git ci yaml is invalid"),
-    GIT_CI_YAML_VERSION_BEHIND("git ci source branch yaml file version behind target branch"),
-    GIT_CI_MERGE_CHECK_CONFLICT("git ci merge request check conflict, please wait"),
-    GIT_CI_MERGE_CHECK_CONFLICT_TIMEOUT("git ci merge request check conflict timeout"),
-    GIT_CI_MERGE_HAS_CONFLICT("git ci merge request has conflict"),
-    TRIGGER_NOT_MATCH("yaml trigger is not match"),
+    TRIGGER_SUCCESS("Trigger success"),
+    CI_DISABLED("CI is disabled"),
+    BUILD_PUSHED_BRANCHES_DISABLED("This project has not yet opened the push event monitoring configuration"),
+    BUILD_MERGE_REQUEST_DISABLED("This project has not yet opened the MR event monitoring configuration"),
+    CI_YAML_NOT_FOUND("The YAML file cannot be found in the .ci directory"),
+    CI_YAML_INVALID("YAML is invalid: %s"),
+    CI_YAML_VERSION_BEHIND("The YAML file version of the source branch lags behind the target branch"),
+    CI_MERGE_CHECKING("Checking whether there is a conflict in MR, please wait"),
+    CI_MERGE_CHECK_TIMEOUT("MR check timeout"),
+    CI_MERGE_CONFLICT("MR conflict, please resolve the conflict first"),
+    TRIGGER_NOT_MATCH("Does not meet the trigger condition"),
     PIPELINE_RUN_ERROR("pipeline run with error"),
-    PIPELINE_DISABLE("pipeline is not enabled");
+    PIPELINE_DISABLE("Pipeline is disabled"),
+    CI_YAML_TEMPLATE_ERROR("YAML template parse error: %s"),
+    CI_RUN_FAILED("Failed to run: %s");
 
     companion object {
 

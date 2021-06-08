@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,6 +37,7 @@ import com.tencent.devops.store.service.common.impl.StoreMemberServiceImpl
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
 
     @Autowired
@@ -88,7 +90,11 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         )
     }
 
-    abstract fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean>
+    abstract fun addRepoMember(
+        storeMemberReq: StoreMemberReq,
+        userId: String,
+        repositoryHashId: String
+    ): Result<Boolean>
 
     /**
      * 删除插件成员
@@ -104,7 +110,10 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, storeCode)
         logger.info("addAtomMember atomRecord is:$atomRecord")
         if (null == atomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(storeCode))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(storeCode)
+            )
         }
         val memberRecord = storeMemberDao.getById(dslContext, id)
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(id))
@@ -120,7 +129,11 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         val deleteRepoMemberResult = deleteRepoMember(userId, username, repositoryHashId)
         logger.info("deleteRepoMemberResult is:$deleteRepoMemberResult")
         if (deleteRepoMemberResult.isNotOk()) {
-            return Result(status = deleteRepoMemberResult.status, message = deleteRepoMemberResult.message, data = false)
+            return Result(
+                status = deleteRepoMemberResult.status,
+                message = deleteRepoMemberResult.message,
+                data = false
+            )
         }
         return super.delete(
             userId = userId,

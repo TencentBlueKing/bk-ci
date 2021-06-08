@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,7 +30,6 @@ package com.tencent.devops.plugin.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
-
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
@@ -53,10 +53,8 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.VSAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.model.plugin.tables.TPluginJingang
 import com.tencent.devops.model.plugin.tables.TPluginJingangResult
 import com.tencent.devops.plugin.dao.JinGangAppDao
@@ -95,8 +93,6 @@ class JinGangService @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val pipelineServiceCode: PipelineAuthServiceCode,
     private val vsServiceCode: VSAuthServiceCode,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
 ) {
 
@@ -239,35 +235,18 @@ class JinGangService @Autowired constructor(
         val version = jfrogFile.meta[ARCHIVE_PROPS_APP_VERSION] ?: throw RuntimeException("no appVersion found")
         val bundleIdentifier = jfrogFile.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]
             ?: throw RuntimeException("no bundleIdentifier found")
-        val pipelineName =
-            client.get(ServiceJfrogResource::class).getPipelineNameByIds(projectId, setOf(pipelineId)).data?.get(
-                pipelineId
-            )
-                ?: throw RuntimeException("no pipeline name found for $pipelineId")
-
-        val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        buildLogPrinter.addLine(
-            buildId = buildId,
-            message = "use bkrepo: $isRepoGray",
-            tag = elementId,
-            jobId = "",
-            executeCount = 1
+        val pipelineName = client.get(ServiceJfrogResource::class).getPipelineNameByIds(projectId, setOf(pipelineId))
+            .data?.get(pipelineId) ?: throw RuntimeException("no pipeline name found for $pipelineId")
+        val shareUri = bkRepoClient.createShareUri(
+            userId,
+            projectId,
+            if (isCustom) "custom" else "pipeline",
+            jfrogFile.fullPath,
+            listOf(),
+            listOf(),
+            3600 * 24
         )
-
-        val fileUrl = if (isRepoGray) {
-            val shareUri = bkRepoClient.createShareUri(
-                userId,
-                projectId,
-                if (isCustom) "custom" else "pipeline",
-                jfrogFile.fullPath,
-                listOf(),
-                listOf(),
-                3600 * 24
-            )
-            "http://$gatewayUrl/bkrepo/api/user/repository$shareUri"
-        } else {
-            getUrl(projectId, jfrogFile.path, isCustom)
-        }
+        val fileUrl = "http://$gatewayUrl/bkrepo/api/user/repository$shareUri"
         val projectInfo =
             client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
         val ccId = projectInfo?.ccAppId ?: throw RuntimeException("no ccid found for project: $projectId")
@@ -316,7 +295,8 @@ class JinGangService @Autowired constructor(
             params.put("submituser", userId) // 邮件抄送人
             params.put("taskId", taskId.toString()) // 任务id
             params.put("is_run_kingkong_v2", if (type == 1) "3" else runType) // ios只有静态扫描
-            params.put("responseUrl", HomeHostUtil.innerApiHost() + "/plugin/api/external/jingang/app/callback") // 任务id
+            // 任务id
+            params.put("responseUrl", HomeHostUtil.innerApiHost() + "/plugin/api/external/jingang/app/callback")
             params.put("bg", getBgName(projectInfo.bgId?.toLong()))
             val json = objectMapper.writeValueAsString(params)
             logger.info("jin gang request json:>>>> $json")

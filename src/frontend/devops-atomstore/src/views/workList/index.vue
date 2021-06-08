@@ -36,20 +36,20 @@
                     { name: 'atomWork',
                       label: this.$t('store.流水线插件'),
                       links: [
-                          { name: this.$t('store.插件指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008942' },
+                          { name: this.$t('store.插件指引'), link: `${DOCS_URL_PREFIX}/store/plugins/create-plugin` },
                           { name: this.$t('store.debugTask'), link: `/console/pipeline/${currentProjectCode}/atomDebug` }
                       ]
                     },
                     { name: 'templateWork',
                       label: this.$t('store.流水线模板'),
                       links: [
-                          { name: this.$t('store.模版指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008944' }
+                          { name: this.$t('store.模版指引'), link: `${DOCS_URL_PREFIX}/store/store-home` }
                       ]
                     },
                     { name: 'imageWork',
                       label: this.$t('store.容器镜像'),
                       links: [
-                          { name: this.$t('store.镜像指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=22118721' }
+                          { name: this.$t('store.镜像指引'), link: `${DOCS_URL_PREFIX}/store/ci-images/image-build` }
                       ]
                     }
                 ]

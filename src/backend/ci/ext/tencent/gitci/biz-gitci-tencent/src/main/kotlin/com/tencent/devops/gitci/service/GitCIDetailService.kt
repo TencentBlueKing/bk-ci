@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,16 +37,17 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.user.UserReportResource
+import com.tencent.devops.process.api.user.TXUserReportResource
 import com.tencent.devops.process.pojo.Report
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.jooq.DSLContext
@@ -59,7 +61,7 @@ import javax.ws.rs.core.Response
 class GitCIDetailService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitCISettingDao: GitCISettingDao,
+    private val gitCIBasicSettingService: GitCIBasicSettingService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val repositoryConfService: GitRepositoryConfService,
@@ -75,12 +77,14 @@ class GitCIDetailService @Autowired constructor(
     private val channelCode = ChannelCode.GIT
 
     fun getProjectLatestBuildDetail(userId: String, gitProjectId: Long, pipelineId: String?): GitCIModelDetail? {
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
         val eventBuildRecord = gitRequestEventBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId) ?: return null
-        val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId)
+        val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
+        // 如果是来自fork库的分支，单独标识
+        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = conf.projectCode!!,
@@ -89,16 +93,18 @@ class GitCIDetailService @Autowired constructor(
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
-        return GitCIModelDetail(pipeline, eventRecord!!, modelDetail)
+        return GitCIModelDetail(pipeline, realEvent, modelDetail)
     }
 
     fun getBuildDetail(userId: String, gitProjectId: Long, buildId: String): GitCIModelDetail? {
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
         val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
-        val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId)
+        val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
+        // 如果是来自fork库的分支，单独标识
+        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = conf.projectCode!!,
@@ -107,11 +113,11 @@ class GitCIDetailService @Autowired constructor(
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
-        return GitCIModelDetail(pipeline, eventRecord!!, modelDetail)
+        return GitCIModelDetail(pipeline, realEvent, modelDetail)
     }
 
     fun batchGetBuildDetail(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitCIBuildHistory> {
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
@@ -124,21 +130,8 @@ class GitCIDetailService @Autowired constructor(
         history.forEach {
             val buildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, it.id) ?: return@forEach
             val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
-            var realEvent = eventRecord
             // 如果是来自fork库的分支，单独标识
-//            if (eventRecord.sourceGitProjectId != null) {
-//                try {
-//                    val gitToken = client.getScm(ServiceGitResource::class).getToken(eventRecord.sourceGitProjectId!!).data!!
-//                    logger.info("get token for gitProjectId[${eventRecord.sourceGitProjectId!!}] form scm, token: $gitToken")
-//                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, eventRecord.sourceGitProjectId!!).data
-//                    realEvent = eventRecord.copy(
-//                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.name}:${eventRecord.branch}"
-//                        else eventRecord.branch)
-//                } catch (e: Exception) {
-//                    logger.error("Cannot get source GitProjectInfo: ", e)
-//                }
-//            }
-
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
             val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, buildRecord.pipelineId) ?: return@forEach
             infoMap[it.id] = GitCIBuildHistory(
                 displayName = pipeline.displayName,
@@ -158,7 +151,7 @@ class GitCIDetailService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): FileInfoPage<FileInfo> {
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
@@ -185,7 +178,7 @@ class GitCIDetailService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Url {
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
@@ -217,20 +210,28 @@ class GitCIDetailService @Autowired constructor(
             return url
         }
         // 没有被替换掉域名的url
-        if (!url.startsWith("/")) {
-            return url
+        return if (!url.startsWith("/")) {
+            url
         } else {
-            return reportPrefix + url
+            reportPrefix + url
         }
     }
 
     fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): List<Report> {
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
-
-        return client.get(UserReportResource::class).get(userId, conf.projectCode!!, pipelineId, buildId).data!!
+        val reportList = client.get(TXUserReportResource::class)
+            .getGitCI(userId, conf.projectCode!!, pipelineId, buildId)
+            .data!!.toMutableList()
+        // 更换域名来支持工蜂的页面
+        reportList.forEachIndexed { index, report ->
+            reportList[index] = report.copy(
+                indexFileUrl = reportPrefix + report.indexFileUrl
+            )
+        }
+        return reportList.toList()
     }
 
     fun getPipelineWithId(
@@ -239,7 +240,7 @@ class GitCIDetailService @Autowired constructor(
         pipelineId: String
     ): GitProjectPipeline? {
         logger.info("get pipeline with pipelineId: $pipelineId, gitProjectId: $gitProjectId")
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
             return null

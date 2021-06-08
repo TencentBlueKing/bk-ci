@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -77,6 +78,7 @@ import java.io.Writer
 import java.net.URL
 import java.nio.file.Files
 
+@Suppress("ALL")
 open class GitUpdateTask constructor(
     protected open val projectName: String,
     protected open val userName: String,
@@ -102,8 +104,9 @@ open class GitUpdateTask constructor(
 
     private val writer = object : Writer() {
         override fun write(cbuf: CharArray?, off: Int, len: Int) {
-            if (cbuf == null)
+            if (cbuf == null) {
                 return
+            }
             LoggerService.addNormalLine(String(cbuf, off, len))
         }
 
@@ -186,9 +189,13 @@ open class GitUpdateTask constructor(
             }
 
             val startType =
-                if (variables[PIPELINE_START_TYPE] != null) StartType.valueOf(variables[PIPELINE_START_TYPE]!!) else null
+                if (variables[PIPELINE_START_TYPE] != null) {
+                    StartType.valueOf(variables[PIPELINE_START_TYPE]!!)
+                } else null
             val hookType =
-                if (variables[PIPELINE_WEBHOOK_EVENT_TYPE] != null) CodeEventType.valueOf(variables[PIPELINE_WEBHOOK_EVENT_TYPE]!!) else null
+                if (variables[PIPELINE_WEBHOOK_EVENT_TYPE] != null) {
+                    CodeEventType.valueOf(variables[PIPELINE_WEBHOOK_EVENT_TYPE]!!)
+                } else null
             val sourceBranch = variables[PIPELINE_WEBHOOK_SOURCE_BRANCH]
             val targetBranch = variables[PIPELINE_WEBHOOK_TARGET_BRANCH]
             val sourceUrl = variables[PIPELINE_WEBHOOK_SOURCE_URL]
@@ -505,7 +512,7 @@ open class GitUpdateTask constructor(
 
         if (pullResult.mergeResult.mergeStatus == MergeResult.MergeStatus.CONFLICTING) {
             LoggerService.addRedLine("Merge branch $branchName conflict")
-            pullResult.mergeResult.conflicts.forEach { (file, value) ->
+            pullResult.mergeResult.conflicts.forEach { file ->
                 LoggerService.addRedLine("Conflict file $file")
             }
             throw TaskExecuteException(
@@ -520,8 +527,9 @@ open class GitUpdateTask constructor(
 
     private fun isBranchExist(git: Git, branch: String): Boolean {
         git.branchList().call().forEach {
-            if (Repository.shortenRefName(it.name) == branch)
+            if (Repository.shortenRefName(it.name) == branch) {
                 return true
+            }
         }
         return false
     }
@@ -754,7 +762,9 @@ open class GitUpdateTask constructor(
                 clone.setProgressMonitor(TextProgressMonitor(writer))
                 clone.call()
             } catch (e: Exception) {
-                LoggerService.addRedLine("Fail to checkout the submodule(${walk.modulesPath}) with url(${walk.modulesUrl}) to revision(${walk.objectId}) because of ${e.message}")
+                LoggerService.addRedLine(
+                    "Fail to checkout the submodule(${walk.modulesPath}) " +
+                        "with url(${walk.modulesUrl}) to revision(${walk.objectId}) because of ${e.message}")
                 throw e
             }
         }

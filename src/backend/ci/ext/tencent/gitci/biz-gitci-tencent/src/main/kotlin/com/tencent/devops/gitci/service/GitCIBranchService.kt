@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,13 +30,14 @@ package com.tencent.devops.gitci.service
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.BranchBuildHistory
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.enums.BranchType
+import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
@@ -48,7 +50,7 @@ import javax.ws.rs.core.Response
 class GitCIBranchService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitCISettingDao: GitCISettingDao,
+    private val gitCIBasicSettingService: GitCIBasicSettingService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val pipelineResourceDao: GitPipelineResourceDao
@@ -62,7 +64,8 @@ class GitCIBranchService @Autowired constructor(
     fun getBranchBuildList(userId: String, gitProjectId: Long, defaultBranch: String?): List<BranchBuildHistory> {
         val default = (defaultBranch ?: "master").removePrefix("refs/heads/")
         logger.info("get branch build list, gitProjectId: $gitProjectId")
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+            ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
 
         val branchBuildsList = gitRequestEventBuildDao.getBranchBuildList(dslContext, gitProjectId)
         if (branchBuildsList.isEmpty()) {
@@ -99,8 +102,14 @@ class GitCIBranchService @Autowired constructor(
                     buildHistory = history
                 ))
             }
+            // 如果是来自fork库的分支，单独标识
             result.add(BranchBuildHistory(
-                branchName = it.branch,
+                branchName = GitCommonUtils.checkAndGetForkBranchName(
+                    gitProjectId = it.gitProjectId,
+                    sourceGitProjectId = it.sourceGitProjectId,
+                    branch = it.branch,
+                    client = client
+                ),
                 buildTotal = it.buildTotal,
                 branchType = if (default.equals(it.branch, true)) { BranchType.Default } else { BranchType.Active },
                 buildHistory = gitCIBuildHistoryList

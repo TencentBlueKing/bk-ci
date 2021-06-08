@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -49,7 +50,6 @@ import com.tencent.devops.process.dao.PipelineContainerDispatchDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.exception.PipelineNotExistException
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineContainerDispatchInfo
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -67,10 +67,11 @@ class PipelineContainerDispatchService @Autowired constructor(
     private val pipelineResDao: PipelineResDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineContainerDispatchDao: PipelineContainerDispatchDao,
-    private val pipelineService: PipelineService
+    private val pipelineListFacadeService: PipelineListFacadeService
 ) {
 
     val logger = LoggerFactory.getLogger(javaClass)!!
+
     /**
      * 额外分表保存pipeline中Container的Dispatch信息以供统计查询
      */
@@ -204,11 +205,13 @@ class PipelineContainerDispatchService @Autowired constructor(
         logger.info("Inner:pipelineIds=[$pipelineIdsStr]")
 
         // 查所有途径创建的流水线中使用某镜像的流水线
-        pipelines = pipelineService.listPipelinesByIds(null, pipelineIds.toSet())
+        pipelines = pipelineListFacadeService.listPipelinesByIds(
+            channelCodes = null, pipelineIds = pipelineIds.toSet()
+        ).toMutableList()
         // 排序
         val watch = StopWatch()
         watch.start("s_r_list_b_ps_sort")
-        pipelineService.sortPipelines(pipelines, sortType)
+        pipelineListFacadeService.sortPipelines(pipelines, sortType)
         watch.stop()
         logger.info("Inner:listPipelinesByProjectIds:sort:watch=$watch")
         return Page(

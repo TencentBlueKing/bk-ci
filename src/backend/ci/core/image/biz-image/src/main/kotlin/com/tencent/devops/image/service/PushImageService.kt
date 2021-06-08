@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -50,7 +51,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 import java.util.concurrent.Executors
 
-@Service
+@Service@Suppress("ALL")
 class PushImageService @Autowired constructor(
     private val client: Client,
     private val dockerConfig: DockerConfig,
@@ -110,17 +111,20 @@ class PushImageService @Autowired constructor(
     }
 
     private fun syncPushImage(pushImageParam: PushImageParam, task: PushImageTask) {
-        logger.info("[${pushImageParam.buildId}]|push image, taskId: ${task.taskId}, pushImageParam: ${pushImageParam.outStr()}")
+        logger.info("[${pushImageParam.buildId}]|push image, taskId:" +
+            " ${task.taskId}, pushImageParam: ${pushImageParam.outStr()}")
 
         val fromImage =
-            "${dockerConfig.imagePrefix}/paas/${pushImageParam.projectId}/${pushImageParam.srcImageName}:${pushImageParam.srcImageTag}"
+            "${dockerConfig.imagePrefix}/paas/${pushImageParam.projectId}/" +
+                "${pushImageParam.srcImageName}:${pushImageParam.srcImageTag}"
         logger.info("源镜像：$fromImage")
         val toImageRepo = "${pushImageParam.repoAddress}/${pushImageParam.namespace}/${pushImageParam.targetImageName}"
         try {
             pullImage(fromImage)
             logger.info("[${pushImageParam.buildId}]|Pull image success, image name and tag: $fromImage")
             dockerClient.tagImageCmd(fromImage, toImageRepo, pushImageParam.targetImageTag).exec()
-            logger.info("[${pushImageParam.buildId}]|Tag image success, image name and tag: $toImageRepo:${pushImageParam.targetImageTag}")
+            logger.info("[${pushImageParam.buildId}]|Tag image success, image name and tag: " +
+                "$toImageRepo:${pushImageParam.targetImageTag}")
             buildLogPrinter.addLine(
                 buildId = pushImageParam.buildId,
                 message = "目标镜像：$toImageRepo:${pushImageParam.targetImageTag}",
@@ -128,7 +132,8 @@ class PushImageService @Autowired constructor(
                 executeCount = pushImageParam.executeCount ?: 1
             )
             pushImageToRepo(pushImageParam)
-            logger.info("[${pushImageParam.buildId}]|Push image success, image name and tag: $toImageRepo:${pushImageParam.targetImageTag}")
+            logger.info("[${pushImageParam.buildId}]|Push image success, image name and tag:" +
+                " $toImageRepo:${pushImageParam.targetImageTag}")
 
             task.apply {
                 taskStatus = TaskStatus.SUCCESS.name
@@ -152,7 +157,8 @@ class PushImageService @Autowired constructor(
             }
             try {
                 dockerClient.removeImageCmd("$toImageRepo:${pushImageParam.targetImageTag}").exec()
-                logger.info("[${pushImageParam.buildId}]|Remove local source image success: $toImageRepo:${pushImageParam.targetImageTag}")
+                logger.info("[${pushImageParam.buildId}]|Remove local source image success: " +
+                    "$toImageRepo:${pushImageParam.targetImageTag}")
             } catch (e: Throwable) {
                 logger.error("[${pushImageParam.buildId}]|Docker rmi failed, msg: ${e.message}")
             }
@@ -179,7 +185,8 @@ class PushImageService @Autowired constructor(
             password = ticketsMap["v2"] as String
         }
         val image =
-            "${pushImageParam.repoAddress}/${pushImageParam.namespace}/${pushImageParam.targetImageName}:${pushImageParam.targetImageTag}"
+            "${pushImageParam.repoAddress}/${pushImageParam.namespace}/" +
+                "${pushImageParam.targetImageName}:${pushImageParam.targetImageTag}"
         val builder = DefaultDockerClientConfig.createDefaultConfigBuilder()
             .withDockerHost(dockerConfig.dockerHost)
             .withDockerConfig(dockerConfig.dockerConfig)

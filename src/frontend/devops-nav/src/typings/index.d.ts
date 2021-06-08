@@ -36,6 +36,7 @@ interface Window {
     setProjectIdCookie: Function
     JSONP: Function
     GLOBAL_PID: string
+    BK_CI_VERSION: string
     getLoginUrl: Function
     attachEvent(event: string, listener: EventListener): boolean
     detachEvent(event: string, listener: EventListener): void
@@ -66,12 +67,12 @@ declare module '*.vue' {
     export default Vue
 }
 
-declare const LOGIN_SERVICE_URL: string
-declare const GW_URL_PREFIX: string
-declare const DOCS_URL_PREFIX: string
-declare const DEVOPS_LS_VERSION: string
-declare const ENTERPRISE_VERSION: string
+declare let LOGIN_SERVICE_URL: string
+declare let API_URL_PREFIX: string
+declare let DOCS_URL_PREFIX: string
+declare let DEVOPS_LS_VERSION: string
+declare let ENTERPRISE_VERSION: string
+
 declare module '*.png'
 
 declare const X_DEVOPS_PROJECT_ID: string
-

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -42,6 +43,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -54,6 +56,7 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
@@ -73,6 +76,7 @@ import java.io.InputStream
 import java.util.ArrayList
 import java.util.regex.Pattern
 
+@Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
     val projectPermissionService: ProjectPermissionService,
     private val dslContext: DSLContext,
@@ -119,7 +123,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (!Pattern.matches(ENGLISH_NAME_PATTERN, name)) {
                     logger.warn("Project English Name($name) is not match")
                     throw ErrorCodeException(
-                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_COMBINATION_ERROR),
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                            ProjectMessageCode.EN_NAME_COMBINATION_ERROR),
                         errorCode = ProjectMessageCode.EN_NAME_COMBINATION_ERROR
                     )
                 }
@@ -136,7 +141,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 创建项目信息
      */
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, createExtInfo: ProjectCreateExtInfo, defaultProjectId: String?): String {
+    override fun create(
+        userId: String,
+        projectCreateInfo: ProjectCreateInfo,
+        accessToken: String?,
+        createExtInfo: ProjectCreateExtInfo,
+        defaultProjectId: String?,
+        projectChannel: ProjectChannelCode
+    ): String {
         logger.info("create project| $userId | $accessToken| $createExtInfo | $projectCreateInfo")
         if (createExtInfo.needValidate!!) {
             validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
@@ -175,21 +187,33 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
             try {
                 dslContext.transaction { configuration ->
+                    val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
                     val context = DSL.using(configuration)
-                    projectDao.create(context, userId, logoAddress, projectCreateInfo, userDeptDetail, projectId!!)
+                    projectDao.create(
+                        dslContext = context,
+                        userId = userId,
+                        logoAddress = logoAddress,
+                        projectCreateInfo = projectInfo,
+                        userDeptDetail = userDeptDetail,
+                        projectId = projectId!!,
+                        channelCode = projectChannel
+                    )
 
                     try {
                         createExtProjectInfo(
                             userId = userId,
                             projectId = projectId!!,
                             accessToken = accessToken,
-                            projectCreateInfo = projectCreateInfo,
+                            projectCreateInfo = projectInfo,
                             createExtInfo = createExtInfo
                         )
                     } catch (e: Exception) {
                         logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
                         projectDao.delete(dslContext, projectId!!)
                         throw e
+                    }
+                    if (projectInfo.secrecy) {
+                        redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                     }
                 }
             } catch (e: DuplicateKeyException) {
@@ -227,8 +251,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return ProjectUtils.packagingBean(record, grayProjectSet())
     }
 
-    override fun update(userId: String, englishName: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Boolean {
-        validate(ProjectValidateType.project_name, projectUpdateInfo.projectName, projectUpdateInfo.englishName)
+    override fun update(
+        userId: String,
+        englishName: String,
+        projectUpdateInfo: ProjectUpdateInfo,
+        accessToken: String?
+    ): Boolean {
+        validate(
+            validateType = ProjectValidateType.project_name,
+            name = projectUpdateInfo.projectName,
+            projectId = projectUpdateInfo.englishName
+        )
         val startEpoch = System.currentTimeMillis()
         var success = false
         validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
@@ -237,15 +270,28 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             try {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    val projectId = projectDao.getByEnglishName(dslContext, englishName)?.projectId ?: throw RuntimeException("项目 -$englishName 不存在")
-                    projectDao.update(context, userId, projectId!!, projectUpdateInfo)
+                    val projectId = projectDao.getByEnglishName(
+                        dslContext = dslContext,
+                        englishName = englishName
+                    )?.projectId ?: throw RuntimeException("项目 -$englishName 不存在")
+                    projectDao.update(
+                        dslContext = context,
+                        userId = userId,
+                        projectId = projectId,
+                        projectUpdateInfo = projectUpdateInfo
+                    )
                     modifyProjectAuthResource(
                         projectUpdateInfo.englishName,
                         projectUpdateInfo.projectName
                     )
+                    if (!projectUpdateInfo.secrecy) {
+                        redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
+                    } else {
+                        redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
+                    }
                     projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
                         userId = userId,
-                        projectId = englishName,
+                        projectId = projectId,
                         projectInfo = projectUpdateInfo
                     ))
                 }
@@ -263,18 +309,24 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 获取所有项目信息
      */
-    override fun list(userId: String, accessToken: String?): List<ProjectVO> {
+    override fun list(userId: String, accessToken: String?, enabled: Boolean?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
 
             val projects = getProjectFromAuth(userId, accessToken)
-            if (projects == null || projects.isEmpty()) {
+            if (projects.isEmpty()) {
                 return emptyList()
             }
-            logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
+            projectDao.listByEnglishName(
+                dslContext = dslContext,
+                englishNameList = projects,
+                offset = null,
+                limit = null,
+                searchName = null,
+                enabled = enabled
+            ).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             success = true
@@ -483,7 +535,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {
         logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
 
-        val projectInfo = projectDao.getByEnglishName(dslContext, englishName) ?: throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+        val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
+            ?: throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
         val verify = validatePermission(
             userId = userId,
             projectCode = englishName,
@@ -557,15 +610,37 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return list
     }
 
-    override fun verifyUserProjectPermission(userId: String, projectId: String, permission: AuthPermission, accessToken: String?): Boolean {
+    override fun verifyUserProjectPermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        accessToken: String?
+    ): Boolean {
         return validatePermission(projectId, userId, permission)
+    }
+
+    override fun listSecrecyProject(): Set<String>? {
+        var projectIds = redisOperation.getSetMembers(SECRECY_PROJECT_REDIS_KEY)
+        if (projectIds.isNullOrEmpty()) {
+            projectIds = projectDao.listSecrecyProject(dslContext)?.map { it.value1() }?.toSet()
+            if (projectIds != null) {
+                redisOperation.sadd(SECRECY_PROJECT_REDIS_KEY, *projectIds.toTypedArray())
+            }
+        }
+        return projectIds
     }
 
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail
 
-    abstract fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, createExtInfo: ProjectCreateExtInfo)
+    abstract fun createExtProjectInfo(
+        userId: String,
+        projectId: String,
+        accessToken: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        createExtInfo: ProjectCreateExtInfo
+    )
 
     abstract fun saveLogoAddress(userId: String, projectCode: String, file: File): String
 
@@ -576,6 +651,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     abstract fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo)
 
     abstract fun drawFile(projectCode: String): File
+
+    abstract fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo
 
     abstract fun modifyProjectAuthResource(projectCode: String, projectName: String)
 

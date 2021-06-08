@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -80,19 +81,23 @@ class GitRequestEventDao {
                 event.description,
                 event.mrTitle
             ).returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }
 
     fun get(
         dslContext: DSLContext,
-        id: Long
+        id: Long,
+        commitMsg: String? = null
     ): GitRequestEvent? {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            val record = dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(ID.eq(id))
-                .fetchOne()
+            if (commitMsg != null) {
+                dsl.and(COMMIT_MSG.like("%$commitMsg%"))
+            }
+            val record = dsl.fetchAny()
             return if (record == null) {
                 null
             } else {
@@ -112,6 +117,44 @@ class GitRequestEventDao {
                     totalCommitCount = record.totalCommitCount,
                     mergeRequestId = record.mergeRequestId,
                     event = "", // record.event,
+                    description = record.description,
+                    mrTitle = record.mrTitle
+                )
+            }
+        }
+    }
+
+    fun getWithEvent(
+        dslContext: DSLContext,
+        id: Long,
+        commitMsg: String? = null
+    ): GitRequestEvent? {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            val dsl = dslContext.selectFrom(this)
+                .where(ID.eq(id))
+            if (commitMsg != null) {
+                dsl.and(COMMIT_MSG.like("%$commitMsg%"))
+            }
+            val record = dsl.fetchAny()
+            return if (record == null) {
+                null
+            } else {
+                GitRequestEvent(
+                    id = record.id,
+                    objectKind = record.objectKind,
+                    operationKind = record.operationKind,
+                    extensionAction = record.extensionAction,
+                    gitProjectId = record.gitProjectId,
+                    sourceGitProjectId = record.sourceGitProjectId,
+                    branch = record.branch,
+                    targetBranch = record.targetBranch,
+                    commitId = record.commitId,
+                    commitMsg = record.commitMsg,
+                    commitTimeStamp = record.commitTimestamp,
+                    userId = record.userName,
+                    totalCommitCount = record.totalCommitCount,
+                    mergeRequestId = record.mergeRequestId,
+                    event = record.event,
                     description = record.description,
                     mrTitle = record.mrTitle
                 )
@@ -208,7 +251,7 @@ class GitRequestEventDao {
             return dslContext.selectCount().from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(OBJECT_KIND.eq(OBJECT_KIND_MERGE_REQUEST))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -221,7 +264,7 @@ class GitRequestEventDao {
                 .from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .orderBy(ID.desc())
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -253,6 +296,46 @@ class GitRequestEventDao {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             return dslContext.delete(this)
                 .where(ID.`in`(ids)).execute()
+        }
+    }
+
+    /**
+     * 根据ID批量查询
+     */
+    fun getRequestsById(
+        dslContext: DSLContext,
+        requestIds: Set<Int>
+    ): List<GitRequestEvent> {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            val records = dslContext.selectFrom(this)
+                .where(ID.`in`(requestIds))
+                .orderBy(ID.desc())
+                .fetch()
+            val result = mutableListOf<GitRequestEvent>()
+            records.forEach {
+                result.add(
+                    GitRequestEvent(
+                        id = it.id,
+                        objectKind = it.objectKind,
+                        operationKind = it.operationKind,
+                        extensionAction = it.extensionAction,
+                        gitProjectId = it.gitProjectId,
+                        sourceGitProjectId = it.sourceGitProjectId,
+                        branch = it.branch,
+                        targetBranch = it.targetBranch,
+                        commitId = it.commitId,
+                        commitMsg = it.commitMsg,
+                        commitTimeStamp = it.commitTimestamp,
+                        userId = it.userName,
+                        totalCommitCount = it.totalCommitCount,
+                        mergeRequestId = it.mergeRequestId,
+                        event = "", // record.event,
+                        description = it.description,
+                        mrTitle = it.mrTitle
+                    )
+                )
+            }
+            return result
         }
     }
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -136,7 +137,7 @@ class PipelineInfoDao {
             dslContext.select(VERSION)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
         logger.info("Update the pipeline $pipelineId add new version($version) and result=${count == 1}")
         return version
@@ -154,7 +155,7 @@ class PipelineInfoDao {
                 .and(PIPELINE_ID.`in`(pipelineIds))
                 .and(CHANNEL.eq(channelCode.name))
                 .and(DELETE.eq(false))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -170,7 +171,7 @@ class PipelineInfoDao {
             if (channelCode != null)
                 query.and(CHANNEL.eq(channelCode.name))
 
-            query.and(DELETE.eq(false)).fetchOne(0, Int::class.java)
+            query.and(DELETE.eq(false)).fetchOne(0, Int::class.java)!!
         }
     }
 

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -60,6 +61,7 @@ class MarketCheckImageTask : ITask() {
 
     private val dockerApi = ApiFactory.create(DockerSDKApi::class)
 
+    @Suppress("ALL")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         logger.info("MarketCheckImageTask buildTask: $buildTask,buildVariables: $buildVariables")
         LoggerService.addNormalLine("begin check image")
@@ -72,7 +74,8 @@ class MarketCheckImageTask : ITask() {
         val checkImageRequest = CheckImageRequest(imageType, imageName!!, registryUser, registryPwd)
         val dockerHostIp = System.getenv(ENV_DOCKER_HOST_IP)
         val dockerHostPort = System.getenv(ENV_DOCKER_HOST_PORT)
-        val path = "/api/docker/build/image/buildIds/${buildTask.buildId}/check?containerId=${buildVariables.containerId}&containerHashId=${buildVariables.containerHashId}"
+        val path = "/api/docker/build/image/buildIds/${buildTask.buildId}/" +
+            "check?containerId=${buildVariables.containerId}&containerHashId=${buildVariables.containerHashId}"
         val body = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             JsonUtil.toJson(checkImageRequest)
@@ -85,7 +88,8 @@ class MarketCheckImageTask : ITask() {
         val response = OkhttpUtils.doLongHttp(request)
         val responseContent = response.body()?.string()
         if (!response.isSuccessful) {
-            logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response ($responseContent)")
+            logger.warn("Fail to request($request) with code ${response.code()} ," +
+                " message ${response.message()} and response ($responseContent)")
             LoggerService.addRedLine(response.message())
             throw TaskExecuteException(
                 errorMsg = "checkImage fail: message ${response.message()} and response ($responseContent)",

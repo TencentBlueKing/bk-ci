@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,22 +29,21 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreMemberReq
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class SampleAtomMemberServiceImpl : AtomMemberServiceImpl() {
 
-    private val logger = LoggerFactory.getLogger(SampleAtomMemberServiceImpl::class.java)
-
-    override fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean> {
-        logger.info("addRepoMember storeMemberReq is:$storeMemberReq,userId is:$userId,repositoryHashId is:$repositoryHashId")
+    override fun addRepoMember(
+        storeMemberReq: StoreMemberReq,
+        userId: String,
+        repositoryHashId: String
+    ): Result<Boolean> {
         // 企业版暂不支持按代码库打成可执行包的方式
         return Result(true)
     }
 
     override fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean> {
-        logger.info("deleteRepoMember userId is:$userId,username is:$username,repositoryHashId is:$repositoryHashId")
         // 企业版暂不支持按代码库打成可执行包的方式
         return Result(true)
     }

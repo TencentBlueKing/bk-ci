@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,8 +47,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
 object ModelUtils {
 
     /**
-     * 初始化旧的数据
+     * 兼容旧的数据结构
      */
+    @Suppress("ALL")
     fun initContainerOldData(c: Container) {
         if (c is NormalContainer) {
             if (c.jobControlOption == null) {
@@ -96,50 +98,44 @@ object ModelUtils {
         return false
     }
 
-    fun refreshCanRetry(model: Model, canRetry: Boolean, status: BuildStatus) {
+    fun refreshCanRetry(model: Model, canRetry: Boolean) {
         model.stages.forEach { s ->
+            s.canRetry = (BuildStatus.parse(s.status).isFailure() ||
+                BuildStatus.parse(s.status).isCancel()) && canRetry
             s.containers.forEach { c ->
                 initContainerOldData(c)
                 if (c is VMBuildContainer) {
-                    c.canRetry = c.canRetry ?: false && canRetry
+                    c.canRetry = (c.canRetry ?: false) && canRetry
                 }
 
                 val failElements = mutableListOf<Element>()
                 c.elements.forEach { e ->
-                    refreshElement(c, e, canRetry, failElements, status)
+                    refreshElement(element = e, canRetry = canRetry, failElements = failElements)
                 }
             }
         }
     }
 
-    private fun refreshElement(
-        c: Container,
-        e: Element,
-        canRetry: Boolean,
-        failElements: MutableList<Element>,
-        status: BuildStatus
-    ) {
-        if (c is VMBuildContainer) {
-            e.canRetry = e.canRetry ?: false && canRetry
-        } else { // 目前暂时不放开无构建环境的即时重试，要重新设计重试的方式。
-            e.canRetry = e.canRetry ?: false && BuildStatus.isFailure(status)
-        }
-        val additionalOptions = e.additionalOptions
+    private fun refreshElement(element: Element, canRetry: Boolean, failElements: MutableList<Element>) {
+
+        element.canRetry = (element.canRetry ?: false) && canRetry
+
+        val additionalOptions = element.additionalOptions
         if (additionalOptions != null && additionalOptions.enable) {
             if (additionalOptions.continueWhenFailed) {
-                e.canRetry = false
+                element.canRetry = false
             } else if (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
                 additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY
             ) {
                 // 前面有失败的插件时也要运行的插件，将前面的失败插件置为不可重试
-                e.canRetry = false
+                element.canRetry = false
                 failElements.forEach {
                     it.canRetry = false
                 }
             }
         }
-        if (e.canRetry == true) { // 先记录可重试的执行失败插件
-            failElements.add(e)
+        if (element.canRetry == true) { // 先记录可重试的执行失败插件
+            failElements.add(element)
         }
     }
 }

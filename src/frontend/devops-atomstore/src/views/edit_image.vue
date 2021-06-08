@@ -1,7 +1,7 @@
 <template>
     <article class="edit-image-home">
         <bread-crumbs :bread-crumbs="navList" type="image">
-            <a class="g-title-work" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
+            <a class="g-title-work" target="_blank" :href="docsLink"> {{ $t('store.镜像指引') }} </a>
         </bread-crumbs>
         <main v-bkloading="{ isLoading }" class="edit-content">
             <bk-form ref="imageForm" class="edit-image" label-width="150" :model="form" v-show="!isLoading">
@@ -90,7 +90,7 @@
                         :toolbars="toolbars"
                         :external-link="false"
                         :box-shadow="false"
-                        @imgAdd="uploadimg"
+                        @imgAdd="uploadimg('mdHook', ...arguments)"
                     />
                 </bk-form-item>
                 <div class="version-msg">
@@ -198,7 +198,16 @@
                     ref="versionContent"
                     error-display-type="normal"
                 >
-                    <bk-input type="textarea" v-model="form.versionContent" :placeholder="$t('store.请输入版本日志')"></bk-input>
+                    <mavon-editor class="image-remark-input"
+                        :placeholder="$t('store.请输入版本日志')"
+                        ref="versionMd"
+                        preview-background="#fff"
+                        v-model="form.versionContent"
+                        :toolbars="toolbars"
+                        :external-link="false"
+                        :box-shadow="false"
+                        @imgAdd="uploadimg('versionMd', ...arguments)"
+                    />
                 </bk-form-item>
                 <select-logo ref="selectLogo" label="Logo" :form="form" type="IMAGE" :is-err="logoErr" right="25"></select-logo>
             </bk-form>
@@ -252,6 +261,7 @@
                     category: '',
                     agentTypeScope: []
                 },
+                docsLink: `${DOCS_URL_PREFIX}/store/ci-images/image-build`,
                 ticketList: [],
                 classifys: [],
                 labelList: [],
@@ -434,7 +444,7 @@
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' }))
             },
 
-            async uploadimg (pos, file) {
+            async uploadimg (ref, pos, file) {
                 const formData = new FormData()
                 const config = {
                     headers: {
@@ -450,7 +460,7 @@
                         config
                     })
 
-                    this.$refs.mdHook.$img2Url(pos, res)
+                    this.$refs[ref].$img2Url(pos, res)
                 } catch (err) {
                     message = err.message ? err.message : err
                     theme = 'error'
@@ -459,7 +469,7 @@
                         message,
                         theme
                     })
-                    this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
+                    this.$refs[ref].$refs.toolbar_left.$imgDel(pos)
                 }
             }
         }
@@ -486,7 +496,7 @@
     }
 
     .button-padding {
-        padding-left: 125px;
+        padding-left: 150px;
     }
 
     .version-msg {

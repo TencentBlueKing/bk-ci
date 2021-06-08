@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,7 +35,7 @@ import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
-import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.Configuration
 import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
@@ -54,6 +55,7 @@ import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
 @Service
+@Suppress("ALL")
 class EmailServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val emailNotifyDao: EmailNotifyDao,
@@ -70,7 +72,7 @@ class EmailServiceImpl @Autowired constructor(
     override fun sendMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation) {
         val emailNotifyPost = generateEmailNotifyPost(emailNotifyMessageWithOperation)
         if (emailNotifyPost == null) {
-            logger.warn("EmailNotifyPost is empty after being processed, EmailNotifyMessageWithOperation: $emailNotifyMessageWithOperation")
+            logger.warn("EmailNotifyPost is empty after being processed: $emailNotifyMessageWithOperation")
             return
         }
 
@@ -88,14 +90,34 @@ class EmailServiceImpl @Autowired constructor(
                 tofConfs["sys-id"], emailNotifyPost.fromSysId)
         } else {
             // 写入失败记录
-            emailNotifyDao.insertOrUpdateEmailNotifyRecord(false, emailNotifyMessageWithOperation.source, id,
-                retryCount, result.ErrMsg, emailNotifyPost.to, emailNotifyPost.cc, emailNotifyPost.bcc, emailNotifyPost.from,
-                emailNotifyPost.title, emailNotifyPost.content, emailNotifyPost.emailType, emailNotifyPost.bodyFormat,
-                emailNotifyPost.priority.toInt(), emailNotifyPost.contentMd5, emailNotifyPost.frequencyLimit,
-                tofConfs["sys-id"], emailNotifyPost.fromSysId)
+            emailNotifyDao.insertOrUpdateEmailNotifyRecord(
+                success = false,
+                source = emailNotifyMessageWithOperation.source,
+                id = id,
+                retryCount = retryCount,
+                lastErrorMessage = result.ErrMsg,
+                to = emailNotifyPost.to,
+                cc = emailNotifyPost.cc,
+                bcc = emailNotifyPost.bcc,
+                sender = emailNotifyPost.from,
+                title = emailNotifyPost.title,
+                body = emailNotifyPost.content,
+                type = emailNotifyPost.emailType,
+                format = emailNotifyPost.bodyFormat,
+                priority = emailNotifyPost.priority.toInt(),
+                contentMd5 = emailNotifyPost.contentMd5,
+                frequencyLimit = emailNotifyPost.frequencyLimit,
+                tofSysId = tofConfs["sys-id"],
+                fromSysId = emailNotifyPost.fromSysId
+            )
             if (retryCount < 3) {
                 // 开始重试
-                reSendMessage(emailNotifyPost, emailNotifyMessageWithOperation.source, retryCount + 1, id)
+                reSendMessage(
+                    post = emailNotifyPost,
+                    source = emailNotifyMessageWithOperation.source,
+                    retryCount = retryCount + 1,
+                    id = id
+                )
             }
         }
     }
@@ -136,8 +158,7 @@ class EmailServiceImpl @Autowired constructor(
 
     private fun generateEmailNotifyPost(emailNotifyMessage: EmailNotifyMessage): EmailNotifyPost? {
 
-        // 由于 soda 中 cc 与 bcc 基本没人使用，暂且不对 cc 和 bcc 作频率限制
-        val contentMd5 = CommonUtils.getMessageContentMD5("", emailNotifyMessage.body)
+        val contentMd5 = NotifyDigestUtils.getMessageContentMD5("", emailNotifyMessage.body)
         val tos = Lists.newArrayList(filterReceivers(
             emailNotifyMessage.getReceivers(), contentMd5, emailNotifyMessage.frequencyLimit)
         )
@@ -211,16 +232,22 @@ class EmailServiceImpl @Autowired constructor(
         return NotificationResponseWithPage(count, page, pageSize, result)
     }
 
-    private fun parseFromTNotifyEmailToResponse(record: TNotifyEmailRecord): NotificationResponse<EmailNotifyMessageWithOperation> {
+    private fun parseFromTNotifyEmailToResponse(
+        record: TNotifyEmailRecord
+    ): NotificationResponse<EmailNotifyMessageWithOperation> {
+
         val receivers: MutableSet<String> = mutableSetOf()
-        if (!record.to.isNullOrEmpty())
+        if (!record.to.isNullOrEmpty()) {
             receivers.addAll(record.to.split(";"))
+        }
         val cc: MutableSet<String> = mutableSetOf()
-        if (!record.cc.isNullOrEmpty())
+        if (!record.cc.isNullOrEmpty()) {
             cc.addAll(record.cc.split(";"))
+        }
         val bcc: MutableSet<String> = mutableSetOf()
-        if (!record.bcc.isNullOrEmpty())
+        if (!record.bcc.isNullOrEmpty()) {
             bcc.addAll(record.bcc.split(";"))
+        }
 
         val message = EmailNotifyMessageWithOperation()
         message.apply {
@@ -241,13 +268,17 @@ class EmailServiceImpl @Autowired constructor(
             addAllBccs(bcc)
         }
 
-        return NotificationResponse(record.id, record.success,
-            if (record.createdTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
-            if (record.updatedTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-            record.contentMd5, message)
+        return NotificationResponse(id = record.id, success = record.success,
+            createdTime = if (record.createdTime == null) {
+                null
+            } else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime)
+            },
+            updatedTime = if (record.updatedTime == null) {
+                null
+            } else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime)
+            },
+            contentMD5 = record.contentMd5, notificationMessage = message)
     }
 }

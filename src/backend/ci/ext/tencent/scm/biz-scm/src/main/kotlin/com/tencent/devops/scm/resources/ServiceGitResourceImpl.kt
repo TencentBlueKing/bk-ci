@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,6 +47,7 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -90,7 +92,12 @@ class ServiceGitResourceImpl @Autowired constructor(
         return gitService.deleteGitProject(repositorySpaceName, token, tokenType)
     }
 
-    override fun moveProjectToGroup(token: String, groupCode: String, repositoryName: String, tokenType: TokenTypeEnum): Result<GitProjectInfo?> {
+    override fun moveProjectToGroup(
+        token: String,
+        groupCode: String,
+        repositoryName: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitProjectInfo?> {
         return gitService.moveProjectToGroup(groupCode, repositoryName, token, tokenType)
     }
 
@@ -147,19 +154,39 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getProject(accessToken, userId))
     }
 
-    override fun getProjectInfo(accessToken: String, gitProjectId: Long): Result<GitCIProjectInfo?> {
+    override fun getProjectInfo(
+        accessToken: String,
+        gitProjectId: Long
+    ): Result<GitCIProjectInfo?> {
         return gitService.getGitCIProjectInfo(gitProjectId.toString(), accessToken)
     }
 
-    override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): Result<List<Project>> {
+    override fun getProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<Project>> {
         return Result(gitService.getProjectList(accessToken, userId, page, pageSize))
     }
 
-    override fun getBranch(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): Result<List<GitBranch>> {
+    override fun getBranch(
+        accessToken: String,
+        userId: String,
+        repository: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<GitBranch>> {
         return Result(gitService.getBranch(accessToken, userId, repository, page, pageSize))
     }
 
-    override fun getTag(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): Result<List<GitTag>> {
+    override fun getTag(
+        accessToken: String,
+        userId: String,
+        repository: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<GitTag>> {
         return Result(gitService.getTag(accessToken, userId, repository, page, pageSize))
     }
 
@@ -179,7 +206,12 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getToken(gitProjectId.toString()))
     }
 
-    override fun getGitCIFileContent(gitProjectId: Long, filePath: String, token: String, ref: String): Result<String> {
+    override fun getGitCIFileContent(
+        gitProjectId: Long,
+        filePath: String,
+        token: String,
+        ref: String
+    ): Result<String> {
         return Result(gitService.getGitCIFileContent(gitProjectId, filePath, token, ref))
     }
 
@@ -191,14 +223,19 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getGitCIMrInfo(gitProjectId, mergeRequestId, token))
     }
 
-    override fun getFileCommits(gitProjectId: Long, filePath: String, branch: String, token: String): Result<List<GitCIFileCommit>> {
+    override fun getFileCommits(
+        gitProjectId: Long,
+        filePath: String,
+        branch: String,
+        token: String
+    ): Result<List<GitCIFileCommit>> {
         return Result(gitService.getFileCommits(gitProjectId, filePath, branch, token))
     }
 
     override fun getCommits(
         gitProjectId: Long,
-        filePath: String,
-        branch: String,
+        filePath: String?,
+        branch: String?,
         token: String,
         since: String?,
         until: String?,
@@ -206,6 +243,18 @@ class ServiceGitResourceImpl @Autowired constructor(
         perPage: Int
     ): Result<List<Commit>> {
         return Result(gitService.getCommits(gitProjectId, filePath, branch, token, since, until, page, perPage))
+    }
+
+    override fun gitCICreateFile(
+        gitProjectId: String,
+        token: String,
+        gitCICreateFile: GitCICreateFile
+    ): Result<Boolean> {
+        return Result(gitService.gitCodeCreateFile(
+            gitProjectId = gitProjectId,
+            token = token,
+            gitCICreateFile = gitCICreateFile
+        ))
     }
 
     override fun getCommitRefs(
@@ -217,7 +266,12 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getCommitRefs(gitProjectId, commitId, type, token))
     }
 
-    override fun getGitCIFileTree(gitProjectId: Long, path: String, token: String, ref: String): Result<List<GitFileInfo>> {
+    override fun getGitCIFileTree(
+        gitProjectId: Long,
+        path: String,
+        token: String,
+        ref: String
+    ): Result<List<GitFileInfo>> {
         return Result(gitService.getGitCIFileTree(gitProjectId, path, token, ref))
     }
 
@@ -225,12 +279,42 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getRedirectUrl(authParamJsonStr))
     }
 
-    override fun getGitFileContent(repoName: String, filePath: String, authType: RepoAuthType?, token: String, ref: String): Result<String> {
-        return Result(gitService.getGitFileContent(repoName, filePath, authType, token, ref))
+    override fun getGitFileContent(
+        repoUrl: String?,
+        repoName: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        token: String,
+        ref: String
+    ): Result<String> {
+        return Result(
+            gitService.getGitFileContent(
+                repoUrl = repoUrl,
+                repoName = repoName,
+                filePath = filePath,
+                authType = authType,
+                token = token,
+                ref = ref
+            )
+        )
     }
 
-    override fun getGitlabFileContent(repoName: String, filePath: String, ref: String, accessToken: String): Result<String> {
-        return Result(gitService.getGitlabFileContent(repoName, filePath, ref, accessToken))
+    override fun getGitlabFileContent(
+        repoUrl: String?,
+        repoName: String,
+        filePath: String,
+        ref: String,
+        accessToken: String
+    ): Result<String> {
+        return Result(
+            gitService.getGitlabFileContent(
+                repoUrl = repoUrl,
+                repoName = repoName,
+                filePath = filePath,
+                ref = ref,
+                accessToken = accessToken
+            )
+        )
     }
 
     override fun getMergeRequestInfo(
@@ -240,16 +324,24 @@ class ServiceGitResourceImpl @Autowired constructor(
         token: String,
         repoUrl: String?
     ): Result<GitMrInfo> {
-        return Result(gitService.getMrInfo(
-            id = repoName,
-            mrId = mrId,
-            tokenType = tokenType,
-            token = token,
-            repoUrl = repoUrl
-        ))
+        return Result(
+            gitService.getMrInfo(
+                id = repoName,
+                mrId = mrId,
+                tokenType = tokenType,
+                token = token,
+                repoUrl = repoUrl
+            )
+        )
     }
 
-    override fun downloadGitRepoFile(repoName: String, sha: String?, token: String, tokenType: TokenTypeEnum, response: HttpServletResponse) {
+    override fun downloadGitRepoFile(
+        repoName: String,
+        sha: String?,
+        token: String,
+        tokenType: TokenTypeEnum,
+        response: HttpServletResponse
+    ) {
         return gitService.downloadGitRepoFile(repoName, sha, token, tokenType, response)
     }
 

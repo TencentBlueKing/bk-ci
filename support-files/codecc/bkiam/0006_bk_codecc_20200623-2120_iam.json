@@ -1,0 +1,31 @@
+{
+  "system_id": "bk_codecc",
+  "operations": [
+    {
+      "operation": "upsert_action_groups",
+      "data": [
+        {
+          "name": "代码检查任务管理",
+          "name_en": "CodeCC Task Permissions",
+          "actions": [
+            {
+              "id": "codecc_task_analyze"
+            },
+            {
+              "id": "codecc_task_defect_manage"
+            },
+            {
+              "id": "codecc_task_defect_view"
+            },
+            {
+              "id": "codecc_task_report_view"
+            },
+            {
+              "id": "codecc_task_task_manage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

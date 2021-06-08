@@ -5,6 +5,7 @@
                 v-for="(col, index) in noticeTypeMap"
                 :key="index"
                 :value="col.value"
+                :disabled="disabled"
                 style="margin-right: 20px;">
                 {{ col.name }}
             </bk-checkbox>
@@ -23,6 +24,10 @@
             handleChange: {
                 type: Function,
                 default: () => () => {}
+            },
+            disabled: {
+                type: Boolean,
+                default: false
             }
         },
         data () {

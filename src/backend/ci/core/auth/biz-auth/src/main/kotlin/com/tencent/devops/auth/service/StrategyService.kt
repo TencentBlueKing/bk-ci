@@ -1,8 +1,36 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.StrategyDao
+import com.tencent.devops.auth.entity.StrategyChangeType
 import com.tencent.devops.auth.entity.StrategyInfo
 import com.tencent.devops.auth.pojo.StrategyEntity
 import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
@@ -21,40 +49,14 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.PostConstruct
 
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 @Service
+@Suppress("ALL")
 class StrategyService @Autowired constructor(
     val dslContext: DSLContext,
     val strategyDao: StrategyDao,
     val objectMapper: ObjectMapper,
     val refreshDispatch: AuthRefreshDispatch
 ) {
-
     private val strategyNameMap = ConcurrentHashMap<String/*strategyId*/, String/*strategyName*/>()
 
     private val strategyMap = ConcurrentHashMap<String/*strategyId*/, String/*strategyBody*/>()
@@ -180,7 +182,8 @@ class StrategyService @Autowired constructor(
     }
 
     fun getStrategy2Map(strategyId: Int): Map<AuthResourceType, List<AuthPermission>> {
-        val strategyStr = getCacheStrategy(strategyId)
+        // 从db获取源数据, 因update数据会导致cache数据差异
+        val strategyStr = refreshStrategy(strategyId.toString(), null)
         val strategyBody: Map<String, List<String>>
         strategyBody = JsonUtil.to(strategyStr!!)
         val permissionMap = mutableMapOf<AuthResourceType, List<AuthPermission>>()
@@ -197,6 +200,11 @@ class StrategyService @Autowired constructor(
         return permissionMap
     }
 
+    fun deleteCache(strategyId: String) {
+        strategyNameMap.remove(strategyId)
+        strategyMap.remove(strategyId)
+    }
+
     private fun refreshWhenCreate(strategyId: Int) {
         val record = strategyDao.get(dslContext, strategyId)
         refreshStrategyName(strategyId.toString(), record)
@@ -204,8 +212,15 @@ class StrategyService @Autowired constructor(
     }
 
     private fun refreshWhenDelete(strategyId: Int) {
-        strategyNameMap.remove(strategyId.toString())
-        strategyMap.remove(strategyId.toString())
+        deleteCache(strategyId.toString())
+        // 异步删除该策略下的其他实例缓存数据
+        refreshDispatch.dispatch(
+            StrategyUpdateEvent(
+                refreshType = "refreshWhenUpdate",
+                strategyId = strategyId,
+                action = StrategyChangeType.DELETE
+            )
+        )
     }
 
     private fun refreshWhenUpdate(strategyId: Int, strategyStr: String) {
@@ -221,7 +236,8 @@ class StrategyService @Autowired constructor(
                 refreshDispatch.dispatch(
                     StrategyUpdateEvent(
                         refreshType = "refreshWhenUpdate",
-                        strategyId = strategyId
+                        strategyId = strategyId,
+                        action = StrategyChangeType.UPDATE
                     )
                 )
             }
@@ -238,7 +254,7 @@ class StrategyService @Autowired constructor(
         return null
     }
 
-    private fun refreshStrategy(strategyId: String, inputRecord: TAuthStrategyRecord?): String? {
+    fun refreshStrategy(strategyId: String, inputRecord: TAuthStrategyRecord?): String? {
         val record = inputRecord ?: strategyDao.get(dslContext, strategyId.toInt())
         if (record != null) {
             logger.info("refreshStrategy |$strategyId| ${record.strategyBody}")
@@ -249,6 +265,6 @@ class StrategyService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this:: class.java)
+        private val logger = LoggerFactory.getLogger(StrategyService:: class.java)
     }
 }

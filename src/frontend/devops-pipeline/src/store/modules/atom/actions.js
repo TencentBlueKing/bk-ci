@@ -27,6 +27,7 @@ import {
 import {
     SET_STAGE_TAG_LIST,
     SET_PIPELINE_STAGE,
+    SET_COMMON_SETTING,
     SET_PIPELINE_CONTAINER,
     SET_TEMPLATE,
     SET_CONTAINER_DETAIL,
@@ -47,6 +48,7 @@ import {
     UPDATE_STAGE,
     CONTAINER_TYPE_SELECTION_VISIBLE,
     SET_INSERT_STAGE_INDEX,
+    SET_INSERT_STAGE_ISFINALLY,
     SET_PIPELINE,
     SET_BUILD_PARAM,
     DELETE_ATOM_PROP,
@@ -99,6 +101,14 @@ export default {
             const defaultStageTag = res.data.filter(item => item.defaultFlag).map(item => item.id)
             commit(SET_STAGE_TAG_LIST, res.data)
             commit(SET_DEFAULT_STAGE_TAG, defaultStageTag)
+        } catch (error) {
+            console.log(error)
+        }
+    },
+    async fetchCommonSetting ({ commit }) {
+        try {
+            const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/setting/common/get`)
+            commit(SET_COMMON_SETTING, res.data)
         } catch (error) {
             console.log(error)
         }
@@ -294,6 +304,7 @@ export default {
         }
     },
     setInertStageIndex: actionCreator(SET_INSERT_STAGE_INDEX),
+    setInsertStageIsFinally: actionCreator(SET_INSERT_STAGE_ISFINALLY),
     toggleStageSelectPopup: actionCreator(CONTAINER_TYPE_SELECTION_VISIBLE),
     addStage: PipelineEditActionCreator(ADD_STAGE),
     deleteStage: ({ commit }, payload) => {
@@ -450,24 +461,27 @@ export default {
     },
 
     // 第一次拉取日志
-    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, subTag }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
+
+    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, subTag, debug }) {
+        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
             params: {
                 tag,
                 executeCount: currentExe,
-                subTag
+                subTag,
+                debug
             }
         })
     },
 
     // 后续拉取日志
-    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo, subTag }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
+    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo, subTag, debug }) {
+        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
             params: {
                 start: lineNo,
                 executeCount: currentExe,
                 tag,
-                subTag
+                subTag,
+                debug
             }
         })
     },

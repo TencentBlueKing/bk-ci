@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -39,12 +40,12 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.dao.StaticData
 import com.tencent.devops.environment.dao.devcloud.DevCloudTaskDao
+import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.DevCloudImageParam
 import com.tencent.devops.environment.pojo.DevCloudModel
 import com.tencent.devops.environment.pojo.DevCloudVmParam
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.json.JSONObject
@@ -100,7 +101,7 @@ class DevCloudService @Autowired constructor(
         }
         val devCloudModel = StaticData.getDevCloudModelList().filter { it.moduleId == devCloudVmParam.modelId }
         val now = LocalDateTime.now()
-        val toAddNodeList = mutableListOf<TNodeRecord>()
+        val toAddNodeList = mutableListOf<CreateNodeModel>()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val taskId = devCloudTaskDao.insertTask(
@@ -126,28 +127,20 @@ class DevCloudService @Autowired constructor(
 
             for (i in 0 until devCloudVmParam.instanceCount) {
                 toAddNodeList.add(
-                    TNodeRecord(
-                        null,
-                        "-",
-                        projectId,
-                        "-",
-                        "-",
-                        NodeStatus.CREATING.name,
-                        NodeType.DEVCLOUD.name,
-                        null,
-                        null,
-                        userId,
-                        now,
-                        null,
-                        "Linux",
-                        userId,
-                        userId,
-                        false,
-                        "",
-                        devCloudVmParam.imageId,
-                        taskId,
-                        now,
-                        userId
+                    CreateNodeModel(
+                        nodeStringId = "-",
+                        projectId = projectId,
+                        nodeIp = "-",
+                        nodeName = "-",
+                        nodeStatus = NodeStatus.CREATING.name,
+                        nodeType = NodeType.DEVCLOUD.name,
+                        createdUser = userId,
+                        osName = "Linux",
+                        operator = userId,
+                        bakOperator = userId,
+                        agentStatus = false,
+                        image = devCloudVmParam.imageId,
+                        taskId = taskId
                     )
                 )
             }

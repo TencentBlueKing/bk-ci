@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -32,14 +33,11 @@ import java.io.File
 
 object WorkspaceUtils {
 
-    fun getLandun() =
-        File(".")
+    fun getLandun() = File(".")
 
-    fun getWorkspace() =
-        File(getLandun(), "workspace")
+    fun getWorkspace() = File(getLandun(), "workspace")
 
-    fun getAgentJar() =
-        File(getLandun(), "worker-agent.jar")
+    fun getAgentJar() = File(getLandun(), "worker-agent.jar")
 
     fun getAgentInstallScript(): File {
         val os = getOS()
@@ -79,9 +77,9 @@ object WorkspaceUtils {
 
     fun getPipelineWorkspace(pipelineId: String, workspace: String): File {
         return if (workspace.isNotBlank()) {
-            File(workspace)
+            File(workspace).normalize()
         } else {
-            File(getWorkspace(), "$pipelineId/src")
+            File(getWorkspace(), "$pipelineId/src").normalize()
         }
     }
 }

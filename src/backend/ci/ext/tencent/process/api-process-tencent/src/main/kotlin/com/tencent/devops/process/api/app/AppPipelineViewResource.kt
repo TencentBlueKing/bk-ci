@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -52,6 +53,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface AppPipelineViewResource {
 
+    @SuppressWarnings("ALL")
     @ApiOperation("app获取视图流水线编排列表")
     @GET
     @Path("/projects/{projectId}/listViewPipelines")
@@ -82,9 +84,13 @@ interface AppPipelineViewResource {
         filterByLabels: String?,
         @ApiParam("用户视图ID", required = false)
         @QueryParam("viewId")
-        viewId: String
+        viewId: String,
+        @ApiParam("是否过滤没权限流水线", required = false)
+        @QueryParam("filterInvalid")
+        filterInvalid: Boolean?
     ): Result<PipelineViewPipelinePage<Pipeline>>
 
+    @SuppressWarnings("ALL")
     @ApiOperation("app获取视图流水线编排列表--V2")
     @GET
     @Path("/projects/{projectId}/listViewPipelines/v2")
@@ -115,7 +121,10 @@ interface AppPipelineViewResource {
         filterByLabels: String?,
         @ApiParam("用户视图ID", required = false)
         @QueryParam("viewId")
-        viewId: String
+        viewId: String,
+        @ApiParam("是否过滤没权限流水线", required = false)
+        @QueryParam("filterInvalid")
+        filterInvalid: Boolean?
     ): Result<Pagination<Pipeline>>
 
     @ApiOperation("获取视图设置")

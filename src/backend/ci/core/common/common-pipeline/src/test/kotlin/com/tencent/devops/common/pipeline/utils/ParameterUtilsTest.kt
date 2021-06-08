@@ -1,11 +1,3 @@
-package com.tencent.devops.common.pipeline.utils
-
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import org.junit.Assert
-import org.junit.Test
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -18,12 +10,13 @@ import org.junit.Test
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,6 +24,15 @@ import org.junit.Test
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+package com.tencent.devops.common.pipeline.utils
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import org.junit.Assert
+import org.junit.Test
+
 class ParameterUtilsTest {
     @Test
     fun parameterSizeCheck() {
@@ -47,7 +49,7 @@ class ParameterUtilsTest {
         )
         Assert.assertNotEquals(ParameterUtils.element2Str(element1, objectMapper), null)
 
-        var sb = StringBuffer()
+        val sb = StringBuilder()
         while (sb.length < 65534) {
             sb.append("this is too long value,")
         }
@@ -82,7 +84,7 @@ class ParameterUtilsTest {
         val json = element1.genTaskParams()["data"]
         val inputData = JsonUtil.toMap(json!!)["input"]
         val inputMap = JsonUtil.toMap(inputData!!)
-        val inputKeys = inputMap?.keys
+        val inputKeys = inputMap.keys
         val input1 = ParameterUtils.getElementInput(element1)
         val checkValue = input1?.keys
         Assert.assertEquals(inputKeys, checkValue)

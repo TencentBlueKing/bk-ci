@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -53,8 +54,7 @@ class GitPipelineResourceDao {
                 ENABLED,
                 LATEST_BUILD_ID,
                 CREATE_TIME,
-                UPDATE_TIME,
-                EXIST_BRANCHES
+                UPDATE_TIME
             ).values(
                 pipeline.pipelineId,
                 gitProjectId,
@@ -64,9 +64,23 @@ class GitPipelineResourceDao {
                 pipeline.enabled,
                 null,
                 LocalDateTime.now(),
-                LocalDateTime.now(),
-                if (pipeline.existBranches == null) { null } else { JsonUtil.toJson(pipeline.existBranches!!) }
+                LocalDateTime.now()
             ).execute()
+        }
+    }
+
+    fun updatePipeline(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String,
+        displayName: String
+    ): Int {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.update(this)
+                .set(DISPLAY_NAME, displayName)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 
@@ -137,7 +151,7 @@ class GitPipelineResourceDao {
             if (!keyword.isNullOrBlank()) {
                 dsl.and(DISPLAY_NAME.like("%$keyword%"))
             }
-            return dsl.orderBy(UPDATE_TIME.desc())
+            return dsl.orderBy(ENABLED.desc(), DISPLAY_NAME)
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -150,7 +164,7 @@ class GitPipelineResourceDao {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .orderBy(UPDATE_TIME.desc())
+                .orderBy(ENABLED.desc(), DISPLAY_NAME)
                 .fetch()
         }
     }
@@ -190,7 +204,7 @@ class GitPipelineResourceDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -275,6 +289,17 @@ class GitPipelineResourceDao {
             return dslContext.deleteFrom(this)
                 .where(ID.`in`(ids))
                 .execute()
+        }
+    }
+
+    fun getPipelines(
+        dslContext: DSLContext,
+        gitProjectId: Long
+    ): List<TGitPipelineResourceRecord> {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .fetch()
         }
     }
 }

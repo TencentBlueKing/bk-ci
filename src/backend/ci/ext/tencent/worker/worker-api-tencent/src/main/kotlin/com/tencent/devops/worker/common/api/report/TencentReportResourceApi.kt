@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,18 +30,12 @@ package com.tencent.devops.worker.common.api.report
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_SOURCE
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
+import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
 import okhttp3.MediaType
@@ -49,12 +44,10 @@ import java.io.File
 
 @ApiPriority(priority = 9)
 class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
-    private val bkrepoMetaDataPrefix = "X-BKREPO-META-"
-    private val bkrepoUid = "X-BKREPO-UID"
-    private val bkrepoOverride = "X-BKREPO-OVERWRITE"
+    private val bkrepoResourceApi = BkRepoResourceApi()
 
     override fun getRootUrl(taskId: String): Result<String> {
-        val path = "/ms/artifactory/api/build/artifactories/report/$taskId/root"
+        val path = "/ms/process/api/build/reports/$taskId/rootUrl"
         val request = buildGet(path)
         val responseContent = request(request, "获取报告跟路径失败")
         return objectMapper.readValue(responseContent)
@@ -74,28 +67,47 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = if (reportEmail == null) {
             buildPost(path)
         } else {
-            val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), objectMapper.writeValueAsString(reportEmail))
+            val requestBody = RequestBody.create(MediaType.parse(
+                "application/json; charset=utf-8"), objectMapper.writeValueAsString(reportEmail))
             buildPost(path, requestBody)
         }
         val responseContent = request(request, "创建报告失败")
         return objectMapper.readValue(responseContent)
     }
 
-    private fun updateBkRepoReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
-        val url = StringBuilder("/bkrepo/api/build/generic/${buildVariables.projectId}/report/${buildVariables.pipelineId}/${buildVariables.buildId}/$elementId/${relativePath.removePrefix("/")}")
-        val header = mutableMapOf<String, String>()
-        with(buildVariables) {
-            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_PROJECT_ID] = projectId
-            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_PIPELINE_ID] = pipelineId
-            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_BUILD_ID] = buildId
-            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_USER_ID] = variables[PIPELINE_START_USER_ID] ?: ""
-            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_BUILD_NO] = variables[PIPELINE_BUILD_NUM] ?: ""
-            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_SOURCE] = "pipeline"
-            header[bkrepoUid] = variables[PIPELINE_START_USER_ID] ?: ""
-            header[bkrepoOverride] = "true"
-        }
+    private fun uploadBkRepoReportByToken(
+        file: File,
+        token: String,
+        task: String,
+        relativePath: String,
+        buildVariables: BuildVariables
+    ) {
+        val pipelineId = buildVariables.pipelineId
+        val buildId = buildVariables.buildId
+        bkrepoResourceApi.uploadFileByToken(
+            file = file,
+            projectId = buildVariables.projectId,
+            repoName = "report",
+            destFullPath = "/$pipelineId/$buildId/$elementId/${relativePath.removePrefix("/")}",
+            token = token,
+            buildVariables = buildVariables,
+            parseAppData = false
+        )
+    }
 
-        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file), header, useFileGateway = true)
+    private fun uploadBkRepoReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
+        val projectId = buildVariables.projectId
+        val pipelineId = buildVariables.pipelineId
+        val buildId = buildVariables.buildId
+        val path = relativePath.removePrefix("/")
+        val url = "/bkrepo/api/build/generic/$projectId/report/$pipelineId/$buildId/$elementId/$path"
+
+        val request = buildPut(
+            url,
+            RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, parseAppData = false),
+            useFileGateway = true
+        )
         val responseContent = request(request, "上传自定义报告失败")
         try {
             val obj = JsonParser().parse(responseContent).asJsonObject
@@ -107,6 +119,17 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     }
 
     override fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
-        updateBkRepoReport(file, taskId, relativePath, buildVariables)
+        if (bkrepoResourceApi.tokenAccess()) {
+            val token = bkrepoResourceApi.createBkRepoTemporaryToken(
+                projectId = buildVariables.projectId,
+                repoName = "report",
+                path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+                type = TokenType.UPLOAD
+            )
+            uploadBkRepoReportByToken(file, token, taskId, relativePath, buildVariables)
+        } else {
+            uploadBkRepoReport(file, taskId, relativePath, buildVariables)
+        }
+        bkrepoResourceApi.setPipelineMetadata("report", buildVariables)
     }
 }

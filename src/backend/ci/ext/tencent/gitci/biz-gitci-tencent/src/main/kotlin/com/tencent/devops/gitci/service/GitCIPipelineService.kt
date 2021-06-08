@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,9 +29,9 @@ package com.tencent.devops.gitci.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -40,7 +41,7 @@ import org.springframework.stereotype.Service
 @Service
 class GitCIPipelineService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val gitCISettingDao: GitCISettingDao,
+    private val gitCIBasicSettingService: GitCIBasicSettingService,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val repositoryConfService: GitRepositoryConfService,
     private val gitCIDetailService: GitCIDetailService
@@ -59,7 +60,7 @@ class GitCIPipelineService @Autowired constructor(
         logger.info("get pipeline list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
             return Page(
@@ -116,7 +117,7 @@ class GitCIPipelineService @Autowired constructor(
         gitProjectId: Long
     ): List<GitProjectPipeline> {
         logger.info("get pipeline info list, gitProjectId: $gitProjectId")
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
             return emptyList()
@@ -145,7 +146,7 @@ class GitCIPipelineService @Autowired constructor(
         pipelineId: String
     ): GitProjectPipeline? {
         logger.info("get pipeline: $pipelineId, gitProjectId: $gitProjectId")
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
             return null
@@ -173,7 +174,7 @@ class GitCIPipelineService @Autowired constructor(
         pipelineIds: List<String>
     ): List<GitProjectPipeline> {
         logger.info("get pipeline list in $pipelineIds, gitProjectId: $gitProjectId")
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
             return emptyList()
@@ -184,7 +185,8 @@ class GitCIPipelineService @Autowired constructor(
             pipelineIds = pipelineIds
         )
         if (pipelines.isEmpty()) return emptyList()
-        val latestBuilds = gitCIDetailService.batchGetBuildDetail(userId, gitProjectId, pipelines.map { it.latestBuildId })
+        val latestBuilds =
+            gitCIDetailService.batchGetBuildDetail(userId, gitProjectId, pipelines.map { it.latestBuildId })
         return pipelines.map {
             GitProjectPipeline(
                 gitProjectId = gitProjectId,

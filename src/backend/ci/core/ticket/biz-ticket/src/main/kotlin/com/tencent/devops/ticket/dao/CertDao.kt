@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,6 +35,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
+@Suppress("ALL")
 @Repository
 class CertDao {
     fun has(dslContext: DSLContext, projectId: String, certId: String): Boolean {
@@ -197,7 +199,7 @@ class CertDao {
                             .from(this)
                             .where(PROJECT_ID.eq(projectId))
                             .and(CERT_ID.`in`(certIds))
-                            .fetchOne(0, Long::class.java)
+                            .fetchOne(0, Long::class.java)!!
                 }
                 else -> {
                     dslContext.selectCount()
@@ -205,7 +207,7 @@ class CertDao {
                             .where(PROJECT_ID.eq(projectId))
                             .and(CERT_ID.`in`(certIds))
                             .and(CERT_TYPE.eq(certType))
-                            .fetchOne(0, Long::class.java)
+                            .fetchOne(0, Long::class.java)!!
                 }
             }
         }
@@ -222,14 +224,14 @@ class CertDao {
                     dslContext.selectCount()
                             .from(this)
                             .where(PROJECT_ID.eq(projectId))
-                            .fetchOne(0, Long::class.java)
+                            .fetchOne(0, Long::class.java)!!
                 }
                 else -> {
                     dslContext.selectCount()
                             .from(this)
                             .where(PROJECT_ID.eq(projectId))
                             .and(CERT_TYPE.eq(certType))
-                            .fetchOne(0, Long::class.java)
+                            .fetchOne(0, Long::class.java)!!
                 }
             }
         }
@@ -308,7 +310,13 @@ class CertDao {
         }
     }
 
-    fun searchByIdLike(dslContext: DSLContext, projectId: String, offset: Int, limit: Int, certId: String): List<TCertRecord> {
+    fun searchByIdLike(
+        dslContext: DSLContext,
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        certId: String
+    ): List<TCertRecord> {
         return with(TCert.T_CERT) {
             dslContext.selectFrom(this)
                     .where(PROJECT_ID.eq(projectId).and(CERT_ID.like("%$certId%")))
@@ -328,7 +336,7 @@ class CertDao {
                     .from(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(CERT_ID.like("%$certId%"))
-                    .fetchOne(0, Long::class.java)
+                    .fetchOne(0, Long::class.java)!!
         }
     }
 }

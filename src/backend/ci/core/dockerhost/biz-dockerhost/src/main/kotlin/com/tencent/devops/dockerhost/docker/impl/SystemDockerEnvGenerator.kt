@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -37,6 +38,7 @@ import com.tencent.devops.dockerhost.pojo.Env
 import com.tencent.devops.dockerhost.utils.COMMON_DOCKER_SIGN
 import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_IP
 import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_PORT
+import com.tencent.devops.dockerhost.utils.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dockerhost.utils.ENV_KEY_AGENT_ID
 import com.tencent.devops.dockerhost.utils.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dockerhost.utils.ENV_KEY_GATEWAY
@@ -53,23 +55,9 @@ class SystemDockerEnvGenerator @Autowired constructor(
 
     override fun generateEnv(dockerHostBuildInfo: DockerHostBuildInfo): List<Env> {
 
-        /*  refactor from DockerHostBuildService
-            "$ENV_KEY_PROJECT_ID=${dockerBuildInfo.projectId}",
-                        "$ENV_KEY_AGENT_ID=${dockerBuildInfo.agentId}",
-                        "$ENV_KEY_AGENT_SECRET_KEY=${dockerBuildInfo.secretKey}",
-                        "$ENV_KEY_GATEWAY=$gateway",
-                        "TERM=xterm-256color",
-                        "landun_env=${dockerHostConfig.landunEnv ?: "prod"}",
-                        "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                        "$COMMON_DOCKER_SIGN=docker",
-                        "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}", move to ----> DistccDockerEnvGenerator
-                        // codecc构建机日志落到本地 -- move to CodeccDockerEnvGenerator
-                        "$ENV_LOG_SAVE_MODE=${if ("codecc_build" == dockerHostConfig.runMode) "LOCAL" else "UPLOAD"}"
-         */
-
         val hostIp = CommonUtils.getInnerIP()
         val gateway = DockerEnv.getGatway()
-        return listOf(
+        val envList = mutableListOf(
             Env(key = ENV_KEY_PROJECT_ID, value = dockerHostBuildInfo.projectId),
             Env(key = ENV_KEY_AGENT_ID, value = dockerHostBuildInfo.agentId),
             Env(key = ENV_KEY_AGENT_SECRET_KEY, value = dockerHostBuildInfo.secretKey),
@@ -79,7 +67,13 @@ class SystemDockerEnvGenerator @Autowired constructor(
             Env(key = "landun_env", value = dockerHostConfig.landunEnv ?: "prod"),
             Env(key = ENV_DOCKER_HOST_IP, value = hostIp),
             Env(key = ENV_DOCKER_HOST_PORT, value = commonConfig.serverPort.toString()),
-            Env(key = COMMON_DOCKER_SIGN, value = "docker")
-        )
+            Env(key = COMMON_DOCKER_SIGN, value = "docker"),
+            Env(key = ENV_JOB_BUILD_TYPE, value = dockerHostBuildInfo.buildType.name))
+
+        dockerHostBuildInfo.customBuildEnv?.forEach { k, v ->
+            envList.add(Env(key = k, value = v))
+        }
+
+        return envList
     }
 }

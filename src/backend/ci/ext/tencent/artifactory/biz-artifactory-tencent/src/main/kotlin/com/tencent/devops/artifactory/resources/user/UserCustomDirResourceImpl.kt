@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,83 +31,57 @@ import com.tencent.devops.artifactory.api.user.UserCustomDirResource
 import com.tencent.devops.artifactory.pojo.CombinationPath
 import com.tencent.devops.artifactory.pojo.PathList
 import com.tencent.devops.artifactory.pojo.PathPair
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryCustomDirService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
 class UserCustomDirResourceImpl @Autowired constructor(
-    val artifactoryCustomDirService: ArtifactoryCustomDirService,
-    val bkRepoCustomDirService: BkRepoCustomDirService,
-    val redisOperation: RedisOperation,
-    val repoGray: RepoGray
+    val bkRepoCustomDirService: BkRepoCustomDirService
 ) : UserCustomDirResource {
-    override fun deploy(userId: String, projectId: String, path: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
+    override fun deploy(
+        userId: String,
+        projectId: String,
+        path: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<Boolean> {
         checkParam(userId, projectId, path)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition)
-        } else {
-            artifactoryCustomDirService.deploy(userId, projectId, path, inputStream, disposition)
-        }
-
+        bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition)
         return Result(true)
     }
 
     override fun mkdir(userId: String, projectId: String, path: String): Result<Boolean> {
         checkParam(userId, projectId, path)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoCustomDirService.mkdir(userId, projectId, path)
-        } else {
-            artifactoryCustomDirService.mkdir(userId, projectId, path)
-        }
+        bkRepoCustomDirService.mkdir(userId, projectId, path)
         return Result(true)
     }
 
     override fun rename(userId: String, projectId: String, pathPair: PathPair): Result<Boolean> {
         checkParam(userId, projectId)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoCustomDirService.rename(userId, projectId, pathPair.srcPath, pathPair.destPath)
-        } else {
-            artifactoryCustomDirService.rename(userId, projectId, pathPair.srcPath, pathPair.destPath)
-        }
+        bkRepoCustomDirService.rename(userId, projectId, pathPair.srcPath, pathPair.destPath)
         return Result(true)
     }
 
     override fun copy(userId: String, projectId: String, combinationPath: CombinationPath): Result<Boolean> {
         checkParam(userId, projectId)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoCustomDirService.copy(userId, projectId, combinationPath)
-        } else {
-            artifactoryCustomDirService.copy(userId, projectId, combinationPath)
-        }
+        bkRepoCustomDirService.copy(userId, projectId, combinationPath)
         return Result(true)
     }
 
     override fun move(userId: String, projectId: String, combinationPath: CombinationPath): Result<Boolean> {
         checkParam(userId, projectId)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoCustomDirService.move(userId, projectId, combinationPath)
-        } else {
-            artifactoryCustomDirService.move(userId, projectId, combinationPath)
-        }
+        bkRepoCustomDirService.move(userId, projectId, combinationPath)
         return Result(true)
     }
 
     override fun delete(userId: String, projectId: String, pathList: PathList): Result<Boolean> {
         checkParam(userId, projectId)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoCustomDirService.delete(userId, projectId, pathList)
-        } else {
-            artifactoryCustomDirService.delete(userId, projectId, pathList)
-        }
+        bkRepoCustomDirService.delete(userId, projectId, pathList)
         return Result(true)
     }
 
@@ -129,9 +104,5 @@ class UserCustomDirResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

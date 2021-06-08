@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,7 +31,9 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.util.concurrent.Callable
@@ -44,7 +47,7 @@ class TaskDaemon(
     private val buildVariables: BuildVariables,
     private val workspace: File
 ) : Callable<Map<String, String>> {
-    override fun call(): Map<String, String>? {
+    override fun call(): Map<String, String> {
         return try {
             task.run(buildTask, buildVariables, workspace)
             task.getAllEnv()
@@ -75,11 +78,49 @@ class TaskDaemon(
         }
     }
 
-    fun getAllEnv(): Map<String, String> {
+    private fun getAllEnv(): Map<String, String> {
         return task.getAllEnv()
     }
 
-    fun getMonitorData(): Map<String, Any> {
+    private fun getMonitorData(): Map<String, Any> {
         return task.getMonitorData()
+    }
+
+    fun getBuildResult(
+        isSuccess: Boolean = true,
+        errorMessage: String? = null,
+        errorType: String? = null,
+        errorCode: Int? = 0
+    ): BuildTaskResult {
+
+        val allEnv = getAllEnv()
+        val buildResult = mutableMapOf<String, String>()
+        if (allEnv.isNotEmpty()) {
+            allEnv.forEach { (key, value) ->
+                if (value.length > PARAM_MAX_LENGTH) {
+                    LoggerService.addYellowLine("[${buildTask.taskId}]|ABANDON_DATA|len[$key]=${value.length}" +
+                        "(max=$PARAM_MAX_LENGTH)")
+                    return@forEach
+                }
+                buildResult[key] = value
+            }
+        }
+
+        return BuildTaskResult(
+            taskId = buildTask.taskId!!,
+            elementId = buildTask.elementId!!,
+            containerId = buildVariables.containerHashId,
+            success = isSuccess,
+            buildResult = buildResult,
+            message = errorMessage,
+            type = buildTask.type,
+            errorType = errorType,
+            errorCode = errorCode,
+            monitorData = getMonitorData()
+        )
+    }
+
+    companion object {
+        private const val PARAM_MAX_LENGTH = 4000 // 流水线参数最大长度
     }
 }
