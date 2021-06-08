@@ -55,7 +55,10 @@ fun main(args: Array<String>) {
     when (buildType) {
         BuildType.DOCKER.name ->
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
+                override fun getWorkspaceAndLogDir(
+                    variables: Map<String, String>,
+                    pipelineId: String
+                ): Pair<File, File> {
                     val workspace = System.getProperty("devops_workspace")
 
                     val workspaceDir = if (workspace.isNullOrBlank()) {
@@ -71,7 +74,10 @@ fun main(args: Array<String>) {
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
-                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(pipelineId = pipelineId, workspace = "")
+                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(
+                        pipelineId = pipelineId,
+                        workspace = ""
+                    )
                     if (workspaceDir.exists()) {
                         if (!workspaceDir.isDirectory) {
                             throw RuntimeException("Work space directory conflict: ${dir.canonicalPath}")
