@@ -575,7 +575,7 @@ class TriggerBuildService @Autowired constructor(
         job: Job,
         finalStage: Boolean = false
     ): JobControlOption {
-        return if (job.ifField != null) {
+        return if (!job.ifField.isNullOrBlank()) {
             if (finalStage) {
                 JobControlOption(
                     timeout = job.timeoutMinutes,
