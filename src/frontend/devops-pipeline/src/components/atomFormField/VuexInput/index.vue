@@ -16,6 +16,9 @@
             placeholder: {
                 type: String,
                 default: ''
+            },
+            maxLength: {
+                type: Number
             }
         },
         methods: {
@@ -33,10 +36,10 @@
             }
         },
         render (h) {
-            const { inputType, value, name, handleInput, readOnly, handleBlur, title, placeholder } = this
+            const { inputType, value, name, handleInput, readOnly, handleBlur, title, placeholder, maxLength } = this
 
             return (
-                <input placeholder={placeholder} title={title} disabled={readOnly} type={inputType} class='bk-form-input pointer-events-auto' name={name} value={value} onBlur={handleBlur} onInput={handleInput} />
+                <input placeholder={placeholder} title={title} disabled={readOnly} type={inputType} class='bk-form-input pointer-events-auto' maxlength={maxLength} name={name} value={value} onBlur={handleBlur} onInput={handleInput} />
             )
         }
     }

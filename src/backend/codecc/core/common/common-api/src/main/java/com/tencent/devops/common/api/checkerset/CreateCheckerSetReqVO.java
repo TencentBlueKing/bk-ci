@@ -55,4 +55,9 @@ public class CreateCheckerSetReqVO
      * 基准规则集版本号
      */
     private Integer baseCheckerSetVersion;
+
+    /**
+     * 版本号
+     */
+    private Integer version;
 }

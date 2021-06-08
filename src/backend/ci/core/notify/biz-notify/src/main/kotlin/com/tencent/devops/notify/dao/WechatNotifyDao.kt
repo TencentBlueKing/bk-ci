@@ -113,7 +113,7 @@ class WechatNotifyDao @Autowired constructor(private val dslContext: DSLContext)
         return dslContext.selectCount()
             .from(TNotifyWechat.T_NOTIFY_WECHAT)
             .where(getListConditions(success, fromSysId))
-            .fetchOne()
+            .fetchOne()!!
             .value1()
     }
 

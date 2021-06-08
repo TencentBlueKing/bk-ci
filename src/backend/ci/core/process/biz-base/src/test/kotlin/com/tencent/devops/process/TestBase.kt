@@ -58,6 +58,8 @@ open class TestBase {
 
     companion object {
         val nullObject = null
+        val inputTypeConfigMap =
+            mapOf("vuex-input" to 1024, "vuex-textarea" to 4096, "atom-ace-editor" to 16384, "default" to 1024)
         const val projectId = "devops1"
         const val buildId = "b-12345678901234567890123456789012"
         const val pipelineId = "p-12345678901234567890123456789012"

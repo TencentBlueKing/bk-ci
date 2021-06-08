@@ -63,7 +63,7 @@ class PipelineWebhookBuildLogDao {
                     Timestamp(receivedTime).toLocalDateTime(),
                     LocalDateTime.now()
                 ).returning(ID)
-                    .fetchOne().id
+                    .fetchOne()!!.id
             }
         }
     }
@@ -105,7 +105,7 @@ class PipelineWebhookBuildLogDao {
                 .from(this)
                 .where(REPO_NAME.eq(repoName))
                 .and(COMMIT_ID.eq(commitId))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

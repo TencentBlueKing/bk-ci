@@ -54,4 +54,7 @@ public class CommonDefectDetailQueryRspVO
 
     @ApiModelProperty("截取的代码片段的起始行")
     private int trimBeginLine;
+
+    @ApiModelProperty("版本号")
+    private String revision;
 }

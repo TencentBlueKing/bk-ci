@@ -36,8 +36,6 @@ import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
-import java.lang.Exception
-import java.lang.StringBuilder
 
 object SignUtils {
 
@@ -277,8 +275,10 @@ object SignUtils {
 
         // 无论是什么目录都将 mobileprovision 文件进行替换
         if (originMpFile.exists()) {
-            logger.info("[replace mobileprovision] origin " +
-                "{${originMpFile.absolutePath}} with {${info.mobileProvisionFile.absolutePath}}")
+            logger.info(
+                "[replace mobileprovision] origin " +
+                        "{${originMpFile.absolutePath}} with {${info.mobileProvisionFile.absolutePath}}"
+            )
             info.mobileProvisionFile.copyTo(originMpFile, true)
         }
 

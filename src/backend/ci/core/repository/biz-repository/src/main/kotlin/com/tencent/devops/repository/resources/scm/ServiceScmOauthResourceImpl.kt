@@ -85,7 +85,9 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
         passPhrase: String?,
         token: String?,
         region: CodeSvnRegion?,
-        userName: String?
+        userName: String?,
+        search: String?,
+        full: Boolean?
     ): Result<List<String>> {
         logger.info("listBranches|(projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
         return Result(
@@ -97,7 +99,9 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
                 passPhrase = passPhrase,
                 token = token,
                 region = region,
-                userName = userName
+                userName = userName,
+                search = search,
+                full = full ?: true
             )
         )
     }
@@ -107,7 +111,9 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
         url: String,
         type: ScmType,
         token: String,
-        userName: String
+        userName: String,
+        search: String?,
+        full: Boolean?
     ): Result<List<String>> {
         logger.info("listTags|(projectName=$projectName, url=$url, type=$type, username=$userName)")
         return Result(
@@ -116,7 +122,9 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
                 url = url,
                 type = type,
                 token = token,
-                userName = userName
+                userName = userName,
+                search = search,
+                full = full ?: true
             )
         )
     }

@@ -26,10 +26,10 @@
 
 package com.tencent.bk.codecc.defect.api;
 
-import com.tencent.bk.codecc.defect.vo.UpdateDefectStatusVO;
+import com.tencent.bk.codecc.defect.vo.UpdateDefectVO;
 import com.tencent.bk.codecc.defect.vo.UploadDefectVO;
 import com.tencent.devops.common.api.annotation.ServiceInterface;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -54,7 +54,7 @@ public interface ServiceReportDefectRestResource
     @ApiOperation("查询所有的告警ID")
     @Path("/ids/taskId/{taskId}/toolName/{toolName}")
     @GET
-    CodeCCResult<Set<Long>> queryIds(
+    Result<Set<Long>> queryIds(
             @ApiParam(value = "任务ID", required = true)
             @PathParam("taskId")
                     long taskId,
@@ -66,14 +66,21 @@ public interface ServiceReportDefectRestResource
     @ApiOperation("批量更新告警状态")
     @Path("/status")
     @PUT
-    CodeCCResult updateDefectStatus(
+    Result updateDefectStatus(
             @ApiParam(value = "告警状态映射表", required = true)
-                    UpdateDefectStatusVO updateDefectStatusVO);
+                    UpdateDefectVO updateDefectVO);
 
     @ApiOperation("上报告警")
     @Path("/")
     @POST
-    CodeCCResult reportDefects(
+    Result reportDefects(
             @ApiParam(value = "告警详细信息", required = true)
                     UploadDefectVO uploadDefectVO);
+
+    @ApiOperation("更新告警详情")
+    @Path("/update/detail")
+    @POST
+    Result updateDefects(
+            @ApiParam(value = "告警详细信息", required = true)
+                    UpdateDefectVO updateDefectVO);
 }

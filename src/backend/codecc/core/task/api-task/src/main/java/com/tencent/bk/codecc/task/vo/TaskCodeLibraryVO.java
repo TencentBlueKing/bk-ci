@@ -63,15 +63,11 @@ public class TaskCodeLibraryVO
     @ApiModelProperty(value = "凭证管理的主键id", required = true)
     private String repoHashId;
 
-    @ApiModelProperty(value = "仓库url")
-    private List<String> repoUrl;
-
     @ApiModelProperty(value = "仓库别名")
     private String aliasName;
 
-    @NotBlank(message = "分支名称不能为空")
-    @ApiModelProperty(value = "分支名，默认为master", required = true)
-    private List<String> branch;
+    @ApiModelProperty(value = "代码表标识，使用别名、分支的方式标识代码，代码库别名 - 分支")
+    private List<CodeLibraryInfoVO> codeInfo;
 
     @NotBlank(message = "代码库类型不能为空")
     @ApiModelProperty(value = "代码库类型", required = true)

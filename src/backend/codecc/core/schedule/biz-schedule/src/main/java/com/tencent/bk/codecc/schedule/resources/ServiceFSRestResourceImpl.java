@@ -15,7 +15,7 @@ package com.tencent.bk.codecc.schedule.resources;
 import com.tencent.bk.codecc.schedule.api.ServiceFSRestResource;
 import com.tencent.bk.codecc.schedule.service.UploadDownloadService;
 import com.tencent.bk.codecc.schedule.vo.FileIndexVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,14 +32,14 @@ public class ServiceFSRestResourceImpl implements ServiceFSRestResource
     private UploadDownloadService uploadDownloadService;
 
     @Override
-    public CodeCCResult<FileIndexVO> index(String fileName, String type)
+    public Result<FileIndexVO> index(String fileName, String type)
     {
-        return new CodeCCResult<>(uploadDownloadService.index(fileName, type));
+        return new Result<>(uploadDownloadService.index(fileName, type));
     }
 
     @Override
-    public CodeCCResult<FileIndexVO> getFileIndex(String fileName, String type)
+    public Result<FileIndexVO> getFileIndex(String fileName, String type)
     {
-        return new CodeCCResult<>(uploadDownloadService.getFileIndex(fileName, type));
+        return new Result<>(uploadDownloadService.getFileIndex(fileName, type));
     }
 }

@@ -58,12 +58,10 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
         params.codeType = CodeType.GITLAB
         params.eventType = element.eventType
         params.block = element.block ?: false
-        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
         params.eventType = element.eventType
         params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
         params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
         params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
-        params.codeType = CodeType.GITLAB
         params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
         params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
         params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)

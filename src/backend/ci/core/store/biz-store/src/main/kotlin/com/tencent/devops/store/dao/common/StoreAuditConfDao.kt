@@ -50,7 +50,7 @@ class StoreAuditConfDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(ID.eq(id))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

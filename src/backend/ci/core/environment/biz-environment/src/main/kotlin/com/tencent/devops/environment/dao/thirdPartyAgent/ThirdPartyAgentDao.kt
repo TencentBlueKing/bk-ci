@@ -75,7 +75,7 @@ class ThirdPartyAgentDao {
                 fileGateway ?: ""
             )
                 .returning(ID)
-                .fetchOne().id
+                .fetchOne()!!.id
         }
     }
 
@@ -111,7 +111,7 @@ class ThirdPartyAgentDao {
                     ip ?: ""
                 )
                 .returning(ID)
-                .fetchOne().id
+                .fetchOne()!!.id
         }
     }
 
@@ -167,7 +167,7 @@ class ThirdPartyAgentDao {
                 .and(NODE_ID.`in`(nodeIds))
                 .and(STATUS.eq(status.status))
                 .and(OS.eq(os.name))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -427,7 +427,7 @@ class ThirdPartyAgentDao {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(AGENT_ID.eq(agentId))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

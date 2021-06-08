@@ -97,6 +97,10 @@ public class AnalyzeTaskConsumer
             {
                 log.info("schedule success: {}", pushVO);
                 channel.basicAck(deliveryTag, true);
+                Long queueCount = analyzeHostPoolDao.getSetProjectQueueCount(pushVO.getProjectId(), -1);
+                if (queueCount < 0){
+                    analyzeHostPoolDao.resetProjectQueueCount(pushVO.getProjectId());
+                }
                 return;
             }
         }

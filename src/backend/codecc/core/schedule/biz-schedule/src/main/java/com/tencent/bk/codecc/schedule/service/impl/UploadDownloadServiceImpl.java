@@ -20,13 +20,19 @@ import com.tencent.bk.codecc.schedule.model.FileIndexEntity;
 import com.tencent.bk.codecc.schedule.service.UploadDownloadService;
 import com.tencent.bk.codecc.schedule.utils.ChunkUploadUtil;
 import com.tencent.bk.codecc.schedule.utils.FileLock;
-import com.tencent.bk.codecc.schedule.vo.*;
+import com.tencent.bk.codecc.schedule.vo.DownloadVO;
+import com.tencent.bk.codecc.schedule.vo.FileChunksMergeVO;
+import com.tencent.bk.codecc.schedule.vo.FileIndexVO;
+import com.tencent.bk.codecc.schedule.vo.FileInfoModel;
+import com.tencent.bk.codecc.schedule.vo.GetFileSizeVO;
+import com.tencent.bk.codecc.schedule.vo.UploadVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.MD5Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
@@ -36,10 +42,22 @@ import org.springframework.stereotype.Service;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
 /**
@@ -50,8 +68,7 @@ import java.util.concurrent.locks.Lock;
  */
 @Service
 @Slf4j
-public class UploadDownloadServiceImpl implements UploadDownloadService
-{
+public class UploadDownloadServiceImpl implements UploadDownloadService {
     @Autowired
     private FileInfoCache fileInfoCache;
 
@@ -60,24 +77,59 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
     private static final Map<String, String> FOLDER_MAP = createMap();
 
-    private static Map<String, String> createMap()
-    {
+    private static Map<String, String> createMap() {
         Map<String, String> folderMap = new HashMap<>();
-        folderMap.put(ScheduleConstants.UploadType.SUCCESS_RESULT.name(), "/data/bkee/codecc/nfs/nfs1/result_upload;/data/bkee/codecc/nfs/nfs2/result_upload;/data/bkee/codecc/nfs/nfs3/result_upload;/data/bkee/codecc/nfs/nfs4/result_upload;/data/bkee/codecc/nfs/nfs5/result_upload;/data/bkee/codecc/nfs/nfs6/result_upload;/data/bkee/codecc/nfs/nfs7/result_upload;/data/bkee/codecc/nfs/nfs8/result_upload");
-        folderMap.put(ScheduleConstants.UploadType.FAIL_RESULT.name(), "/data/bkee/codecc/cfs/fail_result_upload");
-        folderMap.put(ScheduleConstants.UploadType.SCM_JSON.name(), "/data/bkee/codecc/nfs/nfs1/scm;/data/bkee/codecc/nfs/nfs2/scm;/data/bkee/codecc/nfs/nfs3/scm;/data/bkee/codecc/nfs/nfs4/scm;/data/bkee/codecc/nfs/nfs5/scm;/data/bkee/codecc/nfs/nfs6/scm;/data/bkee/codecc/nfs/nfs7/scm;/data/bkee/codecc/nfs/nfs8/scm");
-        folderMap.put(ScheduleConstants.DownloadType.TOOL_CLIENT.name(), "/data/bkee/codecc/nfs/download/tool_client_download");
-        folderMap.put(ScheduleConstants.DownloadType.BUILD_SCRIPT.name(), "/data/bkee/codecc/nfs/download/script_download");
-        folderMap.put(ScheduleConstants.DownloadType.SCM_TOOL.name(), "/data/bkee/codecc/nfs/download/tool_client_download/scm_tool");
-        folderMap.put(ScheduleConstants.DownloadType.P4_TOOL.name(), "/data/bkee/codecc/nfs/download/tool_client_download/p4_tool");
-        folderMap.put(ScheduleConstants.UploadType.AGGREGATE.name(), "/data/bkee/codecc/nfs/nfs1/aggregate;/data/bkee/codecc/nfs/nfs2/aggregate;/data/bkee/codecc/nfs/nfs3/aggregate;/data/bkee/codecc/nfs/nfs4/aggregate;/data/bkee/codecc/nfs/nfs5/aggregate;/data/bkee/codecc/nfs/nfs6/aggregate;/data/bkee/codecc/nfs/nfs7/aggregate;/data/bkee/codecc/nfs/nfs8/aggregate");
+        folderMap.put(ScheduleConstants.UploadType.SUCCESS_RESULT.name(),
+                "/data/bkee/codecc/nfs/nfs1/result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs2/result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs3/result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs4/result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs5/result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs6/result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs7/result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs8/result_upload");
+        folderMap.put(ScheduleConstants.UploadType.FAIL_RESULT.name(),
+                "/data/bkee/codecc/nfs/nfs1/fail_result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs2/fail_result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs3/fail_result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs4/fail_result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs5/fail_result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs6/fail_result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs7/fail_result_upload;"
+                        + "/data/bkee/codecc/nfs/nfs8/fail_result_upload");
+        folderMap.put(ScheduleConstants.UploadType.SCM_JSON.name(),
+                "/data/bkee/codecc/nfs/nfs1/scm;"
+                        + "/data/bkee/codecc/nfs/nfs2/scm;"
+                        + "/data/bkee/codecc/nfs/nfs3/scm;"
+                        + "/data/bkee/codecc/nfs/nfs4/scm;"
+                        + "/data/bkee/codecc/nfs/nfs5/scm;"
+                        + "/data/bkee/codecc/nfs/nfs6/scm;"
+                        + "/data/bkee/codecc/nfs/nfs7/scm;"
+                        + "/data/bkee/codecc/nfs/nfs8/scm");
+        folderMap.put(ScheduleConstants.DownloadType.TOOL_CLIENT.name(),
+                "/data/bkee/codecc/nfs/download/tool_client_download");
+        folderMap.put(ScheduleConstants.DownloadType.BUILD_SCRIPT.name(),
+                "/data/bkee/codecc/nfs/download/script_download");
+        folderMap.put(ScheduleConstants.DownloadType.SCM_TOOL.name(),
+                "/data/bkee/codecc/nfs/download/tool_client_download/scm_tool");
+        folderMap.put(ScheduleConstants.DownloadType.P4_TOOL.name(),
+                "/data/bkee/codecc/nfs/download/tool_client_download/p4_tool");
+        folderMap.put(ScheduleConstants.UploadType.AGGREGATE.name(),
+                "/data/bkee/codecc/nfs/nfs1/aggregate;"
+                        + "/data/bkee/codecc/nfs/nfs2/aggregate;"
+                        + "/data/bkee/codecc/nfs/nfs3/aggregate;"
+                        + "/data/bkee/codecc/nfs/nfs4/aggregate;"
+                        + "/data/bkee/codecc/nfs/nfs5/aggregate;"
+                        + "/data/bkee/codecc/nfs/nfs6/aggregate;"
+                        + "/data/bkee/codecc/nfs/nfs7/aggregate;"
+                        + "/data/bkee/codecc/nfs/nfs8/aggregate");
         folderMap.put(ScheduleConstants.DownloadType.GATHER.name(), "/data/bkee/codecc/nfs/download/gather");
+        folderMap.put(ScheduleConstants.DownloadType.OP_EXCEL.name(), "/data/bkee/codecc/nfs/download/op_excel");
         return folderMap;
     }
 
     @Override
-    public Boolean upload(UploadVO uploadVO, InputStream fileInputStream)
-    {
+    public Boolean upload(UploadVO uploadVO, InputStream fileInputStream) {
         long beginTime = System.currentTimeMillis();
         log.info("begin upload: {}", uploadVO);
 
@@ -92,42 +144,32 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
         File outFile;
         // 非分片上传
-        if (uploadVO.getChunks() == null || uploadVO.getChunks() <= 0)
-        {
+        if (uploadVO.getChunks() == null || uploadVO.getChunks() <= 0) {
             outFile = new File(Paths.get(uploadFolder, fileBaseName).toString());
             log.info("file={}", outFile.getAbsolutePath());
         }
         // 分片上传
-        else
-        {
+        else {
             //为上传的文件准备好对应的目录
-            outFile = ChunkUploadUtil.createChunkFileFolder(uploadFolder, fileBaseName, uploadVO.getChunk());
+            outFile = ChunkUploadUtil.createChunkFileFolder(uploadFolder, fileBaseName, uploadVO.getChunk(),
+                    uploadVO.getBuildId());
             log.info("chunk file={}", outFile.getAbsolutePath());
         }
 
         int index;
         byte[] bytes = new byte[1024];
-        try (FileOutputStream fileOutputStream = new FileOutputStream(outFile))
-        {
-            while ((index = fileInputStream.read(bytes)) != -1)
-            {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(outFile)) {
+            while ((index = fileInputStream.read(bytes)) != -1) {
                 fileOutputStream.write(bytes, 0, index);
                 fileOutputStream.flush();
             }
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             log.error("upload file {} exception", fileBaseName, e);
             throw new CodeCCException(DispatchMessageCode.UPLOAD_FILE_ERR);
-        }
-        finally
-        {
-            try
-            {
+        } finally {
+            try {
                 fileInputStream.close();
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 log.error("close fileInputStream exception", e);
             }
         }
@@ -137,8 +179,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     }
 
     @Override
-    public Boolean chunksMerge(FileChunksMergeVO fileChunksMergeVO)
-    {
+    public Boolean chunksMerge(FileChunksMergeVO fileChunksMergeVO) {
         long beginTime = System.currentTimeMillis();
         log.info("begin chunksMerge: {}", fileChunksMergeVO);
         String fileBaseName = fileChunksMergeVO.getFileName();
@@ -148,38 +189,30 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         String uploadFolder = fileIndexVO.getFileFolder();
 
         //文件上传路径更新为指定文件信息签名后的临时文件夹，用于后期合并
-        String fileFolder = ChunkUploadUtil.md5(fileBaseName);
+        String fileFolder = ChunkUploadUtil.md5(fileBaseName + fileChunksMergeVO.getBuildId());
         String chunkFileFolder = uploadFolder + File.separator + fileFolder;
         log.info("chunkFileFolder={}", chunkFileFolder);
 
         int chunks = fileChunksMergeVO.getChunks();
 
-        int chunksNum = this.getChunksNum(chunkFileFolder);
-        log.info("chunks={}, chunksNum={}", chunks, chunksNum);
+        int chunksNum = this.getChunksNum(chunkFileFolder, chunks);
         //检查是否满足合并条件：分片数量是否足够
-        if (chunks == chunksNum)
-        {
+        if (chunks == chunksNum) {
             //同步指定合并的对象
             Lock lock = FileLock.getLock(fileFolder);
-            try
-            {
+            try {
                 lock.lock();
                 //检查是否满足合并条件：分片数量是否足够
                 List<File> files = new ArrayList<>(Arrays.asList(this.getChunks(chunkFileFolder)));
-                if (chunks == files.size())
-                {
+                if (chunks == files.size()) {
                     //按照文件分片的最后的块号排序文件
                     files.sort(Comparator.comparing((file) -> getCompareChunkNo(file, fileBaseName)));
 
                     merge(files, uploadFolder, fileBaseName);
                 }
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 log.error("数据分片合并失败", ex);
-            }
-            finally
-            {
+            } finally {
                 lock.unlock();
 
                 //清理分片临时文件夹
@@ -188,12 +221,11 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
                 //清理锁对象
                 FileLock.removeLock(fileFolder);
             }
-        }
-        else
-        {
+        } else {
             //清理分片临时文件夹
             this.cleanChunkFileFolder(chunkFileFolder);
-            log.error("数据分片合并失败, 入参分片数chunks={}不等于已上传的分片文件数chunksNum={}", chunks, chunksNum);
+            log.error("数据分片合并失败, 入参分片数chunks={}不等于已上传的分片文件数chunksNum={}, fileName={}",
+                    chunks, chunksNum, fileBaseName);
             throw new CodeCCException(DispatchMessageCode.UPLOAD_FILE_ERR);
         }
 
@@ -202,8 +234,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     }
 
     @NotNull
-    private int getCompareChunkNo(File file, String fileBaseName)
-    {
+    private int getCompareChunkNo(File file, String fileBaseName) {
         String chunkFileNamePrefix = String.format("%s%s", fileBaseName, ScheduleConstants.CHUNK_FILE_SUFFIX);
         String fileName = file.getName();
         String chunkNo = fileName.substring(chunkFileNamePrefix.length());
@@ -211,33 +242,26 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     }
 
     @Override
-    public Long getFileSize(GetFileSizeVO getFileSizeVO)
-    {
+    public Long getFileSize(GetFileSizeVO getFileSizeVO) {
         long beginTime = System.currentTimeMillis();
         log.info("begin getFileSize: {}", getFileSizeVO);
 
         String fileName = getFileSizeVO.getFileName();
         String downloadFolder;
-        if (ScheduleConstants.DownloadType.LAST_RESULT.name().equals(getFileSizeVO.getDownloadType()))
-        {
+        if (ScheduleConstants.DownloadType.LAST_RESULT.name().equals(getFileSizeVO.getDownloadType())) {
             // 获取文件索引
             FileIndexVO fileIndexVO = getFileIndex(fileName, getFileSizeVO.getDownloadType());
             downloadFolder = fileIndexVO.getFileFolder();
-        }
-        else
-        {
+        } else {
             downloadFolder = FOLDER_MAP.get(getFileSizeVO.getDownloadType());
         }
 
         long size = 0;
         File f = new File(downloadFolder, fileName);
-        if (f.exists() && f.isFile())
-        {
+        if (f.exists() && f.isFile()) {
             size = f.length();
             log.info("tool client [{}] size is {}", fileName, size);
-        }
-        else
-        {
+        } else {
             log.error("file [{}] doesn't exist or is not a file", fileName);
         }
         log.info("file size: {}", size);
@@ -246,110 +270,90 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     }
 
     @Override
-    public Response download(DownloadVO downloadVO)
-    {
+    public Response download(DownloadVO downloadVO) {
         long beginTime = System.currentTimeMillis();
         log.info("begin download: {}", downloadVO);
 
         String fileName = downloadVO.getFileName();
         String downloadFolder;
         if (ScheduleConstants.DownloadType.LAST_RESULT.name().equals(downloadVO.getDownloadType())
-                || ScheduleConstants.DownloadType.GATHER.name().equals(downloadVO.getDownloadType()))
-        {
+                || ScheduleConstants.DownloadType.GATHER.name().equals(downloadVO.getDownloadType())) {
             // 获取文件索引
             FileIndexVO fileIndexVO = getFileIndex(fileName, downloadVO.getDownloadType());
             downloadFolder = fileIndexVO.getFileFolder();
-        }
-        else
-        {
+        } else {
             downloadFolder = FOLDER_MAP.get(downloadVO.getDownloadType());
         }
 
         File target = new File(downloadFolder, fileName);
-        if (!target.exists())
-        {
+        if (!target.exists()) {
             log.error("{}不存在", target.getAbsolutePath());
             throw new CodeCCException(DispatchMessageCode.FILE_NOT_EXISTS, new String[]{fileName}, null);
         }
 
-        if (!target.isFile())
-        {
+        if (!target.isFile()) {
             log.error("{}不是一个文件", target.getAbsolutePath());
             throw new CodeCCException(DispatchMessageCode.NOT_A_FILE, new String[]{fileName}, null);
         }
 
         // 一次读40960个字节，如果文件内容不足40960个字节，则读剩下的字节。
         int bufSize = 40960;
-        Response response;
 
-        // 打开一个随机访问文件流，按只读方式
-        try
-        {
-            RandomAccessFile randomFile = new RandomAccessFile(target, "r");
-            // 将读文件的开始位置移到beginIndex位置。
-            randomFile.seek(downloadVO.getBeginIndex());
-            byte[] bytes = new byte[bufSize];
-
-            StreamingOutput fileStream = output ->
-            {
+        StreamingOutput fileStream = output -> {
+            log.info("downloading: {}", target.getAbsoluteFile());
+            // 打开一个随机访问文件流，按只读方式
+            try (RandomAccessFile randomFile = new RandomAccessFile(target, "r"); OutputStream out = output) {
+                // 将读文件的开始位置移到beginIndex位置。
+                randomFile.seek(downloadVO.getBeginIndex());
+                byte[] bytes = new byte[bufSize];
                 // 请求端传入的需要读取的字节数
                 long btyeSize = downloadVO.getBtyeSize();
                 int len;
-                while ((len = randomFile.read(bytes)) != -1 && btyeSize > 0)
-                {
-                    output.write(bytes, 0, len);
-                    output.flush();
+                while ((len = randomFile.read(bytes)) != -1 && btyeSize > 0) {
+                    out.write(bytes, 0, len);
+                    out.flush();
                     btyeSize -= bufSize;
                 }
-                output.close();
-            };
-            response = Response
-                    .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                    .header("content-disposition", "attachment; filename = " + target.getName())
-                    .build();
-        }
-        catch (IOException e)
-        {
-            log.error("下载文件[{}]异常：", target.getAbsolutePath(), e);
-            throw new CodeCCException(DispatchMessageCode.DOWNLOAD_FILE_ERR, new String[]{fileName}, null);
-        }
+            } catch (Throwable throwable) {
+                log.error("下载文件异常: {}", target.getAbsolutePath(), throwable);
+                throw new CodeCCException(DispatchMessageCode.DOWNLOAD_FILE_ERR, new String[]{fileName}, null);
+            }
+            log.info("success download cost: {}, downloadType: {}, fileName: {}",
+                    System.currentTimeMillis() - beginTime, downloadVO.getDownloadType(), fileName);
+        };
+        Response response = Response.ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                .header("content-disposition", "attachment; filename = " + target.getName())
+                .build();
 
-        log.info("end download cost: {}, {}", System.currentTimeMillis() - beginTime, downloadVO);
+        log.info("end download: {}", downloadVO);
         return response;
     }
 
     @Override
-    public FileInfoModel getFileInfo(GetFileSizeVO getFileSizeVO)
-    {
+    public FileInfoModel getFileInfo(GetFileSizeVO getFileSizeVO) {
         long beginTime = System.currentTimeMillis();
         log.info("begin getFileInfo: {}", getFileSizeVO);
 
         String fileName = getFileSizeVO.getFileName();
         String downloadFolder;
-        if (ScheduleConstants.DownloadType.LAST_RESULT.name().equals(getFileSizeVO.getDownloadType()))
-        {
+        if (ScheduleConstants.DownloadType.LAST_RESULT.name().equals(getFileSizeVO.getDownloadType())) {
             // 获取文件索引
             FileIndexVO fileIndexVO = getFileIndex(fileName, getFileSizeVO.getDownloadType());
             downloadFolder = fileIndexVO.getFileFolder();
-        }
-        else
-        {
+        } else {
             downloadFolder = FOLDER_MAP.get(getFileSizeVO.getDownloadType());
         }
 
         String filePath = downloadFolder + File.separator + fileName;
         File file = new File(filePath);
         FileInfoModel fileInfo = null;
-        if (file.exists() && file.isFile())
-        {
+        if (file.exists() && file.isFile()) {
             String md5 = null;
             long lastModifiedTime = file.lastModified();
             fileInfo = fileInfoCache.getFileInfo(filePath);
-            if (fileInfo == null)
-            {
+            if (fileInfo == null) {
                 md5 = getFileMd5(fileName, file);
-                if (StringUtils.isNotEmpty(md5))
-                {
+                if (StringUtils.isNotEmpty(md5)) {
                     fileInfo = new FileInfoModel();
                     fileInfo.setFileName(fileName);
                     fileInfo.setFilePath(filePath);
@@ -359,14 +363,10 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
                     fileInfo.setCreatetime(System.currentTimeMillis());
                     fileInfoCache.saveFileInfo(fileInfo);
                 }
-            }
-            else
-            {
-                if (fileInfo.getLastModifiedTime() < lastModifiedTime)
-                {
+            } else {
+                if (fileInfo.getLastModifiedTime() < lastModifiedTime) {
                     md5 = getFileMd5(fileName, file);
-                    if (StringUtils.isNotEmpty(md5))
-                    {
+                    if (StringUtils.isNotEmpty(md5)) {
                         fileInfo.setContentMd5(md5);
                         fileInfo.setSize(file.length());
                         fileInfo.setLastModifiedTime(lastModifiedTime);
@@ -374,9 +374,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
                     }
                 }
             }
-        }
-        else
-        {
+        } else {
             log.error("file [{}] doesn't exist or is not a file", fileName);
         }
 
@@ -386,18 +384,17 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     }
 
     @Override
-    public FileIndexVO index(String fileName, String type)
-    {
+    public FileIndexVO index(String fileName, String type) {
         long beginTime = System.currentTimeMillis();
         log.info("begin index: {}, {}", fileName, type);
 
         FileIndexEntity fileIndexEntity = fileIndexRepository.findFirstByFileName(fileName);
 
-        if (fileIndexEntity == null)
-        {
+        if (fileIndexEntity == null
+                || fileIndexEntity.getFileFolder().startsWith("/data/bkee/codecc/cfs/fail_result_upload/")) {
+
             String uploadFolders = FOLDER_MAP.get(type);
-            if (StringUtils.isEmpty(uploadFolders))
-            {
+            if (StringUtils.isEmpty(uploadFolders)) {
                 log.error("indexed file {} fail, type [{}] invalid", fileName, type);
                 throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"type"}, null);
             }
@@ -411,7 +408,11 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             String fileFolder = String.format("%s/%s/%s", uploadFolder, dir1, dir2);
 
             ChunkUploadUtil.createFileFolder(fileFolder);
-            fileIndexEntity = new FileIndexEntity();
+
+            // 兼容废弃cfs作为文件存储，这里需要把原来缓存的cfs文件路径刷新成新的文件路径
+            if (fileIndexEntity == null) {
+                fileIndexEntity = new FileIndexEntity();
+            }
             fileIndexEntity.setFileName(fileName);
             fileIndexEntity.setFileFolder(fileFolder);
             fileIndexEntity.setCreatedDate(System.currentTimeMillis());
@@ -427,16 +428,14 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     }
 
     @Override
-    public FileIndexVO getFileIndex(String fileName, String type)
-    {
+    public FileIndexVO getFileIndex(String fileName, String type) {
         long beginTime = System.currentTimeMillis();
         log.info("begin getFileIndex: {}, {}", fileName, type);
 
         FileIndexEntity fileIndexEntity = fileIndexRepository.findFirstByFileName(fileName);
 
         FileIndexVO fileIndexVO = new FileIndexVO();
-        if (fileIndexEntity != null)
-        {
+        if (fileIndexEntity != null) {
             BeanUtils.copyProperties(fileIndexEntity, fileIndexVO);
         }
 
@@ -445,71 +444,57 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     }
 
     @Override
-    public Response download(String downloadType, String fileName)
-    {
+    public Response download(String downloadType, String fileName) {
         long beginTime = System.currentTimeMillis();
         log.info("begin download, downloadType: {}, fileName: {}", downloadType, fileName);
 
         String downloadFolder;
         if (ScheduleConstants.DownloadType.LAST_RESULT.name().equals(downloadType)
-                || ScheduleConstants.DownloadType.GATHER.name().equals(downloadType))
-        {
+                || ScheduleConstants.DownloadType.GATHER.name().equals(downloadType)
+                || ScheduleConstants.DownloadType.OP_EXCEL.name().equals(downloadType)) {
             // 获取文件索引
             FileIndexVO fileIndexVO = getFileIndex(fileName, downloadType);
             downloadFolder = fileIndexVO.getFileFolder();
-        }
-        else
-        {
+        } else {
             downloadFolder = FOLDER_MAP.get(downloadType);
         }
 
         File target = new File(downloadFolder, fileName);
-        if (!target.exists())
-        {
+        if (!target.exists()) {
             log.error("{}不存在", target.getAbsolutePath());
             throw new CodeCCException(DispatchMessageCode.FILE_NOT_EXISTS, new String[]{fileName}, null);
         }
 
-        if (!target.isFile())
-        {
+        if (!target.isFile()) {
             log.error("{}不是一个文件", target.getAbsolutePath());
             throw new CodeCCException(DispatchMessageCode.NOT_A_FILE, new String[]{fileName}, null);
         }
 
-        // 一次读40960个字节，如果文件内容不足40960个字节，则读剩下的字节。
-        int bufSize = 40960;
-        Response response;
-
-        byte[] bytes = new byte[bufSize];
         StreamingOutput fileStream = output ->
         {
-            FileInputStream fileInputStream = new FileInputStream(target);
-            int len;
-            while ((len = fileInputStream.read(bytes)) != -1)
-            {
-                output.write(bytes, 0, len);
-                output.flush();
+            log.info("downloading: {}", target.getAbsoluteFile());
+            try (FileInputStream fileInputStream = new FileInputStream(target); OutputStream out = output) {
+                IOUtils.copyLarge(fileInputStream, out);
+            } catch (Throwable throwable) {
+                log.error("下载文件异常: {}", target.getAbsolutePath(), throwable);
+                throw new CodeCCException(DispatchMessageCode.DOWNLOAD_FILE_ERR, new String[]{fileName}, null);
             }
-            output.close();
+            log.info("success download cost: {}, downloadType: {}, fileName: {}",
+                    System.currentTimeMillis() - beginTime, downloadType, fileName);
         };
-        response = Response
-                .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+        Response response = Response.ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
                 .header("content-disposition", "attachment; filename = " + target.getName())
                 .build();
 
-        log.info("end download cost: {}, downloadType: {}, fileName: {}", System.currentTimeMillis() - beginTime, downloadType, fileName);
+        log.info("end download. downloadType: {}, fileName: {}", downloadType, fileName);
         return response;
     }
 
-    private String getFileMd5(String fileName, File file)
-    {
+    private String getFileMd5(String fileName, File file) {
         String md5 = null;
-        try
-        {
-            md5 = DigestUtils.md5Hex(new FileInputStream(file));
-        }
-        catch (IOException e)
-        {
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            md5 = DigestUtils.md5Hex(inputStream);
+        } catch (IOException e) {
             log.error("get md5 of file [{}] fail", fileName, e);
         }
         log.info("tool fileName [{}] md5 is {}", fileName, md5);
@@ -517,48 +502,37 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         return md5;
     }
 
-    protected boolean merge(List<File> files, String path, String fileName) throws IOException
-    {
+    protected boolean merge(List<File> files, String path, String fileName) throws IOException {
         //创建合并后的文件
         log.info("path={},fileName={}", path, fileName);
         File outputFile = new File(Paths.get(path, fileName).toString());
-        if (outputFile.exists())
-        {
+        if (outputFile.exists()) {
             log.warn("文件[{}]已经存在，删除重新创建", outputFile.getAbsolutePath());
             outputFile.delete();
         }
 
         boolean newFile = outputFile.createNewFile();
-        if (!newFile)
-        {
+        if (!newFile) {
             log.error("创建文件失败");
             throw new CodeCCException(DispatchMessageCode.UPLOAD_FILE_ERR);
         }
 
-        try (FileChannel outChannel = new FileOutputStream(outputFile).getChannel())
-        {
+        try (FileOutputStream out = new FileOutputStream(outputFile); FileChannel outChannel = out.getChannel()) {
             //同步nio方式对分片进行合并, 有效的避免文件过大导致内存溢出
-            for (File file : files)
-            {
-                try (FileChannel inChannel = new FileInputStream(file).getChannel())
-                {
+            for (File file : files) {
+                try (FileInputStream input = new FileInputStream(file); FileChannel inChannel = input.getChannel()) {
                     inChannel.transferTo(0, inChannel.size(), outChannel);
-                }
-                catch (FileNotFoundException ex)
-                {
+                } catch (FileNotFoundException ex) {
                     log.error("文件转换失败", ex);
                     throw new CodeCCException(DispatchMessageCode.UPLOAD_FILE_ERR);
                 }
                 //删除分片
-                if (!file.delete())
-                {
+                if (!file.delete()) {
                     log.error("分片[{}]删除失败", file.getName());
                 }
             }
             outChannel.force(true);
-        }
-        catch (FileNotFoundException e)
-        {
+        } catch (FileNotFoundException e) {
             log.error("文件输出失败", e);
             throw new CodeCCException(DispatchMessageCode.UPLOAD_FILE_ERR);
         }
@@ -570,12 +544,26 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
      * 获取指定文件的分片数量
      *
      * @param folder 文件夹路径
+     * @param chunks
      * @return
      */
-    private int getChunksNum(String folder)
-    {
+    private int getChunksNum(String folder, int chunks) {
+        int i = 0;
         File[] filesList = this.getChunks(folder);
-        return filesList == null ? 0 : filesList.length;
+        int chunksNum = filesList == null ? 0 : filesList.length;
+        while (chunks != chunksNum && i < 20) {
+            try {
+                Thread.sleep(3000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            i++;
+            filesList = this.getChunks(folder);
+            chunksNum = filesList == null ? 0 : filesList.length;
+            log.info("retry to get chunksNum:{}", chunksNum);
+        }
+        log.info("chunks={}, chunksNum={}", chunks, chunksNum);
+        return chunksNum;
     }
 
     /**
@@ -584,13 +572,11 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
      * @param folder 文件夹路径
      * @return
      */
-    private File[] getChunks(String folder)
-    {
+    private File[] getChunks(String folder) {
         File targetFolder = new File(folder);
         return targetFolder.listFiles((file) ->
         {
-            if (file.isDirectory())
-            {
+            if (file.isDirectory()) {
                 return false;
             }
             return true;
@@ -603,12 +589,10 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
      * @param chunkTmpFolder 文件夹名称
      * @return
      */
-    protected boolean cleanChunkFileFolder(String chunkTmpFolder)
-    {
+    protected boolean cleanChunkFileFolder(String chunkTmpFolder) {
         //删除分片文件夹
         File garbage = new File(chunkTmpFolder);
-        if (!FileUtils.deleteQuietly(garbage))
-        {
+        if (!FileUtils.deleteQuietly(garbage)) {
             return false;
         }
         return true;

@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-codecc
+  labels:
+    pv: nfs-codecc
+spec:
+  capacity:
+    storage: {{ .Values.volume.storage }}
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: {{ .Values.volume.persistentVolumeReclaimPolicy }}
+  storageClassName: nfs-codecc
+  nfs:
+    path: /data/nfs/bkcodecc
+    server: {{ .Values.volume.nfs.server }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-codecc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.volume.storage }}
+  storageClassName: nfs-codecc
+  selector:
+    matchLabels:
+      pv: nfs-codecc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bkci-codecc-schedule
+  name: bkci-codecc-schedule
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: bkci-codecc-schedule
+  template:
+    metadata:
+      labels:
+        app: bkci-codecc-schedule
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostAliases:
+        - ip: "{{ .Values.host.BK_CI_PRIVATE_IP }}"
+          hostnames:
+            - "{{ .Values.env.BK_CI_PRIVATE_HOST }}"
+      containers:
+        - image: {{ .Values.image.hub }}/bkci-codecc-schedule:{{ .Values.image.tag }}
+          name: bkci-codecc-schedule
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          workingDir: /data/docker/bkci/codecc/backend/
+          command: ['/bin/sh','-c','/data/docker/bkci/codecc/backend/module_run_codecc.sh']
+          env:
+            - name: CONSUL_SERVER
+              value: {{ .Values.consul.server }}
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                    fieldPath: status.hostIP
+          volumeMounts:
+            - mountPath: "/data/bkee/codecc/nfs"
+              name: nfs-codecc
+      volumes:
+        - name: nfs-codecc
+          persistentVolumeClaim:
+            claimName: nfs-codecc

@@ -1,6 +1,3 @@
-apply plugin: "java"
-apply plugin: "maven"
-
 dependencies {
     compile project(":core:common:common-db")
     compile "org.projectlombok:lombok"

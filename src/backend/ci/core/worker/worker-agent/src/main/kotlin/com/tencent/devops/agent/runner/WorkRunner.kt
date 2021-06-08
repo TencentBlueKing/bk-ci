@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.SLAVE_AGENT_START_FILE
+import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
@@ -75,10 +76,14 @@ object WorkRunner {
                 override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
                     val replaceWorkspace = if (workspace.isNotBlank()) {
                         ReplacementUtils.replace(workspace, object : ReplacementUtils.KeyReplacement {
-                            override fun getReplacement(key: String): String? {
-                                return variables[key] ?: "\${$key}"
+                            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+                                return if (doubleCurlyBraces) {
+                                    variables[key] ?: "\${{$key}}"
+                                } else {
+                                    variables[key] ?: "\${$key}"
+                                }
                             }
-                        })
+                        }, mapOf(WORKSPACE_CONTEXT to workspace))
                     } else {
                         workspace
                     }

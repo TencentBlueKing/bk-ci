@@ -259,13 +259,12 @@
 
                         this.curIndexItemUrl = res.url
                     } else {
-                        const isDevnet = await this.$store.dispatch('soda/requestDevnetGateway')
                         const res = await this.$store.dispatch('soda/requestDownloadUrl', {
                             projectId: this.projectId,
                             artifactoryType: row.artifactoryType,
                             path: row.path
                         })
-                        const url = isDevnet ? res.url : res.url2
+                        const url = res.url2
                         window.location.href = type ? `${API_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
                     }
                 } catch (err) {

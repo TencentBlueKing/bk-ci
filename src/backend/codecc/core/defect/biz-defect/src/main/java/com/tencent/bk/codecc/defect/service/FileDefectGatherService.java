@@ -28,5 +28,5 @@ public interface FileDefectGatherService
      * @param taskId
      * @return
      */
-    FileDefectGatherVO getFileDefectGather(long taskId, String toolName);
+    FileDefectGatherVO getFileDefectGather(long taskId, String toolName, String dimension);
 }
