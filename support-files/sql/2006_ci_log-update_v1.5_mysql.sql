@@ -24,4 +24,4 @@ BEGIN
 END <CI_UBF>
 DELIMITER ;
 COMMIT;
-CALL ci_store_schema_update();
+CALL ci_log_schema_update();
