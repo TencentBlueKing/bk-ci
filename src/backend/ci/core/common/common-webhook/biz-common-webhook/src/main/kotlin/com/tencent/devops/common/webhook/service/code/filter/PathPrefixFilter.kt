@@ -42,6 +42,10 @@ class PathPrefixFilter(
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
+        logger.info(
+            "$pipelineId|triggerOnPath:$triggerOnPath|includedPaths:$includedPaths" +
+                "|excludedPaths:$excludedPaths|path filter"
+        )
         return hasNoPathSpecs() || (isPathNotExcluded() && isPathIncluded(response))
     }
 
@@ -77,7 +81,7 @@ class PathPrefixFilter(
             response.addParam(MATCH_PATHS, matchPaths.joinToString(","))
             true
         } else {
-            false
+            includedPaths.isEmpty()
         }
     }
 

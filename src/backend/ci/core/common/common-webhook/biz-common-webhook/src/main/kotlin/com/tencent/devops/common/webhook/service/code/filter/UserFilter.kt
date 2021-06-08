@@ -41,6 +41,10 @@ class UserFilter(
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
+        logger.info(
+            "$pipelineId|triggerOnUser:$triggerOnUser|includedUsers:$includedUsers" +
+                "|excludedUsers:$excludedUsers|user filter"
+        )
         return hasNoUserSpecs() || (isUserNotExcluded() && isUserIncluded())
     }
 

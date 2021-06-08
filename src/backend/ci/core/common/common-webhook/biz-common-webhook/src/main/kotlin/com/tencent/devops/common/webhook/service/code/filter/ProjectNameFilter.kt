@@ -40,11 +40,13 @@ class ProjectNameFilter(
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info("$pipelineId|$projectName|$triggerOnProjectName project name filter")
+        logger.info(
+            "$pipelineId|triggerOnProjectName:$triggerOnProjectName|projectName:$projectName|project name filter"
+        )
         return projectName == triggerOnProjectName || getProjectName(projectName) == triggerOnProjectName
     }
 
-    fun getProjectName(projectName: String): String {
+    private fun getProjectName(projectName: String): String {
         // 如果项目名是三层的，比如a/b/c，那对应的rep_name是b
         val repoSplit = projectName.split("/")
         if (repoSplit.size != 3) {

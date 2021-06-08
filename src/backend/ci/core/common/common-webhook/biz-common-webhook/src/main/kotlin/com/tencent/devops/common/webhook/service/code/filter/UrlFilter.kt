@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.service.code.filter
 
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.slf4j.LoggerFactory
 
 class UrlFilter(
     private val pipelineId: String,
@@ -36,10 +37,17 @@ class UrlFilter(
     private val includeHost: String? = null
 ) : WebhookFilter {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(UrlFilter::class.java)
+    }
+
     override fun doFilter(response: WebhookFilterResponse): Boolean {
+        logger.info(
+            "$pipelineId|triggerOnUrl:$triggerOnUrl|repositoryUrl:$repositoryUrl" +
+                "|includeHost:$includeHost|url filter"
+        )
         val triggerRepository = GitUtils.getDomainAndRepoName(triggerOnUrl)
         val repository = GitUtils.getDomainAndRepoName(repositoryUrl)
-
         return (
             triggerRepository.first == repository.first ||
                 includeHost?.split(",")?.contains(triggerRepository.first) == true

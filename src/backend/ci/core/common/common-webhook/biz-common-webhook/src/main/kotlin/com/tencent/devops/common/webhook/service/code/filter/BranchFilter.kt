@@ -41,10 +41,12 @@ class BranchFilter(
         private val logger = LoggerFactory.getLogger(BranchFilter::class.java)
         private const val MATCH_BRANCH = "matchBranch"
     }
+    private val matcher = AntPathMatcher()
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info(
-            "$pipelineId|$triggerOnBranchName|$includedBranches|$excludedBranches|git web hook branch filter"
+            "$pipelineId|triggerOnBranchName:$triggerOnBranchName|includedBranches:$includedBranches" +
+                "|excludedBranches:$excludedBranches|branch filter"
         )
         return hasNoBranchSpecs() || (isBranchNotExcluded() && isBranchIncluded(response))
     }
@@ -54,7 +56,6 @@ class BranchFilter(
     }
 
     private fun isBranchNotExcluded(): Boolean {
-        val matcher = AntPathMatcher()
         excludedBranches.forEach { excludePattern ->
             if (matcher.match(excludePattern, triggerOnBranchName)) {
                 logger.warn(
@@ -67,7 +68,6 @@ class BranchFilter(
     }
 
     private fun isBranchIncluded(response: WebhookFilterResponse): Boolean {
-        val matcher = AntPathMatcher()
         includedBranches.forEach { includePattern ->
             if (matcher.match(includePattern, triggerOnBranchName)) {
                 response.addParam(MATCH_BRANCH, includePattern)
