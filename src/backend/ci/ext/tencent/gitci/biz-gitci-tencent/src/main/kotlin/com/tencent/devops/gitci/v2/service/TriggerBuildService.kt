@@ -627,7 +627,11 @@ class TriggerBuildService @Autowired constructor(
                 retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
                 customEnv = emptyList(),
-                runCondition = RunCondition.CUSTOM_CONDITION_MATCH,
+                runCondition = if (step.ifFiled.isNullOrBlank()) {
+                    RunCondition.PRE_TASK_SUCCESS
+                } else {
+                    RunCondition.CUSTOM_CONDITION_MATCH
+                },
                 customCondition = step.ifFiled
             )
 
