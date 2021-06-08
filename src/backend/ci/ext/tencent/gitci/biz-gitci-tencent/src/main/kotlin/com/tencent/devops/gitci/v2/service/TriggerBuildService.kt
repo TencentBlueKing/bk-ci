@@ -317,17 +317,16 @@ class TriggerBuildService @Autowired constructor(
             stageList.add(createStage(stage, event, gitBasicSetting))
         }
         // 添加finally
-        if (yaml.finally != null) {
+        if (!yaml.finally.isNullOrEmpty()) {
             stageList.add(
                 createStage(
                     stage = GitCIV2Stage(
                         name = null,
                         id = null,
                         label = emptyList(),
-                        // TODO: 询问方案
                         ifField = null,
                         fastKill = false,
-                        jobs = yaml.finally ?: emptyList()
+                        jobs = yaml.finally!!
                     ),
                     event = event,
                     gitBasicSetting = gitBasicSetting,
