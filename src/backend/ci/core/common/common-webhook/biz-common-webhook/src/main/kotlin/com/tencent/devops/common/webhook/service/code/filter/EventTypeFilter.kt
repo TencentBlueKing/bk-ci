@@ -45,10 +45,12 @@ class EventTypeFilter(
         logger.info(
             "$pipelineId|triggerOnEventType:$triggerOnEventType|eventType:$eventType|action:$action|eventType filter"
         )
-        return if (triggerOnEventType == CodeEventType.MERGE_REQUEST) {
-            isAllowedByMrAction()
-        } else {
-            isAllowedByEventType()
+        return when (eventType) {
+            null -> true
+            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT ->
+                isAllowedByMrAction()
+            else ->
+                isAllowedByEventType()
         }
     }
 
@@ -57,8 +59,13 @@ class EventTypeFilter(
     }
 
     private fun isAllowedByMrAction(): Boolean {
-        if (isMrAndMergeAction() || isMrAcceptNotMergeAction()) {
-            logger.warn("$pipelineId|Git mr web hook not match with action($action)")
+        if (triggerOnEventType != CodeEventType.MERGE_REQUEST ||
+            isMrAndMergeAction() ||
+            isMrAcceptNotMergeAction()
+        ) {
+            logger.warn(
+                "$pipelineId|Git mr web hook not match with triggerOnEventType($triggerOnEventType) or action($action)"
+            )
             return false
         }
         return true

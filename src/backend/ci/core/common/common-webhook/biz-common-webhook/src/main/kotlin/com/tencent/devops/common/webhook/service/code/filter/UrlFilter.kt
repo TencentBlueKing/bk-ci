@@ -48,10 +48,19 @@ class UrlFilter(
         )
         val triggerRepository = GitUtils.getDomainAndRepoName(triggerOnUrl)
         val repository = GitUtils.getDomainAndRepoName(repositoryUrl)
-        return (
-            triggerRepository.first == repository.first ||
-                includeHost?.split(",")?.contains(triggerRepository.first) == true
-            ) &&
+        return isSameHost(triggerOnHost = triggerRepository.first, host = repository.first) &&
             triggerRepository.second == repository.second
+    }
+
+    /**
+     * 判断两个域名是否指向同一个服务
+     */
+    private fun isSameHost(triggerOnHost: String, host: String): Boolean {
+        return if (triggerOnHost != host) {
+            val includeHosts = includeHost?.split(",") ?: return false
+            includeHosts.containsAll(setOf(triggerOnHost, host))
+        } else {
+            true
+        }
     }
 }

@@ -61,13 +61,16 @@ class PathPrefixFilter(
                     return@eventPath
                 }
             }
-            logger.warn("$pipelineId|$eventPath|Event path not match the user path")
+            logger.warn("$pipelineId|Event path not match the user path")
             return true
         }
         return false
     }
 
     private fun isPathIncluded(response: WebhookFilterResponse): Boolean {
+        if (includedPaths.isEmpty()) {
+            return true
+        }
         val matchPaths = mutableSetOf<String>()
         triggerOnPath.forEach eventPath@{ eventPath ->
             includedPaths.forEach userPath@{ userPath ->
@@ -81,7 +84,7 @@ class PathPrefixFilter(
             response.addParam(MATCH_PATHS, matchPaths.joinToString(","))
             true
         } else {
-            includedPaths.isEmpty()
+            false
         }
     }
 

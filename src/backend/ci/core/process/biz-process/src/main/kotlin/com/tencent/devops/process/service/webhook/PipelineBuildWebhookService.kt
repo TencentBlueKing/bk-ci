@@ -198,11 +198,11 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
 
             watcher.start("webhookTriggerPipelineBuild")
-            pipelines.forEach outside@{ pipelineId ->
+            pipelines.parallelStream().forEach outside@{ pipelineId ->
                 try {
                     logger.info("pipelineId is $pipelineId")
                     val model = pipelineRepositoryService.getModel(pipelineId) ?: run {
-                        logger.info("pipeline does not exists, ignore")
+                        logger.info("$pipelineId|pipeline does not exists, ignore")
                         return@outside
                     }
 
@@ -213,7 +213,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     val canWebhookStartup = canWebhookStartup(triggerContainer, codeRepositoryType)
 
                     if (!canWebhookStartup) {
-                        logger.info("can not start by $codeRepositoryType, ignore")
+                        logger.info("$pipelineId|can not start by $codeRepositoryType, ignore")
                         return@outside
                     }
 
@@ -232,7 +232,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
             return true
         } finally {
-            logger.info("repo(${matcher.getRepoName()})|webhook trigger|watcher=$watcher")
+            logger.info("$watcher")
         }
     }
 
@@ -334,7 +334,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 return@elements
             }
 
-            logger.info("Get the code trigger pipeline $pipelineId branch ${webHookParams.branchName}")
+            logger.info("$pipelineId|${element.name}|Get the code trigger pipeline")
             // #2958 如果仓库找不到,会抛出404异常,就不会继续往下遍历
             val repo = try {
                 if (element is CodeGitGenericWebHookTriggerElement &&
@@ -359,7 +359,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 null
             }
             if (repo == null) {
-                logger.warn("pipeline:$pipelineId|repo[$repositoryConfig] does not exist")
+                logger.warn("$pipelineId|repo[$repositoryConfig] does not exist")
                 return@elements
             }
 
@@ -403,7 +403,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 return false
             } else {
                 logger.info(
-                    "$pipelineId|webhook trigger match unsuccess|(${element.name}|repo(${matcher.getRepoName()})"
+                    "$pipelineId|webhook trigger match unsuccess|(${element.name})|repo(${matcher.getRepoName()})"
                 )
             }
         }
