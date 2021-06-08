@@ -34,6 +34,7 @@ import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
 import com.tencent.devops.model.auth.tables.records.TAuthGroupRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -74,7 +75,7 @@ class GroupService @Autowired constructor(
 
         return Result(true)
     }
-    
+
     fun batchCreate(
         userId: String,
         projectCode: String,
@@ -108,7 +109,7 @@ class GroupService @Autowired constructor(
         return Result(true)
     }
 
-    fun getGroupCode(groupId: Int): TAuthGroupRecord? {
+    fun getGroupCode(groupId: Int): TAuthGroupInfoRecord? {
         return groupDao.getGroupById(dslContext, groupId)
     }
 
