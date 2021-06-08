@@ -27,14 +27,15 @@
 
 package com.tencent.devops.process.config
 
-
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.BSAuthResourceApi
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.permission.GitCiPipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -44,28 +45,46 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
+/**
+ * 流水线引擎初始化配置类
+ *
+ * @version 1.0
+ */
+
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class TxV0PipleineInitConfiguration {
+class TxPipelineEngineConfiguration {
+
+    @Bean
+    fun managerService(client: Client) = ManagerService(client)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
-    fun projectPermissionService(
-        bkAuthProjectApi: BSAuthProjectApi,
-        bkAuthResourceApi: BSAuthResourceApi,
-        bkAuthPermissionApi: BSAuthPermissionApi,
+    fun pipelinePermissionServiceImpl(
+        authProjectApi: AuthProjectApi,
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
         pipelineAuthServiceCode: PipelineAuthServiceCode,
         managerService: ManagerService,
         pipelineDao: PipelineInfoDao,
         dslContext: DSLContext
-    ): PipelinePermissionService = PipelinePermissionServiceImpl(
-        authProjectApi = bkAuthProjectApi,
-        authResourceApi = bkAuthResourceApi,
-        authPermissionApi = bkAuthPermissionApi,
+    ) = PipelinePermissionServiceImpl(
+        authProjectApi = authProjectApi,
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
         pipelineAuthServiceCode = pipelineAuthServiceCode,
         managerService = managerService,
         pipelineDao = pipelineDao,
         dslContext = dslContext
     )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    fun gitCIPipelinePermissionServiceImpl(
+        client: Client,
+        pipelineIndoDao: PipelineInfoDao,
+        dslContext: DSLContext,
+        checkTokenService: ClientTokenService
+    ) = GitCiPipelinePermissionServiceImpl(client, pipelineIndoDao, dslContext, checkTokenService)
 }

@@ -49,7 +49,7 @@ class TxV3PipleineInitConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
-    fun projectPermissionService(
+    fun txV3PipelinePermissionService(
         txV3BsAuthPermission: TxV3BsAuthPermissionApi,
         txV3BSAuthProjectApi: TxV3BSAuthProjectApi,
         bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
