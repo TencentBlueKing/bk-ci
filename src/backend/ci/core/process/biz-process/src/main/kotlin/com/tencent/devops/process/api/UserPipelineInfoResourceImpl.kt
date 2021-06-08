@@ -62,11 +62,11 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
         )
         return Result(pipelineInfos)
     }
-    
+
     override fun getPipelineInfo(userId: String, projectId: String, pipelineId: String): Result<PipelineDetailInfo?> {
         return Result(pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId))
     }
-    
+
     fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
