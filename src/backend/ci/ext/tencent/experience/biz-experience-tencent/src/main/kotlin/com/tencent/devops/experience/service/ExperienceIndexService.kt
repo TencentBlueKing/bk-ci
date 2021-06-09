@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.index.HotCategoryParam
@@ -243,18 +244,20 @@ class ExperienceIndexService @Autowired constructor(
     private fun toIndexAppInfoVO(
         it: TExperiencePublicRecord,
         lastDownloadMap: Map<String, Long>
-    ) = IndexAppInfoVO(
-        experienceHashId = HashUtil.encodeLongId(it.recordId),
-        experienceName = it.experienceName,
-        createTime = it.updateTime.timestampmilli(),
-        size = it.size,
-        logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-        externalUrl = it.externalLink,
-        bundleIdentifier = it.bundleIdentifier,
-        appScheme = it.scheme,
-        expired = false,
-        lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
-            ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
-        type = it.type
-    )
+    ): IndexAppInfoVO {
+        return IndexAppInfoVO(
+            experienceHashId = HashUtil.encodeLongId(it.recordId),
+            experienceName = it.experienceName,
+            createTime = it.updateTime.timestampmilli(),
+            size = it.size,
+            logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
+            externalUrl = HomeHostUtil.outerApiServerHost() + it.externalLink + "?id=" + HashUtil.encodeLongId(it.id),
+            bundleIdentifier = it.bundleIdentifier,
+            appScheme = it.scheme,
+            expired = false,
+            lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
+                ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
+            type = it.type
+        )
+    }
 }
