@@ -4,6 +4,7 @@ import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -16,14 +17,23 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
         projectCode: String,
         groupInfo: ProjectRoleDTO
     ): Int {
+        var groupType= ""
+        var groupName = ""
+        if (!BkAuthGroup.contains(groupInfo.code)) {
+            groupType = CUSTOM_GROUP.toString()
+            groupName = groupInfo.name ?: ""
+        } else {
+            groupType = groupInfo.type
+            groupName = groupInfo.name
+        }
         val roleId = groupService.createGroup(
             userId = userId,
             projectCode = projectCode,
             groupInfo = GroupDTO(
                 groupCode = groupInfo.code,
-                groupType = groupInfo.type,
-                groupName = groupInfo.name,
-                displayName = groupInfo.name,
+                groupType = groupType,
+                groupName = groupName,
+                displayName = groupName,
                 relationId = null
             )
         )
@@ -80,5 +90,6 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(AbsPermissionRoleServiceImpl::class.java)
+        const val CUSTOM_GROUP = 99
     }
 }
