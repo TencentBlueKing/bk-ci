@@ -7,7 +7,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Table structure for T_LOG_INDICES
 -- ----------------------------
 
-CREATE TABLE IF NOT EXISTS `T_AUTH_GROUP` (
+CREATE TABLE IF NOT EXISTS `T_AUTH_GROUP_INFO` (
   `ID` varchar(64) NOT NULL COMMENT '主健ID',
   `GROUP_NAME` varchar(32) NOT NULL DEFAULT '""' COMMENT '用户组名称',
   `GROUP_CODE` varchar(32) NOT NULL COMMENT '用户组标识 默认用户组标识一致',

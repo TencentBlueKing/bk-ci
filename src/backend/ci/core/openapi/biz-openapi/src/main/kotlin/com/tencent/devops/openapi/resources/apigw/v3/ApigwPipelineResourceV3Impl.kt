@@ -37,6 +37,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -183,6 +184,15 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
     ): Result<Boolean> {
         logger.info("restore: userId[$userId] projectId[$projectId] pipelineId[$pipelineId]")
         return client.get(ServicePipelineResource::class).restore(userId, projectId, pipelineId)
+    }
+
+    override fun getProjectPipelineIds(
+        appCode: String?,
+        apigwType: String?,
+        projectCode: String
+    ): Result<List<PipelineIdInfo>> {
+        logger.info("getProjectPipelineIds $projectCode")
+        return client.get(ServicePipelineResource::class).getProjectPipelineIds(projectCode)
     }
 
     companion object {

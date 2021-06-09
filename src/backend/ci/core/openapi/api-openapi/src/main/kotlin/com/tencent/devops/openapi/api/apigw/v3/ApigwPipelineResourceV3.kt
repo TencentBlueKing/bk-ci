@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -254,4 +255,19 @@ interface ApigwPipelineResourceV3 {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取项目下pipelineId+自增id")
+    @GET
+    @Path("/pipelineIds/list")
+    fun getProjectPipelineIds(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("项目Code", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<PipelineIdInfo>>
 }

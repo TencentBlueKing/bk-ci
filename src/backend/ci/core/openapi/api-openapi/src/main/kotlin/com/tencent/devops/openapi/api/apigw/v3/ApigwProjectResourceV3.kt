@@ -179,4 +179,22 @@ interface ApigwProjectResourceV3 {
         @ApiParam("添加信息", required = true)
         createInfo: ProjectCreateUserInfo
     ): Result<Boolean?>
+
+    @ApiOperation("关联iam项目")
+    @PUT
+    @Path("/{projectCode}/relationProject")
+    fun relationProject(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("项目Code", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("iam分级管理员ID", required = true)
+        @QueryParam("relationId")
+        relationId: String
+    ): Result<Boolean>
 }
