@@ -70,8 +70,8 @@ class ClientAutoConfiguration {
 
     @Bean
     fun consulFilter() = ConsulFilter()
-    
+
     @Bean
     fun clientTokenService(redisOperation: RedisOperation) = ClientTokenService(redisOperation)
-    
+
 }

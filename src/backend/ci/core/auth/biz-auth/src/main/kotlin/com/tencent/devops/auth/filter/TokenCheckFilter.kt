@@ -41,18 +41,18 @@ import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 
 @Component
-class TokenCheckFilter @Autowired constructor (
+class TokenCheckFilter @Autowired constructor(
     val clientTokenService: ClientTokenService
 ) : Filter {
     override fun destroy() = Unit
-    
+
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
         if (request == null || chain == null) {
             return
         }
         val httpServletRequest = request as HttpServletRequest
         val token = httpServletRequest.getHeader(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        
+
         if (!httpServletRequest.pathInfo.contains("/open")) {
             return chain.doFilter(request, response)
         }
@@ -60,13 +60,13 @@ class TokenCheckFilter @Autowired constructor (
             logger.warn("auth token fail: $token")
             throw TokenForbiddenException("token check fail")
         }
-        
+
         chain.doFilter(request, response)
     }
 
     override fun init(filterConfig: FilterConfig?) = Unit
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TokenCheckFilter:: class.java)
+        private val logger = LoggerFactory.getLogger(TokenCheckFilter::class.java)
     }
 }
