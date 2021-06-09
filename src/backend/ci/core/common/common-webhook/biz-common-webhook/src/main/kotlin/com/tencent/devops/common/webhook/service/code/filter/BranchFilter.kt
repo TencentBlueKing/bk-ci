@@ -59,7 +59,7 @@ class BranchFilter(
         excludedBranches.forEach { excludePattern ->
             if (matcher.match(excludePattern, triggerOnBranchName)) {
                 logger.warn(
-                    "$pipelineId|The excluded branch match the git event branch $excludePattern"
+                    "$pipelineId|the excluded branch match the git event branch $excludePattern"
                 )
                 return false
             }
@@ -72,7 +72,7 @@ class BranchFilter(
             if (matcher.match(includePattern, triggerOnBranchName)) {
                 response.addParam(MATCH_BRANCH, includePattern)
                 logger.warn(
-                    "$pipelineId|The included branch match the git event branch $includePattern"
+                    "$pipelineId|the included branch match the git event branch $includePattern"
                 )
                 return true
             }

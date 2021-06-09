@@ -61,7 +61,7 @@ class PathPrefixFilter(
                     return@eventPath
                 }
             }
-            logger.warn("$pipelineId|Event path not match the user path")
+            logger.warn("$pipelineId|excluded event path not match the user path")
             return true
         }
         return false
@@ -79,7 +79,7 @@ class PathPrefixFilter(
                 }
             }
         }
-        logger.warn("$pipelineId|$matchPaths|Event path match the user path")
+        logger.warn("$pipelineId|$matchPaths|event path match the user path")
         return if (matchPaths.isNotEmpty()) {
             response.addParam(MATCH_PATHS, matchPaths.joinToString(","))
             true

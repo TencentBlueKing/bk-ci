@@ -74,6 +74,10 @@ abstract class AbstractScmWebhookMatcher<T : CodeWebhookEvent>(
         return eventHandler.getEnv(event)
     }
 
+    override fun getMergeRequestId(): Long? {
+        return eventHandler.getMergeRequestId(event)
+    }
+
     override fun getMessage(): String? {
         return eventHandler.getMessage(event)
     }

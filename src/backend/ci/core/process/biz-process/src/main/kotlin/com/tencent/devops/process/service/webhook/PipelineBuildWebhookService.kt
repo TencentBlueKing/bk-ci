@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -82,7 +81,6 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildService: PipelineBuildService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
     private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher,
     private val pipelineWebHookQueueService: PipelineWebHookQueueService,
@@ -194,11 +192,12 @@ class PipelineBuildWebhookService @Autowired constructor(
             ).toSet()
 
             if (pipelines.isEmpty()) {
+                gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
                 return false
             }
 
             watcher.start("webhookTriggerPipelineBuild")
-            pipelines.parallelStream().forEach outside@{ pipelineId ->
+            pipelines.forEach outside@{ pipelineId ->
                 try {
                     logger.info("pipelineId is $pipelineId")
                     val model = pipelineRepositoryService.getModel(pipelineId) ?: run {
@@ -398,7 +397,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     )
                     logger.info("$pipelineId|$buildId|webhook trigger|(${element.name}|repo(${matcher.getRepoName()})")
                 } catch (ignore: Exception) {
-                    logger.warn("$pipelineId|webhook trigger|(${element.name}|repo(${matcher.getRepoName()})", ignore)
+                    logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
                 }
                 return false
             } else {

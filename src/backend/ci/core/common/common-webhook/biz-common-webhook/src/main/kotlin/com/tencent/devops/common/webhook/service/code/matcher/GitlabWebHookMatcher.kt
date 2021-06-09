@@ -49,7 +49,7 @@ class GitlabWebHookMatcher(
         webHookParams: WebHookParams
     ): ScmWebhookMatcher.MatchResult {
         if (repository !is CodeGitlabRepository) {
-            logger.warn("The repo($repository) is not code git repo for git web hook")
+            logger.warn("$$pipelineId|the repo($repository) is not code git repo for git web hook")
             return ScmWebhookMatcher.MatchResult(isMatch = false)
         }
         return eventHandler.isMatch(

@@ -50,7 +50,7 @@ class GithubWebHookMatcher(
         webHookParams: WebHookParams
     ): ScmWebhookMatcher.MatchResult {
         if (repository !is GithubRepository) {
-            logger.warn("The repo($repository) is not code git repo for github web hook")
+            logger.warn("$pipelineId|The repo($repository) is not code git repo for github web hook")
             return ScmWebhookMatcher.MatchResult(isMatch = false)
         }
         return eventHandler.isMatch(
