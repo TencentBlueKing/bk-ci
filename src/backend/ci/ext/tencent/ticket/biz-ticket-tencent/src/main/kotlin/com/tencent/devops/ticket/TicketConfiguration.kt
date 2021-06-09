@@ -61,7 +61,7 @@ class TicketConfiguration {
         certDao: CertDao,
         dslContext: DSLContext,
         tokenService: ClientTokenService
-    ) = GitCICertPermissionServiceImpl(client, certDao, dslContext)
+    ) = GitCICertPermissionServiceImpl(client, certDao, dslContext, tokenService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
@@ -70,7 +70,7 @@ class TicketConfiguration {
         credentialDao: CredentialDao,
         dslContext: DSLContext,
         tokenService: ClientTokenService
-    ) = GitCICredentialPermissionServiceImpl(client, credentialDao, dslContext)
+    ) = GitCICredentialPermissionServiceImpl(client, credentialDao, dslContext, tokenService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
