@@ -73,5 +73,4 @@ class ClientAutoConfiguration {
 
     @Bean
     fun clientTokenService(redisOperation: RedisOperation) = ClientTokenService(redisOperation)
-
 }
