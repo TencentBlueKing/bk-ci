@@ -240,6 +240,10 @@ class YamlTemplate(
         preYamlObject.label = newYaml.label
         preYamlObject.resources = newYaml.resources
         preYamlObject.notices = newYaml.notices
+        // 用户没写就用模板的名字
+        if (preYamlObject.name.isNullOrBlank()) {
+            preYamlObject.name = newYaml.name
+        }
     }
 
     private fun replaceVariables(
