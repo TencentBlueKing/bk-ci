@@ -131,7 +131,9 @@ object BuildStatusSwitcher {
 
     class TaskBuildStatusMaker : BuildStatusMaker {
 
-        private val timeoutCode = 2128006
+        companion object {
+            private val timeoutCodeSet = setOf(2128006)
+        }
 
         /**
          * 强制结束构建时，[currentBuildStatus]如果是[BuildStatus.isRunning]状态，则为[BuildStatus.TERMINATE]
@@ -156,7 +158,7 @@ object BuildStatusSwitcher {
         }
 
         override fun switchByErrorCode(currentBuildStatus: BuildStatus, errorCode: Int?): BuildStatus {
-            if (errorCode == timeoutCode) {
+            if (timeoutCodeSet.contains(errorCode)) {
                 return BuildStatus.QUEUE_TIMEOUT
             }
             return currentBuildStatus
