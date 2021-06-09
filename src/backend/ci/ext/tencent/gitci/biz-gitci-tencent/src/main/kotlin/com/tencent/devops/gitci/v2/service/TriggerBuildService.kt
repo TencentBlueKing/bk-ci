@@ -155,12 +155,12 @@ class TriggerBuildService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val oauthService: OauthService,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val gitCIEventService: GitCIEventService,
     private val gitPipelineBranchService: GitPipelineBranchService
 
 ) : V2BaseBuildService<ScriptBuildYaml>(
     client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService,
+    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventService,
     gitPipelineBranchService
 ) {
 

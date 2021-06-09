@@ -4,11 +4,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
+import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.gitci.v2.service.GitCIEventService
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -24,8 +24,9 @@ class PipelineCleanJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
-    private val gitCISettingDao: GitCISettingDao,
-    private val client: Client
+    private val gitCISettingDao: GitCIBasicSettingDao,
+    private val client: Client,
+    private val gitCIEventService: GitCIEventService
 ) {
 
     @Value("\${deletePipelines.minusDays:#{null}}")
@@ -78,14 +79,16 @@ class PipelineCleanJob @Autowired constructor(
             return
         }
         val ids = pipelines.map { it.first }.toSet()
-        val pipelineIds = pipelines.map { Pair(it.second, it.third) }
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            val pipelineCnt = gitPipelineResourceDao.deleteLastUpdatePipelines(context, ids)
-            logger.info("[cleanPipelines][$pipelineCnt] Delete the pipelines")
-        }
+        val pipelineIds = pipelines.map { it.second }.toSet()
+        val pipelineAndProjectIds = pipelines.map { Pair(it.second, it.third) }
+
+        val pipelineCnt = gitPipelineResourceDao.deleteLastUpdatePipelines(dslContext, ids)
+        logger.info("[cleanPipelines][$pipelineCnt] Delete the pipelines")
+        val (buildCnt, notBuildCnt) = gitCIEventService.deletePipelineBuildHistory(pipelineIds)
+        logger.info("[cleanPipelines][$buildCnt] Delete the builds [$notBuildCnt] Delete the not builds")
+
         val processClient = client.get(ServicePipelineResource::class)
-        pipelineIds.forEach {
+        pipelineAndProjectIds.forEach {
             val gitProjectConf = gitCISettingDao.getSetting(dslContext, it.second)
             if (gitProjectConf == null) {
                 logger.warn("pipelineCleanJob git ci projectCode not exist projectid: ${it.second}")

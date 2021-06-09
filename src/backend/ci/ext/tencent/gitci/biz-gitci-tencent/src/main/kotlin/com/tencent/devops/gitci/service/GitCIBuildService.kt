@@ -87,7 +87,7 @@ import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
-import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
+import com.tencent.devops.gitci.v2.service.GitCIEventService
 import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -129,7 +129,7 @@ class GitCIBuildService @Autowired constructor(
     private val buildConfig: BuildConfig,
     private val objectMapper: ObjectMapper,
     private val gitCIParameterUtils: GitCIParameterUtils,
-    gitCIEventSaveService: GitCIEventSaveService,
+    gitCIEventService: GitCIEventService,
     private val gitPipelineBranchService: GitPipelineBranchService
 ) : BaseBuildService<CIBuildYaml>(
     client,
@@ -138,7 +138,7 @@ class GitCIBuildService @Autowired constructor(
     redisOperation,
     gitPipelineResourceDao,
     gitRequestEventBuildDao,
-    gitCIEventSaveService,
+    gitCIEventService,
     gitPipelineBranchService
 ) {
     companion object {

@@ -570,4 +570,15 @@ class GitRequestEventBuildDao {
             return dsl
         }
     }
+
+    fun deleteBuildByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>
+    ): Int {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
+        }
+    }
 }

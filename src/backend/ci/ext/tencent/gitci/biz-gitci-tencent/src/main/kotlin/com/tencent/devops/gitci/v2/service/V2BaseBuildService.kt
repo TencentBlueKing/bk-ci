@@ -61,7 +61,7 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val gitCIEventService: GitCIEventService,
     private val gitPipelineBranchService: GitPipelineBranchService
 ) {
     companion object {
@@ -179,7 +179,7 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 e
             )
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventService.saveNotBuildEvent(
                 userId = event.userId,
                 eventId = event.id!!,
                 pipelineId = pipeline.pipelineId,

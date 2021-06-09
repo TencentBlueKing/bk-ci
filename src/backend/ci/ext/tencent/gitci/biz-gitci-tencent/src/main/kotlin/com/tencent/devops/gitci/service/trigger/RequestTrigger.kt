@@ -46,7 +46,7 @@ import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.utils.GitCIWebHookMatcher
-import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
+import com.tencent.devops.gitci.v2.service.GitCIEventService
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -66,7 +66,7 @@ class RequestTrigger @Autowired constructor(
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val repositoryConfService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventService: GitCIEventService
 ) : RequestTriggerInterface<CIBuildYaml> {
 
     override fun triggerBuild(
@@ -126,7 +126,7 @@ class RequestTrigger @Autowired constructor(
         } else {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                 "eventId: ${gitRequestEvent.id}")
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventService.saveNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
@@ -165,7 +165,7 @@ class RequestTrigger @Autowired constructor(
             createCIBuildYaml(originYaml, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
             logger.error("git ci yaml is invalid", e)
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventService.saveNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,

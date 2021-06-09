@@ -30,7 +30,7 @@ package com.tencent.devops.gitci.v2.listener
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
-import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
+import com.tencent.devops.gitci.v2.service.GitCIEventService
 import com.tencent.devops.gitci.v2.service.TriggerBuildService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Service
 @Service
 class V2GitCIRequestTriggerListener @Autowired constructor(
     private val triggerBuildService: TriggerBuildService,
-    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val gitCIEventService: GitCIEventService,
     private val redisOperation: RedisOperation
 ) {
 
@@ -67,7 +67,7 @@ class V2GitCIRequestTriggerListener @Autowired constructor(
         } catch (e: Throwable) {
             logger.error("Fail to start the git ci build(${v2GitCIRequestTriggerEvent.event})", e)
             with(v2GitCIRequestTriggerEvent) {
-                gitCIEventSaveService.saveNotBuildEvent(
+                gitCIEventService.saveNotBuildEvent(
                     userId = event.userId,
                     eventId = event.id!!,
                     originYaml = originYaml,

@@ -49,17 +49,18 @@ import org.springframework.stereotype.Service
  * 用作事务存储需要附带用户消息通知的数据
  */
 @Service
-class GitCIEventSaveService @Autowired constructor(
+class GitCIEventService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val userMessageDao: GitUserMessageDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val gitRequestEventDao: GitRequestEventDao
+    private val gitRequestEventDao: GitRequestEventDao,
+    private val gitRequestEventBuildDao: GitRequestEventNotBuildDao
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCIEventSaveService::class.java)
+        private val logger = LoggerFactory.getLogger(GitCIEventService::class.java)
     }
 
     fun saveNotBuildEvent(
@@ -130,5 +131,13 @@ class GitCIEventSaveService @Autowired constructor(
             }
         }
         return messageId
+    }
+
+    fun deletePipelineBuildHistory(
+        pipelineIds: Set<String>
+    ): Pair<Int, Int> {
+        val notBuildcnt = gitRequestEventNotBuildDao.deleteNotBuildByPipelineIds(dslContext, pipelineIds)
+        val buildcnt = gitRequestEventBuildDao.deleteNotBuildByPipelineIds(dslContext, pipelineIds)
+        return Pair(buildcnt, notBuildcnt)
     }
 }

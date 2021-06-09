@@ -29,6 +29,7 @@ package com.tencent.devops.gitci.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
@@ -40,6 +41,7 @@ import org.springframework.stereotype.Service
 @Service
 class GitCIPipelineService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val gitCISettingDao: GitCISettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val repositoryConfService: GitRepositoryConfService,

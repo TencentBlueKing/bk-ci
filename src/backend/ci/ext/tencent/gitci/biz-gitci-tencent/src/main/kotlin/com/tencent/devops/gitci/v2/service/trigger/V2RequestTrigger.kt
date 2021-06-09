@@ -43,7 +43,7 @@ import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.service.trigger.RequestTriggerInterface
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
-import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
+import com.tencent.devops.gitci.v2.service.GitCIEventService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.v2.template.YamlTemplate
 import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
@@ -62,7 +62,7 @@ class V2RequestTrigger @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitBasicSettingService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventService: GitCIEventService
 ) : RequestTriggerInterface<YamlObjects> {
 
     companion object {
@@ -153,7 +153,7 @@ class V2RequestTrigger @Autowired constructor(
         } else {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                 "eventId: ${gitRequestEvent.id}")
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventService.saveNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
@@ -218,7 +218,7 @@ class V2RequestTrigger @Autowired constructor(
             preTemplateYamlObject
         } catch (e: Exception) {
             logger.error("git ci yaml is invalid", e)
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventService.saveNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
@@ -268,7 +268,7 @@ class V2RequestTrigger @Autowired constructor(
             } else {
                 e.message.toString()
             }
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventService.saveNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,

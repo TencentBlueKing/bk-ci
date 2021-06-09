@@ -124,4 +124,15 @@ class GitRequestEventNotBuildDao {
                 .execute() == 1
         }
     }
+
+    fun deleteNotBuildByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>
+    ): Int {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
+        }
+    }
 }

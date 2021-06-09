@@ -41,7 +41,7 @@ import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
-import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
+import com.tencent.devops.gitci.v2.service.GitCIEventService
 import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -61,7 +61,7 @@ abstract class BaseBuildService<T> @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val gitCIEventService: GitCIEventService,
     private val gitPipelineBranchService: GitPipelineBranchService
 ) {
     companion object {
@@ -180,7 +180,7 @@ abstract class BaseBuildService<T> @Autowired constructor(
             logger.error("GitCI Build failed, gitProjectId[${gitProjectConf.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]", e)
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventService.saveNotBuildEvent(
                 userId = event.userId,
                 eventId = event.id!!,
                 pipelineId = pipeline.pipelineId,
