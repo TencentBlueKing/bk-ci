@@ -1,11 +1,11 @@
 USE devops_ci_auth;
 SET NAMES utf8mb4;
 
-DROP PROCEDURE IF EXISTS ci_process_schema_update;
+DROP PROCEDURE IF EXISTS ci_auth_schema_update;
 
 DELIMITER <CI_UBF>
 
-CREATE PROCEDURE ci_process_schema_update()
+CREATE PROCEDURE ci_auth_schema_update()
 BEGIN
 
     DECLARE db VARCHAR(100);
@@ -18,4 +18,4 @@ BEGIN
 END <CI_UBF>
 DELIMITER ;
 COMMIT;
-CALL ci_process_schema_update();
+CALL ci_auth_schema_update();
