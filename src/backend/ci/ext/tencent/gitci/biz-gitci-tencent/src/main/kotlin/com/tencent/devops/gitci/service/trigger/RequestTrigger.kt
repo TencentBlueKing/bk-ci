@@ -126,7 +126,7 @@ class RequestTrigger @Autowired constructor(
         } else {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                 "eventId: ${gitRequestEvent.id}")
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventSaveService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
@@ -135,7 +135,9 @@ class RequestTrigger @Autowired constructor(
                 normalizedYaml = normalizedYaml,
                 reason = TriggerReason.TRIGGER_NOT_MATCH.name,
                 reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
-                gitProjectId = gitRequestEvent.gitProjectId
+                gitProjectId = gitRequestEvent.gitProjectId,
+                sendCommitCheck = false,
+                commitCheckBlock = false
             )
         }
 
@@ -153,7 +155,7 @@ class RequestTrigger @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
-        filePath: String?,
+        filePath: String,
         pipelineId: String?
     ): CIBuildYaml? {
 
@@ -165,7 +167,7 @@ class RequestTrigger @Autowired constructor(
             createCIBuildYaml(originYaml, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
             logger.error("git ci yaml is invalid", e)
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventSaveService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
@@ -174,7 +176,10 @@ class RequestTrigger @Autowired constructor(
                 normalizedYaml = null,
                 reason = TriggerReason.CI_YAML_INVALID.name,
                 reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message.toString()),
-                gitProjectId = gitRequestEvent.gitProjectId
+                gitProjectId = gitRequestEvent.gitProjectId,
+                // V1不发送通知
+                sendCommitCheck = false,
+                commitCheckBlock = false
             )
             return null
         }

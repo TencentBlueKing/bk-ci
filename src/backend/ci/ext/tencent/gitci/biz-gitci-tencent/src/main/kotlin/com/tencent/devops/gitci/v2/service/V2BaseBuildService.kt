@@ -164,7 +164,7 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 e
             )
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventSaveService.saveRunNotBuildEvent(
                 userId = event.userId,
                 eventId = event.id!!,
                 pipelineId = pipeline.pipelineId,
@@ -173,7 +173,9 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 normalizedYaml = build?.normalizedYaml,
                 reason = TriggerReason.PIPELINE_RUN_ERROR.name,
                 reasonDetail = e.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
-                gitProjectId = event.gitProjectId
+                gitProjectId = event.gitProjectId,
+                sendCommitCheck = true,
+                commitCheckBlock = (event.objectKind == OBJECT_KIND_MERGE_REQUEST)
             )
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
         }

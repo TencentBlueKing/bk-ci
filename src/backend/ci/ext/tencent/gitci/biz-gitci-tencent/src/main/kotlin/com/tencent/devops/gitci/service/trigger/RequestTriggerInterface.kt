@@ -52,7 +52,7 @@ interface RequestTriggerInterface<T> {
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
-        filePath: String?,
+        filePath: String,
         pipelineId: String?
     ): T?
 }
