@@ -50,4 +50,8 @@ class UserDeptResourceImpl @Autowired constructor(
     ): Result<DeptInfoVo?> {
         return Result(deptService.getDeptByParent(parentId, accessToken, userId, pageSize))
     }
+
+    override fun getDeptUsers(userId: String, accessToken: String?, deptId: Int): Result<List<String>?> {
+        return Result(deptService.getDeptUser(deptId, accessToken))
+    }
 }

@@ -49,7 +49,7 @@ class AuthGroupService @Autowired constructor(
         userId: String,
         projectCode: String,
         groupInfo: GroupDTO
-    ): Result<Boolean> {
+    ): Int {
         logger.info("createGroup |$userId|$projectCode||$groupInfo")
         val groupRecord = groupDao.getGroup(
             dslContext = dslContext,
@@ -70,9 +70,7 @@ class AuthGroupService @Autowired constructor(
             displayName = groupInfo.displayName,
             user = userId
         )
-        groupDao.createGroup(dslContext, groupCreateInfo)
-
-        return Result(true)
+        return groupDao.createGroup(dslContext, groupCreateInfo)
     }
 
     fun batchCreate(
@@ -110,6 +108,18 @@ class AuthGroupService @Autowired constructor(
 
     fun getGroupCode(groupId: Int): TAuthGroupInfoRecord? {
         return groupDao.getGroupById(dslContext, groupId)
+    }
+
+    fun bindRelationId(id: Int, relationId: String): Int {
+        return groupDao.updateRelationId(dslContext, id, relationId)
+    }
+
+    fun deleteGroup(id: Int, softDelete: Boolean? = true) {
+        if (softDelete!!) {
+            groupDao.softDelete(dslContext, id)
+        } else {
+            groupDao.deleteRole(dslContext, id)
+        }
     }
 
     companion object {

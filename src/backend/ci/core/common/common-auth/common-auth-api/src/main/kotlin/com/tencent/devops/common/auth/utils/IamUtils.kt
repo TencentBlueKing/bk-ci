@@ -38,10 +38,12 @@ object IamUtils {
     }
 
     fun buildDefaultDescription(projectName: String, groupName: String, userId: String): String {
-        return "$projectName 用户组:$groupName, 由$userId 创建于 ${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
+        return "$projectName 用户组:$groupName,由$userId 创建于 " +
+            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
     }
 
     fun buildManagerDescription(projectName: String, userId: String) : String {
-        return "$projectName 分级管理员, 由$userId 创建于 ${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
+        return "$projectName 分级管理员, 由$userId 创建于" +
+            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
     }
 }

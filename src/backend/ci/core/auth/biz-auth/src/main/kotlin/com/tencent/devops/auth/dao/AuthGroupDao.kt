@@ -38,9 +38,9 @@ import java.time.LocalDateTime
 @Repository
 class AuthGroupDao {
 
-    fun createGroup(dslContext: DSLContext, groupCreateInfo: GroupCreateInfo) {
+    fun createGroup(dslContext: DSLContext, groupCreateInfo: GroupCreateInfo): Int {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
-            dslContext.insertInto(
+            return dslContext.insertInto(
                 this,
                 GROUP_NAME,
                 GROUP_CODE,
@@ -65,7 +65,6 @@ class AuthGroupDao {
                 null
             ).execute()
         }
-        return
     }
 
     fun getGroup(dslContext: DSLContext, projectCode: String, groupCode: String): TAuthGroupInfoRecord? {
@@ -126,4 +125,23 @@ class AuthGroupDao {
             }
         }).execute()
     }
+
+    fun updateRelationId(dslContext: DSLContext, id: Int, relationId: String): Int {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.update(this).set(RELATION_ID, relationId).where(ID.eq(id)).execute()
+        }
+    }
+
+    fun softDelete(dslContext: DSLContext, id: Int) {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            dslContext.update(this).set(IS_DELETE, true).where(ID.eq(id)).execute()
+        }
+    }
+
+    fun deleteRole(dslContext: DSLContext, id: Int) {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            dslContext.delete(this).where(ID.eq(id)).execute()
+        }
+    }
+
 }

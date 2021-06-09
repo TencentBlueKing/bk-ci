@@ -31,27 +31,7 @@ class BkPermissionProjectService @Autowired constructor(
     iamConfiguration = iamConfiguration,
     deptService = deptService
 ) {
-    override fun getProjectUsers(serviceCode: String, projectCode: String, group: BkAuthGroup?): List<String> {
-        return super.getProjectUsers(serviceCode, projectCode, group)
-    }
-
-    override fun getProjectGroupAndUserList(serviceCode: String, projectCode: String): List<BkAuthGroupAndUserList> {
-        return super.getProjectGroupAndUserList(serviceCode, projectCode)
-    }
-
-    override fun getUserProjects(userId: String): List<String> {
-        return super.getUserProjects(userId)
-    }
-
-    override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
-        return super.isProjectUser(userId, projectCode, group)
-    }
-
-    override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
-        return super.createProjectUser(userId, projectCode, role)
-    }
-
-    override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
-        return super.getProjectRoles(projectCode, projectId)
+    override fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String> {
+        return emptyList()
     }
 }
