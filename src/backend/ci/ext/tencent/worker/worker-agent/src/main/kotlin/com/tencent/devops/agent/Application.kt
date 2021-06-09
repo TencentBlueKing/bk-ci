@@ -73,7 +73,10 @@ fun main(args: Array<String>) {
             })
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
+                override fun getWorkspaceAndLogDir(
+                    variables: Map<String, String>,
+                    pipelineId: String
+                ): Pair<File, File> {
                     val workspaceDir = WorkspaceUtils.getPipelineWorkspace(
                         pipelineId = pipelineId,
                         workspace = ""
@@ -161,7 +164,10 @@ fun main(args: Array<String>) {
             }
 
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
+                override fun getWorkspaceAndLogDir(
+                    variables: Map<String, String>,
+                    pipelineId: String
+                ): Pair<File, File> {
                     val workspace = AgentEnv.getMacOSWorkspace()
                     System.out.println("MacOS workspace: $workspace")
                     val workspaceDir = File(workspace)
