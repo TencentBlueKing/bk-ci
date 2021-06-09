@@ -45,7 +45,6 @@ import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
-import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.TXUserReportResource
 import com.tencent.devops.process.pojo.Report
@@ -258,8 +257,7 @@ class GitCIDetailService @Autowired constructor(
             displayName = pipeline.displayName,
             enabled = pipeline.enabled,
             creator = pipeline.creator,
-            latestBuildInfo = null,
-            existBranches = GitCIPipelineUtils.getExistBranchList(pipeline.existBranches)
+            latestBuildInfo = null
         )
     }
 }

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.gitci.dao
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.model.gitci.tables.TGitPipelineResource
 import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord

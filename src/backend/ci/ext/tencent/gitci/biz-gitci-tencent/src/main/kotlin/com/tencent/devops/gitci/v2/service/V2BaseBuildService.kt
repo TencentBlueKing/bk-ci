@@ -61,7 +61,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val gitPipelineBranchService: GitPipelineBranchService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(V2BaseBuildService::class.java)
@@ -94,12 +95,19 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 gitProjectId = gitCIBasicSetting.gitProjectId,
                 pipeline = pipeline
             )
+            // 新建流水线时保存流水线-分支记录
+            gitPipelineBranchService.save(
+                gitProjectId = gitCIBasicSetting.gitProjectId,
+                pipelineId = pipeline.pipelineId,
+                branch = event.branch
+            )
         } else if (needReCreate(processClient, event, gitCIBasicSetting, pipeline)) {
+            val oldPipelineId = pipeline.pipelineId
             // 先删除已有数据
             logger.info("recreate pipeline: $pipeline")
             try {
-                gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
-                processClient.delete(event.userId, gitCIBasicSetting.projectCode!!, pipeline.pipelineId, channelCode)
+                gitPipelineResourceDao.deleteByPipelineId(dslContext, oldPipelineId)
+                processClient.delete(event.userId, gitCIBasicSetting.projectCode!!, oldPipelineId, channelCode)
             } catch (e: Exception) {
                 logger.error("failed to delete pipeline resource, pipeline: $pipeline", e)
             }
@@ -110,6 +118,13 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 dslContext = dslContext,
                 gitProjectId = gitCIBasicSetting.gitProjectId,
                 pipeline = pipeline
+            )
+            // 对于需要删了重建的，删除流水线-分支记录在重建
+            gitPipelineBranchService.deleteBranch(pipelineId = oldPipelineId, branch = null)
+            gitPipelineBranchService.save(
+                gitProjectId = gitCIBasicSetting.gitProjectId,
+                pipelineId = pipeline.pipelineId,
+                branch = event.branch
             )
         } else if (pipeline.pipelineId.isNotBlank()) {
             // 已有的流水线需要更新下工蜂CI这里的状态

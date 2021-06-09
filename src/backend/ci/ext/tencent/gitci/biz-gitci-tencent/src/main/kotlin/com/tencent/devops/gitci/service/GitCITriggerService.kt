@@ -45,6 +45,8 @@ import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
@@ -75,7 +77,7 @@ import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.OauthService
-import com.tencent.devops.gitci.utils.GitCIPipelineUtils
+import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -101,6 +103,7 @@ class GitCITriggerService @Autowired constructor(
     private val scmClient: ScmClient,
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
@@ -111,7 +114,8 @@ class GitCITriggerService @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val requestTriggerFactory: RequestTriggerFactory,
     private val oauthService: OauthService,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val gitPipelineBranchService: GitPipelineBranchService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
@@ -142,15 +146,14 @@ class GitCITriggerService @Autowired constructor(
             displayName = existsPipeline.displayName,
             enabled = existsPipeline.enabled,
             creator = existsPipeline.creator,
-            latestBuildInfo = null,
-            existBranches = GitCIPipelineUtils.getExistBranchList(existsPipeline.existBranches)
+            latestBuildInfo = null
         )
 
         // 流水线未启用在手动触发处直接报错
         if (!buildPipeline.enabled) {
             logger.error(
                 "Pipeline is not enabled, return, " +
-                        "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+                    "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
             )
             throw RuntimeException("${TriggerReason.PIPELINE_DISABLE.name}(${TriggerReason.PIPELINE_DISABLE.detail})")
         }
@@ -415,35 +418,28 @@ class GitCITriggerService @Autowired constructor(
             val existsPipeline = path2PipelineExists[filePath]
             // 如果该流水线已保存过，则继续使用
             val buildPipeline = if (existsPipeline != null) {
-                    // mr请求不涉及删除操作
-                    if (isMrEvent) {
-                        existsPipeline
-                    } else {
-                        // 旧数据中的流水线没有existBranches这个字段，不做新增，等待定时删除
-                        if (existsPipeline.existBranches == null) {
-                            existsPipeline
-                        } else {
-                            existsPipeline.existBranches = GitCIPipelineUtils.updateExistBranches(
-                                existBranches = existsPipeline.existBranches,
-                                isNew = true,
-                                branchName = gitRequestEvent.branch
-                            )
-                            existsPipeline
-                        }
-                    }
-                } else {
-                    // 对于来自fork库的mr新建的流水线，当前库不维护其状态
-                    GitProjectPipeline(
+                // mr请求不涉及删除操作
+                if (!isMrEvent) {
+                    // 触发时新增流水线-分支记录
+                    gitPipelineBranchService.save(
                         gitProjectId = gitProjectConf.gitProjectId,
-                        displayName = displayName,
-                        pipelineId = "", // 留空用于是否创建判断
-                        filePath = filePath,
-                        enabled = true,
-                        creator = gitRequestEvent.userId,
-                        latestBuildInfo = null,
-                        existBranches = if (isFork) { emptyList() } else { listOf(gitRequestEvent.branch) }
+                        pipelineId = existsPipeline.pipelineId,
+                        branch = gitRequestEvent.branch
                     )
                 }
+                existsPipeline
+            } else {
+                // 对于来自fork库的mr新建的流水线，当前库不维护其状态
+                GitProjectPipeline(
+                    gitProjectId = gitProjectConf.gitProjectId,
+                    displayName = displayName,
+                    pipelineId = "", // 留空用于是否创建判断
+                    filePath = filePath,
+                    enabled = true,
+                    creator = gitRequestEvent.userId,
+                    latestBuildInfo = null
+                )
+            }
             var originYaml: String? = null
             try {
                 // 为已存在的流水线设置名称
@@ -456,7 +452,7 @@ class GitCITriggerService @Autowired constructor(
                 if (originYaml.isNullOrBlank()) {
                     logger.warn(
                         "Matcher is false, return, " +
-                                "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+                            "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
                     )
                     gitCIEventSaveService.saveNotBuildEvent(
                         userId = gitRequestEvent.userId,
@@ -475,7 +471,7 @@ class GitCITriggerService @Autowired constructor(
                 if (!buildPipeline.enabled) {
                     logger.warn(
                         "Pipeline is not enabled, return, " +
-                                "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+                            "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
                     )
                     gitCIEventSaveService.saveNotBuildEvent(
                         userId = gitRequestEvent.userId,
@@ -945,7 +941,7 @@ class GitCITriggerService @Autowired constructor(
 
     private fun isFork(isMrEvent: Boolean, gitRequestEvent: GitRequestEvent): Boolean {
         return isMrEvent && gitRequestEvent.sourceGitProjectId != null && gitRequestEvent.sourceGitProjectId !=
-                gitRequestEvent.gitProjectId
+            gitRequestEvent.gitProjectId
     }
 
     // mr锁定提交
@@ -979,43 +975,56 @@ class GitCITriggerService @Autowired constructor(
      * push请求  - 检索当前流水线的存在分支，如果源分支分支在流水线存在分支中唯一，删除流水线
      * 因为源分支已经删除文件，所以后面执行时不会触发构建
      */
-    fun checkAndDeletePipeline(
+    private fun checkAndDeletePipeline(
         gitRequestEvent: GitRequestEvent,
         event: GitEvent,
         path2PipelineExists: Map<String, GitProjectPipeline>,
-        gitProjectConf: GitRepositoryConf
+        gitProjectConf: GitCIBasicSetting
     ) {
-        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
-        logger.info("get token form scm, token: $gitToken")
-
         val deleteYamlFiles = (event as GitPushEvent).commits.flatMap {
             if (it.removed != null) {
                 it.removed!!.asIterable()
             } else {
                 emptyList()
             }
-        }.filter { it == ciFileName || (it.startsWith(ciFileDirectoryName) && it.endsWith(ciFileExtension)) }
+        }.filter { isCiFile(it) }
 
-        val deletePipelines = mutableListOf<GitProjectPipeline>()
-        deleteYamlFiles.forEach { filePath ->
-            val existPipeline = path2PipelineExists[filePath]
-            // 旧数据中的流水线没有existBranches这个字段，不能删除，等待定时删除
-            if (existPipeline?.existBranches != null) {
-                if (GitCIPipelineUtils.isPipelineDeleteByExistBranches(existPipeline.existBranches, gitRequestEvent.branch)) {
-                    deletePipelines.add(existPipeline)
-                }
-            }
+        if (deleteYamlFiles.isNullOrEmpty()) {
+            return
         }
 
         val processClient = client.get(ServicePipelineResource::class)
-        deletePipelines.forEach { pipeline ->
+        deleteYamlFiles.forEach { filePath ->
+            val existPipeline = path2PipelineExists[filePath] ?: return@forEach
+            val pipelineId = existPipeline.pipelineId
+            // 先删除后查询的过程需要加锁
+            val redisLock = RedisLock(
+                redisOperation,
+                "GIT_CI_DELETE_PIPELINE_$pipelineId",
+                60L
+            )
             try {
-                gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
-                processClient.delete(gitRequestEvent.userId, gitProjectConf.projectCode!!, pipeline.pipelineId, channelCode)
-            } catch (e: Exception) {
-                logger.error("failed to delete pipeline resource pipeline: $pipeline", e)
+                redisLock.lock()
+                gitPipelineBranchService.deleteBranch(pipelineId, gitRequestEvent.branch)
+                if (!gitPipelineBranchService.hasBranchExist(pipelineId)) {
+                    gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
+                    processClient.delete(gitRequestEvent.userId, gitProjectConf.projectCode!!, pipelineId, channelCode)
+                }
+            } finally {
+                redisLock.unlock()
             }
         }
+    }
+
+    private fun isCiFile(name: String): Boolean {
+        if (name == ciFileName) {
+            return true
+        }
+        if (name.startsWith(ciFileDirectoryName) &&
+            (name.endsWith(ciFileExtensionYml) || name.endsWith(ciFileExtensionYaml))) {
+            return true
+        }
+        return false
     }
 
     private fun replaceEnv(yaml: String, gitProjectId: Long?): String {
@@ -1305,17 +1314,17 @@ class GitCITriggerService @Autowired constructor(
 //        return if (gitRequestEvent.objectKind == OBJECT_KIND_MERGE_REQUEST) {
 //            when {
 //                gitRequestEvent.targetBranch!!.startsWith("refs/heads/")
-    //                -> gitRequestEvent.targetBranch!!.removePrefix("refs/heads/")
+        //                -> gitRequestEvent.targetBranch!!.removePrefix("refs/heads/")
 //                gitRequestEvent.targetBranch!!.startsWith("refs/tags/")
-    //                -> gitRequestEvent.targetBranch!!.removePrefix("refs/tags/")
+        //                -> gitRequestEvent.targetBranch!!.removePrefix("refs/tags/")
 //                else -> gitRequestEvent.targetBranch!!
 //            }
 //        } else {
 //            when {
 //                gitRequestEvent.branch.startsWith("refs/heads/") ->
-    //                gitRequestEvent.branch.removePrefix("refs/heads/")
+        //                gitRequestEvent.branch.removePrefix("refs/heads/")
 //                gitRequestEvent.branch.startsWith("refs/tags/") ->
-    //                gitRequestEvent.branch.removePrefix("refs/tags/")
+        //                gitRequestEvent.branch.removePrefix("refs/tags/")
 //                else -> gitRequestEvent.branch
 //            }
 //        }

@@ -88,6 +88,7 @@ import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
+import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -128,7 +129,8 @@ class GitCIBuildService @Autowired constructor(
     private val buildConfig: BuildConfig,
     private val objectMapper: ObjectMapper,
     private val gitCIParameterUtils: GitCIParameterUtils,
-    gitCIEventSaveService: GitCIEventSaveService
+    gitCIEventSaveService: GitCIEventSaveService,
+    private val gitPipelineBranchService: GitPipelineBranchService
 ) : BaseBuildService<CIBuildYaml>(
     client,
     scmClient,
@@ -136,7 +138,8 @@ class GitCIBuildService @Autowired constructor(
     redisOperation,
     gitPipelineResourceDao,
     gitRequestEventBuildDao,
-    gitCIEventSaveService
+    gitCIEventSaveService,
+    gitPipelineBranchService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIBuildService::class.java)

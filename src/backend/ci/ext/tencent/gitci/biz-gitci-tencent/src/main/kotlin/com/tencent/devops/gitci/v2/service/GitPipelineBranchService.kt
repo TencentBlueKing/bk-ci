@@ -25,25 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.pojo
+package com.tencent.devops.gitci.v2.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.gitci.v2.dao.GitPipelineBranchDao
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@ApiModel("蓝盾工蜂流水线列表")
-data class GitProjectPipeline(
-    @ApiModelProperty("工蜂项目ID", required = true)
-    val gitProjectId: Long,
-    @ApiModelProperty("流水线名称", required = true)
-    var displayName: String,
-    @ApiModelProperty("蓝盾流水线ID", required = true)
-    var pipelineId: String,
-    @ApiModelProperty("文件路径", required = true)
-    val filePath: String,
-    @ApiModelProperty("是否启用", required = true)
-    val enabled: Boolean,
-    @ApiModelProperty("创建人", required = false)
-    val creator: String?,
-    @ApiModelProperty("最近一次构建详情", required = false)
-    val latestBuildInfo: GitCIBuildHistory?
-)
+@Service
+class GitPipelineBranchService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val gitPipelineBranchDao: GitPipelineBranchDao
+) {
+    fun save(
+        gitProjectId: Long,
+        pipelineId: String,
+        branch: String
+    ) {
+        gitPipelineBranchDao.save(
+            dslContext = dslContext, gitProjectId = gitProjectId, pipelineId = pipelineId, branch = branch
+        )
+    }
+
+    fun deleteBranch(
+        pipelineId: String,
+        branch: String?
+    ): Boolean {
+        if (branch.isNullOrBlank()) {
+            return gitPipelineBranchDao.deletePipeline(dslContext = dslContext, pipelineId = pipelineId) > 0
+        } else {
+            return gitPipelineBranchDao.deleteBranch(
+                dslContext = dslContext, pipelineId = pipelineId, branch = branch
+            ) > 0
+        }
+    }
+
+    fun hasBranchExist(
+        pipelineId: String
+    ): Boolean {
+        return gitPipelineBranchDao.pipelineBranchCount(dslContext, pipelineId) > 0
+    }
+}
