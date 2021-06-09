@@ -251,7 +251,9 @@ class ExperienceIndexService @Autowired constructor(
             createTime = it.updateTime.timestampmilli(),
             size = it.size,
             logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-            externalUrl = HomeHostUtil.outerApiServerHost() + it.externalLink + "?id=" + HashUtil.encodeLongId(it.id),
+            externalUrl = HomeHostUtil.outerApiServerHost() +
+                    "/experience/api/open/experiences/appstore/redirect?id=" +
+                    HashUtil.encodeLongId(it.id),
             bundleIdentifier = it.bundleIdentifier,
             appScheme = it.scheme,
             expired = false,
