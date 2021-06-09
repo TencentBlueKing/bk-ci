@@ -96,7 +96,11 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectRoles(token: String, projectCode: String, projectId: String): Result<List<BKAuthProjectRolesResources>> {
+    override fun getProjectRoles(
+        token: String,
+        projectCode: String,
+        projectId: String
+    ): Result<List<BKAuthProjectRolesResources>> {
         return Result(
             permissionProjectService.getProjectRoles(
                 projectCode = projectCode,
