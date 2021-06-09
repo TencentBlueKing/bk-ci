@@ -62,15 +62,18 @@ class UserFilter @Autowired constructor(
         if (requestContext == null) {
             return
         }
-        val httpServletRequest = requestContext as HttpServletRequest
-        val userId = httpServletRequest.getHeader(AUTH_HEADER_USER_ID)
-        try {
-            client.get(ServiceTxUserResource::class).get(userId)
-        } catch (e: Exception) {
-            val appCode = httpServletRequest.getHeader(AUTH_HEADER_DEVOPS_APP_CODE)
-            logger.warn("$userId is not rtx user, appCode: $appCode , path: ${httpServletRequest.pathInfo}")
-            if (redisOperation.get(FAILTRUNFLAG) != null) {
-                throw ParamBlankException("非法用户")
+        val userId = requestContext.getHeaderString(AUTH_HEADER_USER_ID)
+        if (userId == null) {
+            return
+        } else {
+            try {
+                client.get(ServiceTxUserResource::class).get(userId!!)
+            } catch (e: Exception) {
+                val appCode = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_APP_CODE)
+                logger.warn("$userId is not rtx user, appCode: $appCode , path: ${requestContext.uriInfo.path}")
+                if (redisOperation.get(FAILTRUNFLAG) != null) {
+                    throw ParamBlankException("非法用户")
+                }
             }
         }
     }
