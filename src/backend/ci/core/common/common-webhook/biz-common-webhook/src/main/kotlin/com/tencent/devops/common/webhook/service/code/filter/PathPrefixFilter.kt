@@ -42,6 +42,10 @@ class PathPrefixFilter(
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
+        logger.info(
+            "$pipelineId|triggerOnPath:$triggerOnPath|includedPaths:$includedPaths" +
+                "|excludedPaths:$excludedPaths|path filter"
+        )
         return hasNoPathSpecs() || (isPathNotExcluded() && isPathIncluded(response))
     }
 
@@ -57,13 +61,16 @@ class PathPrefixFilter(
                     return@eventPath
                 }
             }
-            logger.warn("$pipelineId|$eventPath|Event path not match the user path")
+            logger.warn("$pipelineId|excluded event path not match the user path")
             return true
         }
         return false
     }
 
     private fun isPathIncluded(response: WebhookFilterResponse): Boolean {
+        if (includedPaths.isEmpty()) {
+            return true
+        }
         val matchPaths = mutableSetOf<String>()
         triggerOnPath.forEach eventPath@{ eventPath ->
             includedPaths.forEach userPath@{ userPath ->
@@ -72,7 +79,7 @@ class PathPrefixFilter(
                 }
             }
         }
-        logger.warn("$pipelineId|$matchPaths|Event path match the user path")
+        logger.warn("$pipelineId|$matchPaths|event path match the user path")
         return if (matchPaths.isNotEmpty()) {
             response.addParam(MATCH_PATHS, matchPaths.joinToString(","))
             true

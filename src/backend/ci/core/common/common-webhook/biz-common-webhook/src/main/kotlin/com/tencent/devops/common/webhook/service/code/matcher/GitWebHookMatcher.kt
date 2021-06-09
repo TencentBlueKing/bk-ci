@@ -52,7 +52,7 @@ open class GitWebHookMatcher(
         if (repository !is CodeGitRepository &&
             repository !is CodeTGitRepository
         ) {
-            logger.warn("Is not code repo for git web hook for repo and pipeline: $repository, $pipelineId")
+            logger.warn("$pipelineId|Is not code repo for git web hook for repo and pipeline: $repository")
             return ScmWebhookMatcher.MatchResult(isMatch = false)
         }
         return eventHandler.isMatch(

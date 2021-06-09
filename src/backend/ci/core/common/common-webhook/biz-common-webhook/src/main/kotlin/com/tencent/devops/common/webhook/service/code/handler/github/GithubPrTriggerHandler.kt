@@ -29,7 +29,6 @@ package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
-import com.tencent.devops.common.webhook.constant.GITHUB_PR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
@@ -54,6 +53,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
+import com.tencent.devops.scm.pojo.GITHUB_PR_NUMBER
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 

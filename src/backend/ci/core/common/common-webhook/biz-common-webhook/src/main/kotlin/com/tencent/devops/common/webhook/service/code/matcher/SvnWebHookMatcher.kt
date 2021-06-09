@@ -50,7 +50,7 @@ class SvnWebHookMatcher(
         webHookParams: WebHookParams
     ): ScmWebhookMatcher.MatchResult {
         if (repository !is CodeSvnRepository) {
-            logger.warn("The repo($repository) is not code svn repo for svn web hook")
+            logger.warn("$pipelineId|The repo($repository) is not code svn repo for svn web hook")
             return ScmWebhookMatcher.MatchResult(isMatch = false)
         }
         return eventHandler.isMatch(

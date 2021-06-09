@@ -120,3 +120,5 @@ const val PIPELINE_WEBHOOK_SOURCE_REPO_NAME = "BK_CI_HOOK_SOURCE_REPO_NAME"
 const val PIPELINE_WEBHOOK_TARGET_REPO_NAME = "BK_CI_HOOK_TARGET_REPO_NAME"
 const val MATCH_BRANCH = "matchBranch"
 const val MATCH_PATHS = "matchPaths"
+const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
+const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number

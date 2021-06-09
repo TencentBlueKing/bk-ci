@@ -30,7 +30,6 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
-import com.tencent.devops.common.webhook.constant.GIT_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.service.code.GitScmService
@@ -66,6 +65,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
+import com.tencent.devops.scm.pojo.GIT_MR_NUMBER
 import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_MR_COMMITTER
 import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_MR_ID
 import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_SOURCE_BRANCH

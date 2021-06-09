@@ -32,7 +32,9 @@ import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import org.springframework.beans.factory.config.BeanPostProcessor
 import org.springframework.core.annotation.AnnotationUtils
+import org.springframework.stereotype.Service
 
+@Service
 class CodeWebhookHandlerLoader : BeanPostProcessor {
 
     override fun postProcessBeforeInitialization(bean: Any, beanName: String): Any {

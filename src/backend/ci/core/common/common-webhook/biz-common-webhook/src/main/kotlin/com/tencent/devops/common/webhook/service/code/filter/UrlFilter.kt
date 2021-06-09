@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.service.code.filter
 
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.slf4j.LoggerFactory
 
 class UrlFilter(
     private val pipelineId: String,
@@ -36,14 +37,30 @@ class UrlFilter(
     private val includeHost: String? = null
 ) : WebhookFilter {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(UrlFilter::class.java)
+    }
+
     override fun doFilter(response: WebhookFilterResponse): Boolean {
+        logger.info(
+            "$pipelineId|triggerOnUrl:$triggerOnUrl|repositoryUrl:$repositoryUrl" +
+                "|includeHost:$includeHost|url filter"
+        )
         val triggerRepository = GitUtils.getDomainAndRepoName(triggerOnUrl)
         val repository = GitUtils.getDomainAndRepoName(repositoryUrl)
-
-        return (
-            triggerRepository.first == repository.first ||
-                includeHost?.contains(triggerRepository.first) == true
-            ) &&
+        return isSameHost(triggerOnHost = triggerRepository.first, host = repository.first) &&
             triggerRepository.second == repository.second
+    }
+
+    /**
+     * 判断两个域名是否指向同一个服务
+     */
+    private fun isSameHost(triggerOnHost: String, host: String): Boolean {
+        return if (triggerOnHost != host) {
+            val includeHosts = includeHost?.split(",") ?: return false
+            includeHosts.containsAll(setOf(triggerOnHost, host))
+        } else {
+            true
+        }
     }
 }
