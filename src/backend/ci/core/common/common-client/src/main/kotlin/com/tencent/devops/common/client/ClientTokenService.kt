@@ -11,7 +11,7 @@ class ClientTokenService @Autowired constructor(
 ) {
     @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
     private val tag: String? = null
-    
+
     @Value("\${auth.token:#{null}}")
     private val systemToken: String? = ""
 
@@ -31,7 +31,7 @@ class ClientTokenService @Autowired constructor(
     private fun getTokenRedisKey(appCode: String): String {
         return "BK:AUTH:TOKEN:$tag:$appCode:"
     }
-    
+
     companion object {
         const val DEFAULT_APP = "ci"
     }

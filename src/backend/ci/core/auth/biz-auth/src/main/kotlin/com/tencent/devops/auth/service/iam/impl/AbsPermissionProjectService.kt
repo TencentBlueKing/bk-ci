@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
-open class AbsPermissionProjectService @Autowired constructor(
+abstract class AbsPermissionProjectService @Autowired constructor(
     open val permissionRoleService: PermissionRoleService,
     open val permissionRoleMemberService: PermissionRoleMemberService,
     open val authHelper: AuthHelper,
@@ -45,9 +45,8 @@ open class AbsPermissionProjectService @Autowired constructor(
             allGroupAndUser.map { allMembers.addAll(it.userIdList) }
             allMembers
         } else {
-            // TODO: 待iam完成group lable后补齐
-            // 通过分组类型匹配分组用户
-            emptyList()
+            // 获取扩展系统内项目下的用户
+            getUserByExt(group, projectCode)
         }
     }
 
@@ -67,7 +66,7 @@ open class AbsPermissionProjectService @Autowired constructor(
                 // 如果为组织需要获取组织对应的用户
                 if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
                     logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id}| dept ${memberInfo.id}")
-                    val deptUsers = deptService.getDeptUser(memberInfo.id.toInt()) ?: null
+                    val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null) ?: null
                     if (deptUsers != null) {
                         members.addAll(deptUsers)
                     }
@@ -187,6 +186,8 @@ open class AbsPermissionProjectService @Autowired constructor(
         instance.type = type
         return instance
     }
+
+    abstract fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String>
 
     companion object {
         val logger = LoggerFactory.getLogger(AbsPermissionProjectService::class.java)

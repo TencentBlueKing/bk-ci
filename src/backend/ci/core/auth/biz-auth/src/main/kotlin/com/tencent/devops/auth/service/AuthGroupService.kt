@@ -34,14 +34,14 @@ import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.auth.tables.records.TAuthGroupRecord
+import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class GroupService @Autowired constructor(
+class AuthGroupService @Autowired constructor(
     val dslContext: DSLContext,
     val groupDao: AuthGroupDao
 ) {
@@ -49,7 +49,7 @@ class GroupService @Autowired constructor(
         userId: String,
         projectCode: String,
         groupInfo: GroupDTO
-    ): Result<Boolean> {
+    ): Int {
         logger.info("createGroup |$userId|$projectCode||$groupInfo")
         val groupRecord = groupDao.getGroup(
             dslContext = dslContext,
@@ -70,11 +70,9 @@ class GroupService @Autowired constructor(
             displayName = groupInfo.displayName,
             user = userId
         )
-        groupDao.createGroup(dslContext, groupCreateInfo)
-
-        return Result(true)
+        return groupDao.createGroup(dslContext, groupCreateInfo)
     }
-    
+
     fun batchCreate(
         userId: String,
         projectCode: String,
@@ -108,11 +106,23 @@ class GroupService @Autowired constructor(
         return Result(true)
     }
 
-    fun getGroupCode(groupId: Int): TAuthGroupRecord? {
+    fun getGroupCode(groupId: Int): TAuthGroupInfoRecord? {
         return groupDao.getGroupById(dslContext, groupId)
     }
 
+    fun bindRelationId(id: Int, relationId: String): Int {
+        return groupDao.updateRelationId(dslContext, id, relationId)
+    }
+
+    fun deleteGroup(id: Int, softDelete: Boolean? = true) {
+        if (softDelete!!) {
+            groupDao.softDelete(dslContext, id)
+        } else {
+            groupDao.deleteRole(dslContext, id)
+        }
+    }
+
     companion object {
-        val logger = LoggerFactory.getLogger(GroupService::class.java)
+        val logger = LoggerFactory.getLogger(AuthGroupService::class.java)
     }
 }

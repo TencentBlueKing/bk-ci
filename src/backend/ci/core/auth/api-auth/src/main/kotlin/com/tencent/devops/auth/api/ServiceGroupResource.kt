@@ -60,7 +60,7 @@ interface ServiceGroupResource {
         @ApiParam("用户组信息", required = true)
         groupInfo: GroupDTO
     ): Result<Boolean>
-    
+
     @POST
     @Path("/projectCodes/{projectCode}/batchCreate")
     @ApiOperation("项目下添加指定组")

@@ -81,4 +81,18 @@ interface UserDeptResource {
         @ApiParam("父组织Id", required = false)
         pageSize: Int?
     ): Result<DeptInfoVo?>
+
+    @GET
+    @Path("/{deptId}/users")
+    fun getDeptUsers(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?,
+        @PathParam("deptId")
+        @ApiParam("组织Id", required = true)
+        deptId: Int
+    ): Result<List<String>?>
 }

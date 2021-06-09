@@ -34,6 +34,8 @@ import org.hibernate.validator.constraints.Length
 
 @ApiModel
 data class ProjectRoleDTO(
+    @ApiModelProperty("用户组Code")
+    val code: String,
     @ApiModelProperty("用户组名称")
     @Length(min = 5, max = 128)
     val name: String,

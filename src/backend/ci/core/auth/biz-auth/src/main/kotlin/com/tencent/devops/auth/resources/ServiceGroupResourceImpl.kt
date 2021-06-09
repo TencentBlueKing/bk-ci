@@ -29,14 +29,14 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.ServiceGroupResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO
-import com.tencent.devops.auth.service.GroupService
+import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGroupResourceImpl @Autowired constructor(
-    val groupService: GroupService
+    val authGroupService: AuthGroupService
 ) : ServiceGroupResource {
 
     override fun createGroup(
@@ -44,10 +44,11 @@ class ServiceGroupResourceImpl @Autowired constructor(
         projectCode: String,
         groupInfo: GroupDTO
     ): Result<Boolean> {
-        return groupService.createGroup(userId, projectCode, groupInfo)
+        authGroupService.createGroup(userId, projectCode, groupInfo)
+        return Result(true)
     }
-    
+
     override fun batchCreateGroup(userId: String, projectCode: String, groupInfos: List<GroupDTO>): Result<Boolean> {
-        return groupService.batchCreate(userId, projectCode, groupInfos)
+        return authGroupService.batchCreate(userId, projectCode, groupInfos)
     }
 }

@@ -34,5 +34,5 @@ interface DeptService {
 
     fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo?
 
-    fun getDeptUser(deptId: Int): List<String>?
+    fun getDeptUser(deptId: Int, accessToken: String?): List<String>?
 }

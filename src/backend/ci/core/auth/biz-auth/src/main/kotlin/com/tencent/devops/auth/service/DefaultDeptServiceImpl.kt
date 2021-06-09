@@ -41,7 +41,7 @@ class DefaultDeptServiceImpl @Autowired constructor(
         return null
     }
 
-    override fun getDeptUser(deptId: Int): List<String> {
+    override fun getDeptUser(deptId: Int, accessToken: String?): List<String> {
         return emptyList()
     }
 }

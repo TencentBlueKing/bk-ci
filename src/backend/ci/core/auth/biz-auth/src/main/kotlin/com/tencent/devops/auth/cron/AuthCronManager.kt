@@ -46,20 +46,20 @@ class AuthCronManager @Autowired constructor(
     val refreshDispatch: AuthRefreshDispatch,
     val clientTokenService: ClientTokenService
 ) {
-    
+
     @PostConstruct
     fun init() {
         logger.info("start init system authToken")
         clientTokenService.setSystemToken(null)
         logger.info("init system authToken success ${clientTokenService.getSystemToken(null)}")
-    }    
+    }
+
     /**
      * 每2分钟，清理过期管理员
      */
     @Scheduled(cron = "0 0/2 * * * ?")
     fun newClearTimeoutCache() {
         managerUserService.deleteTimeoutUser()
-        
     }
 
     /**
@@ -78,7 +78,7 @@ class AuthCronManager @Autowired constructor(
             )
         }
     }
-    
+
     /**
      * 每天凌晨1点刷新默认系统的token
      */
@@ -86,7 +86,7 @@ class AuthCronManager @Autowired constructor(
     fun refreshToken() {
         clientTokenService.setSystemToken(null)
     }
-    
+
     companion object {
         val logger = LoggerFactory.getLogger(AuthCronManager::class.java)
     }

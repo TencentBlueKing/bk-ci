@@ -99,19 +99,19 @@ class AuthDeptServiceImpl @Autowired constructor(
         return getDeptInfo(search)
     }
 
-    override fun getDeptUser(deptId: Int): List<String> {
+    override fun getDeptUser(deptId: Int, accessToken: String?): List<String> {
         return if (deptUserCache.getIfPresent(deptId.toString()) == null) {
             deptUserCache.getIfPresent(deptId.toString())!!
         } else {
-            val deptUsers = getAndRefreshDeptUser(deptId)
+            val deptUsers = getAndRefreshDeptUser(deptId, accessToken)
             deptUserCache.put(deptId.toString(), deptUsers)
             deptUsers
         }
     }
 
-    private fun getAndRefreshDeptUser(deptId: Int) : List<String> {
+    private fun getAndRefreshDeptUser(deptId: Int, accessToken: String?) : List<String> {
         // TODO: 获取accessToken
-        val accessToken = ""
+        val accessToken = accessToken
         val search = SearchDeptUserEntity(
             id = deptId,
             recursive = true,

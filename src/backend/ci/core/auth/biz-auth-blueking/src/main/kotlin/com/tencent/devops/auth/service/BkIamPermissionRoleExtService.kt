@@ -33,28 +33,27 @@ import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleServiceImpl
+import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
 import org.jvnet.hk2.annotations.Service
 import org.springframework.beans.factory.annotation.Autowired
 
 @Service
-class BkPermissionRoleService @Autowired constructor(
+class BkIamPermissionRoleExtService @Autowired constructor(
     override val iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService,
-    private val iamConfiguration: IamConfiguration
-) : AbsPermissionRoleServiceImpl(iamManagerService, permissionGradeService, iamConfiguration) {
-
-    override fun createPermissionRole(
-        userId: String,
-        projectId: Int,
-        projectCode: String,
-        groupInfo: ProjectRoleDTO
-    ): Int {
-        return super.createPermissionRole(userId, projectId, projectCode, groupInfo)
+    private val iamConfiguration: IamConfiguration,
+    private val groupService: AuthGroupService
+) : IamPermissionRoleExtService(iamManagerService, permissionGradeService, iamConfiguration, groupService) {
+    override fun groupCreateExt(roleId: Int, userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO) {
+        super.groupCreateExt(roleId, userId, projectId, projectCode, groupInfo)
     }
 
-    override fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO) {
-        super.renamePermissionRole(userId, projectId, roleId, groupInfo)
+    override fun renameRoleExt(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO) {
+        super.renameRoleExt(userId, projectId, roleId, groupInfo)
+    }
+
+    override fun deleteRoleExt(userId: String, projectId: Int, roleId: Int) {
+        super.deleteRoleExt(userId, projectId, roleId)
     }
 
     override fun getPermissionRole(projectId: Int): ManagerRoleGroupVO {
