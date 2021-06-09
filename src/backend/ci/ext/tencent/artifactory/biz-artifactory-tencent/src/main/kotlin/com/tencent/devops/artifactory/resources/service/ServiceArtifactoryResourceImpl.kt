@@ -124,6 +124,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun search(
+        userId: String?,
         projectId: String,
         page: Int?,
         pageSize: Int?,
@@ -132,7 +133,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         checkParam(projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10000
-        val result = bkRepoSearchService.serviceSearch(projectId, searchProps, pageNotNull, pageSizeNotNull)
+        val result = bkRepoSearchService.serviceSearch(userId, projectId, searchProps, pageNotNull, pageSizeNotNull)
         return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
     }
 
