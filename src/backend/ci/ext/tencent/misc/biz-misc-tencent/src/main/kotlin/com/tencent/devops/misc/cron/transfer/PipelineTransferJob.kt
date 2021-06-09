@@ -151,13 +151,17 @@ class PipelineTransferJob @Autowired constructor(
                     offset = offset,
                     limit = PIPELINE_BUILD_HISTORY_PAGE_SIZE
                 )
-                if (listPipelineBuilds.isNotEmpty()) {
-                    targetPipelineService.addPipelineBuilds(listPipelineBuilds)
-                    offset += PIPELINE_BUILD_HISTORY_PAGE_SIZE
+
+                targetPipelineService.addPipelineBuilds(listPipelineBuilds)
+                listPipelineBuilds.forEach {
+                    val pipelineBuildDetail = sourcePipelineService.getPipelineBuildDetail(it.buildId)
+                    targetPipelineService.addDetailRecord(pipelineBuildDetail)
                 }
+
+                offset += PIPELINE_BUILD_HISTORY_PAGE_SIZE
             } while (listPipelineBuilds.size >= PIPELINE_BUILD_HISTORY_PAGE_SIZE)
-        } catch (duplicate: Exception) {
-            logger.warn("transferPipelines|DUPLICATE|${pipelineInfoRecord.pipelineId}|$duplicate")
+        } catch (ignored: Exception) {
+            logger.warn("transferPipelines|DUPLICATE|${pipelineInfoRecord.pipelineId}|$ignored")
         }
     }
 }

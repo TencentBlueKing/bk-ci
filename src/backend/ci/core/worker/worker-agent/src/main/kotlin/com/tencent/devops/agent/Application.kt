@@ -36,6 +36,7 @@ import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.task.TaskFactory
+import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import java.io.File
 import java.lang.RuntimeException
 
@@ -64,7 +65,7 @@ fun main(args: Array<String>) {
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
-                    val dir = File("./$pipelineId/src")
+                    val dir = WorkspaceUtils.getPipelineWorkspace(pipelineId, "")
                     if (dir.exists()) {
                         if (!dir.isDirectory) {
                             throw RuntimeException("Work space directory conflict: ${dir.canonicalPath}")

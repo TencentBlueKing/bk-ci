@@ -43,7 +43,7 @@ bk-ci提供了流水线、代码库、凭证管理、环境管理、研发商店
 - [一分钟安装部署](docs/overview/installation.md)
 
 ## Support
-1. [蓝鲸社区](https://bk.tencent.com/s-mart/community)
+1. [GitHub讨论区](https://github.com/Tencent/bk-ci/discussions)
 2. QQ群：744672165
 
 ## BlueKing Community
