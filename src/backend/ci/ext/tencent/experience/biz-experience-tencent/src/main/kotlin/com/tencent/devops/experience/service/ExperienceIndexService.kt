@@ -98,7 +98,7 @@ class ExperienceIndexService @Autowired constructor(
             limit = pageSize,
             platform = platformStr,
             types = types
-        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
+        ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < pageSize) {
             false
@@ -130,7 +130,7 @@ class ExperienceIndexService @Autowired constructor(
             limit = pageSize,
             platform = platformStr,
             types = types
-        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
+        ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < pageSize) {
             false
@@ -163,7 +163,7 @@ class ExperienceIndexService @Autowired constructor(
             limit = pageSize,
             platform = platformStr,
             types = types
-        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
+        ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < pageSize) {
             false
@@ -194,7 +194,7 @@ class ExperienceIndexService @Autowired constructor(
             category = hotCategoryParam.categoryId,
             platform = platformStr,
             types = types
-        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
+        ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < hotCategoryParam.pageSize) {
             false
@@ -226,7 +226,7 @@ class ExperienceIndexService @Autowired constructor(
             category = newCategoryParam.categoryId,
             platform = platformStr,
             types = types
-        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
+        ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < newCategoryParam.pageSize) {
             false
@@ -242,18 +242,23 @@ class ExperienceIndexService @Autowired constructor(
     }
 
     private fun toIndexAppInfoVO(
+        userId: String,
         it: TExperiencePublicRecord,
         lastDownloadMap: Map<String, Long>
     ): IndexAppInfoVO {
+        val externalUrl = if (it.externalLink.isNotBlank()) {
+            HomeHostUtil.outerApiServerHost() +
+                    "/experience/api/open/experiences/appstore/redirect?id=" +
+                    HashUtil.encodeLongId(it.id) +
+                    "&userId=" + userId
+        } else ""
         return IndexAppInfoVO(
             experienceHashId = HashUtil.encodeLongId(it.recordId),
             experienceName = it.experienceName,
             createTime = it.updateTime.timestampmilli(),
             size = it.size,
             logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-            externalUrl = HomeHostUtil.outerApiServerHost() +
-                    "/experience/api/open/experiences/appstore/redirect?id=" +
-                    HashUtil.encodeLongId(it.id),
+            externalUrl = externalUrl,
             bundleIdentifier = it.bundleIdentifier,
             appScheme = it.scheme,
             expired = false,

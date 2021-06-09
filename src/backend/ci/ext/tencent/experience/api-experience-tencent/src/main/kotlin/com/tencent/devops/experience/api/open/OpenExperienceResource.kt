@@ -55,6 +55,9 @@ interface OpenExperienceResource {
     fun appStoreRedirect(
         @ApiParam("公开体验ID", required = true)
         @QueryParam("id")
-        experienceId: String
+        id: String,
+        @ApiParam("用户ID", required = true)
+        @QueryParam("userId")
+        userId: String
     ): Response
 }
