@@ -12,7 +12,7 @@ class DefaultPermissionServiceImpl @Autowired constructor(
     private val authPermissionApi: AuthPermissionApi,
     val authServiceCode: BSCommonAuthServiceCode
 ) : PermissionService {
- 
+
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return false
     }

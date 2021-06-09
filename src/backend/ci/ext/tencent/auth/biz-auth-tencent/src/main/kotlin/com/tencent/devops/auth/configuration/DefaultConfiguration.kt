@@ -5,7 +5,6 @@ import com.tencent.devops.auth.service.v0.DefaultPermissionServiceImpl
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BSCommonAuthServiceCode
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

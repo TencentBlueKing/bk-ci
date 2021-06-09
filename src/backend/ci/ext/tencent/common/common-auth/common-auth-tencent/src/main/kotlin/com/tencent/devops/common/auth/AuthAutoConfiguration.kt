@@ -140,7 +140,7 @@ class AuthAutoConfiguration {
 
     @Bean
     fun artifactoryAuthServiceCode() = BSArtifactoryAuthServiceCode()
-    
+
     @Bean
     fun commonAuthServiceCode() = BSCommonAuthServiceCode()
 }
