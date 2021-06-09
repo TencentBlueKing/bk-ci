@@ -28,8 +28,8 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.entity.GroupCreateInfo
-import com.tencent.devops.model.auth.tables.TAuthGroup
-import com.tencent.devops.model.auth.tables.records.TAuthGroupRecord
+import com.tencent.devops.model.auth.tables.TAuthGroupInfo
+import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -39,7 +39,7 @@ import java.time.LocalDateTime
 class AuthGroupDao {
 
     fun createGroup(dslContext: DSLContext, groupCreateInfo: GroupCreateInfo) {
-        with(TAuthGroup.T_AUTH_GROUP) {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
             dslContext.insertInto(
                 this,
                 GROUP_NAME,
@@ -68,37 +68,37 @@ class AuthGroupDao {
         return
     }
 
-    fun getGroup(dslContext: DSLContext, projectCode: String, groupCode: String): TAuthGroupRecord? {
-        with(TAuthGroup.T_AUTH_GROUP) {
+    fun getGroup(dslContext: DSLContext, projectCode: String, groupCode: String): TAuthGroupInfoRecord? {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode).and(GROUP_CODE.eq(groupCode).and(IS_DELETE.eq(false)))).fetchAny()
         }
     }
-    
+
     fun getGroupByCodes(
         dslContext: DSLContext,
         projectCode: String,
         groupCodes: List<String>
-    ): Result<TAuthGroupRecord?> {
-        with(TAuthGroup.T_AUTH_GROUP) {
+    ): Result<TAuthGroupInfoRecord?> {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode).and(GROUP_CODE.`in`(groupCodes).and(IS_DELETE.eq(false)))).fetch()
         }
     }
 
-    fun getGroupById(dslContext: DSLContext, groupId: Int): TAuthGroupRecord? {
-        with(TAuthGroup.T_AUTH_GROUP) {
+    fun getGroupById(dslContext: DSLContext, groupId: Int): TAuthGroupInfoRecord? {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(groupId)).fetchOne()
         }
     }
-    
+
     fun batchCreateGroups(dslContext: DSLContext, groups: List<GroupCreateInfo>) {
         if (groups.isEmpty()) {
             return
         }
         dslContext.batch(groups.map {
-            with(TAuthGroup.T_AUTH_GROUP) {
+            with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
                 dslContext.insertInto(
                     this,
                     GROUP_NAME,
