@@ -89,7 +89,23 @@ class UpdateCcNodeStatus @Autowired constructor(
         }
 
         try {
-            updateCcNodeStatus()
+            logger.info("updateCcNodeStatus")
+            val allCcNodes = nodeDao.listAllNodesByType(dslContext, NodeType.CC)
+
+            if (allCcNodes.isEmpty()) {
+                return
+            }
+
+            // 分页处理
+            val pageSize = 100
+            val totalCount = allCcNodes.size
+            val totalPage = ceil(totalCount * 1.0 / pageSize).toInt()
+            for (page in 0 until totalPage) {
+                val from = pageSize * page
+                val end = from + min(pageSize, totalCount - from)
+                val nodes = allCcNodes.subList(from, end)
+                updateCcStatus(nodes)
+            }
         } catch (t: Throwable) {
             logger.warn("update server node status failed", t)
         }
@@ -127,26 +143,6 @@ class UpdateCcNodeStatus @Autowired constructor(
             }
         }
         nodeDao.batchUpdateNode(dslContext, nodes)
-    }
-
-    private fun updateCcNodeStatus() {
-        logger.info("updateCcNodeStatus")
-        val allCcNodes = nodeDao.listAllNodesByType(dslContext, NodeType.CC)
-
-        if (allCcNodes.isEmpty()) {
-            return
-        }
-
-        // 分页处理
-        val pageSize = 100
-        val totalCount = allCcNodes.size
-        val totalPage = ceil(totalCount * 1.0 / pageSize).toInt()
-        for (page in 0 until totalPage) {
-            val from = pageSize * page
-            val end = from + min(pageSize, totalCount - from)
-            val nodes = allCcNodes.subList(from, end)
-            updateCcStatus(nodes)
-        }
     }
 
     private fun updateCcStatus(allCcNodes: List<TNodeRecord>) {

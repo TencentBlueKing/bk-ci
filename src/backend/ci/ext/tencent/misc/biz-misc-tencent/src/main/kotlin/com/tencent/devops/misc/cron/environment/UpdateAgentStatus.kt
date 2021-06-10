@@ -48,6 +48,7 @@ class UpdateAgentStatus @Autowired constructor(
         private val logger = LoggerFactory.getLogger(UpdateAgentStatus::class.java)
         private const val LOCK_KEY = "env_cron_updateAgentStatus"
         private const val LOCK_VALUE = "env_cron_updateAgentStatus"
+        private const val EXPIRED_IN_SECOND = 30L
     }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 15000)
@@ -58,32 +59,26 @@ class UpdateAgentStatus @Autowired constructor(
             logger.info("get lock failed, skip")
             return
         } else {
-            redisOperation.set(
-                LOCK_KEY,
-                LOCK_VALUE, 30)
+            redisOperation.set(key = LOCK_KEY, value = LOCK_VALUE, expiredInSecond = EXPIRED_IN_SECOND)
         }
 
         try {
-            updateAgentStatus()
-        } catch (t: Throwable) {
-            logger.warn("update agent status failed", t)
+
+            val allServerNodes = nodeDao.listAllServerNodes(dslContext)
+            if (allServerNodes.isEmpty()) {
+                return
+            }
+
+            val allIps = allServerNodes.map { it.nodeIp }.toSet()
+            val agentStatusMap = esbAgentClient.getAgentStatus(DEFAULT_SYTEM_USER, allIps)
+
+            allServerNodes.forEach {
+                it.agentStatus = agentStatusMap[it.nodeIp] ?: false
+            }
+
+            nodeDao.batchUpdateNode(dslContext, allServerNodes)
+        } catch (ignore: Throwable) {
+            logger.warn("update agent status failed", ignore)
         }
-    }
-
-    private fun updateAgentStatus() {
-        val allServerNodes = nodeDao.listAllServerNodes(dslContext)
-
-        if (allServerNodes.isEmpty()) {
-            return
-        }
-
-        val allIps = allServerNodes.map { it.nodeIp }.toSet()
-        val agentStatusMap = esbAgentClient.getAgentStatus(DEFAULT_SYTEM_USER, allIps)
-
-        allServerNodes.forEach {
-            it.agentStatus = agentStatusMap[it.nodeIp] ?: false
-        }
-
-        nodeDao.batchUpdateNode(dslContext, allServerNodes)
     }
 }
