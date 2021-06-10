@@ -157,7 +157,7 @@ open class MarketAtomTask : ITask() {
                         contextMap = contextMap(buildTask).plus(
                             mapOf(
                                 WORKSPACE_CONTEXT to workspace.absolutePath,
-                                CI_TOKEN_CONTEXT to (runtimeVariables[CI_TOKEN_CONTEXT] ?: "")
+                                CI_TOKEN_CONTEXT to (buildVariables.variables[CI_TOKEN_CONTEXT] ?: "")
                             )
                         )
                     )
