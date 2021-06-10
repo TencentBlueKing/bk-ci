@@ -172,7 +172,7 @@ object CommandLineUtils {
             val value = tmpLine.removePrefix(prefixOutput)
             val keyValue = value.split("::")
             val keyPrefix = if (!elementId.isNullOrBlank()) {
-                "steps.$elementId."
+                "steps.$elementId.outputs."
             } else ""
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(
