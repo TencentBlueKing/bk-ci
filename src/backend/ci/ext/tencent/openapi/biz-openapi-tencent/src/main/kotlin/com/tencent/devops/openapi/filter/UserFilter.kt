@@ -32,17 +32,10 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RequestFilter
-import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.servlet.Filter
-import javax.servlet.FilterChain
-import javax.servlet.FilterConfig
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
-import javax.servlet.http.HttpServletRequest
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
@@ -56,7 +49,7 @@ import javax.ws.rs.ext.Provider
 class UserFilter @Autowired constructor(
     val client: Client,
     val redisOperation: RedisOperation
-): ContainerRequestFilter {
+) : ContainerRequestFilter {
 
     override fun filter(requestContext: ContainerRequestContext?) {
         if (requestContext == null) {
@@ -64,6 +57,8 @@ class UserFilter @Autowired constructor(
         }
         val userId = requestContext.getHeaderString(AUTH_HEADER_USER_ID)
         if (userId == null) {
+            val appCode = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_APP_CODE)
+            logger.info("path: ${requestContext.uriInfo.path} not need userHead, appCode: $appCode ")
             return
         } else {
             try {
@@ -79,7 +74,7 @@ class UserFilter @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(UserFilter:: class.java)
+        private val logger = LoggerFactory.getLogger(UserFilter::class.java)
         const val FAILTRUNFLAG = "BK:OPENPAI:FILTER:FLAG"
     }
 }
