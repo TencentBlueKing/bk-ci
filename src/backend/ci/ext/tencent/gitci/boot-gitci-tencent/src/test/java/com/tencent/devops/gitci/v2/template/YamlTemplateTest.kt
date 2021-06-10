@@ -95,7 +95,7 @@ class YamlTemplateTest {
         val newPath = if (targetRepo == null) {
             "templates/$fileName"
         } else {
-            "templates/${targetRepo}/templates/$fileName"
+            "templates/$targetRepo/templates/$fileName"
         }
         val classPathResource = ClassPathResource(newPath)
         val inputStream: InputStream = classPathResource.inputStream
