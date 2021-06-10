@@ -158,7 +158,7 @@ object CommandLineUtils {
         if (Pattern.matches(patten, tmpLine)) {
             val value = tmpLine.removePrefix(prefix)
             val keyValue = value.split("::")
-            val keyPrefix = if (elementId.isNullOrBlank()) {
+            val keyPrefix = if (!elementId.isNullOrBlank()) {
                 "steps.$elementId."
             } else ""
             if (keyValue.size >= 2) {
