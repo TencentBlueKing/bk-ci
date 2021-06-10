@@ -75,6 +75,7 @@ open class ScriptTask : ITask() {
         val projectId = buildVariables.projectId
 
         ScriptEnvUtils.cleanEnv(buildId, workspace)
+        ScriptEnvUtils.cleanContext(buildId, workspace)
 
         val variables = if (buildTask.buildVariable == null) {
             runtimeVariables
@@ -110,6 +111,7 @@ open class ScriptTask : ITask() {
         } finally {
             // 成功失败都写入环境变量
             addEnv(ScriptEnvUtils.getEnv(buildId, workspace))
+            addEnv(ScriptEnvUtils.getContext(buildId, workspace))
             ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
 
             // 设置质量红线指标信息

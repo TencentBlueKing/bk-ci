@@ -53,7 +53,8 @@ object CommandLineUtils {
         print2Logger: Boolean,
         prefix: String = "",
         executeErrorMessage: String? = null,
-        buildId: String? = null
+        buildId: String? = null,
+        elementId: String? = null
     ): String {
 
         val result = StringBuilder()
@@ -63,7 +64,7 @@ object CommandLineUtils {
         if (workspace != null) {
             executor.workingDirectory = workspace
         }
-        val resultLogFile = if (!buildId.isNullOrBlank()) { ScriptEnvUtils.getEnvFile(buildId) } else { null }
+        val contextLogFile = if (!buildId.isNullOrBlank()) { ScriptEnvUtils.getContextFile(buildId) } else { null }
 
         val outputStream = object : LogOutputStream() {
             override fun processLine(line: String?, level: Int) {
@@ -76,7 +77,7 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendVariableToFile(executor.workingDirectory, resultLogFile, tmpLine)
+                    appendVariableToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
                     LoggerService.addNormalLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
@@ -96,7 +97,7 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendVariableToFile(executor.workingDirectory, resultLogFile, tmpLine)
+                    appendVariableToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
                     LoggerService.addRedLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
@@ -128,17 +129,22 @@ object CommandLineUtils {
         return result.toString()
     }
 
-    private fun appendVariableToFile(workspace: File?, resultLogFile: String?, tmpLine: String) {
+    private fun appendVariableToFile(
+        workspace: File?,
+        resultLogFile: String?,
+        tmpLine: String,
+        elementId: String?
+    ) {
         if (resultLogFile == null) {
             return
         }
         val pattenVar = "::set-variable\\sname=.*"
         val prefixVar = "::set-variable name="
-        appendToFile(pattenVar, prefixVar, tmpLine, workspace, resultLogFile)
+        appendToFile(pattenVar, prefixVar, tmpLine, workspace, resultLogFile, elementId)
 
         val pattenOutput = "::set-output\\sname=.*"
         val prefixOutput = "::set-output name="
-        appendToFile(pattenOutput, prefixOutput, tmpLine, workspace, resultLogFile)
+        appendToFile(pattenOutput, prefixOutput, tmpLine, workspace, resultLogFile, elementId)
     }
 
     private fun appendToFile(
@@ -146,14 +152,18 @@ object CommandLineUtils {
         prefix: String,
         tmpLine: String,
         workspace: File?,
-        resultLogFile: String?
+        resultLogFile: String?,
+        elementId: String?
     ) {
         if (Pattern.matches(patten, tmpLine)) {
             val value = tmpLine.removePrefix(prefix)
             val keyValue = value.split("::")
+            val keyPrefix = if (elementId.isNullOrBlank()) {
+                "steps.$elementId."
+            } else ""
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(
-                    "${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
+                    "$keyPrefix${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
                 )
             }
         }

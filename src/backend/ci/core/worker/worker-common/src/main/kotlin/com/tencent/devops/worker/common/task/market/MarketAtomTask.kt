@@ -292,7 +292,8 @@ open class MarketAtomTask : ITask() {
                         runtimeVariables = environment,
                         dir = atomTmpSpace,
                         workspace = workspace,
-                        errorMessage = errorMessage
+                        errorMessage = errorMessage,
+                        elementId = buildTask.elementId
                     )
                 }
                 AgentEnv.getOS() == OSType.LINUX || AgentEnv.getOS() == OSType.MAC_OS -> {
@@ -310,7 +311,8 @@ open class MarketAtomTask : ITask() {
                         buildEnvs = buildEnvs,
                         runtimeVariables = environment,
                         systemEnvVariables = systemEnvVariables,
-                        errorMessage = errorMessage
+                        errorMessage = errorMessage,
+                        elementId = buildTask.elementId
                     )
                 }
             }
