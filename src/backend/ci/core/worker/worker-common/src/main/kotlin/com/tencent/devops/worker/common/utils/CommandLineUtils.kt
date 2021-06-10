@@ -77,7 +77,7 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendVariableToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
+                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
                     LoggerService.addNormalLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
@@ -97,7 +97,7 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendVariableToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
+                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
                     LoggerService.addRedLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
@@ -129,7 +129,7 @@ object CommandLineUtils {
         return result.toString()
     }
 
-    private fun appendVariableToFile(
+    private fun appendResultToFile(
         workspace: File?,
         resultLogFile: String?,
         tmpLine: String,
