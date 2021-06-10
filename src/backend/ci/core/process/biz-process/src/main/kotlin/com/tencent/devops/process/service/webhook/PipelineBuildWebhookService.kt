@@ -76,6 +76,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.IllegalArgumentException
 
 @Suppress("ALL")
 @Service
@@ -461,7 +462,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         val repoName = webhookCommit.repoName
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
-            ?: throw RuntimeException("Pipeline($pipelineId) not found")
+            ?: throw IllegalArgumentException("Pipeline($pipelineId) not found")
 
         val model = pipelineRepositoryService.getModel(pipelineId)
         if (model == null) {
