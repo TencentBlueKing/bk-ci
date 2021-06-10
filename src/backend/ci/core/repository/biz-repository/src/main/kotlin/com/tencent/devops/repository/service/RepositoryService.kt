@@ -34,10 +34,12 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -1264,7 +1266,7 @@ class RepositoryService @Autowired constructor(
         val result = client.get(ServiceCredentialResource::class)
             .get(projectId, repo.credentialId, encoder.encodeToString(pair.publicKey))
         if (result.isNotOk() || result.data == null) {
-            throw ClientException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GET_TICKET_FAIL))
+            throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
         }
 
         val credential = result.data!!

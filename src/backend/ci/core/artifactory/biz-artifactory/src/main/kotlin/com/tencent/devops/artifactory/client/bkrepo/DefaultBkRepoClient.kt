@@ -55,6 +55,9 @@ import com.tencent.devops.artifactory.pojo.bkrepo.QueryNodeInfo
 import com.tencent.devops.artifactory.util.BkRepoUtils
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.Headers
@@ -70,6 +73,7 @@ import java.io.OutputStream
 import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
+import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 
 @Component
@@ -138,7 +142,7 @@ class DefaultBkRepoClient constructor(
             } else if (!response.isSuccessful) {
                 logger.error("BKREPO_createProject_fail|http request failed, request: ${request.url()}, " +
                     "response.code: ${response.code()}, responseContent: $responseContent")
-                throw RuntimeException("http request failed")
+                throw RemoteServiceException("createProject fail", response.code(), responseContent)
             }
         }
     }
@@ -172,7 +176,7 @@ class DefaultBkRepoClient constructor(
             } else if (!response.isSuccessful) {
                 logger.error("BKREPO_createGenericRepo_fail|http request failed, request: ${request.url()}, " +
                     "response.code: ${response.code()}, responseContent: $responseContent")
-                throw RuntimeException("http request failed")
+                throw RemoteServiceException("createGenericRepo fail", response.code(), responseContent)
             }
         }
     }
@@ -195,12 +199,12 @@ class DefaultBkRepoClient constructor(
                 if (response.code() == 404) {
                     throw NotFoundException("not found")
                 }
-                throw RuntimeException("get file size failed")
+                throw RemoteServiceException("getFileSize fail", response.code(), responseContent)
             }
 
             val responseData = objectMapper.readValue<Response<NodeSizeInfo>>(responseContent)
             if (responseData.isNotOk()) {
-                throw RuntimeException("get file size failed: ${responseData.message}")
+                throw BadRequestException(responseContent)
             }
 
             return responseData.data!!
