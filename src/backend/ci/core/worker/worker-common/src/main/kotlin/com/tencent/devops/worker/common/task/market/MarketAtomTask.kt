@@ -184,6 +184,9 @@ open class MarketAtomTask : ITask() {
             "N"
         }
         runtimeVariables = runtimeVariables.plus(Pair("testVersionFlag", testVersionFlag)) // 设置是否是测试版本的标识
+        // 设置插件名称和任务名称变量
+        val taskName = buildTask.elementName ?: ""
+        runtimeVariables = runtimeVariables.plus(mapOf("atomName" to atomName, "taskName" to taskName))
         val variables = runtimeVariables.plus(atomParams)
         logger.info("atomCode is:$atomCode ,variables is:$variables")
 
