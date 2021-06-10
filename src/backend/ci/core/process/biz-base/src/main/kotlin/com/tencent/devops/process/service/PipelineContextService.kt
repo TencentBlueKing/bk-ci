@@ -98,17 +98,12 @@ class PipelineContextService@Autowired constructor(
         buildVar: Map<String, String>,
         varMap: MutableMap<String, String>
     ) {
-        val userId = buildVar[PIPELINE_START_USER_ID]
         val projectId = buildVar[PROJECT_NAME]
-        if (!userId.isNullOrBlank() && !projectId.isNullOrBlank()) {
-            val credentials = client.get(ServiceCredentialResource::class).hasPermissionList(
-                userId = userId,
+        if (!projectId.isNullOrBlank()) {
+            val credentials = client.get(ServiceCredentialResource::class).list(
                 projectId = projectId,
-                credentialTypesString = null,
-                permission = Permission.USE,
-                page = null,
-                pageSize = null,
-                keyword = null
+                page = 1,
+                pageSize = 1000
             ).data
             if (credentials != null && credentials.records.isNotEmpty()) {
                 credentials.records.forEach { credential ->
