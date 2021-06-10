@@ -77,7 +77,7 @@ object WorkspaceUtils {
 
     fun getPipelineWorkspace(pipelineId: String, workspace: String): File {
         return if (workspace.isNotBlank()) {
-            File(workspace).normalize()
+            File(workspace)
         } else {
             File(getWorkspace(), "$pipelineId/src").normalize()
         }
