@@ -8,10 +8,12 @@ import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -30,7 +32,8 @@ abstract class AbsPermissionProjectService @Autowired constructor(
     open val policyService: PolicyService,
     open val client: Client,
     open val iamConfiguration: IamConfiguration,
-    open val deptService: DeptService
+    open val deptService: DeptService,
+    open val groupService: AuthGroupService
 ) : PermissionProjectService {
 
     private val projectIdCache = CacheBuilder.newBuilder()
@@ -131,17 +134,22 @@ abstract class AbsPermissionProjectService @Autowired constructor(
     }
 
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
-        val projectId = getProjectId(projectCode)
-        val projectRoles = permissionRoleService.getPermissionRole(projectId).result
-        var roleId = 0
-        projectRoles.forEach {
-            // TODO: 通过roleType匹配对应的roleId
-
+        val extProjectId = getProjectId(projectCode)
+        val projectRoles = groupService.getGroupByName(projectCode, role)
+        if (projectRoles == null) {
+            logger.warn("$projectCode | $role group not exists")
+            throw ParamBlankException("user group $role not exists")
         }
         val managerRole = role == BkAuthGroup.MANAGER.value
         val members = mutableListOf<RoleMemberDTO>()
         members.add(RoleMemberDTO(type = ManagerScopesEnum.USER, id = userId))
-        permissionRoleMemberService.createRoleMember(userId, projectId, roleId, members, managerRole)
+        permissionRoleMemberService.createRoleMember(
+            userId = userId,
+            projectId = extProjectId,
+            roleId = projectRoles!!.relationId.toInt(),
+            members = members,
+            managerGroup = managerRole
+        )
         return true
     }
 
