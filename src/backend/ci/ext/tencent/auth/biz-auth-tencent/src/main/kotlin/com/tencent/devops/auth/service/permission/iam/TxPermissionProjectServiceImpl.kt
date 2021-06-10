@@ -32,9 +32,11 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
+import com.tencent.bk.sdk.iam.dto.manager.RoleGroupMemberInfo
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
@@ -58,7 +60,8 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
     override val policyService: PolicyService,
     override val client: Client,
     override val iamConfiguration: IamConfiguration,
-    override val deptService: DeptService
+    override val deptService: DeptService,
+    val groupService: AuthGroupService
 ) : AbsPermissionProjectService(
     permissionRoleService = permissionRoleService,
     permissionRoleMemberService = permissionRoleMemberService,
@@ -90,7 +93,7 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         projectCode: String
     ): List<BkAuthGroupAndUserList> {
         // 1. 转换projectCode为iam侧分级管理员Id
-        val iamProjectId = getProjectId(projectCode)
+        val iamProjectId = getExtProjectId(projectCode)
         // 2. 获取项目下的所有用户组
         val roleInfos = permissionRoleService.getPermissionRole(iamProjectId).result
         logger.info("[IAM] $projectCode $iamProjectId roleInfos: $roleInfos")
@@ -101,14 +104,15 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
                 projectId = iamProjectId,
                 roleId = it.id,
                 page = 0,
-                pageSize = 1000).results
+                pageSize = 1000
+            ).results
             logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id}| users $groupMemberInfos")
             val members = mutableListOf<String>()
             groupMemberInfos.forEach { memberInfo ->
                 // 如果为组织需要获取组织对应的用户
                 if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
                     logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id}| dept ${memberInfo.id}")
-                    val deptUsers = deptService.getDeptUser(memberInfo.id.toInt()) ?: null
+                    val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null) ?: null
                     if (deptUsers != null) {
                         members.addAll(deptUsers)
                     }
@@ -174,7 +178,7 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
     }
 
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
-        val projectId = getProjectId(projectCode)
+        val projectId = getExtProjectId(projectCode)
         val projectRoles = permissionRoleService.getPermissionRole(projectId).result
         var roleId = 0
         projectRoles.forEach {
@@ -204,7 +208,30 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         return roleList
     }
 
-    private fun getProjectId(projectCode: String): Int {
+    override fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String> {
+        val groupInfo = groupService.getGroupByName(projectCode, group.value) ?: return emptyList()
+        val extProjectId = getExtProjectId(projectCode)
+        val relationId = groupInfo!!.relationId
+        if (relationId.isNullOrEmpty()) {
+            logger.warn("$projectCode not bind iam userGroup")
+            return emptyList()
+        }
+        val groupMemberInfos = permissionRoleMemberService.getRoleMember(
+            projectId = extProjectId,
+            roleId = relationId.toInt(),
+            page = 0,
+            pageSize = 1000
+        ).results
+        val users = mutableListOf<String>()
+        groupMemberInfos.forEach {
+            if (it.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
+                users.add(it.id)
+            }
+        }
+        return users
+    }
+
+    private fun getExtProjectId(projectCode: String): Int {
         val iamProjectId = if (projectIdCache.getIfPresent(projectCode) != null) {
             projectIdCache.getIfPresent(projectCode)!!
         } else {

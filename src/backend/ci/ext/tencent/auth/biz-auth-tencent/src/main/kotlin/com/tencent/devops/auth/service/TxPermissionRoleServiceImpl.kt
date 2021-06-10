@@ -34,6 +34,7 @@ import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleServiceImpl
+import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
 import org.springframework.stereotype.Service
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -41,8 +42,9 @@ import org.springframework.beans.factory.annotation.Autowired
 class TxPermissionRoleServiceImpl @Autowired constructor(
     iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService,
-    private val iamConfiguration: IamConfiguration
-): AbsPermissionRoleServiceImpl(iamManagerService, permissionGradeService, iamConfiguration) {
+    private val iamConfiguration: IamConfiguration,
+    private val groupService: AuthGroupService
+): IamPermissionRoleExtService(iamManagerService, permissionGradeService, iamConfiguration, groupService) {
 
     override fun createPermissionRole(
         userId: String,
