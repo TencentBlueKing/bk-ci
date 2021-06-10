@@ -132,8 +132,22 @@ object CommandLineUtils {
         if (resultLogFile == null) {
             return
         }
-        val patten = "::set-variable\\sname=.*"
-        val prefix = "::set-variable name="
+        val pattenVar = "::set-variable\\sname=.*"
+        val prefixVar = "::set-variable name="
+        appendToFile(pattenVar, prefixVar, tmpLine, workspace, resultLogFile)
+
+        val pattenOutput = "::set-output\\sname=.*"
+        val prefixOutput = "::set-output name="
+        appendToFile(pattenOutput, prefixOutput, tmpLine, workspace, resultLogFile)
+    }
+
+    private fun appendToFile(
+        patten: String,
+        prefix: String,
+        tmpLine: String,
+        workspace: File?,
+        resultLogFile: String?
+    ) {
         if (Pattern.matches(patten, tmpLine)) {
             val value = tmpLine.removePrefix(prefix)
             val keyValue = value.split("::")

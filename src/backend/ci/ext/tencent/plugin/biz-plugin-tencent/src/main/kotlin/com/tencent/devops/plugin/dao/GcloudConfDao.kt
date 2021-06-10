@@ -59,7 +59,8 @@ class GcloudConfDao {
                     .values(region,
                             address,
                             fileAddress,
-                            LocalDateTime.ofInstant(Date(System.currentTimeMillis()).toInstant(), ZoneId.systemDefault()),
+                            LocalDateTime.ofInstant(Date(System.currentTimeMillis()).toInstant(),
+                                ZoneId.systemDefault()),
                             userId,
                             remark)
                     .returning(ID)

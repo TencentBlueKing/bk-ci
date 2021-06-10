@@ -70,14 +70,20 @@ import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
+import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
+import com.tencent.devops.store.pojo.common.KEY_CONFIG
+import com.tencent.devops.store.pojo.common.KEY_INPUT
+import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
+import com.tencent.devops.store.pojo.common.KEY_OUTPUT
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
@@ -344,8 +350,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
     }
 
-    override fun rebuild(projectCode: String, userId: String, atomId: String): Result<Boolean> {
-        logger.info("rebuild, projectCode=$projectCode, userId=$userId, atomId=$atomId")
+    @Suppress("UNCHECKED_CAST")
+    override fun rebuild(
+        projectCode: String,
+        userId: String,
+        atomId: String,
+        atomRebuildRequest: AtomRebuildRequest
+    ): Result<Boolean> {
+        logger.info("rebuild, projectCode=$projectCode, userId=$userId, atomId=$atomId, request=$atomRebuildRequest")
         // 判断是否可以启动构建
         val status = AtomStatusEnum.BUILDING.status.toByte()
         val (checkResult, code) = checkAtomVersionOptRight(userId, atomId, status)
@@ -376,6 +388,17 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             )
         }
         val taskDataMap = getAtomConfResult.taskDataMap
+        val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
+        val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!
+        // 校验插件发布类型
+        marketAtomCommonService.validateReleaseType(
+            atomId = atomId,
+            atomCode = atomCode,
+            version = atomVersion,
+            releaseType = releaseType,
+            taskDataMap = taskDataMap,
+            fieldCheckConfirmFlag = atomRebuildRequest.fieldCheckConfirmFlag
+        )
         val atomEnvRequest = getAtomConfResult.atomEnvRequest ?: return MessageCodeUtil.generateResponseDataObject(
             StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf("execution")
         )
@@ -398,10 +421,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             )
         }
         val propsMap = mutableMapOf<String, Any?>()
-        propsMap["inputGroups"] = taskDataMap?.get("inputGroups")
-        propsMap["input"] = taskDataMap?.get("input")
-        propsMap["output"] = taskDataMap?.get("output")
-        propsMap["config"] = taskDataMap?.get("config")
+        propsMap[KEY_INPUT_GROUPS] = taskDataMap[KEY_INPUT_GROUPS]
+        propsMap[KEY_INPUT] = taskDataMap[KEY_INPUT]
+        propsMap[KEY_OUTPUT] = taskDataMap[KEY_OUTPUT]
+        propsMap[KEY_CONFIG] = taskDataMap[KEY_CONFIG]
 
         // 清空redis中保存的发布过程保存的buildId和commitId
         val suffixKeyName = "${StoreTypeEnum.ATOM.name}:$atomCode:$atomId"

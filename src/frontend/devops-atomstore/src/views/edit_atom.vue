@@ -266,7 +266,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/document/6.0/129/7515`,
+                docsLink: `${DOCS_URL_PREFIX}/store/plugins/create-plugin`,
                 showContent: false,
                 isUploading: false,
                 initOs: [],
@@ -662,7 +662,7 @@
                 })
             },
 
-            submit () {
+            submit (fieldCheckConfirmFlag) {
                 this.validate().then(() => {
                     this.loading.isLoading = true
                     const params = {
@@ -684,7 +684,8 @@
                         visibilityLevel: this.atomForm.visibilityLevel,
                         packageShaContent: this.atomForm.packageShaContent,
                         pkgName: this.atomForm.pkgName,
-                        frontendType: this.atomForm.frontendType
+                        frontendType: this.atomForm.frontendType,
+                        fieldCheckConfirmFlag
                     }
 
                     return this.$store.dispatch('store/editAtom', {
@@ -698,20 +699,30 @@
                 }).catch((err) => {
                     if (err.httpStatus === 200) {
                         const h = this.$createElement
-
-                        this.$bkInfo({
-                            type: 'error',
-                            title: this.$t('store.提交失败'),
-                            showFooter: false,
-                            subHeader: h('p', {
-                                style: {
-                                    textDecoration: 'none',
-                                    cursor: 'pointer',
-                                    whiteSpace: 'normal',
-                                    textAlign: 'left'
-                                }
-                            }, err.message ? err.message : err)
-                        })
+                        const subHeader = h('p', { style: {
+                            textDecoration: 'none',
+                            cursor: 'pointer',
+                            whiteSpace: 'normal',
+                            textAlign: 'left',
+                            lineHeight: '24px'
+                        } }, err.message || err)
+                        if ([2120030, 2120031].includes(err.code)) {
+                            const confirmFn = () => this.submit(true)
+                            this.$bkInfo({
+                                type: 'warning',
+                                subHeader,
+                                width: 440,
+                                okText: this.$t('store.已确认兼容新增参数，继续'),
+                                confirmFn
+                            })
+                        } else {
+                            this.$bkInfo({
+                                type: 'error',
+                                title: this.$t('store.提交失败'),
+                                showFooter: false,
+                                subHeader
+                            })
+                        }
                     } else if (err) {
                         this.$bkMessage({ message: err.message || err, theme: 'error' })
                     }

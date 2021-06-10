@@ -54,7 +54,7 @@ tip_dir_exist (){
 
 # 启动网关.
 start_ci__openresty (){
-  $OPENRESTY_CMD -p "$PWD"
+  $OPENRESTY_CMD -p "$PWD" -g "user $MS_USER;"
 }
 
 check_port_listen (){
@@ -83,23 +83,26 @@ detect_main (){
 
 # 检查服务启动成功. health接口为格式化后的, 要求整行匹配.
 check_springboot_up (){
-  curl -m 1 -sf "http://127.0.0.1:$API_PORT/management/health" 2>/dev/null | grep -qx '  "status" : "UP",'
+  local port="$1"
+  curl -m 1 -sf "http://127.0.0.1:$port/management/health" 2>/dev/null | grep -qx '  "status" : "UP",'
 }
 # 等待服务启动成功.
 wait_springboot_up (){
+  local pid="$1" port="$2" msg="app is up. ^_^"
   local wait_count=40 wait_sec=3  # 等待app启动, 否则认为失败触发systemd的自动重启.
   SECONDS=0
-  until check_springboot_up; do
-    echo "wait_springboot_up: $wait_count: sleep ${wait_sec}s.";
+  until check_springboot_up "$port"; do
+    echo "wait_springboot_up $port: $wait_count: sleep ${wait_sec}s.";
     sleep "$wait_sec";
-    let wait_count-- || {
-      echo "wait_springboot_up: unable to confirm app status from http://127.0.0.1:$API_PORT/management/health"
-      echo "see $PWD/logs/bootstrap.log and $PWD/logs/$MS_NAME.log for details."
-      return 14
-    }
+    let wait_count-- || { msg="wait timeout"; break; }
+    check_pid_alive "$pid" || { msg="java is dead"; break; }
   done
-  echo "wait_springboot_up: $wait_count: app is up. ^_^"
-  return 0
+  echo "wait_springboot_up $port: $wait_count: $msg."
+  if check_springboot_up "$port"; then
+    return 0
+  else
+    return 14
+  fi
 }
 
 # 启动微服务.
@@ -116,6 +119,7 @@ start_ci__springboot (){
   done
   java_argv+=(
     "-Ddevops_gateway=$DEVOPS_GATEWAY"
+    "-Dserver.port=$API_PORT"  # 强制覆盖配置文件里的端口.
     "-Dbksvc=bk-ci-$MS_NAME"
   )
   # 指定环境变量及参数, 启动PATH里的java.
@@ -125,7 +129,11 @@ start_ci__springboot (){
   echo "$java_pid" > "$pid_file" || return 24
   echo "java pid is $java_pid."
   # 此处阻塞.
-  wait_springboot_up
+  if ! wait_springboot_up "$java_pid" "$API_PORT"; then
+    echo "wait_springboot_up: unable to confirm app status from http://127.0.0.1:$API_PORT/management/health"
+    echo "see $PWD/logs/bootstrap.log and $PWD/logs/$MS_NAME.log for details."
+    return 14
+  fi
 }
 
 # 模拟systemd时的预设环境: 加载env, 切换启动目录及用户.
@@ -151,8 +159,8 @@ emulate_systemd_prerequisites (){
   cd "$BK_CI_HOME/$MS_NAME" || return 16
   load_systemd_env || return $?
   check_empty_var MS_USER || return 15  # env文件里必须定义MS_USER
-  # 校验启动用户.
-  if [ "$USER" != "${MS_USER:-no-user}" ]; then
+  # gateway使用root启动nginx, 其worker为普通用户.
+  if [ "$USER" != "${MS_USER:-no-user}" ] && [ "$MS_NAME" != "gateway" ]; then
     echo "please run this script using user: ${MS_USER:-}. example command:"
     echo "sudo -u $MS_USER $0 $MS_NAME ..."
     return 5

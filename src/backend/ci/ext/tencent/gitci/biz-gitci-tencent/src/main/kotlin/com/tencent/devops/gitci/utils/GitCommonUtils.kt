@@ -36,8 +36,14 @@ object GitCommonUtils {
 
     private val logger = LoggerFactory.getLogger(GitCommonUtils::class.java)
 
-//    private const val dockerHubUrl = "https://index.docker.io/v1/"
+    //    private const val dockerHubUrl = "https://index.docker.io/v1/"
     private const val dockerHubUrl = ""
+
+    private const val projectPrefix = "git_"
+
+    fun getRepoName(httpUrl: String, name: String): String {
+        return getRepoOwner(httpUrl) + "/" + name
+    }
 
     fun getRepoOwner(httpUrl: String): String {
         return when {
@@ -127,22 +133,23 @@ object GitCommonUtils {
         var realEvent = gitRequestEvent
         // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
         if (gitRequestEvent.sourceGitProjectId != null && gitRequestEvent.gitProjectId != gitRequestEvent.sourceGitProjectId) {
-                try {
-                    val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.sourceGitProjectId!!).data!!
-                    logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, token: $gitToken")
-                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
-                    realEvent = gitRequestEvent.copy(
-                        // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
-                        branch = if (sourceRepositoryConf != null) {
-                            "${sourceRepositoryConf.pathWithNamespace.split("/")[0]}:${gitRequestEvent.branch}"
-                        } else {
-                            gitRequestEvent.branch
-                        }
-                    )
-                } catch (e: Exception) {
-                    logger.error("Cannot get source GitProjectInfo: ", e)
-                }
+            try {
+                val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.sourceGitProjectId!!).data!!
+                logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, token: $gitToken")
+                val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken
+                    .accessToken, gitRequestEvent.sourceGitProjectId!!).data
+                realEvent = gitRequestEvent.copy(
+                    // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
+                    branch = if (sourceRepositoryConf != null) {
+                        "${sourceRepositoryConf.pathWithNamespace.split("/")[0]}:${gitRequestEvent.branch}"
+                    } else {
+                        gitRequestEvent.branch
+                    }
+                )
+            } catch (e: Exception) {
+                logger.error("Cannot get source GitProjectInfo: ", e)
             }
+        }
         return realEvent
     }
 
@@ -153,7 +160,8 @@ object GitCommonUtils {
             try {
                 val gitToken = client.getScm(ServiceGitResource::class).getToken(sourceGitProjectId).data!!
                 logger.info("get token for gitProjectId[$sourceGitProjectId] form scm, token: $gitToken")
-                val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, sourceGitProjectId).data
+                val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken
+                    .accessToken, sourceGitProjectId).data
                 // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
                 return if (sourceRepositoryConf != null) {
                     "${sourceRepositoryConf.pathWithNamespace.split("/")[0]}:$branch"
@@ -165,5 +173,17 @@ object GitCommonUtils {
             }
         }
         return branch
+    }
+
+    fun getGitProjectId(projectId: String): Long {
+        if (projectId.startsWith(projectPrefix)) {
+            try {
+                return projectId.removePrefix(projectPrefix).toLong()
+            } catch (e: Exception) {
+                throw RuntimeException("蓝盾项目ID不正确")
+            }
+        } else {
+            throw RuntimeException("蓝盾项目ID不正确")
+        }
     }
 }

@@ -29,6 +29,7 @@ package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -60,6 +61,8 @@ interface TxUserAtomReleaseResource {
         projectId: String,
         @ApiParam("atomId", required = true)
         @PathParam("atomId")
-        atomId: String
+        atomId: String,
+        @ApiParam("插件重新构建请求报文体", required = true)
+        atomRebuildRequest: AtomRebuildRequest
     ): Result<Boolean>
 }
