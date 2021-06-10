@@ -321,7 +321,7 @@ class TriggerBuildService @Autowired constructor(
             stageList.add(
                 createStage(
                     stage = GitCIV2Stage(
-                        name = null,
+                        name = "Finally",
                         id = null,
                         label = emptyList(),
                         ifField = null,
