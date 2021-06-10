@@ -138,25 +138,38 @@ object CommandLineUtils {
         if (resultLogFile == null) {
             return
         }
-        val pattenVar = "::set-variable\\sname=.*"
-        val prefixVar = "::set-variable name="
-        appendToFile(pattenVar, prefixVar, tmpLine, workspace, resultLogFile, elementId)
-
-        val pattenOutput = "::set-output\\sname=.*"
-        val prefixOutput = "::set-output name="
-        appendToFile(pattenOutput, prefixOutput, tmpLine, workspace, resultLogFile, elementId)
+        appendVariableToFile(tmpLine, workspace, resultLogFile)
+        appendOutputToFile(tmpLine, workspace, resultLogFile, elementId)
     }
 
-    private fun appendToFile(
-        patten: String,
-        prefix: String,
+    private fun appendVariableToFile(
+        tmpLine: String,
+        workspace: File?,
+        resultLogFile: String?
+    ) {
+        val pattenVar = "::set-variable\\sname=.*"
+        val prefixVar = "::set-variable name="
+        if (Pattern.matches(pattenVar, tmpLine)) {
+            val value = tmpLine.removePrefix(prefixVar)
+            val keyValue = value.split("::")
+            if (keyValue.size >= 2) {
+                File(workspace, resultLogFile).appendText(
+                    "variables.${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
+                )
+            }
+        }
+    }
+
+    private fun appendOutputToFile(
         tmpLine: String,
         workspace: File?,
         resultLogFile: String?,
         elementId: String?
     ) {
-        if (Pattern.matches(patten, tmpLine)) {
-            val value = tmpLine.removePrefix(prefix)
+        val pattenOutput = "::set-output\\sname=.*"
+        val prefixOutput = "::set-output name="
+        if (Pattern.matches(pattenOutput, tmpLine)) {
+            val value = tmpLine.removePrefix(prefixOutput)
             val keyValue = value.split("::")
             val keyPrefix = if (!elementId.isNullOrBlank()) {
                 "steps.$elementId."
