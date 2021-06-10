@@ -37,6 +37,7 @@ import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
+import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
@@ -95,42 +96,4 @@ class AuthConfiguration {
     @Bean
     @ConditionalOnMissingBean
     fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
-    
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
-    fun deptService(
-        redisOperation: RedisOperation,
-        objectMapper: ObjectMapper
-    ) = AuthDeptServiceImpl(redisOperation, objectMapper)
-    
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
-    fun txPermissionProjectService(
-        permissionRoleService: PermissionRoleService,
-        permissionRoleMemberService: PermissionRoleMemberService,
-        authHelper: AuthHelper,
-        policyService: PolicyService,
-        client: Client,
-        iamConfiguration: IamConfiguration,
-        deptService: DeptService
-    ) = TxPermissionProjectServiceImpl(
-        permissionRoleService = permissionRoleService,
-        permissionRoleMemberService = permissionRoleMemberService,
-        authHelper = authHelper,
-        policyService = policyService,
-        client = client,
-        iamConfiguration = iamConfiguration,
-        deptService = deptService)
-    
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
-    fun txPermissionService(
-        authHelper: AuthHelper,
-        policyService: PolicyService,
-        iamConfiguration: IamConfiguration
-    ) = TxPermissionServiceImpl(
-        authHelper = authHelper,
-        policyService = policyService,
-        iamConfiguration = iamConfiguration
-    )
 }

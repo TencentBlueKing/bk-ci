@@ -33,7 +33,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
     open val client: Client,
     open val iamConfiguration: IamConfiguration,
     open val deptService: DeptService,
-    val groupService: AuthGroupService
+    open val groupService: AuthGroupService
 ) : PermissionProjectService {
 
     private val projectIdCache = CacheBuilder.newBuilder()
@@ -82,6 +82,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
                 roleId = it.id,
                 roleName = it.name,
                 userIdList = members,
+                // TODO: 待iam完成group lable后补齐
                 type = ""
             )
             result.add(groupAndUser)
