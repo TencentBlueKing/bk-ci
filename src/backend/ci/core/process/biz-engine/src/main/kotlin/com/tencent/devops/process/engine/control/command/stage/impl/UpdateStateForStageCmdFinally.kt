@@ -108,16 +108,16 @@ class UpdateStateForStageCmdFinally(
         val nextStage: PipelineBuildStage?
 
         // 中断的失败事件或者FastKill快速失败，或者 #3138 stage cancel 则直接寻找FinallyStage
-        val gotoFinally = commandContext.buildStatus.isFailure() ||
+        val gotoFinal = commandContext.buildStatus.isFailure() ||
             commandContext.buildStatus.isCancel() ||
             commandContext.fastKill ||
             event.source == BS_STAGE_CANCELED_END_SOURCE
 
-        if (gotoFinally) {
+        if (gotoFinal) {
             nextStage = pipelineStageService.getLastStage(buildId = event.buildId)
             if (nextStage == null || nextStage.seq == stage.seq || nextStage.controlOption?.finally != true) {
 
-                LOG.info("ENGINE|${stage.buildId}|${event.source}|STAGE_FAST_KILL|${stage.stageId}|" +
+                LOG.info("ENGINE|${stage.buildId}|${event.source}|END_STAGE|${stage.stageId}|" +
                     "${commandContext.buildStatus}|${commandContext.latestSummary}")
 
                 return finishBuild(commandContext = commandContext)
@@ -127,7 +127,7 @@ class UpdateStateForStageCmdFinally(
         }
 
         if (nextStage != null) {
-            LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|gotoFinally=$gotoFinally|" +
+            LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|gotoFinal=$gotoFinal|" +
                 "next_s(${nextStage.stageId})|e=${stage.executeCount}|summary=${commandContext.latestSummary}")
             event.sendNextStage(source = "From_s(${stage.stageId})", stageId = nextStage.stageId)
         } else {
