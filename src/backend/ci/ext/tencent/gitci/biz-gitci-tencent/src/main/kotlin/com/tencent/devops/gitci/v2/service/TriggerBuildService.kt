@@ -109,6 +109,7 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.common.ci.v2.Stage as GitCIV2Stage
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
@@ -318,9 +319,22 @@ class TriggerBuildService @Autowired constructor(
         yaml.stages.forEachIndexed { stageIndex, stage ->
             stageList.add(createStage(stage, event, gitBasicSetting))
         }
-
-        yaml.finally?.forEach {
-            stageList.add(createStage(it, event, gitBasicSetting, true))
+        // 添加finally
+        if (!yaml.finally.isNullOrEmpty()) {
+            stageList.add(
+                createStage(
+                    stage = GitCIV2Stage(
+                        name = "Finally",
+                        id = null,
+                        label = emptyList(),
+                        ifField = null,
+                        fastKill = false,
+                        jobs = yaml.finally!!
+                    ),
+                    event = event,
+                    gitBasicSetting = gitBasicSetting,
+                    finalStage = true)
+            )
         }
 
         return Model(
@@ -404,7 +418,7 @@ class TriggerBuildService @Autowired constructor(
     }
 
     private fun createStage(
-        stage: com.tencent.devops.common.ci.v2.Stage,
+        stage: GitCIV2Stage,
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
         finalStage: Boolean = false
