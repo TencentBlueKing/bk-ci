@@ -48,7 +48,7 @@ if build_type == "AGENT" then
     local red = redisUtil:new()
     if not red then
         ngx.log(ngx.ERR, "failed to new redis ", err)
-        ngx.exit(401)
+        ngx.exit(500)
         return
     else
         --- 获取对应的buildId
@@ -169,7 +169,7 @@ elseif build_type == "DOCKER" then
     local red = redisUtil:new()
     if not red then
         ngx.log(ngx.ERR, "failed to new redis ", err)
-        ngx.exit(401)
+        ngx.exit(500)
         return
     else
         local redRes, err = red:get("docker_build_key_" .. reqAgentId .. "_" .. reqSecretKey)
@@ -281,7 +281,7 @@ elseif build_type == "PLUGIN_AGENT" then
     local red = redisUtil:new()
     if not red then
         ngx.log(ngx.ERR, "failed to new redis ", err)
-        ngx.exit(401)
+        ngx.exit(500)
         return
     else
         local redRes, err = red:get("plugin_agent_" .. reqAgentId .. "_" .. reqSecretKey)
@@ -385,7 +385,7 @@ elseif build_type == "MACOS" then
     local red = redisUtil:new()
     if not red then
         ngx.log(ngx.ERR, "failed to new redis ", err)
-        ngx.exit(401)
+        ngx.exit(500)
         return
     else
         --- 获取对应的buildId
@@ -475,7 +475,7 @@ else
     local red = redisUtil:new()
     if not red then
         ngx.log(ngx.ERR, "failed to new redis ", err)
-        ngx.exit(401)
+        ngx.exit(500)
         return
     else
         --- 获取对应的buildId
