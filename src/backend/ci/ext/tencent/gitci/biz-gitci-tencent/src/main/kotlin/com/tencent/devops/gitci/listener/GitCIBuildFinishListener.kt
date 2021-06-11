@@ -36,7 +36,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.v2.NoticeIfType
+import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Notices
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -288,16 +288,16 @@ class GitCIBuildFinishListener @Autowired constructor(
             return true
         }
         return when (notice.ifField) {
-            NoticeIfType.SUCCESS -> {
+            IfType.SUCCESS -> {
                 return buildStatus.isSuccess()
             }
-            NoticeIfType.FAILURE -> {
+            IfType.FAILURE -> {
                 return buildStatus.isFailure()
             }
-            NoticeIfType.CANCELLED -> {
+            IfType.CANCELLED -> {
                 return buildStatus.isCancel()
             }
-            NoticeIfType.ALWAYS -> {
+            IfType.ALWAYS -> {
                 return true
             }
             else -> {
