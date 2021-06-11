@@ -60,6 +60,7 @@
                         </ul>
                         <ul>
                             <li @click="exportPipeline">{{ $t('newlist.exportPipelineJson') }}</li>
+                            <li v-if="!isTemplatePipeline" @click="importModifyPipeline">{{ $t('newlist.importModifyPipelineJson') }}</li>
                             <li @click="copyPipeline">{{ $t('newlist.copyAs') }}</li>
                             <li @click="showTemplateDialog">{{ $t('newlist.saveAsTemp') }}</li>
                             <li @click="deletePipeline">{{ $t('delete') }}</li>
@@ -84,6 +85,8 @@
         </bk-dialog>
         <review-dialog :is-show="showReviewDialog"></review-dialog>
         <export-dialog :is-show.sync="showExportDialog"></export-dialog>
+        <import-pipeline-popup :handle-import-success="handleImportModifyPipeline" :is-show="showImportDialog"></import-pipeline-popup>
+        
     </div>
 </template>
 
@@ -96,6 +99,7 @@
     import ReviewDialog from '@/components/ReviewDialog'
     import { bus } from '@/utils/bus'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import showTooltip from '@/components/common/showTooltip'
     import exportDialog from '@/components/ExportDialog'
     import versionSideslider from '@/components/VersionSideslider'
@@ -108,7 +112,8 @@
             BreadCrumbItem,
             ReviewDialog,
             exportDialog,
-            versionSideslider
+            versionSideslider,
+            ImportPipelinePopup
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -136,7 +141,8 @@
                     isCopySetting: false,
                     templateName: ''
                 },
-                showExportDialog: false
+                showExportDialog: false,
+                showImportDialog: false
             }
         },
         computed: {
@@ -267,7 +273,7 @@
             ...mapActions('atom', [
                 'requestPipelineExecDetailByBuildNum',
                 'togglePropertyPanel',
-                'exportPipelineJson'
+                'setEditFrom'
             ]),
             handleSelected (pipelineId, cur) {
                 const { projectId, $route } = this
@@ -343,6 +349,36 @@
             exportPipeline () {
                 this.showExportDialog = true
             },
+            importModifyPipeline () {
+                this.showImportDialog = true
+            },
+            handleImportModifyPipeline (result) {
+                this.showImportDialog = false
+                this.setEditFrom(true)
+                if (!this.isEditPage) {
+                    this.$router.push({
+                        name: 'pipelinesEdit'
+                    })
+                }
+                this.$nextTick(() => {
+                    const pipelineVersion = this.curPipeline.pipelineVersion
+                    const pipelineName = this.curPipeline.pipelineName
+                    this.setPipelineSetting({
+                        ...result.setting,
+                        pipelineName,
+                        pipelineId: this.pipelineId,
+                        projectId: this.projectId
+                    })
+                    this.setPipeline({
+                        ...result.model,
+                        name: pipelineName,
+                        latestVersion: pipelineVersion,
+                        instanceFromTemplate: false
+                    })
+                    this.setPipelineEditing(true)
+                })
+            },
+            
             copyPipeline () {
                 const { curPipeline } = this
                 this.isDialogShow = true

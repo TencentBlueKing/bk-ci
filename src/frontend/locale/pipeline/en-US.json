@@ -353,6 +353,8 @@
         "noExecution": "No builds",
         "copyAs": "Copy",
         "exportPipelineJson": "Export",
+        "importModifyPipelineJson": "Import",
+        "updatePipelineJson": "更新流水线",
         "sucToStartBuild": "Start build successfully",
         "failToStartBuild": "Failed to start build",
         "view": "View",

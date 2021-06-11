@@ -66,7 +66,8 @@ export default {
             jobLimit: 20,
             atomLimit: 50
         },
-        pipelineCommonSetting: {}
+        pipelineCommonSetting: {},
+        editfromImport: false
     },
     mutations,
     actions,
