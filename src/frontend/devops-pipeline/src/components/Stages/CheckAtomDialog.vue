@@ -3,7 +3,7 @@
         v-model="isShowCheckDialog"
         ext-cls="check-atom-form"
         :close-icon="false"
-        :width="600"
+        :width="650"
         :position="{ top: '100' }"
         :auto-close="false"
         @confirm="handleAtomCheck"
@@ -330,11 +330,11 @@
             display: flex;
             margin-bottom: 10px;
            .form-field {
-               width: 47%;
+               width: 286px;
                margin-right: 10px;
            }
             > .bk-form-item {
-                width: 47%;
+                width: 286px;
                 height: 32px;
                 margin-top: 0px !important;
             }
