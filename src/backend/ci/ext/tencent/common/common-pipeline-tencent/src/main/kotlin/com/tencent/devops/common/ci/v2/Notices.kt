@@ -43,7 +43,7 @@ data class Notices(
     val receivers: Set<String>?,
     val ccs: Set<String>?,
     @JsonProperty("if")
-    val ifField: IfType?,
+    val ifField: String?,
     @JsonProperty("chat-id")
     val chatId: Set<String>?
 )

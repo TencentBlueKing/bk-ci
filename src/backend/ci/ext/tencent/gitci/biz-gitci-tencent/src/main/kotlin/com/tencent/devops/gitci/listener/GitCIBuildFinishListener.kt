@@ -37,7 +37,6 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.v2.IfType
-import com.tencent.devops.common.ci.v2.Notices
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
@@ -63,6 +62,7 @@ import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -121,7 +121,8 @@ class GitCIBuildFinishListener @Autowired constructor(
             val record = gitRequestEventBuildDao.getEventByBuildId(dslContext, buildFinishEvent.buildId)
             if (record != null) {
                 val pipelineId = record["PIPELINE_ID"] as String
-                logger.info("listenPipelineBuildFinishBroadCastEvent , pipelineId : $pipelineId, buildFinishEvent: $buildFinishEvent")
+                logger.info("listenPipelineBuildFinishBroadCastEvent , " +
+                    "pipelineId : $pipelineId, buildFinishEvent: $buildFinishEvent")
 
                 val objectKind = record["OBJECT_KIND"] as String
                 val buildStatus = BuildStatus.valueOf(buildFinishEvent.status)
@@ -230,12 +231,21 @@ class GitCIBuildFinishListener @Autowired constructor(
                 }
 
                 // 构建结束发送通知
+                val build = buildInfo.first()
                 if (isV2) {
+                    // 获取需要进行替换的variables
+                    val variables =
+                        client.get(ServiceVarResource::class).getBuildVar(buildId = build.id, varName = null).data
                     val notices = YamlUtil.getObjectMapper().readValue(
                         event.normalizedYaml, ScriptBuildYaml::class.java
                     ).notices
                     notices?.forEach { notice ->
-                        if (!checkStatus(notice, buildStatus)) {
+                        // 替换 variables
+                        if (!checkStatus(build.id, replaceVar(notice.ifField, variables), buildStatus)) {
+                            return@forEach
+                        }
+                        val newType = replaceVar(notice.type, variables)
+                        if (newType.isBlank()) {
                             return@forEach
                         }
                         sendNotifyV2(
@@ -247,13 +257,13 @@ class GitCIBuildFinishListener @Autowired constructor(
                             conf = v2GitSetting!!,
                             event = event,
                             pipeline = pipeline,
-                            build = buildInfo.first(),
-                            receivers = notice.receivers ?: setOf(),
-                            ccs = notice.ccs?.toMutableSet() ?: mutableSetOf(),
-                            chatIds = notice.chatId ?: mutableSetOf(),
-                            title = notice.title,
-                            content = notice.content,
-                            notifyType = getNoticeType(notice.type)
+                            build = build,
+                            receivers = replaceVar(notice.receivers, variables),
+                            ccs = replaceVar(notice.ccs, variables).toMutableSet(),
+                            chatIds = replaceVar(notice.chatId, variables).toMutableSet(),
+                            title = replaceVar(notice.title, variables),
+                            content = replaceVar(notice.content, variables),
+                            notifyType = getNoticeType(build.id, newType)
                         )
                     }
                 } else {
@@ -266,7 +276,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                         conf = gitProjectConf!!,
                         event = event,
                         pipeline = pipeline,
-                        build = buildInfo.first()
+                        build = build
                     )
                 }
                 // 更新流水线执行状态
@@ -282,25 +292,26 @@ class GitCIBuildFinishListener @Autowired constructor(
     }
 
     // 校验V2通知状态
-    private fun checkStatus(notice: Notices, buildStatus: BuildStatus): Boolean {
+    private fun checkStatus(buildId: String, ifField: String?, buildStatus: BuildStatus): Boolean {
         // 未填写则所有状态都发送
-        if (notice.ifField == null) {
+        if (ifField.isNullOrBlank()) {
             return true
         }
         return when (notice.ifField) {
-            IfType.SUCCESS -> {
+            IfType.SUCCESS.name -> {
                 return buildStatus.isSuccess()
             }
-            IfType.FAILURE -> {
+            IfType.FAILURE.name -> {
                 return buildStatus.isFailure()
             }
-            IfType.CANCELLED -> {
+            IfType.CANCELLED.name -> {
                 return buildStatus.isCancel()
             }
-            IfType.ALWAYS -> {
+            IfType.ALWAYS.name -> {
                 return true
             }
             else -> {
+                logger.error("buidld: $buildId , ifField: $ifField is error!")
                 false
             }
         }
@@ -625,7 +636,6 @@ class GitCIBuildFinishListener @Autowired constructor(
         } else {
             commitId
         }
-        val buildNum = build.buildNum.toString()
         var realReceivers = replaceReceivers(receivers, build.buildParameters)
         // 接收人默认带触发人
         if (realReceivers.isEmpty()) {
@@ -648,52 +658,49 @@ class GitCIBuildFinishListener @Autowired constructor(
                 )
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
-            GitCINotifyType.RTX_CUSTOM -> {
+            GitCINotifyType.RTX_CUSTOM, GitCINotifyType.RTX_GROUP -> {
                 val accessToken =
                     RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
-                val newContent = (content ?: getRtxCustomContentV2(
-                    isSuccess = state == "success",
-                    projectName = projectName,
-                    branchName = branchName,
-                    pipelineName = pipelineName,
-                    pipelineId = pipeline.pipelineId,
-                    build = build,
-                    isMr = isMr,
-                    requestId = requestId,
-                    buildTime = build.totalTime,
-                    openUser = build.userId
-                ))
-                sendRtxCustomNotify(
-                    accessToken = accessToken,
-                    content = newContent,
-                    messageType = MessageType.MARKDOWN,
-                    receiverType = ReceiverType.SINGLE,
-                    receivers = realReceivers
-                )
-            }
-            GitCINotifyType.RTX_GROUP -> {
-                val realGroups = replaceReceivers(chatIds, build.buildParameters)
-                val accessToken =
-                    RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
-                val newContent = (content ?: getRtxCustomContentV2(
-                    isSuccess = state == "success",
-                    projectName = projectName,
-                    branchName = branchName,
-                    pipelineName = pipelineName,
-                    pipelineId = pipeline.pipelineId,
-                    build = build,
-                    isMr = isMr,
-                    requestId = requestId,
-                    buildTime = build.totalTime,
-                    openUser = build.userId
-                ))
-                sendRtxCustomNotify(
-                    accessToken = accessToken,
-                    content = newContent,
-                    messageType = MessageType.MARKDOWN,
-                    receiverType = ReceiverType.GROUP,
-                    receivers = realGroups
-                )
+                val newContent = if (content.isNullOrBlank()) {
+                    getRtxCustomContentV2(
+                        isSuccess = state == "success",
+                        projectName = projectName,
+                        branchName = branchName,
+                        pipelineName = pipelineName,
+                        pipelineId = pipeline.pipelineId,
+                        build = build,
+                        isMr = isMr,
+                        requestId = requestId,
+                        buildTime = build.totalTime,
+                        openUser = build.userId
+                    )
+                } else {
+                    getRtxCustomContentV2(
+                        isSuccess = state == "success",
+                        projectName = projectName,
+                        pipelineId = pipeline.pipelineId,
+                        build = build,
+                        content = content
+                    )
+                }
+                if (notifyType == GitCINotifyType.RTX_GROUP) {
+                    val realGroups = replaceReceivers(chatIds, build.buildParameters)
+                    sendRtxCustomNotify(
+                        accessToken = accessToken,
+                        content = newContent,
+                        messageType = MessageType.MARKDOWN,
+                        receiverType = ReceiverType.GROUP,
+                        receivers = realGroups
+                    )
+                } else {
+                    sendRtxCustomNotify(
+                        accessToken = accessToken,
+                        content = newContent,
+                        messageType = MessageType.MARKDOWN,
+                        receiverType = ReceiverType.SINGLE,
+                        receivers = realReceivers
+                    )
+                }
             }
             else -> {
                 return
@@ -754,6 +761,28 @@ class GitCIBuildFinishListener @Autowired constructor(
         )
     }
 
+    // 为用户的内容增加链接
+    private fun getRtxCustomContentV2(
+        isSuccess: Boolean,
+        projectName: String,
+        pipelineId: String,
+        build: BuildHistory,
+        content: String
+    ): String {
+        val state = if (isSuccess) {
+            Triple("✔", "info", "success")
+        } else {
+            Triple("❌", "warning", "failed")
+        }
+        val detailUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+            homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+            projectName = projectName,
+            pipelineId = pipelineId,
+            buildId = build.id
+        )
+        return " <font color=\"${state.second}\"> ${state.first} </font> $content \n [查看详情]($detailUrl)"
+    }
+
     private fun getRtxCustomContentV2(
         isSuccess: Boolean,
         projectName: String,
@@ -798,6 +827,29 @@ class GitCIBuildFinishListener @Autowired constructor(
             })"
     }
 
+    // 替换variables变量
+    private fun replaceVar(value: String?, variables: Map<String, String>?): String {
+        if (value.isNullOrBlank()) {
+            return ""
+        }
+        if (variables.isNullOrEmpty()) {
+            return value
+        }
+        return EnvUtils.parseEnv(value, variables)
+    }
+
+    private fun replaceVar(value: Set<String>?, variables: Map<String, String>?): Set<String> {
+        if (value.isNullOrEmpty()) {
+            return emptySet()
+        }
+        if (variables.isNullOrEmpty()) {
+            return value
+        }
+        return value.map {
+            EnvUtils.parseEnv(it, variables)
+        }.toSet()
+    }
+
     // 使用启动参数替换接收人
     private fun replaceReceivers(receivers: Set<String>?, startParams: List<BuildParameters>?): MutableSet<String> {
         if (receivers == null || receivers.isEmpty()) {
@@ -814,7 +866,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         }.toMutableSet()
     }
 
-    private fun getNoticeType(type: String): GitCINotifyType? {
+    private fun getNoticeType(buildId: String, type: String): GitCINotifyType? {
         return when (type) {
             "email" -> {
                 GitCINotifyType.EMAIL
@@ -826,6 +878,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 GitCINotifyType.RTX_GROUP
             }
             else -> {
+                logger.error("buidld: $buildId , type: $type is error!")
                 null
             }
         }
