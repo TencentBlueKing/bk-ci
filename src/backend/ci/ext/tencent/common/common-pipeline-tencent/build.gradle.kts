@@ -31,7 +31,7 @@ dependencies {
     api(project(":core:common:common-pipeline"))
     api(project(":ext:tencent:common:common-archive-tencent"))
     api(project(":core:plugin:codecc-plugin:common-codecc"))
-    api(group=  "org.apache.ant", name= "ant", version= "1.10.5")
-    api(group= "org.yaml", name= "snakeyaml", version= "1.27")
+    api(group = "org.apache.ant", name = "ant", version = "1.10.5")
+    api(group = "org.yaml", name = "snakeyaml", version = "1.27")
     api("com.github.fge:json-schema-validator")
 }
