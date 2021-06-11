@@ -342,7 +342,7 @@ class PipelineContextService@Autowired constructor(
     private fun getStepOutput(c: Container, e: Element, buildVar: Map<String, String>): Map<out String, String> {
         val outputMap = mutableMapOf<String, String>()
         buildVar.filterKeys { it.startsWith("steps.${e.id ?: ""}.outputs.") }.forEach { (t, u) ->
-            outputMap["jobs.${c.id}.$t"] = u
+            outputMap["jobs.${c.jobId ?: c.id ?: ""}.$t"] = u
         }
         return outputMap
     }

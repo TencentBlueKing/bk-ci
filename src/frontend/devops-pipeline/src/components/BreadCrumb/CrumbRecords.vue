@@ -1,11 +1,14 @@
 <template>
     <div class="record-list" v-if="records.length">
         <div class="search-area">
-            <input v-bk-focus="1" v-model.trim="searchValue" />
+            <input v-bk-focus="1" :disabled="searching" @input="handleInput" v-model.trim="searchValue" />
             <i class="devops-icon icon-search"></i>
         </div>
-        <ul>
-            <li v-for="item in filterRecords" :title="item[paramName]" :key="item[paramId]" :class="{ 'active': activeId === item[paramId] }" @click.stop="handleRecordClick(item)">
+        <div class="record-list-searching-icon" v-if="searching">
+            <i class="devops-icon icon-circle-2-1 spin-icon" />
+        </div>
+        <ul v-else>
+            <li v-for="item in records" :title="item[paramName]" :key="item[paramId]" :class="{ 'active': selectedValue === item[paramName] }" @click.stop="handleRecordClick(item)">
                 {{ item[paramName] }}
             </li>
         </ul>
@@ -23,7 +26,10 @@
             handleRecordClick: {
                 type: Function
             },
-            activeId: {
+            searching: {
+                type: Boolean
+            },
+            selectedValue: {
                 type: String,
                 default: ''
             },
@@ -41,13 +47,9 @@
                 searchValue: ''
             }
         },
-        computed: {
-            filterRecords () {
-                return this.records.filter(item => {
-                    const lcName = item[this.paramName].toLowerCase()
-                    const lcSearchValue = this.searchValue.toLowerCase()
-                    return lcName.indexOf(lcSearchValue) > -1
-                })
+        methods: {
+            handleInput (e) {
+                this.$emit('searchInput', this.searchValue, e)
             }
         }
     }
@@ -55,6 +57,7 @@
 
 <style lang="scss">
     @import '../../scss/mixins/ellipsis';
+    @import "../../scss/conf";
     
     .record-list {
         position: absolute;
@@ -92,6 +95,11 @@
                 line-height: 30px;
                 color: #ccc;
             }
+        }
+        .record-list-searching-icon {
+            display: flex;
+            margin: 20px 0;
+            justify-content: center;
         }
         ul {
             overflow: auto;

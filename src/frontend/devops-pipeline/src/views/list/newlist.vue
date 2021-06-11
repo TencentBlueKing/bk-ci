@@ -458,6 +458,8 @@
                         viewId: this.currentViewId
                     })
 
+                    $store.commit('pipelines/updateAllPipelineList', response.records)
+
                     const pipelineFeConfMap = response.records.reduce((pipelineFeConfMap, item, index) => {
                         pipelineFeConfMap[item.pipelineId] = {
                             name: item.pipelineName,

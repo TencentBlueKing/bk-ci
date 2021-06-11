@@ -172,7 +172,11 @@ class PipelineListFacadeService @Autowired constructor(
             val model = pipelineRepositoryService.getModel(pipelineId, version) ?: continue
             val pipelineBuildStatus = if (buildStatusOrd != null) {
                 val tmpStatus = BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
-                BuildStatusSwitcher.pipelineStatusMaker.finish(tmpStatus)
+                if (tmpStatus.isFinish()) {
+                    BuildStatusSwitcher.pipelineStatusMaker.finish(tmpStatus)
+                } else {
+                    tmpStatus
+                }
             } else {
                 null
             }
@@ -1105,7 +1109,11 @@ class PipelineListFacadeService @Autowired constructor(
             val buildStatusOrd = it["LATEST_STATUS"] as Int?
             val pipelineBuildStatus = if (buildStatusOrd != null) {
                 val tmpStatus = BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
-                BuildStatusSwitcher.pipelineStatusMaker.finish(tmpStatus)
+                if (tmpStatus.isFinish()) {
+                    BuildStatusSwitcher.pipelineStatusMaker.finish(tmpStatus)
+                } else {
+                    tmpStatus
+                }
             } else {
                 null
             }
