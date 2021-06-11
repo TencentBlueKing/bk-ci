@@ -10,11 +10,4 @@ internal class PageUtilTest {
         Assert.assertEquals(-1, sqlLimit.limit)
         Assert.assertEquals(0, sqlLimit.offset)
     }
-
-    @Test
-    fun test1() {
-        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(null, 10)
-        Assert.assertEquals(-1, sqlLimit.limit)
-        Assert.assertEquals(10, sqlLimit.offset)
-    }
 }
