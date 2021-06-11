@@ -53,8 +53,7 @@ object ScriptEnvUtils {
     }
 
     fun getContext(buildId: String, workspace: File): Map<String, String> {
-        return readScriptContext(workspace, "$buildId-$CONTEXT_FILE")
-            .plus(readScriptContext(workspace, getContextFile(buildId)))
+        return readScriptContext(workspace, getContextFile(buildId))
     }
 
     fun getEnvFile(buildId: String): String {
