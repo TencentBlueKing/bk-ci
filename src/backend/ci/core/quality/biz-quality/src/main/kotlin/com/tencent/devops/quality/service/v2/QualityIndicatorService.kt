@@ -588,6 +588,9 @@ class QualityIndicatorService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(QualityIndicatorService::class.java)
 
         val codeccToolNameMap = mapOf(
+            "STANDARD" to "代码规范",
+            "DEFECT" to "代码缺陷",
+            "SECURITY" to "安全漏洞",
             "COVERITY" to "Coverity",
             "KLOCWORK" to "Klocwork",
             "CPPLINT" to "CppLint",
@@ -606,6 +609,9 @@ class QualityIndicatorService @Autowired constructor(
             "WOODPECKER_SENSITIVE" to "啄木鸟敏感信息")
 
         private val codeccToolDescMap = mapOf(
+            "STANDARD" to "按维度(推荐)",
+            "DEFECT" to "按维度(推荐)",
+            "SECURITY" to "按维度(推荐)",
             "COVERITY" to "斯坦福大学科学家研究成果，静态源代码分析领域的领导者",
             "KLOCWORK" to "业界广泛使用的商用代码检查工具，与Coverity互补",
             "CPPLINT" to "谷歌开源的C++代码风格检查工具",
