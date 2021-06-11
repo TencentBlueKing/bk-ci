@@ -6,6 +6,7 @@
         :title="title || $t('newPipelineFromJSONLabel')"
         :mask-close="false"
         :show-footer="false"
+        @cancel="handleCancel"
     >
         {{$t('importPipelineLabel')}}
         <bk-upload
@@ -115,6 +116,9 @@
                 } catch (e) {
                     return false
                 }
+            },
+            handleCancel () {
+                this.$emit('update:isShow', false)
             }
         }
     }

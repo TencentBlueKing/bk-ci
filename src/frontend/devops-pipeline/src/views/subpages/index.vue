@@ -85,7 +85,7 @@
         </bk-dialog>
         <review-dialog :is-show="showReviewDialog"></review-dialog>
         <export-dialog :is-show.sync="showExportDialog"></export-dialog>
-        <import-pipeline-popup :handle-import-success="handleImportModifyPipeline" :is-show="showImportDialog"></import-pipeline-popup>
+        <import-pipeline-popup :handle-import-success="handleImportModifyPipeline" :is-show.sync="showImportDialog"></import-pipeline-popup>
         
     </div>
 </template>
