@@ -297,7 +297,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         if (ifField.isNullOrBlank()) {
             return true
         }
-        return when (notice.ifField) {
+        return when (ifField) {
             IfType.SUCCESS.name -> {
                 return buildStatus.isSuccess()
             }
