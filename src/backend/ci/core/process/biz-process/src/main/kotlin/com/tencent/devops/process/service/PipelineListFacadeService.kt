@@ -29,8 +29,11 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
@@ -42,6 +45,7 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.dao.PipelineFavorDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -53,7 +57,9 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
@@ -92,7 +98,8 @@ class PipelineListFacadeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val pipelineFavorDao: PipelineFavorDao
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -453,9 +460,11 @@ class PipelineListFacadeService @Autowired constructor(
         watcher.start("s_r_summary")
         try {
             val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
-            val (filterByPipelineNames: List<PipelineViewFilterByName>,
+            val (
+                filterByPipelineNames: List<PipelineViewFilterByName>,
                 filterByPipelineCreators: List<PipelineViewFilterByCreator>,
-                filterByPipelineLabels: List<PipelineViewFilterByLabel>) = generatePipelineFilterInfo(
+                filterByPipelineLabels: List<PipelineViewFilterByLabel>
+            ) = generatePipelineFilterInfo(
                 filterByName = filterByPipelineName,
                 filterByCreator = filterByCreator,
                 filterByLabels = filterByLabels
@@ -1292,7 +1301,7 @@ class PipelineListFacadeService @Autowired constructor(
 
     fun searchByPipelineName(
         projectId: String,
-        pipelineName: String,
+        pipelineName: String?,
         limit: Int?,
         offset: Int?
     ): PipelineViewPipelinePage<PipelineInfo> {
@@ -1303,7 +1312,7 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineInfoDao.searchByPipelineName(
                 dslContext = dslContext,
                 pipelineName = pipelineName,
-                projectId = projectId,
+                projectCode = projectId,
                 limit = limitNotNull,
                 offset = offsetNotNull
             )
@@ -1314,13 +1323,86 @@ class PipelineListFacadeService @Autowired constructor(
         val count = pipelineInfoDao.countPipelineInfoByProject(
             dslContext = dslContext,
             pipelineName = pipelineName,
-            projectId = projectId
+            projectCode = projectId
         )
         return PipelineViewPipelinePage(
             page = limitNotNull,
             pageSize = offsetNotNull,
             records = pipelineInfos,
             count = count.toLong()
+        )
+    }
+
+    fun searchIdAndName(
+        projectId: String,
+        pipelineName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): List<PipelineIdAndName> {
+        logger.info("searchIdAndName |$projectId|$pipelineName| $page| $pageSize")
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 10
+        val page = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val pipelineRecords =
+            pipelineInfoDao.searchByPipelineName(
+                dslContext = dslContext,
+                pipelineName = pipelineName,
+                projectCode = projectId,
+                limit = page.limit,
+                offset = page.offset
+            )
+        val pipelineInfos = mutableListOf<PipelineIdAndName>()
+        pipelineRecords?.map {
+            pipelineInfos.add(PipelineIdAndName(it.pipelineId, it.pipelineName))
+        }
+
+        return pipelineInfos
+    }
+
+    fun getPipelineDetail(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): PipelineDetailInfo? {
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW
+            )) {
+            throw PermissionForbiddenException("$userId 无流水线$pipelineId 查看权限")
+        }
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(
+            dslContext = dslContext,
+            pipelineId = pipelineId
+        ) ?: return null
+        if (pipelineInfo.projectId != projectId) {
+            throw ParamBlankException("$pipelineId 非 $projectId 流水线")
+        }
+        val instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null
+        val favorInfos = pipelineFavorDao.listByPipelineId(
+            dslContext = dslContext,
+            userId = userId,
+            pipelineId = pipelineId
+        )
+        val hasEditPermission = pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
+        val hasCollect = if (favorInfos != null) {
+            favorInfos.size > 0
+        } else false
+        return PipelineDetailInfo(
+            pipelineId = pipelineInfo.pipelineId,
+            pipelineName = pipelineInfo.pipelineName,
+            instanceFromTemplate = instanceFromTemplate,
+            hasCollect = hasCollect,
+            canManualStartup = pipelineInfo.manualStartup,
+            pipelineVersion = pipelineInfo.version.toString(),
+            deploymentTime = DateTimeUtil.toDateTime(pipelineInfo.updateTime),
+            hasPermission = hasEditPermission
         )
     }
 
