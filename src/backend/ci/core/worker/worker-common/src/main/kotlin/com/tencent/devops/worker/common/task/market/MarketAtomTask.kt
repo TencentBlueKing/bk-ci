@@ -45,6 +45,7 @@ import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
@@ -154,7 +155,11 @@ open class MarketAtomTask : ITask() {
                         command = JsonUtil.toJson(value),
                         data = systemVariables,
                         contextMap = contextMap(buildTask).plus(
-                            mapOf(WORKSPACE_CONTEXT to workspace.absolutePath))
+                            mapOf(
+                                WORKSPACE_CONTEXT to workspace.absolutePath,
+                                CI_TOKEN_CONTEXT to (buildVariables.variables[CI_TOKEN_CONTEXT] ?: "")
+                            )
+                        )
                     )
                 } else {
                     atomParams[name] = JsonUtil.toJson(value)
