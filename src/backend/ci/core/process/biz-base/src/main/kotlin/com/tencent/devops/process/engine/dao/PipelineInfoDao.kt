@@ -230,24 +230,41 @@ class PipelineInfoDao {
         }
     }
 
-    fun searchByPipelineName(dslContext: DSLContext, pipelineName: String, projectId: String, limit: Int, offset: Int): Result<TPipelineInfoRecord>? {
+    fun searchByPipelineName(
+        dslContext: DSLContext,
+        pipelineName: String?,
+        projectCode: String,
+        limit: Int,
+        offset: Int,
+        channelCode: ChannelCode? = ChannelCode.BS
+    ): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectCode))
+            conditions.add(DELETE.eq(false))
+            if (!pipelineName.isNullOrEmpty()) {
+                conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
+            }
+            conditions.add(CHANNEL.eq(channelCode!!.name))
             dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_NAME.like("%$pipelineName%"))
-                    .and(DELETE.eq(false)).orderBy(CREATE_TIME.desc())
-                    .limit(limit).offset(offset)
-                    .fetch()
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 
-    fun countPipelineInfoByProject(dslContext: DSLContext, pipelineName: String, projectId: String): Int {
+    fun countPipelineInfoByProject(dslContext: DSLContext, pipelineName: String?, projectCode: String): Int {
         return with(T_PIPELINE_INFO) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectCode))
+            conditions.add(DELETE.eq(false))
+            if (!pipelineName.isNullOrEmpty()) {
+                conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
+            }
             dslContext.selectCount().from(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_NAME.like("%$pipelineName%"))
-                    .and(DELETE.eq(false))
-                    .fetchOne(0, Int::class.java)!!
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
