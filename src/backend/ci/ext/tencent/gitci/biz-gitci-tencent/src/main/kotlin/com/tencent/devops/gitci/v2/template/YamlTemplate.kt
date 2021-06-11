@@ -40,7 +40,6 @@ import com.tencent.devops.gitci.v2.template.pojo.ParametersTemplateNull
 import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
 import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.gitci.v2.template.pojo.NoReplaceTemplate
 import org.slf4j.LoggerFactory
 
@@ -71,7 +70,18 @@ class YamlTemplate(
     // 每个文件使用的模板个数（不能超过10）
     val templateNumb: MutableMap<String, Int> = mutableMapOf(),
     // 嵌套的总模板深度（不能超过5）
-    var templateDeep: Int = 0
+    var templateDeep: Int = 0,
+
+    // 获取模板文件函数，将模板替换过程与获取文件解耦，方便测试或链接其他代码库
+    val getTemplateMethod: (
+        token: String?,
+        gitProjectId: Long,
+        targetRepo: String?,
+        ref: String,
+        personalAccessToken: String?,
+        fileName: String
+    ) -> String
+
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(YamlTemplate::class.java)
@@ -112,6 +122,7 @@ class YamlTemplate(
         const val EXTENDS_TEMPLATE_EXTENDS_ERROR = "[%s]The extends keyword cannot be nested"
         const val EXTENDS_TEMPLATE_ON_ERROR = "[%s]Triggers are not supported in the template"
         const val VALUE_NOT_IN_ENUM = "[%s][%s=%s]Parameter error, the expected value is [%s]"
+        const val FINALLY_FORMAT_ERROR = "final stage not support stage's template"
     }
 
     // 存储当前库的模板信息，减少重复获取 key: templatePath value： template
@@ -154,8 +165,7 @@ class YamlTemplate(
                 label = label,
                 triggerOn = triggerOn,
                 resources = resources,
-                notices = notices,
-                finally = finally
+                notices = notices
             )
         }
 
@@ -173,6 +183,9 @@ class YamlTemplate(
         }
         if (newYamlObject.steps != null) {
             replaceSteps(newYamlObject.steps!!, preYamlObject)
+        }
+        if (newYamlObject.finally != null) {
+            replaceFinally(newYamlObject.finally!!, preYamlObject)
         }
 
         return preYamlObject
@@ -215,12 +228,21 @@ class YamlTemplate(
                 preYamlObject
             )
         }
+        if (templateObject[TemplateType.FINALLY.content] != null) {
+            replaceFinally(
+                transValue(filePath, TemplateType.FINALLY.text, templateObject[TemplateType.FINALLY.content]),
+                preYamlObject
+            )
+        }
         // 将不用替换的直接传入
         val newYaml = YamlObjects.getObjectFromYaml<NoReplaceTemplate>(toPath, YamlUtil.toYaml(templateObject))
         preYamlObject.label = newYaml.label
         preYamlObject.resources = newYaml.resources
         preYamlObject.notices = newYaml.notices
-        preYamlObject.finally = newYaml.finally
+        // 用户没写就用模板的名字
+        if (preYamlObject.name.isNullOrBlank()) {
+            preYamlObject.name = newYaml.name
+        }
     }
 
     private fun replaceVariables(
@@ -232,20 +254,10 @@ class YamlTemplate(
             val newVariable = replaceVariableTemplate(mapOf(key to value), filePath)
             if (key == TEMPLATE_KEY) {
                 // 通过取交集判断除template关键字之外的ID是否重复
-                val interSet = newVariable.keys intersect variables.keys
-                if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == TEMPLATE_KEY)) {
-                    variableMap.putAll(newVariable)
-                } else {
-                    error(
-                        TEMPLATE_ROOT_ID_DUPLICATE.format(
-                            filePath,
-                            interSet.filter { it != TEMPLATE_KEY }
-                        )
-                    )
-                }
-            } else {
-                variableMap.putAll(newVariable)
+                checkDuplicateKey(filePath = filePath, keys = variables.keys, newKeys = newVariable.keys)
             }
+            variableMap.putAll(newVariable)
+
             // 每个参数独立计算模板深度
             refreshTemplateDeep()
         }
@@ -274,20 +286,9 @@ class YamlTemplate(
             // 检查根文件处job_id重复
             val newJob = replaceJobTemplate(mapOf(key to value), filePath)
             if (key == TEMPLATE_KEY) {
-                val interSet = newJob.keys intersect jobs.keys
-                if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == TEMPLATE_KEY)) {
-                    jobMap.putAll(newJob)
-                } else {
-                    error(
-                        TEMPLATE_ROOT_ID_DUPLICATE.format(
-                            filePath,
-                            interSet.filter { it != TEMPLATE_KEY }
-                        )
-                    )
-                }
-            } else {
-                jobMap.putAll(newJob)
+                checkDuplicateKey(filePath = filePath, keys = jobs.keys, newKeys = newJob.keys)
             }
+            jobMap.putAll(newJob)
             // 每个参数独立计算模板深度
             refreshTemplateDeep()
         }
@@ -305,6 +306,56 @@ class YamlTemplate(
             refreshTemplateDeep()
         }
         preYamlObject.steps = stepList
+    }
+
+    private fun replaceFinally(
+        finally: Map<String, Any>,
+        preYamlObject: PreScriptBuildYaml
+    ) {
+        // finally: 与jobs: 的结构相同
+        val finallyMap = mutableMapOf<String, PreJob>()
+        finally.forEach { (key, value) ->
+            // 检查根文件处job_id重复
+            val newFinally = replaceJobTemplate(mapOf(key to value), filePath)
+            if (key == TEMPLATE_KEY) {
+                checkDuplicateKey(filePath = filePath, keys = finally.keys, newKeys = newFinally.keys)
+            }
+            finallyMap.putAll(newFinally)
+            // 每个参数独立计算模板深度
+            refreshTemplateDeep()
+        }
+        preYamlObject.finally = finallyMap
+    }
+
+    // 检查是否具有重复的ID，job，variable中使用
+    private fun checkDuplicateKey(
+        filePath: String,
+        keys: Set<String>,
+        newKeys: Set<String>,
+        toPath: String? = null
+    ): Boolean {
+        val interSet = newKeys intersect keys
+        if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == TEMPLATE_KEY)) {
+            return true
+        } else {
+            if (toPath == null) {
+                error(
+                    TEMPLATE_ROOT_ID_DUPLICATE.format(
+                        filePath,
+                        interSet.filter { it != TEMPLATE_KEY }
+                    )
+                )
+            } else {
+                error(
+                    TEMPLATE_ID_DUPLICATE.format(
+                        interSet.filter { it != TEMPLATE_KEY },
+                        filePath,
+                        toPath
+                    )
+                )
+            }
+            return false
+        }
     }
 
     // 进行模板替换
@@ -345,23 +396,18 @@ class YamlTemplate(
                         fromPath = toPath
                     )
                     // 检测variable是否存在重复的key
-                    val interSet = newVar.keys intersect variableMap.keys
-                    if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == TEMPLATE_KEY)) {
-                        variableMap.putAll(newVar)
-                    } else {
-                        error(
-                            TEMPLATE_ID_DUPLICATE.format(
-                                interSet.filter { it != TEMPLATE_KEY },
-                                filePath,
-                                toPath
-                            )
-                        )
-                    }
+                    checkDuplicateKey(
+                        filePath = filePath,
+                        keys = variableMap.keys,
+                        newKeys = newVar.keys,
+                        toPath = toPath
+                    )
+                    variableMap.putAll(newVar)
                 }
             } else {
                 // 不是模板文件则直接实例化
-                if (value is String) {
-                    variableMap[key] = Variable(value, false)
+                if (value !is Map<*, *>) {
+                    variableMap[key] = Variable(value.toString(), false)
                 } else {
                     variableMap[key] = YamlObjects.getVariable(transValue(fromPath, TemplateType.VARIABLE.text, value))
                 }
@@ -448,18 +494,13 @@ class YamlTemplate(
                         fromPath = toPath
                     )
                     // 检测job是否存在重复的key
-                    val interSet = newJob.keys intersect jobMap.keys
-                    if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == TEMPLATE_KEY)) {
-                        jobMap.putAll(newJob)
-                    } else {
-                        error(
-                            TEMPLATE_ID_DUPLICATE.format(
-                                interSet.filter { it != TEMPLATE_KEY },
-                                filePath,
-                                toPath
-                            )
-                        )
-                    }
+                    checkDuplicateKey(
+                        filePath = filePath,
+                        keys = jobMap.keys,
+                        newKeys = newJob.keys,
+                        toPath = toPath
+                    )
+                    jobMap.putAll(newJob)
                 }
             } else {
                 jobMap[key] = getJob(fromPath, transValue(fromPath, TemplateType.JOB.text, value))
@@ -583,7 +624,8 @@ class YamlTemplate(
             repo = toRepo,
             repoTemplateGraph = repoTemplateGraph,
             templateDeep = templateDeep,
-            resTemplateType = templateType
+            resTemplateType = templateType,
+            getTemplateMethod = getTemplateMethod
         ).replace(parameters = parameters)
         // 替换后的远程模板去除不必要参数
         resYamlObject.resources = null
@@ -727,20 +769,9 @@ class YamlTemplate(
                     // 检查根文件处jobId重复
                     val newJob = replaceJobTemplate(mapOf(key to value), filePath)
                     if (key == TEMPLATE_KEY) {
-                        val interSet = newJob.keys intersect jobs.keys
-                        if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == TEMPLATE_KEY)) {
-                            map.putAll(newJob)
-                        } else {
-                            error(
-                                TEMPLATE_ROOT_ID_DUPLICATE.format(
-                                    filePath,
-                                    interSet.filter { it != TEMPLATE_KEY }
-                                )
-                            )
-                        }
-                    } else {
-                        map.putAll(newJob)
+                        checkDuplicateKey(filePath = filePath, keys = jobs.keys, newKeys = newJob.keys)
                     }
+                    map.putAll(newJob)
                 }
                 map
             }
@@ -752,46 +783,28 @@ class YamlTemplate(
         if (!templates.keys.contains(path)) {
 //             没有库信息说明是触发库
             val template = if (repo == null) {
-                SpringContextUtil.getBean(YamlTemplateService::class.java).getTemplate(
-                    gitProjectId = triggerProjectId,
-                    token = triggerToken,
-                    ref = triggerRef,
-                    fileName = path
+                getTemplateMethod(
+                    triggerToken,
+                    triggerProjectId,
+                    null,
+                    triggerRef,
+                    null,
+                    path
                 )
             } else {
-                SpringContextUtil.getBean(YamlTemplateService::class.java).getResTemplate(
-                    gitProjectId = sourceProjectId,
-                    repo = repo.repository,
-                    ref = repo.ref ?: triggerRef,
-                    personalAccessToken = repo.credentials?.personalAccessToken,
-                    fileName = path
+                getTemplateMethod(
+                    null,
+                    sourceProjectId,
+                    repo.repository,
+                    repo.ref ?: triggerRef,
+                    repo.credentials?.personalAccessToken,
+                    path
                 )
             }
-//            val template = getTestTemplate(path, repo)
             setTemplate(path, template)
         }
         return templates[path]!!
     }
-
-//    private fun getTestTemplate(path: String, repo: Repositories?): String {
-//        val newPath = if (repo == null) {
-//            "templates/$path"
-//        } else {
-//            "templates/${repo.name}/templates/$path"
-//        }
-//        val classPathResource = ClassPathResource(newPath)
-//        val inputStream: InputStream = classPathResource.inputStream
-//        val isReader = InputStreamReader(inputStream)
-//
-//        val reader = BufferedReader(isReader)
-//        val sb = StringBuffer()
-//        var str: String?
-//        while (reader.readLine().also { str = it } != null) {
-//            sb.append(str).append("\n")
-//        }
-//        inputStream.close()
-//        return sb.toString()
-//    }
 
     private fun addAndCheckTemplateNumb(file: String) {
         if (templateNumb.containsKey(file)) {

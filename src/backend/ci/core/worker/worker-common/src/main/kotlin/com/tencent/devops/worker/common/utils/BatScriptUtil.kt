@@ -70,7 +70,8 @@ object BatScriptUtil {
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
-        print2Logger: Boolean = true
+        print2Logger: Boolean = true,
+        elementId: String? = null
     ): String {
         try {
             val file = getCommandFile(
@@ -86,7 +87,8 @@ object BatScriptUtil {
                 print2Logger = print2Logger,
                 prefix = prefix,
                 executeErrorMessage = "",
-                buildId = buildId
+                buildId = buildId,
+                elementId = elementId
             )
         } catch (ignore: Throwable) {
             val errorInfo = errorMessage ?: "Fail to execute bat script $script"

@@ -36,9 +36,6 @@ import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.Variable
-import com.tencent.devops.gitci.v2.template.YamlTemplate.Companion.ATTR_MISSING_ERROR
-import com.tencent.devops.gitci.v2.template.YamlTemplate.Companion.TEMPLATE_KEYWORDS_ERROR
-import com.tencent.devops.gitci.v2.template.YamlTemplate.Companion.YAML_FORMAT_ERROR
 import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
 
 object YamlObjects {
