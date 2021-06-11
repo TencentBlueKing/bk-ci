@@ -160,7 +160,6 @@
                 'togglePropertyPanel',
                 'setPipeline',
                 'setPipelineEditing',
-                'setAuthEditing',
                 'setSaveStatus'
             ]),
             ...mapActions('pipelines', [
