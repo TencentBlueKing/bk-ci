@@ -84,7 +84,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
             groupInfo.description
         }
         // 添加项目下用户组
-        val managerRoleGroup = ManagerRoleGroup(groupName, groupDescription, groupInfo.type)
+        val managerRoleGroup = ManagerRoleGroup(groupName, groupDescription, groupInfo.defaultGroup)
         val roleGroups = mutableListOf<ManagerRoleGroup>()
         roleGroups.add(managerRoleGroup)
         val groups = ManagerRoleGroupDTO.builder().groups(roleGroups).build()
@@ -113,7 +113,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val newGroupInfo = ManagerRoleGroup(
             roleName,
             groupInfo.description,
-            groupInfo.type
+            groupInfo.defaultGroup
         )
         iamManagerService.updateRoleGroup(roleId, newGroupInfo)
     }
