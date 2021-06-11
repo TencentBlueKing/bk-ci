@@ -17,7 +17,7 @@
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local build_type = ngx.var.http_x_devops_build_type
 local cjson = require("cjson")
-
+ngx.header["X-DEVOPS-ERROR-RETURN"] = '{"status": 500,"data": "buildEnd","result":true,"message": "构建已结束。","errorCode":2101182}'
 if build_type == "AGENT" then
     --- 第三方构建机
     -- if build_type == "AGENT" then 
