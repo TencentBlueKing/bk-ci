@@ -45,7 +45,6 @@ object ScriptEnvUtils {
 
     fun cleanContext(buildId: String, workspace: File) {
         cleanScriptEnv(workspace, getContextFile(buildId))
-        cleanScriptEnv(workspace, getDefaultContextFile(buildId))
     }
 
     fun getEnv(buildId: String, workspace: File): Map<String, String> {
@@ -72,18 +71,12 @@ object ScriptEnvUtils {
         return "$buildId-$ENV_FILE"
     }
 
-    private fun getDefaultContextFile(buildId: String): String {
-        return "$buildId-$ENV_FILE"
-    }
-
     fun cleanWhenEnd(buildId: String, workspace: File) {
         val defaultEnvFilePath = getDefaultEnvFile(buildId)
         val randomEnvFilePath = getEnvFile(buildId)
-        val defaultContextFilePath = getDefaultContextFile(buildId)
         val randomContextFilePath = getContextFile(buildId)
         deleteFile(defaultEnvFilePath, workspace)
         deleteFile(randomEnvFilePath, workspace)
-        deleteFile(defaultContextFilePath, workspace)
         deleteFile(randomContextFilePath, workspace)
         ExecutorUtil.removeThreadLocal()
     }
