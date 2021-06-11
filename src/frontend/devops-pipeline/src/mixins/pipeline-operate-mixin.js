@@ -538,11 +538,13 @@ export default {
                 
                 if (!this.isTemplatePipeline && this.pipeline.latestVersion && !isNaN(this.pipeline.latestVersion)) {
                     ++this.pipeline.latestVersion
+                    this.updateCurPipelineByKeyValue('pipelineVersion', this.pipeline.latestVersion)
                 }
                 
                 if (this.pipelineSetting && this.pipelineSetting.pipelineName !== this.curPipeline.pipelineName) {
                     this.updateCurPipelineByKeyValue('pipelineName', this.pipelineSetting.pipelineName)
                 }
+                
                 return {
                     code: 0,
                     data: responses
