@@ -226,7 +226,6 @@ object ScriptYmlUtils {
         checkVariable(preScriptBuildYaml)
         checkStage(preScriptBuildYaml)
         checkExtend(yaml)
-        checkNotice(preScriptBuildYaml.notices)
     }
 
     private fun checkVariable(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
@@ -259,20 +258,6 @@ object ScriptYmlUtils {
         yamlMap.forEach { (t, _) ->
             if (t != formatTrigger && t != "extends" && t != "version" && t != "resources" && t != "name") {
                 throw CustomException(Response.Status.BAD_REQUEST, "使用 extends 时顶级关键字只能有触发器 on 与 resources")
-            }
-        }
-    }
-
-    private fun checkNotice(notices: List<Notices>?) {
-        val types = setOf("email", "wework-message", "wework-chat")
-        if (notices == null) {
-            return
-        }
-        notices.forEach {
-            if (it.type !in types) {
-                throw CustomException(
-                    Response.Status.BAD_REQUEST, "通知类型只能为 email, wework-message, wework-chat 中的一种"
-                )
             }
         }
     }
