@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,7 +43,12 @@ class DefaultDeptServiceImpl @Autowired constructor(
         return null
     }
 
-    override fun getUserAndDeptByName(name: String, accessToken: String?, userId: String): List<UserAndDeptInfoVo?> {
+    override fun getUserAndDeptByName(
+        name: String,
+        accessToken: String?,
+        userId: String,
+        type: ManagerScopesEnum
+    ): List<UserAndDeptInfoVo?> {
         return emptyList()
     }
 

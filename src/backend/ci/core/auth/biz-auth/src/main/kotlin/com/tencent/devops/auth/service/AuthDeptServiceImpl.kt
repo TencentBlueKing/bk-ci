@@ -104,7 +104,12 @@ class AuthDeptServiceImpl @Autowired constructor(
         return getDeptInfo(search)
     }
 
-    override fun getUserAndDeptByName(name: String, accessToken: String?, userId: String): List<UserAndDeptInfoVo?> {
+    override fun getUserAndDeptByName(
+        name: String,
+        accessToken: String?,
+        userId: String,
+        type: ManagerScopesEnum
+    ): List<UserAndDeptInfoVo?> {
         if (name.length < 2) {
             throw ParamBlankException(KEYWORD_TOO_SHORT)
         }
@@ -114,8 +119,8 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_username = userId,
             fields = DEPT_LABEL,
             lookupField = NAME,
-            exactLookups = name,
-            fuzzyLookups = null,
+            exactLookups = null,
+            fuzzyLookups = name,
             accessToken = accessToken
         )
         val userSearch = SearchUserAndDeptEntity(
@@ -124,31 +129,60 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_username = userId,
             fields = USER_LABLE,
             lookupField = NAME,
-            exactLookups = name,
-            fuzzyLookups = null,
+            exactLookups = null,
+            fuzzyLookups = name,
             accessToken = accessToken
         )
-        val deptInfos = getDeptInfo(deptSearch)
-        val userInfos = getUserInfo(userSearch)
         val userAndDeptInfos = mutableListOf<UserAndDeptInfoVo>()
-        deptInfos.result.forEach {
-            userAndDeptInfos.add(
-                UserAndDeptInfoVo(
-                    id = it.id.toString(),
-                    name = it.name,
-                    type = ManagerScopesEnum.DEPARTMENT
-                )
-            )
+        when (type) {
+            ManagerScopesEnum.USER -> {
+                val userInfos = getUserInfo(userSearch)
+                userInfos.result.forEach {
+                    userAndDeptInfos.add(
+                        UserAndDeptInfoVo(
+                            id = it.id.toString(),
+                            name = it.username,
+                            type = ManagerScopesEnum.DEPARTMENT
+                        )
+                    )
+                }
+            }
+            ManagerScopesEnum.DEPARTMENT -> {
+                val depteInfos = getDeptInfo(deptSearch)
+                depteInfos.result.forEach {
+                    userAndDeptInfos.add(
+                        UserAndDeptInfoVo(
+                            id = it.id.toString(),
+                            name = it.name,
+                            type = ManagerScopesEnum.DEPARTMENT
+                        )
+                    )
+                }
+            }
+            ManagerScopesEnum.ALL -> {
+                val userInfos = getUserInfo(userSearch)
+                userInfos.result.forEach {
+                    userAndDeptInfos.add(
+                        UserAndDeptInfoVo(
+                            id = it.id.toString(),
+                            name = it.username,
+                            type = ManagerScopesEnum.DEPARTMENT
+                        )
+                    )
+                }
+                val depteInfos = getDeptInfo(deptSearch)
+                depteInfos.result.forEach {
+                    userAndDeptInfos.add(
+                        UserAndDeptInfoVo(
+                            id = it.id.toString(),
+                            name = it.name,
+                            type = ManagerScopesEnum.DEPARTMENT
+                        )
+                    )
+                }
+            }
         }
-        userInfos.result.forEach {
-            userAndDeptInfos.add(
-                UserAndDeptInfoVo(
-                    id = it.id,
-                    name = it.username,
-                    type = ManagerScopesEnum.USER
-                )
-            )
-        }
+
         return userAndDeptInfos
     }
 

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 
@@ -35,7 +36,12 @@ interface DeptService {
 
     fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo?
 
-    fun getUserAndDeptByName(name: String, accessToken: String?, userId: String): List<UserAndDeptInfoVo?>
+    fun getUserAndDeptByName(
+        name: String,
+        accessToken: String?,
+        userId: String,
+        type: ManagerScopesEnum
+    ): List<UserAndDeptInfoVo?>
 
     fun getDeptUser(deptId: Int, accessToken: String?): List<String>?
 }
