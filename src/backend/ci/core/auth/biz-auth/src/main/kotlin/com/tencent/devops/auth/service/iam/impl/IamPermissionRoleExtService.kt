@@ -193,7 +193,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val ruleAuthorizationScopes = buildOtherAuthorizationScopes(ruleAction, projectCode, "rule")
         iamManagerService.createRolePermission(roleId, ruleAuthorizationScopes)
         val groupAction = GROUPACTION.split(",")
-        val groupAuthorizationScopes = buildOtherAuthorizationScopes(groupAction, projectCode, "group")
+        val groupAuthorizationScopes = buildOtherAuthorizationScopes(groupAction, projectCode, "quality_group")
         iamManagerService.createRolePermission(roleId, groupAuthorizationScopes)
     }
 
@@ -300,15 +300,16 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val logger = LoggerFactory.getLogger(AbsPermissionRoleMemberImpl::class.java)
         const val PROJECT = "project_view"
         const val PIPELINEACTION = "pipeline_create"
-        const val REPORTACTION = "list_repo"
+        // TODO:确认代码库的默认权限
+        const val REPORTACTION = "pipeline_view"
         const val CREDENTIALACTION = "credential_create"
         const val CERTACTION = "cert_create"
         const val REPERTORYACTION = "repertory_create"
         const val ENVIRONMENTACTION = "environment_create"
         const val NODEACTION = "env_node_create"
         const val RULECREATEACTION = "rule_create"
-        const val GROUPCREATEACTION = "group_create"
+        const val GROUPCREATEACTION = "quality_group_create"
         const val RULEACTION = "rule_delete,rule_update,rule_use"
-        const val GROUPACTION = "group_delete,group_update,group_use"
+        const val GROUPACTION = "quality_group_delete,quality_group_update,quality_group_use"
     }
 }
