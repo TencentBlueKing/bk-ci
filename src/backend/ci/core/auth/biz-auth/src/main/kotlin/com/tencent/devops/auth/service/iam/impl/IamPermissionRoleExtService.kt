@@ -92,15 +92,22 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
         // 默认分组需要分配默认权限
         if (groupInfo.defaultGroup!!) {
-            when (groupInfo.type) {
-                BkAuthGroup.DEVELOPER.value -> addDevelopPermission(iamRoleId, projectCode)
-                BkAuthGroup.MAINTAINER.value -> addMaintainerPermission(iamRoleId, projectCode)
-                BkAuthGroup.TESTER.value -> addTestPermission(iamRoleId, projectCode)
-                BkAuthGroup.QC.value -> addQCPermission(iamRoleId, projectCode)
-                BkAuthGroup.PM.value -> addPMPermission(iamRoleId, projectCode)
+            try {
+                when (groupInfo.type) {
+                    BkAuthGroup.DEVELOPER.value -> addDevelopPermission(iamRoleId, projectCode)
+                    BkAuthGroup.MAINTAINER.value -> addMaintainerPermission(iamRoleId, projectCode)
+                    BkAuthGroup.TESTER.value -> addTestPermission(iamRoleId, projectCode)
+                    BkAuthGroup.QC.value -> addQCPermission(iamRoleId, projectCode)
+                    BkAuthGroup.PM.value -> addPMPermission(iamRoleId, projectCode)
+                }
+            }
+            catch (e: Exception) {
+                iamManagerService.deleteRoleGroup(iamRoleId)
+                logger.warn("create iam group permission fail $projectCode | $iamRoleId | $groupInfo")
+                throw e
             }
         }
-
+        logger.info("create ext group success $projectCode $roleId $iamRoleId. start binding")
         // 绑定iamRoleId到本地group表内
         groupService.bindRelationId(roleId, iamRoleId.toString())
     }
@@ -147,7 +154,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     private fun addDevelopPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
-        actions.add(PROJECT)
+//        actions.add(PROJECT)
         actions.add(PIPELINEACTION)
         actions.add(CREDENTIALACTION)
         actions.add(CERTACTION)
@@ -161,7 +168,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     private fun addTestPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
-        actions.add(PROJECT)
+//        actions.add(PROJECT)
         actions.add(PIPELINEACTION)
         actions.add(CREDENTIALACTION)
         actions.add(REPERTORYACTION)
@@ -173,7 +180,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     private fun addPMPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
-        actions.add(PROJECT)
+//        actions.add(PROJECT)
         actions.add(CREDENTIALACTION)
         actions.add(REPERTORYACTION)
         val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
@@ -182,7 +189,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     private fun addQCPermission(roleId: Int, projectCode: String) {
         val createActions = mutableListOf<String>()
-        createActions.add(PROJECT)
+//        createActions.add(PROJECT)
         createActions.add(CREDENTIALACTION)
         createActions.add(REPERTORYACTION)
         createActions.add(RULECREATEACTION)
@@ -199,7 +206,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     private fun addMaintainerPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
-        actions.add(PROJECT)
+//        actions.add(PROJECT)
         actions.add(PIPELINEACTION)
         actions.add(CREDENTIALACTION)
         actions.add(REPERTORYACTION)
