@@ -46,13 +46,13 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_DEPT"], description = "组织架构")
-@Path("/user/dept/")
+@Path("/user/dept")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserDeptResource {
 
     @GET
-    @Path("levels/{level}")
+    @Path("/levels/{level}")
     @ApiOperation("按组织级别获取组织列表")
     fun getDeptByLevel(
         @ApiParam(name = "用户名", required = true)
@@ -67,7 +67,7 @@ interface UserDeptResource {
     ): Result<DeptInfoVo?>
 
     @GET
-    @Path("parents/{parentId}")
+    @Path("/parents/{parentId}")
     @ApiOperation("按组织级别获取组织列表")
     fun getDeptByParent(
         @ApiParam(name = "用户名", required = true)
@@ -85,7 +85,7 @@ interface UserDeptResource {
     ): Result<DeptInfoVo?>
 
     @GET
-    @Path("names/{name}")
+    @Path("/names/{name}")
     @ApiOperation("按组织级别获取组织列表")
     fun getUserAndDeptByName(
         @ApiParam(name = "用户名", required = true)
