@@ -36,6 +36,8 @@ import com.tencent.devops.auth.common.Constants.DEPT_LABEL
 import com.tencent.devops.auth.common.Constants.LEVEL
 import com.tencent.devops.auth.common.Constants.PARENT
 import com.tencent.devops.auth.common.Constants.HTTP_RESULT
+import com.tencent.devops.auth.common.Constants.NAME
+import com.tencent.devops.auth.common.Constants.USERNAME
 import com.tencent.devops.auth.common.Constants.USER_LABLE
 import com.tencent.devops.auth.constant.AuthMessageCode.KEYWORD_TOO_SHORT
 import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
@@ -43,7 +45,6 @@ import com.tencent.devops.auth.entity.SearchDeptUserEntity
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -128,7 +129,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_app_secret = appSecret!!,
             bk_username = userId,
             fields = USER_LABLE,
-            lookupField = NAME,
+            lookupField = USERNAME,
             exactLookups = null,
             fuzzyLookups = name,
             accessToken = accessToken
@@ -187,7 +188,7 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getDeptUser(deptId: Int, accessToken: String?): List<String> {
-        return if (deptUserCache.getIfPresent(deptId.toString()) == null) {
+        return if (deptUserCache.getIfPresent(deptId.toString()) != null) {
             deptUserCache.getIfPresent(deptId.toString())!!
         } else {
             val deptUsers = getAndRefreshDeptUser(deptId, accessToken)
