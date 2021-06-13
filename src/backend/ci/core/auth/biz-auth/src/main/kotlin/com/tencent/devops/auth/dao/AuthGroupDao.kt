@@ -63,7 +63,7 @@ class AuthGroupDao {
                 LocalDateTime.now(),
                 null,
                 null
-            ).execute()
+            ).returning(ID).fetchOne()!!.id
         }
     }
 

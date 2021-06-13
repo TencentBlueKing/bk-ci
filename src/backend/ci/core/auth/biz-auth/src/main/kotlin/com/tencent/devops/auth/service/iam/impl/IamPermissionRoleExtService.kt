@@ -107,7 +107,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
                 throw e
             }
         }
-
+        logger.info("create ext group success $projectCode $roleId $iamRoleId. start binding")
         // 绑定iamRoleId到本地group表内
         groupService.bindRelationId(roleId, iamRoleId.toString())
     }
