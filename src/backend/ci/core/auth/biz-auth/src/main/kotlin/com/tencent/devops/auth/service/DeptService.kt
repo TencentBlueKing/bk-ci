@@ -28,11 +28,14 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 
 interface DeptService {
     fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo?
 
     fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo?
+
+    fun getUserAndDeptByName(name: String, accessToken: String?, userId: String): List<UserAndDeptInfoVo?>
 
     fun getDeptUser(deptId: Int, accessToken: String?): List<String>?
 }

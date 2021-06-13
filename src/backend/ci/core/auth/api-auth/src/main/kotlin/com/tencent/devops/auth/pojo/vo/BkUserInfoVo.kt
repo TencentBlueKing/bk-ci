@@ -25,34 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.entity
+package com.tencent.devops.auth.pojo.vo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.auth.pojo.BkUserInfo
 
-@ApiModel
-data class SearchDeptEntity(
-    @ApiModelProperty("查找字段, 默认值为 'id'")
-    @JsonProperty("lookup_field")
-    val lookupField: String,
-    @ApiModelProperty("返回值字段")
-    val fields: String,
-    @ApiModelProperty("精确查找内容列表")
-    @JsonProperty("exact_lookups")
-    val exactLookups: Any? = null,
-    @ApiModelProperty("模糊查找内容列表")
-    @JsonProperty("fuzzy_lookups")
-    val fuzzyLookups: Any? = null,
-    @ApiModelProperty("用户登录态信息")
-    @JsonProperty("access_token")
-    val accessToken: String? = null,
-    @ApiModelProperty("分页大小")
-    @JsonProperty("page_size")
-    val pageSize: Int? = 200,
-    override var bk_app_code: String,
-    override var bk_app_secret: String,
-    override var bk_username: String,
-    override val bk_token: String = ""
-) : EsbBaseReq(bk_app_code, bk_app_secret, bk_username, bk_token)
+data class BkUserInfoVo (
+    val count : Int,
+    val result: List<BkUserInfo>
+)
