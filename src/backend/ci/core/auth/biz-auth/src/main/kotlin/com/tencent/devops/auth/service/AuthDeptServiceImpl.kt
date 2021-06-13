@@ -36,6 +36,8 @@ import com.tencent.devops.auth.common.Constants.DEPT_LABEL
 import com.tencent.devops.auth.common.Constants.LEVEL
 import com.tencent.devops.auth.common.Constants.PARENT
 import com.tencent.devops.auth.common.Constants.HTTP_RESULT
+import com.tencent.devops.auth.common.Constants.NAME
+import com.tencent.devops.auth.common.Constants.USERNAME
 import com.tencent.devops.auth.common.Constants.USER_LABLE
 import com.tencent.devops.auth.constant.AuthMessageCode.KEYWORD_TOO_SHORT
 import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
@@ -43,7 +45,6 @@ import com.tencent.devops.auth.entity.SearchDeptUserEntity
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -104,7 +105,12 @@ class AuthDeptServiceImpl @Autowired constructor(
         return getDeptInfo(search)
     }
 
-    override fun getUserAndDeptByName(name: String, accessToken: String?, userId: String): List<UserAndDeptInfoVo?> {
+    override fun getUserAndDeptByName(
+        name: String,
+        accessToken: String?,
+        userId: String,
+        type: ManagerScopesEnum
+    ): List<UserAndDeptInfoVo?> {
         if (name.length < 2) {
             throw ParamBlankException(KEYWORD_TOO_SHORT)
         }
@@ -114,8 +120,8 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_username = userId,
             fields = DEPT_LABEL,
             lookupField = NAME,
-            exactLookups = name,
-            fuzzyLookups = null,
+            exactLookups = null,
+            fuzzyLookups = name,
             accessToken = accessToken
         )
         val userSearch = SearchUserAndDeptEntity(
@@ -123,37 +129,66 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_app_secret = appSecret!!,
             bk_username = userId,
             fields = USER_LABLE,
-            lookupField = NAME,
-            exactLookups = name,
-            fuzzyLookups = null,
+            lookupField = USERNAME,
+            exactLookups = null,
+            fuzzyLookups = name,
             accessToken = accessToken
         )
-        val deptInfos = getDeptInfo(deptSearch)
-        val userInfos = getUserInfo(userSearch)
         val userAndDeptInfos = mutableListOf<UserAndDeptInfoVo>()
-        deptInfos.result.forEach {
-            userAndDeptInfos.add(
-                UserAndDeptInfoVo(
-                    id = it.id.toString(),
-                    name = it.name,
-                    type = ManagerScopesEnum.DEPARTMENT
-                )
-            )
+        when (type) {
+            ManagerScopesEnum.USER -> {
+                val userInfos = getUserInfo(userSearch)
+                userInfos.result.forEach {
+                    userAndDeptInfos.add(
+                        UserAndDeptInfoVo(
+                            id = it.id.toString(),
+                            name = it.username,
+                            type = ManagerScopesEnum.DEPARTMENT
+                        )
+                    )
+                }
+            }
+            ManagerScopesEnum.DEPARTMENT -> {
+                val depteInfos = getDeptInfo(deptSearch)
+                depteInfos.result.forEach {
+                    userAndDeptInfos.add(
+                        UserAndDeptInfoVo(
+                            id = it.id.toString(),
+                            name = it.name,
+                            type = ManagerScopesEnum.DEPARTMENT
+                        )
+                    )
+                }
+            }
+            ManagerScopesEnum.ALL -> {
+                val userInfos = getUserInfo(userSearch)
+                userInfos.result.forEach {
+                    userAndDeptInfos.add(
+                        UserAndDeptInfoVo(
+                            id = it.id.toString(),
+                            name = it.username,
+                            type = ManagerScopesEnum.DEPARTMENT
+                        )
+                    )
+                }
+                val depteInfos = getDeptInfo(deptSearch)
+                depteInfos.result.forEach {
+                    userAndDeptInfos.add(
+                        UserAndDeptInfoVo(
+                            id = it.id.toString(),
+                            name = it.name,
+                            type = ManagerScopesEnum.DEPARTMENT
+                        )
+                    )
+                }
+            }
         }
-        userInfos.result.forEach {
-            userAndDeptInfos.add(
-                UserAndDeptInfoVo(
-                    id = it.id,
-                    name = it.username,
-                    type = ManagerScopesEnum.USER
-                )
-            )
-        }
+
         return userAndDeptInfos
     }
 
     override fun getDeptUser(deptId: Int, accessToken: String?): List<String> {
-        return if (deptUserCache.getIfPresent(deptId.toString()) == null) {
+        return if (deptUserCache.getIfPresent(deptId.toString()) != null) {
             deptUserCache.getIfPresent(deptId.toString())!!
         } else {
             val deptUsers = getAndRefreshDeptUser(deptId, accessToken)

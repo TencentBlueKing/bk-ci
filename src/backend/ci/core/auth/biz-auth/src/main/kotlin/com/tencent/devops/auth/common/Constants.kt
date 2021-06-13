@@ -34,6 +34,7 @@ object Constants {
     const val LEVEL = "level"
     const val PARENT = "parent"
     const val NAME = "name"
+    const val USERNAME = "username"
 
     const val HTTP_RESULT = "results"
 }

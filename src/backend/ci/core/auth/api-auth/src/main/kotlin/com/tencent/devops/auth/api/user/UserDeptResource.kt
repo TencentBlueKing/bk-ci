@@ -27,7 +27,9 @@
 
 package com.tencent.devops.auth.api.user
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -44,13 +46,13 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_DEPT"], description = "组织架构")
-@Path("/user/dept/")
+@Path("/user/dept")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserDeptResource {
 
     @GET
-    @Path("levels/{level}")
+    @Path("/levels/{level}")
     @ApiOperation("按组织级别获取组织列表")
     fun getDeptByLevel(
         @ApiParam(name = "用户名", required = true)
@@ -65,7 +67,7 @@ interface UserDeptResource {
     ): Result<DeptInfoVo?>
 
     @GET
-    @Path("parents/{parentId}")
+    @Path("/parents/{parentId}")
     @ApiOperation("按组织级别获取组织列表")
     fun getDeptByParent(
         @ApiParam(name = "用户名", required = true)
@@ -81,6 +83,24 @@ interface UserDeptResource {
         @ApiParam("父组织Id", required = false)
         pageSize: Int?
     ): Result<DeptInfoVo?>
+
+    @GET
+    @Path("/names/{name}")
+    @ApiOperation("按组织级别获取组织列表")
+    fun getUserAndDeptByName(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?,
+        @PathParam("name")
+        @ApiParam("模糊搜索名称", required = true)
+        name: String,
+        @QueryParam("type")
+        @ApiParam("搜索类型", required = true)
+        type: ManagerScopesEnum
+    ): Result<List<UserAndDeptInfoVo?>>
 
     @GET
     @Path("/{deptId}/users")
