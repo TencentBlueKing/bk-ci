@@ -4,6 +4,7 @@ import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,9 +46,11 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
                 projectCode = projectCode,
                 groupInfo = groupInfo
             )
+            logger.info("create ext group success $projectCode $roleId")
         } catch (e: Exception) {
             logger.warn("create Role ext fail $e")
             groupService.deleteGroup(roleId, false)
+            throw ParamBlankException("create project role fail")
         }
         return roleId
     }

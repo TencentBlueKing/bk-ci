@@ -48,12 +48,14 @@ class UserProjectRoleResourceImpl @Autowired constructor(
         projectCode: String,
         groupInfo: ProjectRoleDTO
     ): Result<String> {
-        return Result(permissionRoleService.createPermissionRole(
-            userId = userId,
-            projectId = projectId,
-            projectCode = projectCode,
-            groupInfo = groupInfo
-        ))
+        return Result(
+            permissionRoleService.createPermissionRole(
+                userId = userId,
+                projectId = projectId,
+                projectCode = projectCode,
+                groupInfo = groupInfo
+            ).toString()
+        )
     }
 
     override fun updateProjectRole(

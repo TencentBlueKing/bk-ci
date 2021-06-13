@@ -92,12 +92,19 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
         // 默认分组需要分配默认权限
         if (groupInfo.defaultGroup!!) {
-            when (groupInfo.type) {
-                BkAuthGroup.DEVELOPER.value -> addDevelopPermission(iamRoleId, projectCode)
-                BkAuthGroup.MAINTAINER.value -> addMaintainerPermission(iamRoleId, projectCode)
-                BkAuthGroup.TESTER.value -> addTestPermission(iamRoleId, projectCode)
-                BkAuthGroup.QC.value -> addQCPermission(iamRoleId, projectCode)
-                BkAuthGroup.PM.value -> addPMPermission(iamRoleId, projectCode)
+            try {
+                when (groupInfo.type) {
+                    BkAuthGroup.DEVELOPER.value -> addDevelopPermission(iamRoleId, projectCode)
+                    BkAuthGroup.MAINTAINER.value -> addMaintainerPermission(iamRoleId, projectCode)
+                    BkAuthGroup.TESTER.value -> addTestPermission(iamRoleId, projectCode)
+                    BkAuthGroup.QC.value -> addQCPermission(iamRoleId, projectCode)
+                    BkAuthGroup.PM.value -> addPMPermission(iamRoleId, projectCode)
+                }
+            }
+            catch (e: Exception) {
+                iamManagerService.deleteRoleGroup(iamRoleId)
+                logger.warn("create iam group permission fail $projectCode | $iamRoleId | $groupInfo")
+                throw e
             }
         }
 
