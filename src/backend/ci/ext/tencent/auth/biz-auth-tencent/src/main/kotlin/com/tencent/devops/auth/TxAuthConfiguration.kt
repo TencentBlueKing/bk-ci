@@ -30,12 +30,13 @@ package com.tencent.devops.auth
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
-import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.DefaultHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
+import com.tencent.devops.auth.service.AuthDeptServiceImpl
+import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -47,7 +48,7 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AuthConfiguration {
+class TxAuthConfiguration {
 
     @Value("\${auth.url:}")
     val iamBaseUrl = ""
@@ -86,4 +87,10 @@ class AuthConfiguration {
     @Bean
     @ConditionalOnMissingBean
     fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
+
+    @Bean
+    fun deptService(
+        redisOperation: RedisOperation,
+        objectMapper: ObjectMapper
+    ) = AuthDeptServiceImpl(redisOperation, objectMapper)
 }
