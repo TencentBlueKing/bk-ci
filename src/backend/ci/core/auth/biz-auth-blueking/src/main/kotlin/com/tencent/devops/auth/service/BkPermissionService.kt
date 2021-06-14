@@ -14,8 +14,12 @@ class BkPermissionService @Autowired constructor(
     private val policyService: PolicyService,
     private val iamConfiguration: IamConfiguration
 ) : AbsPermissionService(authHelper, policyService, iamConfiguration) {
-    override fun validateUserResourcePermission(userId: String, action: String): Boolean {
-        return super.validateUserResourcePermission(userId, action)
+    override fun validateUserActionPermission(userId: String, action: String): Boolean {
+        return super.validateUserActionPermission(userId, action)
+    }
+
+    override fun validateUserResourcePermission(userId: String, action: String, projectCode: String, resourceType: String?): Boolean {
+        return super.validateUserResourcePermission(userId, action, projectCode, resourceType)
     }
 
     override fun validateUserResourcePermissionByRelation(userId: String, action: String, projectCode: String, resourceCode: String, resourceType: String, relationResourceType: String?): Boolean {
