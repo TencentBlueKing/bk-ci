@@ -31,5 +31,5 @@ import com.tencent.devops.auth.pojo.BkUserInfo
 
 data class BkUserInfoVo (
     val count : Int,
-    val result: List<BkUserInfo>
+    val results: List<BkUserInfo>
 )
