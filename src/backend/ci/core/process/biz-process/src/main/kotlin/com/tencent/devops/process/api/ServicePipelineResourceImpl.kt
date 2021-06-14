@@ -43,8 +43,10 @@ import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
+import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("UNUSED")
@@ -52,7 +54,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServicePipelineResourceImpl @Autowired constructor(
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService
 ) : ServicePipelineResource {
     override fun status(userId: String, projectId: String, pipelineId: String): Result<Pipeline?> {
         checkParams(userId, projectId, pipelineId)
@@ -149,6 +152,18 @@ class ServicePipelineResourceImpl @Autowired constructor(
             channelCode = channelCode,
             checkPermission = false
         ))
+    }
+
+    override fun saveSetting(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        setting: PipelineSetting
+    ): Result<Boolean> {
+        checkProjectId(projectId)
+        checkPipelineId(pipelineId)
+        pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting, checkPermission = true)
+        return Result(true)
     }
 
     override fun getPipelineInfo(
