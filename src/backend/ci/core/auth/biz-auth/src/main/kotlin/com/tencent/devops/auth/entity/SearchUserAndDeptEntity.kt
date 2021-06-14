@@ -38,7 +38,7 @@ data class SearchUserAndDeptEntity(
     @JsonProperty("lookup_field")
     val lookupField: String,
     @ApiModelProperty("返回值字段")
-    val fields: String,
+    val fields: String?,
     @ApiModelProperty("精确查找内容列表")
     @JsonProperty("exact_lookups")
     val exactLookups: Any? = null,
