@@ -29,11 +29,10 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleServiceImpl
 import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
 import org.springframework.stereotype.Service
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,7 +63,7 @@ class TxPermissionRoleServiceImpl @Autowired constructor(
         super.renamePermissionRole(userId, projectId, roleId, groupInfo)
     }
 
-    override fun getPermissionRole(projectId: Int): ManagerRoleGroupVO {
+    override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
         return super.getPermissionRole(projectId)
     }
 }
