@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 
@@ -39,4 +40,6 @@ interface PermissionRoleService {
     fun getPermissionRole(projectId: Int): List<GroupInfoVo>
 
     fun deletePermissionRole(userId: String, projectId: Int, roleId: Int)
+
+    fun getDefaultRole(): List<DefaultGroup>
 }

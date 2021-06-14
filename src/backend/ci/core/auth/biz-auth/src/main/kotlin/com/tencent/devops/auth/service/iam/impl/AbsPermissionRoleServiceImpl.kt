@@ -91,6 +91,7 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
         roleId: Int
     )
 
+
     companion object {
         val logger = LoggerFactory.getLogger(AbsPermissionRoleServiceImpl::class.java)
         const val CUSTOM_GROUP = 99

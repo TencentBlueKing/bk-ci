@@ -23,37 +23,40 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.common.auth.utils
 
-import org.junit.Assert
-import org.junit.Test
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import java.time.LocalDateTime
 
-internal class IamUtilsTest {
+object IamGroupUtils {
 
-    @Test
-    fun buildIamGroup() {
-        val projectName = "测试项目"
-        val groupName = "管理员"
-        val group = IamUtils.buildIamGroup(projectName, groupName)
-        Assert.assertEquals("测试项目-管理员", group)
+    fun buildIamGroup(projectName: String, groupName: String): String {
+        return "$projectName-$groupName"
     }
 
-    @Test
-    fun buildDefaultDescription() {
-        val projectName = "测试项目"
-        val groupName = "管理员"
-        val userId = "admin"
-        val group = IamUtils.buildDefaultDescription(projectName, groupName, userId)
-        Assert.assertNotEquals("测试项目 分级管理员, 由admin 创建于 2021-04-27T21:58:52+0800", group)
+    fun buildDefaultDescription(projectName: String, groupName: String, userId: String): String {
+        return "$projectName 用户组:$groupName,由$userId 创建于 " +
+            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
     }
 
-    @Test
-    fun buildManagerDescription() {
-        val projectName = "测试项目"
-        val userId = "admin"
-        val group = IamUtils.buildManagerDescription(projectName, userId)
-        Assert.assertNotEquals("测试项目 用户组:管理员, 由admin 创建于 2021-04-27T21:58:52+0800", group)
+    fun buildManagerDescription(projectName: String, userId: String) : String {
+        return "$projectName 分级管理员, 由$userId 创建于" +
+            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
+    }
+
+    fun renameSystemLable(groupName: String): String {
+        return groupName.substringAfterLast("-")
+    }
+
+    fun defaultRoleCheck(groupName: String): Boolean {
+        val name = renameSystemLable(groupName)
+        if (BkAuthGroup.contains(name)) {
+            return true
+        }
+        return false
     }
 }

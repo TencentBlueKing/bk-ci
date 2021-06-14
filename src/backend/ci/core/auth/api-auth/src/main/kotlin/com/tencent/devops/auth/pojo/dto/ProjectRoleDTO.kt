@@ -37,11 +37,10 @@ data class ProjectRoleDTO(
     @ApiModelProperty("用户组Code")
     val code: String,
     @ApiModelProperty("用户组名称")
-    @Length(min = 5, max = 128)
+    @Length(min = 1, max = 128)
     val name: String,
     @ApiModelProperty("用户组描述")
-    @Length(min = 10)
-    val description: String,
+    val description: String?,
     @ApiModelProperty("用户组类型,默认分组对应BkAuthGroup 枚举, 自定义分组可以为“”")
     val type: String,
     @ApiModelProperty("是否为默认分组")

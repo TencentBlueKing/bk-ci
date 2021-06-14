@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionGradeService
@@ -58,5 +59,9 @@ class BkIamPermissionRoleExtService @Autowired constructor(
 
     override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
         return super.getPermissionRole(projectId)
+    }
+
+    override fun getDefaultRole(): List<DefaultGroup> {
+        return emptyList()
     }
 }
