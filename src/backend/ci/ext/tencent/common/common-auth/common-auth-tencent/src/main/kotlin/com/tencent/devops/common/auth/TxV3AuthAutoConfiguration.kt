@@ -52,6 +52,7 @@ import com.tencent.devops.common.auth.code.BSVSAuthServiceCode
 import com.tencent.devops.common.auth.code.BSWetestAuthServiceCode
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -102,14 +103,16 @@ class TxV3AuthAutoConfiguration {
     @Bean
     @Primary
     fun txV3BsAuthProjectApi(
-        client: Client
-    ) = TxV3BSAuthProjectApi(client)
+        client: Client,
+        tokenService: ClientTokenService
+    ) = TxV3BSAuthProjectApi(client, tokenService)
 
     @Bean
     @Primary
     fun txV3BsAuthPermissionApi(
-        client: Client
-    ) = TxV3BsAuthPermissionApi(client)
+        client: Client,
+        tokenService: ClientTokenService
+    ) = TxV3BsAuthPermissionApi(client, tokenService)
 
     @Bean
     @Primary

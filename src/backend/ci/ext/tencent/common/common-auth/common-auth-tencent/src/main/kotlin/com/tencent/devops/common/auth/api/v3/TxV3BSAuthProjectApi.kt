@@ -35,12 +35,14 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class TxV3BSAuthProjectApi @Autowired constructor(
-    val client: Client
+    val client: Client,
+    val tokenService: ClientTokenService
 ): AuthProjectApi {
     override fun getProjectUsers(
         serviceCode: AuthServiceCode,
@@ -48,7 +50,7 @@ class TxV3BSAuthProjectApi @Autowired constructor(
         group: BkAuthGroup?
     ): List<String> {
         return client.get(ServiceProjectAuthResource::class).getProjectUsers(
-            serviceCode = serviceCode.id(),
+            token = tokenService.getSystemToken(null)!!,
             projectCode = projectCode,
             group = group
         ).data ?: emptyList()
@@ -59,7 +61,7 @@ class TxV3BSAuthProjectApi @Autowired constructor(
         projectCode: String
     ): List<BkAuthGroupAndUserList> {
         return client.get(ServiceProjectAuthResource::class).getProjectGroupAndUserList(
-            serviceCode = serviceCode.id(),
+            token = tokenService.getSystemToken(null)!!,
             projectCode = projectCode
         ).data ?: emptyList()
     }
@@ -70,6 +72,7 @@ class TxV3BSAuthProjectApi @Autowired constructor(
         supplier: (() -> List<String>)?
     ): List<String> {
         return client.get(ServiceProjectAuthResource::class).getUserProjects(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId
         ).data ?: emptyList()
     }
@@ -90,6 +93,7 @@ class TxV3BSAuthProjectApi @Autowired constructor(
         group: BkAuthGroup?
     ): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
+            token = tokenService.getSystemToken(null)!!,
             userId = user,
             projectCode = projectCode,
             group = group
@@ -103,6 +107,7 @@ class TxV3BSAuthProjectApi @Autowired constructor(
         role: String
     ): Boolean {
         return client.get(ServiceProjectAuthResource::class).createProjectUser(
+            token = tokenService.getSystemToken(null)!!,
             userId = user,
             projectCode = projectCode,
             role = role
@@ -111,6 +116,7 @@ class TxV3BSAuthProjectApi @Autowired constructor(
 
     override fun getProjectRoles(serviceCode: AuthServiceCode, projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
         return client.get(ServiceProjectAuthResource::class).getProjectRoles(
+            token = tokenService.getSystemToken(null)!!,
             projectCode = projectCode,
             projectId = projectId
         ).data ?: emptyList()
