@@ -5,5 +5,6 @@ import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 data class UserAndDeptInfoVo(
     val id: String,
     val name: String,
-    val type: ManagerScopesEnum
+    val type: ManagerScopesEnum,
+    val hasChild: Boolean? = false
 )

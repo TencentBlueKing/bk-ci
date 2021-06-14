@@ -83,7 +83,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
             bk_username = userId,
-            fields = DEPT_LABEL,
+            fields = null,
             lookupField = LEVEL,
             exactLookups = level,
             fuzzyLookups = null,
@@ -97,7 +97,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
             bk_username = userId,
-            fields = DEPT_LABEL,
+            fields = null,
             lookupField = PARENT,
             exactLookups = parentId,
             fuzzyLookups = null,
@@ -120,7 +120,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
             bk_username = userId,
-            fields = DEPT_LABEL,
+            fields = null,
             lookupField = NAME,
             exactLookups = null,
             fuzzyLookups = name,
@@ -145,7 +145,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                         UserAndDeptInfoVo(
                             id = it.id.toString(),
                             name = it.username,
-                            type = ManagerScopesEnum.DEPARTMENT
+                            type = ManagerScopesEnum.USER
                         )
                     )
                 }
@@ -157,7 +157,8 @@ class AuthDeptServiceImpl @Autowired constructor(
                         UserAndDeptInfoVo(
                             id = it.id.toString(),
                             name = it.name,
-                            type = ManagerScopesEnum.DEPARTMENT
+                            type = ManagerScopesEnum.DEPARTMENT,
+                            hasChild = it.hasChildren
                         )
                     )
                 }
@@ -169,7 +170,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                         UserAndDeptInfoVo(
                             id = it.id.toString(),
                             name = it.username,
-                            type = ManagerScopesEnum.DEPARTMENT
+                            type = ManagerScopesEnum.USER
                         )
                     )
                 }
@@ -179,7 +180,8 @@ class AuthDeptServiceImpl @Autowired constructor(
                         UserAndDeptInfoVo(
                             id = it.id.toString(),
                             name = it.name,
-                            type = ManagerScopesEnum.DEPARTMENT
+                            type = ManagerScopesEnum.DEPARTMENT,
+                            hasChild = it.hasChildren
                         )
                     )
                 }
