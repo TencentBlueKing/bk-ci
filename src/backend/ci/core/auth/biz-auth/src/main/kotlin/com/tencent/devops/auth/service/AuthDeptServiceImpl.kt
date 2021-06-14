@@ -138,7 +138,7 @@ class AuthDeptServiceImpl @Autowired constructor(
         when (type) {
             ManagerScopesEnum.USER -> {
                 val userInfos = getUserInfo(userSearch)
-                userInfos.result.forEach {
+                userInfos.results.forEach {
                     userAndDeptInfos.add(
                         UserAndDeptInfoVo(
                             id = it.id.toString(),
@@ -150,7 +150,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             }
             ManagerScopesEnum.DEPARTMENT -> {
                 val depteInfos = getDeptInfo(deptSearch)
-                depteInfos.result.forEach {
+                depteInfos.results.forEach {
                     userAndDeptInfos.add(
                         UserAndDeptInfoVo(
                             id = it.id.toString(),
@@ -162,7 +162,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             }
             ManagerScopesEnum.ALL -> {
                 val userInfos = getUserInfo(userSearch)
-                userInfos.result.forEach {
+                userInfos.results.forEach {
                     userAndDeptInfos.add(
                         UserAndDeptInfoVo(
                             id = it.id.toString(),
@@ -172,7 +172,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                     )
                 }
                 val depteInfos = getDeptInfo(deptSearch)
-                depteInfos.result.forEach {
+                depteInfos.results.forEach {
                     userAndDeptInfos.add(
                         UserAndDeptInfoVo(
                             id = it.id.toString(),
