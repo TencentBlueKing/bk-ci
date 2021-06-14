@@ -29,7 +29,7 @@ package com.tencent.devops.auth.pojo.vo
 
 import com.tencent.devops.auth.pojo.BkUserInfo
 
-data class BkUserInfoVo (
-    val count : Int,
+data class BkUserInfoVo(
+    val count: Int,
     val results: List<BkUserInfo>
 )

@@ -29,7 +29,7 @@ package com.tencent.devops.auth.pojo.vo
 
 import com.tencent.devops.auth.pojo.DeptInfo
 
-data class DeptInfoVo (
-    val count : Int,
+data class DeptInfoVo(
+    val count: Int,
     val results: List<DeptInfo>
 )
