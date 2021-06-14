@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.response.ResponseDTO
@@ -48,6 +49,7 @@ import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.redis.RedisOperation
 import okhttp3.MediaType
 import okhttp3.Request
@@ -248,7 +250,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                     "get dept fail: $responseStr"
                 )
             }
-            return JsonUtil.fromJson(JsonUtil.toJson(responseDTO.data), DeptInfoVo::class.java)
+            return objectMapper.readValue<DeptInfoVo>(JsonUtil.toJson(responseDTO.data))
         }
     }
 
@@ -275,7 +277,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                     "get user fail: $responseStr"
                 )
             }
-            return JsonUtil.fromJson(JsonUtil.toJson(responseDTO.data), BkUserInfoVo::class.java)
+            return objectMapper.readValue<BkUserInfoVo>(JsonUtil.toJson(responseDTO.data))
         }
     }
 
