@@ -21,7 +21,8 @@ class BkPermissionProjectService @Autowired constructor(
     override val policyService: PolicyService,
     override val client: Client,
     override val iamConfiguration: IamConfiguration,
-    override val deptService: DeptService
+    override val deptService: DeptService,
+    override val groupService: AuthGroupService
 ) : AbsPermissionProjectService(
     permissionRoleService = permissionRoleService,
     permissionRoleMemberService = permissionRoleMemberService,
@@ -29,7 +30,8 @@ class BkPermissionProjectService @Autowired constructor(
     policyService = policyService,
     client = client,
     iamConfiguration = iamConfiguration,
-    deptService = deptService
+    deptService = deptService,
+    groupService = groupService
 ) {
     override fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String> {
         return emptyList()
