@@ -28,8 +28,8 @@
 
 package com.tencent.devops.auth.api.user
 
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -96,7 +96,7 @@ interface UserProjectRoleResource {
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int
-    ): Result<ManagerRoleGroupVO>
+    ): Result<List<GroupInfoVo>>
 
     @DELETE
     @Path("/projectIds/{projectId}/roles/{roleId}")

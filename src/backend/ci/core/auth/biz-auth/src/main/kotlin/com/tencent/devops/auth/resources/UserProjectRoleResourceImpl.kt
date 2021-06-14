@@ -28,9 +28,9 @@
 
 package com.tencent.devops.auth.resources
 
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.api.user.UserProjectRoleResource
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.common.api.pojo.Result
@@ -73,7 +73,7 @@ class UserProjectRoleResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getProjectRoles(userId: String, projectId: Int): Result<ManagerRoleGroupVO> {
+    override fun getProjectRoles(userId: String, projectId: Int): Result<List<GroupInfoVo>> {
         return Result(permissionRoleService.getPermissionRole(projectId))
     }
 

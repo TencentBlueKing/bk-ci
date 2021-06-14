@@ -46,4 +46,8 @@ object IamUtils {
         return "$projectName 分级管理员, 由$userId 创建于" +
             "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
     }
+
+    fun renameSystemLable(groupName: String): String {
+        return groupName.substringAfterLast("_")
+    }
 }

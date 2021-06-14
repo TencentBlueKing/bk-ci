@@ -28,15 +28,15 @@
 
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 
 interface PermissionRoleService {
     fun createPermissionRole(userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO): Int
 
     fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO)
 
-    fun getPermissionRole(projectId: Int): ManagerRoleGroupVO
+    fun getPermissionRole(projectId: Int): List<GroupInfoVo>
 
     fun deletePermissionRole(userId: String, projectId: Int, roleId: Int)
 }

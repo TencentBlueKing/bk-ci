@@ -29,9 +29,9 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
 import org.jvnet.hk2.annotations.Service
@@ -56,7 +56,7 @@ class BkIamPermissionRoleExtService @Autowired constructor(
         super.deleteRoleExt(userId, projectId, roleId)
     }
 
-    override fun getPermissionRole(projectId: Int): ManagerRoleGroupVO {
+    override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
         return super.getPermissionRole(projectId)
     }
 }
