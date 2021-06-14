@@ -57,7 +57,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         // 1. 转换projectCode为iam侧分级管理员Id
         val iamProjectId = getProjectId(projectCode)
         // 2. 获取项目下的所有用户组
-        val roleInfos = permissionRoleService.getPermissionRole(iamProjectId).result
+        val roleInfos = permissionRoleService.getPermissionRole(iamProjectId)
         logger.info("[IAM] $projectCode $iamProjectId roleInfos: $roleInfos")
         val result = mutableListOf<BkAuthGroupAndUserList>()
         // 3. 获取用户组下的所有用户
@@ -154,7 +154,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
     }
 
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
-        val roleInfos = permissionRoleService.getPermissionRole(projectId.toInt()).result
+        val roleInfos = permissionRoleService.getPermissionRole(projectId.toInt())
         logger.info("[IAM] getProjectRole $roleInfos")
         val roleList = mutableListOf<BKAuthProjectRolesResources>()
         roleInfos.forEach {

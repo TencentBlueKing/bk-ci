@@ -35,10 +35,10 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.auth.utils.IamUtils
@@ -132,8 +132,18 @@ open class IamPermissionRoleExtService @Autowired constructor(
         iamManagerService.deleteRoleGroup(roleId)
     }
 
-    override fun getPermissionRole(projectId: Int): ManagerRoleGroupVO {
-        return iamManagerService.getGradeManagerRoleGroup(projectId)
+    override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
+        val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId)
+        val groupInfo = mutableListOf<GroupInfoVo>()
+        groupInfos.result.forEach {
+            groupInfo.add(
+                GroupInfoVo(
+                    id = it.id,
+                    name = IamUtils.renameSystemLable(it.name)
+                )
+            )
+        }
+        return groupInfo
     }
 
     private fun checkRoleName(name: String, defaultGroup: Boolean) {
