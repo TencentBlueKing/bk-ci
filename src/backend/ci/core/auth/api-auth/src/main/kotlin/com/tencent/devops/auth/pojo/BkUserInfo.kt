@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel
 data class BkUserInfo(
     @ApiModelProperty("用户Id")
-    val id: String,
+    val id: Int,
     @ApiModelProperty("用户名")
     val username: String,
     @ApiModelProperty("是否启用")

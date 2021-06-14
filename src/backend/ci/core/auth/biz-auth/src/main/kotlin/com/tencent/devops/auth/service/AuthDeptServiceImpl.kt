@@ -143,7 +143,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 userInfos.results.forEach {
                     userAndDeptInfos.add(
                         UserAndDeptInfoVo(
-                            id = it.id.toString(),
+                            id = it.id,
                             name = it.username,
                             type = ManagerScopesEnum.USER
                         )
@@ -155,7 +155,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 depteInfos.results.forEach {
                     userAndDeptInfos.add(
                         UserAndDeptInfoVo(
-                            id = it.id.toString(),
+                            id = it.id,
                             name = it.name,
                             type = ManagerScopesEnum.DEPARTMENT,
                             hasChild = it.hasChildren
@@ -168,7 +168,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 userInfos.results.forEach {
                     userAndDeptInfos.add(
                         UserAndDeptInfoVo(
-                            id = it.id.toString(),
+                            id = it.id,
                             name = it.username,
                             type = ManagerScopesEnum.USER
                         )
@@ -178,7 +178,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 depteInfos.results.forEach {
                     userAndDeptInfos.add(
                         UserAndDeptInfoVo(
-                            id = it.id.toString(),
+                            id = it.id,
                             name = it.name,
                             type = ManagerScopesEnum.DEPARTMENT,
                             hasChild = it.hasChildren
