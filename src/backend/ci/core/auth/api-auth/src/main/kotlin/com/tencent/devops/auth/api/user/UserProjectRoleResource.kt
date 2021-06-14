@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.api.user
 
+import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -124,4 +125,12 @@ interface UserProjectRoleResource {
         @PathParam("projectId")
         projectId: Int
     ): Result<Boolean>
+
+    @GET
+    @Path("/default/role")
+    fun getDefaultRole(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<DefaultGroup>>
 }

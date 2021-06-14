@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.user.UserProjectRoleResource
+import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionGradeService
@@ -85,5 +86,9 @@ class UserProjectRoleResourceImpl @Autowired constructor(
     override fun hashPermission(userId: String, projectId: Int): Result<Boolean> {
         permissionGradeService.checkGradeManagerUser(userId, projectId)
         return Result(true)
+    }
+
+    override fun getDefaultRole(userId: String): Result<List<DefaultGroup>> {
+        return Result(permissionRoleService.getDefaultRole())
     }
 }

@@ -37,11 +37,12 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.common.auth.utils.IamUtils
+import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -76,10 +77,10 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val defaultGroup = groupInfo.defaultGroup!!
 
         // 默认分组名称规则: projectName-groupName
-        val groupName = IamUtils.buildIamGroup(groupInfo.projectName, groupInfo.name)
+        val groupName = IamGroupUtils.buildIamGroup(groupInfo.projectName, groupInfo.name)
 
-        val groupDescription = if (defaultGroup) {
-            IamUtils.buildDefaultDescription(groupInfo.projectName, groupInfo.name, userId)
+        val groupDescription = if (groupInfo.description.isNullOrEmpty()) {
+            IamGroupUtils.buildDefaultDescription(groupInfo.projectName, groupInfo.name, userId)
         } else {
             groupInfo.description
         }
@@ -91,7 +92,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val iamRoleId = iamManagerService.batchCreateRoleGroup(projectId, groups)
 
         // 默认分组需要分配默认权限
-        if (groupInfo.defaultGroup!!) {
+        if (defaultGroup) {
             try {
                 when (groupInfo.type) {
                     BkAuthGroup.DEVELOPER.value -> addDevelopPermission(iamRoleId, projectCode)
@@ -100,8 +101,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
                     BkAuthGroup.QC.value -> addQCPermission(iamRoleId, projectCode)
                     BkAuthGroup.PM.value -> addPMPermission(iamRoleId, projectCode)
                 }
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 iamManagerService.deleteRoleGroup(iamRoleId)
                 logger.warn("create iam group permission fail $projectCode | $iamRoleId | $groupInfo")
                 throw e
@@ -116,7 +116,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         permissionGradeService.checkGradeManagerUser(userId, projectId)
         // 校验用户组名称
         checkRoleName(groupInfo.name, false)
-        val roleName = IamUtils.buildIamGroup(groupInfo.projectName, groupInfo.name)
+        val roleName = IamGroupUtils.buildIamGroup(groupInfo.projectName, groupInfo.name)
         val newGroupInfo = ManagerRoleGroup(
             roleName,
             groupInfo.description,
@@ -139,11 +139,17 @@ open class IamPermissionRoleExtService @Autowired constructor(
             groupInfo.add(
                 GroupInfoVo(
                     id = it.id,
-                    name = IamUtils.renameSystemLable(it.name)
+                    name = IamGroupUtils.renameSystemLable(it.name),
+                    defaultRole = IamGroupUtils.defaultRoleCheck(it.name),
+                    userCount = 0
                 )
             )
         }
         return groupInfo
+    }
+
+    override fun getDefaultRole(): List<DefaultGroup> {
+        return emptyList()
     }
 
     private fun checkRoleName(name: String, defaultGroup: Boolean) {
@@ -317,6 +323,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val logger = LoggerFactory.getLogger(AbsPermissionRoleMemberImpl::class.java)
         const val PROJECT = "project_view"
         const val PIPELINEACTION = "pipeline_create"
+
         // TODO:确认代码库的默认权限
         const val REPORTACTION = "pipeline_view"
         const val CREDENTIALACTION = "credential_create"
