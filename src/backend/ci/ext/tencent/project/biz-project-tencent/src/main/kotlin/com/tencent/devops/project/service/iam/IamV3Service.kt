@@ -41,11 +41,15 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.api.ServiceGroupResource
+import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.auth.TxAuthGroup
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.auth.utils.IamUtils
+import com.tencent.devops.common.auth.utils.IamGroupUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -62,7 +66,8 @@ class IamV3Service @Autowired constructor(
     val iamConfiguration: IamConfiguration,
     val projectDao: ProjectDao,
     val dslContext: DSLContext,
-    val projectDispatcher: ProjectDispatcher
+    val projectDispatcher: ProjectDispatcher,
+    val client: Client
 ) {
     /**
      *  V3创建项目流程 (V3创建项目未完全迁移完前，需双写V0,V3)
@@ -135,7 +140,7 @@ class IamV3Service @Autowired constructor(
         )
         val createManagerDTO = CreateManagerDTO.builder().system(iamConfiguration.systemId)
             .name("$SYSTEM_DEFAULT_NAME-${resourceRegisterInfo.resourceName}")
-            .description(IamUtils.buildManagerDescription(resourceRegisterInfo.resourceName, userId))
+            .description(IamGroupUtils.buildManagerDescription(resourceRegisterInfo.resourceName, userId))
             .members(arrayListOf(userId))
             .authorization_scopes(authorizationScopes)
             .subject_scopes(arrayListOf(subjectScopes)).build()
@@ -144,8 +149,8 @@ class IamV3Service @Autowired constructor(
 
     private fun createRole(userId: String, iamProjectId: Int, projectCode: String): Int {
         val defaultGroup = ManagerRoleGroup(
-            IamUtils.buildIamGroup(projectCode, BkAuthGroup.MANAGER.value),
-            IamUtils.buildDefaultDescription(projectCode, BkAuthGroup.MANAGER.name, userId),
+            IamGroupUtils.buildIamGroup(projectCode, BkAuthGroup.MANAGER.value),
+            IamGroupUtils.buildDefaultDescription(projectCode, BkAuthGroup.MANAGER.name, userId),
             true
         )
         val defaultGroups = mutableListOf<ManagerRoleGroup>()
@@ -160,6 +165,18 @@ class IamV3Service @Autowired constructor(
         val managerMemberGroup = ManagerMemberGroupDTO.builder().members(groupMembers).expiredAt(expired).build()
         // 项目创建人添加至管理员分组
         iamManagerService.createRoleGroupMember(roleId, managerMemberGroup)
+        // 添加本地用户组信息
+        client.get(ServiceGroupResource::class).createGroup(
+            userId = userId,
+            projectCode = projectCode,
+            groupInfo = GroupDTO(
+                groupCode = TxAuthGroup.MANAGER.value,
+                groupName = TxAuthGroup.MANAGER.value,
+                displayName = TxAuthGroup.MANAGER.displayName,
+                relationId = roleId.toString(),
+                groupType = TxAuthGroup.MANAGER.value
+            )
+        )
         return roleId
     }
 

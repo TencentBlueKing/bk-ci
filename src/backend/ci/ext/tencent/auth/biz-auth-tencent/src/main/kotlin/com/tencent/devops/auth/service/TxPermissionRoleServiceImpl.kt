@@ -30,10 +30,12 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
+import com.tencent.devops.common.auth.TxAuthGroup
 import org.springframework.stereotype.Service
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -65,5 +67,20 @@ class TxPermissionRoleServiceImpl @Autowired constructor(
 
     override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
         return super.getPermissionRole(projectId)
+    }
+
+    override fun getDefaultRole(): List<DefaultGroup> {
+        val defaultGroups = mutableListOf<DefaultGroup>()
+        val allDefaultGroup = TxAuthGroup.getAll()
+        allDefaultGroup.forEach {
+            defaultGroups.add(
+                DefaultGroup(
+                    code = it.value,
+                    name = it.name,
+                    displayName = it.displayName
+                )
+            )
+        }
+        return defaultGroups
     }
 }
