@@ -31,5 +31,5 @@ import com.tencent.devops.auth.pojo.DeptInfo
 
 data class DeptInfoVo (
     val count : Int,
-    val result: List<DeptInfo>
+    val results: List<DeptInfo>
 )
