@@ -45,6 +45,7 @@ import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
+import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
@@ -108,6 +109,7 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.common.ci.v2.Stage as GitCIV2Stage
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
@@ -310,7 +312,7 @@ class TriggerBuildService @Autowired constructor(
             params = params
         )
 
-        val stage1 = Stage(listOf(triggerContainer), id = "Stage-0", name = "Stage_0")
+        val stage1 = Stage(listOf(triggerContainer), id = "stage-0", name = "stage_0")
         stageList.add(stage1)
 
         // 其他的stage
@@ -322,14 +324,22 @@ class TriggerBuildService @Autowired constructor(
                 stageIndex = stageIndex + 1
             ))
         }
-
-        yaml.finally?.forEach {
-            stageList.add(createStage(
-                stage = it,
-                event = event,
-                gitBasicSetting = gitBasicSetting,
-                finalStage = true
-            ))
+        // 添加finally
+        if (!yaml.finally.isNullOrEmpty()) {
+            stageList.add(
+                createStage(
+                    stage = GitCIV2Stage(
+                        name = "Finally",
+                        id = null,
+                        label = emptyList(),
+                        ifField = null,
+                        fastKill = false,
+                        jobs = yaml.finally!!
+                    ),
+                    event = event,
+                    gitBasicSetting = gitBasicSetting,
+                    finalStage = true)
+            )
         }
 
         return Model(
@@ -413,7 +423,7 @@ class TriggerBuildService @Autowired constructor(
     }
 
     private fun createStage(
-        stage: com.tencent.devops.common.ci.v2.Stage,
+        stage: GitCIV2Stage,
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
         stageIndex: Int = 0,
@@ -423,15 +433,15 @@ class TriggerBuildService @Autowired constructor(
         stage.jobs.forEachIndexed { jobIndex, job ->
             val elementList = makeElementList(job, gitBasicSetting, event.userId)
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
-                addNormalContainer(job, elementList, containerList, jobIndex)
+                addNormalContainer(job, elementList, containerList, jobIndex, finalStage)
             } else {
-                addVmBuildContainer(job, elementList, containerList, jobIndex)
+                addVmBuildContainer(job, elementList, containerList, jobIndex, finalStage)
             }
         }
 
         // 根据if设置stageController
         var stageControlOption = StageControlOption()
-        if (stage.ifField != null) {
+        if (!finalStage && !stage.ifField.isNullOrBlank()) {
             stageControlOption = StageControlOption(
                 runCondition = StageRunCondition.CUSTOM_CONDITION_MATCH,
                 customCondition = stage.ifField.toString()
@@ -455,7 +465,8 @@ class TriggerBuildService @Autowired constructor(
         job: Job,
         elementList: List<Element>,
         containerList: MutableList<Container>,
-        jobIndex: Int
+        jobIndex: Int,
+        finalStage: Boolean = false
     ) {
 
 /*        val listPreAgentResult =
@@ -500,7 +511,7 @@ class TriggerBuildService @Autowired constructor(
             thirdPartyWorkspace = null,
             dockerBuildVersion = null,
             tstackAgentId = null,
-            jobControlOption = getJobControlOption(job),
+            jobControlOption = getJobControlOption(job, finalStage),
             dispatchType = getDispatchType(job)
         )
         containerList.add(vmContainer)
@@ -561,7 +572,8 @@ class TriggerBuildService @Autowired constructor(
         job: Job,
         elementList: List<Element>,
         containerList: MutableList<Container>,
-        jobIndex: Int
+        jobIndex: Int,
+        finalStage: Boolean = false
     ) {
 
         containerList.add(
@@ -577,22 +589,40 @@ class TriggerBuildService @Autowired constructor(
                 enableSkip = false,
                 conditions = null,
                 canRetry = false,
-                jobControlOption = getJobControlOption(job),
+                jobControlOption = getJobControlOption(job, finalStage),
                 mutexGroup = null
             )
         )
     }
 
-    private fun getJobControlOption(job: Job): JobControlOption {
-        return if (job.ifField != null) {
-            JobControlOption(
-                timeout = job.timeoutMinutes,
-                runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
-                customCondition = job.ifField.toString(),
-                dependOnType = DependOnType.ID,
-                dependOnId = job.dependOn,
-                continueWhenFailed = job.continueOnError
-            )
+    private fun getJobControlOption(
+        job: Job,
+        finalStage: Boolean = false
+    ): JobControlOption {
+        return if (!job.ifField.isNullOrBlank()) {
+            if (finalStage) {
+                JobControlOption(
+                    timeout = job.timeoutMinutes,
+                    runCondition = when (job.ifField) {
+                        IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
+                        IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
+                        IfType.CANCELLED.name -> JobRunCondition.PREVIOUS_STAGE_CANCEL
+                        else -> JobRunCondition.STAGE_RUNNING
+                    },
+                    dependOnType = DependOnType.ID,
+                    dependOnId = job.dependOn,
+                    continueWhenFailed = job.continueOnError
+                )
+            } else {
+                JobControlOption(
+                    timeout = job.timeoutMinutes,
+                    runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
+                    customCondition = job.ifField.toString(),
+                    dependOnType = DependOnType.ID,
+                    dependOnId = job.dependOn,
+                    continueWhenFailed = job.continueOnError
+                )
+            }
         } else {
             JobControlOption(
                 timeout = job.timeoutMinutes,
@@ -621,7 +651,11 @@ class TriggerBuildService @Autowired constructor(
                 retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
                 customEnv = emptyList(),
-                runCondition = RunCondition.CUSTOM_CONDITION_MATCH,
+                runCondition = if (step.ifFiled.isNullOrBlank()) {
+                    RunCondition.PRE_TASK_SUCCESS
+                } else {
+                    RunCondition.CUSTOM_CONDITION_MATCH
+                },
                 customCondition = step.ifFiled
             )
 

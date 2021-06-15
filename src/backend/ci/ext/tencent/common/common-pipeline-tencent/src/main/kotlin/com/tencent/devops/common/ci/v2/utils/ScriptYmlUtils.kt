@@ -257,7 +257,7 @@ object ScriptYmlUtils {
             return
         }
         yamlMap.forEach { (t, _) ->
-            if (t != formatTrigger && t != "extends" && t != "version" && t != "resources") {
+            if (t != formatTrigger && t != "extends" && t != "version" && t != "resources" && t != "name") {
                 throw CustomException(Response.Status.BAD_REQUEST, "使用 extends 时顶级关键字只能有触发器 on 与 resources")
             }
         }
@@ -393,6 +393,20 @@ object ScriptYmlUtils {
         return stepList
     }
 
+    private fun preStage2Stage(preStage: PreStage?): Stage? {
+        if (preStage == null) {
+            return null
+        }
+        return Stage(
+            id = preStage.id ?: randomString(stageNamespace),
+            name = preStage.name,
+            label = formatStageLabel(preStage.label),
+            ifField = preStage.ifField,
+            fastKill = preStage.fastKill ?: false,
+            jobs = preJobs2Jobs(preStage.jobs as Map<String, PreJob>)
+        )
+    }
+
     private fun preStages2Stages(preStageList: List<PreStage>?): List<Stage> {
         if (preStageList == null) {
             return emptyList()
@@ -495,7 +509,7 @@ object ScriptYmlUtils {
             resource = preScriptBuildYaml.resources,
             notices = preScriptBuildYaml.notices,
             stages = stages,
-            finally = preStages2Stages(preScriptBuildYaml.finally),
+            finally = preJobs2Jobs(preScriptBuildYaml.finally),
             label = preScriptBuildYaml.label ?: emptyList()
         )
     }
