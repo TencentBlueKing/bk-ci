@@ -74,7 +74,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             redisLock.lock()
             if (event.actionType == ActionType.REFRESH) {
                 taskContinue(task = taskRecord!!, userId = event.userId)
-            } else if (event.actionType == ActionType.TERMINATE) {
+            } else if (event.actionType == ActionType.END) {
                 taskCancel(task = taskRecord!!, userId = event.userId)
             }
             // #3400 减少重复DETAIL事件转发， Cancel与Continue之后插件任务执行都会刷新DETAIL
