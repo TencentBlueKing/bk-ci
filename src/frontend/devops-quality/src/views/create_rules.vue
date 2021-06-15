@@ -299,16 +299,14 @@
                                                 </bk-checkbox>
                                             </bk-checkbox-group>
                                         </bk-form-item>
-                                        <bk-form-item label="附加通知人员" desc="请输入通知人员，多个用逗号分隔，支持输入流水线变量">
-                                            <!-- <user-input :handle-change="handleChange" name="attacher" :value="createRuleForm.notifyUserList" placeholder="请输入通知人员"></user-input> -->
-                                            <bk-input :allow-create="true" @change="handleAttacherChange" name="attacher" :value="createRuleForm.notifyUserList.join()" placeholder="请输入通知人员，多个用逗号分隔，支持输入流水线变量"></bk-input>
+                                        <bk-form-item label="附加通知人员" desc="请输入通知人员，支持输入流水线变量">
+                                            <user-input :handle-change="handleChange" name="attacher" :value="createRuleForm.notifyUserList" placeholder="请输入通知人员，支持输入流水线变量"></user-input>
                                         </bk-form-item>
                                     </bk-form>
 
                                     <bk-form v-else :label-width="120" :model="createRuleForm" class="user-audit-form">
-                                        <bk-form-item label="审核人" desc="请输入通知人员，多个用逗号分隔，支持输入流水线变量" :required="true">
-                                            <!-- <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" placeholder="请输入通知人员"></user-input> -->
-                                            <bk-input :allow-create="true" @change="handleReviewerChange" name="reviewer" :value="createRuleForm.auditUserList.join()" placeholder="请输入通知人员，多个用逗号分隔，支持输入流水线变量"></bk-input>
+                                        <bk-form-item label="审核人" desc="请输入通知人员，支持输入流水线变量" :required="true">
+                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" placeholder="请输入通知人员，支持输入流水线变量"></user-input>
                                         </bk-form-item>
                                         <bk-form-item label="审核超时时间">
                                             <bk-input type="number"
@@ -420,7 +418,7 @@
 <script>
     import { mapGetters } from 'vuex'
     import metadataPanel from '@/components/devops/metadata-panel'
-    // import UserInput from '@/components/devops/UserInput/index.vue'
+    import UserInput from '@/components/devops/UserInput/index.vue'
     import pipelineList from '@/components/devops/pipeline-list'
     import templateList from '@/components/devops/template-list'
     import createGroup from '@/components/devops/create_group'
@@ -433,7 +431,7 @@
             pipelineList,
             templateList,
             metadataPanel,
-            // UserInput,
+            UserInput,
             emptyTips
         },
         data () {
@@ -1134,12 +1132,6 @@
             },
             closePipelineList () {
                 this.showPipelineList = false
-            },
-            handleAttacherChange (value) {
-                this.createRuleForm.notifyUserList = value.split(',')
-            },
-            handleReviewerChange (value) {
-                this.createRuleForm.auditUserList = value.split(',')
             },
             handleChange (name, value) {
                 if (name === 'reviewer') {
