@@ -97,7 +97,7 @@ class StartContainerStageCmd(
             stageStatus = pickJob(commandContext, actionType = newActionType, userId = event.userId)
 
             if (commandContext.skipContainerNum == commandContext.containers.size) {
-                stageStatus  = BuildStatus.SKIP
+                stageStatus = BuildStatus.SKIP
             }
 
             commandContext.buildStatus = stageStatus
@@ -126,7 +126,7 @@ class StartContainerStageCmd(
      * 所有容器都结束，但有失败的容器，则根据容器的状态判断[BuildStatusSwitcher.stageStatusMaker]决定哪种失败状态设置stageStatus
      * 所有容器都结束，但有取消的容器，则直接返回[BuildStatusSwitcher.stageStatusMaker] 决定取消的状态设置stageStatus
      */
-    private fun pickJob(commandContext: StageContext, actionType: ActionType, userId: String):BuildStatus {
+    private fun pickJob(commandContext: StageContext, actionType: ActionType, userId: String): BuildStatus {
         // hotfix：可能在出现最后的Job失败将前面的运行中的Job中断
         var running: BuildStatus? = null
         var fail: BuildStatus? = null

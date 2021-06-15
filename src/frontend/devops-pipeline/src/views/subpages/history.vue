@@ -42,7 +42,6 @@
         computed: {
             ...mapGetters('pipelines', {
                 'statusMap': 'getStatusMap',
-                'pipelineList': 'getPipelineList',
                 'hisPageStatus': 'getHisPageStatus'
             }),
             projectId () {
