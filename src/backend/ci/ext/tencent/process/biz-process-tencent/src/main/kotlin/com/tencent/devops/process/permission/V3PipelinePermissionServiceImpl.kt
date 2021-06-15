@@ -28,15 +28,14 @@
 
 package com.tencent.devops.process.permission
 
-import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,7 +46,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
     val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     val dslContext: DSLContext,
     val pipelineInfoDao: PipelineInfoDao,
-    val managerService: ManagerService
+    val authResourceApi: AuthResourceApi
 ) : PipelinePermissionService {
     // TODO: 为解决pipelineId较长的问题，此处校验时需将pipelineId转为Id, 获取实例时,需将ID转化为pipelineId
 
@@ -122,6 +121,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
     }
 
     override fun getResourceByPermission(userId: String, projectId: String, permission: AuthPermission): List<String> {
+
         val iamInstanceList = authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = bsPipelineAuthServiceCode,
@@ -130,19 +130,31 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             supplier = null,
             resourceType = AuthResourceType.PIPELINE_DEFAULT
         )
+
         val pipelineIds = mutableListOf<String>()
         if (iamInstanceList.contains("*")) {
             pipelineInfoDao.searchByPipelineName(dslContext, projectId)?.map { pipelineIds.add(it.pipelineId) }
         } else {
-            // TODO: 根据ID 列表查pipeline信息
-            pipelineIds.addAll(iamInstanceList)
-
+            pipelineInfoDao.listInfoByPipelineIds(dslContext, projectId, iamInstanceList.toSet())?.map { pipelineIds.add(it.pipelineId) }
         }
         return pipelineIds
     }
 
-    override fun createResource(userId: String, projectId: String, pipelineId: String, pipelineName: String) {
-        return
+    override fun createResource(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String
+    ) {
+        val pipelineAutoId = findInstanceId(pipelineId)
+        return authResourceApi.createResource(
+            user = userId,
+            projectCode = projectId,
+            serviceCode = bsPipelineAuthServiceCode,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            resourceCode = pipelineAutoId,
+            resourceName = pipelineName
+        )
     }
 
     override fun modifyResource(projectId: String, pipelineId: String, pipelineName: String) {

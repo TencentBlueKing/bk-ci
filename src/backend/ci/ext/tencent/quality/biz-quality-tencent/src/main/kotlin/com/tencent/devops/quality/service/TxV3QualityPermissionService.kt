@@ -3,6 +3,7 @@ package com.tencent.devops.quality.service
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
@@ -16,7 +17,8 @@ class TxV3QualityPermissionService @Autowired constructor(
     val dslContext: DSLContext,
     val ruleDao: QualityRuleDao,
     val groupDao: QualityRuleDao,
-    val tokenService: ClientTokenService
+    val tokenService: ClientTokenService,
+    val authResourceApiStr: AuthResourceApiStr
 ): QualityPermissionService {
     override fun validateGroupPermission(
         userId: String,
@@ -40,7 +42,14 @@ class TxV3QualityPermissionService @Autowired constructor(
     }
 
     override fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String) {
-        TODO("Not yet implemented")
+        authResourceApiStr.createResource(
+            user = userId,
+            serviceCode = null,
+            resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_GROUP),
+            projectCode = projectId,
+            resourceCode = groupId.toString(),
+            resourceName = groupName
+        )
     }
 
     override fun modifyGroupResource(projectId: String, groupId: Long, groupName: String) {
@@ -121,7 +130,14 @@ class TxV3QualityPermissionService @Autowired constructor(
     }
 
     override fun createRuleResource(userId: String, projectId: String, ruleId: Long, ruleName: String) {
-        TODO("Not yet implemented")
+        authResourceApiStr.createResource(
+            user = userId,
+            serviceCode = null,
+            resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_RULE),
+            projectCode = projectId,
+            resourceCode = ruleId.toString(),
+            resourceName = ruleName
+        )
     }
 
     override fun modifyRuleResource(projectId: String, ruleId: Long, ruleName: String) {

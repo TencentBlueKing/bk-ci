@@ -5,6 +5,7 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.common.client.Client
@@ -46,10 +47,15 @@ class IamAuthConfiguration {
     fun txPermissionService(
         authHelper: AuthHelper,
         policyService: PolicyService,
-        iamConfiguration: IamConfiguration
+        iamConfiguration: IamConfiguration,
+        managerService: ManagerService
     ) = TxPermissionServiceImpl(
         authHelper = authHelper,
         policyService = policyService,
-        iamConfiguration = iamConfiguration
+        iamConfiguration = iamConfiguration,
+        managerService = managerService
     )
+
+    @Bean
+    fun managerService(client: Client) = ManagerService(client)
 }

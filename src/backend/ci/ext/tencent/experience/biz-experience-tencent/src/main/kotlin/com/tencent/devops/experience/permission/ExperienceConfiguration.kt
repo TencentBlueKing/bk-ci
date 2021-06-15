@@ -27,6 +27,7 @@
 
 package com.tencent.devops.experience.permission
 
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
@@ -63,8 +64,9 @@ class ExperienceConfiguration {
         dslContext: DSLContext,
         experienceDao: ExperienceDao,
         groupDao: GroupDao,
-        tokenService: ClientTokenService
+        tokenService: ClientTokenService,
+        authResourceApiStr: AuthResourceApiStr
     ) = TxV3ExperiencePermissionServiceImpl(
-        client, dslContext, experienceDao, groupDao, tokenService
+        client, dslContext, experienceDao, groupDao, tokenService, authResourceApiStr
     )
 }

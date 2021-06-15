@@ -30,15 +30,17 @@ package com.tencent.devops.auth.service.permission.iam
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.utils.TActionUtils
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 class TxPermissionServiceImpl @Autowired constructor(
     val authHelper: AuthHelper,
     val policyService: PolicyService,
-    val iamConfiguration: IamConfiguration
+    val iamConfiguration: IamConfiguration,
+    val managerService: ManagerService
 ) : AbsPermissionService(authHelper, policyService, iamConfiguration) {
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
@@ -46,6 +48,14 @@ class TxPermissionServiceImpl @Autowired constructor(
     }
 
     override fun validateUserResourcePermission(userId: String, action: String, projectCode: String, resourceType: String?): Boolean {
+        if (reviewManagerCheck(
+                userId = userId,
+                projectCode = projectCode,
+                resourceTypeStr = resourceType ?: "",
+                action = action
+            )) {
+            return true
+        }
         return super.validateUserResourcePermission(userId, action, projectCode, resourceType)
     }
 
@@ -57,6 +67,14 @@ class TxPermissionServiceImpl @Autowired constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
+        if (reviewManagerCheck(
+                userId = userId,
+                projectCode = projectCode,
+                resourceTypeStr = resourceType ?: "",
+                action = action
+            )) {
+            return true
+        }
         return super.validateUserResourcePermissionByRelation(
             userId = userId,
             action = action,
@@ -73,6 +91,14 @@ class TxPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): List<String> {
+        if (reviewManagerCheck(
+                userId = userId,
+                projectCode = projectCode,
+                resourceTypeStr = resourceType ?: "",
+                action = action
+            )) {
+            return arrayListOf("*")
+        }
         return super.getUserResourceByAction(userId, action, projectCode, resourceType)
     }
 
@@ -83,5 +109,22 @@ class TxPermissionServiceImpl @Autowired constructor(
         resourceType: String
     ): Map<AuthPermission, List<String>> {
         return super.getUserResourcesByActions(userId, actions, projectCode, resourceType)
+    }
+
+    private fun reviewManagerCheck(
+        userId: String,
+        projectCode: String,
+        resourceTypeStr: String,
+        action: String
+    ): Boolean {
+        if (action == "all_action" || resourceTypeStr.isNullOrEmpty()) {
+            return false
+        }
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectCode,
+            resourceType = TActionUtils.getResourceTypeByStr(resourceTypeStr),
+            authPermission = TActionUtils.getAuthPermissionByAction(action)
+        )
     }
 }

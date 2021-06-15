@@ -30,6 +30,7 @@ package com.tencent.devops.quality
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -72,8 +73,9 @@ class QualityConfiguration {
         dslContext: DSLContext,
         ruleDao: QualityRuleDao,
         groupDao: QualityRuleDao,
-        tokenService: ClientTokenService
+        tokenService: ClientTokenService,
+        authResourceApiStr: AuthResourceApiStr
     ) = TxV3QualityPermissionService(
-        client, dslContext, ruleDao, groupDao, tokenService
+        client, dslContext, ruleDao, groupDao, tokenService, authResourceApiStr
     )
 }

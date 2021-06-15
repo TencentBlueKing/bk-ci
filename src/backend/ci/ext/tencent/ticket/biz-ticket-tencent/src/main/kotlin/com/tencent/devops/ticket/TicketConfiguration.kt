@@ -30,6 +30,7 @@ package com.tencent.devops.ticket
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -116,14 +117,14 @@ class TicketConfiguration {
         client: Client,
         certDao: CertDao,
         dslContext: DSLContext,
-        managerService: ManagerService,
-        tokenService: ClientTokenService
+        tokenService: ClientTokenService,
+        authResourceApi: AuthResourceApiStr
     ) = TxV3CertPermissionServiceImpl(
         client = client,
         certDao = certDao,
         dslContext = dslContext,
-        managerService = managerService,
-        tokenService = tokenService
+        tokenService = tokenService,
+        authResourceApi = authResourceApi
     )
 
     @Bean
@@ -132,13 +133,13 @@ class TicketConfiguration {
         client: Client,
         credentialDao: CredentialDao,
         dslContext: DSLContext,
-        managerService: ManagerService,
-        tokenService: ClientTokenService
+        tokenService: ClientTokenService,
+        authResourceApi: AuthResourceApiStr
     ) = TxV3CredentialPermissionServiceImpl(
         client = client,
         credentialDao = credentialDao,
         dslContext = dslContext,
-        managerService = managerService,
-        tokenService = tokenService
+        tokenService = tokenService,
+        authResourceApi = authResourceApi
     )
 }

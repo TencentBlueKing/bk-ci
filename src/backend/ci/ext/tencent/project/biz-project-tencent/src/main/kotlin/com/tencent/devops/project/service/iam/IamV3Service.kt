@@ -45,6 +45,7 @@ import com.tencent.devops.auth.api.ServiceGroupResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.TxAuthGroup
+import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
@@ -67,7 +68,8 @@ class IamV3Service @Autowired constructor(
     val projectDao: ProjectDao,
     val dslContext: DSLContext,
     val projectDispatcher: ProjectDispatcher,
-    val client: Client
+    val client: Client,
+    val authResourceApi: AuthResourceApi
 ) {
     /**
      *  V3创建项目流程 (V3创建项目未完全迁移完前，需双写V0,V3)
@@ -89,10 +91,13 @@ class IamV3Service @Autowired constructor(
             if (event.retryCount == 0) {
                 logger.info("start create iam V3 project $event")
                 watcher.start("createProject")
+                // 创建iamV3 分级管理员
                 val iamProjectId = createIamProject(userId, resourceRegisterInfo)
                 watcher.start("createManagerRole")
+                // 创建分级管理员下管理员分组
                 val roleId = createRole(userId, iamProjectId.toInt(), resourceRegisterInfo.resourceCode)
                 watcher.start("createManagerPermission")
+                // 添加管理员分组默认权限
                 createManagerPermission(resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceName, roleId)
                 event.iamProjectId = iamProjectId
                 watcher.start("findProject")

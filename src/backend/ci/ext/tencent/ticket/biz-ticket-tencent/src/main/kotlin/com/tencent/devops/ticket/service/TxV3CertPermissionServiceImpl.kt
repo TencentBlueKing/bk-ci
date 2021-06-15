@@ -4,6 +4,8 @@ import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
@@ -17,9 +19,9 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val certDao: CertDao,
     val dslContext: DSLContext,
-    val managerService: ManagerService,
-    val tokenService: ClientTokenService
-): CertPermissionService {
+    val tokenService: ClientTokenService,
+    val authResourceApi: AuthResourceApiStr
+) : CertPermissionService {
     override fun validatePermission(
         userId: String,
         projectId: String,
@@ -57,9 +59,6 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermission: AuthPermission
     ): Boolean {
-        if (managerCheck(userId, projectId, authPermission)) {
-            return true
-        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -77,9 +76,6 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         resourceCode: String,
         authPermission: AuthPermission
     ): Boolean {
-        if (managerCheck(userId, projectId, authPermission)) {
-            return true
-        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -96,6 +92,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermission: AuthPermission
     ): List<String> {
+
         val certIamInfo = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -103,6 +100,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
             resourceType = AuthResourceType.TICKET_CERT.value,
             projectCode = projectId
         ).data ?: emptyList()
+
         logger.info("filterCert user[$userId] project[$projectId] auth[$authPermission] list[$certIamInfo]")
         if (certIamInfo.contains("*")) {
             return getAllCertByProject(projectId)
@@ -135,14 +133,21 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
     }
 
     override fun createResource(userId: String, projectId: String, certId: String) {
-        TODO("Not yet implemented")
+        authResourceApi.createResource(
+            user = userId,
+            serviceCode = null,
+            resourceType = AuthResourceType.TICKET_CERT.value,
+            projectCode = projectId,
+            resourceCode = certId,
+            resourceName = certId
+        )
     }
 
     override fun deleteResource(projectId: String, certId: String) {
         return
     }
 
-    private fun buildCertAction(permission: AuthPermission) : String {
+    private fun buildCertAction(permission: AuthPermission): String {
         return TActionUtils.buildAction(permission, AuthResourceType.TICKET_CERT)
     }
 
@@ -154,18 +159,6 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
             idList.add(it.certId)
         }
         return idList
-    }
-
-    private fun managerCheck(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        if (managerService.isManagerPermission(
-                userId = userId,
-                projectId = projectId,
-                authPermission = authPermission,
-                resourceType = AuthResourceType.TICKET_CERT
-            )) {
-            return true
-        }
-        return false
     }
 
     companion object {

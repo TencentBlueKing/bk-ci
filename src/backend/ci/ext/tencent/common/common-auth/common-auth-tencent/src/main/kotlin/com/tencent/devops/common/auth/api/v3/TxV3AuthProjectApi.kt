@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class TxV3BSAuthProjectApi @Autowired constructor(
+class TxV3AuthProjectApi @Autowired constructor(
     val client: Client,
     val tokenService: ClientTokenService
 ): AuthProjectApi {

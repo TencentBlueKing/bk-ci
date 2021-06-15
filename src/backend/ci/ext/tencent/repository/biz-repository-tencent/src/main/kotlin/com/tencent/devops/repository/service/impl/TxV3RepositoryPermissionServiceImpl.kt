@@ -31,6 +31,7 @@ import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
@@ -45,7 +46,8 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val dslContext: DSLContext,
     private val client: Client,
-    private val tokenService: ClientTokenService
+    private val tokenService: ClientTokenService,
+    val authResourceApiStr: AuthResourceApiStr
 ) : RepositoryPermissionService {
 
     override fun validatePermission(
@@ -161,8 +163,14 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
     }
 
     override fun createResource(userId: String, projectId: String, repositoryId: Long, repositoryName: String) {
-        // TODO
-        return
+        authResourceApiStr.createResource(
+            user = userId,
+            serviceCode = null,
+            resourceType = TActionUtils.extResourceType(AuthResourceType.CODE_REPERTORY),
+            projectCode = projectId,
+            resourceCode = repositoryId.toString(),
+            resourceName = repositoryName
+        )
     }
 
     override fun editResource(projectId: String, repositoryId: Long, repositoryName: String) {

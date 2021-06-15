@@ -1,22 +1,3 @@
-package com.tencent.devops.repository
-
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.CodeAuthServiceCode
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.repository.dao.RepositoryDao
-import com.tencent.devops.repository.service.impl.RepositoryPermissionServiceImpl
-import com.tencent.devops.repository.service.impl.TxV3RepositoryPermissionServiceImpl
-import org.jooq.DSLContext
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -42,6 +23,26 @@ import org.springframework.core.Ordered
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+package com.tencent.devops.repository
+
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
+import com.tencent.devops.common.auth.code.CodeAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.service.impl.RepositoryPermissionServiceImpl
+import com.tencent.devops.repository.service.impl.TxV3RepositoryPermissionServiceImpl
+import org.jooq.DSLContext
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
 @Configuration
 @ConditionalOnWebApplication
@@ -75,12 +76,14 @@ class RepositoryConfiguration {
         repositoryDao: RepositoryDao,
         dslContext: DSLContext,
         client: Client,
-        tokenService: ClientTokenService
+        tokenService: ClientTokenService,
+        authResourceApiStr: AuthResourceApiStr
     ) = TxV3RepositoryPermissionServiceImpl(
         managerService = managerService,
         repositoryDao = repositoryDao,
         dslContext = dslContext,
         client = client,
-        tokenService = tokenService
+        tokenService = tokenService,
+        authResourceApiStr = authResourceApiStr
     )
 }

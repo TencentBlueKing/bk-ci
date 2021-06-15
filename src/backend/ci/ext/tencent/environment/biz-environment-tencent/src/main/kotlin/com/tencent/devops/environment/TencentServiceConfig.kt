@@ -30,6 +30,7 @@ package com.tencent.devops.environment
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -97,13 +98,15 @@ class TencentServiceConfig {
         nodeDao: NodeDao,
         dslContext: DSLContext,
         managerService: ManagerService,
-        tokenCheckService: ClientTokenService
+        tokenCheckService: ClientTokenService,
+        authResourceApiStr: AuthResourceApiStr
     ) = TxV3EnvironmentPermissionService(
         client = client,
         envDao = envDao,
         nodeDao = nodeDao,
         dslContext = dslContext,
         managerService = managerService,
-        tokenCheckService = tokenCheckService
+        tokenCheckService = tokenCheckService,
+        authResourceApiStr = authResourceApiStr
     )
 }

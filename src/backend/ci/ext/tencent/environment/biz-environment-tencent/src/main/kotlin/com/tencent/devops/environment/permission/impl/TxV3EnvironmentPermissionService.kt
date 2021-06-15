@@ -31,6 +31,7 @@ import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
@@ -47,7 +48,8 @@ class TxV3EnvironmentPermissionService constructor(
     private val envDao: EnvDao,
     private val nodeDao: NodeDao,
     private val managerService: ManagerService,
-    private val tokenCheckService: ClientTokenService
+    private val tokenCheckService: ClientTokenService,
+    val authResourceApiStr: AuthResourceApiStr
 ) : EnvironmentPermissionService {
 
     override fun checkEnvPermission(
@@ -61,7 +63,7 @@ class TxV3EnvironmentPermissionService constructor(
                 projectId = projectId,
                 authPermission = permission,
                 resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
-        )) {
+            )) {
             return true
         }
 
@@ -217,7 +219,14 @@ class TxV3EnvironmentPermissionService constructor(
     }
 
     override fun createEnv(userId: String, projectId: String, envId: Long, envName: String) {
-        TODO("Not yet implemented")
+        authResourceApiStr.createResource(
+            user = userId,
+            serviceCode = null,
+            resourceType = TActionUtils.extResourceType(AuthResourceType.ENVIRONMENT_ENVIRONMENT),
+            projectCode = projectId,
+            resourceCode = envId.toString(),
+            resourceName = envName
+        )
     }
 
     override fun updateEnv(userId: String, projectId: String, envId: Long, envName: String) {
@@ -229,11 +238,18 @@ class TxV3EnvironmentPermissionService constructor(
     }
 
     override fun createNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
-        TODO("Not yet implemented")
+        authResourceApiStr.createResource(
+            user = userId,
+            serviceCode = null,
+            resourceType = TActionUtils.extResourceType(AuthResourceType.ENVIRONMENT_ENV_NODE),
+            projectCode = projectId,
+            resourceCode = nodeId.toString(),
+            resourceName = nodeName
+        )
     }
 
     override fun deleteNode(projectId: String, nodeId: Long) {
-        TODO("Not yet implemented")
+        return
     }
 
     override fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {

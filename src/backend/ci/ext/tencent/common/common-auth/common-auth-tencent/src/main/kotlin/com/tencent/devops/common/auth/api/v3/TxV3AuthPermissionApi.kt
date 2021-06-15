@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
 @Component
-class TxV3BsAuthPermissionApi @Autowired constructor(
+class TxV3AuthPermissionApi @Autowired constructor(
     val client: Client,
     val tokenService: ClientTokenService
 ) : AuthPermissionApi {

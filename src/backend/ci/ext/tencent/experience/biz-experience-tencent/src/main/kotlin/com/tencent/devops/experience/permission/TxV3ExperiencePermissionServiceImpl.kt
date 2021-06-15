@@ -3,6 +3,7 @@ package com.tencent.devops.experience.permission
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
@@ -18,7 +19,8 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
     val dslContext: DSLContext,
     val experienceDao: ExperienceDao,
     val groupDao: GroupDao,
-    val tokenService: ClientTokenService
+    val tokenService: ClientTokenService,
+    val authResourceApiStr: AuthResourceApiStr
 ): ExperiencePermissionService {
 
     override fun validateTaskPermission(
@@ -43,7 +45,14 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
     }
 
     override fun createTaskResource(user: String, projectId: String, experienceId: Long, experienceName: String) {
-        TODO("Not yet implemented")
+        authResourceApiStr.createResource(
+            user = user,
+            serviceCode = null,
+            resourceType = TActionUtils.extResourceType(AuthResourceType.EXPERIENCE_TASK),
+            projectCode = projectId,
+            resourceCode = experienceId.toString(),
+            resourceName = experienceName
+        )
     }
 
     override fun filterExperience(
@@ -88,7 +97,14 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
     }
 
     override fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String) {
-        TODO("Not yet implemented")
+        authResourceApiStr.createResource(
+            user = userId,
+            serviceCode = null,
+            resourceType = TActionUtils.extResourceType(AuthResourceType.EXPERIENCE_GROUP),
+            projectCode = projectId,
+            resourceCode = groupId.toString(),
+            resourceName = groupName
+        )
     }
 
     override fun modifyGroupResource(projectId: String, groupId: Long, groupName: String) {

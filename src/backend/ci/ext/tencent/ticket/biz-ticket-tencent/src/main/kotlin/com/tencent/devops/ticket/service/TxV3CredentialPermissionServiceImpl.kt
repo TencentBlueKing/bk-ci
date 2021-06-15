@@ -31,6 +31,7 @@ import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.utils.TActionUtils
@@ -45,8 +46,8 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val credentialDao: CredentialDao,
     val dslContext: DSLContext,
-    val managerService: ManagerService,
-    val tokenService: ClientTokenService
+    val tokenService: ClientTokenService,
+    val authResourceApi: AuthResourceApiStr
 ) : CredentialPermissionService {
 
     override fun validatePermission(
@@ -73,9 +74,6 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        if (managerCheck(userId, projectId, authPermission)) {
-            return true
-        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -93,9 +91,6 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
         resourceCode: String,
         authPermission: AuthPermission
     ): Boolean {
-        if (managerCheck(userId, projectId, authPermission)) {
-            return true
-        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -115,6 +110,7 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
             action = buildCredentialAction(authPermission),
             resourceType = AuthResourceType.TICKET_CREDENTIAL.value
         ).data ?: emptyList()
+
         logger.info("filterCredential user[$userId] project[$projectId] auth[$authPermission] list[$credentialList]")
         return if (credentialList.contains("*")) {
             getAllCredentialsByProject(projectId)
@@ -155,7 +151,14 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
         credentialId: String,
         authGroupList: List<BkAuthGroup>?
     ) {
-        // TODO
+        authResourceApi.createResource(
+            user = userId,
+            serviceCode = null,
+            resourceType = AuthResourceType.TICKET_CREDENTIAL.value,
+            projectCode = projectId,
+            resourceCode = credentialId,
+            resourceName = credentialId
+        )
         return
     }
 
@@ -171,7 +174,7 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
         return idList
     }
 
-    private fun buildCredentialAction(permission: AuthPermission) : String {
+    private fun buildCredentialAction(permission: AuthPermission): String {
         return TActionUtils.buildAction(permission, AuthResourceType.TICKET_CREDENTIAL)
     }
 
