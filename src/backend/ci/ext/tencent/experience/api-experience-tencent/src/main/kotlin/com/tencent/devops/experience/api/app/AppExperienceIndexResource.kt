@@ -47,7 +47,6 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Api(tags = ["APP_EXPERIENCE_INDEX"], description = "版本体验-首页")
 @Path("/app/experiences/index")
