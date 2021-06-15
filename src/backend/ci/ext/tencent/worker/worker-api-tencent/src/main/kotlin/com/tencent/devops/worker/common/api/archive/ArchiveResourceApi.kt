@@ -188,12 +188,13 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         projectId: String,
         repoName: String,
         fullpath: String,
-        destPath: File
+        destPath: File,
+        isVmBuildEnv: Boolean
     ) {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullpath"
         var header = HashMap<String, String>()
         header.set("X-BKREPO-UID", user)
-        val request = buildGet(url, header, true)
+        val request = buildGet(url, header, isVmBuildEnv)
         download(request, destPath)
     }
 
@@ -221,7 +222,14 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                 isVmBuildEnv = isVmBuildEnv
             )
         } else {
-            downloadBkRepoFile(userId, projectId, "custom", uri, destPath)
+            downloadBkRepoFile(
+                user = userId,
+                projectId = projectId,
+                repoName = "custom",
+                fullpath = uri,
+                destPath = destPath,
+                isVmBuildEnv = isVmBuildEnv
+            )
         }
     }
 
@@ -251,7 +259,14 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                 isVmBuildEnv = isVmBuildEnv
             )
         } else {
-            downloadBkRepoFile(userId, projectId, "pipeline", uri, destPath)
+            downloadBkRepoFile(
+                user = userId,
+                projectId = projectId,
+                repoName = "pipeline",
+                fullpath = uri,
+                destPath = destPath,
+                isVmBuildEnv = isVmBuildEnv
+            )
         }
     }
 
