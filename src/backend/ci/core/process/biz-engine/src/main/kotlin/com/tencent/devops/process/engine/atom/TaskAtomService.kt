@@ -37,6 +37,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
@@ -70,6 +71,9 @@ class TaskAtomService @Autowired(required = false) constructor(
         jmxElements.execute(task.taskType)
         var atomResponse = AtomResponse(BuildStatus.FAILED)
         try {
+            if (!VmOperateTaskGenerator.isVmAtom(task)) {
+                dispatchBroadCastEvent(task, ActionType.START)
+            }
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(
                 task = task,
@@ -108,6 +112,20 @@ class TaskAtomService @Autowired(required = false) constructor(
             taskAfter(atomResponse, task, startTime)
         }
         return atomResponse
+    }
+
+    private fun dispatchBroadCastEvent(task: PipelineBuildTask, actionType: ActionType) {
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildStatusBroadCastEvent(
+                source = "task-${task.taskId}",
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                userId = task.starter,
+                taskId = task.taskId,
+                buildId = task.buildId,
+                actionType = actionType
+            )
+        )
     }
 
     /**
@@ -169,17 +187,11 @@ class TaskAtomService @Autowired(required = false) constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to post the task($task): ${ignored.message}")
         }
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildStatusBroadCastEvent(
-                source = "task-end-${task.taskId}",
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                userId = task.starter,
-                taskId = task.taskId,
-                buildId = task.buildId,
-                actionType = ActionType.END
-            )
-        )
+
+        if (!VmOperateTaskGenerator.isVmAtom(task)) {
+            dispatchBroadCastEvent(task, ActionType.END)
+        }
+
         buildLogPrinter.stopLog(
             buildId = task.buildId,
             tag = task.taskId,
