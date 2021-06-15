@@ -232,7 +232,7 @@ object LoggerService {
                 // 上报前做长度等内容限制
                 fixUploadMessage(logMessage)
                 this.uploadQueue.put(logMessage)
-            } else {
+            } else if (elementId2LogProperty[elementId]?.logStorageMode != LogStorageMode.LOCAL) {
                 logger.warn("The number of Task[$elementId] log lines exceeds the limit, " +
                     "the log file will be archived.")
                 this.uploadQueue.put(logMessage.copy(
