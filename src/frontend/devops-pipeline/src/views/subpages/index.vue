@@ -60,6 +60,7 @@
                         </ul>
                         <ul>
                             <li @click="exportPipeline">{{ $t('newlist.exportPipelineJson') }}</li>
+                            <li v-if="!isTemplatePipeline" @click="importModifyPipeline">{{ $t('newlist.importModifyPipelineJson') }}</li>
                             <li @click="copyPipeline">{{ $t('newlist.copyAs') }}</li>
                             <li @click="showTemplateDialog">{{ $t('newlist.saveAsTemp') }}</li>
                             <li @click="deletePipeline">{{ $t('delete') }}</li>
@@ -84,6 +85,8 @@
         </bk-dialog>
         <review-dialog :is-show="showReviewDialog"></review-dialog>
         <export-dialog :is-show.sync="showExportDialog"></export-dialog>
+        <import-pipeline-popup :handle-import-success="handleImportModifyPipeline" :is-show.sync="showImportDialog"></import-pipeline-popup>
+        
     </div>
 </template>
 
@@ -96,10 +99,11 @@
     import ReviewDialog from '@/components/ReviewDialog'
     import { bus } from '@/utils/bus'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import showTooltip from '@/components/common/showTooltip'
     import exportDialog from '@/components/ExportDialog'
     import versionSideslider from '@/components/VersionSideslider'
-    import { debounce } from '../../utils/util'
+    import { debounce, navConfirm } from '@/utils/util'
     export default {
         components: {
             innerHeader,
@@ -109,7 +113,8 @@
             BreadCrumbItem,
             ReviewDialog,
             exportDialog,
-            versionSideslider
+            versionSideslider,
+            ImportPipelinePopup
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -138,7 +143,8 @@
                     isCopySetting: false,
                     templateName: ''
                 },
-                showExportDialog: false
+                showExportDialog: false,
+                showImportDialog: false
             }
         },
         computed: {
@@ -263,14 +269,34 @@
         methods: {
             ...mapActions('atom', [
                 'requestPipelineExecDetailByBuildNum',
-                'togglePropertyPanel'
+                'togglePropertyPanel',
+                'setEditFrom'
             ]),
-            handleSelected (pipelineId) {
+            handleSelected (pipelineId, cur) {
+                if (this.isEditing) {
+                    navConfirm({ content: this.$t('editPage.confirmMsg'), type: 'warning' }).then(() => {
+                        this.doSelectPipeline(pipelineId, cur)
+                    }).catch(() => {
+                        // prevent select
+                    })
+                } else {
+                    this.doSelectPipeline(pipelineId, cur)
+                }
+            },
+            doSelectPipeline (pipelineId, cur) {
                 const { projectId, $route } = this
-
                 this.updateCurPipeline({
                     pipelineId,
                     projectId
+                })
+                // 清空搜索
+                this.searchPipelineList({
+                    projectId
+                }).then((list) => {
+                    this.setBreadCrumbPipelineList(list, {
+                        pipelineId,
+                        pipelineName: cur.pipelineName
+                    })
                 })
 
                 const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
@@ -282,7 +308,7 @@
                     }
                 })
             },
-            async handleSearchPipeline (value, e) {
+            async handleSearchPipeline (value) {
                 if (this.pipelineListSearching) return
                 this.pipelineListSearching = true
                 await this.fetchPipelineList(value)
@@ -348,6 +374,36 @@
             exportPipeline () {
                 this.showExportDialog = true
             },
+            importModifyPipeline () {
+                this.showImportDialog = true
+            },
+            handleImportModifyPipeline (result) {
+                this.showImportDialog = false
+                this.setEditFrom(true)
+                if (!this.isEditPage) {
+                    this.$router.push({
+                        name: 'pipelinesEdit'
+                    })
+                }
+                this.$nextTick(() => {
+                    const pipelineVersion = this.curPipeline.pipelineVersion
+                    const pipelineName = this.curPipeline.pipelineName
+                    this.setPipelineSetting({
+                        ...result.setting,
+                        pipelineName,
+                        pipelineId: this.pipelineId,
+                        projectId: this.projectId
+                    })
+                    this.setPipeline({
+                        ...result.model,
+                        name: pipelineName,
+                        latestVersion: pipelineVersion,
+                        instanceFromTemplate: false
+                    })
+                    this.setPipelineEditing(true)
+                })
+            },
+            
             copyPipeline () {
                 this.isDialogShow = true
                 this.dialogConfig = {
