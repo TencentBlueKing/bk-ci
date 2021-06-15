@@ -310,16 +310,26 @@ class TriggerBuildService @Autowired constructor(
             params = params
         )
 
-        val stage1 = Stage(listOf(triggerContainer), id = "stage-0", name = "stage_0")
+        val stage1 = Stage(listOf(triggerContainer), id = "Stage-0", name = "Stage_0")
         stageList.add(stage1)
 
         // 其他的stage
         yaml.stages.forEachIndexed { stageIndex, stage ->
-            stageList.add(createStage(stage, event, gitBasicSetting))
+            stageList.add(createStage(
+                stage = stage,
+                event = event,
+                gitBasicSetting = gitBasicSetting,
+                stageIndex = stageIndex + 1
+            ))
         }
 
         yaml.finally?.forEach {
-            stageList.add(createStage(it, event, gitBasicSetting, true))
+            stageList.add(createStage(
+                stage = it,
+                event = event,
+                gitBasicSetting = gitBasicSetting,
+                finalStage = true
+            ))
         }
 
         return Model(
@@ -406,6 +416,7 @@ class TriggerBuildService @Autowired constructor(
         stage: com.tencent.devops.common.ci.v2.Stage,
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
+        stageIndex: Int = 0,
         finalStage: Boolean = false
     ): Stage {
         val containerList = mutableListOf<Container>()
@@ -429,7 +440,9 @@ class TriggerBuildService @Autowired constructor(
 
         return Stage(
             id = stage.id,
-            name = stage.name ?: "",
+            name = stage.name ?: if (finalStage) {
+                "Stage_final"
+            } else { "Stage_$stageIndex" },
             tag = stage.label,
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
@@ -470,7 +483,7 @@ class TriggerBuildService @Autowired constructor(
 
         val vmContainer = VMBuildContainer(
             jobId = job.id,
-            name = job.name ?: "",
+            name = job.name ?: "Job_${jobIndex + 1}",
             elements = elementList,
             status = null,
             startEpoch = null,
