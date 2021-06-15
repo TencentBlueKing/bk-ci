@@ -171,4 +171,19 @@ interface ServiceTemplateResource {
         @QueryParam("templateType")
         templateType: TemplateType?
     ): Result<OptionalTemplateList>
+
+    @ApiOperation("检查模板是否合法")
+    @GET
+    @Path("/projects/{projectId}/templates/{templateId}/check")
+    fun checkTemplate(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "模版ID", required = true)
+        @PathParam("templateId")
+        templateId: String
+    ): Result<Boolean>
 }

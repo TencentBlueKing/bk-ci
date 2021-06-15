@@ -278,7 +278,7 @@ class DispatchService constructor(
             secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1),
             JsonUtil.toJson(SecretInfo(hashId, secretKey))
         )
-        val expireAt = System.currentTimeMillis() + 24 * 7 * 3600
+        val expireAt = System.currentTimeMillis() + 24 * 7 * 3600 * 1000
         redisOperation.expireAt(secretInfoRedisKey, Date(expireAt))
         return SecretInfo(
             hashId = hashId,

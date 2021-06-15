@@ -27,6 +27,7 @@ import {
 import {
     SET_STAGE_TAG_LIST,
     SET_PIPELINE_STAGE,
+    SET_COMMON_SETTING,
     SET_PIPELINE_CONTAINER,
     SET_TEMPLATE,
     SET_CONTAINER_DETAIL,
@@ -104,6 +105,14 @@ export default {
             console.log(error)
         }
     },
+    async fetchCommonSetting ({ commit }) {
+        try {
+            const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/setting/common/get`)
+            commit(SET_COMMON_SETTING, res.data)
+        } catch (error) {
+            console.log(error)
+        }
+    },
     setExecuteStatus ({ commit }, status) {
         commit(SET_EXECUTE_STATUS, status)
     },
@@ -159,15 +168,6 @@ export default {
 
     setPipelineContainer ({ commit }, { oldContainers, containers }) {
         commit(SET_PIPELINE_CONTAINER, { oldContainers, containers })
-    },
-    /**
-     * 根据projectcode获取项目详情
-     */
-    requestProjectDetail: async ({ commit }, { projectId }) => {
-        return request.get(`project/api/user/projects/${projectId}/`).then(response => {
-            // Object.assign(response.data, { ccAppName: response.ccAppName })
-            return response.data
-        })
     },
     requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
         try {
@@ -428,7 +428,7 @@ export default {
 
     // 获取项目下已安装的插件列表
     getInstallAtomList ({ commit }, projectCode) {
-        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=1000`)
+        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=2000`)
     },
 
     // 获取已安装的插件详情

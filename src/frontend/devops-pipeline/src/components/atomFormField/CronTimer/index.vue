@@ -1,7 +1,7 @@
 <template>
-    <div class='soda-cron-timer duration-exp'>
+    <div class="soda-cron-timer duration-exp">
         <span>
-            <span class='desc-divider'>每</span>
+            <span class="desc-divider">每</span>
             <bk-select
                 :searchable="false"
                 :clearable="false"
@@ -12,29 +12,29 @@
 
                 </bk-option>
             </bk-select>
-            <span class='desc-divider'>的</span>
+            <span class="desc-divider">的</span>
         </span>
         <!-- 星期 -->
         <span v-if="contabObj.peroid.value === 2">
             <bk-select
                 :searchable="false"
                 :clearable="false"
-                :disabled='disabled'
-                :value='contabObj.week.index'
-                @selected='onSelect'>
+                :disabled="disabled"
+                :value="contabObj.week.index"
+                @selected="onSelect">
                 <bk-option v-for="item in weekArray" :key="item.index" :id="item.index" :name="item.label">
                 </bk-option>
             </bk-select>
-            <span class='desc-divider'>的</span>
+            <span class="desc-divider">的</span>
         </span>
         <!-- 日期 -->
         <span v-if="contabObj.peroid.value === 3">
             <bk-select
                 :searchable="false"
                 :clearable="false"
-                :disabled='disabled'
-                :value='contabObj.day.index'
-                @selected='onSelect'>
+                :disabled="disabled"
+                :value="contabObj.day.index"
+                @selected="onSelect">
                 <bk-option v-for="item in dayArray" :key="item.index" :id="item.index" :name="item.label">
                 </bk-option>
             </bk-select>
@@ -44,27 +44,27 @@
             <bk-select
                 :searchable="false"
                 :clearable="false"
-                :disabled='disabled'
-                :value='contabObj.hour.index'
-                @selected='onSelect'>
+                :disabled="disabled"
+                :value="contabObj.hour.index"
+                @selected="onSelect">
                 <bk-option v-for="item in hourArray" :key="item.index" :id="item.index" :name="item.label">
                 </bk-option>
             </bk-select>
-            <span class='desc-divider'>时</span>
+            <span class="desc-divider">时</span>
         </span>
         <!-- 分钟 -->
         <span>
             <bk-select
                 :searchable="false"
                 :clearable="false"
-                :disabled='disabled'
-                :list='minutesArray'
-                :value='contabObj.minute.index'
-                @selected='onSelect'>
+                :disabled="disabled"
+                :list="minutesArray"
+                :value="contabObj.minute.index"
+                @selected="onSelect">
                 <bk-option v-for="item in minutesArray" :key="item.index" :id="item.index" :name="item.label">
                 </bk-option>
             </bk-select>
-            <span class='desc-divider'>分</span>
+            <span class="desc-divider">分</span>
         </span>
     </div>
 </template>
@@ -74,8 +74,8 @@
     import { PERIOD_ARRAY, WEEK_ARRAY, MONTH_ARRAY, DAY_ARRAY, HOUR_ARRAY, MINUTES_ARRAY } from './cronUtils'
 
     export default {
-        mixins: [ atomFieldMixin ],
         name: 'cron-timer',
+        mixins: [atomFieldMixin],
         props: {
             value: {
                 type: String,
@@ -95,7 +95,7 @@
         },
         methods: {
             parseExpression (expression) {
-                const [second, minute, hour, day, month, week] = expression.split(' ')
+                const [, minute, hour, day, month, week] = expression.split(' ')
                 let peroid = PERIOD_ARRAY[0]
                 switch (true) {
                     case /\s\*\s\?(\s\*){2}$/g.test(expression):
@@ -124,7 +124,7 @@
                 return list.find(opt => opt.value === Number(val))
             },
             generatorExpression () {
-                const { peroid, minute, hour, day, month, week } = this.contabObj
+                const { peroid, minute, hour, day, week } = this.contabObj
                 switch (peroid.label) {
                     case '小时':
                         return `0 ${minute.value} * ? * *`

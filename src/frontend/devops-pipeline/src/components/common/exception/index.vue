@@ -1,8 +1,8 @@
 <template>
-	<div class="bk-exception bk-exception-center" v-show="show">
-	    <img :src="image">
-	    <h2 class="exception-text">{{message}}</h2>
-	</div>
+    <div class="bk-exception bk-exception-center" v-show="show">
+        <img :src="image">
+        <h2 class="exception-text">{{message}}</h2>
+    </div>
 </template>
 
 <script>

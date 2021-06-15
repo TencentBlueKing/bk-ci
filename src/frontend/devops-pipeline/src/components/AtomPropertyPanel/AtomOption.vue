@@ -19,11 +19,11 @@
     import { mapActions, mapState } from 'vuex'
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
-    import optionConfigMixin from '@/store/modules/soda/optionConfigMixin'
+    import optionConfigMixin from '@/store/modules/common/optionConfigMixin'
     // import {
     //     getAtomOptionDefault,
     //     ATOM_OPTION
-    // } from '@/store/modules/soda/optionConfig'
+    // } from '@/store/modules/common/optionConfig'
     export default {
         name: 'atom-config',
         mixins: [atomMixin, validMixins, optionConfigMixin],
