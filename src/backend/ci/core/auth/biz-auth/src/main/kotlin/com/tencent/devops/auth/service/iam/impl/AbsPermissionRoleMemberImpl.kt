@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.service.iam.impl
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
@@ -35,18 +36,26 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleMemberDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.pojo.MemberInfo
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.common.api.util.PageUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.lang.reflect.Member
 import java.util.concurrent.TimeUnit
 
 abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
     open val iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService
 ) : PermissionRoleMemberService {
+
+    private val projectMemberCache = CacheBuilder.newBuilder()
+        .maximumSize(20)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build<String, ProjectMembersVO>()
 
     override fun createRoleMember(
         userId: String,
@@ -101,6 +110,41 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         pageInfoDTO.limit = pageInfo.limit.toLong()
         pageInfoDTO.offset = pageInfo.offset.toLong()
         return iamManagerService.getRoleGroupMember(roleId, pageInfoDTO)
+    }
+
+    override fun getProjectAllMember(projectId: Int): ProjectMembersVO? {
+        if (projectMemberCache.getIfPresent(projectId.toString()) != null) {
+            logger.info("getProjectAllMember $projectId get by cache")
+            return projectMemberCache.getIfPresent(projectId.toString())!!
+        }
+        // 获取项目下的用户组
+        val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId)
+        if (groupInfos == null || groupInfos.count == 0) {
+            return null
+        }
+        val pageInfo = PageInfoDTO()
+        pageInfo.limit = 0
+        // 单个用户组最多有1000个用户
+        pageInfo.offset = 1500
+
+        val members = mutableSetOf<MemberInfo>()
+        groupInfos.result.forEach { group ->
+            val membersInfos = iamManagerService.getRoleGroupMember(group.id, pageInfo).results
+            membersInfos.forEach { member ->
+                members.add(MemberInfo(
+                    id = member.id.toInt(),
+                    name = member.name,
+                    type = member.type
+                ))
+            }
+        }
+        val count = members.size
+        val result = ProjectMembersVO(
+            count = count,
+            userIds = members
+        )
+        projectMemberCache.put(projectId.toString(), result)
+        return result
     }
 
     abstract fun checkUser(userId: String)

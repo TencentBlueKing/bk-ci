@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.api.user.UserProjectMemberResource
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -66,6 +67,10 @@ class UserProjectMemberResourceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize
             ))
+    }
+
+    override fun getProjectAllMember(projectId: Int): Result<ProjectMembersVO?> {
+        return Result(permissionRoleMemberService.getProjectAllMember(projectId))
     }
 
     override fun deleteRoleMember(
