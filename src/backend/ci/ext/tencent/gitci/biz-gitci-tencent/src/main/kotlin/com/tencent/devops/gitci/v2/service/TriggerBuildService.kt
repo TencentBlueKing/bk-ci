@@ -568,7 +568,7 @@ class TriggerBuildService @Autowired constructor(
             NormalContainer(
                 containerId = null,
                 id = job.id,
-                name = job.name ?: "",
+                name = job.name ?: "Job_${jobIndex + 1}",
                 elements = elementList,
                 status = null,
                 startEpoch = null,
