@@ -31,10 +31,13 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType
 import org.slf4j.MDC
 
+@SuppressWarnings("LongParameterList")
 open class ICodeWebhookEvent(
     open val requestContent: String,
     open val retryTime: Int,
     open val delayMills: Int,
     open val commitEventType: CommitEventType,
-    open var traceId: String? = MDC.get(TraceTag.BIZID)
+    open var traceId: String? = MDC.get(TraceTag.BIZID),
+    open val event: String? = null,
+    open val secret: String? = null
 )

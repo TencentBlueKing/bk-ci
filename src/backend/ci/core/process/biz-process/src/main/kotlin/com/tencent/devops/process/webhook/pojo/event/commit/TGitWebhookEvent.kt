@@ -40,6 +40,13 @@ data class TGitWebhookEvent(
     override var delayMills: Int = 0,
     override val commitEventType: CommitEventType = CommitEventType.TGIT,
     override var traceId: String? = MDC.get(TraceTag.BIZID),
-    val event: String,
-    val secret: String?
-) : ICodeWebhookEvent(requestContent, retryTime, delayMills, commitEventType)
+    override val event: String,
+    override val secret: String?
+) : ICodeWebhookEvent(
+    requestContent = requestContent,
+    retryTime = retryTime,
+    delayMills = delayMills,
+    commitEventType = commitEventType,
+    event = event,
+    secret = secret
+)

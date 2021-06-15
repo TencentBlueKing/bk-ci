@@ -55,7 +55,7 @@ class WebhookEventListener constructor(
 ) {
 
     fun handleCommitEvent(event: ICodeWebhookEvent) {
-        logger.info("Receive WebhookEvent from MQ [${event.commitEventType}|${event.requestContent}]")
+        logger.info("Receive WebhookEvent from MQ [${event.commitEventType}|${event.requestContent}]|[${event.event}]")
         var result = false
         try {
             PipelineWebhookBuildLogContext.initTriggerLog(
@@ -73,7 +73,6 @@ class WebhookEventListener constructor(
             when (event.commitEventType) {
                 CommitEventType.SVN -> pipelineBuildService.externalCodeSvnBuild(event.requestContent)
                 CommitEventType.GIT -> {
-                    event as GitWebhookEvent
                     pipelineBuildService.externalCodeGitBuild(
                         codeRepositoryType = CodeGitWebHookTriggerElement.classType,
                         event = event.event,
@@ -84,7 +83,6 @@ class WebhookEventListener constructor(
                     e = event.requestContent
                 )
                 CommitEventType.TGIT -> {
-                    event as TGitWebhookEvent
                     pipelineBuildService.externalCodeGitBuild(
                         codeRepositoryType = CodeTGitWebHookTriggerElement.classType,
                         event = event.event,
