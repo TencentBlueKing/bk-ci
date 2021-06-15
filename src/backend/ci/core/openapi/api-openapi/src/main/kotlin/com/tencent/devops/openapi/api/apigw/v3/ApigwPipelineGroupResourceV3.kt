@@ -50,7 +50,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_PIPELINE_GROUP_V3"], description = "OPENAPI-流水线分组")
-@Path("/user/pipelineGroups")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/pipelineGroups")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwPipelineGroupResourceV3 {

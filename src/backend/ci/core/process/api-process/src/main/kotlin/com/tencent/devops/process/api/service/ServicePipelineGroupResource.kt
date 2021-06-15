@@ -50,7 +50,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PIPELINE_GROUP"], description = "用户-流水线分组")
-@Path("/user/pipelineGroups")
+@Path("/service/pipelineGroups")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServicePipelineGroupResource {
