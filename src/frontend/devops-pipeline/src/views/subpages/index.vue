@@ -272,22 +272,31 @@
                 'togglePropertyPanel',
                 'setEditFrom'
             ]),
-            handleSelected (pipelineId) {
+            handleSelected (pipelineId, cur) {
                 if (this.isEditing) {
                     navConfirm({ content: this.$t('editPage.confirmMsg'), type: 'warning' }).then(() => {
-                        this.doSelectPipeline(pipelineId)
+                        this.doSelectPipeline(pipelineId, cur)
                     }).catch(() => {
                         // prevent select
                     })
                 } else {
-                    this.doSelectPipeline(pipelineId)
+                    this.doSelectPipeline(pipelineId, cur)
                 }
             },
-            doSelectPipeline (pipelineId) {
+            doSelectPipeline (pipelineId, cur) {
                 const { projectId, $route } = this
                 this.updateCurPipeline({
                     pipelineId,
                     projectId
+                })
+                // 清空搜索
+                this.searchPipelineList({
+                    projectId
+                }).then((list) => {
+                    this.setBreadCrumbPipelineList(list, {
+                        pipelineId,
+                        pipelineName: cur.pipelineName
+                    })
                 })
 
                 const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
@@ -299,7 +308,7 @@
                     }
                 })
             },
-            async handleSearchPipeline (value, e) {
+            async handleSearchPipeline (value) {
                 if (this.pipelineListSearching) return
                 this.pipelineListSearching = true
                 await this.fetchPipelineList(value)
