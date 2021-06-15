@@ -132,8 +132,11 @@
             }
         },
         mounted () {
-            this.init()
-            this.requestQualityAtom()
+            if (!this.editfromImport) {
+                this.init()
+                this.requestQualityAtom()
+            }
+            this.setEditFrom(false)
             this.addLeaveListenr()
         },
         beforeDestroy () {
@@ -142,6 +145,7 @@
             this.removeLeaveListenr()
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
+            this.setEditFrom(false)
             this.errors.clear()
         },
         beforeRouteUpdate (to, from, next) {
@@ -160,7 +164,8 @@
                 'togglePropertyPanel',
                 'setPipeline',
                 'setPipelineEditing',
-                'setSaveStatus'
+                'setSaveStatus',
+                'setEditFrom'
             ]),
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
@@ -172,7 +177,7 @@
                 'requestInterceptAtom'
             ]),
             init () {
-                if (!this.isDraftEdit && !this.editfromImport) {
+                if (!this.isDraftEdit) {
                     this.isLoading = true
                     this.requestPipeline(this.$route.params)
                     this.requestPipelineSetting(this.$route.params)
