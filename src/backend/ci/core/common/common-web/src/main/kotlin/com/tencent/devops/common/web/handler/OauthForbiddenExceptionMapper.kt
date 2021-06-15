@@ -55,5 +55,4 @@ class OauthForbiddenExceptionMapper : ExceptionMapper<OauthForbiddenException> {
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result(status = CommonMessageCode.OAUTH_DENERD, message = message, data = exception.message)).build()
     }
-
 }
