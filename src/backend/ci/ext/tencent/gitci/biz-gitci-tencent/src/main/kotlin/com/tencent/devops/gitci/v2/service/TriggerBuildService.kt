@@ -677,7 +677,7 @@ class TriggerBuildService @Autowired constructor(
         if (!step.with.isNullOrEmpty()) {
             inputMap.putAll(step.with!!)
         }
-        // 拉取本地工程代码
+        // 非mr下根据commitId拉取本地工程代码
         if (step.checkout == "self") {
             inputMap["accessToken"] =
                 oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
