@@ -125,7 +125,7 @@ class PipelinePauseBuildFacadeService(
 
         var actionType = ActionType.REFRESH
         if (!isContinue) {
-            actionType = ActionType.TERMINATE
+            actionType = ActionType.END // END才会对应成取消状态
         }
 
         val isDiff = findDiffValue(
