@@ -106,7 +106,7 @@ class PipelineBuildWebhookService @Autowired constructor(
     }
 
     fun externalCodeGitBuild(codeRepositoryType: String, event: String?, body: String): Boolean {
-        logger.info("Trigger code git build($body)")
+        logger.info("Trigger code git build($body|$event)")
 
         val gitEvent = try {
             if (event == "Review Hook") {
