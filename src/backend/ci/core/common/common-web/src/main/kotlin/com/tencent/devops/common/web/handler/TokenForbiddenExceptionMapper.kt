@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.web.handler
 
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.exception.TokenForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -38,12 +38,12 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
 
 @BkExceptionMapper
-class TokenForbiddenExceptionMapper : ExceptionMapper<PermissionForbiddenException> {
+class TokenForbiddenExceptionMapper : ExceptionMapper<TokenForbiddenException> {
     companion object {
         val logger = LoggerFactory.getLogger(TokenForbiddenExceptionMapper::class.java)!!
     }
 
-    override fun toResponse(exception: PermissionForbiddenException): Response {
+    override fun toResponse(exception: TokenForbiddenException): Response {
         logger.warn("Encounter token exception(${exception.message})")
         val status = Response.Status.FORBIDDEN
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
