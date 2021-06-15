@@ -53,6 +53,9 @@ class PathPrefixFilter(
         return includedPaths.isEmpty() && excludedPaths.isEmpty()
     }
 
+    /**
+     * 路径过滤:触发的路径需要满足所有配置的路径
+     */
     @Suppress("ReturnCount")
     private fun isPathNotExcluded(): Boolean {
         triggerOnPath.forEach eventPath@{ eventPath ->
@@ -67,6 +70,9 @@ class PathPrefixFilter(
         return false
     }
 
+    /**
+     * 路径包含: 触发的路径只要有一个满足配置的路径
+     */
     private fun isPathIncluded(response: WebhookFilterResponse): Boolean {
         if (includedPaths.isEmpty()) {
             return true

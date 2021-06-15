@@ -24,11 +24,43 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-dependencies {
-    api(project(":core:common:common-webhook:api-common-webhook"))
-    api(project(":core:common:common-scm"))
-    api(project(":core:common:common-client"))
-    api(project(":core:repository:api-repository"))
-    api(project(":core:ticket:api-ticket"))
-    testImplementation(project(":core:common:common-test"))
+
+package com.tencent.devops.common.webhook.service.code.filter
+
+import org.junit.Assert
+import org.junit.Test
+
+class ProjectNameFilterTest {
+    private val response = WebhookFilterResponse()
+
+    @Test
+    fun filter() {
+        var projectNameFilter = ProjectNameFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnProjectName = "aaa/bbb",
+            projectName = "aaa/bbb"
+        )
+        Assert.assertTrue(projectNameFilter.doFilter(response))
+
+        projectNameFilter = ProjectNameFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnProjectName = "aaa/ccc",
+            projectName = "aaa/bbb"
+        )
+        Assert.assertFalse(projectNameFilter.doFilter(response))
+
+        projectNameFilter = ProjectNameFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnProjectName = "bbb",
+            projectName = "aaa/bbb/ccc"
+        )
+        Assert.assertTrue(projectNameFilter.doFilter(response))
+
+        projectNameFilter = ProjectNameFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnProjectName = "bbb",
+            projectName = "aaa/bbb/ccc/ddd"
+        )
+        Assert.assertFalse(projectNameFilter.doFilter(response))
+    }
 }

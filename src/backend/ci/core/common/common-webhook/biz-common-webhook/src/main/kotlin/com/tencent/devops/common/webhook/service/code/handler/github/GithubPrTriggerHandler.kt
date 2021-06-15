@@ -33,7 +33,7 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
+import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
-class GithubPrTriggerHandler : CodeWebhookTriggerHandler<GithubPullRequestEvent> {
+class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(GithubPrTriggerHandler::class.java)
@@ -117,7 +117,7 @@ class GithubPrTriggerHandler : CodeWebhookTriggerHandler<GithubPullRequestEvent>
         return ScmWebhookMatcher.MatchResult(true)
     }
 
-    override fun getWebhookFilters(
+    override fun getEventFilters(
         event: GithubPullRequestEvent,
         projectId: String,
         pipelineId: String,

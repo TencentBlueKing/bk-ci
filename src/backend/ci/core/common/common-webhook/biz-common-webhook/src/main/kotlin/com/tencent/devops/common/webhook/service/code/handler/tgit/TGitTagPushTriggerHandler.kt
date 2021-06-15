@@ -43,7 +43,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @CodeWebhookHandler
-class TGitTabPushTriggerHandler : GitHookTriggerHandler<GitTagPushEvent> {
+class TGitTagPushTriggerHandler : GitHookTriggerHandler<GitTagPushEvent> {
 
     override fun eventClass(): Class<GitTagPushEvent> {
         return GitTagPushEvent::class.java
