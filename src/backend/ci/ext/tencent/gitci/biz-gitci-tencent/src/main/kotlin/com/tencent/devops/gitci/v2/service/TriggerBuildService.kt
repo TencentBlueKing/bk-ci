@@ -640,7 +640,7 @@ class TriggerBuildService @Autowired constructor(
                     }
                 }
                 step.checkout != null -> {
-                    makeCheckoutElement(step, gitBasicSetting, additionalOptions)
+                    makeCheckoutElement(step, gitBasicSetting, event).copy(additionalOptions = additionalOptions)
                 }
                 else -> {
                     val data = mutableMapOf<String, Any>()
@@ -670,7 +670,7 @@ class TriggerBuildService @Autowired constructor(
     private fun makeCheckoutElement(
         step: Step,
         gitBasicSetting: GitCIBasicSetting,
-        additionalOptions: ElementAdditionalOptions
+        event: GitRequestEvent
     ): MarketBuildAtomElement {
         // checkout插件装配
         val inputMap = mutableMapOf<String, Any?>()
@@ -683,6 +683,13 @@ class TriggerBuildService @Autowired constructor(
                 oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
             inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl
             inputMap["authType"] = "ACCESS_TOKEN"
+
+            if (event.mergeRequestId != null) {
+                inputMap["pullType"] = "BRANCH"
+            } else {
+                inputMap["pullType"] = "COMMIT_ID"
+                inputMap["refName"] = event.commitId
+            }
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
         }
@@ -698,8 +705,7 @@ class TriggerBuildService @Autowired constructor(
             id = step.id,
             atomCode = "checkout",
             version = "1.*",
-            data = data,
-            additionalOptions = additionalOptions
+            data = data
         )
     }
 
