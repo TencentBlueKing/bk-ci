@@ -312,7 +312,7 @@ class TriggerBuildService @Autowired constructor(
             params = params
         )
 
-        val stage1 = Stage(listOf(triggerContainer), id = "stage-0", name = "stage_0")
+        val stage1 = Stage(listOf(triggerContainer), id = "stage-0", name = "Stage-0")
         stageList.add(stage1)
 
         // 其他的stage
@@ -451,8 +451,8 @@ class TriggerBuildService @Autowired constructor(
         return Stage(
             id = stage.id,
             name = stage.name ?: if (finalStage) {
-                "Stage_final"
-            } else { "Stage_$stageIndex" },
+                "Final"
+            } else { "Stage-$stageIndex" },
             tag = stage.label,
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
@@ -494,7 +494,7 @@ class TriggerBuildService @Autowired constructor(
 
         val vmContainer = VMBuildContainer(
             jobId = job.id,
-            name = job.name ?: "Job_${jobIndex + 1}",
+            name = job.name ?: "Job-${jobIndex + 1}",
             elements = elementList,
             status = null,
             startEpoch = null,
@@ -580,7 +580,7 @@ class TriggerBuildService @Autowired constructor(
             NormalContainer(
                 containerId = null,
                 id = job.id,
-                name = job.name ?: "Job_${jobIndex + 1}",
+                name = job.name ?: "Job-${jobIndex + 1}",
                 elements = elementList,
                 status = null,
                 startEpoch = null,
