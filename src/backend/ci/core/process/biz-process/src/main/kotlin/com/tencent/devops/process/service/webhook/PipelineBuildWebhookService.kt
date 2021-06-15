@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
@@ -104,17 +105,21 @@ class PipelineBuildWebhookService @Autowired constructor(
         return startProcessByWebhook(CodeSVNWebHookTriggerElement.classType, svnWebHookMatcher)
     }
 
-    fun externalCodeGitBuild(codeRepositoryType: String, e: String): Boolean {
-        logger.info("Trigger code git build($e)")
+    fun externalCodeGitBuild(codeRepositoryType: String, event: String, body: String): Boolean {
+        logger.info("Trigger code git build($body)")
 
-        val event = try {
-            objectMapper.readValue<GitEvent>(e)
+        val gitEvent = try {
+            if (event == "Review Hook") {
+                objectMapper.readValue<GitReviewEvent>(body)
+            } else {
+                objectMapper.readValue<GitEvent>(body)
+            }
         } catch (e: Exception) {
             logger.warn("Fail to parse the git web hook commit event", e)
             return false
         }
 
-        val gitWebHookMatcher = scmWebhookMatcherBuilder.createGitWebHookMatcher(event)
+        val gitWebHookMatcher = scmWebhookMatcherBuilder.createGitWebHookMatcher(gitEvent)
         if (!gitWebHookMatcher.preMatch().isMatch) {
             return true
         }

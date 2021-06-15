@@ -32,8 +32,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitReviewEvent(
-    @JsonProperty("objectKind")
-    val objectKind: String = classType,
     val event: String,
     val author: GitUser,
     val reviewers: List<Reviewer>,
