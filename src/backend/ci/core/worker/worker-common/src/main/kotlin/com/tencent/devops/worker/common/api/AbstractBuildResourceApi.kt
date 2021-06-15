@@ -312,9 +312,11 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             path
         } else if (useFileDevnetGateway != null) {
             if (useFileDevnetGateway) {
-                fixUrl(CommonEnv.fileDevnetGateway ?: gateway, path)
+                val fileDevnetGateway = CommonEnv.fileDevnetGateway
+                fixUrl(if (fileDevnetGateway.isNullOrBlank()) gateway else fileDevnetGateway, path)
             } else {
-                fixUrl(CommonEnv.fileIdcGateway ?: gateway, path)
+                val fileIdcGateway = CommonEnv.fileIdcGateway
+                fixUrl(if (fileIdcGateway.isNullOrBlank()) gateway else fileIdcGateway, path)
             }
         } else {
             fixUrl(gateway, path)
