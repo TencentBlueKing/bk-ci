@@ -112,11 +112,13 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @param destPath 上传目标文件路径
      * @param file 上传的文件
      * @param headers 请求头
+     * @param isVmBuildEnv 是否是有编译环境
      */
     fun uploadFile(
         url: String,
         destPath: String,
         file: File,
-        headers: Map<String, String>? = emptyMap()
+        headers: Map<String, String>? = emptyMap(),
+        isVmBuildEnv: Boolean
     ): Result<Boolean>
 }

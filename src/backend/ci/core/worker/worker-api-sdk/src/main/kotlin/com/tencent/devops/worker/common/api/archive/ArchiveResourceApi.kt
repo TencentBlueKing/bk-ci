@@ -173,7 +173,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         url: String,
         destPath: String,
         file: File,
-        headers: Map<String, String>?
+        headers: Map<String, String>?,
+        isVmBuildEnv: Boolean
     ): Result<Boolean> {
         LoggerService.addNormalLine("upload file url >>> $url")
         val fileBody = RequestBody.create(MultipartFormData, file)
@@ -182,7 +183,12 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .setType(MultipartBody.FORM)
             .addFormDataPart("file", fileName, fileBody)
             .build()
-        val request = buildPost(url, requestBody, headers ?: emptyMap())
+        val request = buildPost(
+            path = url,
+            requestBody = requestBody,
+            headers = headers ?: emptyMap(),
+            useFileDevnetGateway = isVmBuildEnv
+        )
         val responseContent = request(request, "upload file:$fileName fail")
         return objectMapper.readValue(responseContent)
     }
