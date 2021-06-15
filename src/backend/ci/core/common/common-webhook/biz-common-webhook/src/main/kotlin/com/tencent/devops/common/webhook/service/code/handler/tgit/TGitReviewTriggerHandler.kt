@@ -31,8 +31,12 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
+import com.tencent.devops.common.webhook.service.code.filter.CodeReviewStateFilter
+import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
+import com.tencent.devops.common.webhook.service.code.filter.UrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
+import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
+import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_REVIEW_RESTRICT_TYPE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_ID
@@ -40,7 +44,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @CodeWebhookHandler
-class TGitReviewTriggerHandler : GitHookTriggerHandler<GitReviewEvent> {
+class TGitReviewTriggerHandler : CodeWebhookTriggerHandler<GitReviewEvent> {
     override fun eventClass(): Class<GitReviewEvent> {
         return GitReviewEvent::class.java
     }
@@ -81,13 +85,31 @@ class TGitReviewTriggerHandler : GitHookTriggerHandler<GitReviewEvent> {
         return startParams
     }
 
-    override fun getEventFilters(
+    override fun getWebhookFilters(
         event: GitReviewEvent,
         projectId: String,
         pipelineId: String,
         repository: Repository,
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
-        return emptyList()
+        with(webHookParams) {
+            val urlFilter = UrlFilter(
+                pipelineId = pipelineId,
+                triggerOnUrl = getUrl(event),
+                repositoryUrl = repository.url,
+                includeHost = includeHost
+            )
+            val eventTypeFilter = EventTypeFilter(
+                pipelineId = pipelineId,
+                triggerOnEventType = getEventType(),
+                eventType = eventType
+            )
+            val codeReviewStateFilter = CodeReviewStateFilter(
+                pipelineId = pipelineId,
+                triggerOnState = event.state,
+                includedState = WebhookUtils.convert(includeCrState)
+            )
+            return listOf(urlFilter, eventTypeFilter, codeReviewStateFilter)
+        }
     }
 }

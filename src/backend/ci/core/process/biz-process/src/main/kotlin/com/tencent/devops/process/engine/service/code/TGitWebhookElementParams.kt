@@ -65,6 +65,11 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             params.excludeTagName = EnvUtils.parseEnv(excludeTagName ?: "", variables)
             params.excludeSourceBranchName = EnvUtils.parseEnv(excludeSourceBranchName ?: "", variables)
             params.includeSourceBranchName = EnvUtils.parseEnv(includeSourceBranchName ?: "", variables)
+            params.includeCrState = if (includeCrState.isNullOrEmpty()) {
+                ""
+            } else {
+                includeCrState!!.joinToString(",")
+            }
             return params
         }
     }
