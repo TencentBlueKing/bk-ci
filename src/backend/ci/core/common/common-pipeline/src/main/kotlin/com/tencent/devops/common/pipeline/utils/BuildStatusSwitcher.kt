@@ -171,10 +171,10 @@ object BuildStatusSwitcher {
             BuildStatus.RUNNING,
             BuildStatus.CALL_WAITING,
             BuildStatus.REVIEWING,
-            BuildStatus.PAUSE,
-            BuildStatus.CANCELED,
             BuildStatus.REVIEW_ABORT,
             BuildStatus.REVIEW_PROCESSED,
+            BuildStatus.PAUSE,
+            BuildStatus.CANCELED,
             BuildStatus.SUCCEED,
             BuildStatus.FAILED,
             BuildStatus.TERMINATE,
@@ -196,6 +196,7 @@ object BuildStatusSwitcher {
             BuildStatus.CANCELED,
             BuildStatus.SUCCEED,
             BuildStatus.FAILED,
+            BuildStatus.TERMINATE,
             BuildStatus.QUEUE_TIMEOUT,
             BuildStatus.STAGE_SUCCESS
         )
@@ -214,6 +215,7 @@ object BuildStatusSwitcher {
             BuildStatus.CANCELED,
             BuildStatus.SUCCEED,
             BuildStatus.FAILED,
+            BuildStatus.TERMINATE,
             BuildStatus.SKIP,
             BuildStatus.UNEXEC,
             BuildStatus.QUEUE_TIMEOUT,
@@ -236,9 +238,9 @@ object BuildStatusSwitcher {
             BuildStatus.SUCCEED,
             BuildStatus.FAILED,
             BuildStatus.TERMINATE,
-            BuildStatus.QUEUE_TIMEOUT,
             BuildStatus.SKIP,
             BuildStatus.UNEXEC,
+            BuildStatus.QUEUE_TIMEOUT,
             BuildStatus.HEARTBEAT_TIMEOUT
         )
 

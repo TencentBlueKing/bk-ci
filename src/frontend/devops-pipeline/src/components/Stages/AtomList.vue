@@ -127,7 +127,7 @@
             }
         },
         computed: {
-            ...mapState('soda', [
+            ...mapState('common', [
                 'ruleList',
                 'templateRuleList'
             ]),
@@ -157,8 +157,9 @@
             atomList: {
                 get () {
                     const atoms = this.getElements(this.container)
+                    
                     atoms.forEach(atom => {
-                        if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
+                        if (Array.isArray(this.curMatchRules) && this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
                                 || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
@@ -194,7 +195,7 @@
             }
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'reviewExcuteAtom',
                 'requestAuditUserList'
             ]),
