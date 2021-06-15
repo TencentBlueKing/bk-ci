@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.BkCCProperties
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -51,10 +51,10 @@ class CCAutoConfiguration {
     @Bean
     @Primary
     fun bkCCProjectApi(
-        bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+        pipelineAuthServiceCode: PipelineAuthServiceCode,
         bkCCProperties: BkCCProperties,
         objectMapper: ObjectMapper,
         bsAuthTokenApi: BSAuthTokenApi
     ) =
-        BSCCProjectApi(bkCCProperties, objectMapper, bsAuthTokenApi, bsPipelineAuthServiceCode)
+        BSCCProjectApi(bkCCProperties, objectMapper, bsAuthTokenApi, pipelineAuthServiceCode)
 }
