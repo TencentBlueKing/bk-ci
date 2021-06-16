@@ -33,14 +33,6 @@ version = ""
 
 plugins {
     kotlin("jvm")
-    id("org.jetbrains.kotlin.plugin.spring")
-    id("org.springframework.boot")
-}
-
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-service"))
 }
 
 ext {

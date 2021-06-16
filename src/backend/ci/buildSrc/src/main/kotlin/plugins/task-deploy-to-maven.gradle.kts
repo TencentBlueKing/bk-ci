@@ -28,9 +28,6 @@
 import java.net.URI
 
 plugins {
-    kotlin
-    maven
-    `kotlin-spring`
     `maven-publish`
     signing
 }
