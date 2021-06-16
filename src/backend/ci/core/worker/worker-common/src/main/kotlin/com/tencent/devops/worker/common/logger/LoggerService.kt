@@ -222,6 +222,7 @@ object LoggerService {
             logType = logType,
             executeCount = executeCount
         )
+        logger.info(logMessage.toString())
         // 如果已经进入Job执行任务，则可以做日志本地落盘
         if (elementId.isNotBlank() && pipelineLogDir != null) {
             saveLocalLog(logMessage)
