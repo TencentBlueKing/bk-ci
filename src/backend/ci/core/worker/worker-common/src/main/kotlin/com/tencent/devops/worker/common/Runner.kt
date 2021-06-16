@@ -58,6 +58,9 @@ import kotlin.system.exitProcess
 
 object Runner {
 
+    private const val maxSleepStep = 50L
+    private const val windows = 5L
+    private const val millsStep = 100L
     private val logger = LoggerFactory.getLogger(Runner::class.java)
 
     fun run(workspaceInterface: WorkspaceInterface, systemExit: Boolean = true) {
@@ -135,6 +138,7 @@ object Runner {
         LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath})")
         logger.info("Start the runner at workspace(${workspacePathFile.absolutePath})")
 
+        var waitCount = 0
         loop@ while (true) {
             logger.info("Start to claim the task")
             val buildTask = EngineService.claimTask()
@@ -161,16 +165,25 @@ object Runner {
                         val buildTaskRst = taskDaemon.getBuildResult()
                         EngineService.completeTask(buildTaskRst)
                         logger.info("Finish completing the task ($buildTask)")
-                    } catch (exception: Throwable) {
+                    } catch (ignore: Throwable) {
                         failed = true
-                        dealException(exception, buildTask, taskDaemon)
+                        dealException(ignore, buildTask, taskDaemon)
                     } finally {
                         LoggerService.finishTask()
                         LoggerService.elementId = ""
                         LoggerService.elementName = ""
+                        waitCount = 0
                     }
                 }
-                BuildTaskStatus.WAIT -> Thread.sleep(5000)
+                BuildTaskStatus.WAIT -> {
+                    var sleepStep = waitCount++ / windows
+                    if (sleepStep <= 0) {
+                        sleepStep = 1
+                    }
+                    val sleepMills = sleepStep.coerceAtMost(maxSleepStep) * millsStep
+                    logger.info("WAIT $sleepMills ms")
+                    Thread.sleep(sleepMills)
+                }
                 BuildTaskStatus.END -> break@loop
             }
         }
@@ -197,8 +210,8 @@ object Runner {
                 if (!file.deleteRecursively()) {
                     logger.warn("Fail to clean up the workspace")
                 }
-            } catch (e: Exception) {
-                logger.error("Fail to clean up the workspace.", e)
+            } catch (ignore: Exception) {
+                logger.error("Fail to clean up the workspace.", ignore)
             }
         }
     }

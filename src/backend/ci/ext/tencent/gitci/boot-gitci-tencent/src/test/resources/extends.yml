@@ -7,7 +7,7 @@ extends:
 
 resources:
   repositories:
-    - repository: ruotiantang/gitci2-template-1
+    - repository: repoC
       name: repoC
       ref: master  # 可选
       credentials:

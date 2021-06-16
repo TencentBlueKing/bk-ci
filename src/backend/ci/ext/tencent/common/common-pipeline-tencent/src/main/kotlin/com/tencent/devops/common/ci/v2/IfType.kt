@@ -25,37 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task.script.shell
+package com.tencent.devops.common.ci.v2
 
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.worker.common.task.script.ICommand
-import com.tencent.devops.worker.common.utils.ShellUtil
-import java.io.File
-
-class CommandShellImpl : ICommand {
-
-    override fun execute(
-        buildId: String,
-        script: String,
-        taskParam: Map<String, String>,
-        runtimeVariables: Map<String, String>,
-        projectId: String,
-        dir: File,
-        buildEnvs: List<BuildEnv>,
-        continueNoneZero: Boolean,
-        errorMessage: String?,
-        elementId: String?
-    ) {
-        val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables), dir)
-        ShellUtil.execute(
-            buildId = buildId,
-            script = realCommand,
-            dir = dir,
-            buildEnvs = buildEnvs,
-            runtimeVariables = runtimeVariables,
-            continueNoneZero = continueNoneZero,
-            errorMessage = errorMessage,
-            elementId = elementId
-        )
-    }
+enum class IfType {
+    SUCCESS,
+    FAILURE,
+    CANCELLED,
+    ALWAYS
 }

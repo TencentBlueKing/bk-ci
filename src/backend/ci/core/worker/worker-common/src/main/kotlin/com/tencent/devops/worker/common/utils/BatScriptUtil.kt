@@ -48,7 +48,10 @@ object BatScriptUtil {
         "    goto:eof\r\n"
 
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
-    private val specialKey = listOf<String>()
+
+    // 2021-06-11 batchScript需要过滤掉上下文产生的变量，防止注入到环境变量中
+    private val specialKey = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.")
+
     private val specialValue = listOf("\n", "\r")
     private val escapeValue = mapOf(
         "&" to "^&",
@@ -67,7 +70,8 @@ object BatScriptUtil {
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
-        print2Logger: Boolean = true
+        print2Logger: Boolean = true,
+        elementId: String? = null
     ): String {
         try {
             val file = getCommandFile(
@@ -83,7 +87,8 @@ object BatScriptUtil {
                 print2Logger = print2Logger,
                 prefix = prefix,
                 executeErrorMessage = "",
-                buildId = buildId
+                buildId = buildId,
+                elementId = elementId
             )
         } catch (ignore: Throwable) {
             val errorInfo = errorMessage ?: "Fail to execute bat script $script"
@@ -150,7 +155,7 @@ object BatScriptUtil {
     private fun specialEnv(key: String, value: String): Boolean {
         var match = false
         for (it in specialKey) {
-            if (key.contains(it)) {
+            if (key.trim().startsWith(it)) {
                 match = true
                 break
             }

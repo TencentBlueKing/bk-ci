@@ -29,11 +29,8 @@ package com.tencent.devops.gitci.v2.template.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.ci.v2.Extends
 import com.tencent.devops.common.ci.v2.Notices
-import com.tencent.devops.common.ci.v2.OnFail
-import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTriggerOn
 import com.tencent.devops.common.ci.v2.Resources
 
@@ -45,10 +42,7 @@ data class NoReplaceTemplate(
     var name: String?,
     var label: List<String>? = null,
     var triggerOn: PreTriggerOn?,
-    @JsonProperty("on-fail")
-    var onFail: OnFail?,
     var extends: Extends?,
     var resources: Resources?,
-    var notices: List<Notices>?,
-    var finally: List<PreStage>?
+    var notices: List<Notices>?
 )
