@@ -326,7 +326,7 @@ const actions = {
         })
     },
     searchPipelineList ({ commit, state, dispatch }, { projectId, pipelineId, searchName = '' }) {
-        const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${searchName}&pipelineId=${pipelineId}`
+        const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${encodeURIComponent(searchName)}&pipelineId=${pipelineId}`
         
         return ajax.get(url).then(response => {
             return response.data
