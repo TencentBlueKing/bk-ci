@@ -501,7 +501,7 @@ class TriggerBuildService @Autowired constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            baseOS = getBaseOs(job.runsOn.agentSelector),
+            baseOS = getBaseOs(job),
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = job.timeoutMinutes ?: 900,
@@ -518,11 +518,15 @@ class TriggerBuildService @Autowired constructor(
         containerList.add(vmContainer)
     }
 
-    private fun getBaseOs(agentSelector: List<String>?): VMBaseOS {
-        if (agentSelector.isNullOrEmpty()) {
+    private fun getBaseOs(job: Job): VMBaseOS {
+        if (job.runsOn.poolName.startsWith("macos")) {
+            return VMBaseOS.MACOS
+        }
+
+        if (job.runsOn.agentSelector.isNullOrEmpty()) {
             return VMBaseOS.LINUX
         }
-        return when (agentSelector[0]) {
+        return when (job.runsOn.agentSelector!![0]) {
             "linux" -> VMBaseOS.LINUX
             "macos" -> VMBaseOS.MACOS
             "windows" -> VMBaseOS.WINDOWS
@@ -534,9 +538,9 @@ class TriggerBuildService @Autowired constructor(
         // macos构建机
         if (job.runsOn.poolName.startsWith("macos")) {
             return MacOSDispatchType(
-                macOSEvn = "",
-                systemVersion = "10.15",
-                xcodeVersion = "12.4"
+                macOSEvn = "Catalina10.15.4:12.2",
+                systemVersion = "Catalina10.15.4",
+                xcodeVersion = "12.2"
             )
         }
 
