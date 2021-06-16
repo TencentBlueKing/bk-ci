@@ -636,15 +636,16 @@ open class MarketAtomTask : ITask() {
         }
         params["reportName"] = output["label"] as String
         val reportArchTask = BuildTask(
-            buildTask.buildId,
-            buildTask.vmSeqId,
-            buildTask.status,
-            buildTask.taskId,
-            buildTask.elementId,
-            buildTask.elementName,
-            buildTask.type,
-            params,
-            buildTask.buildVariable
+            buildId = buildTask.buildId,
+            vmSeqId = buildTask.vmSeqId,
+            status = buildTask.status,
+            taskId = buildTask.taskId,
+            elementId = buildTask.elementId,
+            elementName = buildTask.elementName,
+            type = buildTask.type,
+            params = params,
+            buildVariable = buildTask.buildVariable,
+            containerType = buildTask.containerType
         )
         logger.info("${buildTask.buildId}|reportArchTask|atomWorkspacePath=${atomWorkspace.absolutePath}")
 
