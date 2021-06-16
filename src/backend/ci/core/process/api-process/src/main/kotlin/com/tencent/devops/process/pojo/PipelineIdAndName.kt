@@ -24,35 +24,16 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.monitoring.resources
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.monitoring.api.service.ServiceAtomMonitorResource
-import com.tencent.devops.monitoring.constant.MonitoringMessageCode
-import com.tencent.devops.monitoring.pojo.AtomMonitorStatisticData
-import com.tencent.devops.monitoring.service.AtomMonitorService
-import org.influxdb.InfluxDBIOException
-import org.springframework.beans.factory.annotation.Autowired
+package com.tencent.devops.process.pojo
 
-@RestResource
-class ServiceAtomMonitorResourceImpl @Autowired constructor(private val atomMonitorService: AtomMonitorService) :
-    ServiceAtomMonitorResource {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    @Suppress("ALL")
-    override fun queryAtomMonitorStatisticData(
-        atomCode: String,
-        startTime: Long,
-        endTime: Long
-    ): Result<AtomMonitorStatisticData> {
-        return try {
-            Result(atomMonitorService.queryAtomMonitorStatisticData(atomCode, startTime, endTime))
-        } catch (e: InfluxDBIOException) {
-            throw ErrorCodeException(
-                errorCode = MonitoringMessageCode.ERROR_MONITORING_INFLUXDB_BAD,
-                defaultMessage = "bad influxdb: ${e.message}"
-            )
-        }
-    }
-}
+@ApiModel("流水线名称与Id")
+data class PipelineIdAndName(
+    @ApiModelProperty("流水线Id")
+    val pipelineId: String,
+    @ApiModelProperty("流水线名称")
+    val pipelineName: String
+)

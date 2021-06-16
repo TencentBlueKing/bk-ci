@@ -187,6 +187,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/search")
     @POST
     fun search(
+        @ApiParam("用户ID", required = false)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String?,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

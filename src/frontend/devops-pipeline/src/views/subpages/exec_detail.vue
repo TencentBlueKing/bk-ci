@@ -365,8 +365,11 @@
 
         .pipeline-detail-tab-card {
             height: 100%;
-            .bk-tab-section {
-                height: calc(100% - 52px);
+            display: flex;
+            flex-direction: column;
+            .bk-tab-content {
+                height: calc(100% - 25px);
+                overflow: auto;
             }
         }
         .exec-pipeline {

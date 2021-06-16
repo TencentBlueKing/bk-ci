@@ -49,7 +49,7 @@
         </infinite-scroll>
 
         <pipeline-template-popup :toggle-popup="toggleTemplatePopup" :is-show="templatePopupShow"></pipeline-template-popup>
-        <import-pipeline-popup :toggle-import-pipeline-popup="toggleImportPipelinePopup" :is-show="importPipelinePopupShow"></import-pipeline-popup>
+        <import-pipeline-popup :is-show.sync="importPipelinePopupShow"></import-pipeline-popup>
 
         <pipeline-filter v-if="slideShow" :is-show="slideShow" @showSlide="showSlide" :is-disabled="isDisabled" :selected-filter="currentFilter" @filter="filterCommit" class="pipeline-filter"></pipeline-filter>
 

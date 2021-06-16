@@ -38,6 +38,8 @@ import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -67,7 +69,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         projectId: String,
         pipeline: Model
     ): Result<PipelineId> {
-        logger.info("Create a pipeline at project:$projectId with model: $pipeline")
+        logger.info("Create pipeline at project:$projectId")
         return client.get(ServicePipelineResource::class).create(
             userId = userId,
             projectId = projectId,
@@ -84,12 +86,46 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         pipelineId: String,
         pipeline: Model
     ): Result<Boolean> {
-        logger.info("Edit a pipeline at project:$projectId, pipelineId:$pipelineId with model: $pipeline")
+        logger.info("Edit a pipeline at project:$projectId, pipelineId:$pipelineId")
         return client.get(ServicePipelineResource::class).edit(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             pipeline = pipeline,
+            channelCode = ChannelCode.BS
+        )
+    }
+
+    override fun updatePipeline(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        modelAndSetting: PipelineModelAndSetting
+    ): Result<DeployPipelineResult> {
+        logger.info("updatePipeline|project:$projectId|userId:$userId|pipelineId:$pipelineId")
+        return client.get(ServicePipelineResource::class).updatePipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            modelAndSetting = modelAndSetting,
+            channelCode = ChannelCode.BS
+        )
+    }
+
+    override fun uploadPipeline(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        modelAndSetting: PipelineModelAndSetting
+    ): Result<PipelineId> {
+        logger.info("uploadPipeline|project:$projectId|userId:$userId")
+        return client.get(ServicePipelineResource::class).uploadPipeline(
+            userId = userId,
+            projectId = projectId,
+            modelAndSetting = modelAndSetting,
             channelCode = ChannelCode.BS
         )
     }

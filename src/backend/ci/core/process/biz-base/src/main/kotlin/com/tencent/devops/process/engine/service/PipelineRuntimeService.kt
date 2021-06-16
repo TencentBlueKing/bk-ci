@@ -66,6 +66,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
@@ -1845,15 +1846,16 @@ class PipelineRuntimeService @Autowired constructor(
         errorCode: Int? = null,
         errorMsg: String? = null
     ) {
+        val taskStatus = BuildStatusSwitcher.taskStatusMaker.switchByErrorCode(buildStatus, errorCode)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            logger.info("${task.buildId}|UPDATE_STATUS|${task.taskName}|${buildStatus.name}|$userId")
+            logger.info("${task.buildId}|UPDATE_TASK_STATUS|${task.taskName}|$taskStatus|$userId|$errorCode")
             pipelineBuildTaskDao.updateStatus(
                 dslContext = transactionContext,
                 buildId = task.buildId,
                 taskId = task.taskId,
                 userId = userId,
-                buildStatus = buildStatus
+                buildStatus = taskStatus
             )
             if (errorType != null) pipelineBuildTaskDao.setTaskErrorInfo(
                 dslContext = transactionContext,

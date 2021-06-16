@@ -227,7 +227,7 @@ for MS_NAME in "$@"; do
   }
 done
 if [ "${#invalid_proj}" -gt 1 ]; then
-  echo "ERROR: invalid proj: $invalid_proj."
+  echo "ERROR: invalid proj: ${invalid_proj:1}."  # 去掉开头的逗号.
   exit 15
 fi
 

@@ -75,6 +75,9 @@
             ...mapState([
                 'fetchError'
             ]),
+            ...mapState('atom', [
+                'editfromImport'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -129,8 +132,11 @@
             }
         },
         mounted () {
-            this.init()
-            this.requestQualityAtom()
+            if (!this.editfromImport) {
+                this.init()
+                this.requestQualityAtom()
+            }
+            this.setEditFrom(false)
             this.addLeaveListenr()
         },
         beforeDestroy () {
@@ -139,6 +145,7 @@
             this.removeLeaveListenr()
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
+            this.setEditFrom(false)
             this.errors.clear()
         },
         beforeRouteUpdate (to, from, next) {
@@ -157,8 +164,8 @@
                 'togglePropertyPanel',
                 'setPipeline',
                 'setPipelineEditing',
-                'setAuthEditing',
-                'setSaveStatus'
+                'setSaveStatus',
+                'setEditFrom'
             ]),
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
@@ -256,7 +263,7 @@
             flex-direction: column;
             width: 100%;
             overflow: hidden;
-            .bk-tab-section {
+            .bk-tab-content {
                 overflow: auto;
             }
         }
