@@ -178,18 +178,6 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
         return TActionUtils.buildAction(permission, AuthResourceType.TICKET_CREDENTIAL)
     }
 
-    private fun managerCheck(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        if (managerService.isManagerPermission(
-                userId = userId,
-                projectId = projectId,
-                authPermission = authPermission,
-                resourceType = AuthResourceType.TICKET_CREDENTIAL
-            )) {
-            return true
-        }
-        return false
-    }
-
     companion object {
         val logger = LoggerFactory.getLogger(TxV3CredentialPermissionServiceImpl::class.java)
     }
