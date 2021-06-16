@@ -36,10 +36,12 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.handler.tgit.TGitMrTriggerHandler
 import com.tencent.devops.common.webhook.service.code.handler.tgit.TGitPushTriggerHandler
+import com.tencent.devops.common.webhook.service.code.handler.tgit.TGitReviewTriggerHandler
 import com.tencent.devops.common.webhook.service.code.handler.tgit.TGitTagPushTriggerHandler
 import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -69,6 +71,7 @@ class GitWebHookMatcherTest {
         CodeWebhookHandlerRegistrar.register(TGitTagPushTriggerHandler())
         val gitScmService: GitScmService = mock()
         CodeWebhookHandlerRegistrar.register(TGitMrTriggerHandler(gitScmService))
+        CodeWebhookHandlerRegistrar.register(TGitReviewTriggerHandler())
     }
 
     @Test
@@ -171,7 +174,7 @@ class GitWebHookMatcherTest {
                 repositoryType = RepositoryType.ID,
                 repositoryName = null
             ),
-            eventType = CodeEventType.TAG_PUSH,
+            eventType = CodeEventType.MERGE_REQUEST,
             branchName = "master"
         )
         val matcher = GitWebHookMatcher(event = event)
@@ -186,7 +189,7 @@ class GitWebHookMatcherTest {
             ).isMatch
         )
         Assert.assertEquals("mingshewhe", matcher.getUsername())
-        Assert.assertEquals("87acd380f4a91ba1eb200a082ad60f394f3062a5", matcher.getRevision())
+        Assert.assertEquals("9c9f8cc062060fdad67137e5e102689be765b4d4", matcher.getRevision())
         Assert.assertEquals("mingshewhe/webhook_test3", matcher.getRepoName())
         Assert.assertEquals("master", matcher.getBranchName())
         Assert.assertEquals(CodeEventType.MERGE_REQUEST, matcher.getEventType())
@@ -199,7 +202,48 @@ class GitWebHookMatcherTest {
             "https://git.code.tencent.com/mingshewhe/webhook_test3.git",
             matcher.getHookTargetUrl()
         )
-        Assert.assertEquals(290966, matcher.getMergeRequestId())
+        Assert.assertEquals(290966L, matcher.getMergeRequestId())
         Assert.assertEquals("mr 19", matcher.getMessage())
+    }
+
+    @Test
+    fun codeReviewEventTrigger() {
+        val classPathResource = ClassPathResource(
+            "com/tencent/devops/common/webhook/service/code/tgit/TGitCodeReviewEvent.json"
+        )
+        val event = JsonUtil.to(
+            json = classPathResource.inputStream.readBytes().toString(Charset.defaultCharset()),
+            type = GitReviewEvent::class.java
+        )
+        val webHookParams = WebHookParams(
+            repositoryConfig = RepositoryConfig(
+                repositoryHashId = "eraf",
+                repositoryType = RepositoryType.ID,
+                repositoryName = null
+            ),
+            eventType = CodeEventType.REVIEW,
+            includeCrState = "approved"
+        )
+        val matcher = GitWebHookMatcher(event = event)
+
+        Assert.assertTrue(matcher.preMatch().isMatch)
+        Assert.assertTrue(
+            matcher.isMatch(
+                projectId = "mht",
+                pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+                repository = repository,
+                webHookParams = webHookParams
+            ).isMatch
+        )
+        Assert.assertEquals("mingshewhe", matcher.getUsername())
+        Assert.assertEquals("", matcher.getRevision())
+        Assert.assertEquals("mingshewhe/webhook_test3", matcher.getRepoName())
+        Assert.assertEquals("", matcher.getBranchName())
+        Assert.assertEquals(CodeEventType.REVIEW, matcher.getEventType())
+        Assert.assertEquals(CodeType.GIT, matcher.getCodeType())
+        Assert.assertEquals(null, matcher.getHookSourceUrl())
+        Assert.assertEquals(null, matcher.getHookTargetUrl())
+        Assert.assertEquals(null, matcher.getMergeRequestId())
+        Assert.assertEquals("", matcher.getMessage())
     }
 }

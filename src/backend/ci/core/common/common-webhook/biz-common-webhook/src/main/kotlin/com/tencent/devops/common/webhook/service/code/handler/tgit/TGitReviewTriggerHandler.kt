@@ -54,7 +54,7 @@ class TGitReviewTriggerHandler : CodeWebhookTriggerHandler<GitReviewEvent> {
     }
 
     override fun getUsername(event: GitReviewEvent): String {
-        return ""
+        return event.author.username
     }
 
     override fun getRevision(event: GitReviewEvent): String {
@@ -79,9 +79,9 @@ class TGitReviewTriggerHandler : CodeWebhookTriggerHandler<GitReviewEvent> {
 
     override fun retrieveParams(event: GitReviewEvent, projectId: String?, repository: Repository?): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
-        startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_ID] = event.reviewableId
-        startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE] = event.reviewableType
-        startParams[BK_REPO_GIT_WEBHOOK_REVIEW_RESTRICT_TYPE] = event.restrictType
+        startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_ID] = event.reviewableId ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE] = event.reviewableType ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_REVIEW_RESTRICT_TYPE] = event.restrictType ?: ""
         return startParams
     }
 

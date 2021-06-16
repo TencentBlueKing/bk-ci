@@ -36,8 +36,7 @@ import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 @JsonSubTypes(
     JsonSubTypes.Type(value = GitPushEvent::class, name = GitPushEvent.classType),
     JsonSubTypes.Type(value = GitTagPushEvent::class, name = GitTagPushEvent.classType),
-    JsonSubTypes.Type(value = GitMergeRequestEvent::class, name = GitMergeRequestEvent.classType),
-    JsonSubTypes.Type(value = GitReviewEvent::class, name = GitReviewEvent.classType)
+    JsonSubTypes.Type(value = GitMergeRequestEvent::class, name = GitMergeRequestEvent.classType)
 )
 abstract class GitEvent : CodeWebhookEvent
 
