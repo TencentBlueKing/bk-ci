@@ -28,6 +28,13 @@
 package com.tencent.devops.worker.common.task.market
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.constant.ARTIFACT
+import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
+import com.tencent.devops.common.api.constant.PATH
+import com.tencent.devops.common.api.constant.REPORT
+import com.tencent.devops.common.api.constant.STRING
+import com.tencent.devops.common.api.constant.VALUE
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -518,9 +525,9 @@ open class MarketAtomTask : ITask() {
                  */
                 TaskUtil.setTaskId(buildTask.taskId ?: "")
                 when (type) {
-                    "string" -> env[key] = output["value"] as String
-                    "report" -> env[key] = archiveReport(buildTask, output, buildVariables, bkWorkspace)
-                    "artifact" -> env[key] = archiveArtifact(output, bkWorkspace, buildVariables)
+                    STRING -> env[key] = output[VALUE] as String
+                    REPORT -> env[key] = archiveReport(buildTask, output, buildVariables, bkWorkspace)
+                    ARTIFACT -> env[key] = archiveArtifact(output, bkWorkspace, buildVariables)
                 }
 
                 env["steps.${buildTask.elementId ?: ""}.outputs.$key"] = env[key] ?: ""
@@ -596,10 +603,16 @@ open class MarketAtomTask : ITask() {
     ): String {
         var oneArtifact = ""
         try {
-            val artifacts = output["value"] as List<String>
+            val artifacts = output[VALUE] as List<String>
+            val artifactoryType = (output[ARTIFACTORY_TYPE] as? String) ?: ArtifactoryType.PIPELINE.name
             artifacts.forEach { artifact ->
                 oneArtifact = artifact
-                ArchiveUtils.archivePipelineFiles(artifact, atomWorkspace, buildVariables)
+                if (artifactoryType == ArtifactoryType.PIPELINE.name) {
+                    ArchiveUtils.archivePipelineFiles(artifact, atomWorkspace, buildVariables)
+                } else if (artifactoryType == ArtifactoryType.CUSTOM_DIR.name) {
+                    val destPath = output[PATH] as String
+                    ArchiveUtils.archiveCustomFiles(artifact, destPath, atomWorkspace, buildVariables)
+                }
             }
         } catch (e: Exception) {
             LoggerService.addRedLine("获取输出构件[artifact]值错误：${e.message}")
