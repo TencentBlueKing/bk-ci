@@ -49,6 +49,7 @@ import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -425,7 +426,7 @@ class TriggerBuildService @Autowired constructor(
     ): Stage {
         val containerList = mutableListOf<Container>()
         stage.jobs.forEachIndexed { jobIndex, job ->
-            val elementList = makeElementList(job, gitBasicSetting, event.userId)
+            val elementList = makeElementList(job, gitBasicSetting, event)
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
                 addNormalContainer(job, elementList, containerList, jobIndex, finalStage)
             } else {
@@ -628,14 +629,13 @@ class TriggerBuildService @Autowired constructor(
     private fun makeElementList(
         job: Job,
         gitBasicSetting: GitCIBasicSetting,
-        userId: String
+        event: GitRequestEvent
     ): MutableList<Element> {
         // 解析service
         val elementList = makeServiceElementList(job)
 
         // 解析job steps
         job.steps!!.forEach { step ->
-            // bash
             val additionalOptions = ElementAdditionalOptions(
                 continueWhenFailed = step.continueOnError ?: false,
                 timeout = step.timeoutMinutes?.toLong(),
@@ -651,6 +651,7 @@ class TriggerBuildService @Autowired constructor(
                 customCondition = step.ifFiled
             )
 
+            // bash
             val element: Element = when {
                 step.run != null -> {
                     val linux = LinuxScriptElement(
@@ -678,35 +679,7 @@ class TriggerBuildService @Autowired constructor(
                     }
                 }
                 step.checkout != null -> {
-                    // checkout插件装配
-                    val inputMap = mutableMapOf<String, Any?>()
-                    if (!step.with.isNullOrEmpty()) {
-                        inputMap.putAll(step.with!!)
-                    }
-                    // 拉取本地工程代码
-                    if (step.checkout == "self") {
-                        inputMap["accessToken"] =
-                            oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
-                        inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl
-                        inputMap["authType"] = "ACCESS_TOKEN"
-                    } else {
-                        inputMap["repositoryUrl"] = step.checkout!!
-                    }
-
-                    // 拼装插件固定参数
-                    inputMap["repositoryType"] = "URL"
-
-                    val data = mutableMapOf<String, Any>()
-                    data["input"] = inputMap
-
-                    MarketBuildAtomElement(
-                        name = step.name ?: "checkout",
-                        id = step.id,
-                        atomCode = "checkout",
-                        version = "1.*",
-                        data = data,
-                        additionalOptions = additionalOptions
-                    )
+                    makeCheckoutElement(step, gitBasicSetting, event).copy(additionalOptions = additionalOptions)
                 }
                 else -> {
                     val data = mutableMapOf<String, Any>()
@@ -726,11 +699,53 @@ class TriggerBuildService @Autowired constructor(
 
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
-                installMarketAtom(gitBasicSetting, userId, element.getAtomCode())
+                installMarketAtom(gitBasicSetting, event.userId, element.getAtomCode())
             }
         }
 
         return elementList
+    }
+
+    private fun makeCheckoutElement(
+        step: Step,
+        gitBasicSetting: GitCIBasicSetting,
+        event: GitRequestEvent
+    ): MarketBuildAtomElement {
+        // checkout插件装配
+        val inputMap = mutableMapOf<String, Any?>()
+        if (!step.with.isNullOrEmpty()) {
+            inputMap.putAll(step.with!!)
+        }
+        // 非mr下根据commitId拉取本地工程代码
+        if (step.checkout == "self") {
+            inputMap["accessToken"] =
+                oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
+            inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl
+            inputMap["authType"] = "ACCESS_TOKEN"
+
+            if (event.mergeRequestId != null) {
+                inputMap["pullType"] = "BRANCH"
+            } else {
+                inputMap["pullType"] = "COMMIT_ID"
+                inputMap["refName"] = event.commitId
+            }
+        } else {
+            inputMap["repositoryUrl"] = step.checkout!!
+        }
+
+        // 拼装插件固定参数
+        inputMap["repositoryType"] = "URL"
+
+        val data = mutableMapOf<String, Any>()
+        data["input"] = inputMap
+
+        return MarketBuildAtomElement(
+            name = step.name ?: "checkout",
+            id = step.id,
+            atomCode = "checkout",
+            version = "1.*",
+            data = data
+        )
     }
 
     private fun makeServiceElementList(job: Job): MutableList<Element> {
