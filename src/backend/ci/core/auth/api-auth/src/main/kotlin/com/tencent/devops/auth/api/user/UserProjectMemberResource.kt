@@ -31,6 +31,7 @@ package com.tencent.devops.auth.api.user
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -89,6 +90,15 @@ interface UserProjectMemberResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<ManagerGroupMemberVo>
+
+    @GET
+    @Path("projectIds/{projectId}/members/all")
+    @ApiOperation("获取项目下所有用户")
+    fun getProjectAllMember(
+        @ApiParam(name = "项目标识", required = true)
+        @PathParam("projectId")
+        projectId: Int
+    ): Result<ProjectMembersVO?>
 
     @DELETE
     @Path("/projectIds/{projectId}/roleIds/{roleId}")

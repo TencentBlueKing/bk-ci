@@ -445,7 +445,7 @@ class PipelineInfoFacadeService @Autowired constructor(
 //                permission = AuthPermission.CREATE,
 //                message = "用户($userId)无权限在工程($projectId)下创建流水线"
 //            )
-            if (pipelinePermissionService.checkPipelinePermission(
+            if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 permission = AuthPermission.CREATE
