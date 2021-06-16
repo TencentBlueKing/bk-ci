@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
@@ -46,7 +46,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
     val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     val dslContext: DSLContext,
     val pipelineInfoDao: PipelineInfoDao,
-    val authResourceApi: AuthResourceApi
+    val authResourceApi: AuthResourceApiStr
 ) : PipelinePermissionService {
     // TODO: 为解决pipelineId较长的问题，此处校验时需将pipelineId转为Id, 获取实例时,需将ID转化为pipelineId
 
@@ -150,8 +150,8 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         return authResourceApi.createResource(
             user = userId,
             projectCode = projectId,
-            serviceCode = bsPipelineAuthServiceCode,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            serviceCode = bsPipelineAuthServiceCode.id(),
+            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
             resourceCode = pipelineAutoId,
             resourceName = pipelineName
         )

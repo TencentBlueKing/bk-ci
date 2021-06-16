@@ -66,9 +66,9 @@ import org.springframework.jmx.export.MBeanExporter
 
 @Suppress("ALL")
 @Configuration
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
 class TxV3AuthAutoConfiguration {
 
     @Value("\${auth.url:}")
