@@ -65,7 +65,6 @@ class ExternalScmResourceImpl @Autowired constructor(
                 rabbitTemplate = rabbitTemplate,
                 event = GitWebhookEvent(
                     requestContent = body,
-                    traceId = traceId,
                     event = event,
                     secret = secret
                 )
@@ -97,7 +96,6 @@ class ExternalScmResourceImpl @Autowired constructor(
                 rabbitTemplate = rabbitTemplate,
                 event = TGitWebhookEvent(
                     requestContent = body,
-                    traceId = traceId,
                     event = event,
                     secret = secret
                 )

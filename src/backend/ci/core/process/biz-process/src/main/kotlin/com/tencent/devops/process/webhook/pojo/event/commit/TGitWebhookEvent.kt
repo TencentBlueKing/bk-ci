@@ -29,9 +29,7 @@ package com.tencent.devops.process.webhook.pojo.event.commit
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType
-import org.slf4j.MDC
 
 @Event(MQ.EXCHANGE_TGIT_BUILD_REQUEST_EVENT, MQ.ROUTE_TGIT_BUILD_REQUEST_EVENT)
 data class TGitWebhookEvent(
@@ -39,7 +37,6 @@ data class TGitWebhookEvent(
     override var retryTime: Int = 3,
     override var delayMills: Int = 0,
     override val commitEventType: CommitEventType = CommitEventType.TGIT,
-    override var traceId: String? = MDC.get(TraceTag.BIZID),
     override val event: String,
     override val secret: String?
 ) : ICodeWebhookEvent(

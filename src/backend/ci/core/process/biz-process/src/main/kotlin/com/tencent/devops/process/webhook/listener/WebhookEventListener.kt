@@ -99,6 +99,7 @@ class WebhookEventListener constructor(
             }
             saveWebhookTriggerLog(event.commitEventType.name)
             PipelineWebhookBuildLogContext.remove()
+            MDC.remove(TraceTag.BIZID)
         }
     }
 
@@ -185,6 +186,7 @@ class WebhookEventListener constructor(
             }
             saveWebhookTriggerLog(CodeType.GITHUB.name)
             PipelineWebhookBuildLogContext.remove()
+            MDC.remove(TraceTag.BIZID)
         }
     }
 
