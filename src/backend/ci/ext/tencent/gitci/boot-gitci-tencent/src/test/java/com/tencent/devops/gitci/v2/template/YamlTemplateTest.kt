@@ -27,6 +27,11 @@
 
 package com.tencent.devops.gitci.v2.template
 
+import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
+import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
+import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
 import org.junit.Test
 
 import org.springframework.core.io.ClassPathResource
@@ -58,23 +63,51 @@ class YamlTemplateTest {
             sb.append(str).append("\n")
         }
 
-//        val yaml = ScriptYmlUtils.formatYaml(sb.toString())
-//        val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
+        val yaml = ScriptYmlUtils.formatYaml(sb.toString())
+        val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
+        val result = YamlCommonUtils.toYamlNotNull(
+            YamlTemplate(
+                yamlObject = preTemplateYamlObject,
+                filePath = testYaml,
+                triggerUserId = "ruotiantang",
+                triggerProjectId = 580280,
+                triggerToken = "",
+                triggerRef = "master",
+                repo = null,
+                repoTemplateGraph = TemplateGraph(),
+                sourceProjectId = 580280,
+                getTemplateMethod = ::getTestTemplate
+            ).replace()
+        )
+        println(
+            result
+        )
+    }
 
-//        println(
-//            YamlCommonUtils.toYamlNotNull(
-//                YamlTemplate(
-//                    yamlObject = preTemplateYamlObject,
-//                    filePath = testYaml,
-//                    triggerUserId = "ruotiantang",
-//                    triggerProjectId = 580280,
-//                    triggerToken = "",
-//                    triggerRef = "master",
-//                    repo = null,
-//                    repoTemplateGraph = TemplateGraph(),
-//                    sourceProjectId = 580280
-//                ).replace()
-//            )
-//        )
+    private fun getTestTemplate(
+        token: String?,
+        gitProjectId: Long,
+        targetRepo: String?,
+        ref: String,
+        personalAccessToken: String?,
+        fileName: String
+    ): String {
+        val newPath = if (targetRepo == null) {
+            "templates/$fileName"
+        } else {
+            "templates/$targetRepo/templates/$fileName"
+        }
+        val classPathResource = ClassPathResource(newPath)
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+            sb.append(str).append("\n")
+        }
+        inputStream.close()
+        return sb.toString()
     }
 }

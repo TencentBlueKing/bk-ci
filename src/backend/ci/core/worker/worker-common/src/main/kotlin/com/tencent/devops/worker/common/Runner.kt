@@ -307,6 +307,16 @@ object Runner {
 
     private val contextKeys = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.")
 
+    private fun context(key: String): Boolean {
+        var match = false
+        for (it in contextKeys) {
+            if (key.trim().startsWith(it)) {
+                match = true
+                break
+            }
+        }
+        return match
+    }
     /**
      * 显示用户预定义变量
      */
@@ -314,10 +324,8 @@ object Runner {
         LoggerService.addNormalLine("")
         LoggerService.addFoldStartLine("[Build Environment Properties]")
         variables.forEach { v ->
-            for (it in contextKeys) {
-                if (v.key.trim().startsWith(it)) {
-                    return@forEach
-                }
+            if (context(v.key)) {
+                return@forEach
             }
             if (v.valueType == BuildFormPropertyType.PASSWORD) {
                 LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a("******").toString())

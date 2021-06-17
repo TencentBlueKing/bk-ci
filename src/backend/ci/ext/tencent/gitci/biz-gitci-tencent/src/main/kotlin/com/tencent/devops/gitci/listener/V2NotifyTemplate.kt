@@ -89,6 +89,12 @@ object V2NotifyTemplate {
                 style="width: 130px;display: inline-block;text-align: right;">Total duration：
             </span><span>$totalTime</span> </li>
         <li style="list-style: none;display: block;line-height: 30px;"> <span
+                style="width: 130px;display: inline-block;text-align: right;">Trigger：
+            </span><span>$trigger</span> </li>
+        <li style="list-style: none;display: block;line-height: 30px;"> <span
+                style="width: 130px;display: inline-block;text-align: right;">Branch：
+            </span><span>$branchName</span> </li>        
+        <li style="list-style: none;display: block;line-height: 30px;"> <span
                 style="width: 130px;display: inline-block;text-align: right;">Commit： </span><a href="$webUrl"
                 style="color: #3a84ff;">$commitId</a> </li>
     </ul> <a href="$webUrl" style="color: #3a84ff;line-height: 30px;">查看详情</a>

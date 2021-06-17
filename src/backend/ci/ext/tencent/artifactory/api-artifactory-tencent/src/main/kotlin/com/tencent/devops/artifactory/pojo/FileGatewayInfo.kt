@@ -28,5 +28,6 @@
 package com.tencent.devops.artifactory.pojo
 
 data class FileGatewayInfo(
-    val fileGateway: String
+    val fileDevnetGateway: String,
+    val fileIdcGateway: String
 )
