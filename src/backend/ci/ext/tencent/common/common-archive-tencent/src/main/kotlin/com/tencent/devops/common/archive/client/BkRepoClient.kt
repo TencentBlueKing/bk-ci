@@ -546,7 +546,12 @@ class BkRepoClient constructor(
 
     fun getFileDetail(userId: String, projectId: String, repoName: String, path: String): NodeDetail? {
         logger.info("getFileInfo, projectId:$projectId, repoName: $repoName, path: $path")
-        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/$path"
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/${
+            path.replace(
+                "#",
+                "%23"
+            )
+        }"
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
@@ -761,7 +766,12 @@ class BkRepoClient constructor(
     ): String {
         logger.info("createShareUri, userId: $userId, projectId: $projectId, repoName: $repoName, " +
             "fullPath: $fullPath, downloadUsers: $downloadUsers, downloadIps: $downloadIps, timeoutInSeconds: $timeoutInSeconds")
-        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/share/$projectId/$repoName/${fullPath.removePrefix("/")}"
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/share/$projectId/$repoName/${
+            fullPath.removePrefix("/").replace(
+                "#",
+                "%23"
+            )
+        }"
         val requestData = ShareRecordCreateRequest(
             authorizedUserList = downloadUsers,
             authorizedIpList = downloadIps,
@@ -849,7 +859,7 @@ class BkRepoClient constructor(
                 throw RuntimeException("create share uri failed: ${responseData.message}")
             }
 
-            return responseData.data!!.map { it.url }
+            return responseData.data!!.map { "${it.url}&download=true" }
         }
     }
 

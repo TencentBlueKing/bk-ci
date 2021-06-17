@@ -82,11 +82,14 @@ class BkRepoSearchService @Autowired constructor(
         )
 
         val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId)
+        logger.info("pipelineHasPermissionList is $pipelineHasPermissionList")
+        logger.info("nodeList is $nodeList")
         val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, pipelineHasPermissionList)
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 
     fun serviceSearch(
+        userId: String?,
         projectId: String,
         searchProps: List<Property>,
         page: Int,
@@ -105,7 +108,7 @@ class BkRepoSearchService @Autowired constructor(
         }
 
         val nodeList = bkRepoClient.queryByNameAndMetadata(
-            "",
+            userId ?: "",
             projectId,
             listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
             fileNameSet.toList(),

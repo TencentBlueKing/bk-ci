@@ -127,14 +127,15 @@
             }
         },
         computed: {
-            ...mapState('soda', [
+            ...mapState('common', [
                 'ruleList',
                 'templateRuleList'
             ]),
             ...mapState('atom', [
                 'execDetail',
                 'atomMap',
-                'pipeline'
+                'pipeline',
+                'pipelineLimit'
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
@@ -156,8 +157,9 @@
             atomList: {
                 get () {
                     const atoms = this.getElements(this.container)
+                    
                     atoms.forEach(atom => {
-                        if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
+                        if (Array.isArray(this.curMatchRules) && this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
                                 || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
@@ -193,7 +195,7 @@
             }
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'reviewExcuteAtom',
                 'requestAuditUserList'
             ]),
@@ -324,6 +326,13 @@
             editAtom (atomIndex, isAdd) {
                 const { stageIndex, containerIndex, container, addAtom, deleteAtom } = this
                 const editAction = isAdd ? addAtom : deleteAtom
+                if (isAdd && this.container.elements.length >= this.pipelineLimit.atomLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.atomLimit') + this.pipelineLimit.atomLimit
+                    })
+                    return
+                }
                 editAction({
                     container,
                     atomIndex,
@@ -332,6 +341,13 @@
                 })
             },
             copyAtom (atomIndex) {
+                if (this.container.elements.length >= this.pipelineLimit.atomLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.atomLimit') + this.pipelineLimit.atomLimit
+                    })
+                    return
+                }
                 try {
                     const { id, ...element } = this.container.elements[atomIndex]
                     this.container.elements.splice(atomIndex + 1, 0, JSON.parse(JSON.stringify({

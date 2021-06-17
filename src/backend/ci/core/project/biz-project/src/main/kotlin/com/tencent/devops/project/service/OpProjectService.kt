@@ -34,17 +34,11 @@ import com.tencent.devops.project.pojo.Result
 @Suppress("ALL")
 interface OpProjectService {
 
-//    fun syncCCAppName(): Int
-
     fun listGrayProject(): Result<OpGrayProject>
 
     fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
 
     fun setCodeCCGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
-
-    fun setRepoGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
-
-    fun setRepoNotGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
 
     fun setMacOSGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
 

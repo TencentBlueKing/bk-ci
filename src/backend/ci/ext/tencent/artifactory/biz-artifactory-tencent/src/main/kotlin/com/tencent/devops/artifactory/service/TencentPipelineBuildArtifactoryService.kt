@@ -30,10 +30,7 @@ package com.tencent.devops.artifactory.service
 import com.tencent.devops.artifactory.Constants
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.Property
-import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -42,10 +39,7 @@ import org.springframework.stereotype.Service
 @Primary
 class TencentPipelineBuildArtifactoryService constructor(
     private val artifactoryInfoService: ArtifactoryInfoService,
-    private val artifactorySearchService: ArtifactorySearchService,
-    private val bkRepoSearchService: BkRepoSearchService,
-    private val repoGray: RepoGray,
-    private val redisOperation: RedisOperation
+    private val bkRepoSearchService: BkRepoSearchService
 ) : PipelineBuildArtifactoryService {
 
     companion object {
@@ -55,21 +49,12 @@ class TencentPipelineBuildArtifactoryService constructor(
     override fun getArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {
         val fileInfoList = mutableListOf<FileInfo>()
         fileInfoList.addAll(
-            if (repoGray.isGray(projectId, redisOperation)) {
-                bkRepoSearchService.serviceSearchFileAndProperty(
-                    projectId = projectId,
-                    searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)),
-                    customized = null,
-                    generateShortUrl = true
-                ).second
-            } else {
-                artifactorySearchService.serviceSearchFileAndProperty(
-                    projectId = projectId,
-                    searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)),
-                    customized = null,
-                    generateShortUrl = true
-                ).second
-            }
+            bkRepoSearchService.serviceSearchFileAndProperty(
+                projectId = projectId,
+                searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)),
+                customized = null,
+                generateShortUrl = true
+            ).second
         )
         logger.info("ArtifactFileList size: ${fileInfoList.size}")
         return fileInfoList.sorted()

@@ -10,12 +10,15 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to
+ * use, copy,
  * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,8 +29,16 @@
 
 package com.tencent.devops.common.constant;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import java.util.Arrays;
+import jersey.repackaged.com.google.common.collect.Lists;
+import jersey.repackaged.com.google.common.collect.Sets;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 公共常量类
@@ -35,8 +46,7 @@ import java.util.Map;
  * @version V1.0
  * @date 2019/5/1
  */
-public interface ComConstants
-{
+public interface ComConstants {
     String SYSTEM_USER = "system";
 
     /**
@@ -55,14 +65,14 @@ public interface ComConstants
     String PATH_TYPE_DEFAULT = "DEFAULT";
 
     /**
+     * CODE_YML过滤路径类型
+     */
+    String PATH_TYPE_CODE_YML = "CODE_YML";
+
+    /**
      * BizService的bean名（PatternBizTypeBizService）的后缀名,比如：COVERITYBatchMarkDefectBizService
      */
     String BIZ_SERVICE_POSTFIX = "BizService";
-
-    /**
-     * Component的bean名（CommonFilterPathComponet）的后缀名,比如：CommonFilterPathComponet
-     */
-    String COMPONENT_POSTFIX = "Component";
 
     /**
      * 通用Processor类名（CommonBatchBizTypeProcessorImpl）的前缀名,比如：COVERITYBatchMarkDefectProcessorImpl
@@ -73,7 +83,6 @@ public interface ComConstants
      * 通用BizService类名（CommonBizTypeBizServiceImpl）的前缀名
      */
     String COMMON_BIZ_SERVICE_PREFIX = "Common";
-
     /**
      * 项目已接入工具的名称之间的分隔符
      */
@@ -94,11 +103,23 @@ public interface ComConstants
     String PARAMJSON_KEY_GO_PATH = "go_path";
 
     /**
+     * 合计
+     */
+    String SUM = "合计";
+
+    /**
      * 严重程度类别：严重（1），一般（2），提示（4）
      */
     int SERIOUS = 1;
     int NORMAL = 2;
     int PROMPT = 4;
+
+    /**
+     * 天数
+     */
+    int DAY_FOURTEEN = 14;
+    int DAY_THIRTY = 30;
+    int DAY_THIRTYONE = 31;
 
     Map<Integer, String> severityMap = new HashMap<Integer, String>() {
         {
@@ -238,20 +259,217 @@ public interface ComConstants
     String KEY_OPENSOURCE_ROUTE = "OPENSOURCE_ROUTE";
 
     /**
+     * 开源扫描下发频率配置
+     */
+    String KEY_OPENSOURCE_FREQUENCY = "OPENSOURCE_FREQUENCY";
+
+    /**
      * 灰度测试的bg
      */
     String KEY_TOOL_NAMES_GRAY_TEST_BG = "TOOL_NAMES_GRAY_TEST_BG";
 
     /**
+     * 屏蔽用户成员名单
+     */
+    String KEY_EXCLUDE_USER_LIST = "EXCLUDE_USER_MEMBER";
+
+    /**
+     * 管理员名单
+     */
+    String KEY_ADMIN_MEMBER = "ADMIN_MEMBER";
+
+    /**
+     * 开源治理下发校验配置
+     */
+    String GONGFENG_CHECK_CONFIG = "GONGFENG_CHECK_CONFIG";
+
+    /**
+     * 工具对应的规范规则集ID的配置
+     */
+    String STANDARD_CHECKER_SET_ID = "STANDARD_CHECKER_SET_ID";
+
+    /**
      * 分号
      */
     String SEMICOLON = ";";
+    /**
+     * ------------------------操作历史记录操作类型------------------
+     */
+    String REGISTER_TOOL = "register_tool";
+    String MODIFY_INFO = "modify_info";
+    String ENABLE_ACTION = "enable_action";
+    String DISABLE_ACTION = "diable_action";
+    String OPEN_CHECKER = "open_checker";
+    String CLOSE_CHECKER = "close_checker";
+    String TRIGGER_ANALYSIS = "trigger_analysis";
+    String AUTHOR_TRANSFER = "author_transfer";
+    /**
+     * ------------------------操作历史记录操作功能id------------------
+     */
+    //注册工具
+    String FUNC_REGISTER_TOOL = "register_tool";
+    //修改任务信息
+    String FUNC_TASK_INFO = "task_info";
+    //切换任务状态
+    String FUNC_TASK_SWITCH = "task_switch";
+    //切换工具状态
+    String FUNC_TOOL_SWITCH = "tool_switch";
+    //任务代码库更新
+    String FUNC_CODE_REPOSITORY = "task_code";
+    //规则配置
+    String FUNC_CHECKER_CONFIG = "checker_config";
+    //触发立即分析
+    String FUNC_TRIGGER_ANALYSIS = "trigger_analysis";
+    //定时扫描修改
+    String FUNC_SCAN_SCHEDULE = "scan_schedule";
+    //过滤路径
+    String FUNC_FILTER_PATH = "filter_path";
+    //告警管理
+    String FUNC_DEFECT_MANAGE = "defect_manage";
+    /**
+     * ----------------------------end----------------------------
+     */
+
+    /*-------------------------------Accept-Language-----------------------*/
+    String ZH_CN = "ZH-CN";
+    /**
+     * Node规则包
+     */
+    String NODE = "NODE";
+    /**
+     * 风格规则包
+     */
+    String STYLISTIC = "STYLISTIC";
+    /**
+     * 严格模式包
+     */
+    String STRICT_MODE = "STRICT_MODE";
+    /**
+     * 逻辑规则包
+     */
+    String LOGICA = "LOGICAL";
+    /**
+     * 默认规则包
+     */
+    String DEFAULT = "DEFAULT";
+    /**
+     * 腾讯开源包
+     */
+    String TOSA = "TOSA";
+    /**
+     * 变量规则包
+     */
+    String VARIABLE = "VARIABLE";
+    /**
+     * ES6规则包
+     */
+    String ES6 = "ES6";
+    /**
+     * 最佳实践包
+     */
+    String BEST_PRACTICES = "BEST_PRACTICES";
+    /**
+     * 头文件规则包
+     */
+    String HEADER_FILE = "HEADER_FILE";
+    /**
+     * 系统API包
+     */
+    String SYS_API = "SYS_API";
+    /**
+     * OneSDK规则包
+     */
+    String ONESDK = "ONESDK";
+    /**
+     * 安全规则包
+     */
+    String SECURITY = "SECURITY";
+    /**
+     * 命名规范包
+     */
+    String NAMING = "NAMING";
+    /**
+     * 注释规则包
+     */
+    String COMMENT = "COMMENT";
+    /**
+     * 格式规范包
+     */
+    String FORMAT = "FORMAT";
+    /**
+     * ESLINT参数名 - eslint_rc
+     */
+    String PARAM_ESLINT_RC = "eslint_rc";
+    /**
+     * GOML参数名 - go_path
+     */
+    String PARAM_GOML_GO_PATH = "go_path";
+    /**
+     * ----------------------------end----------------------------
+     */
+    /**
+     * GOML参数名 - rel_path
+     */
+    String PARAM_GOML_REL_PATH = "rel_path";
+    /**
+     * PYLINT参数名 - py_version
+     */
+    String PARAM_PYLINT_PY_VERSION = "py_version";
+    /**
+     * SPOTBUGS参数名 - script_type
+     */
+    String PARAM_SPOTBUGS_SCRIPT_TYPE = "script_type";
+    /**
+     * SPOTBUGS参数名 - script_content
+     */
+    String PARAM_SPOTBUGS_SCRIPT_CONTENT = "script_content";
+    /**
+     * PHPCS参数名 - script_type
+     */
+    String PARAM_PHPCS_XX = "script_type";
+    /**
+     * 圈复杂度阈值
+     */
+    String KEY_CCN_THRESHOLD = "ccn_threshold";
+    /**
+     * 默认圈复杂度阈值
+     */
+    int DEFAULT_CCN_THRESHOLD = 20;
+    /**
+     * PHPCS规范
+     */
+    String KEY_PHPCS_STANDARD = "phpcs_standard";
+    /**
+     * 下划线
+     */
+    String KEY_UNDERLINE = "_";
+    String BLUEKING_LANGUAGE = "blueking_language";
+    String KEY_DOCKERNIZED_TOOLS = "DOCKERNIZED_TOOLS";
+
+    /**
+     * 一键开启规则集key
+     */
+    String ONCE_CHECKER_SET_KEY = "ONCE_CHECKER_SET_KEY";
+
+
+    String GRAY_PROJECT_PREFIX = "GRAY_TASK_POOL_";
+
+    /**
+     * 灰度任务池配置类型
+     */
+    String GRAY_TASK_POOL_CONFIG = "GRAY_TASK_POOL_CONFIG";
+
+    /**
+     * 每日分析代码行统计
+     */
+    String TOTAL_BLANK = "totalBlank";
+    String TOTAL_COMMENT = "totalComment";
+    String TOTAL_CODE = "totalCode";
 
     /**
      * 业务类型
      */
-    enum BusinessType
-    {
+    enum BusinessType {
         /**
          * 注册接入新工具
          */
@@ -271,16 +489,6 @@ public interface ComConstants
          * 分析记录上报
          */
         ANALYZE_TASK("AnalyzeTask"),
-
-        /**
-         * 消息队列，区分工蜂使用
-         */
-        MESSAGE_QUEUE("MessageQueue"),
-
-        /**
-         * 分析流程后处理，区分工蜂使用
-         */
-        CREATE_FROM("CreateFrom"),
 
         /**
          * 获取分析记录
@@ -350,17 +558,20 @@ public interface ComConstants
         /**
          * 告警生成
          */
-        DEFECT_OPERATE("DefectOperate");
+        DEFECT_OPERATE("DefectOperate"),
+
+        /**
+         * OP告警数据
+         */
+        DEFECT_DATA("DefectData");
 
         private String value;
 
-        BusinessType(String value)
-        {
+        BusinessType(String value) {
             this.value = value;
         }
 
-        public String value()
-        {
+        public String value() {
             return this.value;
         }
     }
@@ -368,8 +579,7 @@ public interface ComConstants
     /**
      * 工具类型
      */
-    enum Tool
-    {
+    enum Tool {
         COVERITY,
         KLOCWORK,
         PINPOINT,
@@ -391,14 +601,17 @@ public interface ComConstants
         TSCLUA,
         SPOTBUGS,
         CLOC,
-        CLOJURE;
+        FLAKE8,
+        CLOJURE,
+        IP_CHECK,
+        GITHUBSTATISTIC,
+        SCC;
     }
 
     /**
      * 工具当前的状态/当前步骤的状态
      */
-    enum StepStatus
-    {
+    enum StepStatus {
         SUCC(0),
         FAIL(1),
 
@@ -414,13 +627,11 @@ public interface ComConstants
 
         private int stepStatus;
 
-        StepStatus(int stepStatus)
-        {
+        StepStatus(int stepStatus) {
             this.stepStatus = stepStatus;
         }
 
-        public int value()
-        {
+        public int value() {
             return this.stepStatus;
         }
     }
@@ -428,8 +639,7 @@ public interface ComConstants
     /**
      * 上报分析步骤的状态标记,包括成功、失败、进行中、中断
      */
-    enum StepFlag
-    {
+    enum StepFlag {
         SUCC(1),
         FAIL(2),
         PROCESSING(3),
@@ -437,13 +647,11 @@ public interface ComConstants
 
         private int stepFlag;
 
-        StepFlag(int stepStatus)
-        {
+        StepFlag(int stepStatus) {
             this.stepFlag = stepStatus;
         }
 
-        public int value()
-        {
+        public int value() {
             return this.stepFlag;
         }
     }
@@ -451,8 +659,7 @@ public interface ComConstants
     /**
      * 项目接入多工具步骤
      */
-    enum Step4MutliTool
-    {
+    enum Step4MutliTool {
         /**
          * 步骤：代码托管帐号鉴权，stepStatus = 0表示正常，1表示帐号密码过期，2表示代码没更新,3表示正在鉴权
          *
@@ -498,13 +705,11 @@ public interface ComConstants
 
         private int value;
 
-        Step4MutliTool(int value)
-        {
+        Step4MutliTool(int value) {
             this.value = value;
         }
 
-        public int value()
-        {
+        public int value() {
             return this.value;
         }
     }
@@ -512,8 +717,7 @@ public interface ComConstants
     /**
      * 项目接入Coverity工具步骤
      */
-    enum Step4Cov
-    {
+    enum Step4Cov {
         /**
          * 申请中，该状态已经废弃
          */
@@ -556,13 +760,11 @@ public interface ComConstants
 
         private int value;
 
-        Step4Cov(int value)
-        {
+        Step4Cov(int value) {
             this.value = value;
         }
 
-        public int value()
-        {
+        public int value() {
             return this.value;
         }
     }
@@ -570,8 +772,7 @@ public interface ComConstants
     /**
      * 文件类型
      */
-    enum FileType
-    {
+    enum FileType {
         NEW(1),
         HISTORY(2),
         FIXED(4),
@@ -579,30 +780,25 @@ public interface ComConstants
 
         private int value;
 
-        FileType(int value)
-        {
+        FileType(int value) {
             this.value = value;
         }
 
-        public int value()
-        {
+        public int value() {
             return value;
         }
 
-        public String stringValue()
-        {
+        public String stringValue() {
             return String.valueOf(value);
         }
     }
-
 
     /**
      * 规则包分类，默认规则包-0；安全规则包-1；内存规则包-2；编译警告包-3；
      * 系统API包-4；性能问题包-5；表达式问题包-6；可疑问题包-7；定制规则包-8；ONESDK规范规则包-9
      * 腾讯开源包-10；
      */
-    enum CheckerPkgKind
-    {
+    enum CheckerPkgKind {
         DEFAULT("0"),
         SECURITY("1"),
         MEMORY("2"),
@@ -628,37 +824,30 @@ public interface ComConstants
 
         private String value;
 
-        CheckerPkgKind(String value)
-        {
+        CheckerPkgKind(String value) {
             this.value = value;
         }
 
-        public String value()
-        {
-            return value;
-        }
-
-        public static String getValueByName(String name)
-        {
-            if (values() != null)
-            {
-                for (CheckerPkgKind checkerPkgKind : values())
-                {
-                    if (checkerPkgKind.name().equalsIgnoreCase(name))
-                    {
+        public static String getValueByName(String name) {
+            if (values() != null) {
+                for (CheckerPkgKind checkerPkgKind : values()) {
+                    if (checkerPkgKind.name().equalsIgnoreCase(name)) {
                         return checkerPkgKind.value;
                     }
                 }
             }
             return null;
         }
+
+        public String value() {
+            return value;
+        }
     }
 
     /**
      * 任务语言
      */
-    enum CodeLang
-    {
+    enum CodeLang {
         C_SHARP(1L, "C#", "C#"),
         C_CPP(2L, "C/C++", "C/C++"),
         JAVA(4L, "JAVA", "JAVA"),
@@ -670,7 +859,9 @@ public interface ComConstants
         LUA(256L, "LUA", "LUA"),
         GOLANG(512L, "Golang", "Golang"),
         SWIFT(1024L, "SWIFT", "Swift"),
-        TYPESCRIPT(2048L, "TypeScript", "TS");
+        TYPESCRIPT(2048L, "TypeScript", "TS"),
+        KOTLIN(4096L, "Kotlin", "Kotlin"),
+        OTHERS(1073741824L, "OTHERS", "其他");
 
         private Long langValue;
 
@@ -678,21 +869,16 @@ public interface ComConstants
 
         private String displayName;
 
-        CodeLang(Long langValue, String langName, String displayName)
-        {
+        CodeLang(Long langValue, String langName, String displayName) {
             this.langValue = langValue;
             this.langName = langName;
             this.displayName = displayName;
         }
 
-        public static String getCodeLang(Long value)
-        {
-            if (values() != null)
-            {
-                for (CodeLang lang : values())
-                {
-                    if (lang.langValue.equals(value))
-                    {
+        public static String getCodeLang(Long value) {
+            if (values() != null) {
+                for (CodeLang lang : values()) {
+                    if (lang.langValue.equals(value)) {
                         return lang.displayName();
                     }
                 }
@@ -700,24 +886,23 @@ public interface ComConstants
             return null;
         }
 
-        public Long langValue()
-        {
+        public Long langValue() {
             return langValue;
         }
 
-        public String langName()
-        {
+        public String langName() {
             return langName;
         }
 
-        public String displayName() {return displayName; }
+        public String displayName() {
+            return displayName;
+        }
     }
 
     /**
      * 风险系数：极高-SH, 高-H，中-M，低-L
      */
-    enum RiskFactor
-    {
+    enum RiskFactor {
         SH(1),
         H(2),
         M(4),
@@ -725,23 +910,19 @@ public interface ComConstants
 
         private int value;
 
-        RiskFactor(int value)
-        {
+        RiskFactor(int value) {
             this.value = value;
         }
 
-        public int value()
-        {
+        public int value() {
             return value;
         }
     }
 
-
     /**
      * 区分蓝盾codecc任务创建来源
      */
-    enum BsTaskCreateFrom
-    {
+    enum BsTaskCreateFrom {
         /**
          * codecc服务创建的codecc任务
          */
@@ -755,32 +936,57 @@ public interface ComConstants
         /**
          * 工蜂代码扫描任务
          */
-        GONGFENG_SCAN("gongfeng_scan");
+        GONGFENG_SCAN("gongfeng_scan"),
+
+        /**
+         * API 触发创建任务
+         */
+        API_TRIGGER("api_trigger"),
+
+        /**
+         * 定时扫描任务
+         */
+        TIMING_SCAN("timing_scan");
 
         private String value;
 
-        BsTaskCreateFrom(String value)
-        {
+        BsTaskCreateFrom(String value) {
             this.value = value;
         }
 
-        public String value()
-        {
+        public String value() {
             return this.value;
+        }
+
+        @NotNull
+        public static Set<String> getByStatType(Set<String> type) {
+            Set<String> createFrom;
+            if (type != null) {
+                createFrom = Sets.newHashSet();
+                if (type.contains(DefectStatType.GONGFENG_SCAN.value)) {
+                    // 开源
+                    createFrom.add(GONGFENG_SCAN.value());
+                }
+                if (type.contains(DefectStatType.USER.value)) {
+                    // 非开源
+                    createFrom.add(BS_CODECC.value());
+                    createFrom.add(BS_PIPELINE.value());
+                }
+            } else {
+                createFrom = Sets.newHashSet(BS_CODECC.value(), BS_PIPELINE.value(), GONGFENG_SCAN.value());
+            }
+            return createFrom;
         }
     }
 
-    enum EslintFrameworkType
-    {
+    enum EslintFrameworkType {
         standard, vue, react
     }
-
 
     /**
      * 工具跟进状态
      */
-    enum FOLLOW_STATUS
-    {
+    enum FOLLOW_STATUS {
 
         NOT_FOLLOW_UP_0(0), //未跟进
         NOT_FOLLOW_UP_1(1), //未跟进
@@ -792,23 +998,24 @@ public interface ComConstants
 
         private int value;
 
-        FOLLOW_STATUS(int value)
-        {
+        FOLLOW_STATUS(int value) {
             this.value = value;
         }
 
-        public int value()
-        {
+        public int value() {
             return value;
         }
-    }
 
+        @NotNull
+        public static List<Integer> getEffectiveStatus() {
+            return Lists.newArrayList(NOT_FOLLOW_UP_0.value, NOT_FOLLOW_UP_1.value, ACCESSED.value, EXPERIENCE.value);
+        }
+    }
 
     /**
      * PHPCS规范编码
      */
-    enum PHPCSStandardCode
-    {
+    enum PHPCSStandardCode {
         PEAR(1),
         Generic(2),
         MySource(4),
@@ -820,13 +1027,11 @@ public interface ComConstants
 
         private int code;
 
-        PHPCSStandardCode(int code)
-        {
+        PHPCSStandardCode(int code) {
             this.code = code;
         }
 
-        public int code()
-        {
+        public int code() {
             return this.code;
         }
     }
@@ -834,41 +1039,40 @@ public interface ComConstants
     /**
      * 工具处理模式
      */
-    enum ToolPattern
-    {
+    enum ToolPattern {
         LINT,
         COVERITY,
         KLOCWORK,
+        PINPOINT,
         CCN,
         DUPC,
+        CLOC,
+        STAT,
         TSCLUA;
     }
-
 
     /**
      * 流水线工具配置操作类型
      */
-    enum PipelineToolUpdateType
-    {
+    enum PipelineToolUpdateType {
         ADD,
         REPLACE,
         REMOVE,
         GET
     }
 
-    enum CommonJudge
-    {
+
+    /*------------------------------- 工具参数提示国际化 -----------------------*/
+    enum CommonJudge {
         COMMON_Y("Y"),
         COMMON_N("N");
         String value;
 
-        CommonJudge(String value)
-        {
+        CommonJudge(String value) {
             this.value = value;
         }
 
-        public String value()
-        {
+        public String value() {
             return this.value;
         }
 
@@ -877,47 +1081,39 @@ public interface ComConstants
     /**
      * 任务文件状态
      */
-    enum TaskFileStatus
-    {
+    enum TaskFileStatus {
         NEW(1),
         PATH_MASK(8);
 
         private int value;
 
-        TaskFileStatus(int value)
-        {
+        TaskFileStatus(int value) {
             this.value = value;
         }
 
-        public int value()
-        {
+        public int value() {
             return value;
         }
     }
 
-
     /**
      * 缺陷类型
      */
-    enum DefectType
-    {
+    enum DefectType {
         NEW(1),
         HISTORY(2);
 
         private int value;
 
-        DefectType(int value)
-        {
+        DefectType(int value) {
             this.value = value;
         }
 
-        public int value()
-        {
+        public int value() {
             return value;
         }
 
-        public String stringValue()
-        {
+        public String stringValue() {
             return String.valueOf(value);
         }
     }
@@ -925,8 +1121,7 @@ public interface ComConstants
     /**
      * 缺陷状态
      */
-    enum DefectStatus
-    {
+    enum DefectStatus {
         NEW(1),
         FIXED(2),
         IGNORE(4),
@@ -935,22 +1130,21 @@ public interface ComConstants
 
         private int value;
 
-        DefectStatus(int value)
-        {
+        DefectStatus(int value) {
             this.value = value;
         }
 
-        public int value()
-        {
+        public int value() {
             return value;
         }
     }
 
+    List<String> MASK_STATUS = Arrays.asList("8", "16", "10", "12", "14", "18", "20", "22", "24", "26", "28", "30");
+
     /**
      * 聚类类型
      */
-    enum ClusterType
-    {
+    enum ClusterType {
         file,
         defect
     }
@@ -958,16 +1152,14 @@ public interface ComConstants
     /**
      * rdm项目coverity分析状态
      */
-    enum RDMCoverityStatus
-    {
+    enum RDMCoverityStatus {
         success, failed
     }
 
     /**
      * 代码托管类型，包括SVN、GIT等
      */
-    enum CodeHostingType
-    {
+    enum CodeHostingType {
         SVN,
         GIT,
         HTTP_DOWNLOAD,
@@ -977,30 +1169,25 @@ public interface ComConstants
     /**
      * 通用状态，0-启用，1-停用
      */
-    enum Status
-    {
+    enum Status {
         ENABLE(0),
         DISABLE(1);
 
         private int value;
 
-        Status(int value)
-        {
+        Status(int value) {
             this.value = value;
         }
 
-        public int value()
-        {
+        public int value() {
             return value;
         }
     }
 
-
     /**
      * REPAIR: 待修复告警趋势，NEW: 每日新增告警，CLOSE: 每日关闭/修复告警
      */
-    enum ChartType
-    {
+    enum ChartType {
         REPAIR,
         NEW,
         CLOSE,
@@ -1009,8 +1196,7 @@ public interface ComConstants
     /**
      * 扫描方式
      */
-    enum ScanType
-    {
+    enum ScanType {
         /**
          * 全量
          */
@@ -1044,8 +1230,8 @@ public interface ComConstants
         PARTIAL_INCREMENTAL(4);
 
         public int code;
-        ScanType(int code)
-        {
+
+        ScanType(int code) {
             this.code = code;
         }
     }
@@ -1053,8 +1239,7 @@ public interface ComConstants
     /**
      * 忽略告警原因类型
      */
-    enum IgnoreReasonType
-    {
+    enum IgnoreReasonType {
         // 默认为0不是已忽略告警
         DEFAULT(0),
         // 工具误报
@@ -1078,21 +1263,20 @@ public interface ComConstants
     /**
      * 机器人通知范围
      */
-    enum BotNotifyRange
-    {
+    enum BotNotifyRange {
         /**
          * 新增告警
          */
         NEW(1),
 
         /**
-         * 遗留告警
+         * 遗留告警(新+旧)
          */
         EXIST(2);
 
         public int code;
-        BotNotifyRange(int code)
-        {
+
+        BotNotifyRange(int code) {
             this.code = code;
         }
     }
@@ -1100,8 +1284,7 @@ public interface ComConstants
     /**
      * 统计项
      */
-    enum StaticticItem
-    {
+    enum StaticticItem {
         NEW,
         EXIST,
         CLOSE,
@@ -1116,258 +1299,48 @@ public interface ComConstants
     }
 
     /**
-     * ------------------------操作历史记录操作类型------------------
-     */
-    String REGISTER_TOOL = "register_tool";
-
-    String MODIFY_INFO = "modify_info";
-
-    String ENABLE_ACTION = "enable_action";
-
-    String DISABLE_ACTION = "diable_action";
-
-    String OPEN_CHECKER = "open_checker";
-
-    String CLOSE_CHECKER = "close_checker";
-
-    String TRIGGER_ANALYSIS = "trigger_analysis";
-
-    String AUTHOR_TRANSFER = "author_transfer";
-    /**
-     * ----------------------------end----------------------------
-     */
-
-
-    /**
-     * ------------------------操作历史记录操作功能id------------------
-     */
-    //注册工具
-    String FUNC_REGISTER_TOOL = "register_tool";
-
-    //修改任务信息
-    String FUNC_TASK_INFO = "task_info";
-
-    //切换任务状态
-    String FUNC_TASK_SWITCH = "task_switch";
-
-    //切换工具状态
-    String FUNC_TOOL_SWITCH = "tool_switch";
-
-    //任务代码库更新
-    String FUNC_CODE_REPOSITORY = "task_code";
-
-    //规则配置
-    String FUNC_CHECKER_CONFIG = "checker_config";
-
-    //触发立即分析
-    String FUNC_TRIGGER_ANALYSIS = "trigger_analysis";
-
-    //定时扫描修改
-    String FUNC_SCAN_SCHEDULE = "scan_schedule";
-
-    //过滤路径
-    String FUNC_FILTER_PATH = "filter_path";
-
-    //告警管理
-    String FUNC_DEFECT_MANAGE = "defect_manage";
-    /**
-     * ----------------------------end----------------------------
-     */
-
-    /*-------------------------------Accept-Language-----------------------*/
-    String ZH_CN = "ZH-CN";
-
-
-
-    /*------------------------------- 规则包描述国际化 -----------------------*/
-    /**
-     * Node规则包
-     */
-    String NODE = "NODE";
-
-    /**
-     * 风格规则包
-     */
-    String STYLISTIC = "STYLISTIC";
-
-    /**
-     * 严格模式包
-     */
-    String STRICT_MODE = "STRICT_MODE";
-
-    /**
-     * 逻辑规则包
-     */
-    String LOGICA = "LOGICAL";
-
-    /**
-     * 默认规则包
-     */
-    String DEFAULT = "DEFAULT";
-
-    /**
-     * 腾讯开源包
-     */
-    String TOSA = "TOSA";
-
-    /**
-     * 变量规则包
-     */
-    String VARIABLE = "VARIABLE";
-
-    /**
-     * ES6规则包
-     */
-    String ES6 = "ES6";
-
-    /**
-     * 最佳实践包
-     */
-    String BEST_PRACTICES = "BEST_PRACTICES";
-
-    /**
-     * 头文件规则包
-     */
-    String HEADER_FILE = "HEADER_FILE";
-
-    /**
-     * 系统API包
-     */
-    String SYS_API = "SYS_API";
-
-    /**
-     * OneSDK规则包
-     */
-    String ONESDK = "ONESDK";
-
-    /**
-     * 安全规则包
-     */
-    String SECURITY = "SECURITY";
-
-    /**
-     * 命名规范包
-     */
-    String NAMING = "NAMING";
-
-    /**
-     * 注释规则包
-     */
-    String COMMENT = "COMMENT";
-
-    /**
-     * 格式规范包
-     */
-    String FORMAT = "FORMAT";
-
-
-    /*------------------------------- 工具参数提示国际化 -----------------------*/
-    /**
-     * ESLINT参数名 - eslint_rc
-     */
-    String PARAM_ESLINT_RC = "eslint_rc";
-
-    /**
-     * GOML参数名 - go_path
-     */
-    String PARAM_GOML_GO_PATH = "go_path";
-
-    /**
-     * GOML参数名 - rel_path
-     */
-    String PARAM_GOML_REL_PATH = "rel_path";
-
-    /**
-     * PYLINT参数名 - py_version
-     */
-    String PARAM_PYLINT_PY_VERSION = "py_version";
-
-    /**
-     * SPOTBUGS参数名 - script_type
-     */
-    String PARAM_SPOTBUGS_SCRIPT_TYPE = "script_type";
-
-    /**
-     * SPOTBUGS参数名 - script_content
-     */
-    String PARAM_SPOTBUGS_SCRIPT_CONTENT = "script_content";
-
-    /**
-     * PHPCS参数名 - script_type
-     */
-    String PARAM_PHPCS_XX = "script_type";
-
-    /**
-     * 圈复杂度阈值
-     */
-    String KEY_CCN_THRESHOLD = "ccn_threshold";
-
-    /**
-     * 默认圈复杂度阈值
-     */
-    int DEFAULT_CCN_THRESHOLD = 20;
-
-    /**
-     * PHPCS规范
-     */
-    String KEY_PHPCS_STANDARD = "phpcs_standard";
-
-    /**
-     * 下划线
-     */
-    String KEY_UNDERLINE = "_";
-
-    /**
      * 报告类型：定时报告T，即时报告I, 开源检查报告O
      */
-    enum ReportType
-    {
+    enum ReportType {
         T,
         I,
         O,
         A;
     }
 
-
-    String BLUEKING_LANGUAGE = "blueking_language";
-
-    String KEY_DOCKERNIZED_TOOLS = "DOCKERNIZED_TOOLS";
-
-    enum InstantReportStatus
-    {
+    enum InstantReportStatus {
         ENABLED("1"),
         DISABLED("2");
 
         private String code;
 
-        InstantReportStatus(String code)
-        {
+        InstantReportStatus(String code) {
             this.code = code;
         }
 
-        public String code()
-        {
+        public String code() {
             return this.code;
         }
     }
 
 
-    enum EmailReceiverType
-    {
+    enum EmailReceiverType {
         TASK_MEMBER("0"),
         TASK_OWNER("1"),
         CUSTOMIZED("2"),
-        NOT_SEND("3");
+        NOT_SEND("3"),
+        /**
+         * 遗留处理人
+         */
+        ONLY_AUTHOR("4");
 
         private String code;
 
-        EmailReceiverType(String code)
-        {
+        EmailReceiverType(String code) {
             this.code = code;
         }
 
-        public String code()
-        {
+        public String code() {
             return this.code;
         }
     }
@@ -1375,28 +1348,24 @@ public interface ComConstants
     /**
      * 告警上报状态
      */
-    enum DefectReportStatus
-    {
+    enum DefectReportStatus {
         PROCESSING,
         SUCCESS,
         FAIL
     }
 
-    enum MarkStatus
-    {
+    enum MarkStatus {
         NOT_MARKED(0),
         MARKED(1),
         NOT_FIXED(2);
 
         private int value;
 
-        MarkStatus(int value)
-        {
+        MarkStatus(int value) {
             this.value = value;
         }
 
-        public int value()
-        {
+        public int value() {
             return this.value;
         }
     }
@@ -1404,8 +1373,7 @@ public interface ComConstants
     /**
      * codecc分发路由规则（用于配置在codeccDispatchType中）
      */
-    enum CodeCCDispatchRoute
-    {
+    enum CodeCCDispatchRoute {
         //独立构建机集群
         INDEPENDENT(-1L),
         //开源扫描集群
@@ -1415,25 +1383,34 @@ public interface ComConstants
 
         private Long flag;
 
-        CodeCCDispatchRoute(Long flag){this.flag = flag;}
+        CodeCCDispatchRoute(Long flag) {
+            this.flag = flag;
+        }
 
-        public Long flag() {return this.flag;}
+        public Long flag() {
+            return this.flag;
+        }
     }
 
     /**
      * 开源扫描规则集类型
      */
-    enum OpenSourceCheckerSetType
-    {
+    enum OpenSourceCheckerSetType {
         //全量规则集
         FULL,
         //简化规则集
-        SIMPLIFIED
+        SIMPLIFIED,
+        //两者规则集都配置
+        BOTH,
+        //oteam专有规则集
+        OTEAM,
+        //oteam且配置了ci的yml文件专有规则集
+        OTEAM_CI
     }
 
     /**
      * CLOC 告警查询类型
-     * */
+     */
     enum CLOCOrder {
         // 根据文件查询
         FILE,
@@ -1444,8 +1421,7 @@ public interface ComConstants
     /**
      * 开源失效原因
      */
-    enum OpenSourceDisableReason
-    {
+    enum OpenSourceDisableReason {
         //删除或变为私有
         DELETEORPRIVATE(1),
         //归档
@@ -1458,24 +1434,25 @@ public interface ComConstants
         OWNERPROBLEM(5),
         //没有工蜂统计信息
         NOGONGFENGSTAT(6),
-        //用户手动停用
-        MANUALDISABLE(7);
+        //冗余项目
+        REDUNDANTTASK(7),
+        //创建或下发过程异常
+        CREATETRIGGERERROR(8);
         private Integer code;
 
-        public Integer getCode(){
-            return this.code;
+        OpenSourceDisableReason(Integer code) {
+            this.code = code;
         }
 
-        OpenSourceDisableReason(Integer code){
-            this.code = code;
+        public Integer getCode() {
+            return this.code;
         }
     }
 
     /**
      * 告警统计类型
-     * */
-    enum StatisticType
-    {
+     */
+    enum StatisticType {
         // 按状态统计
         STATUS,
         // 按严重程度统计
@@ -1488,19 +1465,18 @@ public interface ComConstants
     /**
      * 工具类型
      */
-    enum AtomCode
-    {
+    enum AtomCode {
         CODECC_V2("CodeccCheckAtom"),
         CODECC_V3("CodeccCheckAtomDebug");
 
         private String code;
 
-        public String code(){
-            return this.code;
+        AtomCode(String code) {
+            this.code = code;
         }
 
-        AtomCode(String code){
-            this.code = code;
+        public String code() {
+            return this.code;
         }
     }
 
@@ -1518,9 +1494,22 @@ public interface ComConstants
         }
     }
 
+    enum WeChatNotifyTemplate {
+        BK_PLUGIN_FAILED_TEMPLATE("BK_PLUGIN_FAILED_TEMPLATE");
 
-    enum ScanStatus
-    {
+        private String templateCode;
+
+        WeChatNotifyTemplate(String templateCode) {
+            this.templateCode = templateCode;
+        }
+
+        public String value() {
+            return this.templateCode;
+        }
+    }
+
+
+    enum ScanStatus {
         //正在扫描中
         PROCESSING(3),
         //成功
@@ -1529,35 +1518,205 @@ public interface ComConstants
         FAIL(1);
         private Integer code;
 
-        ScanStatus(Integer code){
+        ScanStatus(Integer code) {
             this.code = code;
         }
 
-        public Integer getCode(){
+        public Integer getCode() {
+            return this.code;
+        }
+
+        public static String convertScanStatus(Integer code) {
+            String status;
+            if (PROCESSING.code.equals(code)) {
+                status = "分析中";
+            } else if (FAIL.code.equals(code)) {
+                status = "分析失败";
+            } else if (SUCCESS.code.equals(code)) {
+                status = "分析成功";
+            } else {
+                status = "未知状态" + code;
+            }
+            return status;
+        }
+    }
+
+    enum TOSAStandardTools {
+
+    }
+
+    enum ToolType {
+        STANDARD,
+        SECURITY,
+        DUPC,
+        CCN,
+        DEFECT,
+        CLOC,
+        STAT
+    }
+
+    enum BaseConfig {
+        // 不支持增量的工具列表
+        INCREMENTAL_EXCEPT_TOOLS,
+
+        // 支持coverity增量的灰度任务白名单列表
+        INCREMENTAL_TASK_WHITE_LIST,
+
+        // 支持快速增量的灰度任务白名单列表
+        FAST_INCREMENTAL_TASK_WHITE_LIST,
+
+        // 支持快速增量的开源灰度任务白名单列表
+        FAST_INCREMENTAL_OPENSOURCE_TASK_WHITE_LIST,
+
+        //安全工具
+        SECURITY_TOOLS,
+
+        // 规范工具
+        STANDARD_TOOLS
+    }
+
+    enum ProjectId {
+        // Oteam项目都属于这个项目
+        CUSTOMPROJ_TEG_CUSTOMIZED,
+
+        // EPC系统的项目
+        CUSTOMPROJ_PCG_RD
+    }
+
+    String GONGFENG_PROJECT_ID_PREFIX = "CODE_";
+
+    enum DefectStatType {
+        /**
+         * 所有任务范围
+         */
+        ALL("all"),
+        /**
+         * 非开源扫描（服务、流水线）
+         */
+        USER("user"),
+        /**
+         * 开源扫描
+         */
+        GONGFENG_SCAN("gongfeng_scan");
+
+        private String value;
+
+        DefectStatType(String value) {
+            this.value = value;
+        }
+
+        public String value() {
+            return this.value;
+        }
+    }
+
+    enum ScanStatType {
+        /**
+         * 超快增量
+         */
+        IS_FAST_INCREMENT("IS_FAST_INCRE"),
+        /**
+         * 非超快增量
+         */
+        NOT_FAST_INCREMENT("NOT_FAST_INCRE");
+
+        private String value;
+
+        ScanStatType(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
+
+    enum CheckerSetType {
+        NORMAL("normal"),
+
+        OPEN_SCAN("openScan"),
+
+        EPC_SCAN("epcScan");
+
+        private String value;
+
+        CheckerSetType(String value) {
+            this.value = value;
+        }
+
+        public String value() {
+            return value;
+        }
+
+        @JsonCreator
+        public static CheckerSetType forValue(String value) {
+            CheckerSetType[] checkerSetTypes = CheckerSetType.values();
+            for (CheckerSetType checkerSetType : checkerSetTypes) {
+                if (checkerSetType.value.equalsIgnoreCase(value)) {
+                    return checkerSetType;
+                }
+            }
+            return NORMAL;
+        }
+    }
+
+    /**
+     * 工具集成进展状态：T-测试，G-灰度，P-发布
+     */
+    enum ToolIntegratedStatus {
+        T(-1),
+        G(-2),
+        P(0);
+
+        private int value;
+
+        ToolIntegratedStatus(int value) {
+            this.value = value;
+        }
+
+        public static ToolIntegratedStatus getInstance(int value) {
+            ToolIntegratedStatus[] values = ToolIntegratedStatus.values();
+            for (ToolIntegratedStatus toolIntegratedStatus : values) {
+                if (toolIntegratedStatus.value == value) {
+                    return toolIntegratedStatus;
+                }
+            }
+            return P;
+        }
+
+        public int value() {
+            return this.value;
+        }
+    }
+
+    /**
+     * 文件生成过程状态标识
+     */
+    enum FileStatus {
+        /**
+         * 未开始
+         */
+        NOT_STARTED("-1"),
+
+        /**
+         * 已导出完成
+         */
+        FINISH("0"),
+
+        /**
+         * 正在生成中
+         */
+        DOING("1");
+
+        private String  code;
+
+        FileStatus(String  code) {
+            this.code = code;
+        }
+
+        public String  getCode() {
             return this.code;
         }
     }
 
-    enum CreateFromBizInfix
-    {
-        /**
-         * 创建来源是GongFeng项目的类名前缀名：
-         */
-        GongFeng("gongfeng_scan"),
-
-        /**
-         * 创建来源是除GongFeng，其他的类名前缀名：
-         */
-        COMMON("Common");
-
-        private String code;
-
-        public String code(){
-            return this.code;
-        }
-
-        CreateFromBizInfix(String code){
-            this.code = code;
-        }
-    }
 }

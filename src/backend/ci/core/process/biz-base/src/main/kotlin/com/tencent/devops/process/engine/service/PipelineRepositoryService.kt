@@ -339,11 +339,13 @@ class PipelineRepositoryService constructor(
                     ), eventType)
                 }
                 is CodeGitlabWebHookTriggerElement -> {
-                    Pair(RepositoryConfig(
-                        repositoryHashId = e.repositoryHashId,
-                        repositoryName = e.repositoryName,
-                        repositoryType = e.repositoryType ?: RepositoryType.ID
-                    ), CodeEventType.PUSH)
+                    Pair(
+                        RepositoryConfig(
+                            repositoryHashId = e.repositoryHashId,
+                            repositoryName = e.repositoryName,
+                            repositoryType = e.repositoryType ?: RepositoryType.ID
+                        ), e.eventType ?: CodeEventType.PUSH
+                    )
                 }
                 is CodeGithubWebHookTriggerElement -> {
                     Pair(RepositoryConfig(
@@ -380,7 +382,7 @@ class PipelineRepositoryService constructor(
         }
 
         // 统一发事件
-        val variables = container.params.map { it.id to it.defaultValue.toString() }.toMap()
+        val variables = container.params.associate { it.id to it.defaultValue.toString() }
         svnRepoEventTypeMap.values.forEach { e ->
             logger.info("[$pipelineId]-initTriggerContainer,element is WebHook, add WebHook by mq")
             pipelineEventDispatcher.dispatch(
@@ -455,7 +457,11 @@ class PipelineRepositoryService constructor(
             }
 
             modelCheckPlugin.checkJob(
-                projectId = projectId, pipelineId = pipelineId, jobContainer = c, userId = userId
+                projectId = projectId,
+                pipelineId = pipelineId,
+                jobContainer = c,
+                userId = userId,
+                finallyStage = stage.finally
             )
 
             var taskSeq = 0
@@ -526,12 +532,14 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 version = 1,
                 pipelineName = model.name,
+                pipelineDesc = model.desc ?: model.name,
                 userId = userId,
                 channelCode = channelCode,
                 manualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 taskCount = taskCount
             )
+            model.latestVersion = 1
             pipelineResDao.create(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
@@ -647,8 +655,14 @@ class PipelineRepositoryService constructor(
                 manualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
-                taskCount = taskCount
+                taskCount = taskCount,
+                latestVersion = model.latestVersion
             )
+            if (version == 0) {
+                // 传过来的latestVersion已经不是最新
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)
+            }
+            model.latestVersion = version
             pipelineResDao.create(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
@@ -736,7 +750,9 @@ class PipelineRepositoryService constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                channelCode = channelCode),
+                channelCode = channelCode,
+                delete = delete
+            ),
             templateId = templateId
         )
     }
@@ -828,8 +844,8 @@ class PipelineRepositoryService constructor(
                     name = deleteName,
                     desc = "DELETE BY $userId in $deleteTime"
                 )
-                // 删除关联之模板
-                templatePipelineDao.delete(dslContext = transactionContext, pipelineId = pipelineId)
+                // #4201 标志关联模板为删除
+                templatePipelineDao.softDelete(dslContext = transactionContext, pipelineId = pipelineId)
             }
 
             pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
@@ -999,7 +1015,8 @@ class PipelineRepositoryService constructor(
                 waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
                 maxQueueSize = t.maxQueueSize,
                 maxPipelineResNum = t.maxPipelineResNum,
-                maxConRunningQueueSize = t.maxConRunningQueueSize
+                maxConRunningQueueSize = t.maxConRunningQueueSize,
+                buildNumRule = t.buildNumRule
             )
         } else null
     }
@@ -1110,6 +1127,10 @@ class PipelineRepositoryService constructor(
                 userId = userId,
                 channelCode = channelCode
             )
+
+            // #4012 还原与模板的绑定关系
+            templatePipelineDao.restore(dslContext = transactionContext, pipelineId = pipelineId)
+
             // 只初始化相关信息
             val tasks = initModel(
                 model = existModel,

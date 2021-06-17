@@ -28,15 +28,12 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.process.pojo.code.WebhookInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-/**
- * @Description
- * @Date 2019/9/19
- * @Version 1.0
- */
 @ApiModel("带构建变量的历史构建模型")
 data class BuildHistoryWithVars(
     @ApiModelProperty("构建ID", required = true)
@@ -55,6 +52,8 @@ data class BuildHistoryWithVars(
     val endTime: Long?,
     @ApiModelProperty("状态", required = true)
     val status: String,
+    @ApiModelProperty("各阶段状态", required = true)
+    val stageStatus: List<BuildStageStatus>?,
     @ApiModelProperty("结束原因", required = true)
     val deleteReason: String?,
     @ApiModelProperty("服务器当前时间戳", required = true)
@@ -77,12 +76,20 @@ data class BuildHistoryWithVars(
     val buildParameters: List<BuildParameters>?,
     @ApiModelProperty("WebHookType", required = false)
     val webHookType: String?,
+    @ApiModelProperty("webhookInfo", required = false)
+    val webhookInfo: WebhookInfo?,
     @ApiModelProperty("启动类型(新)", required = false)
     val startType: String?,
     @ApiModelProperty("推荐版本号", required = false)
     val recommendVersion: String?,
-    @ApiModelProperty("构建变量集合", required = true)
-    val variables: Map<String, String>,
+    @ApiModelProperty("是否重试", required = false)
+    val retry: Boolean = false,
+    @ApiModelProperty("流水线任务执行错误", required = false)
+    var errorInfoList: List<ErrorInfo>?,
     @ApiModelProperty("构建信息", required = false)
-    var buildMsg: String?
+    var buildMsg: String?,
+    @ApiModelProperty("自定义构建版本号", required = false)
+    val buildNumAlias: String? = null,
+    @ApiModelProperty("构建变量集合", required = true)
+    val variables: Map<String, String>
 )

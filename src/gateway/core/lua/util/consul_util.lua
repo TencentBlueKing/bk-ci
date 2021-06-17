@@ -29,7 +29,6 @@ function _M:getAllWhitelistIp()
     end
 
     -- 获取灰度设置
-
     local ns_config = nil
     if ngx.var.devops_region ~= "DEVNET" then
         ns_config = config.ns
@@ -79,7 +78,7 @@ function _M:getAllWhitelistIp()
 
         if responseBody == nil then
             ngx.log(ngx.ERR, "nil responseBody , please check all cache and http api")
-            ngx.exit(500)
+            ngx.exit(401)
             return
         else
             if useHttp then

@@ -30,10 +30,10 @@ package com.tencent.devops.process.permission
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
@@ -43,13 +43,11 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 /**
  * Pipeline专用权限校验接口
  */
-@Service
 class PipelinePermissionServiceImpl @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val authResourceApi: AuthResourceApi,
@@ -190,7 +188,9 @@ class PipelinePermissionServiceImpl @Autowired constructor(
         }
         instanceSet.addAll(instances.toSet())
         instanceSet.addAll(projectInstances.toSet())
-        logger.info("pipeline getResourceByPermission has manager permission|managerList $projectInstances, iamList $instances")
+        logger.info(
+            "pipeline getResourceByPermission has manager permission|managerList $projectInstances, iamList $instances"
+        )
         return instanceSet.toList()
     }
 

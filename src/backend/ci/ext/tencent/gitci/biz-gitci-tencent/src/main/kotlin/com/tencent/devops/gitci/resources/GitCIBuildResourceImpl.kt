@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.GitCIBuildResource
+import com.tencent.devops.gitci.pojo.GitCIStartupVO
 import com.tencent.devops.gitci.service.GitCIBuildService
 import com.tencent.devops.process.pojo.BuildId
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,6 +70,16 @@ class GitCIBuildResourceImpl @Autowired constructor(
             gitProjectId = gitProjectId,
             pipelineId = pipelineId,
             buildId = buildId
+        ))
+    }
+
+    override fun gitCIStartupPipeline(userId: String, gitCIStartupVO: GitCIStartupVO): Result<BuildId?> {
+        return Result(buildService.startBuild(
+            pipeline = gitCIStartupVO.pipeline,
+            event = gitCIStartupVO.event,
+            gitProjectConf = gitCIStartupVO.gitProjectConf,
+            model = gitCIStartupVO.model,
+            gitBuildId = gitCIStartupVO.gitBuildId
         ))
     }
 

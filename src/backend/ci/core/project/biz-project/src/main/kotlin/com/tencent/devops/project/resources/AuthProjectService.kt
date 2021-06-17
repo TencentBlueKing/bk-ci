@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.SearchInstanceResponseDTO
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.AuthConstants
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
@@ -43,11 +44,13 @@ import org.springframework.stereotype.Service
 
 @Service
 class AuthProjectService @Autowired constructor(
-    val projectService: ProjectService
+    val projectService: ProjectService,
+    val authTokenApi: AuthTokenApi
 ) {
 
-    fun getProjectList(page: PageInfoDTO?): ListInstanceResponseDTO {
-        logger.info("getProjectList page $page ")
+    fun getProjectList(page: PageInfoDTO?, token: String): ListInstanceResponseDTO {
+        logger.info("getProjectList page $page, token: $token ")
+        authTokenApi.checkToken(token)
         var offset = 0
         var limit = AuthConstants.MAX_LIMIT
         if (page != null) {
@@ -68,8 +71,9 @@ class AuthProjectService @Autowired constructor(
         return result.buildListInstanceResult(projectInfo, count)
     }
 
-    fun getProjectInfo(idList: List<String>): FetchInstanceInfoResponseDTO {
+    fun getProjectInfo(idList: List<String>, token: String): FetchInstanceInfoResponseDTO {
         logger.info("getProjectInfo ids[$idList]")
+        authTokenApi.checkToken(token)
         val ids = idList.toSet()
         val projectInfo = projectService.list(ids)
         val entityList = mutableListOf<InstanceInfoDTO>()
@@ -84,8 +88,9 @@ class AuthProjectService @Autowired constructor(
         return result.buildFetchInstanceResult(entityList)
     }
 
-    fun searchProjectInstances(keyword: String, page: PageInfoDTO?): SearchInstanceResponseDTO {
+    fun searchProjectInstances(keyword: String, page: PageInfoDTO?, token: String): SearchInstanceResponseDTO {
         logger.info("searchInstance keyword[$keyword] page[$page]")
+        authTokenApi.checkToken(token)
         val projectRecords = projectService.searchProjectByProjectName(
             projectName = keyword,
             limit = page!!.limit.toInt(),

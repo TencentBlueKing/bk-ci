@@ -50,6 +50,7 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -212,6 +213,7 @@ interface UserPipelineResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam(value = "流水线模型与设置", required = true)
+        @Valid
         modelAndSetting: PipelineModelAndSetting
     ): Result<Boolean>
 

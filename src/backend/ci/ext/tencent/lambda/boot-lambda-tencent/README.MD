@@ -5,8 +5,8 @@
 默认是：
 
 ```groovy
-    compile project(":core:artifactory:biz-artifactory")
-    compile project(":core:artifactory:biz-artifactory-sample")
+    api(project(":core:artifactory:biz-artifactory")
+    api(project(":core:artifactory:biz-artifactory-sample")
 ```
 
 - artifactory-biz 是基础实现和抽象逻辑

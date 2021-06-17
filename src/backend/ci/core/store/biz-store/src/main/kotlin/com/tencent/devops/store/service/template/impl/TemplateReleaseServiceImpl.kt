@@ -125,16 +125,32 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 data = false
             )
         }
+        val projectCode = marketTemplateRelRequest.projectCode
+        // 校验模板是否合法
+        val checkResult = client.get(ServiceTemplateResource::class).checkTemplate(
+            userId = userId,
+            projectId = projectCode,
+            templateId = templateCode
+        )
+        if (checkResult.isNotOk()) {
+            return checkResult
+        }
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val templateId = UUIDUtil.generate()
-            marketTemplateDao.addMarketTemplate(context, userId, templateId, templateCode, marketTemplateRelRequest)
+            marketTemplateDao.addMarketTemplate(
+                dslContext = context,
+                userId = userId,
+                templateId = templateId,
+                templateCode = templateCode,
+                marketTemplateRelRequest = marketTemplateRelRequest
+            )
             // 添加模板与项目关联关系，type为0代表新增模板时关联的项目
             storeProjectRelDao.addStoreProjectRel(
                 dslContext = context,
                 userId = userId,
                 storeCode = templateCode,
-                projectCode = marketTemplateRelRequest.projectCode,
+                projectCode = projectCode,
                 type = StoreProjectTypeEnum.INIT.type.toByte(),
                 storeType = StoreTypeEnum.TEMPLATE.type.toByte()
             )

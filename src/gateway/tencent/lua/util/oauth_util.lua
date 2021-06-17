@@ -1,22 +1,20 @@
---[[
-Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
-
-Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
-
-BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
-
-A copy of the MIT License is included in this file.
-
-
-Terms of the MIT License:
----------------------------------------------------
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-]]
-
+-- Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+-- Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+-- BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+-- A copy of the MIT License is included in this file.
+-- Terms of the MIT License:
+-- ---------------------------------------------------
+-- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+-- documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+-- rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+-- permit persons to whom the Software is furnished to do so, subject to the following conditions:
+-- The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+-- the Software.
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+-- LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+-- NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+-- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+-- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 _M = {}
 
 local cjson = require("cjson")
@@ -34,11 +32,11 @@ function _M:get_ticket(bk_ticket)
 
         --- 组装请求body
         local requestBody = {
-            env_name = config.oauth.env, 
-            app_code = config.oauth.app_code, 
-            app_secret = config.oauth.app_secret, 
-            grant_type =  "authorization_code",  
-            id_provider = "bk_login_ied", 
+            env_name = config.oauth.env,
+            app_code = config.oauth.app_code,
+            app_secret = config.oauth.app_secret,
+            grant_type = "authorization_code",
+            id_provider = "bk_login_ied",
             bk_ticket = bk_ticket
         }
 
@@ -57,22 +55,22 @@ function _M:get_ticket(bk_ticket)
             path = url,
             method = "POST",
             headers = {
-            ["Host"] = config.oauth.host,
-            ["Accept"] = "application/json",
-            ["Content-Type"] = "application/json"
-            }, 
+                ["Host"] = config.oauth.host,
+                ["Accept"] = "application/json",
+                ["Content-Type"] = "application/json"
+            },
             body = requestBodyJson
         })
         --- 判断是否出错了
         if not res then
             ngx.log(ngx.ERR, "failed to request get_ticket: ", err)
-            ngx.exit(500)
+            ngx.exit(401)
             return
         end
         --- 判断返回的状态码是否是200
         if res.status ~= 200 then
             ngx.log(ngx.STDERR, "failed to request get_ticket, status: ", res.status)
-            ngx.exit(500)
+            ngx.exit(401)
             return
         end
         --- 获取所有回复
@@ -82,7 +80,7 @@ function _M:get_ticket(bk_ticket)
         --- 转换JSON的返回数据为TABLE
         local result = json.decode(responseBody)
         --- 判断JSON转换是否成功
-        if result == nil then 
+        if result == nil then
             ngx.log(ngx.ERR, "failed to parse get_ticket response：", responseBody)
             ngx.exit(500)
             return
@@ -97,7 +95,6 @@ function _M:get_ticket(bk_ticket)
         user_cache:set(bk_ticket, responseBody, 180)
         return result.data
     else
-
         ngx.log(ngx.STDERR, "has user info:", user_cache_value)
         return json.decode(user_cache_value).data
     end
@@ -127,10 +124,10 @@ function _M:get_prebuild_ticket(bk_ticket)
             --- 组装请求body
             local requestBody = {
                 env_name = "prod",
-                app_code = "bk-prebuild",
-                app_secret = "oBv5hO54nR6USNPbc55nFRVrqkOzDZ4jX8MyTTWz6iGC8rIBP5", 
-                grant_type =  "authorization_code",  
-                id_provider = "bk_login_ied", 
+                app_code = "bk-preci",
+                app_secret = "SjJBvBR5iCJBXRa1n5z26YFgqIjJVZIIkMzD8GeEVQHH90LWAp",
+                grant_type = "authorization_code",
+                id_provider = "bk_login_ied",
                 bk_ticket = bk_ticket
             }
 
@@ -149,22 +146,22 @@ function _M:get_prebuild_ticket(bk_ticket)
                 path = url,
                 method = "POST",
                 headers = {
-                ["Host"] = config.oauth.host,
-                ["Accept"] = "application/json",
-                ["Content-Type"] = "application/json"
-                }, 
+                    ["Host"] = config.oauth.host,
+                    ["Accept"] = "application/json",
+                    ["Content-Type"] = "application/json"
+                },
                 body = requestBodyJson
             })
             --- 判断是否出错了
             if not res then
                 ngx.log(ngx.ERR, "failed to request get_ticket: ", err)
-                ngx.exit(500)
+                ngx.exit(401)
                 return
             end
             --- 判断返回的状态码是否是200
             if res.status ~= 200 then
                 ngx.log(ngx.STDERR, "failed to request get_ticket, status: ", res.status)
-                ngx.exit(500)
+                ngx.exit(401)
                 return
             end
             --- 获取所有回复
@@ -174,7 +171,7 @@ function _M:get_prebuild_ticket(bk_ticket)
             --- 转换JSON的返回数据为TABLE
             local result = json.decode(responseBody)
             --- 判断JSON转换是否成功
-            if result == nil then 
+            if result == nil then
                 ngx.log(ngx.ERR, "failed to parse get_ticket response：", responseBody)
                 ngx.exit(500)
                 return
@@ -187,8 +184,8 @@ function _M:get_prebuild_ticket(bk_ticket)
                 return
             end
 
-            red:set(red_key,cjson.encode(result.data))
-            red:expire(red_key,29*24*60*60) -- 缓存29天
+            red:set(red_key, cjson.encode(result.data))
+            red:expire(red_key, 29 * 24 * 60 * 60) -- 缓存29天
 
             prebuild_ticket = result.data
         else
@@ -210,8 +207,8 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
         project_code = project_code,
         service_code = service_code,
         policy_code = policy_code,
-        resource_code = resource_code, 
-        resource_type = resource_type, 
+        resource_code = resource_code,
+        resource_type = resource_type,
         user_id = user_id
     }
 
@@ -231,11 +228,7 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
     local res, err = httpc:request({
         path = "/permission/project/service/policy/resource/user/verfiy?access_token=" .. access_token,
         method = "POST",
-        headers = {
-        ["Host"] = config.oauth.host,
-        ["Accept"] = "application/json",
-        ["Content-Type"] = "application/json",
-        },
+        headers = {["Host"] = config.oauth.host, ["Accept"] = "application/json", ["Content-Type"] = "application/json"},
         body = requestBodyJson
     })
     --- 判断是否出错了
@@ -255,7 +248,7 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
     --- 转换JSON的返回数据为TABLE
     local result = json.decode(responseBody)
     --- 判断JSON转换是否成功
-    if result == nil then 
+    if result == nil then
         ngx.log(ngx.ERR, "failed to parse verfiy_permis response：", responseBody)
         return false
     end
@@ -268,11 +261,8 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
     return true
 end
 
-
 function _M:verify_token(access_token)
-    local requestBody = {
-        access_token = access_token
-    }
+    local requestBody = {access_token = access_token}
     --- 初始化HTTP连接
     local httpc = http.new()
     --- 开始连接
@@ -282,22 +272,18 @@ function _M:verify_token(access_token)
     local res, err = httpc:request({
         path = "/oauth/token" .. "?access_token=" .. access_token,
         method = "GET",
-        headers = {
-        ["Host"] = config.oauth.host,
-        ["Accept"] = "application/json",
-        ["Content-Type"] = "application/json",
-        }
+        headers = {["Host"] = config.oauth.host, ["Accept"] = "application/json", ["Content-Type"] = "application/json"}
     })
     --- 判断是否出错了
     if not res then
         ngx.log(ngx.ERR, "failed to request verify_token: ", err)
-        ngx.exit(500)
+        ngx.exit(401)
         return
     end
     --- 判断返回的状态码是否是200
     if res.status ~= 200 then
         ngx.log(ngx.STDERR, "failed to request verify_token, status: ", res.status)
-        ngx.exit(500)
+        ngx.exit(401)
         return
     end
     --- 获取所有回复
@@ -307,7 +293,7 @@ function _M:verify_token(access_token)
     --- 转换JSON的返回数据为TABLE
     local result = json.decode(responseBody)
     --- 判断JSON转换是否成功
-    if result == nil then 
+    if result == nil then
         ngx.log(ngx.ERR, "failed to parse verify_token response：", responseBody)
         ngx.exit(500)
         return
@@ -322,6 +308,5 @@ function _M:verify_token(access_token)
     result.data.access_token = access_token
     return result.data
 end
-
 
 return _M

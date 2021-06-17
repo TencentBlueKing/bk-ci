@@ -47,19 +47,26 @@ export default {
         isStagePopupShow: false,
         isAddParallelContainer: false,
         insertStageIndex: null,
+        insertStageIsFinally: false,
         buildParamsMap: {},
         execDetail: null,
         globalEnvs: null,
         executeStatus: false,
         saveStatus: false,
-        authSettingEditing: false,
         stageTagList: [],
         defaultStageTags: [],
         showReviewDialog: false,
         reviewInfo: null,
         showStageReviewPanel: false,
         importedPipelineJson: null,
-        atomVersionChangedKeys: []
+        atomVersionChangedKeys: [],
+        pipelineLimit: {
+            stageLimit: 20,
+            jobLimit: 20,
+            atomLimit: 50
+        },
+        pipelineCommonSetting: {},
+        editfromImport: false
     },
     mutations,
     actions,

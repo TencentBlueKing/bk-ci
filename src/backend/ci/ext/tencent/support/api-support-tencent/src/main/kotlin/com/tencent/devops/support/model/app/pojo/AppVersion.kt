@@ -41,5 +41,7 @@ data class AppVersion(
     @ApiModelProperty("发布内容")
     val releaseContent: String = "",
     @ApiModelProperty("渠道类型（1:\"安卓\", 2:\"IOS\"）")
-    val channelType: Byte = 1
+    val channelType: Byte = 1,
+    @ApiModelProperty("更新类型(1:强更新 , 2:软更新)")
+    val updateType: Int = 1
 )

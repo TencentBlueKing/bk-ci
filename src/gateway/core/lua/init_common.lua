@@ -35,6 +35,8 @@ cookieUtil = require("util.cookie_util")
 urlUtil = require("util.url_util")
 tagUtil = require("util.tag_util")
 loadBalanceUtil = require("util.loadbalance_util")
+accessControlUtil = require("util.access_control_util")
+securityUtil = require("util.security_util")
 
 math.randomseed(ngx.now() * 1000)
 uuid.seed()

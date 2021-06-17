@@ -71,7 +71,7 @@ class ExperienceGroupDao {
                 .from(this)
                 .where(RECORD_ID.eq(recordId))
                 .and(GROUP_ID.eq(groupId))
-                .fetchOne().value1()
+                .fetchOne()!!.value1()
         }
     }
 

@@ -212,9 +212,9 @@
                     this.$store.commit('pipelines/showPageLoading', true)
                     const viewSetting = await this.requestViewSettingInfo({ projectId: this.projectId })
                     viewSetting.currentViewId = currentViewId || viewSetting.currentViewId || 'myPipeline'
+
                     if (!currentViewId) {
                         this.$router.replace({
-                            name: 'pipelinesList',
                             params: {
                                 type: viewSetting.currentViewId
                             }
@@ -271,7 +271,7 @@
         &.bk-tab .bk-tab-header {
             height: 59px;
             line-height: 59px;
-            background-image: none;
+            background-image: none !important;
             .bk-tab-label-wrapper .bk-tab-label-list {
                 height: 59px;
                 li.bk-tab-label-item {

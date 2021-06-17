@@ -11,21 +11,41 @@
  */
 package com.tencent.bk.codecc.apiquery.service;
 
-import com.tencent.bk.codecc.apiquery.vo.CheckerSetVO;
+
+import com.tencent.bk.codecc.apiquery.defect.model.CheckerSetModel;
+import com.tencent.bk.codecc.apiquery.vo.CheckerSetListQueryReq;
+import com.tencent.devops.common.api.checkerset.CheckerSetVO;
+import com.tencent.devops.common.api.pojo.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public interface ICheckerSetBizService
-{
+public interface ICheckerSetBizService {
     /**
      * 根据任务ID集合获取关联的规则集
      *
      * @param taskIds 任务ID集合
      * @return map
      */
-    public Map<Long, List<CheckerSetVO>> getCheckerSetByTaskIdSet(Collection<Long> taskIds);
+    Map<Long, List<CheckerSetVO>> getCheckerSetByTaskIdSet(Collection<Long> taskIds);
 
 
+    /**
+     * 根据任务Id查询任务已经关联的规则集列表
+     *
+     * @param taskId 任务ID
+     * @return list
+     */
+    List<CheckerSetVO> getCheckerSetsByTaskId(Long taskId);
+
+    /**
+     * 分页查询规则管理列表
+     *
+     * @param checkerSetListQueryReq 规则集管理列表请求体
+     * @param pageable               分页数据
+     * @return page
+     */
+    Page<CheckerSetModel> getCheckerSetList(CheckerSetListQueryReq checkerSetListQueryReq, Pageable pageable);
 }

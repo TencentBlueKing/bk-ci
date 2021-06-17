@@ -39,8 +39,6 @@ import com.tencent.devops.common.job.api.pojo.FastPushFileRequest
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.ReportArchiveServiceElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -73,8 +71,6 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
     private val jFrogStorageApi: JFrogStorageApi,
     private val buildLogPrinter: BuildLogPrinter,
     private val jobClient: JobClient,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
 ) : IAtomTask<ReportArchiveServiceElement> {
 
@@ -101,7 +97,6 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
 
         val startTime = task.taskParams[BS_ATOM_START_TIME_MILLS].toString().toLong()
         val operator = task.taskParams[STARTER] as String
-        val isRepoGray = repoGray.isGray(projectId, redisOperation)
 
         logger.info("[$buildId]|LOOP|$taskId|JOB_TASK_ID=$taskInstanceId|startTime=$startTime")
         val timeout = getTimeoutMills()
@@ -127,7 +122,6 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         val fileDirParam = parseVariable(param.fileDir, runVariables)
         recordReportDetail(
             userId = userId,
-            isRepoGray = isRepoGray,
             param = param,
             runVariables = runVariables,
             destPath = destPath,
@@ -177,8 +171,6 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         val destPath = "/tmp/$projectId/$pipelineId/$buildId/$taskId/"
 
         val outputVariables = mutableMapOf<String, Any>()
-        val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        buildLogPrinter.addLine(buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
 
         val localIp = CommonUtils.getInnerIP()
         task.taskParams[BS_TASK_HOST] = localIp
@@ -213,7 +205,8 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
             timeout = getTimeoutMills().toLong()
         )
         val taskInstanceId = jobClient.fastPushFileDevops(fileRequest, projectId)
-        buildLogPrinter.addLine(buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId,
+            containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkFileTransferStatus(
@@ -233,13 +226,13 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
 
         if (!BuildStatus.isFinish(buildStatus)) {
-            buildLogPrinter.addLine(task.buildId, "报告正在上传 job:$taskInstanceId", task.taskId, task.containerHashId, executeCount)
+            buildLogPrinter.addLine(task.buildId, "报告正在上传 job:$taskInstanceId", task.taskId, task.containerHashId,
+                executeCount)
             return AtomResponse(buildStatus)
         }
 
         recordReportDetail(
             userId = userId,
-            isRepoGray = isRepoGray,
             param = param,
             runVariables = runVariables,
             destPath = destPath,
@@ -260,7 +253,6 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
 
     private fun recordReportDetail(
         userId: String,
-        isRepoGray: Boolean,
         param: ReportArchiveServiceElement,
         runVariables: Map<String, String>,
         destPath: String,
@@ -312,16 +304,10 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         // 获取项目下的所有文件，并上传到版本仓库
         val allFileList = recursiveGetFiles(localDirFile)
         val count = allFileList.size
-        if (isRepoGray) {
-            allFileList.forEach { file ->
-                val relativePath = localDirFilePath.relativize(Paths.get(file.canonicalPath)).toString()
-                bkRepoClient.uploadLocalFile(userId, projectId, "report", "$pipelineId/$buildId/$taskId/$relativePath", file)
-            }
-        } else {
-            allFileList.forEach { file ->
-                val relativePath = localDirFilePath.relativize(Paths.get(file.canonicalPath)).toString()
-                upload(projectId, pipelineId, buildId, taskId, relativePath, file)
-            }
+        allFileList.forEach { file ->
+            val relativePath = localDirFilePath.relativize(Paths.get(file.canonicalPath)).toString()
+            bkRepoClient.uploadLocalFile(userId, projectId, "report", "$pipelineId/$buildId/$taskId/$relativePath",
+                file)
         }
 
         var reportEmail: ReportEmail? = null
@@ -330,7 +316,8 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
             reportEmail = ReportEmail(receivers, emailTitle, indexFile.readBytes().toString(Charset.defaultCharset()))
         }
 
-        reportService.create(projectId, pipelineId, buildId, taskId, indexFileParam, reportNameParam, ReportTypeEnum.INTERNAL, reportEmail)
+        reportService.create(projectId, pipelineId, buildId, taskId, indexFileParam, reportNameParam,
+            ReportTypeEnum.INTERNAL, reportEmail)
         buildLogPrinter.addLine(buildId, "上传自定义产出物成功，共产生了${count}个文件", taskId, containerId, executeCount)
     }
 

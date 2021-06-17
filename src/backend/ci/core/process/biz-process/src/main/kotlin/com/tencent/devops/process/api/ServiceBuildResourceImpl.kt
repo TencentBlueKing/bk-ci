@@ -156,6 +156,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         taskId: String?,
+        failedContainer: Boolean?,
         channelCode: ChannelCode
     ): Result<BuildId> {
         checkUserId(userId)
@@ -169,6 +170,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             taskId = taskId,
+            failedContainer = failedContainer,
             isMobile = false,
             channelCode = channelCode,
             checkPermission = ChannelCode.isNeedAuth(channelCode)

@@ -33,6 +33,7 @@ import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecor
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Record1
+import org.jooq.Record4
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -155,6 +156,7 @@ class ExperiencePublicDao {
         }
     }
 
+    @SuppressWarnings("LongParameterList")
     fun create(
         dslContext: DSLContext,
         recordId: Long,
@@ -232,10 +234,17 @@ class ExperiencePublicDao {
 
     fun countByRecordId(
         dslContext: DSLContext,
-        recordId: Long
+        recordId: Long,
+        online: Boolean = true,
+        expireTime: LocalDateTime? = null
     ): Record1<Int>? {
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
-            dslContext.selectCount().from(this).where(RECORD_ID.eq(recordId)).fetchOne()
+            dslContext.selectCount()
+                .from(this)
+                .where(RECORD_ID.eq(recordId))
+                .and(ONLINE.eq(online))
+                .let { if (expireTime == null) it else it.and(END_DATE.gt(expireTime)) }
+                .fetchOne()
         }
     }
 
@@ -247,7 +256,8 @@ class ExperiencePublicDao {
         necessary: Boolean? = null,
         bannerUrl: String? = null,
         necessaryIndex: Int? = null,
-        bannerIndex: Int? = null
+        bannerIndex: Int? = null,
+        downloadTime: Int? = null
     ) {
         val now = LocalDateTime.now()
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -258,6 +268,7 @@ class ExperiencePublicDao {
                 .let { if (null == bannerUrl) it else it.set(BANNER_URL, bannerUrl) }
                 .let { if (null == necessaryIndex) it else it.set(NECESSARY_INDEX, necessaryIndex) }
                 .let { if (null == bannerIndex) it else it.set(BANNER_INDEX, bannerIndex) }
+                .let { if (null == downloadTime) it else it.set(DOWNLOAD_TIME, downloadTime) }
                 .where(ID.eq(id))
                 .execute()
         }
@@ -321,16 +332,7 @@ class ExperiencePublicDao {
                         if (withBanner) BANNER_URL.ne(StringUtils.EMPTY) else BANNER_URL.eq(StringUtils.EMPTY)
                     )
                 }
-                .fetchOne().value1()
-        }
-    }
-
-    fun addDownloadTimeByRecordId(dslContext: DSLContext, recordId: Long) {
-        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
-            dslContext.update(this)
-                .set(DOWNLOAD_TIME, DOWNLOAD_TIME.plus(1))
-                .where(RECORD_ID.eq(recordId))
-                .execute()
+                .fetchOne()!!.value1()
         }
     }
 
@@ -340,6 +342,12 @@ class ExperiencePublicDao {
                 .from(this)
                 .where(RECORD_ID.`in`(records))
                 .fetch()
+        }
+    }
+
+    fun listAllUnique(dslContext: DSLContext): Result<Record4<Long, String, String, String>> {
+        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            return dslContext.select(ID, PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM).from(this).fetch()
         }
     }
 }

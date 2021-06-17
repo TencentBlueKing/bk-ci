@@ -67,11 +67,11 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.MessageProperties
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
-import java.util.ArrayList
 
 @Service
 class ProjectLocalService @Autowired constructor(
@@ -86,9 +86,13 @@ class ProjectLocalService @Autowired constructor(
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi,
     private val projectService: ProjectService,
-    private val projectIamV0Service: ProjectIamV0Service
+    private val projectIamV0Service: ProjectIamV0Service,
+    private val projectTagService: ProjectTagService
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
+
+    @Value("\${gitCI.tag:#{null}}")
+    private val gitCI: String? = null
 
     fun listForApp(
         userId: String,
@@ -102,7 +106,11 @@ class ProjectLocalService @Autowired constructor(
             searchName.isNotEmpty() &&
             projectDao.countByEnglishName(dslContext, projectIds) < 1000
         ) {
-            val records = projectDao.listByEnglishName(dslContext, projectIds).asSequence().filter {
+            val records = projectDao.listByEnglishName(
+                dslContext = dslContext,
+                englishNameList = projectIds,
+                enabled = true
+            ).asSequence().filter {
                 it.projectName.contains(searchName, true)
             }.map {
                 AppProjectVO(
@@ -110,7 +118,7 @@ class ProjectLocalService @Autowired constructor(
                     projectName = it.projectName,
                     logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
                         "https://dev-download.bkdevops.qq.com/images" +
-                            it.logoAddr.removePrefix("http://radosgw.open.oa.com")
+                                it.logoAddr.removePrefix("http://radosgw.open.oa.com")
                     } else {
                         it.logoAddr
                     }
@@ -119,13 +127,20 @@ class ProjectLocalService @Autowired constructor(
 
             return Pagination(false, records)
         } else {
-            val records = projectDao.listByEnglishName(dslContext, projectIds, offset, limit, searchName).map {
+            val records = projectDao.listByEnglishName(
+                dslContext = dslContext,
+                englishNameList = projectIds,
+                offset = offset,
+                limit = limit,
+                searchName = searchName,
+                enabled = true
+            ).map {
                 AppProjectVO(
                     projectCode = it.englishName,
                     projectName = it.projectName,
                     logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
                         "https://dev-download.bkdevops.qq.com/images" +
-                            it.logoAddr.removePrefix("http://radosgw.open.oa.com")
+                                it.logoAddr.removePrefix("http://radosgw.open.oa.com")
                     } else {
                         it.logoAddr
                     }
@@ -520,6 +535,9 @@ class ProjectLocalService @Autowired constructor(
                 projectId = projectCode,
                 channel = ProjectChannelCode.GITCI
             )
+
+            // GitCI项目自动把流量指向gitCI集群, 注意此tag写死在代码内,若对应集群的consulTag调整需要变更代码
+            projectTagService.updateTagByProject(projectCreateInfo.englishName, gitCI)
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
             throw e

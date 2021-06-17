@@ -27,10 +27,16 @@
 
 package com.tencent.devops.log.service.impl
 
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.log.service.LogPermissionService
 
 class SimpleLogPermissionService : LogPermissionService {
-    override fun verifyUserLogPermission(projectCode: String, pipelineId: String, userId: String): Boolean {
+    override fun verifyUserLogPermission(
+        projectCode: String,
+        pipelineId: String,
+        userId: String,
+        permission: AuthPermission?
+    ): Boolean {
         return true
     }
 }

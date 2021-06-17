@@ -74,5 +74,7 @@ data class MarketAtomUpdateRequest(
     @ApiModelProperty("可执行包sha摘要内容", required = true)
     val packageShaContent: String = "",
     @ApiModelProperty(value = "前端UI渲染方式", required = true)
-    val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL
+    val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL,
+    @ApiModelProperty(value = "插件字段校验确认标识", required = false)
+    val fieldCheckConfirmFlag: Boolean? = false
 )

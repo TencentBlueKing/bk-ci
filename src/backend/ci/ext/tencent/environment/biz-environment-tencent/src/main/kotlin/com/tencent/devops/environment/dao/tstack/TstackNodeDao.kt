@@ -73,7 +73,7 @@ class TstackNodeDao {
                             now
                     )
                     .returning(ID)
-                    .fetchOne().id.toLong()
+                    .fetchOne()!!.id.toLong()
         }
     }
 

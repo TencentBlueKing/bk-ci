@@ -44,6 +44,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDao
+import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.TokenDao
@@ -68,6 +69,7 @@ class ExperienceDownloadService @Autowired constructor(
     private val tokenDao: TokenDao,
     private val experienceDao: ExperienceDao,
     private val experienceDownloadDao: ExperienceDownloadDao,
+    private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
@@ -137,8 +139,8 @@ class ExperienceDownloadService @Autowired constructor(
         return getExternalDownloadUrl(userId, experienceId)
     }
 
-    fun getExternalDownloadUrl(userId: String, experienceId: Long): DownloadUrl {
-        val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
+    fun getExternalDownloadUrl(userId: String, experienceId: Long, isOuter: Boolean = false): DownloadUrl {
+        val canExperience = experienceBaseService.userCanExperience(userId, experienceId, isOuter)
         if (!canExperience) {
             throw ErrorCodeException(
                 statusCode = 403,
@@ -234,13 +236,15 @@ class ExperienceDownloadService @Autowired constructor(
 
     fun addDownloadRecord(experienceRecord: TExperienceRecord, userId: String) {
         // 新增下载次数
-        val experienceDownloadRecord = experienceDownloadDao.getOrNull(dslContext, experienceRecord.id, userId)
-        if (experienceDownloadRecord == null) {
-            experienceDownloadDao.create(dslContext, experienceRecord.id, userId)
-        } else {
-            experienceDownloadDao.plusTimes(dslContext, experienceDownloadRecord.id)
-        }
-        experiencePublicDao.addDownloadTimeByRecordId(dslContext, experienceRecord.id)
+        addUserDownloadTime(experienceRecord, userId)
+        experienceDownloadDetailDao.create(
+            dslContext = dslContext,
+            userId = userId,
+            recordId = experienceRecord.id,
+            projectId = experienceRecord.projectId,
+            bundleIdentifier = experienceRecord.bundleIdentifier,
+            platform = experienceRecord.platform
+        )
 
         // 更新最近下载记录
         experienceLastDownloadDao.upset(
@@ -253,7 +257,7 @@ class ExperienceDownloadService @Autowired constructor(
         )
     }
 
-    fun downloadCount(userId: String, projectId: String, experienceHashId: String): ExperienceCount {
+    fun downloadCount(experienceHashId: String): ExperienceCount {
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
 
@@ -328,7 +332,8 @@ class ExperienceDownloadService @Autowired constructor(
                     expireTime = LocalDateTime.now(),
                     online = true,
                     offset = 0,
-                    limit = experienceIdsByBundleId.size
+                    limit = experienceIdsByBundleId.size,
+                    experienceName = null
                 ).asSequence().map {
                     DownloadRecordVO(
                         experienceHashId = HashUtil.encodeLongId(it.id),
@@ -357,6 +362,18 @@ class ExperienceDownloadService @Autowired constructor(
                 )
                 Pagination(hasNext, experiences)
             }
+        }
+    }
+
+    private fun addUserDownloadTime(
+        experienceRecord: TExperienceRecord,
+        userId: String
+    ) {
+        val experienceDownloadRecord = experienceDownloadDao.getOrNull(dslContext, experienceRecord.id, userId)
+        if (experienceDownloadRecord == null) {
+            experienceDownloadDao.create(dslContext, experienceRecord.id, userId)
+        } else {
+            experienceDownloadDao.plusTimes(dslContext, experienceDownloadRecord.id)
         }
     }
 

@@ -1,6 +1,10 @@
 <template>
     <section class="plugin-log">
-        <bk-log-search :down-load-link="id === undefined ? downLoadAllLink : downLoadLink" :execute-count="executeCount" @change-execute="changeExecute" class="log-tools"></bk-log-search>
+        <bk-log-search :down-load-link="id === undefined ? downLoadAllLink : downLoadLink" :execute-count="executeCount" @change-execute="changeExecute" class="log-tools">
+            <template v-slot:tool>
+                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? 'Hide Debug Log' : 'Show Debug Log' }}</li>
+            </template>
+        </bk-log-search>
         <bk-log class="bk-log" ref="scroll" @tag-change="tagChange"></bk-log>
     </section>
 </template>
@@ -32,10 +36,12 @@
                     tag: this.id,
                     subTag: '',
                     currentExe: this.executeCount,
-                    lineNo: 0
+                    lineNo: 0,
+                    debug: false
                 },
                 timeId: '',
-                clearIds: []
+                clearIds: [],
+                showDebug: false
             }
         },
 
@@ -162,6 +168,15 @@
             handleApiErr (err) {
                 const scroll = this.$refs.scroll
                 if (scroll) scroll.handleApiErr(err)
+            },
+
+            toggleShowDebugLog () {
+                this.showDebug = !this.showDebug
+                this.$refs.scroll.changeExecute()
+                this.postData.debug = this.showDebug
+                this.postData.lineNo = 0
+                this.closeLog()
+                this.getLog()
             }
         }
     }

@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.index.HotCategoryParam
@@ -97,7 +98,7 @@ class ExperienceIndexService @Autowired constructor(
             limit = pageSize,
             platform = platformStr,
             types = types
-        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
+        ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < pageSize) {
             false
@@ -129,7 +130,7 @@ class ExperienceIndexService @Autowired constructor(
             limit = pageSize,
             platform = platformStr,
             types = types
-        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
+        ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < pageSize) {
             false
@@ -162,7 +163,7 @@ class ExperienceIndexService @Autowired constructor(
             limit = pageSize,
             platform = platformStr,
             types = types
-        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
+        ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < pageSize) {
             false
@@ -193,7 +194,7 @@ class ExperienceIndexService @Autowired constructor(
             category = hotCategoryParam.categoryId,
             platform = platformStr,
             types = types
-        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
+        ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < hotCategoryParam.pageSize) {
             false
@@ -225,7 +226,7 @@ class ExperienceIndexService @Autowired constructor(
             category = newCategoryParam.categoryId,
             platform = platformStr,
             types = types
-        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
+        ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < newCategoryParam.pageSize) {
             false
@@ -241,20 +242,29 @@ class ExperienceIndexService @Autowired constructor(
     }
 
     private fun toIndexAppInfoVO(
+        userId: String,
         it: TExperiencePublicRecord,
         lastDownloadMap: Map<String, Long>
-    ) = IndexAppInfoVO(
-        experienceHashId = HashUtil.encodeLongId(it.recordId),
-        experienceName = it.experienceName,
-        createTime = it.updateTime.timestampmilli(),
-        size = it.size,
-        logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-        externalUrl = it.externalLink,
-        bundleIdentifier = it.bundleIdentifier,
-        appScheme = it.scheme,
-        expired = false,
-        lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
-            ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
-        type = it.type
-    )
+    ): IndexAppInfoVO {
+        val externalUrl = if (it.externalLink.isNotBlank()) {
+            HomeHostUtil.outerApiServerHost() +
+                    "/experience/api/open/experiences/appstore/redirect?id=" +
+                    HashUtil.encodeLongId(it.id) +
+                    "&userId=" + userId
+        } else ""
+        return IndexAppInfoVO(
+            experienceHashId = HashUtil.encodeLongId(it.recordId),
+            experienceName = it.experienceName,
+            createTime = it.updateTime.timestampmilli(),
+            size = it.size,
+            logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
+            externalUrl = externalUrl,
+            bundleIdentifier = it.bundleIdentifier,
+            appScheme = it.scheme,
+            expired = false,
+            lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
+                ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
+            type = it.type
+        )
+    }
 }

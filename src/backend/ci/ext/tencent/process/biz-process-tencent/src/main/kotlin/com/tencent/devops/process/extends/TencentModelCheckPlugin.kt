@@ -33,12 +33,28 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
+import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
+import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
+import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
+import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Primary
 @Service
-class TencentModelCheckPlugin constructor(override val client: Client) : DefaultModelCheckPlugin(client) {
+class TencentModelCheckPlugin constructor(
+    override val client: Client,
+    override val pipelineCommonSettingConfig: PipelineCommonSettingConfig,
+    override val stageCommonSettingConfig: StageCommonSettingConfig,
+    override val jobCommonSettingConfig: JobCommonSettingConfig,
+    override val taskCommonSettingConfig: TaskCommonSettingConfig
+) : DefaultModelCheckPlugin(
+    client,
+    pipelineCommonSettingConfig,
+    stageCommonSettingConfig,
+    jobCommonSettingConfig,
+    taskCommonSettingConfig
+) {
 
     /**
      * 注：因内部历史原因，存在大量中文命名的变量，所以相对默认检查器，减少针对命名的规范检查

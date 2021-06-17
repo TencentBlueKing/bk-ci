@@ -33,8 +33,8 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
 
-data class GitCIDispatchType(@JsonProperty("value") var image: String)
-    : DispatchType(
+data class GitCIDispatchType(@JsonProperty("value") var image: String) :
+    DispatchType(
     image,
     DispatchRouteKeySuffix.GITCI
 ) {
