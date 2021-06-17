@@ -287,7 +287,7 @@ class GitCITriggerService @Autowired constructor(
         } catch (e: Exception) {
             // 触发只要出了异常就把Mr锁定取消，防止出现工蜂项目无法合并
             blockCommitCheck(
-                isMrEvent = (event is GitMergeRequestEvent),
+                mrEvent = (event is GitMergeRequestEvent),
                 event = gitRequestEvent,
                 gitProjectConf = gitProjectConf,
                 block = false,
@@ -314,21 +314,21 @@ class GitCITriggerService @Autowired constructor(
         path2PipelineExists: Map<String, GitProjectPipeline>,
         gitProjectConf: GitCIBasicSetting
     ): Boolean {
-        val isMrEvent = event is GitMergeRequestEvent
+        val mrEvent = event is GitMergeRequestEvent
 
         val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
         logger.info("get token for gitProject[${gitRequestEvent.gitProjectId}] form scm, token: $gitToken")
         // fork项目库的projectId与原项目不同
-        val isFork = isFork(isMrEvent, gitRequestEvent)
+        val isFork = isFork(mrEvent, gitRequestEvent)
 
         var forkGitToken: GitToken? = null
         if (isFork) {
             forkGitToken =
-                client.getScm(ServiceGitResource::class).getToken(getProjectId(isMrEvent, gitRequestEvent)).data!!
+                client.getScm(ServiceGitResource::class).getToken(getProjectId(mrEvent, gitRequestEvent)).data!!
             logger.info(
                 "get fork token for gitProject[${
                     getProjectId(
-                        isMrEvent,
+                        mrEvent,
                         gitRequestEvent
                     )
                 }] form scm, token: $forkGitToken"
@@ -337,15 +337,15 @@ class GitCITriggerService @Autowired constructor(
 
         // 获取指定目录下所有yml文件
         val yamlPathList = if (isFork) {
-            getCIYamlList(forkGitToken!!, gitRequestEvent, isMrEvent)
+            getCIYamlList(forkGitToken!!, gitRequestEvent, mrEvent)
         } else {
-            getCIYamlList(gitToken, gitRequestEvent, isMrEvent)
+            getCIYamlList(gitToken, gitRequestEvent, mrEvent)
         }
         // 兼容旧的根目录yml文件
         val isCIYamlExist = if (isFork) {
-            isCIYamlExist(forkGitToken!!, gitRequestEvent, isMrEvent)
+            isCIYamlExist(forkGitToken!!, gitRequestEvent, mrEvent)
         } else {
-            isCIYamlExist(gitToken, gitRequestEvent, isMrEvent)
+            isCIYamlExist(gitToken, gitRequestEvent, mrEvent)
         }
         if (isCIYamlExist) {
             yamlPathList.add(ciFileName)
@@ -367,7 +367,7 @@ class GitCITriggerService @Autowired constructor(
 
         // mr提交锁定,这时还没有流水线，所以提交的是无流水线锁
         blockCommitCheck(
-            isMrEvent = isMrEvent,
+            mrEvent = mrEvent,
             event = gitRequestEvent,
             gitProjectConf = gitProjectConf,
             context = noPipelineBuildEvent,
@@ -376,7 +376,7 @@ class GitCITriggerService @Autowired constructor(
         )
 
         // 比较Mr请求中的yml版本模拟pre merge，源分支版本落后时对应文件的流水线不触发
-        if (isMrEvent) {
+        if (mrEvent) {
             val checkMap =
                 checkYmlVersion(yamlPathList, gitRequestEvent, forkGitToken?.accessToken, gitToken.accessToken)
             checkMap.forEach { (filePath, isTrigger) ->
@@ -392,7 +392,7 @@ class GitCITriggerService @Autowired constructor(
                         reasonDetail = TriggerReason.CI_YAML_VERSION_BEHIND.detail,
                         gitProjectId = gitRequestEvent.gitProjectId,
                         sendCommitCheck = true,
-                        commitCheckBlock = isMrEvent
+                        commitCheckBlock = mrEvent
                     )
                     // 落后版本的文件不触发
                     yamlPathList.remove(filePath)
@@ -422,8 +422,8 @@ class GitCITriggerService @Autowired constructor(
             try {
                 // 为已存在的流水线设置名称
                 buildPipeline.displayName = displayName
-                originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
-                else getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
+                originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, mrEvent)
+                else getYamlFromGit(gitToken, gitRequestEvent, filePath, mrEvent)
                 logger.info("origin yamlStr: $originYaml")
 
                 // 如果当前文件没有内容直接不触发
@@ -443,7 +443,7 @@ class GitCITriggerService @Autowired constructor(
                         reasonDetail = TriggerReason.CI_YAML_CONTENT_NULL.detail,
                         gitProjectId = gitRequestEvent.gitProjectId,
                         sendCommitCheck = true,
-                        commitCheckBlock = isMrEvent
+                        commitCheckBlock = mrEvent
                     )
                     return@forEach
                 }
@@ -501,14 +501,14 @@ class GitCITriggerService @Autowired constructor(
                     reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message),
                     gitProjectId = gitRequestEvent.gitProjectId,
                     sendCommitCheck = true,
-                    commitCheckBlock = isMrEvent
+                    commitCheckBlock = mrEvent
                 )
                 return@forEach
             }
         }
         // yml校验全部结束后，解除锁定
         blockCommitCheck(
-            isMrEvent = isMrEvent,
+            mrEvent = mrEvent,
             event = gitRequestEvent,
             gitProjectConf = gitProjectConf,
             context = noPipelineBuildEvent,
@@ -848,13 +848,15 @@ class GitCITriggerService @Autowired constructor(
 
     // mr锁定提交
     private fun blockCommitCheck(
-        isMrEvent: Boolean,
+        mrEvent: Boolean,
         event: GitRequestEvent,
         gitProjectConf: GitCIBasicSetting,
         block: Boolean,
         state: GitCICommitCheckState,
         context: String
     ) {
+        logger.info("CommitCheck with block, gitProjectId:${event.gitProjectId}, mrEvent:$mrEvent, " +
+            "block:$block, state:$state, context:$context, enableMrBlock:${gitProjectConf.enableMrBlock}")
 //        if (!isMrEvent) {
 //            // push事件也发送commitCheck不加锁
 //            scmClient.pushCommitCheckWithBlock(
@@ -867,7 +869,7 @@ class GitCITriggerService @Autowired constructor(
 //                gitCIBasicSetting = gitProjectConf
 //            )
 //        }
-        if (gitProjectConf.enableMrBlock && isMrEvent) {
+        if (gitProjectConf.enableMrBlock && mrEvent) {
             scmClient.pushCommitCheckWithBlock(
                 commitId = event.commitId,
                 mergeRequestId = event.mergeRequestId ?: 0L,
