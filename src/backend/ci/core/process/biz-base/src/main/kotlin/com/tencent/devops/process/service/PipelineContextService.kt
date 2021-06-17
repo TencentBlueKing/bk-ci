@@ -84,7 +84,7 @@ class PipelineContextService@Autowired constructor(
                 }
             }
             buildCiContext(varMap, modelDetail, buildVar)
-            buildCredentialContext(buildVar, varMap)
+//            buildCredentialContext(buildVar, varMap)
         } catch (e: Throwable) {
             logger.error("Build context failed,", e)
         }
