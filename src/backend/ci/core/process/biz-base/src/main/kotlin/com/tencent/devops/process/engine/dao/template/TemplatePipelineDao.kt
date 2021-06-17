@@ -140,25 +140,41 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
     fun listPipeline(
         dslContext: DSLContext,
         instanceType: String,
-        templateIds: Collection<String>
+        templateIds: Collection<String>,
+        deleteFlag: Boolean? = null
     ): Result<TTemplatePipelineRecord> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            val conditions = getQueryTemplatePipelineCondition(templateIds, instanceType, deleteFlag)
             return dslContext.selectFrom(this)
-                .where(TEMPLATE_ID.`in`(templateIds))
-                .and(INSTANCE_TYPE.eq(instanceType))
+                .where(conditions)
                 .fetch()
         }
+    }
+
+    private fun TTemplatePipeline.getQueryTemplatePipelineCondition(
+        templateIds: Collection<String>,
+        instanceType: String,
+        deleteFlag: Boolean?
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(TEMPLATE_ID.`in`(templateIds))
+        conditions.add(INSTANCE_TYPE.eq(instanceType))
+        if (deleteFlag != null) {
+            conditions.add(DELETED.eq(deleteFlag))
+        }
+        return conditions
     }
 
     fun countByTemplates(
         dslContext: DSLContext,
         instanceType: String,
-        templateIds: Collection<String>
+        templateIds: Collection<String>,
+        deleteFlag: Boolean? = null
     ): Int {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            val conditions = getQueryTemplatePipelineCondition(templateIds, instanceType, deleteFlag)
             return dslContext.select(DSL.count(PIPELINE_ID)).from(this)
-                .where(TEMPLATE_ID.`in`(templateIds))
-                .and(INSTANCE_TYPE.eq(instanceType))
+                .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
