@@ -583,7 +583,8 @@ class TemplateFacadeService @Autowired constructor(
                     templatePipelineDao.listPipeline(
                         dslContext = context,
                         instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
-                        templateIds = setOf(templateId)
+                        templateIds = setOf(templateId),
+                        deleteFlag = false
                     )
 
                 val pipelineIds = associatePipeline.map { PipelineId(it.pipelineId) }
