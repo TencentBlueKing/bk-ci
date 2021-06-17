@@ -25,7 +25,7 @@ interface ApigwPermissionMoveResourceV3 {
 
     @ApiOperation("获取项目下pipelineId+自增id")
     @GET
-    @Path("projects/{projectCode}/pipelineIds/list")
+    @Path("/projects/{projectCode}/pipelineIds/list")
     fun getProjectPipelineIds(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -40,7 +40,7 @@ interface ApigwPermissionMoveResourceV3 {
 
     @ApiOperation("关联iam项目")
     @PUT
-    @Path("/{projectCode}/relationProject")
+    @Path("/projects/{projectCode}/relationProject")
     fun relationProject(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
