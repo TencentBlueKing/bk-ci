@@ -38,6 +38,7 @@ import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
+import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import java.io.File
@@ -103,10 +104,10 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val url = "/bkrepo/api/build/generic/$projectId/report/$pipelineId/$buildId/$elementId/$path"
 
         val request = buildPut(
-            url,
-            RequestBody.create(MediaType.parse("application/octet-stream"), file),
-            bkrepoResourceApi.getUploadHeader(file, buildVariables, parseAppMetadata = false),
-            useFileGateway = true
+            path = url,
+            requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            headers = bkrepoResourceApi.getUploadHeader(file, buildVariables, parseAppMetadata = false),
+            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
         val responseContent = request(request, "上传自定义报告失败")
         try {

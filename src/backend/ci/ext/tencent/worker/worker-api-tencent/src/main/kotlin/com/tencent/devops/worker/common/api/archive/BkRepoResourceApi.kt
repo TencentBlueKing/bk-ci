@@ -36,6 +36,7 @@ import com.tencent.bkrepo.common.query.model.PageLimit
 import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
+import com.tencent.devops.artifactory.pojo.FileGatewayInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -44,7 +45,6 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_FULL_IMAGE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_IMAGE
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.process.pojo.BuildVariables
@@ -55,7 +55,6 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
-import com.tencent.devops.worker.common.api.pojo.FileGatewayInfo
 import com.tencent.devops.worker.common.api.pojo.QueryData
 import com.tencent.devops.worker.common.api.pojo.QueryNodeInfo
 import com.tencent.devops.worker.common.utils.IosUtils
@@ -72,13 +71,13 @@ import java.util.Locale
 
 class BkRepoResourceApi : AbstractBuildResourceApi() {
 
-    private fun getFileGateway(): String? {
+    private fun getFileGateway(): FileGatewayInfo? {
         return try {
             val path = "/artifactory/api/build/fileGateway/get"
             val request = buildGet(path)
             val response = request(request, "获取构建机基本信息失败")
             val fileGatewayResult = objectMapper.readValue<Result<FileGatewayInfo>>(response)
-            fileGatewayResult.data!!.fileGateway
+            fileGatewayResult.data
         } catch (e: Exception) {
             logger.warn("get file gateway exception", e)
             null
@@ -86,10 +85,17 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
     }
 
     fun tokenAccess(): Boolean {
-        if (CommonEnv.fileGateway == null) {
-            CommonEnv.fileGateway = getFileGateway()
+        var fileDevnetGateway = CommonEnv.fileDevnetGateway
+        var fileIdcGateway = CommonEnv.fileIdcGateway
+        if (fileDevnetGateway == null || fileIdcGateway == null) {
+            val fileGatewayInfo = getFileGateway()
+            fileDevnetGateway = fileGatewayInfo?.fileDevnetGateway
+            CommonEnv.fileDevnetGateway = fileDevnetGateway
+            fileIdcGateway = fileGatewayInfo?.fileIdcGateway
+            CommonEnv.fileIdcGateway = fileIdcGateway
         }
-        return CommonEnv.fileGateway != null && CommonEnv.fileGateway!!.contains("bkrepo", true)
+        return fileDevnetGateway?.contains("bkrepo", true) == true &&
+            fileIdcGateway?.contains("bkrepo", true) == true
     }
 
     fun createBkRepoTemporaryToken(projectId: String, repoName: String, path: String, type: TokenType): String {
@@ -141,7 +147,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             url,
             RequestBody.create(MediaType.parse("application/octet-stream"), file),
             getUploadHeader(file, buildVariables, parseAppMetadata),
-            useFileGateway = true
+            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
         val response = request(request, "上传文件失败")
         try {
@@ -158,12 +164,13 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         repoName: String,
         fullPath: String,
         token: String,
-        destPath: File
+        destPath: File,
+        isVmBuildEnv: Boolean
     ) {
         val url = "/generic/temporary/download/$projectId/$repoName$fullPath?token=$token"
         var header = HashMap<String, String>()
         header.set("X-BKREPO-UID", userId)
-        val request = buildGet(url, header, useFileGateway = true)
+        val request = buildGet(url, header, isVmBuildEnv)
         download(request, destPath)
     }
 
@@ -237,7 +244,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
                 repoName = repoName,
                 fullPath = fullPath,
                 token = token,
-                destPath = destPath
+                destPath = destPath,
+                isVmBuildEnv = true
             )
         } else {
             directDownloadBkRepoFile(userId, projectId, repoName, fullPath, destPath)
@@ -255,10 +263,10 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         AbstractBuildResourceApi.logger.info("upload file >>> ${file.name}")
         val url = "/bkrepo/api/build/generic/$projectId/$repoName$destFullPath"
         val request = buildPut(
-            url,
-            RequestBody.create(MediaType.parse("application/octet-stream"), file),
-            getUploadHeader(file, buildVariables, parseAppMetadata),
-            useFileGateway = true
+            path = url,
+            requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            headers = getUploadHeader(file, buildVariables, parseAppMetadata),
+            useFileDevnetGateway = true
         )
         val response = request(request, "上传文件失败")
         try {
