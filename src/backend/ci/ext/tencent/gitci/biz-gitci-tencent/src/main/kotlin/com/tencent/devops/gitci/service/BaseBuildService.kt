@@ -168,6 +168,7 @@ abstract class BaseBuildService<T> @Autowired constructor(
                 userId = event.userId,
                 eventId = event.id!!,
                 pipelineId = pipeline.pipelineId,
+                pipelineName = pipeline.displayName,
                 filePath = pipeline.filePath,
                 originYaml = build?.originYaml,
                 normalizedYaml = build?.normalizedYaml,

@@ -77,6 +77,7 @@ class V2GitCIRequestTriggerListener @Autowired constructor(
                     reason = TriggerReason.PIPELINE_PREPARE_ERROR.name,
                     reasonDetail = TriggerReason.PIPELINE_PREPARE_ERROR.detail.format(e.message),
                     pipelineId = pipeline.pipelineId,
+                    pipelineName = pipeline.displayName,
                     filePath = pipeline.filePath,
                     gitProjectId = event.gitProjectId,
                     sendCommitCheck = true,
