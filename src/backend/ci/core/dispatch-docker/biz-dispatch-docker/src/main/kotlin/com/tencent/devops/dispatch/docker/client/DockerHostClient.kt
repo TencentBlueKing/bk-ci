@@ -65,6 +65,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.net.NoRouteToHostException
 import java.net.SocketTimeoutException
 
 @Component@Suppress("ALL")
@@ -83,6 +84,7 @@ class DockerHostClient @Autowired constructor(
 
     companion object {
         private val LOG = LoggerFactory.getLogger(DockerHostClient::class.java)
+        private const val RETRY_BUILD_TIME = 3
     }
 
     fun startBuild(
@@ -180,10 +182,7 @@ class DockerHostClient @Autowired constructor(
             dockerIp = dockerIp
         )
 
-        // 准备开始构建，增加缓存计数，限流用
-        redisOperation.increment("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp", 1)
-
-        dockerBuildStart(dockerIp, dockerHostPort, requestBody, dispatchMessage, driftIpInfo)
+        dockerBuildStart(dockerIp, dockerHostPort, requestBody, driftIpInfo)
     }
 
     fun startAgentLessBuild(
@@ -281,27 +280,7 @@ class DockerHostClient @Autowired constructor(
             buildType = BuildType.AGENT_LESS
         )
 
-        dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody, DispatchMessage(
-            id = agentId,
-            secretKey = secretKey,
-            gateway = "",
-            projectId = event.projectId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            dispatchMessage = event.dispatchType.value,
-            userId = event.userId,
-            vmSeqId = event.vmSeqId,
-            channelCode = event.channelCode,
-            vmNames = "",
-            atoms = event.atoms,
-            zone = event.zone,
-            containerHashId = event.containerHashId,
-            executeCount = event.executeCount,
-            containerId = event.containerId,
-            containerType = "",
-            stageId = "",
-            dispatchType = event.dispatchType
-        ), "", DockerHostClusterType.AGENT_LESS)
+        dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody,  "", DockerHostClusterType.AGENT_LESS)
     }
 
     fun endBuild(
@@ -362,8 +341,7 @@ class DockerHostClient @Autowired constructor(
     private fun dockerBuildStart(
         dockerIp: String,
         dockerHostPort: Int,
-        requestBody: DockerHostBuildInfo,
-        dispatchMessage: DispatchMessage,
+        dockerHostBuildInfo: DockerHostBuildInfo,
         driftIpInfo: String,
         clusterType: DockerHostClusterType = DockerHostClusterType.COMMON,
         retryTime: Int = 0,
@@ -380,10 +358,10 @@ class DockerHostClient @Autowired constructor(
             dockerHostIp = dockerIp,
             dockerHostPort = dockerHostPort,
             clusterType = clusterType
-        ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+        ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(dockerHostBuildInfo)))
             .build()
 
-        LOG.info("dockerStart|${dispatchMessage.buildId}|$retryTime|$dockerIp|${request.url()}")
+        LOG.info("dockerStart|${dockerHostBuildInfo.buildId}|$retryTime|$dockerIp|${request.url()}")
         try {
             OkhttpUtils.doLongHttp(request).use { resp ->
                 if (resp.isSuccessful) {
@@ -392,10 +370,12 @@ class DockerHostClient @Autowired constructor(
                     when {
                         response["status"] == 0 -> {
                             val containerId = response["data"] as String
-                            LOG.info("${dispatchMessage.buildId}|$retryTime| update container: $containerId")
+                            LOG.info("${dockerHostBuildInfo.buildId}|$retryTime| update container: $containerId")
                             // 更新task状态以及构建历史记录，并记录漂移日志
                             dockerHostUtils.updateTaskSimpleAndRecordDriftLog(
-                                dispatchMessage = dispatchMessage,
+                                pipelineId = dockerHostBuildInfo.pipelineId,
+                                buildId = dockerHostBuildInfo.buildId,
+                                vmSeqId = dockerHostBuildInfo.vmSeqId.toString(),
                                 containerId = containerId,
                                 newIp = dockerIp,
                                 driftIpInfo = driftIpInfo
@@ -403,23 +383,31 @@ class DockerHostClient @Autowired constructor(
                         }
                         // 业务逻辑重试错误码匹配
                         arrayOf("2104002").contains(response["status"]) -> {
-                            doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
+                            doRetry(
+                                retryTime = retryTime,
+                                dockerIp = dockerIp,
+                                dockerHostBuildInfo = dockerHostBuildInfo,
+                                driftIpInfo = driftIpInfo,
+                                errorMessage = resp.message(),
+                                unAvailableIpList = unAvailableIpList,
+                                clusterType = clusterType
+                            )
                         }
                         else -> {
-                            val msg = response["message"] as String
-                            LOG.error("${dispatchMessage.buildId}|$retryTime| Start build Docker VM failed, msg: $msg")
-                            throw DockerServiceException(errorType = ErrorCodeEnum.START_VM_FAIL.errorType,
-                                errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
-                                errorMsg = "Start build Docker VM failed, msg: $msg")
+                            // 非可重试异常码，不重试直接失败
+                            doFail(
+                                dockerIp = dockerIp,
+                                dockerHostBuildInfo = dockerHostBuildInfo,
+                                errorMessage = resp.message()
+                            )
                         }
                     }
                 } else {
                     // 服务异常重试
                     doRetry(
-                        dispatchMessage = dispatchMessage,
                         retryTime = retryTime,
                         dockerIp = dockerIp,
-                        requestBody = requestBody,
+                        dockerHostBuildInfo = dockerHostBuildInfo,
                         driftIpInfo = driftIpInfo,
                         errorMessage = resp.message(),
                         unAvailableIpList = unAvailableIpList,
@@ -428,56 +416,98 @@ class DockerHostClient @Autowired constructor(
                 }
             }
         } catch (e: SocketTimeoutException) {
-            // 超时重试
-            if (e.message == "timeout") {
-                doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, e.message, unAvailableIpList)
+            // 只针对http连接超时重试
+            if (e.message == "connect timed out") {
+                doRetry(
+                    retryTime = retryTime,
+                    dockerIp = dockerIp,
+                    dockerHostBuildInfo = dockerHostBuildInfo,
+                    driftIpInfo = driftIpInfo,
+                    errorMessage = e.message,
+                    unAvailableIpList = unAvailableIpList,
+                    clusterType = clusterType
+                )
             } else {
-                LOG.error("${dispatchMessage.buildId}|$retryTime| Start build Docker VM failed, msg: ${e.message}")
-                throw DockerServiceException(errorType = ErrorCodeEnum.START_VM_FAIL.errorType,
-                    errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
-                    errorMsg = "Start build Docker VM failed, msg: ${e.message}")
+                // read timeout, 不重试直接失败
+                doFail(
+                    dockerIp = dockerIp,
+                    dockerHostBuildInfo = dockerHostBuildInfo,
+                    errorMessage = e.message ?: "SocketTimeoutException: read time out"
+                )
             }
+        } catch (e: NoRouteToHostException) {
+            // 针对Host unreachable场景重试
+            doRetry(
+                retryTime = retryTime,
+                dockerIp = dockerIp,
+                dockerHostBuildInfo = dockerHostBuildInfo,
+                driftIpInfo = driftIpInfo,
+                errorMessage = e.message,
+                unAvailableIpList = unAvailableIpList,
+                clusterType = clusterType
+            )
         }
     }
 
     private fun doRetry(
-        dispatchMessage: DispatchMessage,
         retryTime: Int,
         dockerIp: String,
-        requestBody: DockerHostBuildInfo,
+        dockerHostBuildInfo: DockerHostBuildInfo,
         driftIpInfo: String,
         errorMessage: String?,
         unAvailableIpList: Set<String>?,
         clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
     ) {
-        if (retryTime < 3) {
-            LOG.warn("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}" +
+        // 当前IP此刻不可用，将IP状态置为false
+        pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIp, false)
+
+        if (retryTime < RETRY_BUILD_TIME) {
+            LOG.warn("[${dockerHostBuildInfo.projectId}|${dockerHostBuildInfo.pipelineId}|${dockerHostBuildInfo.buildId}" +
                     "|$retryTime] Start build Docker VM in $dockerIp failed, retry startBuild.")
             val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
             val retryTimeLocal = retryTime + 1
-            // 当前IP不可用，保险起见将当前ip可用性置为false，并重新获取可用ip
-            pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIp, false)
+            // 过滤重试前异常IP, 并重新获取可用ip
             val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIp(
-                projectId = dispatchMessage.projectId,
-                pipelineId = dispatchMessage.pipelineId,
-                vmSeqId = dispatchMessage.vmSeqId,
+                projectId = dockerHostBuildInfo.projectId,
+                pipelineId = dockerHostBuildInfo.pipelineId,
+                vmSeqId = dockerHostBuildInfo.vmSeqId.toString(),
                 unAvailableIpList = unAvailableIpListLocal,
                 clusterType = clusterType
             )
             dockerBuildStart(
                 dockerIp = dockerIpLocalPair.first,
                 dockerHostPort = dockerIpLocalPair.second,
-                requestBody = requestBody,
-                dispatchMessage = dispatchMessage,
+                dockerHostBuildInfo = dockerHostBuildInfo,
                 driftIpInfo = driftIpInfo,
+                clusterType = clusterType,
                 retryTime = retryTimeLocal,
                 unAvailableIpList = unAvailableIpListLocal
             )
         } else {
-            LOG.error("${dispatchMessage.buildId}|$retryTime|doRetry $retryTime times. message: $errorMessage")
-            throw DockerServiceException(errorType = ErrorCodeEnum.RETRY_START_VM_FAIL.errorType,
-                errorCode = ErrorCodeEnum.RETRY_START_VM_FAIL.errorCode,
-                errorMsg = "Start build Docker VM failed, retry $retryTime times.")
+            LOG.error("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId}|doRetry $retryTime times." +
+                    " message: $errorMessage")
+            throw DockerServiceException(
+                errorType = ErrorCodeEnum.START_VM_FAIL.errorType,
+                errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
+                errorMsg = "Start build Docker VM failed, msg: $errorMessage."
+            )
         }
+    }
+
+    private fun doFail(
+        dockerIp: String,
+        dockerHostBuildInfo: DockerHostBuildInfo,
+        errorMessage: String
+    ) {
+        // 当前IP此刻不可用，将IP状态置为false
+        pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIp, false)
+
+        LOG.error("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId}| Start build Docker VM failed," +
+                " message: $errorMessage")
+        throw DockerServiceException(
+            errorType = ErrorCodeEnum.START_VM_FAIL.errorType,
+            errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
+            errorMsg = "Start build Docker VM failed, msg: $errorMessage."
+        )
     }
 }
