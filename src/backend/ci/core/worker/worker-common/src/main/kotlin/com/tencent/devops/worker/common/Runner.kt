@@ -50,6 +50,7 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
+import com.tencent.devops.worker.common.utils.BatScriptUtil
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
@@ -305,6 +306,18 @@ object Runner {
         LoggerService.addFoldEndLine("-----")
     }
 
+    private val contextKeys = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.")
+
+    private fun context(key: String): Boolean {
+        var match = false
+        for (it in contextKeys) {
+            if (key.trim().startsWith(it)) {
+                match = true
+                break
+            }
+        }
+        return match
+    }
     /**
      * 显示用户预定义变量
      */
@@ -312,6 +325,9 @@ object Runner {
         LoggerService.addNormalLine("")
         LoggerService.addFoldStartLine("[Build Environment Properties]")
         variables.forEach { v ->
+            if (context(v.key)) {
+                return@forEach
+            }
             if (v.valueType == BuildFormPropertyType.PASSWORD) {
                 LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a("******").toString())
             } else {
