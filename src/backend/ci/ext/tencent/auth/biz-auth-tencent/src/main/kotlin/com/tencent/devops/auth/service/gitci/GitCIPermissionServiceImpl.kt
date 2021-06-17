@@ -6,9 +6,11 @@ import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
@@ -43,6 +45,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             logger.info("$projectCode $userId $action $resourceType is review manager")
             return true
         }
+        val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
         // 操作类action需要校验用户oauth, 查看类的无需oauth校验
         if (!checkListOrViewAction(action)) {
             val checkOauth = client.get(ServiceOauthResource::class).gitGet(userId).data
@@ -51,23 +54,28 @@ class GitCIPermissionServiceImpl @Autowired constructor(
                 throw OauthForbiddenException("oauth is empty")
             }
         }
-        logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode")
+        logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode gitProjectId: $gitProjectId")
 
         // 判断是否为开源项目
-        if (checkProjectPublic(projectCode)) {
+        if (checkProjectPublic(gitProjectId)) {
             // 若为pipeline 且action为list 校验成功
             if (checkExtAction(action, resourceType)) {
+                logger.info("$projectCode is public, views action can check success")
                 return true
             }
         }
 
-        val gitUserId = getGitUserByRtx(userId, projectCode)
+        val gitUserId = getGitUserByRtx(userId, gitProjectId)
         if (gitUserId.isNullOrEmpty()) {
             logger.warn("$userId is not gitCI user")
             return false
         }
 
-        return client.getScm(ServiceGitCiResource::class).checkUserGitAuth(gitUserId, projectCode).data ?: false
+        val checkResult = client.getScm(ServiceGitCiResource::class).checkUserGitAuth(gitUserId, gitProjectId).data ?: false
+        if (!checkResult) {
+            logger.warn("$projectCode $userId $action $resourceType check permission fail")
+        }
+        return checkResult
     }
 
     override fun validateUserResourcePermissionByRelation(

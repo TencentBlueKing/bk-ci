@@ -146,10 +146,9 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
     }
 
     private fun checkPermission(userId: String, projectId: String): Boolean {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
-        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
+        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, "", gitProjectId, "").data ?: false
+            userId, "", projectId, "").data ?: false
     }
 
     // 拿到的数据统一为加密后的id

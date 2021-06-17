@@ -32,10 +32,9 @@ class GitCIPipelineService @Autowired constructor(
         pipelineId: String?,
         permission: AuthPermission?
     ): Boolean {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
-        logger.info("GitCIPipelineService user:$userId projectId: $projectId gitProject: $gitProjectId")
+        logger.info("GitCIPipelineService user:$userId projectId: $projectId")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, "", gitProjectId, null).data ?: false
+            userId, "", projectId, null).data ?: false
     }
 
     override fun filterPipeline(user: String, projectId: String): List<String> {

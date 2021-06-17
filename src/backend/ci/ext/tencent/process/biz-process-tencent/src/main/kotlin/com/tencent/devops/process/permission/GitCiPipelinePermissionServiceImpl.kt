@@ -22,9 +22,8 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
         projectId: String,
         permission: AuthPermission
     ): Boolean {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, permission.value, gitProjectId, AuthResourceType.PIPELINE_DEFAULT.value).data ?: false
+            userId, permission.value, projectId, AuthResourceType.PIPELINE_DEFAULT.value).data ?: false
     }
 
     override fun checkPipelinePermission(
@@ -73,9 +72,8 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
     }
 
     override fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, "", gitProjectId, null).data ?: false
+            userId, "", projectId, null).data ?: false
     }
 
     private fun getProjectAllInstance(projectId: String): List<String> {

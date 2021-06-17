@@ -90,10 +90,9 @@ class GitCIV2PermissionService @Autowired constructor(
     }
 
     private fun checkPermission(userId: String, projectId: String, permission: AuthPermission) {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
-        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
+        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId ")
         val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, permission.value, gitProjectId, null
+            userId, permission.value, projectId, null
         ).data
         // 说明用户没有工蜂权限
         if (result == null || !result) {

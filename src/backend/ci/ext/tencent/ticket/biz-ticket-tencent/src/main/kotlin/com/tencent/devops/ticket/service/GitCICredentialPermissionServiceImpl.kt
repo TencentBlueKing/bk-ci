@@ -68,10 +68,9 @@ class GitCICredentialPermissionServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
-        logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectId gitProject: $gitProjectId")
+        logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectId ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, "", gitProjectId, null).data ?: false
+            userId, "", projectId, null).data ?: false
     }
 
     override fun validatePermission(

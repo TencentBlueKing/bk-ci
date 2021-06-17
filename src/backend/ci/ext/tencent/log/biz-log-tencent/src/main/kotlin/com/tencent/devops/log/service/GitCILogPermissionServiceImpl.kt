@@ -17,11 +17,10 @@ class GitCILogPermissionServiceImpl @Autowired constructor(
         userId: String,
         permission: AuthPermission?
     ): Boolean {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
         val action = permission?.value ?: AuthPermission.VIEW.value
-        logger.info("GitCILogPermissionServiceImpl user:$userId projectId: $projectCode gitProject: $gitProjectId")
+        logger.info("GitCILogPermissionServiceImpl user:$userId projectId: $projectCode ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, action, gitProjectId, AuthResourceType.PIPELINE_DEFAULT.value).data ?: false
+            userId, action, projectCode, AuthResourceType.PIPELINE_DEFAULT.value).data ?: false
     }
 
     companion object {
