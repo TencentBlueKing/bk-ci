@@ -867,7 +867,7 @@ class GitCITriggerService @Autowired constructor(
 //                gitCIBasicSetting = gitProjectConf
 //            )
 //        }
-        if (gitProjectConf.enableMrBlock) {
+        if (gitProjectConf.enableMrBlock && isMrEvent) {
             scmClient.pushCommitCheckWithBlock(
                 commitId = event.commitId,
                 mergeRequestId = event.mergeRequestId ?: 0L,
