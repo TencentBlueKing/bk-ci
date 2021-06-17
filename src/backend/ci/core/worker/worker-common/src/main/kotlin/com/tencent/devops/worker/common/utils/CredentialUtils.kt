@@ -94,6 +94,143 @@ object CredentialUtils {
         }
     }
 
+
+    fun getCredentialContextValue(key: String): String? {
+        val ticketId = getCredentialKey(key)
+        if (ticketId == key) {
+            return null
+        }
+
+        return try {
+            val valueTypePair = getCredentialWithType(ticketId, false)
+            val value = getCredentialValue(valueTypePair.first, valueTypePair.second, key)
+            logger.info("get credential context value, key: $key, value: $value")
+            value
+        } catch (ignore: Exception) {
+            logger.warn("凭证ID变量($ticketId)不存在", ignore.message)
+            null
+        }
+    }
+
+    private fun getCredentialKey(key: String): String {
+        // 参考CredentialType
+        return if (key.startsWith("settings.") && (
+                key.endsWith(".password") ||
+                    key.endsWith(".access_token") ||
+                    key.endsWith(".username") ||
+                    key.endsWith(".secretKey") ||
+                    key.endsWith(".appId") ||
+                    key.endsWith(".privateKey") ||
+                    key.endsWith(".passphrase") ||
+                    key.endsWith(".token") ||
+                    key.endsWith(".cosappId") ||
+                    key.endsWith(".secretId") ||
+                    key.endsWith(".region")
+                )) {
+            key.substringAfter("settings.").substringBeforeLast(".")
+        } else {
+            key
+        }
+    }
+
+    private fun getCredentialValue(valueList: List<String>, type: CredentialType, key: String): String? {
+        when (type) {
+            CredentialType.PASSWORD -> {
+                if (valueList.isNotEmpty() && key.endsWith(".password")) {
+                    return valueList[0]
+                }
+            }
+            CredentialType.ACCESSTOKEN -> {
+                if (valueList.isNotEmpty() && key.endsWith(".access_token")) {
+                    return valueList[0]
+                }
+            }
+            CredentialType.USERNAME_PASSWORD -> {
+                if (valueList.size >= 2) {
+                    if (key.endsWith(".username")) {
+                        return valueList[0]
+                    }
+                    if (key.endsWith(".password")) {
+                        return valueList[1]
+                    }
+                }
+            }
+            CredentialType.SECRETKEY -> {
+                if (valueList.isNotEmpty() && key.endsWith(".secretKey")) {
+                    return valueList[0]
+                }
+            }
+            CredentialType.APPID_SECRETKEY -> {
+                if (valueList.size >= 2) {
+                    if (key.endsWith(".appId")) {
+                        return valueList[0]
+                    }
+                    if (key.endsWith(".secretKey")) {
+                        return valueList[1]
+                    }
+                }
+            }
+            CredentialType.SSH_PRIVATEKEY -> {
+                if (valueList.size >= 2) {
+                    if (key.endsWith(".privateKey")) {
+                        return valueList[0]
+                    }
+                    if (key.endsWith(".passphrase")) {
+                        return valueList[1]
+                    }
+                }
+            }
+            CredentialType.TOKEN_SSH_PRIVATEKEY -> {
+                if (valueList.size >= 3) {
+                    if (key.endsWith(".token")) {
+                        return valueList[0]
+                    }
+                    if (key.endsWith(".privateKey")) {
+                        return valueList[1]
+                    }
+                    if (key.endsWith(".passphrase")) {
+                        return valueList[2]
+                    }
+                }
+            }
+            CredentialType.TOKEN_USERNAME_PASSWORD -> {
+                if (valueList.size >= 3) {
+                    if (key.endsWith(".token")) {
+                        return valueList[0]
+                    }
+                    if (key.endsWith(".username")) {
+                        return valueList[1]
+                    }
+                    if (key.endsWith(".password")) {
+                        return valueList[2]
+                    }
+                }
+            }
+            CredentialType.COS_APPID_SECRETID_SECRETKEY_REGION -> {
+                if (valueList.size >= 4) {
+                    if (key.endsWith(".cosappId")) {
+                        return valueList[0]
+                    }
+                    if (key.endsWith(".secretId")) {
+                        return valueList[1]
+                    }
+                    if (key.endsWith(".secretKey")) {
+                        return valueList[2]
+                    }
+                    if (key.endsWith(".region")) {
+                        return valueList[3]
+                    }
+                }
+            }
+            CredentialType.MULTI_LINE_PASSWORD -> {
+                if (valueList.isNotEmpty() && key.endsWith(".password")) {
+                    return valueList[0]
+                }
+            }
+        }
+        return null
+    }
+
     private fun decode(encode: String, publicKey: String, privateKey: ByteArray): String {
         val decoder = Base64.getDecoder()
         return String(DHUtil.decrypt(decoder.decode(encode), decoder.decode(publicKey), privateKey))

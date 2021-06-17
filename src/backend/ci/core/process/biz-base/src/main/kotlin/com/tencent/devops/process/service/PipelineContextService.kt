@@ -106,7 +106,7 @@ class PipelineContextService@Autowired constructor(
             if (credentials != null && credentials.records.isNotEmpty()) {
                 credentials.records.forEach { credential ->
                     varMap["settings.${credential.credentialId}"] = credential.credentialId
-                    varMap.putAll(getKeyMap(projectId, credential))
+//                    varMap.putAll(getKeyMap(projectId, credential))
                 }
             }
         }
