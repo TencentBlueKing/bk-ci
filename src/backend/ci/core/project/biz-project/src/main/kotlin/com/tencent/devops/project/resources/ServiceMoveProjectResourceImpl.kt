@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceMoveProjectResourceImpl @Autowired constructor(
     private val projectService: ProjectService
-): ServiceMoveProjectResource {
+) : ServiceMoveProjectResource {
     override fun relationIamProject(projectCode: String, relationId: String): Result<Boolean> {
         return Result(projectService.relationIamProject(projectCode, relationId))
     }
