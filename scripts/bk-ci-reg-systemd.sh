@@ -235,8 +235,12 @@ gen_systemd_ci__target
 for MS_NAME in "$@"; do
   reg_systemd_ci "$MS_NAME"
 done
-systemctl daemon-reload
-sleep 1  # 规避daemon-reload报错Failed to execute operation: Connection reset by peer
+systemd_retry=9
+until systemctl daemon-reload ; do
+  let systemd_retry-- || { echo "max retry exceed."; break; }
+  echo "systemctl daemon-reload failed, sleep 1 and retry..."
+  sleep 1  # 规避daemon-reload报错.
+done
 # 启用target.
 systemctl reenable bk-ci.target
 for MS_NAME in "$@"; do

@@ -77,7 +77,7 @@ object WorkspaceUtils {
 
     fun getPipelineWorkspace(pipelineId: String, workspace: String): File {
         return if (workspace.isNotBlank()) {
-            File(workspace).normalize()
+            File(workspace) // .normalize() 会导致在windows机器下填写 ./ 时，File.exists() 会返回false，表示文件夹不存在
         } else {
             File(getWorkspace(), "$pipelineId/src").normalize()
         }

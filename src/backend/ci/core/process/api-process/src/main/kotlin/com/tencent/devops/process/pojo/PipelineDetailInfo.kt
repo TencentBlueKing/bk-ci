@@ -25,37 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task.script.shell
+package com.tencent.devops.process.pojo
 
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.worker.common.task.script.ICommand
-import com.tencent.devops.worker.common.utils.ShellUtil
-import java.io.File
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class CommandShellImpl : ICommand {
-
-    override fun execute(
-        buildId: String,
-        script: String,
-        taskParam: Map<String, String>,
-        runtimeVariables: Map<String, String>,
-        projectId: String,
-        dir: File,
-        buildEnvs: List<BuildEnv>,
-        continueNoneZero: Boolean,
-        errorMessage: String?,
-        elementId: String?
-    ) {
-        val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables), dir)
-        ShellUtil.execute(
-            buildId = buildId,
-            script = realCommand,
-            dir = dir,
-            buildEnvs = buildEnvs,
-            runtimeVariables = runtimeVariables,
-            continueNoneZero = continueNoneZero,
-            errorMessage = errorMessage,
-            elementId = elementId
-        )
-    }
-}
+@ApiModel("流水线名称与Id")
+data class PipelineDetailInfo(
+    @ApiModelProperty("流水线Id")
+    val pipelineId: String,
+    @ApiModelProperty("流水线名称")
+    val pipelineName: String,
+    @ApiModelProperty("是否收藏")
+    val hasCollect: Boolean,
+    @ApiModelProperty("canManualStartup")
+    val canManualStartup: Int,
+    @ApiModelProperty("是否关联模板")
+    val instanceFromTemplate: Boolean,
+    @ApiModelProperty("流水线版本")
+    val pipelineVersion: String,
+    @ApiModelProperty("部署时间")
+    val deploymentTime: String,
+    @ApiModelProperty("是否有编辑权限")
+    val hasPermission: Boolean
+)

@@ -106,7 +106,7 @@ class StartActionTaskContainerCmd(
      */
     private fun findTask(containerContext: ContainerContext): PipelineBuildTask? {
         var toDoTask: PipelineBuildTask? = null
-        var hasFailedTaskInSuccessContainer = false
+        var continueWhenFailure = false // 失败继续
         var needTerminate = isTerminate(containerContext) // 是否终止类型
         var breakFlag = false
 
@@ -124,17 +124,17 @@ class StartActionTaskContainerCmd(
                 needTerminate = needTerminate || TaskUtils.isStartVMTask(t) // #4301 构建机启动失败，就需要终止[P0]
                 // 当前任务已经失败or取消，并且没有设置[失败继续]的， 设置给容器最终FAILED状态
                 if (!ControlUtils.continueWhenFailure(t.additionalOptions)) {
-                    containerContext.buildStatus = BuildStatus.FAILED
+                    containerContext.buildStatus = BuildStatusSwitcher.jobStatusMaker.forceFinish(t.status)
                 } else {
-                    hasFailedTaskInSuccessContainer = true
+                    continueWhenFailure = true
                     if (needTerminate) { // #4301 强制终止的标志为失败，不管是不是设置了失败继续[P0]
-                        containerContext.buildStatus = BuildStatus.FAILED
+                        containerContext.buildStatus = BuildStatusSwitcher.jobStatusMaker.forceFinish(t.status)
                     }
                 }
             } else if (t.status.isReadyToRun()) {
                 // 拿到按序号排列的第一个必须要执行的插件
                 toDoTask = t.findNeedToRunTask(
-                    hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
+                    hasFailedTaskInSuccessContainer = continueWhenFailure,
                     containerContext = containerContext,
                     needTerminate = needTerminate
                 )
