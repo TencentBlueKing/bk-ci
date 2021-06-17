@@ -855,18 +855,18 @@ class GitCITriggerService @Autowired constructor(
         state: GitCICommitCheckState,
         context: String
     ) {
-        if (!isMrEvent) {
-            // push时间也发送commitCheck不加锁
-            scmClient.pushCommitCheckWithBlock(
-                commitId = event.commitId,
-                mergeRequestId = event.mergeRequestId ?: 0L,
-                userId = event.userId,
-                block = false,
-                state = state,
-                context = context,
-                gitCIBasicSetting = gitProjectConf
-            )
-        }
+//        if (!isMrEvent) {
+//            // push事件也发送commitCheck不加锁
+//            scmClient.pushCommitCheckWithBlock(
+//                commitId = event.commitId,
+//                mergeRequestId = event.mergeRequestId ?: 0L,
+//                userId = event.userId,
+//                block = false,
+//                state = state,
+//                context = context,
+//                gitCIBasicSetting = gitProjectConf
+//            )
+//        }
         if (gitProjectConf.enableMrBlock) {
             scmClient.pushCommitCheckWithBlock(
                 commitId = event.commitId,
