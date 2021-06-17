@@ -353,6 +353,8 @@
         "noExecution": "No builds",
         "copyAs": "Copy",
         "exportPipelineJson": "Export",
+        "importModifyPipelineJson": "Import",
+        "updatePipelineJson": "更新流水线",
         "sucToStartBuild": "Start build successfully",
         "failToStartBuild": "Failed to start build",
         "view": "View",
@@ -631,8 +633,8 @@
         "checkDesc": "Approval description",
         "checkSuggestTips": " Please enter suggestions for approval",
         "checkResult": "Approval Results",
-        "agree": "Approval",
-        "abort": "Abort",
+        "agree": "Approve, and continue pipeline execution",
+        "abort": "Reject, and set current task status failed",
         "customVar": "Custom variables",
         "abortSuc": "Abort successfully",
         "agreeSuc": "Approval successfully",
@@ -880,5 +882,6 @@
     },
     "permissionRefreshtitle": "Permission Request form has been submitted",
     "permissionRefreshSubtitle": "Please fill in the permission request form in the permission center and refresh the page after submission",
-    "permissionRefreshOkText": "Reload Page"
+    "permissionRefreshOkText": "Reload Page",
+    "searchForMore": "search for pipelines"
 }

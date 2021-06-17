@@ -141,14 +141,4 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
             createInfo = createInfo
         )
     }
-
-    override fun relationProject(
-        appCode: String?,
-        apigwType: String?,
-        projectCode: String,
-        relationId: String
-    ): Result<Boolean> {
-        logger.info("relationProject $projectCode| $relationId")
-        return client.get(ServiceProjectResource::class).relationIamProject(projectCode, relationId)
-    }
 }
