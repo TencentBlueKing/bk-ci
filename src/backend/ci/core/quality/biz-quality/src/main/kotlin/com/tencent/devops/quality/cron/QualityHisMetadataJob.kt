@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -38,15 +37,15 @@ import org.springframework.stereotype.Component
 class QualityHisMetadataJob @Autowired constructor(
     private val qualityHisMetadataDao: QualityHisMetadataDao,
     private val dslContext: DSLContext
-){
+) {
 
-    private val SIX_HOURS = 3600 * 6 * 1000
+    private val TWELVE_HOURS = 3600 * 12 * 1000
 
     private val logger = LoggerFactory.getLogger(QualityHisMetadataJob::class.java)
 
     @Scheduled(cron = "0 0 6 * * ?")
     fun clean() {
-        val deleteTime = System.currentTimeMillis() - SIX_HOURS
+        val deleteTime = System.currentTimeMillis() - TWELVE_HOURS
 
         logger.info("start to delete quality his meta data before: $deleteTime")
 
