@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.ci.CiYamlUtils
@@ -315,7 +316,7 @@ class GitCITriggerService @Autowired constructor(
         gitProjectConf: GitCIBasicSetting
     ): Boolean {
         val mrEvent = event is GitMergeRequestEvent
-
+        val hookStartTime = LocalDateTime.now()
         val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
         logger.info("get token for gitProject[${gitRequestEvent.gitProjectId}] form scm, token: $gitToken")
         // fork项目库的projectId与原项目不同
@@ -351,7 +352,10 @@ class GitCITriggerService @Autowired constructor(
             yamlPathList.add(ciFileName)
         }
         logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: " +
-            "$yamlPathList, path2PipelineExists: $path2PipelineExists")
+            "$yamlPathList, path2PipelineExists: $path2PipelineExists, " +
+            "commitTime:${gitRequestEvent.commitTimeStamp}, " +
+            "hookStartTime:${DateTimeUtil.toDateTime(hookStartTime)}, " +
+            "yamlCheckedTime:${DateTimeUtil.toDateTime(LocalDateTime.now())}")
         // 如果没有Yaml文件则直接不触发
         if (yamlPathList.isEmpty()) {
             logger.error("gitProjectId: ${gitRequestEvent.gitProjectId} cannot found ci yaml from git")
@@ -507,6 +511,7 @@ class GitCITriggerService @Autowired constructor(
             }
         }
         // yml校验全部结束后，解除锁定
+        logger.info("")
         blockCommitCheck(
             mrEvent = mrEvent,
             event = gitRequestEvent,
