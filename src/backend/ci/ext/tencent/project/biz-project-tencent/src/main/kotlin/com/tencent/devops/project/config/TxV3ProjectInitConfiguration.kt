@@ -33,9 +33,12 @@ import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.iam.IamV3Service
 import com.tencent.devops.project.service.impl.TxV3ProjectPermissionServiceImpl
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -45,11 +48,11 @@ import org.springframework.core.Ordered
 
 @Configuration
 @ConditionalOnWebApplication
+@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class TxV3ProjectInitConfiguration {
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
     fun projectPermissionService(
         objectMapper: ObjectMapper,
         bkAuthProperties: BkAuthProperties,
@@ -62,5 +65,17 @@ class TxV3ProjectInitConfiguration {
         projectDispatcher = projectDispatcher,
         client = client,
         tokenService = tokenService
+    )
+
+    @Bean
+    fun iamV3Service(
+        iamManagerService: ManagerService,
+        iamConfiguration: IamConfiguration,
+        projectDao: ProjectDao,
+        dslContext: DSLContext,
+        projectDispatcher: ProjectDispatcher,
+        client: Client
+    ) = IamV3Service(
+        iamManagerService, iamConfiguration, projectDao, dslContext, projectDispatcher, client
     )
 }

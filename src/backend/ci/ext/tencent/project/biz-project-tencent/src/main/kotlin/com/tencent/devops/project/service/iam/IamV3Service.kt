@@ -45,7 +45,6 @@ import com.tencent.devops.auth.api.ServiceGroupResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.TxAuthGroup
-import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
@@ -56,20 +55,17 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import org.jooq.DSLContext
-import org.springframework.stereotype.Service
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
-@Service
 class IamV3Service @Autowired constructor(
     val iamManagerService: ManagerService,
     val iamConfiguration: IamConfiguration,
     val projectDao: ProjectDao,
     val dslContext: DSLContext,
     val projectDispatcher: ProjectDispatcher,
-    val client: Client,
-    val authResourceApi: AuthResourceApi
+    val client: Client
 ) {
     /**
      *  V3创建项目流程 (V3创建项目未完全迁移完前，需双写V0,V3)
