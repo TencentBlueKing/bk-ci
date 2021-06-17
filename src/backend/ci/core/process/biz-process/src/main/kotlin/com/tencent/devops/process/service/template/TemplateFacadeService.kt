@@ -313,10 +313,10 @@ class TemplateFacadeService @Autowired constructor(
         val template = templateDao.getLatestTemplate(dslContext, templateId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val instanceSize = templatePipelineDao.countByTemplates(
+            val instanceSize = templatePipelineDao.countByVersionFeat(
                 dslContext = context,
-                instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
-                templateIds = setOf(templateId)
+                templateId = templateId,
+                instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type
             )
             if (instanceSize > 0) {
                 throw ErrorCodeException(
