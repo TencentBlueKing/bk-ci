@@ -103,7 +103,7 @@
             }
         },
         computed: {
-            ...mapState('soda', [
+            ...mapState('pipelines', [
                 'pipelineSetting'
             ]),
             ...mapGetters({
@@ -162,7 +162,7 @@
             this.list = this.groupIdStorage = localStorage.getItem('groupIdStr') ? localStorage.getItem('groupIdStr').split(';').filter(item => item) : []
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('pipelines', [
                 'requestTemplateSetting',
                 'updatePipelineSetting'
             ]),

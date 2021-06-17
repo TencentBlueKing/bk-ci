@@ -49,7 +49,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Job
-import com.tencent.devops.common.ci.v2.Notices
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
@@ -226,7 +225,6 @@ object ScriptYmlUtils {
         checkVariable(preScriptBuildYaml)
         checkStage(preScriptBuildYaml)
         checkExtend(yaml)
-        checkNotice(preScriptBuildYaml.notices)
     }
 
     private fun checkVariable(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
@@ -257,22 +255,8 @@ object ScriptYmlUtils {
             return
         }
         yamlMap.forEach { (t, _) ->
-            if (t != formatTrigger && t != "extends" && t != "version" && t != "resources") {
+            if (t != formatTrigger && t != "extends" && t != "version" && t != "resources" && t != "name") {
                 throw CustomException(Response.Status.BAD_REQUEST, "使用 extends 时顶级关键字只能有触发器 on 与 resources")
-            }
-        }
-    }
-
-    private fun checkNotice(notices: List<Notices>?) {
-        val types = setOf("email", "wework-message", "wework-chat")
-        if (notices == null) {
-            return
-        }
-        notices.forEach {
-            if (it.type !in types) {
-                throw CustomException(
-                    Response.Status.BAD_REQUEST, "通知类型只能为 email, wework-message, wework-chat 中的一种"
-                )
             }
         }
     }
@@ -393,6 +377,20 @@ object ScriptYmlUtils {
         return stepList
     }
 
+    private fun preStage2Stage(preStage: PreStage?): Stage? {
+        if (preStage == null) {
+            return null
+        }
+        return Stage(
+            id = preStage.id ?: randomString(stageNamespace),
+            name = preStage.name,
+            label = formatStageLabel(preStage.label),
+            ifField = preStage.ifField,
+            fastKill = preStage.fastKill ?: false,
+            jobs = preJobs2Jobs(preStage.jobs as Map<String, PreJob>)
+        )
+    }
+
     private fun preStages2Stages(preStageList: List<PreStage>?): List<Stage> {
         if (preStageList == null) {
             return emptyList()
@@ -495,7 +493,7 @@ object ScriptYmlUtils {
             resource = preScriptBuildYaml.resources,
             notices = preScriptBuildYaml.notices,
             stages = stages,
-            finally = preStages2Stages(preScriptBuildYaml.finally),
+            finally = preJobs2Jobs(preScriptBuildYaml.finally),
             label = preScriptBuildYaml.label ?: emptyList()
         )
     }

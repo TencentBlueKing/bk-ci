@@ -444,7 +444,7 @@
             async downloadFile ({ artifactoryType, path }, key = 'download') {
                 try {
                     const { projectId } = this.$route.params
-                    const res = await this.$store.dispatch('soda/requestDownloadUrl', {
+                    const res = await this.$store.dispatch('common/requestDownloadUrl', {
                         projectId,
                         artifactoryType,
                         path
@@ -468,7 +468,7 @@
                         files: [artifactory.name],
                         copyAll: false
                     }
-                    const res = await this.$store.dispatch('soda/requestCopyArtifactory', {
+                    const res = await this.$store.dispatch('common/requestCopyArtifactory', {
                         projectId,
                         pipelineId,
                         buildId: this.currentBuildId,

@@ -71,7 +71,7 @@
                 loading.title = this.$t('loadingTips')
 
                 try {
-                    const res = await this.$store.dispatch('soda/requestCommitList', {
+                    const res = await this.$store.dispatch('common/requestCommitList', {
                         buildId: buildNo
                     })
 
