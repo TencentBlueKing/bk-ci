@@ -17,6 +17,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Api(tags = ["OPEN_EXPERIENCE"], description = "版本体验-公开接口")
 @Path("/open/experiences/")
@@ -43,7 +44,20 @@ interface OpenExperienceResource {
     @Path("/outerAuth")
     @GET
     fun outerAuth(
+        @ApiParam("凭证", required = true)
         @QueryParam("token")
         token: String
     ): Result<OuterProfileVO>
+
+    @ApiOperation("苹果应用商店跳转")
+    @Path("/appstore/redirect")
+    @GET
+    fun appStoreRedirect(
+        @ApiParam("公开体验ID", required = true)
+        @QueryParam("id")
+        id: String,
+        @ApiParam("用户ID", required = true)
+        @QueryParam("userId")
+        userId: String
+    ): Response
 }
