@@ -40,7 +40,6 @@ import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.config.DefaultImageConfig
@@ -74,7 +73,6 @@ class DockerHostClient @Autowired constructor(
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val dockerHostUtils: DockerHostUtils,
-    private val redisOperation: RedisOperation,
     private val client: Client,
     private val dslContext: DSLContext,
     private val defaultImageConfig: DefaultImageConfig,
