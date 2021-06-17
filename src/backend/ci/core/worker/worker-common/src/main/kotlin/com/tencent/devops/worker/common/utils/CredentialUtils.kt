@@ -134,14 +134,18 @@ object CredentialUtils {
     }
 
     private fun getCredentialValue(valueList: List<String>, type: CredentialType, key: String): String? {
+        if (valueList.isEmpty()) {
+            return null
+        }
+
         when (type) {
             CredentialType.PASSWORD -> {
-                if (valueList.isNotEmpty() && key.endsWith(".password")) {
+                if (key.endsWith(".password")) {
                     return valueList[0]
                 }
             }
             CredentialType.ACCESSTOKEN -> {
-                if (valueList.isNotEmpty() && key.endsWith(".access_token")) {
+                if (key.endsWith(".access_token")) {
                     return valueList[0]
                 }
             }
@@ -156,7 +160,7 @@ object CredentialUtils {
                 }
             }
             CredentialType.SECRETKEY -> {
-                if (valueList.isNotEmpty() && key.endsWith(".secretKey")) {
+                if (key.endsWith(".secretKey")) {
                     return valueList[0]
                 }
             }
@@ -171,6 +175,11 @@ object CredentialUtils {
                 }
             }
             CredentialType.SSH_PRIVATEKEY -> {
+                if (valueList.size == 1) {
+                    if (key.endsWith(".privateKey")) {
+                        return valueList[0]
+                    }
+                }
                 if (valueList.size >= 2) {
                     if (key.endsWith(".privateKey")) {
                         return valueList[0]
@@ -181,6 +190,14 @@ object CredentialUtils {
                 }
             }
             CredentialType.TOKEN_SSH_PRIVATEKEY -> {
+                if (valueList.size == 2) {
+                    if (key.endsWith(".token")) {
+                        return valueList[0]
+                    }
+                    if (key.endsWith(".privateKey")) {
+                        return valueList[1]
+                    }
+                }
                 if (valueList.size >= 3) {
                     if (key.endsWith(".token")) {
                         return valueList[0]
