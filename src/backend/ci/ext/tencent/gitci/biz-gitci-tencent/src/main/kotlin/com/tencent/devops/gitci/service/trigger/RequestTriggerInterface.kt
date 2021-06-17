@@ -53,6 +53,7 @@ interface RequestTriggerInterface<T> {
         isMr: Boolean,
         originYaml: String?,
         filePath: String,
-        pipelineId: String?
+        pipelineId: String?,
+        pipelineName: String?
     ): T?
 }

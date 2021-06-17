@@ -85,7 +85,8 @@ class RequestTrigger @Autowired constructor(
             isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
             filePath = filePath,
-            pipelineId = gitProjectPipeline.pipelineId
+            pipelineId = gitProjectPipeline.pipelineId,
+            pipelineName = gitProjectPipeline.displayName
         ) ?: return false
 
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
@@ -130,6 +131,7 @@ class RequestTrigger @Autowired constructor(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
+                pipelineName = gitProjectPipeline.displayName,
                 filePath = gitProjectPipeline.filePath,
                 originYaml = originYaml,
                 normalizedYaml = normalizedYaml,
@@ -156,7 +158,8 @@ class RequestTrigger @Autowired constructor(
         isMr: Boolean,
         originYaml: String?,
         filePath: String,
-        pipelineId: String?
+        pipelineId: String?,
+        pipelineName: String?
     ): CIBuildYaml? {
 
         if (originYaml.isNullOrBlank()) {
@@ -171,6 +174,7 @@ class RequestTrigger @Autowired constructor(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 filePath = filePath,
                 originYaml = originYaml,
                 normalizedYaml = null,

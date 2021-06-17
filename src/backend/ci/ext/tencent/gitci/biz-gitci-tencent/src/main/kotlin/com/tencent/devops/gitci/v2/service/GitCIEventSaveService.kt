@@ -99,6 +99,7 @@ class GitCIEventSaveService @Autowired constructor(
         reason: String,
         reasonDetail: String,
         pipelineId: String?,
+        pipelineName: String?,
         filePath: String,
         gitProjectId: Long,
         sendCommitCheck: Boolean,
@@ -117,7 +118,7 @@ class GitCIEventSaveService @Autowired constructor(
                 userId = event.userId,
                 block = realBlock,
                 state = GitCICommitCheckState.FAILURE,
-                context = filePath,
+                context = "${pipelineName ?: ""}($filePath): $reason",
                 gitCIBasicSetting = gitBasicSetting
             )
         }
@@ -146,6 +147,7 @@ class GitCIEventSaveService @Autowired constructor(
         reason: String,
         reasonDetail: String,
         pipelineId: String?,
+        pipelineName: String?,
         filePath: String,
         gitProjectId: Long,
         sendCommitCheck: Boolean,
@@ -160,6 +162,7 @@ class GitCIEventSaveService @Autowired constructor(
             reason = reason,
             reasonDetail = reasonDetail,
             pipelineId = pipelineId,
+            pipelineName = pipelineName,
             filePath = filePath,
             gitProjectId = gitProjectId,
             sendCommitCheck = sendCommitCheck,

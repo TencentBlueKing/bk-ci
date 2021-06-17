@@ -162,6 +162,7 @@ class GitCITriggerService @Autowired constructor(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = if (buildPipeline.pipelineId.isBlank()) null else buildPipeline.pipelineId,
+                pipelineName = buildPipeline.displayName,
                 filePath = buildPipeline.filePath,
                 originYaml = originYaml,
                 normalizedYaml = null,
@@ -175,8 +176,13 @@ class GitCITriggerService @Autowired constructor(
 
         if (!ScriptYmlUtils.isV2Version(originYaml)) {
             val (yamlObject, normalizedYaml) =
-                prepareCIBuildYaml(gitRequestEvent, originYaml, existsPipeline.filePath, existsPipeline.pipelineId)
-                    ?: return false
+                prepareCIBuildYaml(
+                    gitRequestEvent = gitRequestEvent,
+                    originYaml = originYaml,
+                    filePath = existsPipeline.filePath,
+                    pipelineId = existsPipeline.pipelineId,
+                    pipelineName = existsPipeline.displayName
+                ) ?: return false
 
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
@@ -214,7 +220,8 @@ class GitCITriggerService @Autowired constructor(
                 isMr = false,
                 originYaml = originYaml,
                 filePath = existsPipeline.filePath,
-                pipelineId = existsPipeline.pipelineId
+                pipelineId = existsPipeline.pipelineId,
+                pipelineName = existsPipeline.displayName
             ) ?: return false
             val parsedYaml = YamlCommonUtils.toYamlNotNull(objects.preYaml)
             val gitBuildId = gitRequestEventBuildDao.save(
@@ -389,6 +396,7 @@ class GitCITriggerService @Autowired constructor(
                         userId = gitRequestEvent.userId,
                         eventId = gitRequestEvent.id!!,
                         pipelineId = null,
+                        pipelineName = null,
                         filePath = filePath,
                         originYaml = null,
                         normalizedYaml = null,
@@ -440,6 +448,7 @@ class GitCITriggerService @Autowired constructor(
                         userId = gitRequestEvent.userId,
                         eventId = gitRequestEvent.id!!,
                         pipelineId = buildPipeline.pipelineId.ifBlank { null },
+                        pipelineName = buildPipeline.displayName,
                         filePath = buildPipeline.filePath,
                         originYaml = originYaml,
                         normalizedYaml = null,
@@ -462,6 +471,7 @@ class GitCITriggerService @Autowired constructor(
                         userId = gitRequestEvent.userId,
                         eventId = gitRequestEvent.id!!,
                         pipelineId = buildPipeline.pipelineId,
+                        pipelineName = buildPipeline.displayName,
                         filePath = buildPipeline.filePath,
                         originYaml = originYaml,
                         normalizedYaml = null,
@@ -498,6 +508,7 @@ class GitCITriggerService @Autowired constructor(
                     userId = gitRequestEvent.userId,
                     eventId = gitRequestEvent.id!!,
                     pipelineId = buildPipeline.pipelineId,
+                    pipelineName = buildPipeline.displayName,
                     filePath = buildPipeline.filePath,
                     originYaml = originYaml,
                     normalizedYaml = null,
@@ -555,7 +566,8 @@ class GitCITriggerService @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         originYaml: String?,
         filePath: String,
-        pipelineId: String?
+        pipelineId: String?,
+        pipelineName: String?
     ): Pair<CIBuildYaml, String>? {
 
         if (originYaml.isNullOrBlank()) {
@@ -571,6 +583,7 @@ class GitCITriggerService @Autowired constructor(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 filePath = filePath,
                 originYaml = originYaml,
                 normalizedYaml = null,
