@@ -60,7 +60,6 @@ class TokenCheckFilter @Autowired constructor(
             logger.warn("auth token fail: $token")
             throw TokenForbiddenException("token check fail")
         }
-
         chain.doFilter(request, response)
     }
 
