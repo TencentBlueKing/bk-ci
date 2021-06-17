@@ -29,21 +29,11 @@ function _M:getAllWhitelistIp()
     end
 
     -- 获取灰度设置
-    local devops_gray = grayUtil:get_gray()
-
     local ns_config = nil
-    if devops_gray ~= true then
-        if ngx.var.devops_region ~= "DEVNET" then
-            ns_config = config.ns
-        else
-            ns_config = config.ns_devnet
-        end
+    if ngx.var.devops_region ~= "DEVNET" then
+        ns_config = config.ns
     else
-        if ngx.var.devops_region ~= "DEVNET" then
-            ns_config = config.ns_gray
-        else
-            ns_config = config.ns_devnet_gray
-        end
+        ns_config = config.ns_devnet
     end
 
     local white_ip_hot_cache = ngx.shared.white_ip_hot_store
