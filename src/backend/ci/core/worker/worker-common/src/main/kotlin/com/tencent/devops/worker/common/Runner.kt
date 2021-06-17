@@ -50,7 +50,6 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
-import com.tencent.devops.worker.common.utils.BatScriptUtil
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
