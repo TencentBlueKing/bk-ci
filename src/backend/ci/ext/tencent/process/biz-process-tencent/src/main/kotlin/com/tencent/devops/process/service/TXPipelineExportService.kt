@@ -53,6 +53,7 @@ import com.tencent.devops.common.ci.task.WindowsScriptInput
 import com.tencent.devops.common.ci.task.WindowsScriptTask
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.Variable
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.ci.yaml.JobDetail
@@ -121,19 +122,15 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
 
-/**
- *
- * @author irwinsun
- * @version 1.0
- */
 @Suppress("ALL")
-@Service("newPipelineService")
-class TXPipelineService @Autowired constructor(
+@Service("TXPipelineExportService")
+class TXPipelineExportService @Autowired constructor(
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineListFacadeService: PipelineListFacadeService,
+    private val stageTagService: StageTagService,
     private val processJmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
@@ -143,7 +140,7 @@ class TXPipelineService @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TXPipelineService::class.java)
+        private val logger = LoggerFactory.getLogger(TXPipelineExportService::class.java)
     }
 
     fun listQualityViewPipelines(
@@ -275,50 +272,6 @@ class TXPipelineService @Autowired constructor(
 
     fun listPipelineInfo(userId: String, projectId: String, request: PipelineListRequest?): List<Pipeline> {
         return pipelineListFacadeService.listPipelineInfo(userId, projectId, request?.pipelineId, request?.templateId)
-    }
-
-    fun exportYaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Response {
-        val (model, yamlSb) = checkPermissionAndGetHead(userId, projectId, pipelineId, isGitCI)
-        // 在stages对象的生成中会添加顶部注释，所以放在分隔注释上面
-        val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb, isGitCI)
-        yamlSb.append("################################################################" +
-            "#####################################################\n\n")
-        val yamlObj = CIBuildYaml(
-            name = null,
-            trigger = null,
-            mr = null,
-            variables = getVariableFromModel(model),
-            services = null,
-            stages = stages.map { it.stage },
-            steps = null
-        )
-        var yamlStr = YamlUtil.toYaml(yamlObj)
-        // 无法使用的替换为带注释的,目前仅工蜂CI需要
-        if (isGitCI) {
-            val replaceList = mutableListOf<List<Pair<PoolData, List<TaskData>>>>()
-            stages.forEach { stage ->
-                replaceList.add(stage.jobDataList.map { job -> Pair(job.poolData, job.taskDataList) })
-            }
-            if (replaceList.isNotEmpty()) {
-                replaceList.forEach { stage ->
-                    stage.forEach {
-                        yamlStr = replaceJobYamlStrLineToComment(
-                            yamlStr = yamlStr,
-                            tip = it.first.tip,
-                            replaceYamlStr = it.first.replaceYamlStr
-                        )
-                        if (it.second.isNotEmpty()) {
-                            yamlStr = replaceTaskYamlStrLineToComment(
-                                yamlStr = yamlStr,
-                                replaceList = it.second.map { task -> Pair(task.tip, task.replaceYamlStr) }
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        yamlSb.append(replaceTaskType(yamlStr))
-        return exportToFile(yamlSb.toString(), model.name)
     }
 
     private fun replaceTaskType(yamlStr: String): String {
@@ -581,7 +534,7 @@ class TXPipelineService @Autowired constructor(
                     logger.info("Not support plugin:${it.getClassType()}, skip...")
                     comment.append(
                         "# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！" +
-                                "请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n"
+                            "请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n"
                     )
                     if (isGitCI) {
                         val task = OldVersionTask(
@@ -593,7 +546,7 @@ class TXPipelineService @Autowired constructor(
                             TaskData(
                                 task,
                                 "# ======== 工蜂CI不支持蓝盾老版本插件 ${it.name} ，" +
-                                        "请在研发商店搜索新插件替换 ======== \n ${it.getClassType()}@latest",
+                                    "请在研发商店搜索新插件替换 ======== \n ${it.getClassType()}@latest",
                                 toYamlStr(task)
                             )
                         )
@@ -618,8 +571,8 @@ class TXPipelineService @Autowired constructor(
                 // 工蜂CI仅支持docker，devCloud，macos
                 val tip =
                     "# 注意：工蜂CI暂不支持当前类型的构建机" +
-                            "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
-                            "需检查JOB(${modelContainer.name})的Pool字段 "
+                        "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
+                        "需检查JOB(${modelContainer.name})的Pool字段 "
                 when (dispatchType.buildType()) {
                     BuildType.DOCKER, BuildType.PUBLIC_DEVCLOUD -> {
                         return PoolData(
@@ -675,8 +628,8 @@ class TXPipelineService @Autowired constructor(
                     else -> {
                         comment.append(
                             "# 注意：暂不支持当前类型的构建机" +
-                                    "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
-                                    "需检查JOB(${modelContainer.name})的Pool字段 \n"
+                                "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
+                                "需检查JOB(${modelContainer.name})的Pool字段 \n"
                         )
                         return PoolData(null, null, null)
                     }
@@ -691,7 +644,7 @@ class TXPipelineService @Autowired constructor(
     private fun getThirdPartyEnvPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
         comment.append(
             "# 注意：【${BuildType.THIRD_PARTY_AGENT_ENV.value}】的环境【${dispatchType.value}】在新业务下可能不存在，" +
-                    "请手动修改成存在的环境，并检查操作系统是否正确！ \n"
+                "请手动修改成存在的环境，并检查操作系统是否正确！ \n"
         )
         return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
             val agentsResult = if (dispatchType.agentType == AgentType.ID) {
@@ -704,7 +657,7 @@ class TXPipelineService @Autowired constructor(
             val os = if (agentsResult.isNotOk() || null == agentsResult.data || agentsResult.data!!.isEmpty()) {
                 logger.error(
                     "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , " +
-                            "not found agent:${dispatchType.envName}"
+                        "not found agent:${dispatchType.envName}"
                 )
                 VMBaseOS.LINUX
             } else {
@@ -747,7 +700,7 @@ class TXPipelineService @Autowired constructor(
     private fun getThirdPartyAgentPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
         comment.append(
             "# 注意：【${BuildType.THIRD_PARTY_AGENT_ID.value}】的节点【${dispatchType.value}】在新业务下可能不存在，" +
-                    "请手动修改成存在的节点！ \n"
+                "请手动修改成存在的节点！ \n"
         )
         return if (dispatchType is ThirdPartyAgentIDDispatchType) {
             val agentResult = if (dispatchType.agentType == AgentType.ID) {
@@ -760,7 +713,7 @@ class TXPipelineService @Autowired constructor(
             val os = if (agentResult.isNotOk() || null == agentResult.data) {
                 logger.error(
                     "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , " +
-                            "not found agent:${dispatchType.displayName}"
+                        "not found agent:${dispatchType.displayName}"
                 )
                 VMBaseOS.LINUX
             } else {
@@ -953,11 +906,11 @@ class TXPipelineService @Autowired constructor(
         return null
     }
 
-    private fun getVariableFromModel(model: Model): Map<String, String>? {
+    private fun getVariableFromModel(model: Model): Map<String, Variable>? {
         val params = (model.stages[0].containers[0] as TriggerContainer).params
-        val result = mutableMapOf<String, String>()
+        val result = mutableMapOf<String, Variable>()
         params.forEach {
-            result[it.id] = it.defaultValue.toString()
+            result[it.id] = Variable(it.defaultValue.toString())
         }
         return if (result.isEmpty()) {
             null
@@ -1086,78 +1039,47 @@ class TXPipelineService @Autowired constructor(
         val (model, yamlSb) = checkPermissionAndGetHead(userId, projectId, pipelineId, isGitCI)
         yamlSb.append("########################################################" +
             "#############################################################\n\n")
-
-
+        val stageTagsMap = stageTagService.getAllStageTag().data?.map {
+            it.id to it.stageTagName
+        }?.toMap() ?: emptyMap()
         val yamlObj = ScriptBuildYaml(
             version = "v2.0",
             name = model.name,
             label = model.labels,
             triggerOn = null,
-            // TODO: variables从Var表中拿
-            variables = null,
-            stages = getV2StageFromModel(userId, projectId, pipelineId, model, yamlSb),
+            variables = getVariableFromModel(model),
+            stages = getV2StageFromModel(model, yamlSb, stageTagsMap),
             extends = null,
             resource = null,
             notices = null,
-            // TODO: 后面做
-            finally = null
+            finally = getV2FinalFromStage(model.stages.last(), yamlSb)
         )
         var yamlStr = YamlUtil.toYaml(yamlObj)
         yamlSb.append(replaceTaskType(yamlStr))
         return exportToFile(yamlSb.toString(), model.name)
     }
 
-    private fun getV2FinalFromStage(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        stage: List<com.tencent.devops.common.pipeline.container.Stage>,
-        comment: StringBuilder
-    ): List<V2Stage> {
-        if (stage.isEmpty()) {
-            return emptyList()
-        }
-        val stages = mutableListOf<V2Stage>()
-        stage.forEach {
-            val jobs = getV2JobFromStage(userId, projectId, pipelineId, it, comment)
-            stages.add(
-                V2Stage(
-                    name = it.name,
-                    id = it.id,
-                    // TODO: 根据ID从后台去拿名称再填进去
-                    label = listOf(it.tag.toString()),
-                    ifField = if (it.stageControlOption?.runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
-                        it.stageControlOption?.customCondition
-                    } else {
-                        null
-                    },
-                    fastKill = it.fastKill,
-                    jobs = jobs
-                )
-            )
-        }
-        return stages
-    }
-
     private fun getV2StageFromModel(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
         model: Model,
-        comment: StringBuilder
+        comment: StringBuilder,
+        stageTagsMap: Map<String, String>
     ): List<V2Stage> {
         val stages = mutableListOf<V2Stage>()
         model.stages.drop(1).forEach { stage ->
             if (stage.finally) {
                 return@forEach
             }
-            val jobs = getV2JobFromStage(userId, projectId, pipelineId, stage, comment)
+            val jobs = getV2JobFromStage(stage, comment)
+            val tags = mutableListOf<String>()
+            stage.tag?.forEach {
+                val tagName = stageTagsMap[it]
+                if (!tagName.isNullOrBlank()) tags.add(tagName)
+            }
             stages.add(
                 V2Stage(
                     name = stage.name,
                     id = stage.id,
-                    // TODO: 根据ID从后台去拿名称再填进去
-                    label = listOf(stage.tag.toString()),
+                    label = tags,
                     ifField = if (stage.stageControlOption?.runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
                         stage.stageControlOption?.customCondition
                     } else {
@@ -1171,10 +1093,17 @@ class TXPipelineService @Autowired constructor(
         return stages
     }
 
+    private fun getV2FinalFromStage(
+        stage: com.tencent.devops.common.pipeline.container.Stage,
+        comment: StringBuilder
+    ): List<com.tencent.devops.common.ci.v2.Job>? {
+        if (stage.finally) {
+            return getV2JobFromStage(stage, comment)
+        }
+        return null
+    }
+
     private fun getV2JobFromStage(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
         stage: com.tencent.devops.common.pipeline.container.Stage,
         comment: StringBuilder
     ): List<V2Job> {
@@ -1197,22 +1126,18 @@ class TXPipelineService @Autowired constructor(
                             } else {
                                 null
                             },
-                            steps = getV2StepFromJob(userId, projectId, pipelineId, job, comment),
+                            steps = getV2StepFromJob(job, comment),
                             timeoutMinutes = job.jobControlOption?.timeout,
-                            // TODO: 问下对应关系
                             env = null,
                             continueOnError = job.jobControlOption?.continueWhenFailed,
-                            // TODO: 问下对应关系
+                            // TODO: 未实施功能
                             strategy = null,
+                            // TODO: 支持哪些流水线Job标识参数
                             dependOn = job.jobControlOption?.dependOnId
                         )
                     )
                 }
-                else -> {
-                    if (it.getClassType() != VMBuildContainer.classType) {
-                        logger.error("get jobs from stage failed, unknown classType:(${it.getClassType()})")
-                        // TODO: 看看是否抛异常
-                    }
+                VMBuildContainer.classType -> {
                     val job = it as VMBuildContainer
                     jobs.add(
                         V2Job(
@@ -1228,16 +1153,20 @@ class TXPipelineService @Autowired constructor(
                             } else {
                                 null
                             },
-                            steps = getV2StepFromJob(userId, projectId, pipelineId, job, comment),
+                            steps = getV2StepFromJob(job, comment),
                             timeoutMinutes = job.jobControlOption?.timeout,
-                            // TODO: 问下对应关系
-                            env = job.buildEnv,
+                            env = job.customBuildEnv,
                             continueOnError = job.jobControlOption?.continueWhenFailed,
-                            // TODO: 问下对应关系
+                            // TODO: 未实施功能
                             strategy = null,
+                            // TODO: 支持哪些流水线Job标识参数
                             dependOn = job.jobControlOption?.dependOnId
                         )
                     )
+                }
+                else -> {
+                    logger.error("get jobs from stage failed, unknown classType:(${it.getClassType()})")
+                    // TODO: 看看是否抛异常
                 }
             }
         }
@@ -1245,9 +1174,6 @@ class TXPipelineService @Autowired constructor(
     }
 
     private fun getV2StepFromJob(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
         job: Container,
         comment: StringBuilder
     ): List<V2Step> {
@@ -1399,7 +1325,7 @@ class TXPipelineService @Autowired constructor(
                     logger.info("Not support plugin:${element.getClassType()}, skip...")
                     comment.append(
                         "# 注意：不再支持插件【${element.name}(${element.getClassType()})】的导出！" +
-                                "请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n"
+                            "请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n"
                     )
                 }
             }
