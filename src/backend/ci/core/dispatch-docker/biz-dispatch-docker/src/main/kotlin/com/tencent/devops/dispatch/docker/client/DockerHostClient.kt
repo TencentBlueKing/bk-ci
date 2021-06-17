@@ -461,7 +461,7 @@ class DockerHostClient @Autowired constructor(
 
         if (retryTime < RETRY_BUILD_TIME) {
             LOG.warn("[${dockerHostBuildInfo.projectId}|${dockerHostBuildInfo.pipelineId}|${dockerHostBuildInfo.buildId}" +
-                    "|$retryTime] Start build Docker VM in $dockerIp failed, retry startBuild.")
+                    "|$retryTime] Start build Docker VM in $dockerIp failed, retry startBuild. errorMessage: $errorMessage")
             val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
             val retryTimeLocal = retryTime + 1
             // 过滤重试前异常IP, 并重新获取可用ip
