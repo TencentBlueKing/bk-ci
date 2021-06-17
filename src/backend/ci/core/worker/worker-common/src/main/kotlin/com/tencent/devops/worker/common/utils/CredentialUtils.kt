@@ -94,7 +94,6 @@ object CredentialUtils {
         }
     }
 
-
     fun getCredentialContextValue(key: String): String? {
         val ticketId = getCredentialKey(key)
         if (ticketId == key) {
