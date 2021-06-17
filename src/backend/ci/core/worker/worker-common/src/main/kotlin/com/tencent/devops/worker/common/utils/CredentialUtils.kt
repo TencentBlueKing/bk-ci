@@ -43,6 +43,7 @@ import java.util.Base64
  * This util is to get the credential from core
  * It use DH encrypt and decrypt
  */
+@Suppress("ALL")
 object CredentialUtils {
 
     private val sdkApi = ApiFactory.create(CredentialSDKApi::class)
