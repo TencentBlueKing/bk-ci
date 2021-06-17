@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -61,6 +62,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
+import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -149,10 +151,21 @@ open class MarketAtomTask : ITask() {
         try {
             val inputMap = map["input"] as Map<String, Any>?
             inputMap?.forEach { (name, value) ->
+                var valueStr = JsonUtil.toJson(value)
+                valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
+                    override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+                        return CredentialUtils.getCredentialContextValue(key) ?: if (doubleCurlyBraces) {
+                                "\${{$key}}"
+                            } else {
+                                "\${$key}"
+                            }
+                    }
+                })
+
                 // 只有构建环境下运行的插件才有workspace变量
                 if (buildTask.containerType == VMBuildContainer.classType) {
                     atomParams[name] = EnvUtils.parseEnv(
-                        command = JsonUtil.toJson(value),
+                        command = valueStr,
                         data = systemVariables,
                         contextMap = contextMap(buildTask).plus(
                             mapOf(
@@ -162,7 +175,7 @@ open class MarketAtomTask : ITask() {
                         )
                     )
                 } else {
-                    atomParams[name] = JsonUtil.toJson(value)
+                    atomParams[name] = valueStr
                 }
             }
         } catch (e: Throwable) {
