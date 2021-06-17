@@ -232,7 +232,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
                 conditions.add(VERSION_NAME.eq(versionName))
             }
             conditions.add(DELETED.eq(false)) // #4012 模板实例列表需要隐藏 回收站的流水线
-            return dslContext.selectFrom(this)
+            return dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
@@ -260,6 +260,22 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             dslContext.deleteFrom(this)
                 .where(TEMPLATE_ID.eq(templateId))
+                .execute()
+        }
+    }
+
+    fun deleteByVersion(dslContext: DSLContext, templateId: String, version: Long) {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            dslContext.deleteFrom(this)
+                .where(TEMPLATE_ID.eq(templateId).and(VERSION.eq(version)))
+                .execute()
+        }
+    }
+
+    fun deleteByVersionName(dslContext: DSLContext, templateId: String, versionName: String) {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            dslContext.deleteFrom(this)
+                .where(TEMPLATE_ID.eq(templateId).and(VERSION_NAME.eq(versionName)))
                 .execute()
         }
     }

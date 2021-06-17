@@ -335,7 +335,7 @@ class TemplateFacadeService @Autowired constructor(
                     errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_INSTALL,
                     defaultMessage = "已安装到其他项目下使用，不能删除")
             }
-
+            templatePipelineDao.delete(context, templateId)
             templateDao.delete(context, templateId)
             pipelineSettingDao.delete(context, templateId)
             if (template.type == TemplateType.CONSTRAINT.name) {
@@ -367,7 +367,7 @@ class TemplateFacadeService @Autowired constructor(
                     errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE,
                     defaultMessage = "模板还存在实例，不允许删除")
             }
-            templatePipelineDao.deleteByTemplateId(dslContext, templateId)
+            templatePipelineDao.deleteByVersion(dslContext = dslContext, templateId = templateId, version = version)
             templateDao.delete(dslContext, templateId, setOf(version)) == 1
         }
     }
@@ -388,7 +388,11 @@ class TemplateFacadeService @Autowired constructor(
                 logger.warn("There are $instanceSize pipeline attach to $templateId of versionName $versionName")
                 throw ErrorCodeException(errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE)
             }
-            templatePipelineDao.deleteByTemplateId(dslContext, templateId)
+            templatePipelineDao.deleteByVersionName(
+                dslContext = dslContext,
+                templateId = templateId,
+                versionName = versionName
+            )
             templateDao.delete(dslContext = dslContext, templateId = templateId, versionName = versionName)
         }
         return true
