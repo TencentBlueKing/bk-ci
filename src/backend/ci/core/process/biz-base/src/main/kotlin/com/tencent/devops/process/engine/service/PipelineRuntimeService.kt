@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -57,6 +58,8 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -1799,8 +1802,15 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getExecuteTime(pipelineId: String, buildId: String): Long {
+        val filter = setOf(
+            EnvControlTaskType.VM.name,
+            EnvControlTaskType.NORMAL.name,
+            QualityGateInElement.classType,
+            QualityGateOutElement.classType,
+            ManualReviewUserTaskElement.classType
+        )
         val executeTask = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
-            .filter { it.taskType != ManualReviewUserTaskElement.classType }
+            .filter { !filter.contains(it.taskType) }
         var executeTime = 0L
         executeTask.forEach {
             executeTime += it.totalTime ?: 0
