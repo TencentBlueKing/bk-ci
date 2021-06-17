@@ -386,7 +386,7 @@ class DockerHostClient @Autowired constructor(
                                 dockerIp = dockerIp,
                                 dockerHostBuildInfo = dockerHostBuildInfo,
                                 driftIpInfo = driftIpInfo,
-                                errorMessage = resp.message(),
+                                errorMessage = response["message"] as String,
                                 unAvailableIpList = unAvailableIpList,
                                 clusterType = clusterType
                             )
@@ -396,7 +396,7 @@ class DockerHostClient @Autowired constructor(
                             doFail(
                                 dockerIp = dockerIp,
                                 dockerHostBuildInfo = dockerHostBuildInfo,
-                                errorMessage = resp.message()
+                                errorMessage = response["message"] as String
                             )
                         }
                     }
