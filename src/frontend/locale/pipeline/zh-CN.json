@@ -884,5 +884,6 @@
     },
     "permissionRefreshtitle": "权限申请单已提交",
     "permissionRefreshSubtitle": "请在权限中心填写权限申请单，提交完成后再刷新该页面",
-    "permissionRefreshOkText": "刷新页面"
+    "permissionRefreshOkText": "刷新页面",
+    "searchForMore": "输入搜索更多流水线"
 }
