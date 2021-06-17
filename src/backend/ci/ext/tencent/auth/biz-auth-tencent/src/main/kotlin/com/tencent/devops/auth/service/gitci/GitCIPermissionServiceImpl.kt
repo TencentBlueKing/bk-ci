@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.service.gitci
 
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -13,7 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
 class GitCIPermissionServiceImpl @Autowired constructor(
-    val client: Client
+    val client: Client,
+    val managerService: ManagerService
 ) : PermissionService {
     private val gitCIUserCache = CacheBuilder.newBuilder()
         .maximumSize(2000)
@@ -36,6 +38,11 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String?
     ): Boolean {
+        // review管理员校验
+        if (reviewManagerCheck(userId, projectCode, action, resourceType ?: "")) {
+            logger.info("$projectCode $userId $action $resourceType is review manager")
+            return true
+        }
         // 操作类action需要校验用户oauth, 查看类的无需oauth校验
         if (!checkListOrViewAction(action)) {
             val checkOauth = client.get(ServiceOauthResource::class).gitGet(userId).data
@@ -140,6 +147,25 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             return true
         }
         return false
+    }
+
+    private fun reviewManagerCheck(userId: String, projectCode: String, action: String, resourceTypeStr: String): Boolean {
+        if (resourceTypeStr.isNullOrEmpty()) {
+            return false
+        }
+        return try {
+            val authPermission = AuthPermission.get(action)
+            val resourceType = AuthResourceType.get(resourceTypeStr)
+            managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectCode,
+                authPermission = authPermission,
+                resourceType = resourceType
+            )
+        } catch (e: Exception) {
+            logger.warn("reviewManagerCheck change enum fail $projectCode $action $resourceTypeStr")
+            false
+        }
     }
 
     companion object {
