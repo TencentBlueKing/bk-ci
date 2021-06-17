@@ -157,10 +157,10 @@ abstract class AbstractDockerHostBuildService constructor(
                         "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
-                throw ContainerException(
+    /*            throw ContainerException(
                     errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
                     message = errorMessage
-                )
+                )*/
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
                 log(
