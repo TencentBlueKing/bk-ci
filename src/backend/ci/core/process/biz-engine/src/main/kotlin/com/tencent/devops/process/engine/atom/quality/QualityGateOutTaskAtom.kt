@@ -84,6 +84,7 @@ class QualityGateOutTaskAtom @Autowired constructor(
             position = ControlPointPosition.AFTER_POSITION,
             task = task,
             interceptTask = param.interceptTask!!,
+            runVariables = runVariables,
             checkResult = checkResult,
             buildLogPrinter = buildLogPrinter,
             pipelineBuildQualityService = pipelineBuildQualityService,

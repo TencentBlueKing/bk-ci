@@ -3,9 +3,10 @@
         theme="primary"
         :width="600"
         :height="400"
-        :title="$t('newPipelineFromJSONLabel')"
+        :title="title || $t('newPipelineFromJSONLabel')"
         :mask-close="false"
         :show-footer="false"
+        @cancel="handleCancel"
     >
         {{$t('importPipelineLabel')}}
         <bk-upload
@@ -27,15 +28,16 @@
             isShow: {
                 type: Boolean
             },
-            toggleImportPipelinePopup: {
-                type: Function,
-                default: () => () => {}
+            title: {
+                type: String
+            },
+            handleImportSuccess: {
+                type: Function
             }
         },
         watch: {
             isShow (show) {
                 this.isShow = show
-                this.toggleImportPipelinePopup(show)
             }
         },
         methods: {
@@ -82,6 +84,10 @@
             },
 
             handleSuccess (result) {
+                if (typeof this.handleImportSuccess === 'function') {
+                    this.handleImportSuccess(result)
+                    return
+                }
                 const newPipelineName = `${result.model.name}_${hashID().slice(0, 8)}`
                 this.setImportedPipelineJson(result)
                 this.setPipelineSetting({
@@ -110,6 +116,9 @@
                 } catch (e) {
                     return false
                 }
+            },
+            handleCancel () {
+                this.$emit('update:isShow', false)
             }
         }
     }

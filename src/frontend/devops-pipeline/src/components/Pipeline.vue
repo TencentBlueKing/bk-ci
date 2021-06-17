@@ -10,7 +10,7 @@
         </header>
         <div v-if="pipeline" class="scroll-container">
             <div class="scroll-wraper">
-                <stages :stages="pipeline.stages" :editable="pipelineEditable" :can-skip-element="canSkipElement" :is-preview="isPreview"></stages>
+                <stages :key="pipeline.name" :stages="pipeline.stages" :editable="pipelineEditable" :can-skip-element="canSkipElement" :is-preview="isPreview"></stages>
             </div>
         </div>
 

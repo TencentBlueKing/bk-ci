@@ -25,37 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task.script.shell
+package com.tencent.devops.process.pojo
 
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.worker.common.task.script.ICommand
-import com.tencent.devops.worker.common.utils.ShellUtil
-import java.io.File
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class CommandShellImpl : ICommand {
-
-    override fun execute(
-        buildId: String,
-        script: String,
-        taskParam: Map<String, String>,
-        runtimeVariables: Map<String, String>,
-        projectId: String,
-        dir: File,
-        buildEnvs: List<BuildEnv>,
-        continueNoneZero: Boolean,
-        errorMessage: String?,
-        elementId: String?
-    ) {
-        val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables), dir)
-        ShellUtil.execute(
-            buildId = buildId,
-            script = realCommand,
-            dir = dir,
-            buildEnvs = buildEnvs,
-            runtimeVariables = runtimeVariables,
-            continueNoneZero = continueNoneZero,
-            errorMessage = errorMessage,
-            elementId = elementId
-        )
-    }
-}
+@ApiModel("流水线名称与Id")
+data class PipelineIdAndName(
+    @ApiModelProperty("流水线Id")
+    val pipelineId: String,
+    @ApiModelProperty("流水线名称")
+    val pipelineName: String
+)
