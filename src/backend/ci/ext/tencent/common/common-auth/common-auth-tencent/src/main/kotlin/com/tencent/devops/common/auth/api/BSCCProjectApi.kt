@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.BkAuthProject
 import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -46,7 +46,7 @@ class BSCCProjectApi @Autowired constructor(
     private val bkCCProperties: BkCCProperties,
     private val objectMapper: ObjectMapper,
     private val bsAuthTokenApi: BSAuthTokenApi,
-    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
+    private val bsPipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
 
     fun getProject(projectCode: String): BkAuthProject? {

@@ -27,6 +27,8 @@
 
 dependencies {
     api(project(":ext:tencent:ticket:biz-ticket-tencent"))
+    api(project(":core:ticket:biz-ticket-sample"))
+    api(project(":core:common:common-auth:common-auth-mock"))
 }
 
 plugins{
