@@ -56,12 +56,14 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      *
      * @param uri 下载路径
      * @param destPath 下载后存放的文件
+     * @param isVmBuildEnv 是否是有编译环境
      */
     fun downloadCustomizeFile(
         userId: String,
         projectId: String,
         uri: String,
-        destPath: File
+        destPath: File,
+        isVmBuildEnv: Boolean
     )
 
     /**
@@ -70,6 +72,7 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @param buildId 构建id
      * @param uri 下载uri
      * @param destPath 下载后存放的文件
+     * @param isVmBuildEnv 是否是有编译环境
      */
     fun downloadPipelineFile(
         userId: String,
@@ -77,7 +80,8 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
         pipelineId: String,
         buildId: String,
         uri: String,
-        destPath: File
+        destPath: File,
+        isVmBuildEnv: Boolean
     )
 
     /**
@@ -108,11 +112,13 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @param destPath 上传目标文件路径
      * @param file 上传的文件
      * @param headers 请求头
+     * @param isVmBuildEnv 是否是有编译环境
      */
     fun uploadFile(
         url: String,
         destPath: String,
         file: File,
-        headers: Map<String, String>? = emptyMap()
+        headers: Map<String, String>? = emptyMap(),
+        isVmBuildEnv: Boolean
     ): Result<Boolean>
 }
