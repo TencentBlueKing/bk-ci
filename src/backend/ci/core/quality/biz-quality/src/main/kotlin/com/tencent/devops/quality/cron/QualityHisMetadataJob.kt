@@ -39,13 +39,13 @@ class QualityHisMetadataJob @Autowired constructor(
     private val dslContext: DSLContext
 ) {
 
-    private val TWELVE_HOURS = 3600 * 12 * 1000
+    private val twelveHours = 3600 * 12 * 1000
 
     private val logger = LoggerFactory.getLogger(QualityHisMetadataJob::class.java)
 
     @Scheduled(cron = "0 0 6 * * ?")
     fun clean() {
-        val deleteTime = System.currentTimeMillis() - TWELVE_HOURS
+        val deleteTime = System.currentTimeMillis() - twelveHours
 
         logger.info("start to delete quality his meta data before: $deleteTime")
 
