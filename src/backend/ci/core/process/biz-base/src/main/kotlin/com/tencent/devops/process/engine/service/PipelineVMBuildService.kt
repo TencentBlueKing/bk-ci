@@ -179,7 +179,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         containerId = it.id!!,
                         containerHashId = it.containerId ?: "",
                         variablesWithType = variablesWithType,
-                        timeoutMills = timeoutMills!!
+                        timeoutMills = timeoutMills!!,
+                        containerType = it.getClassType()
                     )
                 }
                 vmId++
