@@ -889,6 +889,18 @@ class PipelineBuildFacadeService(
             }
 
             try {
+                val lastStage = pipelineStageService.getLastStage(buildId)
+                if (lastStage?.status?.isRunning() == true && lastStage.controlOption?.finally == true) {
+                    val message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_FINAL_STAGE_CANNOT_CANCEL)
+                    buildLogPrinter.addRedLine(
+                        buildId = buildId,
+                        message = message,
+                        tag = "startVM-0",
+                        jobId = "0",
+                        executeCount = lastStage.executeCount
+                    )
+                    return
+                }
                 pipelineRuntimeService.cancelBuild(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -1051,6 +1063,7 @@ class PipelineBuildFacadeService(
             startTime = buildHistory.startTime,
             endTime = buildHistory.endTime,
             status = buildHistory.status,
+            stageStatus = buildHistory.stageStatus,
             deleteReason = buildHistory.deleteReason,
             currentTimestamp = buildHistory.currentTimestamp,
             isMobileStart = buildHistory.isMobileStart,
@@ -1065,7 +1078,11 @@ class PipelineBuildFacadeService(
             startType = buildHistory.startType,
             recommendVersion = buildHistory.recommendVersion,
             variables = variables,
-            buildMsg = buildHistory.buildMsg
+            buildMsg = buildHistory.buildMsg,
+            retry = buildHistory.retry,
+            errorInfoList = buildHistory.errorInfoList,
+            buildNumAlias = buildHistory.buildNumAlias,
+            webhookInfo = buildHistory.webhookInfo
         )
     }
 
@@ -1510,19 +1527,21 @@ class PipelineBuildFacadeService(
             logger.error("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, pipeline is not running.")
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_RUNNING_LOCK,
                 defaultMessage = "流水线不在运行中"
             )
         }
 
         // 查看项目是否具有插件的权限
         val incrementAtoms = mutableMapOf<String, String>()
+        val storeEnvResource = client.get(ServiceMarketAtomEnvResource::class)
         redisAtomsBuild.atoms.forEach { (atomCode, _) ->
-            val atomEnvResult = client.get(ServiceMarketAtomEnvResource::class).getAtomEnv(projectId, atomCode, "*")
+            val atomEnvResult = storeEnvResource.getAtomEnv(projectId, atomCode = atomCode, version = "*")
             val atomEnv = atomEnvResult.data
             if (atomEnvResult.isNotOk() || atomEnv == null) {
                 val message =
-                    "Can not found atom($atomCode) in $projectId| ${atomEnvResult.message}, please check if the plugin is installed."
+                    "Can not found atom($atomCode) in $projectId| ${atomEnvResult.message}, " +
+                        "please check if the plugin is installed."
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
                     errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
@@ -1538,7 +1557,13 @@ class PipelineBuildFacadeService(
         }
 
         // 从redis缓存中获取secret信息
-        val result = redisOperation.hget(secretInfoRedisKey(buildId), secretInfoRedisMapKey(redisAtomsBuild.vmSeqId, redisAtomsBuild.executeCount ?: 1))
+        val result = redisOperation.hget(
+            key = secretInfoRedisKey(buildId = buildId),
+            hashKey = secretInfoRedisMapKey(
+                vmSeqId = redisAtomsBuild.vmSeqId,
+                executeCount = redisAtomsBuild.executeCount ?: 1
+            )
+        )
         if (result != null) {
             val secretInfo = JsonUtil.to(result, SecretInfo::class.java)
             logger.info("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms secretInfo: $secretInfo")
@@ -1553,7 +1578,7 @@ class PipelineBuildFacadeService(
                 logger.error("buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, no redisBuild in redis.")
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
+                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                     defaultMessage = "没有redis缓存信息(redisBuild)"
                 )
             }
@@ -1561,7 +1586,7 @@ class PipelineBuildFacadeService(
             logger.error("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, no secretInfo in redis.")
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 defaultMessage = "没有redis缓存信息(secretInfo)"
             )
         }
@@ -1626,6 +1651,24 @@ class PipelineBuildFacadeService(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                     defaultMessage = "构建任务${buildId}不存在",
+                    params = arrayOf(buildId)
+                )
+            }
+            val lastStage = pipelineStageService.getLastStage(buildId)
+            if (lastStage?.status?.isRunning() == true && lastStage.controlOption?.finally == true) {
+                val message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_FINAL_STAGE_CANNOT_CANCEL)
+                buildLogPrinter.addRedLine(
+                    buildId = buildId,
+                    message = "$message userId:$userId",
+                    tag = "startVM-0",
+                    jobId = "0",
+                    executeCount = lastStage.executeCount
+                )
+
+                throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_FINAL_STAGE_CANNOT_CANCEL,
+                    defaultMessage = "Cannot cancel the running [final stage]",
                     params = arrayOf(buildId)
                 )
             }

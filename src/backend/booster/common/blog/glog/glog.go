@@ -833,7 +833,7 @@ func (sb *syncBuffer) Write(p []byte) (n int, err error) {
 	if err != nil {
 		sb.logger.exit(err)
 	}
-	return
+	return n, err
 }
 
 // rotateFile closes the syncBuffer's file and starts a new one.

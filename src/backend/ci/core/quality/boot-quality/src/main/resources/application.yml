@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: quality${service-suffix}
     desc: DevOps Quality Service

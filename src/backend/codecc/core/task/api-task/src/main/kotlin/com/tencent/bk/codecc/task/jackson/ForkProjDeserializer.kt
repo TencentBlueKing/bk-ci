@@ -15,9 +15,9 @@ class ForkProjDeserializer : JsonDeserializer<ForkProjModel>() {
     }
 
     override fun deserialize(jp: JsonParser, context: DeserializationContext): ForkProjModel? {
-        return try{
+        return try {
             jp.readValueAs(ForkProjModel::class.java)
-        } catch (e : Exception) {
+        } catch (e: Exception) {
             null
         }
     }

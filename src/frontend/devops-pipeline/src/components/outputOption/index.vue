@@ -73,7 +73,7 @@
             this.init()
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestReportList'
             ]),
             async init () {

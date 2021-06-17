@@ -46,7 +46,7 @@
                     <p>{{ $t('editPage.noAtomVersion') }}</p>
                 </div>
 
-                <div class="quality-setting-tips" v-if="showSetRuleTips">
+                <!-- <div class="quality-setting-tips" v-if="showSetRuleTips">
                     <div class="quality-setting-desc">
                         {{ $t('details.quality.canSet') }}
                         <span class="quality-rule-link" @click="toSetRule()">{{ $t('details.quality.settingNow') }}
@@ -55,7 +55,7 @@
                     </div>
                     <div class="refresh-btn" v-if="isSetted && !refreshLoading" @click="refresh()">{{ $t('details.quality.reflashSetting') }}</div>
                     <i class="devops-icon icon-circle-2-1 executing-job" v-if="isSetted && refreshLoading"></i>
-                </div>
+                </div> -->
                 <qualitygate-tips v-if="showRuleList" :relative-rule-list="renderRelativeRuleList"></qualitygate-tips>
 
                 <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }">
@@ -178,7 +178,7 @@
             }
         },
         computed: {
-            ...mapState('soda', [
+            ...mapState('common', [
                 'ruleList',
                 'qualityAtom',
                 'templateRuleList',
@@ -409,7 +409,7 @@
                 'requestPipelineExecDetail'
             ]),
 
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'updateRefreshQualityLoading'
             ]),
 
@@ -482,7 +482,7 @@
                 }
             },
             requestInterceptAtom () {
-                this.$store.dispatch('soda/requestInterceptAtom', {
+                this.$store.dispatch('common/requestInterceptAtom', {
                     projectId: this.projectId,
                     pipelineId: this.pipelineId
                 })
@@ -491,14 +491,14 @@
                 try {
                     let res
                     if (this.isTemplatePanel) {
-                        res = await this.$store.dispatch('soda/requestTemplateCheckVersion', {
+                        res = await this.$store.dispatch('common/requestTemplateCheckVersion', {
                             projectId: this.projectId,
                             templateId: this.templateId,
                             atomCode: this.element.atomCode,
                             version
                         })
                     } else {
-                        res = await this.$store.dispatch('soda/requestPipelineCheckVersion', {
+                        res = await this.$store.dispatch('common/requestPipelineCheckVersion', {
                             projectId: this.projectId,
                             pipelineId: this.pipelineId,
                             atomCode: this.element.atomCode,
@@ -565,7 +565,7 @@
                 window.open(url, '_blank')
             },
             requestMatchTemplateRules () {
-                this.$store.dispatch('soda/requestMatchTemplateRuleList', {
+                this.$store.dispatch('common/requestMatchTemplateRuleList', {
                     projectId: this.projectId,
                     templateId: this.templateId
                 })

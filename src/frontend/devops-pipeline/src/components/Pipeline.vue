@@ -10,7 +10,7 @@
         </header>
         <div v-if="pipeline" class="scroll-container">
             <div class="scroll-wraper">
-                <stages :stages="pipeline.stages" :editable="pipelineEditable" :can-skip-element="canSkipElement" :is-preview="isPreview"></stages>
+                <stages :key="pipeline.name" :stages="pipeline.stages" :editable="pipelineEditable" :can-skip-element="canSkipElement" :is-preview="isPreview"></stages>
             </div>
         </div>
 
@@ -133,6 +133,7 @@
                 'editingElementPos',
                 'isStagePopupShow',
                 'insertStageIndex',
+                'insertStageIsFinally',
                 'isAddParallelContainer',
                 'showStageReviewPanel'
             ]),
@@ -241,12 +242,17 @@
             },
             insert (type) {
                 if (!this.isStagePopupShow) return
-                const { pipeline, insertStageIndex, isAddParallelContainer, setInertStageIndex } = this
+                const { pipeline, insertStageIndex, isAddParallelContainer, insertStageIsFinally, setInertStageIndex } = this
                 if (!isAddParallelContainer) {
                     this.addStage({
                         stages: pipeline.stages,
-                        insertStageIndex
+                        insertStageIndex,
+                        insertStageIsFinally
                     })
+                    if (insertStageIsFinally) {
+                        const element = document.getElementsByClassName('bk-tab-section')[0]
+                        element && (element.scrollLeft = element.scrollWidth + 300)
+                    }
                     setInertStageIndex({
                         insertStageIndex: insertStageIndex + 1
                     })

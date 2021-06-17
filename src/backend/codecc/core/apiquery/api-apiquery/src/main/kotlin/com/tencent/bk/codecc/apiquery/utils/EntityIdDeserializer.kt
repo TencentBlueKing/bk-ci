@@ -6,14 +6,14 @@ import com.fasterxml.jackson.databind.JsonDeserializer
 
 class EntityIdDeserializer : JsonDeserializer<String>() {
     override fun deserialize(jp: JsonParser, ctxt: DeserializationContext): String {
-        return try{
+        return try {
             val map = jp.readValueAs(Map::class.java)
-            if(!map.isNullOrEmpty()){
+            if (!map.isNullOrEmpty()) {
                 map["\$oid"] as String
             } else {
                 ""
             }
-        } catch (e : Exception){
+        } catch (e: Exception) {
             ""
         }
     }

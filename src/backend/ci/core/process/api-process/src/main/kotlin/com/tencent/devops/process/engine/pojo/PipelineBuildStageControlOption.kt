@@ -35,5 +35,6 @@ import com.tencent.devops.common.pipeline.option.StageControlOption
  */
 data class PipelineBuildStageControlOption(
     val stageControlOption: StageControlOption,
+    val finally: Boolean = false,
     val fastKill: Boolean? = false
 )

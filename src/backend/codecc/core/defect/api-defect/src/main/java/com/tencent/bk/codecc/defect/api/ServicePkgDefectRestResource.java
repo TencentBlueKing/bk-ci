@@ -12,6 +12,7 @@
 
 package com.tencent.bk.codecc.defect.api;
 
+import com.tencent.bk.codecc.defect.vo.CLOCDefectQueryRspInfoVO;
 import com.tencent.bk.codecc.defect.vo.ToolClocRspVO;
 import com.tencent.bk.codecc.defect.vo.ToolDefectRspVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectExtReqVO;
@@ -20,7 +21,7 @@ import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
 import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectRespVO;
 import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectVO;
 import com.tencent.bk.codecc.defect.vo.openapi.TaskOverviewDetailRspVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -30,7 +31,7 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_TASK_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
 
 /**
  * 告警相关接口
@@ -47,9 +48,9 @@ public interface ServicePkgDefectRestResource
     @ApiOperation("查询工具告警清单")
     @Path("/list")
     @POST
-    CodeCCResult<ToolDefectRspVO> queryToolDefectList(
+    Result<ToolDefectRspVO> queryToolDefectList(
             @ApiParam(value = "任务ID", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
             @ApiParam(value = "查询参数详情", required = true)
             @Valid DefectQueryReqVO defectQueryReqVO,
@@ -70,15 +71,34 @@ public interface ServicePkgDefectRestResource
     @ApiOperation("查询代码行数信息")
     @Path("/codeLine/taskId/{taskId}")
     @POST
-    CodeCCResult<ToolClocRspVO> queryCodeLine(
+    Result<ToolClocRspVO> queryCodeLine(
             @ApiParam(value = "任务id", required = true)
             @PathParam(value = "taskId")
-            Long taskId);
+            Long taskId,
+            @ApiParam(value = "工具名称", required = true)
+            @QueryParam(value = "toolName")
+            @DefaultValue("CLOC")
+            String toolName);
+
+
+    @ApiOperation("通过task_id和语言查询代码行信息")
+    @Path("/codeLine/taskId/{taskId}/toolName/{toolName}/language/{language}")
+    @GET
+    Result<CLOCDefectQueryRspInfoVO> queryCodeLineByTaskIdAndLanguge(
+            @ApiParam(value = "任务id", required = true)
+            @PathParam(value = "taskId")
+                    Long taskId,
+            @ApiParam(value = "工具名称", required = true)
+            @PathParam(value = "toolName")
+                    String toolName,
+            @ApiParam(value = "语言", required = true)
+            @PathParam(value = "language")
+                    String language);
 
     @ApiOperation("批量统计任务告警概览情况")
     @Path("/statistics/overview")
     @POST
-    CodeCCResult<TaskOverviewDetailRspVO> queryTaskOverview(
+    Result<TaskOverviewDetailRspVO> queryTaskOverview(
             @ApiParam(value = "查询参数详情", required = true) @Valid DeptTaskDefectReqVO deptTaskDefectReqVO,
             @ApiParam(value = "页数") @QueryParam(value = "pageNum") Integer pageNum,
             @ApiParam(value = "每页数量") @QueryParam(value = "pageSize") Integer pageSize,
@@ -88,7 +108,7 @@ public interface ServicePkgDefectRestResource
     @ApiOperation("批量获取个性化任务告警概览情况")
     @Path("/statistics/custom")
     @GET
-    CodeCCResult<TaskOverviewDetailRspVO> queryCustomTaskOverview(
+    Result<TaskOverviewDetailRspVO> queryCustomTaskOverview(
             @ApiParam(value = "个性化任务创建来源") @QueryParam(value = "customProjSource") String customProjSource,
             @ApiParam(value = "页数") @QueryParam(value = "pageNum") Integer pageNum,
             @ApiParam(value = "每页数量") @QueryParam(value = "pageSize") Integer pageSize,

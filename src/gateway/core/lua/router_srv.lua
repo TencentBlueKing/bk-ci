@@ -15,39 +15,17 @@
 -- NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
---- 是否在白名单里面
-if (ngx.var.whitelist_deny and ngx.var.whitelist_deny ~= "") then
-    ngx.log(ngx.ERR, "owner_uin is not in whitelist!")
-    ngx.exit(423)
+-- 频率限制
+if not accessControlUtil:isAccess() then
+    ngx.log(ngx.ERR, "request excess!")
+    ngx.exit(429)
     return
 end
 
--- 访问限制的工具
-local access_util = nil
-
--- 用户请求类型访问频率限制
-if ngx.var.access_type == 'user' then
-    access_util = require 'access_control_user'
-end
--- ip地址请求类型访问频率限制
-if ngx.var.access_type == 'build' or ngx.var.access_type == 'external' then
-    access_util = require 'access_control_ip'
-end
-
--- report服务和bkrepo服务不做频率限制
-if ngx.var.service == 'report' or ngx.var.service == 'bkrepo' or ngx.var.service == 'schedule' or ngx.var.service ==
-    'task' then
-    access_util = nil
-end
-
--- 限制访问频率
-if access_util then
-    local access_result = access_util:isAccess()
-    if not access_result then
-        ngx.log(ngx.ERR, "request excess!")
-        ngx.exit(503)
-        return
-    end
+-- 安全限制
+if not securityUtil:isSafe() then
+    ngx.log(ngx.ERR, "unsafe request")
+    ngx.exit(422)
 end
 
 -- 获取服务名称

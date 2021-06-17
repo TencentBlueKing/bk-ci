@@ -9,9 +9,11 @@ import com.tencent.bk.codecc.apiquery.defect.model.LintStatisticModel
 import com.tencent.bk.codecc.apiquery.utils.PageUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.BasicQuery
 import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -39,16 +41,11 @@ class StatisticDao @Autowired constructor(
             Criteria.where("task_id").`in`(taskIds).and("tool_name").`is`(toolName)
         }
         query.addCriteria(criteria)
-        if (null != startTime && null != endTime)
-        {
+        if (null != startTime && null != endTime) {
             query.addCriteria(Criteria.where("time").gte(startTime).lt(endTime))
-        }
-        else if (null != startTime)
-        {
+        } else if (null != startTime) {
             query.addCriteria(Criteria.where("time").gte(startTime))
-        }
-        else if (null != endTime)
-        {
+        } else if (null != endTime) {
             query.addCriteria(Criteria.where("time").lt(endTime))
         }
         if (null != pageable) {
@@ -78,16 +75,11 @@ class StatisticDao @Autowired constructor(
             Criteria.where("task_id").`in`(taskIds).and("tool_name").`is`(toolName)
         }
         query.addCriteria(criteria)
-        if (null != startTime && null != endTime)
-        {
+        if (null != startTime && null != endTime) {
             query.addCriteria(Criteria.where("time").gte(startTime).lt(endTime))
-        }
-        else if (null != startTime)
-        {
+        } else if (null != startTime) {
             query.addCriteria(Criteria.where("time").gte(startTime))
-        }
-        else if (null != endTime)
-        {
+        } else if (null != endTime) {
             query.addCriteria(Criteria.where("time").lt(endTime))
         }
         if (null != buildId) {
@@ -98,7 +90,6 @@ class StatisticDao @Autowired constructor(
         }
         return defectMongoTemplate.find(query, LintStatisticModel::class.java, "t_lint_statistic")
     }
-
 
     /**
      * 通过任务id清单查询圈复杂度告警统计信息
@@ -115,16 +106,11 @@ class StatisticDao @Autowired constructor(
         PageUtils.getFilterFields(filterFields, fieldsObj)
         val query = BasicQuery(BasicDBObject(), fieldsObj)
         query.addCriteria(Criteria.where("task_id").`in`(taskIds))
-        if (null != startTime && null != endTime)
-        {
+        if (null != startTime && null != endTime) {
             query.addCriteria(Criteria.where("time").gte(startTime).lt(endTime))
-        }
-        else if (null != startTime)
-        {
+        } else if (null != startTime) {
             query.addCriteria(Criteria.where("time").gte(startTime))
-        }
-        else if (null != endTime)
-        {
+        } else if (null != endTime) {
             query.addCriteria(Criteria.where("time").lt(endTime))
         }
         if (null != buildId) {
@@ -135,7 +121,6 @@ class StatisticDao @Autowired constructor(
         }
         return defectMongoTemplate.find(query, CCNStatisticModel::class.java, "t_ccn_statistic")
     }
-
 
     /**
      * 通过任务id清单查询重复率告警统计信息
@@ -151,16 +136,11 @@ class StatisticDao @Autowired constructor(
         PageUtils.getFilterFields(filterFields, fieldsObj)
         val query = BasicQuery(BasicDBObject(), fieldsObj)
         query.addCriteria(Criteria.where("task_id").`in`(taskIds))
-        if (null != startTime && null != endTime)
-        {
+        if (null != startTime && null != endTime) {
             query.addCriteria(Criteria.where("time").gte(startTime).lt(endTime))
-        }
-        else if (null != startTime)
-        {
+        } else if (null != startTime) {
             query.addCriteria(Criteria.where("time").gte(startTime))
-        }
-        else if (null != endTime)
-        {
+        } else if (null != endTime) {
             query.addCriteria(Criteria.where("time").lt(endTime))
         }
         if (null != pageable) {
@@ -174,6 +154,7 @@ class StatisticDao @Autowired constructor(
      */
     fun findCLOCByTaskIdInAndToolName(
         taskIds: List<Long>,
+        toolName: String,
         startTime: Long?,
         endTime: Long?,
         filterFields: List<String>?,
@@ -183,17 +164,13 @@ class StatisticDao @Autowired constructor(
         val fieldsObj = BasicDBObject()
         PageUtils.getFilterFields(filterFields, fieldsObj)
         val query = BasicQuery(BasicDBObject(), fieldsObj)
-        query.addCriteria(Criteria.where("task_id").`in`(taskIds))
-        if (null != startTime && null != endTime)
-        {
+        query.addCriteria(Criteria.where("task_id").`in`(taskIds)
+                .and("tool_name").`is`(toolName))
+        if (null != startTime && null != endTime) {
             query.addCriteria(Criteria.where("updated_date").gte(startTime).lt(endTime))
-        }
-        else if (null != startTime)
-        {
+        } else if (null != startTime) {
             query.addCriteria(Criteria.where("updated_date").gte(startTime))
-        }
-        else if (null != endTime)
-        {
+        } else if (null != endTime) {
             query.addCriteria(Criteria.where("updated_date").lt(endTime))
         }
         if (null != buildId) {
@@ -205,6 +182,12 @@ class StatisticDao @Autowired constructor(
         return defectMongoTemplate.find(query, CLOCStatisticModel::class.java, "t_cloc_statistic")
     }
 
+    fun findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId: Long, toolName: String): LintStatisticModel {
+        val query = Query()
+        query.addCriteria(Criteria.where("task_id").`is`(taskId).and("tool_name").`is`(toolName))
+        query.with(Sort(Sort.Direction.DESC, "time"))
+        val statisticModels = defectMongoTemplate.find(query, LintStatisticModel::class.java, "t_lint_statistic")
 
-
+        return if (statisticModels.isEmpty()) LintStatisticModel() else statisticModels.first()
+    }
 }

@@ -4,15 +4,15 @@ import io.swagger.annotations.ApiModelProperty
 
 data class TriggerPipelineRsp(
     @ApiModelProperty("项目id")
-    val projectId : String,
+    val projectId: String,
     @ApiModelProperty("流水线id")
-    val pipelineId : String,
+    val pipelineId: String,
     @ApiModelProperty("任务id")
-    val taskId : Long,
+    val taskId: Long,
     @ApiModelProperty("工具清单")
-    val toolList : List<String>,
+    val toolList: List<String>,
     @ApiModelProperty("是否首次触发")
-    val firstTrigger : String,
+    val firstTrigger: String,
     @ApiModelProperty("codecc构建id")
-    val codeccBuildId : String
+    val codeccBuildId: String
 )

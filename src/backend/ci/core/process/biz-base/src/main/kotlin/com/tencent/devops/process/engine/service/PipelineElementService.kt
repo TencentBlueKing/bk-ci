@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
@@ -49,6 +50,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PR
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -66,12 +68,16 @@ class PipelineElementService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineElementService::class.java)
     }
 
+    @Value("\${pipeline.atom.postPrompt:POST：}")
+    private val postPrompt: String = "POST："
+
     fun handlePostElements(
         projectId: String,
         elementItemList: MutableList<ElementBaseInfo>,
         originalElementList: List<Element>,
         finalElementList: MutableList<Element>,
-        startValues: Map<String, String>? = null
+        startValues: Map<String, String>? = null,
+        finallyStage: Boolean
     ): MutableList<Element> {
         logger.info("handlePostElements projectId:$projectId,elementItemList:$elementItemList")
         val allPostElements = mutableListOf<ElementPostInfo>()
@@ -103,6 +109,34 @@ class PipelineElementService @Autowired constructor(
                 }
             }
         }
+        if (noCacheAtomItems.isNotEmpty()) {
+            handleNoCachePostElement(
+                projectId = projectId,
+                noCacheAtomItems = noCacheAtomItems,
+                noCacheElementMap = noCacheElementMap,
+                allPostElements = allPostElements
+            )
+        }
+        // 将post操作的element倒序排序以满足业务需要
+        allPostElements.sortByDescending { it.parentElementJobIndex }
+        allPostElements.forEach { elementPostInfo ->
+            addPostElement(
+                elementPostInfo = elementPostInfo,
+                originalElementList = originalElementList,
+                startValues = startValues,
+                finalElementList = finalElementList,
+                finallyStage = finallyStage
+            )
+        }
+        return finalElementList
+    }
+
+    private fun handleNoCachePostElement(
+        projectId: String,
+        noCacheAtomItems: MutableSet<AtomPostReqItem>,
+        noCacheElementMap: MutableMap<String, ElementBaseInfo>,
+        allPostElements: MutableList<ElementPostInfo>
+    ) {
         val getPostAtomsResult =
             client.get(ServiceMarketAtomResource::class).getPostAtoms(projectId, noCacheAtomItems)
         if (getPostAtomsResult.isNotOk()) {
@@ -114,39 +148,39 @@ class PipelineElementService @Autowired constructor(
         val atomPostResp = getPostAtomsResult.data
         val atomPostAtoms = atomPostResp?.postAtoms
         if (atomPostAtoms != null && atomPostAtoms.isNotEmpty()) {
-            noCacheElementMap.forEach { (elementId, elementItem) ->
-                atomPostAtoms.forEach { atomPostInfo ->
-                    if (elementItem.atomCode == atomPostInfo.atomCode && elementItem.version == atomPostInfo.version) {
-                        // 把redis中未缓存的带post操作的element加入集合
-                        allPostElements.add(ElementPostInfo(
+            addNoCachePostElement(noCacheElementMap, atomPostAtoms, allPostElements)
+        }
+    }
+
+    private fun addNoCachePostElement(
+        noCacheElementMap: MutableMap<String, ElementBaseInfo>,
+        atomPostAtoms: List<AtomPostInfo>,
+        allPostElements: MutableList<ElementPostInfo>
+    ) {
+        noCacheElementMap.forEach { (elementId, elementItem) ->
+            atomPostAtoms.forEach { atomPostInfo ->
+                if (elementItem.atomCode == atomPostInfo.atomCode && elementItem.version == atomPostInfo.version) {
+                    // 把redis中未缓存的带post操作的element加入集合
+                    allPostElements.add(
+                        ElementPostInfo(
                             postEntryParam = atomPostInfo.postEntryParam,
                             postCondition = atomPostInfo.postCondition,
                             parentElementId = elementId,
                             parentElementName = elementItem.elementName,
                             parentElementJobIndex = elementItem.elementJobIndex
-                        ))
-                    }
+                        )
+                    )
                 }
             }
         }
-        // 将post操作的element倒序排序以满足业务需要
-        allPostElements.sortByDescending { it.parentElementJobIndex }
-        allPostElements.forEach { elementPostInfo ->
-            addPostElement(
-                elementPostInfo = elementPostInfo,
-                originalElementList = originalElementList,
-                startValues = startValues,
-                finalElementList = finalElementList
-            )
-        }
-        return finalElementList
     }
 
     private fun addPostElement(
         elementPostInfo: ElementPostInfo,
         originalElementList: List<Element>,
         startValues: Map<String, String>?,
-        finalElementList: MutableList<Element>
+        finalElementList: MutableList<Element>,
+        finallyStage: Boolean
     ) {
         val originAtomElement = originalElementList[elementPostInfo.parentElementJobIndex]
         var originElementId = originAtomElement.id
@@ -156,7 +190,7 @@ class PipelineElementService @Autowired constructor(
             originAtomElement.id = originElementId
         } else {
             if (startValues != null) {
-                val status = originAtomElement.initStatus(params = startValues)
+                val status = originAtomElement.initStatus(params = startValues, rerun = finallyStage)
                 // 如果原插件执行时选择跳过，那么插件的post操作也要跳過
                 if (status == BuildStatus.SKIP) {
                     elementStatus = BuildStatus.SKIP.name
@@ -188,9 +222,10 @@ class PipelineElementService @Autowired constructor(
             elementPostInfo = elementPostInfo
         )
         // 生成post操作的element
+        val postElementName = "$postPrompt$elementName"
         if (originAtomElement is MarketBuildAtomElement) {
             val marketBuildAtomElement = MarketBuildAtomElement(
-                name = elementName,
+                name = postElementName,
                 id = modelTaskIdGenerator.getNextId(),
                 status = elementStatus,
                 atomCode = originAtomElement.getAtomCode(),
@@ -201,7 +236,7 @@ class PipelineElementService @Autowired constructor(
             finalElementList.add(marketBuildAtomElement)
         } else if (originAtomElement is MarketBuildLessAtomElement) {
             val marketBuildLessAtomElement = MarketBuildLessAtomElement(
-                name = elementName,
+                name = postElementName,
                 id = modelTaskIdGenerator.getNextId(),
                 status = elementStatus,
                 atomCode = originAtomElement.getAtomCode(),

@@ -28,7 +28,7 @@ package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameVO;
 import com.tencent.devops.common.api.annotation.ServiceInterface;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -39,6 +39,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -57,7 +58,7 @@ public interface ServiceScmFileCacheRestResource {
     @ApiOperation("获取上报文件scm blame信息")
     @Path("/scmBlame/list")
     @GET
-    CodeCCResult<Map<String, ScmBlameVO>> loadAuthorInfoMap(
+    Result<Map<String, ScmBlameVO>> loadAuthorInfoMap(
         @ApiParam(value = "任务id", required = true)
         @QueryParam("taskId")
             long taskId,
