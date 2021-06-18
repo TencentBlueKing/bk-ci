@@ -55,6 +55,14 @@ class WebhookEventListener constructor(
 ) {
 
     fun handleCommitEvent(event: ICodeWebhookEvent) {
+        val traceId = MDC.get(TraceTag.BIZID)
+        if (traceId.isNullOrEmpty()) {
+            if (!event.traceId.isNullOrEmpty()) {
+                MDC.put(TraceTag.BIZID, event.traceId)
+            } else {
+                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            }
+        }
         logger.info("Receive WebhookEvent from MQ [${event.commitEventType}|${event.requestContent}]|[${event.event}]")
         var result = false
         try {
@@ -62,14 +70,6 @@ class WebhookEventListener constructor(
                 codeType = event.commitEventType.name,
                 requestContent = event.requestContent
             )
-            val traceId = MDC.get(TraceTag.BIZID)
-            if (traceId.isNullOrEmpty()) {
-                if (!event.traceId.isNullOrEmpty()) {
-                    MDC.put(TraceTag.BIZID, event.traceId)
-                } else {
-                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-                }
-            }
             when (event.commitEventType) {
                 CommitEventType.SVN -> pipelineBuildService.externalCodeSvnBuild(event.requestContent)
                 CommitEventType.GIT -> {
@@ -148,6 +148,14 @@ class WebhookEventListener constructor(
     }
 
     fun handleGithubCommitEvent(event: GithubWebhookEvent) {
+        val traceId = MDC.get(TraceTag.BIZID)
+        if (traceId.isNullOrEmpty()) {
+            if (!event.traceId.isNullOrEmpty()) {
+                MDC.put(TraceTag.BIZID, event.traceId)
+            } else {
+                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            }
+        }
         logger.info("Receive Github from MQ [GITHUB|${event.githubWebhook.event}]")
         val thisGithubWebhook = event.githubWebhook
         var result = false
@@ -156,14 +164,6 @@ class WebhookEventListener constructor(
             requestContent = thisGithubWebhook.body
         )
         try {
-            val traceId = MDC.get(TraceTag.BIZID)
-            if (traceId.isNullOrEmpty()) {
-                if (!event.traceId.isNullOrEmpty()) {
-                    MDC.put(TraceTag.BIZID, event.traceId)
-                } else {
-                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-                }
-            }
             pipelineBuildService.externalCodeGithubBuild(
                 eventType = thisGithubWebhook.event,
                 guid = thisGithubWebhook.guid,
