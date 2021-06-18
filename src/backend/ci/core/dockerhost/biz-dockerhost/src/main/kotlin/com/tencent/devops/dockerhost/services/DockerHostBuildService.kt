@@ -34,6 +34,7 @@ import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.AuthConfigurations
+import com.github.dockerjava.api.model.BlkioRateDevice
 import com.github.dockerjava.api.model.BuildResponseItem
 import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.Frame
@@ -203,6 +204,13 @@ class DockerHostBuildService(
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
+            val blkioRateDeviceWirte = BlkioRateDevice()
+                .withPath("/data")
+                .withRate(dockerHostConfig.blkioDeviceWriteBps)
+            val blkioRateDeviceRead = BlkioRateDevice()
+                .withPath("/data")
+                .withRate(dockerHostConfig.blkioDeviceReadBps)
+
             val containerName =
                 "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = httpLongDockerCli.createContainerCmd(imageName)
@@ -210,7 +218,15 @@ class DockerHostBuildService(
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge"))
+                .withHostConfig(HostConfig()
+                    .withMemory(dockerHostConfig.memory)
+                    .withMemorySwap(dockerHostConfig.memory)
+                    .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
+                    .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
+                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))
+                    .withBinds(binds)
+                    .withNetworkMode("bridge"))
                 .exec()
 
             logger.info("Created container $container")
@@ -517,13 +533,29 @@ class DockerHostBuildService(
             val containerName =
                 "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
 
+            val blkioRateDeviceWirte = BlkioRateDevice()
+                .withPath("/data")
+                .withRate(dockerHostConfig.blkioDeviceWriteBps)
+            val blkioRateDeviceRead = BlkioRateDevice()
+                .withPath("/data")
+                .withRate(dockerHostConfig.blkioDeviceReadBps)
+
             val container = if (dockerRunParam.command.isEmpty() || dockerRunParam.command.equals("[]")) {
                 httpLongDockerCli.createContainerCmd(imageName)
                     .withName(containerName)
                     .withEnv(env)
                     .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                     .withHostConfig(HostConfig()
-                        .withBinds(binds).withNetworkMode("bridge").withPortBindings(portBindings))
+                        .withBinds(binds)
+                        .withMemory(dockerHostConfig.memory)
+                        .withMemorySwap(dockerHostConfig.memory)
+                        .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
+                        .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
+                        .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                        .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))
+                        .withNetworkMode("bridge")
+                        .withPortBindings(portBindings)
+                    )
                     .withWorkingDir(dockerHostConfig.volumeWorkspace)
                     .exec()
             } else {
@@ -684,7 +716,7 @@ class DockerHostBuildService(
         val cpuPeriod = dockerHostConfig.elasticityCpuPeriod ?: 10000
         val cpuQuota = dockerHostConfig.elasticityCpuQuota ?: 80000
         httpDockerCli.updateContainerCmd(containerId)
-            .withMemoryReservation(memReservation)
+            .withMemory(memReservation)
             .withCpuPeriod(cpuPeriod)
             .withCpuQuota(cpuQuota).exec()
         logger.info("<<<< Trigger container reset, containerId: $containerId," +
