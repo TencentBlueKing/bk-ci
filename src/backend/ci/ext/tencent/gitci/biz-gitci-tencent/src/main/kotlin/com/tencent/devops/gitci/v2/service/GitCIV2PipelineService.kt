@@ -183,6 +183,7 @@ class GitCIV2PipelineService @Autowired constructor(
                 pipelineId = pipelineId,
                 enabled = enabled
             ) == 1
+            // TODO 事件推送 - 流水线启用/停用
         } catch (e: Exception) {
             logger.error("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled error ${e.message}")
             return false
