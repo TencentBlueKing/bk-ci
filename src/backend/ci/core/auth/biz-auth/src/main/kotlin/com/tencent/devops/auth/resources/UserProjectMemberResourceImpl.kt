@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.api.user.UserProjectMemberResource
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
@@ -90,5 +91,9 @@ class UserProjectMemberResourceImpl @Autowired constructor(
             managerGroup = managerGroup
         ))
         return Result(true)
+    }
+
+    override fun getUserAllGroup(userId: String, projectId: Int): Result<List<ManagerRoleGroupInfo>?> {
+        return Result(permissionRoleMemberService.getUserGroups(projectId, userId))
     }
 }

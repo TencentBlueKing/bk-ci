@@ -32,6 +32,7 @@ import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleMemberDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
@@ -145,6 +146,13 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         )
         projectMemberCache.put(projectId.toString(), result)
         return result
+    }
+
+    override fun getUserGroups(projectId: Int, userId: String): List<ManagerRoleGroupInfo>? {
+        logger.info("getUserGroup: $projectId $userId")
+        val groupInfos = iamManagerService.getUserGroup(projectId, userId)
+        logger.info("getUserGroup: $projectId $userId $groupInfos")
+        return groupInfos
     }
 
     abstract fun checkUser(userId: String)

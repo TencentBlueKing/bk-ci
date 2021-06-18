@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.api.user
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
@@ -123,4 +124,16 @@ interface UserProjectMemberResource {
         @QueryParam("type")
         type: ManagerScopesEnum
     ): Result<Boolean>
+
+    @GET
+    @Path("projectIds/{projectId}/user/groups")
+    @ApiOperation("获取指定用户指定项目下的用户组")
+    fun getUserAllGroup(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "项目标识", required = true)
+        @PathParam("projectId")
+        projectId: Int
+    ): Result<List<ManagerRoleGroupInfo>?>
 }
