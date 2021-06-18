@@ -27,12 +27,16 @@
 
 package com.tencent.devops.gitci.v2.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
+import com.tencent.devops.common.websocket.pojo.NotifyPost
+import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
@@ -42,6 +46,7 @@ import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.ws.GitCIPipelineWebsocketPush
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -125,6 +130,11 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 version = ymlVersion
             )
         }
+        pushWebSocket(
+            projectId = "git_${gitCIBasicSetting.gitProjectId}",
+            pipelineId = pipeline.pipelineId,
+            userId = event.userId
+        )
     }
 
     fun startBuild(
@@ -240,5 +250,28 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
             logger.error("install atom($atomCode) failed, exception:", e)
             // 可能之前安装过，继续执行不退出
         }
+    }
+
+    fun pushWebSocket(projectId: String, pipelineId: String, userId: String) {
+        webSocketDispatcher.dispatch(
+            GitCIPipelineWebsocketPush(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                pushType = WebSocketType.STATUS,
+                redisOperation = redisOperation,
+                objectMapper = objectMapper,
+                page = "",
+                notifyPost = NotifyPost(
+                    module = "gitci",
+                    level = 0,
+                    code = 200,
+                    page = "",
+                    webSocketType = WebSocketType.changWebType(WebSocketType.STATUS),
+                    message = "",
+                    dealUrl = null
+                )
+            )
+        )
     }
 }

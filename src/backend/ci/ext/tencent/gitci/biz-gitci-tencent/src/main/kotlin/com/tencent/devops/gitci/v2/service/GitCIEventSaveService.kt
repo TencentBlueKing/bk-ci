@@ -33,6 +33,10 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
+import com.tencent.devops.common.websocket.pojo.NotifyPost
+import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
@@ -42,6 +46,7 @@ import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.dao.GitUserMessageDao
+import com.tencent.devops.gitci.ws.GitCINotifyWebsocketPush
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -240,7 +245,26 @@ class GitCIEventSaveService @Autowired constructor(
                     messageId = event.id.toString(),
                     messageTitle = messageTitle
                 )
-                // TODO 事件推送 - 新增用户未读消息
+                webSocketDispatcher.dispatch(
+                    GitCINotifyWebsocketPush(
+                        buildId = null,
+                        projectId = "git_$gitProjectId",
+                        userId = userId,
+                        pushType = WebSocketType.AMD,
+                        redisOperation = redisOperation,
+                        objectMapper = objectMapper,
+                        page = "",
+                        notifyPost = NotifyPost(
+                            module = "gitci",
+                            level = 0,
+                            dealUrl = null,
+                            code = 200,
+                            message = "",
+                            webSocketType = WebSocketType.changWebType(WebSocketType.AMD),
+                            page = ""
+                        )
+                    )
+                )
             }
         }
         return messageId

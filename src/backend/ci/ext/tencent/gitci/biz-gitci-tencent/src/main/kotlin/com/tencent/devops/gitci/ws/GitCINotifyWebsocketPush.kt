@@ -14,7 +14,6 @@ import com.tencent.devops.common.websocket.utils.RedisUtlis
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
 class GitCINotifyWebsocketPush (
     val buildId: String?,
-    val pipelineId: String,
     val projectId: String,
     override val userId: String,
     override val pushType: WebSocketType,
@@ -35,7 +34,7 @@ class GitCINotifyWebsocketPush (
     override fun buildMqMessage(): SendMessage? {
         return NotifyMessage(
             buildId = null,
-            pipelineId = pipelineId,
+            pipelineId = "",
             projectId = projectId,
             userId = userId,
             sessionList = findSession(page ?: "") ?: emptyList(),
