@@ -118,7 +118,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         return exportModelToFile(modelAndSetting, settingInfo.pipelineName)
     }
 
-    fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String? {
+    fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String {
         val permissionCheck = pipelinePermissionService.checkPipelinePermission(
             userId = userId,
             projectId = projectId,

@@ -45,31 +45,9 @@ config = {
     suffix = "-__BK_CI_CONSUL_DISCOVERY_TAG__",
     nodes_url = "/v1/catalog/nodes"
   },
-  ns_gray = {
-    ip = {
-      "__BK_CI_CONSUL_GRAY_IP__"
-    },
-    port = __BK_CI_CONSUL_DNS_PORT__,
-    http_port = __BK_CI_CONSUL_PORT__,
-    domain = "__BK_CI_CONSUL_DOMAIN__",
-    tag = "__BK_CI_CONSUL_DISCOVERY_TAG__",
-    suffix = "-__BK_CI_CONSUL_DISCOVERY_TAG__",
-    nodes_url = "/v1/catalog/nodes"
-  },
   ns_devnet = {
     ip = {
       "__BK_CI_CONSUL_DEVNET_IP__"
-    },
-    port = __BK_CI_CONSUL_DNS_PORT__,
-    http_port = __BK_CI_CONSUL_PORT__,
-    domain = "__BK_CI_CONSUL_DOMAIN__",
-    tag = "__BK_CI_CONSUL_DISCOVERY_TAG__",
-    suffix = "-__BK_CI_CONSUL_DISCOVERY_TAG__",
-    nodes_url = "/v1/catalog/nodes"
-  },
-  ns_devnet_gray = {
-    ip = {
-      "__BK_CI_CONSUL_DEVNET_GRAY_IP__"
     },
     port = __BK_CI_CONSUL_DNS_PORT__,
     http_port = __BK_CI_CONSUL_PORT__,

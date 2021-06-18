@@ -53,25 +53,16 @@ end
 
 -- 获取灰度设置
 local cache_tail = ""
-local devops_gray = grayUtil:get_gray()
 local ns_config = nil
-if devops_gray ~= true then
-    if ngx.var.devops_region ~= "DEVNET" then
-        ns_config = config.ns
-        cache_tail = ".normal.idc"
-    else
-        ns_config = config.ns_devnet
-        cache_tail = ".normal.devnet"
-    end
+
+if ngx.var.devops_region ~= "DEVNET" then
+    ns_config = config.ns
+    cache_tail = ".normal.idc"
 else
-    if ngx.var.devops_region ~= "DEVNET" then
-        ns_config = config.ns_gray
-        cache_tail = ".gray.idc"
-    else
-        ns_config = config.ns_devnet_gray
-        cache_tail = ".gray.devnet"
-    end
+    ns_config = config.ns_devnet
+    cache_tail = ".normal.devnet"
 end
+
 if not ns_config.ip then
     ngx.log(ngx.ERR, "DNS ip not exist!")
     ngx.exit(503)

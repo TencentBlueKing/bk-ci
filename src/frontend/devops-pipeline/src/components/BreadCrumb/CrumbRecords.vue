@@ -1,7 +1,7 @@
 <template>
     <div class="record-list" v-if="records.length">
         <div class="search-area">
-            <input v-bk-focus="1" :disabled="searching" @input="handleInput" v-model.trim="searchValue" />
+            <input :placeholder="$t('searchForMore')" v-bk-focus="1" :disabled="searching" @compositionstart="handleCompositionStart" @compositionend="handleCompositionEnd" @input="handleInput" v-model.trim="searchValue" />
             <i class="devops-icon icon-search"></i>
         </div>
         <div class="record-list-searching-icon" v-if="searching">
@@ -44,12 +44,20 @@
         },
         data () {
             return {
-                searchValue: ''
+                searchValue: '',
+                isInputZH: false // 当前是否输入中文
             }
         },
         methods: {
             handleInput (e) {
+                if (this.isInputZH) return
                 this.$emit('searchInput', this.searchValue, e)
+            },
+            handleCompositionStart () {
+                this.isInputZH = true
+            },
+            handleCompositionEnd () {
+                this.isInputZH = false
             }
         }
     }
@@ -86,6 +94,9 @@
                 border: 1px solid #dde4eb;
                 border-radius: 2px;
                 color: #63656E;
+                &::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+                    color: #ccc;
+                }
             }
             > i.icon-search {
                 position: absolute;

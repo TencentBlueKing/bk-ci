@@ -27,8 +27,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.util.DHUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -55,22 +53,14 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.process.utils.PROJECT_NAME
-import com.tencent.devops.ticket.api.ServiceCredentialResource
-import com.tencent.devops.ticket.pojo.Credential
-import com.tencent.devops.ticket.pojo.enums.CredentialType
-import com.tencent.devops.ticket.pojo.enums.Permission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Base64
 
 @Suppress("ALL")
 @Service
 class PipelineContextService@Autowired constructor(
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val client: Client
+    private val pipelineBuildDetailService: PipelineBuildDetailService
 ) {
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
 
@@ -86,170 +76,11 @@ class PipelineContextService@Autowired constructor(
                 }
             }
             buildCiContext(varMap, modelDetail, buildVar)
-            buildCredentialContext(buildVar, varMap)
         } catch (e: Throwable) {
             logger.error("Build context failed,", e)
         }
 
         return varMap
-    }
-
-    private fun buildCredentialContext(
-        buildVar: Map<String, String>,
-        varMap: MutableMap<String, String>
-    ) {
-        val userId = buildVar[PIPELINE_START_USER_ID]
-        val projectId = buildVar[PROJECT_NAME]
-        if (!userId.isNullOrBlank() && !projectId.isNullOrBlank()) {
-            val credentials = client.get(ServiceCredentialResource::class).hasPermissionList(
-                userId = userId,
-                projectId = projectId,
-                credentialTypesString = null,
-                permission = Permission.USE,
-                page = null,
-                pageSize = null,
-                keyword = null
-            ).data
-            if (credentials != null && credentials.records.isNotEmpty()) {
-                credentials.records.forEach { credential ->
-                    varMap["settings.${credential.credentialId}"] = credential.credentialId
-                    varMap.putAll(getKeyMap(projectId, credential))
-                }
-            }
-        }
-    }
-
-    private fun getKeyMap(projectId: String, credential: Credential): Map<String, String> {
-        val credentialMap = getCredential(projectId, credential.credentialId)
-
-        val keyMap = mutableMapOf<String, String>()
-        when (credential.credentialType) {
-            CredentialType.PASSWORD -> {
-                if (credentialMap["v1"] != null) {
-                    keyMap["settings.${credential.credentialId}.password"] = credentialMap["v1"]!!
-                }
-            }
-            CredentialType.ACCESSTOKEN -> {
-                if (credentialMap["v1"] != null) {
-                    keyMap["settings.${credential.credentialId}.access_token"] = credentialMap["v1"]!!
-                }
-            }
-            CredentialType.USERNAME_PASSWORD -> {
-                if (credentialMap["v1"] != null) {
-                    keyMap["settings.${credential.credentialId}.username"] = credentialMap["v1"]!!
-                }
-                if (credentialMap["v2"] != null) {
-                    keyMap["settings.${credential.credentialId}.password"] = credentialMap["v2"]!!
-                }
-            }
-            CredentialType.SECRETKEY -> {
-                if (credentialMap["v1"] != null) {
-                    keyMap["settings.${credential.credentialId}.secretKey"] = credentialMap["v1"]!!
-                }
-            }
-            CredentialType.APPID_SECRETKEY -> {
-                if (credentialMap["v1"] != null) {
-                    keyMap["settings.${credential.credentialId}.appId"] = credentialMap["v1"]!!
-                }
-                if (credentialMap["v2"] != null) {
-                    keyMap["settings.${credential.credentialId}.secretKey"] = credentialMap["v2"]!!
-                }
-            }
-            CredentialType.SSH_PRIVATEKEY -> {
-                if (credentialMap["v1"] != null) {
-                    keyMap["settings.${credential.credentialId}.privateKey"] = credentialMap["v1"]!!
-                }
-                if (credentialMap["v2"] != null) {
-                    keyMap["settings.${credential.credentialId}.passphrase"] = credentialMap["v2"]!!
-                }
-            }
-            CredentialType.TOKEN_SSH_PRIVATEKEY -> {
-                if (credentialMap["v1"] != null) {
-                    keyMap["settings.${credential.credentialId}.token"] = credentialMap["v1"]!!
-                }
-                if (credentialMap["v2"] != null) {
-                    keyMap["settings.${credential.credentialId}.privateKey"] = credentialMap["v2"]!!
-                }
-                if (credentialMap["v3"] != null) {
-                    keyMap["settings.${credential.credentialId}.passphrase"] = credentialMap["v3"]!!
-                }
-            }
-            CredentialType.TOKEN_USERNAME_PASSWORD -> {
-                if (credentialMap["v1"] != null) {
-                    keyMap["settings.${credential.credentialId}.token"] = credentialMap["v1"]!!
-                }
-                if (credentialMap["v2"] != null) {
-                    keyMap["settings.${credential.credentialId}.username"] = credentialMap["v2"]!!
-                }
-                if (credentialMap["v3"] != null) {
-                    keyMap["settings.${credential.credentialId}.password"] = credentialMap["v3"]!!
-                }
-            }
-            CredentialType.COS_APPID_SECRETID_SECRETKEY_REGION -> {
-                if (credentialMap["v1"] != null) {
-                    keyMap["settings.${credential.credentialId}.cosappId"] = credentialMap["v1"]!!
-                }
-                if (credentialMap["v2"] != null) {
-                    keyMap["settings.${credential.credentialId}.secretId"] = credentialMap["v2"]!!
-                }
-                if (credentialMap["v3"] != null) {
-                    keyMap["settings.${credential.credentialId}.secretKey"] = credentialMap["v3"]!!
-                }
-                if (credentialMap["v4"] != null) {
-                    keyMap["settings.${credential.credentialId}.region"] = credentialMap["v4"]!!
-                }
-            }
-            CredentialType.MULTI_LINE_PASSWORD -> {
-                if (credentialMap["v1"] != null) {
-                    keyMap["settings.${credential.credentialId}.password"] = credentialMap["v1"]!!
-                }
-            }
-        }
-        return keyMap
-    }
-
-    fun getCredential(
-        projectId: String,
-        credentialId: String
-    ): MutableMap<String, String> {
-        val pair = DHUtil.initKey()
-        val encoder = Base64.getEncoder()
-        val decoder = Base64.getDecoder()
-        val credentialInfo = client.get(ServiceCredentialResource::class).get(projectId, credentialId,
-            encoder.encodeToString(pair.publicKey)).data ?: return mutableMapOf()
-
-        val ticketMap = mutableMapOf<String, String>()
-        val v1 = String(DHUtil.decrypt(
-            decoder.decode(credentialInfo.v1),
-            decoder.decode(credentialInfo.publicKey),
-            pair.privateKey))
-        ticketMap["v1"] = v1
-
-        if (credentialInfo.v2 != null && credentialInfo.v2!!.isNotEmpty()) {
-            val v2 = String(DHUtil.decrypt(
-                decoder.decode(credentialInfo.v2),
-                decoder.decode(credentialInfo.publicKey),
-                pair.privateKey))
-            ticketMap["v2"] = v2
-        }
-
-        if (credentialInfo.v3 != null && credentialInfo.v3!!.isNotEmpty()) {
-            val v3 = String(DHUtil.decrypt(
-                decoder.decode(credentialInfo.v3),
-                decoder.decode(credentialInfo.publicKey),
-                pair.privateKey))
-            ticketMap["v3"] = v3
-        }
-
-        if (credentialInfo.v4 != null && credentialInfo.v4!!.isNotEmpty()) {
-            val v4 = String(DHUtil.decrypt(
-                decoder.decode(credentialInfo.v4),
-                decoder.decode(credentialInfo.publicKey),
-                pair.privateKey))
-            ticketMap["v4"] = v4
-        }
-
-        return ticketMap
     }
 
     private fun buildCiContext(
