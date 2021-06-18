@@ -62,7 +62,7 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
     }
 
     override fun getBranchName(event: GithubCreateEvent): String {
-       return org.eclipse.jgit.lib.Repository.shortenRefName(event.ref)
+        return org.eclipse.jgit.lib.Repository.shortenRefName(event.ref)
     }
 
     override fun getEventType(): CodeEventType {
