@@ -45,8 +45,8 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_PIPELINE_GROUP_V3"], description = "OPENAPI-流水线分组")
@@ -63,7 +63,7 @@ interface ApigwPipelineGroupResourceV3 {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
-        @QueryParam("projectId")
+        @PathParam("projectId")
         projectId: String
     ): Result<List<PipelineGroup>>
 
@@ -74,6 +74,7 @@ interface ApigwPipelineGroupResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(value = "流水线标签分组创建请求", required = true)
         pipelineGroup: PipelineGroupCreate
     ): Result<Boolean>
 
@@ -84,18 +85,19 @@ interface ApigwPipelineGroupResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(value = "流水线标签分组更新请求", required = true)
         pipelineGroup: PipelineGroupUpdate
     ): Result<Boolean>
 
     @ApiOperation("删除分组")
     @DELETE
-    @Path("/groups/")
+    @Path("/groups/{groupId}")
     fun deleteGroup(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("分组ID", required = true)
-        @QueryParam("groupId")
+        @PathParam("groupId")
         groupId: String
     ): Result<Boolean>
 
@@ -106,18 +108,19 @@ interface ApigwPipelineGroupResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(value = "流水线标签创建请求", required = true)
         pipelineLabel: PipelineLabelCreate
     ): Result<Boolean>
 
     @ApiOperation("删除标签")
     @DELETE
-    @Path("/labels/")
+    @Path("/labels/{labelId}")
     fun deleteLabel(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("标签ID", required = true)
-        @QueryParam("labelId")
+        @PathParam("labelId")
         labelId: String
     ): Result<Boolean>
 
@@ -128,6 +131,7 @@ interface ApigwPipelineGroupResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(value = "流水线标签更新请求", required = true)
         pipelineLabel: PipelineLabelUpdate
     ): Result<Boolean>
 }
