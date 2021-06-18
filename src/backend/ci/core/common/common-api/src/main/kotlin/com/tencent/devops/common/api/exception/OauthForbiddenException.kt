@@ -25,32 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth
+package com.tencent.devops.common.api.exception
 
-import com.tencent.devops.auth.service.BkAuthPermissionProjectService
-import com.tencent.devops.auth.service.BkAuthPermissionService
-import com.tencent.devops.common.auth.service.IamEsbService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.api.constant.CommonMessageCode.PERMISSION_DENIED
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AuthConfiguration {
-
-    @Bean
-    fun iamEsbService() = IamEsbService()
-
-    @Bean
-    @ConditionalOnMissingBean
-    fun permissionService() = BkAuthPermissionService()
-
-    @Bean
-    @ConditionalOnMissingBean
-    fun permissionProjectService() = BkAuthPermissionProjectService()
-}
+class OauthForbiddenException(
+    message: String?,
+    errorCode: String = PERMISSION_DENIED,
+    params: Array<String>? = null
+) :
+    ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params)

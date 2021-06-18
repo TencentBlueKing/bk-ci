@@ -25,32 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth
+package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.auth.service.BkAuthPermissionProjectService
-import com.tencent.devops.auth.service.BkAuthPermissionService
-import com.tencent.devops.common.auth.service.IamEsbService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.auth.api.AuthPermission
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AuthConfiguration {
+interface PermissionService {
+    fun validateUserActionPermission(
+        userId: String,
+        action: String
+    ): Boolean
 
-    @Bean
-    fun iamEsbService() = IamEsbService()
+    fun validateUserResourcePermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String?
+    ): Boolean
 
-    @Bean
-    @ConditionalOnMissingBean
-    fun permissionService() = BkAuthPermissionService()
+    fun validateUserResourcePermissionByRelation(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String,
+        relationResourceType: String?
+    ): Boolean
 
-    @Bean
-    @ConditionalOnMissingBean
-    fun permissionProjectService() = BkAuthPermissionProjectService()
+    fun getUserResourceByAction(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String
+    ): List<String>
+
+    fun getUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String
+    ): Map<AuthPermission, List<String>>
 }

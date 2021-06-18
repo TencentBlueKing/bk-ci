@@ -25,32 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth
+package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.auth.service.BkAuthPermissionProjectService
-import com.tencent.devops.auth.service.BkAuthPermissionService
-import com.tencent.devops.common.auth.service.IamEsbService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AuthConfiguration {
+interface PermissionProjectService {
 
-    @Bean
-    fun iamEsbService() = IamEsbService()
+    fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String>
 
-    @Bean
-    @ConditionalOnMissingBean
-    fun permissionService() = BkAuthPermissionService()
+    fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList>
 
-    @Bean
-    @ConditionalOnMissingBean
-    fun permissionProjectService() = BkAuthPermissionProjectService()
+    fun getUserProjects(userId: String): List<String>
+
+    fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean
+
+    fun createProjectUser(userId: String, projectCode: String, role: String): Boolean
+
+    fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
 }
