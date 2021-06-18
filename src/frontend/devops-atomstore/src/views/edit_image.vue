@@ -67,9 +67,7 @@
                         v-model="form.agentTypeScope"
                         searchable
                         multiple
-                        show-select-all
-                        :loading="isLoadingAgent"
-                        @toggle="handlerFetchAgentTypes">
+                        show-select-all>
                         <bk-option v-for="(option, index) in agentTypes"
                             :key="index"
                             :id="option.code"
@@ -277,7 +275,6 @@
                 imageVersionList: [],
                 isLoading: false,
                 isLoadingTag: false,
-                isLoadingAgent: false,
                 needAgentType: false,
                 originVersion: '',
                 requireRule: {
@@ -339,26 +336,6 @@
                 'requestReleaseImage',
                 'fetchAgentTypes'
             ]),
-
-            handlerFetchAgentTypes (v) {
-                if (v) {
-                    let message, theme
-                    this.isLoadingAgent = true
-                    this.fetchAgentTypes().then((res) => {
-                        this.agentTypes = res
-                    }).catch((err) => {
-                        message = err.message ? err.message : err
-                        theme = 'error'
-
-                        this.$bkMessage({
-                            message,
-                            theme
-                        })
-                    }).finally(() => {
-                        this.isLoadingAgent = false
-                    })
-                }
-            },
 
             changeShowAgentType (option) {
                 const settings = option.settings || {}
@@ -435,10 +412,12 @@
                         this.requestImageClassifys(),
                         this.requestImageLabel(),
                         this.requestTicketList({ projectCode: res.projectCode }),
-                        this.requestImageCategorys()]).then(([classifys, labels, ticket, categorys]) => {
+                        this.fetchAgentTypes(),
+                        this.requestImageCategorys()]).then(([classifys, labels, ticket, agents, categorys]) => {
                             this.classifys = classifys
                             this.labelList = labels
                             this.categoryList = categorys
+                            this.agentTypes = agents
                             this.ticketList = ticket.records || []
                             const currentCategory = categorys.find((category) => (res.category === category.categoryCode)) || {}
                             const settings = currentCategory.settings || {}
