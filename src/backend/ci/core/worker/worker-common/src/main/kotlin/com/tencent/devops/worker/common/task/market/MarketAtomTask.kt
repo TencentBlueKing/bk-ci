@@ -105,12 +105,12 @@ open class MarketAtomTask : ITask() {
     @Suppress("UNCHECKED_CAST")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
-        val atomName = taskParams["name"] as String
+        val taskName = taskParams["name"] as String
         val atomCode = taskParams["atomCode"] as String
         val atomVersion = taskParams["version"] as String
         val data = taskParams["data"] ?: "{}"
         val map = JsonUtil.toMutableMapSkipEmpty(data)
-        logger.info("${buildTask.buildId}|RUN_ATOM|atomName=$atomName|ver=$atomVersion|code=$atomCode" +
+        logger.info("${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
             "|workspace=${workspace.absolutePath}")
 
         // 获取插件基本信息
@@ -118,7 +118,7 @@ open class MarketAtomTask : ITask() {
         logger.info("atomEnvResult is:$atomEnvResult")
         val atomData =
             atomEnvResult.data ?: throw TaskExecuteException(
-                errorMsg = "can not found $atomName: ${atomEnvResult.message}",
+                errorMsg = "can not found $taskName: ${atomEnvResult.message}",
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
@@ -214,6 +214,8 @@ open class MarketAtomTask : ITask() {
             "N"
         }
         runtimeVariables = runtimeVariables.plus(Pair("testVersionFlag", testVersionFlag)) // 设置是否是测试版本的标识
+        // 设置插件名称和任务名称变量
+        runtimeVariables = runtimeVariables.plus(mapOf("atomName" to atomData.atomName, "taskName" to taskName))
         val variables = runtimeVariables.plus(atomParams)
         logger.info("atomCode is:$atomCode ,variables is:$variables")
 
