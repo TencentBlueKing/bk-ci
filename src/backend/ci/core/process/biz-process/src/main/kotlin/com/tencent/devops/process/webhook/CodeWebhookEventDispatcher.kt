@@ -28,11 +28,9 @@
 package com.tencent.devops.process.webhook
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.ICodeWebhookEvent
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 /**
@@ -45,15 +43,7 @@ object CodeWebhookEventDispatcher {
         logger.debug("Webhook comming [${event.commitEventType}|${event.requestContent}]")
         var result = false
         try {
-            val traceId = MDC.get(TraceTag.BIZID)
-            if (traceId.isNullOrEmpty()) {
-                if (!event.traceId.isNullOrEmpty()) {
-                    MDC.put(TraceTag.BIZID, event.traceId)
-                } else {
-                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-                }
-            }
-            logger.info("Dispatch the ${event.commitEventType} webhook event by MQ")
+            logger.info("${event.traceId}|Dispatch the ${event.commitEventType} webhook event by MQ")
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
                 // 事件中的变量指定
@@ -75,14 +65,6 @@ object CodeWebhookEventDispatcher {
         logger.debug("Webhook comming [GITHUB|${event.githubWebhook.event}]")
         var result = false
         try {
-            val traceId = MDC.get(TraceTag.BIZID)
-            if (traceId.isNullOrEmpty()) {
-                if (!event.traceId.isNullOrEmpty()) {
-                    MDC.put(TraceTag.BIZID, event.traceId)
-                } else {
-                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-                }
-            }
             logger.info("Dispatch the GITHUB webhook event by MQ")
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->

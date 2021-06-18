@@ -29,13 +29,14 @@ package com.tencent.devops.common.webhook.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
 data class GitReviewEvent(
-    @JsonProperty("objectKind")
-    val objectKind: String = classType,
     val event: String,
     val author: GitUser,
+    val reviewer: Reviewer? = null,
     val reviewers: List<Reviewer>,
     val repository: GitCommitRepository,
     @JsonProperty("project_id")
@@ -43,14 +44,14 @@ data class GitReviewEvent(
     @JsonProperty("author_id")
     val authorId: Long,
     @JsonProperty("reviewable_id")
-    val reviewableId: Long,
+    val reviewableId: Long? = null,
     @JsonProperty("reviewable_type")
-    val reviewableType: String,
+    val reviewableType: String? = null,
     @JsonProperty("commit_id")
     val commitId: String? = null,
     val state: String,
     @JsonProperty("restrict_type")
-    val restrictType: String
+    val restrictType: String? = null
 ) : GitEvent() {
     companion object {
         const val classType = "review"
@@ -58,6 +59,7 @@ data class GitReviewEvent(
 }
 
 data class Reviewer(
+    val reviewer: GitUser,
     val id: Long,
     @JsonProperty("review_id")
     val reviewId: Long,

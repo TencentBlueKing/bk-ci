@@ -98,14 +98,14 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
             val projectRelativePath = WebhookUtils.getRelativePath(repository.url)
             val pathFilter = PathPrefixFilter(
                 pipelineId = pipelineId,
-                triggerOnPath = event.paths,
+                triggerOnPath = event.files.map { it.file },
                 excludedPaths = WebhookUtils.convert(excludePaths).map { path ->
                     WebhookUtils.getFullPath(
                         projectRelativePath = projectRelativePath,
                         relativeSubPath = path
                     )
                 },
-                includedPaths = WebhookUtils.convert(includePaths).map { path ->
+                includedPaths = WebhookUtils.convert(relativePath).map { path ->
                     WebhookUtils.getFullPath(
                         projectRelativePath = projectRelativePath,
                         relativeSubPath = path

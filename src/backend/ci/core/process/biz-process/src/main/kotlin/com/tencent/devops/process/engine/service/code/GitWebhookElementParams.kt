@@ -65,6 +65,11 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
         params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
         params.webhookQueue = element.webhookQueue ?: false
+        params.includeCrState = if (element.includeCrState.isNullOrEmpty()) {
+            ""
+        } else {
+            element.includeCrState!!.joinToString(",")
+        }
         return params
     }
 }

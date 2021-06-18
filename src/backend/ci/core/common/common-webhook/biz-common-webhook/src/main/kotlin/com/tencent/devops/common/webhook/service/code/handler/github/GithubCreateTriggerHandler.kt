@@ -32,7 +32,7 @@ import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
+import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
@@ -40,7 +40,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @CodeWebhookHandler
-class GithubCreateTriggerHandler : CodeWebhookTriggerHandler<GithubCreateEvent> {
+class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
     override fun eventClass(): Class<GithubCreateEvent> {
         return GithubCreateEvent::class.java
     }
@@ -73,16 +73,6 @@ class GithubCreateTriggerHandler : CodeWebhookTriggerHandler<GithubCreateEvent> 
         return ""
     }
 
-    override fun getWebhookFilters(
-        event: GithubCreateEvent,
-        projectId: String,
-        pipelineId: String,
-        repository: Repository,
-        webHookParams: WebHookParams
-    ): List<WebhookFilter> {
-        return emptyList()
-    }
-
     override fun retrieveParams(
         event: GithubCreateEvent,
         projectId: String?,
@@ -93,5 +83,15 @@ class GithubCreateTriggerHandler : CodeWebhookTriggerHandler<GithubCreateEvent> 
         startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE] = event.ref_type
         startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME] = event.sender.login
         return startParams
+    }
+
+    override fun getEventFilters(
+        event: GithubCreateEvent,
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: WebHookParams
+    ): List<WebhookFilter> {
+        return emptyList()
     }
 }

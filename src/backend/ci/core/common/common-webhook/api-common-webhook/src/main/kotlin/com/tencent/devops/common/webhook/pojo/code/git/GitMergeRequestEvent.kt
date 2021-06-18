@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
 @Suppress("ALL")
 data class GitMergeRequestEvent(
@@ -62,5 +63,9 @@ data class GitMRAttributes(
     val last_commit: GitCommit,
     val url: String,
     val action: String,
-    val extension_action: String?
+    val extension_action: String?,
+    @JsonProperty("merge_type")
+    val mergeType: String? = null,
+    @JsonProperty("merge_commit_sha")
+    val mergeCommitSha: String? = null
 )

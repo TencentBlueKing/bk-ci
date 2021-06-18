@@ -25,21 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.webhook.pojo.event.commit
+package com.tencent.devops.common.webhook.service.code.filter
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType
+import org.slf4j.LoggerFactory
 
-@Event(MQ.EXCHANGE_GITLAB_BUILD_REQUEST_EVENT, MQ.ROUTE_GITLAB_BUILD_REQUEST_EVENT)
-data class GitlabWebhookEvent(
-    override var requestContent: String,
-    override var retryTime: Int = 3,
-    override var delayMills: Int = 0,
-    override val commitEventType: CommitEventType = CommitEventType.GITLAB
-) : ICodeWebhookEvent(
-    requestContent = requestContent,
-    retryTime = retryTime,
-    delayMills = delayMills,
-    commitEventType = commitEventType
-)
+class CodeReviewStateFilter(
+    private val pipelineId: String,
+    private val triggerOnState: String,
+    private val includedState: List<String>
+) : WebhookFilter {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(CodeReviewStateFilter::class.java)
+    }
+
+    override fun doFilter(response: WebhookFilterResponse): Boolean {
+        logger.info("$pipelineId|triggerOnState:$triggerOnState|includedState:$includedState|code review state filter")
+        return includedState.isEmpty() || includedState.contains(triggerOnState)
+    }
+}

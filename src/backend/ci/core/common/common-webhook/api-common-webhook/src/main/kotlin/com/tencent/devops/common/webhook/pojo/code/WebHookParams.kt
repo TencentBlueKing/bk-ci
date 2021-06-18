@@ -51,5 +51,7 @@ data class WebHookParams(
     /**
      * 当代码库有多个域名时,代码库配置url为git.a.com，事件触发的url为git.b.com，但是git.a.com和git.b.com指向同一个仓库
      * **/
-    var includeHost: String? = null
+    var includeHost: String? = null,
+    // code review状态
+    var includeCrState: String? = null
 )
