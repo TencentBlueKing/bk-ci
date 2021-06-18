@@ -49,10 +49,12 @@ import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
+import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -62,7 +64,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
     private val pipelineRuleService: PipelineRuleService,
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService
 ) : ServicePipelineResource {
     override fun status(userId: String, projectId: String, pipelineId: String): Result<Pipeline?> {
         checkParams(userId, projectId)
@@ -227,6 +230,18 @@ class ServicePipelineResourceImpl @Autowired constructor(
         ))
     }
 
+    override fun saveSetting(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        setting: PipelineSetting
+    ): Result<Boolean> {
+        checkProjectId(projectId)
+        checkPipelineId(pipelineId)
+        pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting, checkPermission = true)
+        return Result(true)
+    }
+
     override fun getPipelineInfo(
         projectId: String,
         pipelineId: String,
@@ -363,6 +378,12 @@ class ServicePipelineResourceImpl @Autowired constructor(
     private fun checkProjectId(projectId: String) {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
+        }
+    }
+
+    private fun checkPipelineId(pipelineId: String) {
+        if (pipelineId.isBlank()) {
+            throw ParamBlankException("Invalid pipelineId")
         }
     }
 
