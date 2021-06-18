@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -42,6 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.utils.QualityUtils
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
@@ -58,7 +60,8 @@ class PipelineBuildQualityService(
     private val client: Client,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildDetailService: PipelineBuildDetailService,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val buildVariableService: BuildVariableService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildQualityService::class.java)
@@ -187,14 +190,29 @@ class PipelineBuildQualityService(
         }
     }
 
-    fun getAuditUserList(projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
+    fun getAuditUserList(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        variablesParam: Map<String, String> = mapOf()
+    ): Set<String> {
+        val runVariables = if (variablesParam.isEmpty()) {
+            buildVariableService.getAllVariable(buildId)
+        } else {
+            variablesParam
+        }
         return try {
-            client.get(ServiceQualityRuleResource::class).getAuditUserList(
+            val auditUserSet = client.get(ServiceQualityRuleResource::class).getAuditUserList(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId
             ).data ?: setOf()
+
+            auditUserSet.map {
+                EnvUtils.parseEnv(it, runVariables)
+            }.toSet()
         } catch (e: Exception) {
             logger.error("quality get audit user list fail: ${e.message}", e)
             setOf()

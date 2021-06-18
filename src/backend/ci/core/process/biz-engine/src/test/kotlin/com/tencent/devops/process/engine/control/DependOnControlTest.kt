@@ -60,12 +60,12 @@ class DependOnControlTest {
     fun `when dependOnContainerId2JobIds is null return success`() {
         val dependContainerId = 2
         val status2 = BuildStatus.RUNNING
-        val mockJob = TestTool.genVmBuildContainer(id = 1,
+        val mockJob = TestTool.genVmBuildContainer(vmSeqId = 1,
             jobControlOption = JobControlOption(dependOnContainerId2JobIds = null)
         )
 
         val mockContainers = listOf(
-            TestTool.genVmBuildContainer(id = dependContainerId).copy(status = status2)
+            TestTool.genVmBuildContainer(vmSeqId = dependContainerId).copy(status = status2)
         )
         whenever(pipelineRuntimeService.listContainers(TestTool.buildId, TestTool.stageId)).thenReturn(mockContainers)
         Assert.assertEquals(BuildStatus.SUCCEED, dependOnControl.dependOnJobStatus(container = mockJob))
@@ -75,14 +75,14 @@ class DependOnControlTest {
     fun `when depend on job is running then return running`() {
         val dependContainerId = 2
         val status2 = BuildStatus.RUNNING
-        val mockJob = TestTool.genVmBuildContainer(id = 1,
+        val mockJob = TestTool.genVmBuildContainer(vmSeqId = 1,
             jobControlOption = JobControlOption(
                 dependOnContainerId2JobIds = mapOf(dependContainerId.toString() to "jobId2")
             )
         )
 
         val mockContainers = listOf(
-            TestTool.genVmBuildContainer(id = dependContainerId).copy(status = status2)
+            TestTool.genVmBuildContainer(vmSeqId = dependContainerId).copy(status = status2)
         )
         whenever(pipelineRuntimeService.listContainers(TestTool.buildId, TestTool.stageId)).thenReturn(mockContainers)
         Assert.assertEquals(status2, dependOnControl.dependOnJobStatus(container = mockJob))
@@ -92,14 +92,14 @@ class DependOnControlTest {
     fun `when depend on job is failed then return failed`() {
         val dependContainerId = 2
         val status2 = BuildStatus.FAILED
-        val mockJob = TestTool.genVmBuildContainer(id = 1,
+        val mockJob = TestTool.genVmBuildContainer(vmSeqId = 1,
             jobControlOption = JobControlOption(
                 dependOnContainerId2JobIds = mapOf(dependContainerId.toString() to "jobId2")
             )
         )
 
         val mockContainers = listOf(
-            TestTool.genVmBuildContainer(id = dependContainerId).copy(status = status2)
+            TestTool.genVmBuildContainer(vmSeqId = dependContainerId).copy(status = status2)
         )
         whenever(pipelineRuntimeService.listContainers(TestTool.buildId, TestTool.stageId)).thenReturn(mockContainers)
         val dependOnJobStatus = dependOnControl.dependOnJobStatus(container = mockJob)
@@ -110,7 +110,7 @@ class DependOnControlTest {
     fun `when depend on job is running or success then return running`() {
         val dependContainerId = 2
         val dependContainerId3 = 3
-        val mockJob = TestTool.genVmBuildContainer(id = 1,
+        val mockJob = TestTool.genVmBuildContainer(vmSeqId = 1,
             jobControlOption = JobControlOption(
                 dependOnContainerId2JobIds = mapOf("2" to "jobId2").plus("3" to "jobId3")
             ), status = BuildStatus.RUNNING
@@ -118,16 +118,16 @@ class DependOnControlTest {
 
         whenever(pipelineRuntimeService.listContainers(TestTool.buildId, TestTool.stageId)).thenReturn(
             listOf(
-                TestTool.genVmBuildContainer(id = dependContainerId).copy(status = BuildStatus.RUNNING),
-                TestTool.genVmBuildContainer(id = dependContainerId3).copy(status = BuildStatus.SUCCEED)
+                TestTool.genVmBuildContainer(vmSeqId = dependContainerId).copy(status = BuildStatus.RUNNING),
+                TestTool.genVmBuildContainer(vmSeqId = dependContainerId3).copy(status = BuildStatus.SUCCEED)
             )
         )
         Assert.assertEquals(BuildStatus.RUNNING, dependOnControl.dependOnJobStatus(container = mockJob))
 
         whenever(pipelineRuntimeService.listContainers(TestTool.buildId, TestTool.stageId)).thenReturn(
             listOf(
-                TestTool.genVmBuildContainer(id = dependContainerId).copy(status = BuildStatus.SUCCEED),
-                TestTool.genVmBuildContainer(id = dependContainerId3).copy(status = BuildStatus.SUCCEED)
+                TestTool.genVmBuildContainer(vmSeqId = dependContainerId).copy(status = BuildStatus.SUCCEED),
+                TestTool.genVmBuildContainer(vmSeqId = dependContainerId3).copy(status = BuildStatus.SUCCEED)
             )
         )
         Assert.assertEquals(BuildStatus.SUCCEED, dependOnControl.dependOnJobStatus(container = mockJob))
@@ -135,8 +135,8 @@ class DependOnControlTest {
         // when fail
         whenever(pipelineRuntimeService.listContainers(TestTool.buildId, TestTool.stageId)).thenReturn(
             listOf(
-                TestTool.genVmBuildContainer(id = dependContainerId).copy(status = BuildStatus.RUNNING),
-                TestTool.genVmBuildContainer(id = dependContainerId3).copy(status = BuildStatus.FAILED)
+                TestTool.genVmBuildContainer(vmSeqId = dependContainerId).copy(status = BuildStatus.RUNNING),
+                TestTool.genVmBuildContainer(vmSeqId = dependContainerId3).copy(status = BuildStatus.FAILED)
             )
         )
         Assert.assertEquals(BuildStatus.FAILED, dependOnControl.dependOnJobStatus(container = mockJob))

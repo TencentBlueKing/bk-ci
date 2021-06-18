@@ -25,34 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.process.pojo
 
-import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
-import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectAuthResource
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceProjectAuthResourceImpl @Autowired constructor(
-    val authProjectService: AuthProjectService
-) : ServiceProjectAuthResource {
-    override fun projectInfo(token: String, callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
-        val method = callBackInfo.method
-        val page = callBackInfo.page
-        when (method) {
-            CallbackMethodEnum.LIST_INSTANCE -> {
-                return authProjectService.getProjectList(page, token)
-            }
-            CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
-                val ids = callBackInfo.filter.idList.map { it.toString() }
-                return authProjectService.getProjectInfo(ids, token)
-            }
-            CallbackMethodEnum.SEARCH_INSTANCE -> {
-                return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page, token)
-            }
-        }
-        return null
-    }
-}
+@ApiModel("流水线名称与Id")
+data class PipelineIdAndName(
+    @ApiModelProperty("流水线Id")
+    val pipelineId: String,
+    @ApiModelProperty("流水线名称")
+    val pipelineName: String
+)

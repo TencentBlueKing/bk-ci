@@ -18,14 +18,12 @@
  */
 
 import * as pipeline from './pipeline'
-import list from './list'
 import atom from './atom'
 import { mergeModules } from '@/utils/util'
 
 const commonModules = {
     namespaced: true,
     state: {
-        ci: 'hello'
     },
     mutations: {
     },
@@ -34,4 +32,4 @@ const commonModules = {
     getters: {}
 }
 
-export default mergeModules(commonModules, pipeline, list, atom)
+export default mergeModules(commonModules, pipeline, atom)

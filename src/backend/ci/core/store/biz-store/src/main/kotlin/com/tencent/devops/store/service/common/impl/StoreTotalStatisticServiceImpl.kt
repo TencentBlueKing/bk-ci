@@ -27,12 +27,15 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.FAIL_NUM
 import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.common.StoreStatistic
@@ -62,6 +65,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val storeStatisticDao: StoreStatisticDao,
     private val storeStatisticTotalDao: StoreStatisticTotalDao,
+    private val storeMemberDao: StoreMemberDao,
     private val storeDailyStatisticService: StoreDailyStatisticService
 ) : StoreTotalStatisticService {
 
@@ -197,6 +201,19 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         endTime: String
     ): StoreStatisticTrendData {
         logger.info("getStatisticTrendDataByCode $userId,$storeCode,$storeType,$startTime,$endTime")
+        // 判断当前用户是否是该组件的成员
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(storeCode)
+            )
+        }
         val dailyStatisticList = storeDailyStatisticService.getDailyStatisticListByCode(
             storeCode = storeCode,
             storeType = storeType,
