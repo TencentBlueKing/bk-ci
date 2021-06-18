@@ -25,46 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.cron
+package com.tencent.devops.common.api.exception
 
-import com.tencent.devops.auth.entity.ManagerChangeType
-import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
-import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
-import com.tencent.devops.auth.service.ManagerOrganizationService
-import com.tencent.devops.auth.service.ManagerUserService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.constant.CommonMessageCode.OAUTH_TOKEN_IS_INVALID
 
-@Component
-class ManagerUserTimeoutCron @Autowired constructor(
-    val managerUserService: ManagerUserService,
-    val managerOrganizationService: ManagerOrganizationService,
-    val refreshDispatch: AuthRefreshDispatch
-) {
-
-    /**
-     * 每2分钟，清理过期管理员
-     */
-    @Scheduled(cron = "0 0/2 * * * ?")
-    fun newClearTimeoutCache() {
-        managerUserService.deleteTimeoutUser()
-    }
-
-    /**
-     * 每5分钟，刷新缓存数据
-     */
-    @Scheduled(cron = "0 0/5 * * * ?")
-    fun refreshCache() {
-        val managerList = managerOrganizationService.listManager() ?: return
-        managerList.forEach {
-            refreshDispatch.dispatch(
-                ManagerOrganizationChangeEvent(
-                    refreshType = "updateManagerOrganization",
-                    managerId = it.id!!,
-                    managerChangeType = ManagerChangeType.UPDATE
-                )
-            )
-        }
-    }
-}
+class TokenForbiddenException(
+    message: String?,
+    errorCode: String = OAUTH_TOKEN_IS_INVALID,
+    params: Array<String>? = null
+) :
+    ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params)

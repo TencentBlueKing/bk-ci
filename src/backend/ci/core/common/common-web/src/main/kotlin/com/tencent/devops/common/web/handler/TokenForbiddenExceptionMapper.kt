@@ -25,23 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.common.web.handler
 
-import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import com.tencent.devops.common.api.exception.TokenForbiddenException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-interface PermissionProjectService {
+@BkExceptionMapper
+class TokenForbiddenExceptionMapper : ExceptionMapper<TokenForbiddenException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(TokenForbiddenExceptionMapper::class.java)!!
+    }
 
-    fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String>
-
-    fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList>
-
-    fun getUserProjects(userId: String): List<String>
-
-    fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean
-
-    fun createProjectUser(userId: String, projectCode: String, role: String): Boolean
-
-    fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
+    override fun toResponse(exception: TokenForbiddenException): Response {
+        logger.warn("Encounter token exception(${exception.message})")
+        val status = Response.Status.FORBIDDEN
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.defaultMessage
+        } else {
+            "auth token 校验失败"
+        }
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
+    }
 }

@@ -53,6 +53,10 @@ class OauthForbiddenExceptionMapper : ExceptionMapper<OauthForbiddenException> {
             "你没有Oauth认证"
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result(CommonMessageCode.OAUTH_DENERD, message = message, data = exception.message)).build()
+            .entity(
+                Result(
+                    status = CommonMessageCode.OAUTH_DENERD,
+                    message = message,
+                    data = exception.message)).build()
     }
 }
