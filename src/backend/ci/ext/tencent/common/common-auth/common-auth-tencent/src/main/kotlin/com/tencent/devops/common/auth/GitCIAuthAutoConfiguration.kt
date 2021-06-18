@@ -83,6 +83,18 @@ class GitCIAuthAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
+
+    // TODO: 优化gitCI实例化project逻辑
+    @Bean
+    @ConditionalOnMissingBean
+    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
+
+    @Bean
+    fun apigwHttpClientServiceImpl() = ApigwHttpClientServiceImpl(iamConfiguration())
+
+    @Bean
+    fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
+
     @Bean
     @Primary
     fun bkAuthProperties() = BkAuthProperties()
