@@ -38,7 +38,7 @@ class ServiceUserGroupResourceImpl @Autowired constructor(
     val groupUserService: GroupUserService
 ) : ServiceUserGroupResource {
 
-    override fun addUser2Group(userId: String, groupId: String): Result<Boolean> {
+    override fun addUser2Group(userId: String, groupId: Int): Result<Boolean> {
         return groupUserService.addUser2Group(userId, groupId)
     }
 }
