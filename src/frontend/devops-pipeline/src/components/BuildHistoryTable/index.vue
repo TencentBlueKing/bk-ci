@@ -11,7 +11,7 @@
             <bk-table-column v-for="col in columnList" v-bind="col" :key="col.prop">
                 <template v-if="col.prop === 'buildNum'" v-slot="props">
                     <span class="build-num-status">
-                        <router-link :class="{ [props.row.status]: true }" style="line-height: 42px;" :to="getArchiveUrl(props.row)">#{{ props.row.buildNum }}</router-link>
+                        <router-link :class="{ [props.row.status]: true }" :to="getArchiveUrl(props.row)">{{ getBuildNumHtml(props.row) }}</router-link>
                         <logo v-if="props.row.status === 'STAGE_SUCCESS'" v-bk-tooltips="$t('details.statusMap.STAGE_SUCCESS')" name="flag" class="devops-icon" size="12" fill="#34d97b" />
                         <i v-else-if="retryable(props.row)" title="rebuild" class="devops-icon icon-retry" @click.stop="retry(props.row.id)" />
                         <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime"
@@ -444,7 +444,7 @@
             async downloadFile ({ artifactoryType, path }, key = 'download') {
                 try {
                     const { projectId } = this.$route.params
-                    const res = await this.$store.dispatch('soda/requestDownloadUrl', {
+                    const res = await this.$store.dispatch('common/requestDownloadUrl', {
                         projectId,
                         artifactoryType,
                         path
@@ -468,7 +468,7 @@
                         files: [artifactory.name],
                         copyAll: false
                     }
-                    const res = await this.$store.dispatch('soda/requestCopyArtifactory', {
+                    const res = await this.$store.dispatch('common/requestCopyArtifactory', {
                         projectId,
                         pipelineId,
                         buildId: this.currentBuildId,
@@ -529,6 +529,12 @@
                         theme
                     })
                 }
+            },
+            getBuildNumHtml (row) {
+                if (row.buildNumAlias && row.buildNumAlias.length) {
+                    return row.buildNumAlias
+                }
+                return '#' + row.buildNum
             }
         }
     }
@@ -600,6 +606,7 @@
         .build-num-status {
             display: flex;
             align-items: center;
+            padding: 12px 0;
             .devops-icon {
                 margin-left: 6px;
                 display: inline-block;

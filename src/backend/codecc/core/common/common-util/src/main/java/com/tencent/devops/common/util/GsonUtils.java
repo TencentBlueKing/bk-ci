@@ -72,7 +72,7 @@ public class GsonUtils
      *
      * @param obj
      * @return
-     * @author xxx
+     * @author austinshen
      * @date 2017/10/3
      * @version V2.4
      */

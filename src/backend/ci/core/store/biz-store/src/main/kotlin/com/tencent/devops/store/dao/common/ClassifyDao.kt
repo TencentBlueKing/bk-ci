@@ -66,14 +66,14 @@ class ClassifyDao {
     fun countByName(dslContext: DSLContext, classifyName: String, type: Byte): Int {
         with(TClassify.T_CLASSIFY) {
             return dslContext.selectCount().from(this).where(CLASSIFY_NAME.eq(classifyName).and(TYPE.eq(type)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
     fun countByCode(dslContext: DSLContext, classifyCode: String, type: Byte): Int {
         with(TClassify.T_CLASSIFY) {
             return dslContext.selectCount().from(this).where(CLASSIFY_CODE.eq(classifyCode).and(TYPE.eq(type)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

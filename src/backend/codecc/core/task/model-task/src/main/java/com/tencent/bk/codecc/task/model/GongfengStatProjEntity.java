@@ -92,6 +92,18 @@ public class GongfengStatProjEntity extends CommonEntity
     private String owners;
 
     /**
+     * 特殊情况注册了的子group用户
+     */
+    @Field("current_owners")
+    private String currentOwners;
+
+    /**
+     * 子group用户对应的组织架构信息
+     */
+    @Field("current_owners_org_paths")
+    private String currentOwnersOrgPaths;
+
+    /**
      * 创建时间
      */
     @Field("created_at")
@@ -136,5 +148,12 @@ public class GongfengStatProjEntity extends CommonEntity
     @Field("public_visibility")
     @JsonProperty("public_visibility")
     private Integer publicVisibility;
+
+    /**
+     * 同步时间
+     */
+    @Field("synchronize_time")
+    @JsonProperty("synchronize_time")
+    private Long synchronizeTime;
 
 }

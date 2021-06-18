@@ -124,7 +124,7 @@ class PipelineDockerTaskDao {
                 imagePublicFlag,
                 imageRDType?.type?.toByte(),
                 containerHashId
-            ).returning(ID).fetchOne().id
+            ).returning(ID).fetchOne()!!.id
         }
     }
 

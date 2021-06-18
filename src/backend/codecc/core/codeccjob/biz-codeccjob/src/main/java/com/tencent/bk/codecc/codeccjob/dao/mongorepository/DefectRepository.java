@@ -27,6 +27,7 @@
 package com.tencent.bk.codecc.codeccjob.dao.mongorepository;
 
 import com.tencent.bk.codecc.defect.model.DefectEntity;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -98,4 +99,12 @@ public interface DefectRepository extends MongoRepository<DefectEntity, String>
      */
     @Query(fields = "{'id':1, 'status':1}", value = "{'_id': {'$in': ?0}}")
     List<DefectEntity> findStatusByEntityIdIn(Set<String> entityIdSet);
+
+    /**
+     * 通过任务id，工具名查询告警作者信息
+     *
+     * @return
+     */
+    @Query(fields = "{'author_list':1}", value = "{'task_id': ?0, 'tool_name': {'$in': ?1}, 'status': ?2}")
+    List<DefectEntity> findAuthorListByTaskIdAndToolNameInAndStatus(long taskId, List<String> toolNameList, int status, Pageable pageable);
 }

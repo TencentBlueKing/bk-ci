@@ -28,10 +28,10 @@ package com.tencent.bk.codecc.task.api;
 
 import com.tencent.bk.codecc.task.vo.BuildEnvVO;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
+import com.tencent.bk.codecc.task.vo.OpenScanAndEpcToolNameMapVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
-import com.tencent.devops.common.api.annotation.UserLogin;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -56,7 +56,7 @@ public interface UserMetaRestResource
     @ApiOperation("查询工具列表")
     @Path("/toolList")
     @GET
-    CodeCCResult<List<ToolMetaBaseVO>> toolList(
+    Result<List<ToolMetaBaseVO>> toolList(
             @ApiParam(value = "是否查询详细信息")
             @QueryParam("isDetail")
                     Boolean isDetail);
@@ -64,7 +64,7 @@ public interface UserMetaRestResource
     @ApiOperation("查询工具详情")
     @Path("/toolDetail")
     @GET
-    CodeCCResult<ToolMetaDetailVO> toolDetail(
+    Result<ToolMetaDetailVO> toolDetail(
             @ApiParam(value = "工具名（唯一标志）", required = true)
             @QueryParam("toolName")
                     String toolName);
@@ -72,7 +72,7 @@ public interface UserMetaRestResource
     @ApiOperation("查询元数据")
     @Path("/metadatas")
     @GET
-    CodeCCResult<Map<String, List<MetadataVO>>> metadatas(
+    Result<Map<String, List<MetadataVO>>> metadatas(
             @ApiParam(value = "元数据类型", required = true)
             @QueryParam("metadataType")
                     String metadataType);
@@ -80,8 +80,13 @@ public interface UserMetaRestResource
     @ApiOperation("查询编译工具")
     @Path("/buildEnv")
     @GET
-    CodeCCResult<List<BuildEnvVO>> getBuildEnv(
+    Result<List<BuildEnvVO>> getBuildEnv(
             @ApiParam(value = "操作系统类型", required = true)
             @QueryParam("os")
                     String os);
+
+    @ApiOperation("查询开源治理/EPC对应工具列表映射")
+    @Path("/getOpenScanAndEpcToolNameMap")
+    @GET
+    Result<OpenScanAndEpcToolNameMapVO> getOpenScanAndEpcToolNameMap();
 }

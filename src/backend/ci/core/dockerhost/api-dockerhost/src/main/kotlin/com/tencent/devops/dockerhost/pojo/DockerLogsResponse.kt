@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("DockerLogsResponse")
 data class DockerLogsResponse(
     @ApiModelProperty("是否结束", required = true)
-    val isRunning: Boolean,
+    val running: Boolean,
     @ApiModelProperty("退出码", required = true)
     val exitCode: Int?,
     @ApiModelProperty("日志", required = true)

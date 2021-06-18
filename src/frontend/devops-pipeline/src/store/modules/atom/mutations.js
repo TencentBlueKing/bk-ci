@@ -21,6 +21,7 @@ import Vue from 'vue'
 import {
     SET_STAGE_TAG_LIST,
     SET_PIPELINE_STAGE,
+    SET_COMMON_SETTING,
     SET_PIPELINE_CONTAINER,
     SET_TEMPLATE,
     SET_ATOMS,
@@ -40,6 +41,7 @@ import {
     ADD_STAGE,
     CONTAINER_TYPE_SELECTION_VISIBLE,
     SET_INSERT_STAGE_INDEX,
+    SET_INSERT_STAGE_ISFINALLY,
     UPDATE_ATOM,
     SET_PIPELINE_EDITING,
     SET_PIPELINE,
@@ -64,7 +66,8 @@ import {
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_REVIEW_DIALOG,
     TOGGLE_STAGE_REVIEW_PANEL,
-    SET_IMPORTED_JSON
+    SET_IMPORTED_JSON,
+    SET_EDIT_FROM
 } from './constants'
 import {
     getAtomModalKey,
@@ -94,6 +97,18 @@ export default {
     },
     [SET_PIPELINE_STAGE]: (state, stages) => {
         state.pipeline.stages = stages
+    },
+    [SET_COMMON_SETTING]: (state, setting) => {
+        state.pipelineCommonSetting = setting || {}
+        try {
+            state.pipelineLimit = {
+                stageLimit: setting.maxStageNum,
+                jobLimit: setting.stageCommonSetting.maxJobNum,
+                atomLimit: setting.stageCommonSetting.jobCommonSetting.maxTaskNum
+            }
+        } catch (err) {
+            console.error('commom setting error', err)
+        }
     },
     [SET_PIPELINE_CONTAINER]: (state, { oldContainers, containers }) => {
         const stages = state.pipeline.stages || []
@@ -126,6 +141,10 @@ export default {
     },
     [SET_PIPELINE]: (state, pipeline = null) => {
         Vue.set(state, 'pipeline', pipeline)
+        return state
+    },
+    [SET_EDIT_FROM]: (state, editfromImport = false) => {
+        Vue.set(state, 'editfromImport', editfromImport)
         return state
     },
     [SET_PIPELINE_EDITING]: (state, editing) => {
@@ -185,6 +204,10 @@ export default {
         return state
     },
     [SET_INSERT_STAGE_INDEX]: (state, payload) => {
+        Object.assign(state, payload)
+        return state
+    },
+    [SET_INSERT_STAGE_ISFINALLY]: (state, payload) => {
         Object.assign(state, payload)
         return state
     },
@@ -294,12 +317,13 @@ export default {
     [UPDATE_STAGE]: (state, { stage, newParam }) => {
         Object.assign(stage, newParam)
     },
-    [ADD_STAGE]: (state, { stages, insertStageIndex }) => {
+    [ADD_STAGE]: (state, { stages, insertStageIndex, insertStageIsFinally = false }) => {
         stages.splice(insertStageIndex, 0, {
             id: `s-${hashID(32)}`,
-            name: `stage-${insertStageIndex + 1}`,
+            name: insertStageIsFinally === true ? 'Finally' : `stage-${insertStageIndex + 1}`,
             tag: [...state.defaultStageTags],
-            containers: []
+            containers: [],
+            finally: insertStageIsFinally === true || undefined
         })
         return state
     },

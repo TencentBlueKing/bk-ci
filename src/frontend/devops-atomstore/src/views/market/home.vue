@@ -78,12 +78,22 @@
             },
 
             showMore (sortType) {
+                const sortTypeMap = {
+                    atom: {
+                        hottest: 'RECENT_EXECUTE_NUM',
+                        latest: 'UPDATE_TIME'
+                    }
+                }
+                const defaultSortType = {
+                    hottest: 'DOWNLOAD_COUNT',
+                    latest: 'UPDATE_TIME'
+                }
+                const type = this.$route.query.pipeType || 'atom'
+                const curType = sortTypeMap[type] || defaultSortType
                 switch (sortType) {
                     case 'hottest':
-                        this.$parent.filterData.sortType = 'DOWNLOAD_COUNT'
-                        break
                     case 'latest':
-                        this.$parent.filterData.sortType = 'UPDATE_TIME'
+                        this.$parent.filterData.sortType = curType[sortType]
                         break
                     default:
                         this.$parent.setClassifyValue(sortType)

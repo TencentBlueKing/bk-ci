@@ -4,7 +4,6 @@ import com.tencent.bk.codecc.quartz.model.JobInstanceEntity
 import com.tencent.bk.codecc.quartz.pojo.OperationType
 import com.tencent.bk.codecc.quartz.pojo.ShardInfo
 import com.tencent.bk.codecc.quartz.pojo.ShardingResult
-import java.util.*
 
 abstract class AbstractRouterStrategy {
 
@@ -23,5 +22,4 @@ abstract class AbstractRouterStrategy {
         shardingResult: ShardingResult?,
         jobInstance: JobInstanceEntity
     ): Boolean
-
 }

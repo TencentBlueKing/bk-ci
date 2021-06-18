@@ -164,7 +164,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         containerId = it.id!!,
                         containerHashId = it.containerId ?: "",
                         variablesWithType = variablesWithType,
-                        timeoutMills = timeoutMills!!
+                        timeoutMills = timeoutMills!!,
+                        containerType = it.getClassType()
                     )
                 }
                 vmId++
@@ -314,7 +315,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             else -> {
                 val allVariable = buildVariableService.getAllVariable(buildId)
                 // 构造扩展变量
-                val extMap = buildExtService.buildExt(task)
+                val extMap = buildExtService.buildExt(task, allVariable)
                 val buildVariable = mutableMapOf(
                     PIPELINE_VMSEQ_ID to vmSeqId,
                     PIPELINE_ELEMENT_ID to task.taskId
@@ -461,6 +462,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 endBuild = true
             )
             LOG.info("ENGINE|$buildId|Agent|END_JOB|${task.stageId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
+            buildExtService.endBuild(task)
             true
         }
     }

@@ -29,6 +29,7 @@ package com.tencent.devops.common.redis
 
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
@@ -44,6 +45,9 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 @AutoConfigureBefore(RedisAutoConfiguration::class)
 class RedisAutoConfiguration {
 
+    @Value("\${spring.redis.name:#{null}}")
+    private var redisName: String? = null
+
     @Bean
     fun redisOperation(@Autowired factory: RedisConnectionFactory): RedisOperation {
         val template = RedisTemplate<String, String>()
@@ -51,7 +55,7 @@ class RedisAutoConfiguration {
         template.keySerializer = StringRedisSerializer()
         template.valueSerializer = StringRedisSerializer()
         template.afterPropertiesSet()
-        return RedisOperation(template)
+        return RedisOperation(template, redisName)
     }
 
     @Bean

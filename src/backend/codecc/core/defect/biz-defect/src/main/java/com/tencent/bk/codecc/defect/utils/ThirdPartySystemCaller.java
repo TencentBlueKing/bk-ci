@@ -30,11 +30,10 @@ import com.tencent.bk.codecc.defect.api.ServiceReportTaskLogRestResource;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.task.api.ServiceBaseDataResource;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
-import com.tencent.bk.codecc.task.vo.BaseDataVO;
+import com.tencent.devops.common.api.BaseDataVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -55,8 +54,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @Slf4j
-public class ThirdPartySystemCaller
-{
+public class ThirdPartySystemCaller {
     @Autowired
     private Client client;
 
@@ -67,15 +65,13 @@ public class ThirdPartySystemCaller
      * @return
      */
     @NotNull
-    public TaskDetailVO getTaskInfo(String streamName)
-    {
-        CodeCCResult<TaskDetailVO> taskInfoCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfo(streamName);
-        if (taskInfoCodeCCResult.isNotOk() || null == taskInfoCodeCCResult.getData())
-        {
-            log.error("get task info fail! stream name is: {}, msg: {}", streamName, taskInfoCodeCCResult.getMessage());
+    public TaskDetailVO getTaskInfo(String streamName) {
+        Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfo(streamName);
+        if (taskInfoResult.isNotOk() || null == taskInfoResult.getData()) {
+            log.error("get task info fail! stream name is: {}, msg: {}", streamName, taskInfoResult.getMessage());
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        return taskInfoCodeCCResult.getData();
+        return taskInfoResult.getData();
     }
 
     /**
@@ -85,15 +81,13 @@ public class ThirdPartySystemCaller
      * @return
      */
     @NotNull
-    public TaskDetailVO getTaskInfoWithoutToolsByTaskId(Long taskId)
-    {
-        CodeCCResult<TaskDetailVO> taskDetailCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoWithoutToolsByTaskId(taskId);
-        if (taskDetailCodeCCResult.isNotOk() || null == taskDetailCodeCCResult.getData())
-        {
-            log.error("get task info fail! taskId: {}, msg: {}", taskId, taskDetailCodeCCResult.getMessage());
+    public TaskDetailVO getTaskInfoWithoutToolsByTaskId(Long taskId) {
+        Result<TaskDetailVO> taskDetailResult = client.get(ServiceTaskRestResource.class).getTaskInfoWithoutToolsByTaskId(taskId);
+        if (taskDetailResult.isNotOk() || null == taskDetailResult.getData()) {
+            log.error("get task info fail! taskId: {}, msg: {}", taskId, taskDetailResult.getMessage());
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        return taskDetailCodeCCResult.getData();
+        return taskDetailResult.getData();
     }
 
 
@@ -103,30 +97,54 @@ public class ThirdPartySystemCaller
      * @return
      */
     @NotNull
-    public Map<String, String> getRiskFactorConfig(String toolName)
-    {
+    public Map<String, String> getRiskFactorConfig(String toolName) {
         //获取风险系数值
-        CodeCCResult<List<BaseDataVO>> baseDataCodeCCResult = client.get(ServiceBaseDataResource.class)
+        Result<List<BaseDataVO>> baseDataResult = client.get(ServiceBaseDataResource.class)
                 .getInfoByTypeAndCode(ComConstants.PREFIX_RISK_FACTOR_CONFIG, toolName);
 
-        if (baseDataCodeCCResult.isNotOk() || null == baseDataCodeCCResult.getData())
-        {
+        if (baseDataResult.isNotOk() || null == baseDataResult.getData()) {
             log.error("get risk coefficient fail!");
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
 
-        return baseDataCodeCCResult.getData().stream()
+        return baseDataResult.getData().stream()
                 .collect(Collectors.toMap(BaseDataVO::getParamName, BaseDataVO::getParamValue, (k, v) -> v));
     }
 
-    public void uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO)
-    {
-        CodeCCResult result = client.get(ServiceReportTaskLogRestResource.class).uploadTaskLog(uploadTaskLogStepVO);
+    public void uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO) {
+        Result result = client.get(ServiceReportTaskLogRestResource.class).uploadTaskLog(uploadTaskLogStepVO);
 
-        if (result.isNotOk())
-        {
+        if (result.isNotOk()) {
             log.error("upload TaskLog fail! message: {} {}", uploadTaskLogStepVO.getStreamName(), result.getMessage());
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
     }
+
+    public List<BaseDataVO> getParamsByType(String paramType) {
+        Result<List<BaseDataVO>> result = client.get(ServiceBaseDataResource.class).getParamsByType(paramType);
+
+        if (result.isNotOk() || null == result.getData()) {
+            log.error("get param by type fail! message: {} {}", paramType, result.getMessage());
+            throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
+        }
+
+        return result.getData();
+    }
+
+    /**
+     * 根据任务英文名查询任务信息，不包含工具信息
+     *
+     * @param streamName 流名称
+     * @return vo
+     */
+    public TaskDetailVO getTaskInfoWithoutToolsByStreamName(String streamName) {
+        Result<TaskDetailVO> taskInfoResult =
+                client.get(ServiceTaskRestResource.class).getTaskInfoWithoutToolsByStreamName(streamName);
+        if (taskInfoResult.isNotOk() || null == taskInfoResult.getData()) {
+            log.error("get task info fail! stream name is: {}, msg: {}", streamName, taskInfoResult.getMessage());
+            throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
+        }
+        return taskInfoResult.getData();
+    }
+
 }

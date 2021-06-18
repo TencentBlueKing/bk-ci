@@ -64,6 +64,9 @@ public class DefectQueryRspVO extends CommonDefectQueryRspVO
     @ApiModelProperty("已忽略告警数")
     private int ignoreCount;
 
+    @ApiModelProperty("已屏蔽告警数")
+    private int maskCount;
+
     @ApiModelProperty("新告警数")
     private int newCount;
 

@@ -72,5 +72,6 @@ data class DockerDispatchType(
 
     override fun replaceField(variables: Map<String, String>) {
         dockerBuildVersion = EnvUtils.parseEnv(dockerBuildVersion!!, variables)
+        credentialId = EnvUtils.parseEnv(credentialId, variables)
     }
 }

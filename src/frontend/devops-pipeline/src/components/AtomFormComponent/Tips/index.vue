@@ -69,7 +69,7 @@
             handleDeepValue (reg, str) {
                 return str.replace(reg, (str, key) => {
                     const exisParamKey = this.paramValues.hasOwnProperty(key)
-                    const value = exisParamKey ? this.paramValues[key] : key
+                    const value = exisParamKey ? this.paramValues[key] : str
                     if (exisParamKey) this.list.push(key)
                     return value
                 })
@@ -87,7 +87,7 @@
                 this.list = []
                 this.tip = str.replace(/{([^\{\}]+)}/gim, (str, key) => {
                     const exisParamKey = typeof this.paramValues[key] !== 'undefined'
-                    const value = exisParamKey ? this.paramValues[key] : key
+                    const value = exisParamKey ? this.paramValues[key] : str
                     if (exisParamKey) this.list.push(key)
                     const val = this.formatter(value)
                     return this.escapeHtml(val)

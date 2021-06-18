@@ -106,7 +106,7 @@ public class ToolBuildInfoServiceImpl implements ToolBuildInfoService
             analyzeConfigInfoVO.setScanType(ComConstants.ScanType.FULL.code);
         }
         // 流水线任务增量要判断代码库和白名单是否有变化, 如果修改过代码仓库列表或修改过扫描目录白名单，则本次全量扫描
-        else if (ComConstants.ScanType.INCREMENTAL.code == scanType && analyzeConfigInfoVO.isPipelineTask())
+        else
         {
             String atomCode = analyzeConfigInfoVO.getAtomCode();
             List<String> repoWhiteList = CollectionUtils.isEmpty(analyzeConfigInfoVO.getRepoWhiteList()) ? Lists.newArrayList() : analyzeConfigInfoVO.getRepoWhiteList();
@@ -149,7 +149,7 @@ public class ToolBuildInfoServiceImpl implements ToolBuildInfoService
             toolBuildStackEntity.setToolName(toolName);
             toolBuildStackEntity.setBuildId(analyzeConfigInfoVO.getBuildId());
             toolBuildStackEntity.setBaseBuildId(toolBuildInfoEntity.getDefectBaseBuildId());
-            toolBuildStackEntity.setFullScan(scanType == ComConstants.ScanType.FULL.code);
+            toolBuildStackEntity.setFullScan(scanType == ComConstants.ScanType.FULL.code || scanType == ComConstants.ScanType.DIFF_MODE.code);
             toolBuildStackDao.upsert(toolBuildStackEntity);
         }
 

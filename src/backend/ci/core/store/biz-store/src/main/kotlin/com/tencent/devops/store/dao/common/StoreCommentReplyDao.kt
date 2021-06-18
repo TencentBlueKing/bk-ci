@@ -41,7 +41,7 @@ class StoreCommentReplyDao {
 
     fun countReplyNumByCommentId(dslContext: DSLContext, commentId: String): Int {
         with(TStoreCommentReply.T_STORE_COMMENT_REPLY) {
-            return dslContext.selectCount().from(this).where(COMMENT_ID.eq(commentId)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(COMMENT_ID.eq(commentId)).fetchOne(0, Int::class.java)!!
         }
     }
 

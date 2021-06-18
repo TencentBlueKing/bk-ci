@@ -180,8 +180,9 @@
             },
             savePipeline () {
                 try {
-                    const { checkPipelineInvalid, pipeline } = this
-                    const { inValid, message } = checkPipelineInvalid(pipeline.stages)
+                    const { checkPipelineInvalid, pipeline, pipelineSetting } = this
+                    console.log(this, 'pipelineSetting')
+                    const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
                     if (inValid) {
                         throw new Error(message)
                     }
@@ -279,12 +280,12 @@
                 }
             },
             requestQualityAtom () {
-                this.$store.dispatch('soda/requestQualityAtom', {
+                this.$store.dispatch('common/requestQualityAtom', {
                     projectId: this.projectId
                 })
             },
             requestMatchTemplateRules () {
-                this.$store.dispatch('soda/requestMatchTemplateRuleList', {
+                this.$store.dispatch('common/requestMatchTemplateRuleList', {
                     projectId: this.projectId,
                     templateId: this.templateId
                 })

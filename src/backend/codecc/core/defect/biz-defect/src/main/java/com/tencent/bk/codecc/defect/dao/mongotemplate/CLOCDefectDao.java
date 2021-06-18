@@ -15,6 +15,8 @@ package com.tencent.bk.codecc.defect.dao.mongotemplate;
 import com.mongodb.WriteResult;
 import com.tencent.bk.codecc.defect.dto.CodeLineModel;
 import com.tencent.bk.codecc.defect.model.CLOCDefectEntity;
+import com.tencent.devops.common.constant.ComConstants.Tool;
+import java.util.Arrays;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.BulkOperations;
@@ -62,10 +64,14 @@ public class CLOCDefectDao
      * 批量失效
      * @param taskId
      */
-    public void batchDisableClocInfo(Long taskId)
-    {
+    public void batchDisableClocInfo(Long taskId, String toolName) {
         Query query = new Query();
-        query.addCriteria(Criteria.where("task_id").is(taskId));
+        if (Tool.SCC.name().equals(toolName)) {
+            query.addCriteria(Criteria.where("task_id").is(taskId).and("tool_name").is(toolName));
+        } else {
+            query.addCriteria(Criteria.where("task_id").is(taskId)
+                    .and("tool_name").in(Arrays.asList(toolName, null)));
+        }
         Update update = new Update();
         update.set("status", "DISABLED");
         mongoTemplate.updateMulti(query, update, CLOCDefectEntity.class);
@@ -77,9 +83,16 @@ public class CLOCDefectDao
      * @param taskId 任务ID
      * @param fileNames 文件全路径
      * */
-    public void batchDisableClocInfoByFileName(Long taskId, List<String> fileNames) {
+    public void batchDisableClocInfoByFileName(Long taskId, String toolName, List<String> fileNames) {
         Query query = new Query();
-        query.addCriteria(Criteria.where("task_id").is(taskId).and("file_name").in(fileNames));
+        if (Tool.SCC.name().equals(toolName)) {
+            query.addCriteria(Criteria.where("task_id").is(taskId).and("tool_name").is(toolName)
+                    .and("file_name").in(fileNames));
+        } else {
+            query.addCriteria(Criteria.where("task_id").is(taskId)
+                    .and("tool_name").in(Arrays.asList(toolName, null))
+                    .and("file_name").in(fileNames));
+        }
         Update update = new Update();
         update.set("status", "DISABLED");
         mongoTemplate.updateMulti(query, update, CLOCDefectEntity.class);
@@ -95,17 +108,27 @@ public class CLOCDefectDao
             BulkOperations operations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, CLOCDefectEntity.class);
             clocDefectEntityList.forEach(clocDefectEntity -> {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("task_id").is(clocDefectEntity.getTaskId()))
-                        .addCriteria(Criteria.where("file_name").is(clocDefectEntity.getFileName()));
+                String toolName = clocDefectEntity.getToolName();
+                if (Tool.SCC.name().equals(toolName)) {
+                    query.addCriteria(Criteria.where("task_id").is(clocDefectEntity.getTaskId()))
+                            .addCriteria(Criteria.where("tool_name").is(toolName))
+                            .addCriteria(Criteria.where("file_name").is(clocDefectEntity.getFileName()));
+                } else {
+                    query.addCriteria(Criteria.where("task_id").is(clocDefectEntity.getTaskId()))
+                            .addCriteria(Criteria.where("tool_name").in(Arrays.asList(toolName, null)))
+                            .addCriteria(Criteria.where("file_name").is(clocDefectEntity.getFileName()));
+                }
 
                 Update update = new Update();
                 update.set("task_id", clocDefectEntity.getTaskId())
                         .set("stream_name", clocDefectEntity.getStreamName())
                         .set("file_name", clocDefectEntity.getFileName())
-                        .set("tool_name", clocDefectEntity.getToolName())
+                        .set("rel_path", clocDefectEntity.getRelPath())
+                        .set("tool_name", toolName)
                         .set("blank", clocDefectEntity.getBlank())
                         .set("code", clocDefectEntity.getCode())
                         .set("comment", clocDefectEntity.getComment())
+                        .set("efficient_comment", clocDefectEntity.getEfficientComment())
                         .set("language", clocDefectEntity.getLanguage())
                         .set("status", "ENABLED");
                 operations.upsert(query, update);
@@ -114,20 +137,32 @@ public class CLOCDefectDao
         }
     }
 
-
     /**
      * 查询代码行数信息
      * @param taskId
      * @return
      */
-    public List<CodeLineModel> getCodeLineInfo(Long taskId) {
+    public List<CodeLineModel> getCodeLineInfo(Long taskId, String toolName) {
         //以taskid进行过滤
-        MatchOperation match = Aggregation.match(Criteria.where("task_id").is(taskId));
+        MatchOperation match;
+        if (Tool.SCC.name().equals(toolName)) {
+            match = Aggregation.match(Criteria.where("task_id").is(taskId)
+                    .and("tool_name").is(toolName));
+        } else {
+            match = Aggregation.match(Criteria.where("task_id").is(taskId)
+                    .and("tool_name").in(Arrays.asList(toolName, null)));
+        }
         //以toolName进行分组，并且取第一个的endTime字段
-        GroupOperation group = Aggregation.group("language").sum("code").as("codeLine");
+        GroupOperation group = Aggregation.group("language")
+                .sum("code").as("codeLine")
+                .sum("comment").as("commentLine")
+                .sum("efficient_comment").as("efficientCommentLine");
 
-        ProjectionOperation project = Aggregation.project().andExpression("_id").as("language").
-                andExpression("codeLine").as("codeLine");
+        ProjectionOperation project = Aggregation.project()
+                .andExpression("_id").as("language")
+                .andExpression("codeLine").as("codeLine")
+                .andExpression("commentLine").as("commentLine")
+                .andExpression("efficientCommentLine").as("efficientCommentLine");
         //聚合配置
         Aggregation agg = Aggregation.newAggregation(match, group, project);
 

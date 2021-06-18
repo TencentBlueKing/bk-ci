@@ -47,15 +47,14 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         elementId: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         logger.info(
-            "getInitLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] queryKeywords[$queryKeywords] " +
-                "elementId[$elementId] jobId[$jobId] executeCount[$executeCount] isAnalysis[$isAnalysis] jobId[$jobId]"
+            "getInitLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] " +
+                "elementId[$elementId] jobId[$jobId] executeCount[$executeCount] debug[$debug] jobId[$jobId]"
         )
         return client.get(ServiceLogResource::class).getInitLogs(
             projectId = projectId,
@@ -64,8 +63,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             tag = elementId,
             jobId = jobId,
             executeCount = executeCount,
-            isAnalysis = isAnalysis,
-            queryKeywords = queryKeywords
+            debug = debug
         )
     }
 
@@ -75,6 +73,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
+        debug: Boolean?,
         num: Int?,
         fromStart: Boolean?,
         start: Long,
@@ -91,6 +90,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
+            debug = debug,
             num = num,
             fromStart = fromStart,
             start = start,
@@ -108,15 +108,14 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         start: Long,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         logger.info(
-            "getAfterLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] isAnalysis[$isAnalysis] " +
-                "queryKeywords[$queryKeywords]jobId[$jobId]executeCount[$executeCount]" +
+            "getAfterLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] debug[$debug] " +
+                "debug[$debug]jobId[$jobId]executeCount[$executeCount]" +
                 "start[$start]tag[$tag]jobId[$jobId]"
         )
         return client.get(ServiceLogResource::class).getAfterLogs(
@@ -124,8 +123,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             start = start,
-            isAnalysis = isAnalysis,
-            queryKeywords = queryKeywords,
+            debug = debug,
             tag = tag,
             jobId = jobId,
             executeCount = executeCount

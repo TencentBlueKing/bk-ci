@@ -15,7 +15,7 @@ package com.tencent.bk.codecc.schedule.resources;
 import com.tencent.bk.codecc.schedule.api.BuildFSRestResource;
 import com.tencent.bk.codecc.schedule.vo.*;
 import com.tencent.bk.codecc.schedule.service.UploadDownloadService;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,26 +35,27 @@ public class BuildFSRestResourceImpl implements BuildFSRestResource
     private UploadDownloadService uploadDownloadService;
 
     @Override
-    public CodeCCResult<Boolean> upload(String fileName, Integer chunks, Integer chunk, String uploadType, InputStream file)
-    {
+    public Result<Boolean> upload(String fileName, Integer chunks, Integer chunk, String uploadType, String buildId,
+            InputStream file) {
         UploadVO uploadVO = new UploadVO();
         uploadVO.setFileName(fileName);
         uploadVO.setChunks(chunks);
         uploadVO.setChunk(chunk);
         uploadVO.setUploadType(uploadType);
-        return new CodeCCResult<>(uploadDownloadService.upload(uploadVO, file));
+        uploadVO.setBuildId(buildId);
+        return new Result<>(uploadDownloadService.upload(uploadVO, file));
     }
 
     @Override
-    public CodeCCResult<Boolean> chunksMerge(FileChunksMergeVO fileChunksMergeVO)
+    public Result<Boolean> chunksMerge(FileChunksMergeVO fileChunksMergeVO)
     {
-        return new CodeCCResult<>(uploadDownloadService.chunksMerge(fileChunksMergeVO));
+        return new Result<>(uploadDownloadService.chunksMerge(fileChunksMergeVO));
     }
 
     @Override
-    public CodeCCResult<Long> getFileSize(GetFileSizeVO getFileSizeVO)
+    public Result<Long> getFileSize(GetFileSizeVO getFileSizeVO)
     {
-        return new CodeCCResult<>(uploadDownloadService.getFileSize(getFileSizeVO));
+        return new Result<>(uploadDownloadService.getFileSize(getFileSizeVO));
     }
 
     @Override
@@ -64,20 +65,20 @@ public class BuildFSRestResourceImpl implements BuildFSRestResource
     }
 
     @Override
-    public CodeCCResult<FileInfoModel> getFileInfo(GetFileSizeVO getFileSizeVO)
+    public Result<FileInfoModel> getFileInfo(GetFileSizeVO getFileSizeVO)
     {
-        return new CodeCCResult<>(uploadDownloadService.getFileInfo(getFileSizeVO));
+        return new Result<>(uploadDownloadService.getFileInfo(getFileSizeVO));
     }
 
     @Override
-    public CodeCCResult<FileIndexVO> index(String fileName, String type)
+    public Result<FileIndexVO> index(String fileName, String type)
     {
-        return new CodeCCResult<>(uploadDownloadService.index(fileName, type));
+        return new Result<>(uploadDownloadService.index(fileName, type));
     }
 
     @Override
-    public CodeCCResult<FileIndexVO> getFileIndex(String fileName, String type)
+    public Result<FileIndexVO> getFileIndex(String fileName, String type)
     {
-        return new CodeCCResult<>(uploadDownloadService.getFileIndex(fileName, type));
+        return new Result<>(uploadDownloadService.getFileIndex(fileName, type));
     }
 }

@@ -30,10 +30,13 @@ import com.tencent.bk.codecc.defect.model.CheckerDetailEntity;
 import com.tencent.bk.codecc.defect.model.checkerset.CheckerSetEntity;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerCategory;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerRecommendType;
+import com.tencent.devops.common.constant.ComConstants;
+import org.omg.CORBA.INTERNAL;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -44,8 +47,7 @@ import java.util.Set;
  * @date 2019/4/26
  */
 @Repository
-public interface CheckerRepository extends MongoRepository<CheckerDetailEntity, String>
-{
+public interface CheckerRepository extends MongoRepository<CheckerDetailEntity, String> {
     /**
      * 通过工具名查询规则详细信息
      *
@@ -53,6 +55,14 @@ public interface CheckerRepository extends MongoRepository<CheckerDetailEntity, 
      * @return
      */
     List<CheckerDetailEntity> findByToolName(String toolName);
+
+    /**
+     * 通过工具名查询规则详细信息
+     *
+     * @param toolNameSet
+     * @return
+     */
+    List<CheckerDetailEntity> findByToolNameIn(List<String> toolNameSet);
 
     /**
      * 通过工具名称与规则key查询规则明细
@@ -74,8 +84,34 @@ public interface CheckerRepository extends MongoRepository<CheckerDetailEntity, 
     /**
      * 通过规则ID列表查询
      *
-     * @param checkerSetIds
+     * @param checkerKeys
      * @return
      */
-    List<CheckerDetailEntity> findByCheckerKeyIn(Set<String> checkerSetIds);
+    List<CheckerDetailEntity> findByToolNameAndCheckerKeyIn(String toolName, Set<String> checkerKeys);
+
+    /**
+     * 通过工具名和版本查询规则详细信息
+     *
+     * @param toolName
+     * @return
+     */
+    List<CheckerDetailEntity> findByToolNameAndCheckerVersion(String toolName, Integer version);
+
+    /**
+     * 通过工具名和版本查询规则详细信息
+     *
+     * @param toolName
+     * @return
+     */
+    List<CheckerDetailEntity> findByToolNameAndCheckerVersionAndCheckerKeyIn(String toolName,
+                                                                             Integer version,
+                                                                             Collection<String> checkerIds);
+
+    /**
+     * 通过工具名和版本删除规则详细信息
+     *
+     * @param toolName
+     * @return
+     */
+    void deleteByToolNameAndCheckerVersion(String toolName, Integer version);
 }

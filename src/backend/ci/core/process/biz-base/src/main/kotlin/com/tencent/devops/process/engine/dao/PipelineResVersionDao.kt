@@ -49,8 +49,26 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
         versionName: String = "init",
         model: Model
     ) {
+        val modelString = objectMapper.writeValueAsString(model)
+        create(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            creator = creator,
+            version = version,
+            versionName = versionName,
+            modelString = modelString
+        )
+    }
+
+    fun create(
+        dslContext: DSLContext,
+        pipelineId: String,
+        creator: String,
+        version: Int,
+        versionName: String = "init",
+        modelString: String
+    ) {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            val modelString = objectMapper.writeValueAsString(model)
             dslContext.insertInto(
                 this,
                 PIPELINE_ID,
@@ -144,7 +162,7 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
             return dslContext.select(DSL.count(PIPELINE_ID))
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
