@@ -73,7 +73,7 @@ object QualityUtils {
                 val indicatorElementName = indicator?.elementType ?: ""
                 val elementCnName = ElementUtils.getElementCnName(indicatorElementName, projectId)
                 val resultList = resultMap[elementCnName] ?: mutableListOf()
-                val actualValue = if (indicatorElementName == LinuxPaasCodeCCScriptElement.classType) {
+                val actualValue = if (CodeccUtils.isCodeccAtom(indicatorElementName)) {
                     getActualValue(
                         projectId = projectId,
                         pipelineId = pipelineId,
