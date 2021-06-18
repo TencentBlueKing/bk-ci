@@ -3,6 +3,7 @@ package com.tencent.devops.experience.job
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import org.jooq.DSLContext
@@ -21,6 +22,7 @@ class ExperienceHotJob @Autowired constructor(
     private val profile: Profile,
     private val redisOperation: RedisOperation,
     private val experiencePublicDao: ExperiencePublicDao,
+    private val experienceDao: ExperienceDao,
     private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val dslContext: DSLContext
 ) {
@@ -52,10 +54,14 @@ class ExperienceHotJob @Autowired constructor(
                         platform = it.get("PLATFORM", String::class.java),
                         hotDaysAgo = hotDaysAgo
                     )
+
+                    val record = experienceDao.get(dslContext, it.get("RECORD_ID", Long::class.java))
+
                     experiencePublicDao.updateById(
                         dslContext = dslContext,
                         id = it.get("ID", Long::class.java),
-                        downloadTime = countForHot
+                        downloadTime = countForHot,
+                        updateTime = record.updateTime
                     )
                 }
                 logger.info("Job hot finish")
