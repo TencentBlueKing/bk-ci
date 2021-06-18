@@ -1,5 +1,3 @@
-import nu.studer.gradle.jooq.JooqGenerate
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -26,18 +24,15 @@ import nu.studer.gradle.jooq.JooqGenerate
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
+import nu.studer.gradle.jooq.JooqGenerate
 
 plugins {
     id("nu.studer.jooq")
-    kotlin("jvm")
 }
 
 val jooqGenerator by project.configurations
-val api by project.configurations
 
 dependencies {
-    api("org.jooq:jooq")
     jooqGenerator("mysql:mysql-connector-java:8.0.22")
 }
 

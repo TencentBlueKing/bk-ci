@@ -35,23 +35,19 @@ plugins {
     kotlin("jvm")
 }
 
-ext {
-    var gitDir = file("$projectDir/../../../.git")
-    project.extra["commit"] = if (gitDir.exists()) {
-        gitDir = file("$projectDir/../../../")
-        Grgit.open(gitDir).head()
-    } else {
-        null
-    }
-}
-
 tasks {
     withType<BootRun> {
         jvmArgs = listOf("-Dspring.output.ansi.enabled=ALWAYS", "-Dfile.encoding=UTF-8")
     }
 
     register("copyVersionInfo") {
-        val commit: Commit? = project.extra["commit"] as Commit?
+        var gitDir = file("$projectDir/../../../.git")
+        val commit: Commit? = if (gitDir.exists()) {
+            gitDir = file("$projectDir/../../../")
+            Grgit.open(gitDir).head()
+        } else {
+            null
+        }
         if (null != commit && File("$projectDir/src/main/resources").exists()) {
             File("$projectDir/src/main/resources/version.txt").writeText(
                 """

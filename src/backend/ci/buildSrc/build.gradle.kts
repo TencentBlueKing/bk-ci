@@ -1,8 +1,9 @@
+// gradle使用kts
 plugins {
     `kotlin-dsl`
 }
 
-// 仓库
+// 插件使用仓库
 repositories {
     var mavenRepoUrl: String? = System.getProperty("mavenRepoUrl")
     if (mavenRepoUrl == null) {
@@ -19,11 +20,7 @@ repositories {
     jcenter()
 }
 
-kotlinDslPluginOptions {
-    experimentalWarning.set(false)
-}
-
-
+// 依赖插件
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72")
     implementation("org.jetbrains.kotlin:kotlin-allopen:1.3.72")
