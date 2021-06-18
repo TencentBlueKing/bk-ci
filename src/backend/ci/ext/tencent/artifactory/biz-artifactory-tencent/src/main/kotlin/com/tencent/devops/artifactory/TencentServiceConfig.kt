@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -62,6 +63,7 @@ class TencentServiceConfig {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
     fun gitCIPipelineService(
-        client: Client
-    ) = GitCIPipelineService(client)
+        client: Client,
+        tokenCheckService: ClientTokenService
+    ) = GitCIPipelineService(client, tokenCheckService)
 }

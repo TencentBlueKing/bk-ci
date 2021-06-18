@@ -25,34 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api.service
+package com.tencent.devops.common.web.handler
 
-import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
+import com.tencent.devops.common.api.exception.TokenForbiddenException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-@Api(tags = ["AUTH_CALLBACK_PROJECT"], description = "iam回调project接口")
-@Path("/open/project/callback")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceProjectAuthResource {
-    @POST
-    @Path("/")
-    @ApiOperation("iam项目回调接口")
-    fun projectInfo(
-        @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @ApiParam("token")
-        token: String,
-        @ApiParam(value = "回调信息")
-        callBackInfo: CallbackRequestDTO
-    ): CallbackBaseResponseDTO?
+@BkExceptionMapper
+class TokenForbiddenExceptionMapper : ExceptionMapper<TokenForbiddenException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(TokenForbiddenExceptionMapper::class.java)!!
+    }
+
+    override fun toResponse(exception: TokenForbiddenException): Response {
+        logger.warn("Encounter token exception(${exception.message})")
+        val status = Response.Status.FORBIDDEN
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.defaultMessage
+        } else {
+            "auth token 校验失败"
+        }
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
+    }
 }

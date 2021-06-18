@@ -27,7 +27,6 @@
 
 package com.tencent.devops.auth.pojo.dto
 
-import com.tencent.devops.auth.pojo.enum.GroupType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -36,9 +35,11 @@ data class GroupDTO(
     @ApiModelProperty("用户组编号, 内置用户组编号固定, 自定义组动态生成")
     val groupCode: String,
     @ApiModelProperty("用户组分类")
-    val groupType: GroupType,
+    val groupType: String,
     @ApiModelProperty("用户组名称")
     val groupName: String,
-    @ApiModelProperty("权限集合")
-    val authPermissionList: List<String>?
+    @ApiModelProperty("用户组别名")
+    val displayName: String?,
+    @ApiModelProperty("关联系统Id")
+    val relationId: String?
 )
