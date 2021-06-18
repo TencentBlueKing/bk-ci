@@ -28,22 +28,51 @@ package com.tencent.bk.codecc.task.resources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tencent.bk.codecc.task.api.UserTaskRestResource;
+import com.tencent.bk.codecc.task.enums.EmailType;
 import com.tencent.bk.codecc.task.enums.TaskSortType;
-import com.tencent.bk.codecc.task.service.*;
-import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.pojo.EmailNotifyModel;
+import com.tencent.bk.codecc.task.pojo.RtxNotifyModel;
+import com.tencent.bk.codecc.task.service.EmailNotifyService;
+import com.tencent.bk.codecc.task.service.GongfengPublicProjService;
+import com.tencent.bk.codecc.task.service.GongfengTriggerService;
+import com.tencent.bk.codecc.task.service.PathFilterService;
+import com.tencent.bk.codecc.task.service.TaskRegisterService;
+import com.tencent.bk.codecc.task.service.TaskService;
+import com.tencent.bk.codecc.task.vo.CreateTaskConfigVO;
+import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
+import com.tencent.bk.codecc.task.vo.FilterPathOutVO;
+import com.tencent.bk.codecc.task.vo.MetadataVO;
+import com.tencent.bk.codecc.task.vo.NotifyCustomVO;
+import com.tencent.bk.codecc.task.vo.TaskBaseVO;
+import com.tencent.bk.codecc.task.vo.TaskCodeLibraryVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.TaskIdVO;
+import com.tencent.bk.codecc.task.vo.TaskListReqVO;
+import com.tencent.bk.codecc.task.vo.TaskListVO;
+import com.tencent.bk.codecc.task.vo.TaskMemberVO;
+import com.tencent.bk.codecc.task.vo.TaskOverviewVO;
+import com.tencent.bk.codecc.task.vo.TaskOwnerAndMemberVO;
+import com.tencent.bk.codecc.task.vo.TaskStatusVO;
+import com.tencent.bk.codecc.task.vo.TaskUpdateVO;
+import com.tencent.bk.codecc.task.vo.TreeNodeTaskVO;
 import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
-import com.tencent.devops.common.api.CommonPageVO;
-import com.tencent.devops.common.api.pojo.Page;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.enums.RepositoryType;
+import com.tencent.devops.common.api.exception.CodeCCException;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.pojo.external.CodeCCAuthAction;
-import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.client.Client;
+import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.web.RestResource;
 import com.tencent.devops.common.web.security.AuthMethod;
+import java.util.List;
+
+import com.tencent.devops.repository.api.ServiceRepositoryResource;
+import com.tencent.devops.repository.pojo.Repository;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-
-import java.util.List;
 
 /**
  * 任务清单资源实现
@@ -52,6 +81,7 @@ import java.util.List;
  * @date 2019/4/23
  */
 @RestResource
+@Slf4j
 public class UserTaskRestResourceImpl implements UserTaskRestResource {
     @Autowired
     private TaskService taskService;
@@ -67,162 +97,191 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
     private PathFilterService pathFilterService;
 
     @Autowired
-    private KafkaSyncService kafkaSyncService;
-
+    private GongfengTriggerService gongfengTriggerService;
 
     @Override
-    public CodeCCResult<TaskListVO> getTaskList(String projectId, String user, TaskSortType taskSortType, TaskListReqVO taskListReqVO) {
-        return new CodeCCResult<>(taskService.getTaskList(projectId, user, taskSortType, taskListReqVO));
+    public Result<TaskListVO> getTaskList(String projectId, String user, TaskSortType taskSortType, TaskListReqVO taskListReqVO) {
+        return new Result<>(taskService.getTaskList(projectId, user, taskSortType, taskListReqVO));
+    }
+
+    @Autowired
+    private EmailNotifyService emailNotifyService;
+
+    @Autowired
+    private Client client;
+
+    @Override
+    public Result<Boolean> triggerNotify(Long taskId, Integer type) {
+        if (type.equals(1)) {
+            emailNotifyService.sendReport(new EmailNotifyModel(taskId, null, EmailType.INSTANT));
+        } else if (type.equals(2)) {
+            emailNotifyService.sendRtx(new RtxNotifyModel(taskId, true,null));
+        } else if (type.equals(3)) {
+            emailNotifyService.sendRtx(new RtxNotifyModel(taskId, false,null));
+        }
+
+        return new Result<>(true);
     }
 
     @Override
-    public CodeCCResult<TaskListVO> getTaskBaseList(String projectId, String user) {
-        return new CodeCCResult<>(taskService.getTaskBaseList(projectId, user));
+    public Result<TaskListVO> getTaskBaseList(String projectId, String user) {
+        return new Result<>(taskService.getTaskBaseList(projectId, user));
     }
 
     @Override
-    public CodeCCResult<TaskBaseVO> getTaskInfo() {
-        return new CodeCCResult<>(taskService.getTaskInfo());
+    public Result<TaskBaseVO> getTaskInfo() {
+        return new Result<>(taskService.getTaskInfo());
     }
 
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.REPORT_VIEW})
-    public CodeCCResult<TaskDetailVO> getTask(Long taskId) {
-        return new CodeCCResult<>(taskService.getTaskInfoById(taskId));
+    public Result<TaskDetailVO> getTask(Long taskId) {
+        return new Result<>(taskService.getTaskInfoById(taskId));
     }
 
     @Override
-    public CodeCCResult<TaskOverviewVO> getTaskOverview(Long taskId) {
-        return new CodeCCResult<>(taskService.getTaskOverview(taskId));
+    public Result<TaskOverviewVO> getTaskOverview(Long taskId, String buildNum, String orderBy) {
+        return new Result<>(taskService.getTaskOverview(taskId, buildNum, orderBy));
     }
 
 
     @Override
-    public CodeCCResult<TaskIdVO> registerDevopsTask(TaskDetailVO taskDetailVO, String projectId, String userName) {
+    public Result<TaskIdVO> registerDevopsTask(TaskDetailVO taskDetailVO, String projectId, String userName) {
         taskDetailVO.setProjectId(projectId);
-        return new CodeCCResult<>(taskRegisterService.registerTask(taskDetailVO, userName));
+        return new Result<>(taskRegisterService.registerTask(taskDetailVO, userName));
     }
 
     @Override
 //    @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
-    public CodeCCResult<Boolean> updateScanConfiguration(Long taskId, String user, ScanConfigurationVO scanConfigurationVO) {
-        return new CodeCCResult<>(taskService.updateScanConfiguration(taskId, user, scanConfigurationVO));
+    public Result<Boolean> updateScanConfiguration(Long taskId, String user, ScanConfigurationVO scanConfigurationVO) {
+        return new Result<>(taskService.updateScanConfiguration(taskId, user, scanConfigurationVO));
     }
 
 
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
-    public CodeCCResult<Boolean> updateTask(TaskUpdateVO taskUpdateVO, Long taskId, String projectId, String userName) {
-        return new CodeCCResult<>(taskService.updateTask(taskUpdateVO, taskId, userName));
+    public Result<Boolean> updateTask(TaskUpdateVO taskUpdateVO, Long taskId, String projectId, String userName) {
+        return new Result<>(taskService.updateTask(taskUpdateVO, taskId, userName));
     }
 
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
-    public CodeCCResult<Boolean> addFilterPath(FilterPathInputVO filterPathInput, String userName) {
-        return new CodeCCResult<>(pathFilterService.addFilterPaths(filterPathInput, userName));
+    public Result<Boolean> addFilterPath(FilterPathInputVO filterPathInput, String userName) {
+        return new Result<>(pathFilterService.addFilterPaths(filterPathInput, userName));
     }
 
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
-    public CodeCCResult<Boolean> deleteFilterPath(String path, String pathType, Long taskId, String userName) {
-        return new CodeCCResult<>(pathFilterService.deleteFilterPath(path, pathType, taskId, userName));
+    public Result<Boolean> deleteFilterPath(String path, String pathType, Long taskId, String userName) {
+        return new Result<>(pathFilterService.deleteFilterPath(path, pathType, taskId, userName));
     }
 
     @Override
-    public CodeCCResult<FilterPathOutVO> filterPath(Long taskId) {
-        return new CodeCCResult<>(pathFilterService.getFilterPath(taskId));
+    public Result<FilterPathOutVO> filterPath(Long taskId) {
+        return new Result<>(pathFilterService.getFilterPath(taskId));
     }
 
     @Override
-    public CodeCCResult<TreeNodeTaskVO> filterPathTree(Long taskId) {
-        return new CodeCCResult<>(pathFilterService.filterPathTree(taskId));
-    }
-
-    @Override
-    @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
-    public CodeCCResult<Boolean> startTask(Long taskId, String userName) {
-        return new CodeCCResult<>(taskService.startTask(taskId, userName));
-    }
-
-    @Override
-    public CodeCCResult<TaskStatusVO> getTaskStatus(Long taskId) {
-        return new CodeCCResult<>(taskService.getTaskStatus(taskId));
-    }
-
-
-    @Override
-    @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
-    public CodeCCResult<Boolean> stopTask(Long taskId, String disabledReason, String userName) {
-        return new CodeCCResult<>(taskService.stopTask(taskId, disabledReason, userName));
-    }
-
-    @Override
-    public CodeCCResult<TaskCodeLibraryVO> getCodeLibrary(Long taskId) {
-        return new CodeCCResult<>(taskService.getCodeLibrary(taskId));
+    public Result<TreeNodeTaskVO> filterPathTree(Long taskId) {
+        return new Result<>(pathFilterService.filterPathTree(taskId));
     }
 
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
-    public CodeCCResult<Boolean> updateCodeLibrary(Long taskId, String userName, TaskDetailVO taskDetailVO) throws JsonProcessingException {
-        return new CodeCCResult<>(taskService.updateCodeLibrary(taskId, userName, taskDetailVO));
+    public Result<Boolean> startTask(Long taskId, String userName) {
+        return new Result<>(taskService.startTask(taskId, userName));
+    }
+
+    @Override
+    public Result<TaskStatusVO> getTaskStatus(Long taskId) {
+        return new Result<>(taskService.getTaskStatus(taskId));
+    }
+
+
+    @Override
+    @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
+    public Result<Boolean> stopTask(Long taskId, String disabledReason, String userName) {
+        return new Result<>(taskService.stopTask(taskId, disabledReason, userName));
+    }
+
+    @Override
+    public Result<TaskCodeLibraryVO> getCodeLibrary(Long taskId) {
+        return new Result<>(taskService.getCodeLibrary(taskId));
+    }
+
+    @Override
+    @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
+    public Result<Boolean> updateCodeLibrary(Long taskId, String userName, TaskDetailVO taskDetailVO) throws JsonProcessingException {
+        return new Result<>(taskService.updateCodeLibrary(taskId, userName, taskDetailVO));
     }
 
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.ANALYZE})
-    public CodeCCResult<Boolean> executeTask(long taskId, String isFirstTrigger,
+    public Result<Boolean> executeTask(long taskId, String isFirstTrigger,
                                        String userName) {
-        return new CodeCCResult<>(taskService.manualExecuteTask(taskId, isFirstTrigger, userName));
+        return new Result<>(taskService.manualExecuteTask(taskId, isFirstTrigger, userName));
     }
 
     @Override
-    public CodeCCResult<TaskMemberVO> getTaskUsers(long taskId, String projectId) {
-        return new CodeCCResult<>(taskService.getTaskUsers(taskId, projectId));
+    public Result<TaskMemberVO> getTaskUsers(long taskId, String projectId) {
+        return new Result<>(taskService.getTaskUsers(taskId, projectId));
     }
 
     @Override
-    public CodeCCResult<Boolean> extendGongfengScanRange(Integer startPage, Integer endPage, Integer startHour, Integer startMinute) {
-        return new CodeCCResult<>(gongfengPublicProjService.extendGongfengScanRange(startPage, endPage, startHour, startMinute));
+    public Result<Boolean> extendGongfengScanRange(Integer startPage, Integer endPage, Integer startHour, Integer startMinute) {
+        return new Result<>(gongfengPublicProjService.extendGongfengScanRange(startPage, endPage, startHour, startMinute));
     }
 
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
-    public CodeCCResult<Boolean> updateTaskReportInfo(Long taskId, NotifyCustomVO notifyCustomVO) {
+    public Result<Boolean> updateTaskReportInfo(Long taskId, NotifyCustomVO notifyCustomVO) {
         taskService.updateReportInfo(taskId, notifyCustomVO);
-        return new CodeCCResult<>(true);
+        return new Result<>(true);
     }
 
 
     @Override
-    public CodeCCResult<Boolean> updateTopUserInfo(String user, Long taskId, Boolean topFlag)
+    public Result<Boolean> updateTopUserInfo(String user, Long taskId, Boolean topFlag)
     {
-        return new CodeCCResult<>(taskService.updateTopUserInfo(taskId, user, topFlag));
+        return new Result<>(taskService.updateTopUserInfo(taskId, user, topFlag));
     }
 
     @Override
-    public CodeCCResult<Boolean> syncKafkaTaskInfo(String dataType, String washTime) {
-        return new CodeCCResult<>(kafkaSyncService.syncTaskInfoToKafkaByType(dataType, washTime));
-    }
-
-    @Override
-    public CodeCCResult<Boolean> manualTriggerPipeline(List<Long> taskIdList) {
-        kafkaSyncService.manualExecuteTriggerPipeline(taskIdList);
-        return new CodeCCResult<>(true);
-    }
-
-    @Override
-    public CodeCCResult<Boolean> updateTaskOwnerAndMember(TaskOwnerAndMemberVO taskOwnerAndMemberVO, Long taskId)
+    public Result<Boolean> updateTaskOwnerAndMember(TaskOwnerAndMemberVO taskOwnerAndMemberVO, Long taskId)
     {
         taskService.updateTaskOwnerAndMember(taskOwnerAndMemberVO, taskId);
-        return new CodeCCResult<>(true);
+        return new Result<>(true);
     }
 
     @Override
-    public CodeCCResult<CodeYmlFilterPathVO> listCodeYmlFilterPath(Long taskId) {
-        return new CodeCCResult<>(pathFilterService.listCodeYmlFilterPath(taskId));
+    public Result<CodeYmlFilterPathVO> listCodeYmlFilterPath(Long taskId) {
+        return new Result<>(pathFilterService.listCodeYmlFilterPath(taskId));
     }
 
     @Override
-    public CodeCCResult<Boolean> triggerBkPluginScoring() {
-        return new CodeCCResult<>(taskService.triggerBkPluginScoring());
+    public Result<Boolean> triggerBkPluginScoring() {
+        return new Result<>(taskService.triggerBkPluginScoring());
+    }
+
+    @Override
+    public Result<List<MetadataVO>> listTaskToolDimension(Long taskId) {
+        return new Result<>(taskService.listTaskToolDimension(taskId));
+    }
+
+    @Override public Result<Boolean> createTaskForBkPlugins(String repoId, CreateTaskConfigVO createTaskConfigVO) {
+        if (StringUtils.isBlank(repoId) || createTaskConfigVO.getLangs().isEmpty()) {
+            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_NULL);
+        }
+
+        try {
+            boolean isSucc = gongfengTriggerService.createTaskByRepoId(repoId, createTaskConfigVO.getLangs());
+            if (isSucc) {
+                return new Result<>(true);
+            } else {
+                return new Result<>(0, CommonMessageCode.SYSTEM_ERROR, "工蜂任务不合法", false);
+            }
+        } catch (CodeCCException e) {
+            return new Result<>(2300021, "2300021", "任务创建失败", false);
+        }
     }
 }

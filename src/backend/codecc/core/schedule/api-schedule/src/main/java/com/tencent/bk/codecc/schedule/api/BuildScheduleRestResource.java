@@ -27,13 +27,21 @@
 package com.tencent.bk.codecc.schedule.api;
 
 import com.tencent.bk.codecc.schedule.vo.TailLogRspVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_PROJECT_ID;
 
 /**
  * 分析服务调度接口
@@ -45,12 +53,11 @@ import javax.ws.rs.core.MediaType;
 @Path("/build")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public interface BuildScheduleRestResource
-{
+public interface BuildScheduleRestResource {
     @ApiOperation(value = "推入分析任务")
     @Path("/push/streamName/{streamName}/toolName/{toolName}/buildId/{buildId}")
     @GET
-    CodeCCResult<Boolean> push(
+    Result<Boolean> push(
             @ApiParam(value = "任务英文名", required = true)
             @PathParam("streamName")
                     String streamName,
@@ -62,12 +69,15 @@ public interface BuildScheduleRestResource
                     String buildId,
             @ApiParam(value = "构建ID")
             @QueryParam("createFrom")
-                    String createFrom);
+                    String createFrom,
+            @ApiParam(value = "任务所属蓝盾项目", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+                    String projectId);
 
     @ApiOperation(value = "实时获取日志")
     @Path("/log/streamName/{streamName}/toolName/{toolName}/buildId/{buildId}/beginLine/{beginLine}")
     @GET
-    CodeCCResult<TailLogRspVO> tailLog(
+    Result<TailLogRspVO> tailLog(
             @ApiParam(value = "任务英文名", required = true)
             @PathParam("streamName")
                     String streamName,

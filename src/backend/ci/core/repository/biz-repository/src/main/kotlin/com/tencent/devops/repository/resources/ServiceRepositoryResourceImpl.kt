@@ -158,4 +158,18 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         val result = repositoryService.listByProject(setOf(projectId), repositoryType, limit.offset, limit.limit)
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
+
+    override fun delete(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (repositoryHashId.isBlank()) {
+            throw ParamBlankException("Invalid repositoryHashId")
+        }
+        repositoryService.userDelete(userId, projectId, repositoryHashId)
+        return Result(true)
+    }
 }

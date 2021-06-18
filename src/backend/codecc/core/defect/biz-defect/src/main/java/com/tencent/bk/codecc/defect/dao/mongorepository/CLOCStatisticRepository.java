@@ -32,20 +32,51 @@ public interface CLOCStatisticRepository extends MongoRepository<CLOCStatisticEn
      * @param taskId
      * @return
      */
-    List<CLOCStatisticEntity> findByTaskId(Long taskId);
+    List<CLOCStatisticEntity> findByTaskId(Long taskId, String toolName);
+
+    /**
+     * 通过任务id查找cloc统计清单
+     * @param taskId
+     * @return
+     */
+    List<CLOCStatisticEntity> findByTaskIdAndToolName(Long taskId, String toolName);
 
     /**
      * 根据 task_id 查询当前任务下最近一次
      * 构建的记录
      * @param taskId 任务ID
      */
-    CLOCStatisticEntity findFirstByTaskIdOrderByUpdatedDateDesc(Long taskId);
+    CLOCStatisticEntity findFirstByTaskIdOrderByUpdatedDateDesc(Long taskId, String toolName);
+
+    /**
+     * 根据 task_id 查询当前任务下最近一次
+     * 构建的记录
+     * @param taskId 任务ID
+     */
+    CLOCStatisticEntity findFirstByTaskIdAndToolNameOrderByUpdatedDateDesc(Long taskId, String toolName);
+
+    /**
+     * 根据task_id和language查询当前任务下最近一次
+     * @param taskId
+     * @param language
+     * @return
+     */
+    CLOCStatisticEntity findFirstByTaskIdAndLanguageOrderByUpdatedDateDesc(Long taskId, String language);
+
+    /**
+     * 根据task_id和language查询当前任务下最近一次
+     * @param taskId
+     * @param language
+     * @return
+     */
+    CLOCStatisticEntity findFirstByTaskIdAndToolNameAndLanguageOrderByUpdatedDateDesc(
+            Long taskId, String toolName, String language);
 
     /**
      * 根据 task_id 和 build_id 查询单个记录
      * @param taskId 任务ID
      * @param buildId 构建ID
      */
-    List<CLOCStatisticEntity> findByTaskIdAndBuildId(Long taskId, String buildId);
+    List<CLOCStatisticEntity> findByTaskIdAndToolNameAndBuildId(Long taskId, String toolName, String buildId);
 
 }

@@ -33,14 +33,11 @@ import java.io.File
 
 object WorkspaceUtils {
 
-    fun getLandun() =
-        File(".")
+    fun getLandun() = File(".")
 
-    fun getWorkspace() =
-        File(getLandun(), "workspace")
+    fun getWorkspace() = File(getLandun(), "workspace")
 
-    fun getAgentJar() =
-        File(getLandun(), "worker-agent.jar")
+    fun getAgentJar() = File(getLandun(), "worker-agent.jar")
 
     fun getAgentInstallScript(): File {
         val os = getOS()
@@ -80,9 +77,9 @@ object WorkspaceUtils {
 
     fun getPipelineWorkspace(pipelineId: String, workspace: String): File {
         return if (workspace.isNotBlank()) {
-            File(workspace)
+            File(workspace) // .normalize() 会导致在windows机器下填写 ./ 时，File.exists() 会返回false，表示文件夹不存在
         } else {
-            File(getWorkspace(), "$pipelineId/src")
+            File(getWorkspace(), "$pipelineId/src").normalize()
         }
     }
 }

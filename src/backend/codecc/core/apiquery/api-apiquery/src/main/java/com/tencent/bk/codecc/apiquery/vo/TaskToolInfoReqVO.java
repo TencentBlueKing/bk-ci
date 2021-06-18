@@ -17,6 +17,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,8 +29,7 @@ import java.util.Set;
 
 @Data
 @ApiModel("任务工具信息请求体")
-public class TaskToolInfoReqVO
-{
+public class TaskToolInfoReqVO {
     @ApiModelProperty("开始时间")
     private String startTime;
 
@@ -60,11 +60,20 @@ public class TaskToolInfoReqVO
     @ApiModelProperty("部门ID集合")
     private Set<Integer> deptIds;
 
+    @ApiModelProperty("中心ID集合")
+    private Set<Integer> centerIds;
+
     @ApiModelProperty("任务状态")
     private Integer status;
 
     @ApiModelProperty("工具名称")
     private String toolName;
+
+    @ApiModelProperty("多个工具名称")
+    private List<String> toolNames;
+
+    @ApiModelProperty("工具跟进状态")
+    private Integer followStatus;
 
     @ApiModelProperty("所用语言")
     private Long codeLang;
@@ -75,10 +84,31 @@ public class TaskToolInfoReqVO
     @ApiModelProperty("是否包含新手接入 1包含,其他值不包含")
     private Integer hasNoviceRegister;
 
+    @ApiModelProperty("是否包含管理员任务 1包含,其他值不包含")
+    private Integer hasAdminTask;
+
     @ApiModelProperty("跟进描述")
     private String description;
 
     @ApiModelProperty("告警状态: enum DefectStatus")
     private Integer defectStatus;
+
+    @ApiModelProperty("遗留告警超时天数阈值")
+    private Integer timeoutDays;
+
+    @ApiModelProperty("告警严重级别筛选")
+    private Integer severity;
+
+    @ApiModelProperty("运营数据屏蔽名单")
+    private List<String> excludeUserList;
+
+    @ApiModelProperty("搜索字符串")
+    private String searchString;
+
+    @ApiModelProperty("最小分析次数")
+    private Integer minAnalyzeCount;
+
+    @ApiModelProperty("超快增量类型 enum ScanStatType")
+    private String scanStatType;
 
 }

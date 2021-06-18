@@ -32,8 +32,21 @@ import com.tencent.bk.codecc.task.pojo.TriggerPipelineOldReq;
 import com.tencent.bk.codecc.task.pojo.TriggerPipelineOldRsp;
 import com.tencent.bk.codecc.task.pojo.TriggerPipelineReq;
 import com.tencent.bk.codecc.task.pojo.TriggerPipelineRsp;
-import com.tencent.bk.codecc.task.service.*;
-import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.service.GongfengPublicProjService;
+import com.tencent.bk.codecc.task.service.GongfengTriggerOldService;
+import com.tencent.bk.codecc.task.service.GongfengTriggerService;
+import com.tencent.bk.codecc.task.service.PathFilterService;
+import com.tencent.bk.codecc.task.service.PipelineService;
+import com.tencent.bk.codecc.task.service.TaskRegisterService;
+import com.tencent.bk.codecc.task.service.TaskService;
+import com.tencent.bk.codecc.task.vo.CreateTaskConfigVO;
+import com.tencent.bk.codecc.task.vo.CustomProjVO;
+import com.tencent.bk.codecc.task.vo.FilterPathOutVO;
+import com.tencent.bk.codecc.task.vo.GongfengPublicProjVO;
+import com.tencent.bk.codecc.task.vo.TaskBaseVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.TaskIdVO;
+import com.tencent.bk.codecc.task.vo.TaskListVO;
 import com.tencent.bk.codecc.task.vo.checkerset.UpdateCheckerSet2TaskReqVO;
 import com.tencent.bk.codecc.task.vo.gongfeng.ProjectStatVO;
 import com.tencent.bk.codecc.task.vo.pipeline.PipelineTaskVO;
@@ -43,20 +56,23 @@ import com.tencent.bk.codecc.task.vo.tianyi.TaskInfoVO;
 import com.tencent.devops.common.api.CommonPageVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
+import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Page;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.external.AuthTaskService;
+import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.pojo.GongfengBaseInfo;
 import com.tencent.devops.common.util.JsonUtil;
 import com.tencent.devops.common.web.RestResource;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * 服务间任务管理接口
@@ -85,9 +101,6 @@ public class ServiceTaskRestResourceImpl implements ServiceTaskRestResource
     private AuthTaskService authTaskService;
 
     @Autowired
-    private KafkaSyncService kafkaSyncService;
-
-    @Autowired
     private PathFilterService pathFilterService;
 
     @Autowired
@@ -97,199 +110,264 @@ public class ServiceTaskRestResourceImpl implements ServiceTaskRestResource
     private GongfengTriggerOldService gongfengTriggerOldService;
 
     @Override
-    public CodeCCResult<TaskDetailVO> getTaskInfo(String nameEn)
-    {
-        return new CodeCCResult<>(taskService.getTaskInfoByStreamName(nameEn));
+    public Result<TaskDetailVO> getTaskInfo(String nameEn) {
+        return new Result<>(taskService.getTaskInfoByStreamName(nameEn));
     }
 
     @Override
-    public CodeCCResult<TaskBaseVO> getTaskToolList(long taskId)
-    {
-        return new CodeCCResult<>(taskService.getTaskToolList(taskId));
+    public Result<TaskBaseVO> getTaskToolList(long taskId) {
+        return new Result<>(taskService.getTaskToolList(taskId));
     }
 
     @Override
-    public CodeCCResult<TaskDetailVO> getTaskInfoById(Long taskId)
+    public Result<TaskDetailVO> getTaskInfoById(Long taskId)
     {
-        return new CodeCCResult<>(taskService.getTaskInfoById(taskId));
+        return new Result<>(taskService.getTaskInfoById(taskId));
     }
 
     @Override
-    public CodeCCResult<List<TaskBaseVO>> getTaskInfosByIds(List<Long> taskIds)
+    public Result<List<TaskBaseVO>> getTaskInfosByIds(List<Long> taskIds)
     {
-        return new CodeCCResult<>(taskService.getTasksByIds(taskIds));
+        return new Result<>(taskService.getTasksByIds(taskIds));
     }
 
     @Override
-    public CodeCCResult<TaskDetailVO> getTaskInfoWithoutToolsByTaskId(Long taskId)
+    public Result<TaskDetailVO> getTaskInfoWithoutToolsByTaskId(Long taskId)
     {
-        return new CodeCCResult<>(taskService.getTaskInfoWithoutToolsByTaskId(taskId));
+        return new Result<>(taskService.getTaskInfoWithoutToolsByTaskId(taskId));
     }
 
     @Override
-    public CodeCCResult<Boolean> updateTask(TaskDetailVO taskDetailVO, String userName)
+    public Result<Boolean> updateTask(TaskDetailVO taskDetailVO, String userName)
     {
         log.info("upadte pipeline task request body: {}, username: {}", JsonUtil.INSTANCE.toJson(taskDetailVO), userName);
-        return new CodeCCResult<>(taskRegisterService.updateTask(taskDetailVO, userName));
+        return new Result<>(taskRegisterService.updateTask(taskDetailVO, userName));
     }
 
     @Override
-    public CodeCCResult<TaskIdVO> registerPipelineTask(TaskDetailVO taskDetailVO, String projectId, String userName)
+    public Result<TaskIdVO> registerPipelineTask(TaskDetailVO taskDetailVO, String projectId, String userName)
     {
         taskDetailVO.setProjectId(projectId);
         log.info("registerPipelineTask request body: {}", JsonUtil.INSTANCE.toJson(taskDetailVO));
-        return new CodeCCResult<>(taskRegisterService.registerTask(taskDetailVO, userName));
+        return new Result<>(taskRegisterService.registerTask(taskDetailVO, userName));
     }
 
     @Override
-    public CodeCCResult<Boolean> stopTask(Long taskId, String disabledReason, String userName)
+    public Result<Boolean> stopTask(Long taskId, String disabledReason, String userName)
     {
-        return new CodeCCResult<>(taskService.stopTask(taskId, disabledReason, userName));
+        return new Result<>(taskService.stopTask(taskId, disabledReason, userName));
     }
 
     @Override
-    public CodeCCResult<Boolean> stopTaskByPipeline(String pipelineId, String disabledReason, String userName) {
-        return new CodeCCResult<>(taskService.stopTask(pipelineId, disabledReason, userName));
+    public Result<Boolean> stopTaskByPipeline(String pipelineId, String disabledReason, String userName) {
+        return new Result<>(taskService.stopTask(pipelineId, disabledReason, userName));
     }
 
     @Override
-    public CodeCCResult<Boolean> checkTaskExists(Long taskId)
+    public Result<Boolean> checkTaskExists(Long taskId)
     {
-        return new CodeCCResult<>(taskService.checkTaskExists(taskId));
+        return new Result<>(taskService.checkTaskExists(taskId));
     }
 
     @Override
-    public CodeCCResult<Map<String, ToolMetaBaseVO>> getToolMetaListFromCache()
+    public Result<Map<String, ToolMetaBaseVO>> getToolMetaListFromCache()
     {
-        return new CodeCCResult<>(taskService.getToolMetaListFromCache());
+        return new Result<>(taskService.getToolMetaListFromCache());
     }
 
     @Override
-    public CodeCCResult<PipelineTaskVO> getPipelineTask(String pipelineId, String user)
+    public Result<PipelineTaskVO> getPipelineTask(String pipelineId, String user)
     {
-        return new CodeCCResult<>(taskService.getTaskInfoByPipelineId(pipelineId, user));
+        return new Result<>(taskService.getTaskInfoByPipelineId(pipelineId, user));
     }
 
     @Override
-    public CodeCCResult<TaskListVO> getTaskList(String projectId, String user)
+    public Result<Set<String>> queryTaskListByPipelineIds(Set<String> pipelineIds) {
+        return new Result<>(authTaskService.queryTaskListByPipelineIds(pipelineIds));
+    }
+
+    @Override
+    public Result<TaskListVO> getTaskList(String projectId, String user)
     {
-        return new CodeCCResult<>(taskService.getTaskList(projectId, user, TaskSortType.CREATE_DATE, null));
+        return new Result<>(taskService.getTaskList(projectId, user, TaskSortType.CREATE_DATE, null));
     }
 
     @Override
-    public CodeCCResult<String> getGongfengRepoUrl(Long taskId)
+    public Result<String> getGongfengRepoUrl(Long taskId)
     {
-        return new CodeCCResult<>(gongfengPublicProjService.getGongfengUrl(taskId));
+        return new Result<>(gongfengPublicProjService.getGongfengUrl(taskId));
     }
 
     @Override
-    public CodeCCResult<List<TaskBaseVO>> getTasksByBgId(Integer bgId)
+    public Result<List<TaskBaseVO>> getTasksByBgId(Integer bgId)
     {
-        return new CodeCCResult<>(taskService.getTasksByBgId(bgId));
+        return new Result<>(taskService.getTasksByBgId(bgId));
     }
 
     @Override
-    public CodeCCResult<TaskListVO> getTaskDetailList(QueryTaskListReqVO taskListReqVO)
+    public Result<TaskListVO> getTaskDetailList(QueryTaskListReqVO taskListReqVO)
     {
-        return new CodeCCResult<>(taskService.getTaskDetailList(taskListReqVO));
+        return new Result<>(taskService.getTaskDetailList(taskListReqVO));
     }
 
     @Override
-    public CodeCCResult<Page<TaskInfoVO>> getTasksByAuthor(QueryMyTasksReqVO reqVO)
+    public Result<Page<TaskInfoVO>> getTasksByAuthor(QueryMyTasksReqVO reqVO)
     {
-        return new CodeCCResult<>(taskService.getTasksByAuthor(reqVO));
+        return new Result<>(taskService.getTasksByAuthor(reqVO));
     }
 
     @Override
-    public CodeCCResult<Boolean> updatePipelineTaskCheckerSets(String user, String projectId, String pipelineId, Long taskId,
-                                                               UpdateCheckerSet2TaskReqVO updateCheckerSet2TaskReqVO)
+    public Result<Boolean> updatePipelineTaskCheckerSets(String user, String projectId, String pipelineId, Long taskId,
+                                                         UpdateCheckerSet2TaskReqVO updateCheckerSet2TaskReqVO)
     {
-        return new CodeCCResult<>(pipelineService.updateCheckerSets(user, projectId, pipelineId, taskId, updateCheckerSet2TaskReqVO.getToolCheckerSets()));
+        return new Result<>(pipelineService.updateCheckerSets(user, projectId, pipelineId, taskId, updateCheckerSet2TaskReqVO.getToolCheckerSets()));
     }
 
     @Override
-    public CodeCCResult<Map<Integer, GongfengPublicProjVO>> getGongfengProjInfo(Collection<Integer> gfProjectId)
+    public Result<Map<Integer, GongfengPublicProjVO>> getGongfengProjInfo(Collection<Integer> gfProjectId)
     {
-        return new CodeCCResult<>(gongfengPublicProjService.queryGongfengProjectMapById(gfProjectId));
+        return new Result<>(gongfengPublicProjService.queryGongfengProjectMapById(gfProjectId));
     }
 
     @Override
-    public CodeCCResult<Boolean> syncGongfengStatProj(Integer bgId)
+    public Result<Boolean> syncGongfengStatProj(Integer bgId)
     {
-        return new CodeCCResult<>(gongfengPublicProjService.saveStatProject(bgId));
+        return new Result<>(gongfengPublicProjService.saveStatProject(bgId));
     }
 
     @Override
-    public CodeCCResult<Map<Integer, ProjectStatVO>> getGongfengStatProjInfo(Integer bgId, Collection<Integer> gfProjectId)
+    public Result<Map<Integer, ProjectStatVO>> getGongfengStatProjInfo(Integer bgId, Collection<Integer> gfProjectId)
     {
-        return new CodeCCResult<>(gongfengPublicProjService.queryGongfengStatProjectById(bgId, gfProjectId));
+        return new Result<>(gongfengPublicProjService.queryGongfengStatProjectById(bgId, gfProjectId));
     }
 
     @Override
-    public CodeCCResult<GongfengBaseInfo> getGongfengBaseInfo(Long taskId)
+    public Result<GongfengBaseInfo> getGongfengBaseInfo(Long taskId)
     {
-        return new CodeCCResult<>(authTaskService.getGongfengProjInfo(taskId));
+        return new Result<>(authTaskService.getGongfengProjInfo(taskId));
     }
 
     @Override
-    public CodeCCResult<Page<Long>> getTaskInfoByCreateFrom(String taskType, CommonPageVO reqVO)
-    {
-        Page<Long> list = kafkaSyncService.getTaskInfoByCreateFrom(taskType, reqVO);
-        return new CodeCCResult<>(list);
-    }
-
-    @Override
-    public CodeCCResult<Set<Integer>> queryDeptIdByBgId(Integer bgId)
+    public Result<Set<Integer>> queryDeptIdByBgId(Integer bgId)
     {
         Set<Integer> deptIdSet = taskService.queryDeptIdByBgId(bgId);
-        return new CodeCCResult<>(deptIdSet);
+        return new Result<>(deptIdSet);
     }
 
     @Override
-    public CodeCCResult<List<TaskDetailVO>> batchGetTaskList(QueryTaskListReqVO queryTaskListReqVO)
+    public Result<List<TaskDetailVO>> batchGetTaskList(QueryTaskListReqVO queryTaskListReqVO)
     {
-        return new CodeCCResult<>(taskService.getTaskInfoList(queryTaskListReqVO));
+        return new Result<>(taskService.getTaskInfoList(queryTaskListReqVO));
     }
 
 
     @Override
-    public CodeCCResult<FilterPathOutVO> filterPath(Long taskId) {
-        return new CodeCCResult<>(pathFilterService.getFilterPath(taskId));
+    public Result<FilterPathOutVO> filterPath(Long taskId) {
+        return new Result<>(pathFilterService.getFilterPath(taskId));
     }
 
     @Override
-    public CodeCCResult<TriggerPipelineOldRsp> triggerCustomPipeline(TriggerPipelineOldReq triggerPipelineReq, String userId)
+    public Result<TriggerPipelineOldRsp> triggerCustomPipeline(TriggerPipelineOldReq triggerPipelineReq, String userId)
     {
-        return new CodeCCResult<>(gongfengTriggerOldService.triggerCustomProjectPipeline(triggerPipelineReq, userId));
+        return new Result<>(gongfengTriggerOldService.triggerCustomProjectPipeline(triggerPipelineReq, userId));
     }
 
     @Override
-    public CodeCCResult<TriggerPipelineRsp> triggerCustomPipelineNew(TriggerPipelineReq triggerPipelineReq, String appCode, String userId)
+    public Result<TriggerPipelineRsp> triggerCustomPipelineNew(TriggerPipelineReq triggerPipelineReq, String appCode, String userId)
     {
-        return new CodeCCResult<>(gongfengTriggerService.triggerCustomProjectPipeline(triggerPipelineReq, appCode, userId));
+        return new Result<>(gongfengTriggerService.triggerCustomProjectPipeline(triggerPipelineReq, appCode, userId));
     }
 
     @Override
-    public CodeCCResult<Page<CustomProjVO>> batchGetCustomTaskList(QueryTaskListReqVO reqVO)
+    public Result<Page<CustomProjVO>> batchGetCustomTaskList(QueryTaskListReqVO reqVO)
     {
-        return new CodeCCResult<>(gongfengPublicProjService.queryCustomTaskByPageable(reqVO));
+        return new Result<>(gongfengPublicProjService.queryCustomTaskByPageable(reqVO));
     }
 
     @Override
-    public CodeCCResult<Page<TaskDetailVO>> getTaskDetailPage(QueryTaskListReqVO reqVO)
+    public Result<Page<TaskDetailVO>> getTaskDetailPage(QueryTaskListReqVO reqVO)
     {
-        return new CodeCCResult<>(taskService.getTaskDetailPage(reqVO));
+        return new Result<>(taskService.getTaskDetailPage(reqVO));
     }
 
     @Override
-    public CodeCCResult<Boolean> authorTransfer(Long taskId, List<ScanConfigurationVO.TransferAuthorPair> transferAuthorPairs, String userId)
+    public Result<Boolean> authorTransfer(Long taskId, List<ScanConfigurationVO.TransferAuthorPair> transferAuthorPairs, String userId)
     {
         taskService.authorTransferForApi(taskId, transferAuthorPairs, userId);
-        return new CodeCCResult<>(true);
+        return new Result<>(true);
     }
 
     @Override
-    public CodeCCResult<List<Long>> getBkPluginTaskIds() {
-        return new CodeCCResult<>(taskService.getBkPluginTaskIds());
+    public Result<List<Long>> getBkPluginTaskIds() {
+        return new Result<>(taskService.getBkPluginTaskIds());
     }
+
+    @Override
+    public Result<Map<Long, GongfengPublicProjVO>> getGongfengProjInfoByTaskId(List<Long> taskId) {
+        if (CollectionUtils.isEmpty(taskId)) {
+            return new Result<>(null);
+        }
+        return new Result<>(gongfengPublicProjService.queryGongfengProjectMapByTaskId(taskId));
+    }
+
+    @Override
+    public Result<TaskDetailVO> getTaskInfoByAliasName(String aliasName) {
+        if (StringUtils.isBlank(aliasName)) {
+            throw new CodeCCException(com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_,
+                    new String[]{"无效的代码库别名"});
+        }
+
+        return new Result<>(taskService.getTaskInfoByAliasName(aliasName));
+    }
+
+    @Override public Result<TaskDetailVO> getTaskInfoByGongfengId(Integer id) {
+        return new Result<>(taskService.getTaskInfoByGongfengId(id, null));
+    }
+
+    @Override
+    public Result<GongfengBaseInfo> getGongfengCIBaseInfo(Integer gongfengId) {
+        return new Result<>(authTaskService.getGongfengCIProjInfo(gongfengId));
+    }
+
+    @Override public Result<Boolean> createTaskForBkPlugins(String repoId, CreateTaskConfigVO createTaskConfigVO) {
+        if (StringUtils.isBlank(repoId) || createTaskConfigVO.getLangs().isEmpty()) {
+            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_NULL);
+        }
+
+        try {
+            boolean isSucc = gongfengTriggerService.createTaskByRepoId(repoId, createTaskConfigVO.getLangs());
+            if (isSucc) {
+                return new Result<>(true);
+            } else {
+                return new Result<>(2300021,
+                        CommonMessageCode.SYSTEM_ERROR,
+                        "工蜂任务不合法",
+                        false);
+            }
+        } catch (CodeCCException e) {
+            return new Result<>(2300021, "2300021", "任务创建失败", false);
+        }
+    }
+
+    @Override
+    public Result<List<Long>> queryTaskIdByCreateFrom(List<String> createFrom) {
+        return new Result<>(taskService.queryTaskIdByCreateFrom(createFrom));
+    }
+
+    @Override
+    public Result<TaskDetailVO> getTaskInfoWithoutToolsByStreamName(String nameEn) {
+        return new Result<>(taskService.getTaskInfoWithoutToolsByStreamName(nameEn));
+    }
+
+    @Override
+    public Result<Boolean> stopRunningApiTask(String codeccBuildId, String appCode, String userId) {
+        try {
+            gongfengTriggerService.stopRunningApiTask(codeccBuildId, appCode, userId);
+        } catch (Exception e) {
+            log.info("stop running api task:{}", e.getMessage());
+            throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, e.getMessage());
+        }
+        return new Result<>(true);
+    }
+
 }

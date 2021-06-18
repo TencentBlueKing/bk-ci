@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.task.api;
 
 import com.tencent.devops.common.api.ToolMetaDetailVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -36,7 +36,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_PROJECT_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 工具元数据注册接口
@@ -53,9 +54,9 @@ public interface BuildToolMetaRestResource
     @ApiOperation("工具元数据注册")
     @Path("/")
     @POST
-    CodeCCResult<ToolMetaDetailVO> register(
+    Result<ToolMetaDetailVO> register(
             @ApiParam(value = "用户名", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String userName,
             @ApiParam(value = "工具元数据信息", required = true)
                     ToolMetaDetailVO toolMetaDetailVO
@@ -64,5 +65,9 @@ public interface BuildToolMetaRestResource
     @ApiOperation("工具元数据查询")
     @Path("/list")
     @GET
-    CodeCCResult<List<ToolMetaDetailVO>> queryToolMetaDataList();
+    Result<List<ToolMetaDetailVO>> queryToolMetaDataList(
+            @ApiParam(value = "项目ID", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+                    String projectId
+    );
 }

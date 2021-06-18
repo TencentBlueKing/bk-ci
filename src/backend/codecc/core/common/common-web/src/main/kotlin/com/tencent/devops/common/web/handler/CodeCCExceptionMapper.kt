@@ -27,7 +27,7 @@
 package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.exception.CodeCCException
-import com.tencent.devops.common.api.pojo.CodeCCResult
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
@@ -45,11 +45,10 @@ class CodeCCExceptionMapper : ExceptionMapper<CodeCCException> {
     override fun toResponse(exception: CodeCCException): Response {
         logger.error("Request fails with the exception, error code: ${exception.errorCode}, params: ${exception.params?.toList()}," +
                 " cause exception is ${exception.errorCause}", exception)
-        exception.printStackTrace()
         val status = Response.Status.OK
         val errorMsg = MessageCodeUtil.generateResponseDataObject<String>(exception.errorCode, exception.params
                 ?: emptyArray())
-        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE).entity(CodeCCResult<Void>(
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE).entity(Result<Void>(
                 status = status.statusCode,
                 code = exception.errorCode,
                 message = errorMsg.message ?: exception.message ?: exception.defaultMessage)).build()

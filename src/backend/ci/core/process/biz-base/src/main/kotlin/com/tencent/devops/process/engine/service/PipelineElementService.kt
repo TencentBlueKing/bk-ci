@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
@@ -49,6 +50,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PR
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -65,6 +67,9 @@ class PipelineElementService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineElementService::class.java)
     }
+
+    @Value("\${pipeline.atom.postPrompt:POST：}")
+    private val postPrompt: String = "POST："
 
     fun handlePostElements(
         projectId: String,
@@ -104,31 +109,13 @@ class PipelineElementService @Autowired constructor(
                 }
             }
         }
-        val getPostAtomsResult =
-            client.get(ServiceMarketAtomResource::class).getPostAtoms(projectId, noCacheAtomItems)
-        if (getPostAtomsResult.isNotOk()) {
-            throw ErrorCodeException(
-                errorCode = getPostAtomsResult.status.toString(),
-                defaultMessage = getPostAtomsResult.message
+        if (noCacheAtomItems.isNotEmpty()) {
+            handleNoCachePostElement(
+                projectId = projectId,
+                noCacheAtomItems = noCacheAtomItems,
+                noCacheElementMap = noCacheElementMap,
+                allPostElements = allPostElements
             )
-        }
-        val atomPostResp = getPostAtomsResult.data
-        val atomPostAtoms = atomPostResp?.postAtoms
-        if (atomPostAtoms != null && atomPostAtoms.isNotEmpty()) {
-            noCacheElementMap.forEach { (elementId, elementItem) ->
-                atomPostAtoms.forEach { atomPostInfo ->
-                    if (elementItem.atomCode == atomPostInfo.atomCode && elementItem.version == atomPostInfo.version) {
-                        // 把redis中未缓存的带post操作的element加入集合
-                        allPostElements.add(ElementPostInfo(
-                            postEntryParam = atomPostInfo.postEntryParam,
-                            postCondition = atomPostInfo.postCondition,
-                            parentElementId = elementId,
-                            parentElementName = elementItem.elementName,
-                            parentElementJobIndex = elementItem.elementJobIndex
-                        ))
-                    }
-                }
-            }
         }
         // 将post操作的element倒序排序以满足业务需要
         allPostElements.sortByDescending { it.parentElementJobIndex }
@@ -142,6 +129,50 @@ class PipelineElementService @Autowired constructor(
             )
         }
         return finalElementList
+    }
+
+    private fun handleNoCachePostElement(
+        projectId: String,
+        noCacheAtomItems: MutableSet<AtomPostReqItem>,
+        noCacheElementMap: MutableMap<String, ElementBaseInfo>,
+        allPostElements: MutableList<ElementPostInfo>
+    ) {
+        val getPostAtomsResult =
+            client.get(ServiceMarketAtomResource::class).getPostAtoms(projectId, noCacheAtomItems)
+        if (getPostAtomsResult.isNotOk()) {
+            throw ErrorCodeException(
+                errorCode = getPostAtomsResult.status.toString(),
+                defaultMessage = getPostAtomsResult.message
+            )
+        }
+        val atomPostResp = getPostAtomsResult.data
+        val atomPostAtoms = atomPostResp?.postAtoms
+        if (atomPostAtoms != null && atomPostAtoms.isNotEmpty()) {
+            addNoCachePostElement(noCacheElementMap, atomPostAtoms, allPostElements)
+        }
+    }
+
+    private fun addNoCachePostElement(
+        noCacheElementMap: MutableMap<String, ElementBaseInfo>,
+        atomPostAtoms: List<AtomPostInfo>,
+        allPostElements: MutableList<ElementPostInfo>
+    ) {
+        noCacheElementMap.forEach { (elementId, elementItem) ->
+            atomPostAtoms.forEach { atomPostInfo ->
+                if (elementItem.atomCode == atomPostInfo.atomCode && elementItem.version == atomPostInfo.version) {
+                    // 把redis中未缓存的带post操作的element加入集合
+                    allPostElements.add(
+                        ElementPostInfo(
+                            postEntryParam = atomPostInfo.postEntryParam,
+                            postCondition = atomPostInfo.postCondition,
+                            parentElementId = elementId,
+                            parentElementName = elementItem.elementName,
+                            parentElementJobIndex = elementItem.elementJobIndex
+                        )
+                    )
+                }
+            }
+        }
     }
 
     private fun addPostElement(
@@ -191,9 +222,10 @@ class PipelineElementService @Autowired constructor(
             elementPostInfo = elementPostInfo
         )
         // 生成post操作的element
+        val postElementName = "$postPrompt$elementName"
         if (originAtomElement is MarketBuildAtomElement) {
             val marketBuildAtomElement = MarketBuildAtomElement(
-                name = elementName,
+                name = postElementName,
                 id = modelTaskIdGenerator.getNextId(),
                 status = elementStatus,
                 atomCode = originAtomElement.getAtomCode(),
@@ -204,7 +236,7 @@ class PipelineElementService @Autowired constructor(
             finalElementList.add(marketBuildAtomElement)
         } else if (originAtomElement is MarketBuildLessAtomElement) {
             val marketBuildLessAtomElement = MarketBuildLessAtomElement(
-                name = elementName,
+                name = postElementName,
                 id = modelTaskIdGenerator.getNextId(),
                 status = elementStatus,
                 atomCode = originAtomElement.getAtomCode(),

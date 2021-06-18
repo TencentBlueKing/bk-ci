@@ -79,6 +79,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -108,8 +109,15 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         private const val PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY = "pipeline:atom:replace:fail:flag"
     }
 
+    @Value("\${pipeline.atom.replaceSwitch:true}")
+    private val switch: Boolean = true
+
     @Scheduled(cron = "0 0/1 * * * ?")
     fun pipelineAtomReplace() {
+        if (!switch) {
+            // 开关关闭，则不替换回滚
+            return
+        }
         val lock = RedisLock(redisOperation, LOCK_KEY, 3000)
         try {
             if (!lock.tryLock()) {
@@ -579,6 +587,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         userId: String
     ): Boolean {
         val pipelineModel = JsonUtil.to(pipelineModelObj["MODEL"] as String, Model::class.java)
+        pipelineModel.latestVersion = 0 // latestVersion置为0以便适配修改流水线的校验逻辑
         val pipelineId = pipelineModelObj["PIPELINE_ID"] as String
         val pipelineInfoRecord = pipelineInfoMap[pipelineId]
         if (pipelineInfoRecord == null) {

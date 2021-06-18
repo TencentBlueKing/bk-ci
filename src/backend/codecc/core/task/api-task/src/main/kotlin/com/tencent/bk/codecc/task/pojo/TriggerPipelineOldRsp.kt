@@ -4,11 +4,11 @@ import io.swagger.annotations.ApiModelProperty
 
 data class TriggerPipelineOldRsp(
     @ApiModelProperty("显示页面路径")
-    val displayAddress : String,
+    val displayAddress: String,
     @ApiModelProperty("构建id")
-    val buildId : String,
+    val buildId: String,
     @ApiModelProperty("任务id")
-    val taskId : Long,
+    val taskId: Long,
     @ApiModelProperty("工具清单")
-    val toolList : List<String>
+    val toolList: List<String>
 )

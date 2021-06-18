@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.devops.common.api.annotation.ServiceInterface;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -54,7 +54,7 @@ public interface ServiceDefectDataResource
     @ApiOperation("刷新工具的汇总数据")
     @Path("/freshToolStatic")
     @POST
-    CodeCCResult<String> freshToolStatic(
+    Result<String> freshToolStatic(
         Set<Long> taskIds
     );
 }

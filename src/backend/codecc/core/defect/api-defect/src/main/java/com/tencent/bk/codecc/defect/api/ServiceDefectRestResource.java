@@ -26,17 +26,23 @@
 
 package com.tencent.bk.codecc.defect.api;
 
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
+
 import com.tencent.bk.codecc.defect.vo.BatchDefectProcessReqVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.bk.codecc.defect.vo.MetricsVO;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-
 import javax.validation.Valid;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 服务间调用的告警管理服务
@@ -53,15 +59,39 @@ public interface ServiceDefectRestResource
     @ApiOperation("告警批量处理")
     @Path("/batch/task/{taskId}")
     @POST
-    CodeCCResult<Boolean> batchDefectProcess(
+    Result<Boolean> batchDefectProcess(
             @ApiParam(value = "任务ID", required = true)
             @PathParam("taskId")
                     long taskId,
             @ApiParam(value = "用户名", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String userName,
             @ApiParam(value = "批量告警处理请求信息", required = true)
             @Valid
                     BatchDefectProcessReqVO batchDefectProcessReqVO
+    );
+
+    @ApiOperation("获取度量信息")
+    @Path("/repo/measurement")
+    @GET
+    Result<MetricsVO> getMetrics(
+            @ApiParam(value = "代码库别名", required = true)
+            @HeaderParam("repoId")
+                    String repoId,
+            @ApiParam(value = "构建号")
+            @HeaderParam("buildId")
+                    String buildId
+        );
+
+    @ApiOperation("按时间获取最后一条告警")
+    @Path("/task/{taskId}/tool/{toolName}/lastest")
+    @GET
+    Result<Long> lastestStatDefect(
+            @ApiParam(value = "任务ID", required = true)
+            @PathParam("taskId")
+                    long taskId,
+            @ApiParam(value = "工具名称", required = true)
+            @PathParam("toolName")
+                    String toolName
     );
 }

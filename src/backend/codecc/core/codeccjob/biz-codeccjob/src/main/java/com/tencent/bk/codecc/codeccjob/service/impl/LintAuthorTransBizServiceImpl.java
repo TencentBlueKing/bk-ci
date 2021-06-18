@@ -17,7 +17,7 @@ import com.tencent.bk.codecc.codeccjob.dao.mongotemplate.LintDefectV2Dao;
 import com.tencent.bk.codecc.codeccjob.service.AbstractAuthorTransBizService;
 import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
 import com.tencent.bk.codecc.defect.vo.common.AuthorTransferVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +45,7 @@ public class LintAuthorTransBizServiceImpl extends AbstractAuthorTransBizService
     private LintDefectV2Dao lintDefectV2Dao;
 
     @Override
-    public CodeCCResult processBiz(AuthorTransferVO authorTransferVO)
+    public Result processBiz(AuthorTransferVO authorTransferVO)
     {
         Set<String> sourceAuthorSet = authorTransferVO.getTransferAuthorList().stream().map(AuthorTransferVO.TransferAuthorPair::getSourceAuthor).collect(Collectors.toSet());
         List<LintDefectV2Entity> lintDefectEntityList = lintDefectV2Repository.findDefectsNeedTransferAuthor(authorTransferVO.getTaskId(),
@@ -60,7 +60,7 @@ public class LintAuthorTransBizServiceImpl extends AbstractAuthorTransBizService
             });
             lintDefectV2Dao.batchUpdateDefectAuthor(authorTransferVO.getTaskId(), lintDefectEntityList);
         }
-        return new CodeCCResult(CommonMessageCode.SUCCESS);
+        return new Result(CommonMessageCode.SUCCESS);
     }
 
 }

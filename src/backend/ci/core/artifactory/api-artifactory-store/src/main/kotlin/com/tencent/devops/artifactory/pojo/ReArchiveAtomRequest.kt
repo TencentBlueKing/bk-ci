@@ -39,5 +39,7 @@ data class ReArchiveAtomRequest(
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
     @ApiModelProperty("插件版本号", required = true)
-    val version: String
+    val version: String,
+    @ApiModelProperty(value = "插件字段校验确认标识", required = false)
+    val fieldCheckConfirmFlag: Boolean? = false
 )

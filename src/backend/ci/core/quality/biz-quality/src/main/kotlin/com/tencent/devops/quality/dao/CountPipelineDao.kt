@@ -126,7 +126,7 @@ class CountPipelineDao {
                 now
             )
                 .returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }
@@ -146,7 +146,7 @@ class CountPipelineDao {
             return dslContext.select(PIPELINE_ID.countDistinct())
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

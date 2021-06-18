@@ -28,6 +28,8 @@
 package com.tencent.devops.process.pojo.setting
 
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
@@ -52,7 +54,9 @@ data class PipelineSetting(
     var hasPermission: Boolean? = null,
     val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
     val maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, // MULTIPLE类型时，并发构建数量限制
-    var version: Int = 0
+    var version: Int = 0,
+    @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
+    val buildNumRule: String? = null // 构建号生成规则
 ) {
 
     @Suppress("ALL")
