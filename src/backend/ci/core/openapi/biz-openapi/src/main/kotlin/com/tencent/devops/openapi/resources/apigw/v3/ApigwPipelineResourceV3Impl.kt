@@ -46,7 +46,6 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Client) :
     ApigwPipelineResourceV3 {
-
     override fun status(
         appCode: String?,
         apigwType: String?,

@@ -42,6 +42,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.PipelineWithModel
@@ -336,6 +337,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
             channelCode = ChannelCode.BS
         )
         return Result(true)
+    }
+
+    override fun getProjectPipelineIds(projectCode: String): Result<List<PipelineIdInfo>> {
+        return Result(pipelineListFacadeService.getPipelineId(projectCode))
     }
 
     private fun checkParams(userId: String, projectId: String) {
