@@ -83,7 +83,7 @@ class TxProjectInitConfiguration {
 
     @Bean
     fun iamV3Service(
-        iamManagerService: ManagerService,
+        iamManagerService: com.tencent.bk.sdk.iam.service.ManagerService,
         iamConfiguration: IamConfiguration,
         projectDao: ProjectDao,
         dslContext: DSLContext,
