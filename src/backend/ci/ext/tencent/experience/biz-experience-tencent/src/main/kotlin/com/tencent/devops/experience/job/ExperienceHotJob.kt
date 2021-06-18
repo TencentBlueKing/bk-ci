@@ -30,7 +30,7 @@ class ExperienceHotJob @Autowired constructor(
     private var hotDays: Long = 7
 
     @Scheduled(cron = "0 5 0 * * ?")
-    @SuppressWarnings("MagicNumber")
+    @SuppressWarnings("MagicNumber", "NestedBlockDepth", "SwallowedException")
     fun jobHot() {
         if (profile.isProd() && !profile.isProdGray()) {
             logger.info("profile is prod , no start")
