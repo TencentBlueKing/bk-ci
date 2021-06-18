@@ -278,7 +278,7 @@ class DockerHostClient @Autowired constructor(
             buildType = BuildType.AGENT_LESS
         )
 
-        dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody,  "", DockerHostClusterType.AGENT_LESS)
+        dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody, "", DockerHostClusterType.AGENT_LESS)
     }
 
     fun endBuild(

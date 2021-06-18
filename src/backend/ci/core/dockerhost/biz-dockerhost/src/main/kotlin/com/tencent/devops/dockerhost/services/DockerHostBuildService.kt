@@ -67,7 +67,6 @@ import com.tencent.devops.dockerhost.docker.DockerBindLoader
 import com.tencent.devops.dockerhost.docker.DockerEnvLoader
 import com.tencent.devops.dockerhost.docker.DockerVolumeLoader
 import com.tencent.devops.dockerhost.exception.ContainerException
-import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
