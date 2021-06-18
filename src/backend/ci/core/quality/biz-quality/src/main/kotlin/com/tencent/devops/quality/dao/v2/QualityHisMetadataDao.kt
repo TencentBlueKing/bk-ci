@@ -53,14 +53,16 @@ class QualityHisMetadataDao {
                 PIPELINE_ID,
                 BUILD_ID,
                 BUILD_NO,
-                RESULT_DATA
+                RESULT_DATA,
+                CREATE_TIME
             )
                 .values(
                     projectId,
                     pipelineId,
                     buildId,
                     buildNo,
-                    callbackStr
+                    callbackStr,
+                    System.currentTimeMillis()
                 )
                 .execute()
         }
@@ -91,7 +93,8 @@ class QualityHisMetadataDao {
                     this.PIPELINE_ID,
                     this.BUILD_ID,
                     this.BUILD_NO,
-                    this.EXTRA
+                    this.EXTRA,
+                    this.CREATE_TIME
                 )
                     .values(
                         it.enName,
@@ -105,7 +108,8 @@ class QualityHisMetadataDao {
                         pipelineId,
                         buildId,
                         buildNo,
-                        it.extra
+                        it.extra,
+                        System.currentTimeMillis()
                     )
                     .onDuplicateKeyUpdate()
                     .set(DATA_TYPE, it.type.name)
@@ -114,6 +118,7 @@ class QualityHisMetadataDao {
                     .set(ELEMENT_TYPE, elementType)
                     .set(ELEMENT_DETAIL, it.detail)
                     .set(EXTRA, it.extra)
+                    .set(CREATE_TIME, System.currentTimeMillis())
             }
             dslContext.batch(insertCommand).execute()
         }
@@ -124,6 +129,22 @@ class QualityHisMetadataDao {
             dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .fetch()
+        }
+    }
+
+    fun deleteHisMetadataByCreateTime(dslContext: DSLContext, time: Long): Int {
+        return with(TQualityHisDetailMetadata.T_QUALITY_HIS_DETAIL_METADATA) {
+            dslContext.deleteFrom(this)
+                .where(CREATE_TIME.lt(time))
+                .execute()
+        }
+    }
+
+    fun deleteHisOriginMetadataByCreateTime(dslContext: DSLContext, time: Long): Int {
+        return with(TQualityHisOriginMetadata.T_QUALITY_HIS_ORIGIN_METADATA) {
+            dslContext.deleteFrom(this)
+                .where(CREATE_TIME.lt(time))
+                .execute()
         }
     }
 }

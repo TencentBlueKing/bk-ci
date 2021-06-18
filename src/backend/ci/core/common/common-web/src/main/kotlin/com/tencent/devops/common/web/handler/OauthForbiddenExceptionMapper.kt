@@ -25,32 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth
+package com.tencent.devops.common.web.handler
 
-import com.tencent.devops.auth.service.BkAuthPermissionProjectService
-import com.tencent.devops.auth.service.BkAuthPermissionService
-import com.tencent.devops.common.auth.service.IamEsbService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AuthConfiguration {
+@BkExceptionMapper
+class OauthForbiddenExceptionMapper : ExceptionMapper<OauthForbiddenException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(OauthForbiddenExceptionMapper::class.java)!!
+    }
 
-    @Bean
-    fun iamEsbService() = IamEsbService()
-
-    @Bean
-    @ConditionalOnMissingBean
-    fun permissionService() = BkAuthPermissionService()
-
-    @Bean
-    @ConditionalOnMissingBean
-    fun permissionProjectService() = BkAuthPermissionProjectService()
+    override fun toResponse(exception: OauthForbiddenException): Response {
+        logger.warn("Encounter permission exception(${exception.message})")
+        val status = CommonMessageCode.OAUTH_DENERD
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.defaultMessage
+        } else {
+            "你没有Oauth认证"
+        }
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(
+                Result(
+                    status = CommonMessageCode.OAUTH_DENERD,
+                    message = message,
+                    data = exception.message)).build()
+    }
 }
