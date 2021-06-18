@@ -90,7 +90,8 @@ class V2RequestTrigger @Autowired constructor(
             isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
             filePath = filePath,
-            pipelineId = gitProjectPipeline.pipelineId
+            pipelineId = gitProjectPipeline.pipelineId,
+            pipelineName = gitProjectPipeline.displayName
         ) ?: return false
         val yamlObject = yamlObjects.normalYaml
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
@@ -107,7 +108,7 @@ class V2RequestTrigger @Autowired constructor(
             // 正常匹配仓库操作触发
             logger.info(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                        "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
+                    "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
             )
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
@@ -155,17 +156,20 @@ class V2RequestTrigger @Autowired constructor(
         } else {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                 "eventId: ${gitRequestEvent.id}")
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventSaveService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
+                pipelineName = gitProjectPipeline.displayName,
                 filePath = gitProjectPipeline.filePath,
                 originYaml = originYaml,
                 parsedYaml = parsedYaml,
                 normalizedYaml = normalizedYaml,
                 reason = TriggerReason.TRIGGER_NOT_MATCH.name,
                 reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
-                gitProjectId = gitRequestEvent.gitProjectId
+                gitProjectId = gitRequestEvent.gitProjectId,
+                sendCommitCheck = false,
+                commitCheckBlock = false
             )
         }
 
@@ -182,25 +186,35 @@ class V2RequestTrigger @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
-        filePath: String?,
-        pipelineId: String?
+        filePath: String,
+        pipelineId: String?,
+        pipelineName: String?
     ): YamlObjects? {
         if (originYaml.isNullOrBlank()) {
             return null
         }
         logger.info("input yamlStr: $originYaml")
         val isFork = (isMr) && gitRequestEvent.sourceGitProjectId != null &&
-                gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
-        val preTemplateYamlObject = formatAndCheckYaml(originYaml, gitRequestEvent, pipelineId, filePath) ?: return null
+            gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
+        val preTemplateYamlObject = formatAndCheckYaml(
+            originYaml = originYaml,
+            gitRequestEvent = gitRequestEvent,
+            pipelineId = pipelineId,
+            filePath = filePath,
+            isMr = isMr,
+            pipelineName = pipelineName
+        ) ?: return null
         return replaceYamlTemplate(
             isFork = isFork,
+            isMr = isMr,
             gitToken = gitToken,
             forkGitToken = forkGitToken,
             preTemplateYamlObject = preTemplateYamlObject,
             filePath = filePath ?: GIT_CI_TEMPLATE_ROOT_FILE,
             gitRequestEvent = gitRequestEvent,
             pipelineId = pipelineId,
-            originYaml = originYaml
+            originYaml = originYaml,
+            pipelineName = pipelineName
         )
     }
 
@@ -208,7 +222,9 @@ class V2RequestTrigger @Autowired constructor(
         originYaml: String,
         gitRequestEvent: GitRequestEvent,
         pipelineId: String?,
-        filePath: String?
+        pipelineName: String?,
+        filePath: String,
+        isMr: Boolean
     ): PreTemplateScriptBuildYaml? {
         return try {
             // 格式化yaml，替换部分内容
@@ -220,17 +236,20 @@ class V2RequestTrigger @Autowired constructor(
             preTemplateYamlObject
         } catch (e: Exception) {
             logger.error("git ci yaml is invalid", e)
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventSaveService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 filePath = filePath,
                 originYaml = originYaml,
                 parsedYaml = null,
                 normalizedYaml = null,
                 reason = TriggerReason.CI_YAML_INVALID.name,
                 reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message),
-                gitProjectId = gitRequestEvent.gitProjectId
+                gitProjectId = gitRequestEvent.gitProjectId,
+                sendCommitCheck = true,
+                commitCheckBlock = isMr
             )
             null
         }
@@ -238,13 +257,15 @@ class V2RequestTrigger @Autowired constructor(
 
     private fun replaceYamlTemplate(
         isFork: Boolean,
+        isMr: Boolean,
         gitToken: GitToken,
         forkGitToken: GitToken?,
         preTemplateYamlObject: PreTemplateScriptBuildYaml,
         filePath: String,
         gitRequestEvent: GitRequestEvent,
         originYaml: String?,
-        pipelineId: String?
+        pipelineId: String?,
+        pipelineName: String?
     ): YamlObjects? {
         // 替换yaml文件中的模板引用
         val preYamlObject = try {
@@ -271,17 +292,20 @@ class V2RequestTrigger @Autowired constructor(
             } else {
                 e.message.toString()
             }
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventSaveService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 filePath = filePath,
                 originYaml = originYaml,
                 parsedYaml = null,
                 normalizedYaml = null,
                 reason = TriggerReason.CI_YAML_TEMPLATE_ERROR.name,
                 reasonDetail = TriggerReason.CI_YAML_TEMPLATE_ERROR.detail.format(message),
-                gitProjectId = gitRequestEvent.gitProjectId
+                gitProjectId = gitRequestEvent.gitProjectId,
+                sendCommitCheck = true,
+                commitCheckBlock = isMr
             )
             return null
         }
