@@ -27,32 +27,49 @@
 
 package com.tencent.devops.quality.cron
 
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.quality.dao.v2.QualityHisMetadataDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 @Component
 class QualityHisMetadataJob @Autowired constructor(
     private val qualityHisMetadataDao: QualityHisMetadataDao,
+    private val redisOperation: RedisOperation,
     private val dslContext: DSLContext
 ) {
 
-    private val twelveHours = 3600 * 12 * 1000
-
     private val logger = LoggerFactory.getLogger(QualityHisMetadataJob::class.java)
+
+    @Value("\${quality.metadata.clean.timeGap:12}")
+    var cleanTimeGapHour: Long = 12
 
     @Scheduled(cron = "0 0 6 * * ?")
     fun clean() {
-        val deleteTime = System.currentTimeMillis() - twelveHours
+        val key = this::class.java.name + "#" + Thread.currentThread().stackTrace[1].methodName
+        val lock = RedisLock(redisOperation, key, 3600L)
+        try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip: $key")
+                return
+            }
 
-        logger.info("start to delete quality his meta data before: $deleteTime")
+            val deleteTime = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(cleanTimeGapHour)
 
-        val detailCount = qualityHisMetadataDao.deleteHisMetadataByCreateTime(dslContext, deleteTime)
-        val originCount = qualityHisMetadataDao.deleteHisOriginMetadataByCreateTime(dslContext, deleteTime)
+            logger.info("start to delete quality his meta data before: $deleteTime")
 
-        logger.info("finish to delete quality his meta data before: $deleteTime, $detailCount, $originCount")
+            val detailCount = qualityHisMetadataDao.deleteHisMetadataByCreateTime(dslContext, deleteTime)
+            val originCount = qualityHisMetadataDao.deleteHisOriginMetadataByCreateTime(dslContext, deleteTime)
+
+            logger.info("finish to delete quality his meta data before: $deleteTime, $detailCount, $originCount")
+        } finally {
+            lock.unlock()
+        }
     }
 }
