@@ -33,7 +33,7 @@ import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecor
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Record1
-import org.jooq.Record4
+import org.jooq.Record5
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -257,12 +257,12 @@ class ExperiencePublicDao {
         bannerUrl: String? = null,
         necessaryIndex: Int? = null,
         bannerIndex: Int? = null,
-        downloadTime: Int? = null
+        downloadTime: Int? = null,
+        updateTime: LocalDateTime? = LocalDateTime.now()
     ) {
-        val now = LocalDateTime.now()
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             dslContext.update(this)
-                .set(UPDATE_TIME, now)
+                .set(UPDATE_TIME, updateTime)
                 .let { if (null == online) it else it.set(ONLINE, online) }
                 .let { if (null == necessary) it else it.set(NECESSARY, necessary) }
                 .let { if (null == bannerUrl) it else it.set(BANNER_URL, bannerUrl) }
@@ -345,9 +345,15 @@ class ExperiencePublicDao {
         }
     }
 
-    fun listAllUnique(dslContext: DSLContext): Result<Record4<Long, String, String, String>> {
+    fun listAllUnique(dslContext: DSLContext): Result<Record5<Long, Long, String, String, String>> {
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
-            return dslContext.select(ID, PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM).from(this).fetch()
+            return dslContext.select(ID, RECORD_ID, PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM)
+                .from(this)
+                .where(END_DATE.gt(LocalDateTime.now()))
+                .and(ONLINE.eq(true))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(10000)
+                .fetch()
         }
     }
 }
