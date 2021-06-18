@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
@@ -46,7 +47,8 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val dslContext: DSLContext,
     val nodeDao: NodeDao,
-    val envDao: EnvDao
+    val envDao: EnvDao,
+    val tokenCheckService: ClientTokenService
 ) : EnvironmentPermissionService {
 
     override fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
@@ -149,7 +151,12 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
         logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, "", gitProjectId, "").data ?: false
+            userId = userId,
+            token = tokenCheckService.getSystemToken(null) ?: "",
+            action = "",
+            projectCode = gitProjectId,
+            resourceCode = ""
+        ).data ?: false
     }
 
     // 拿到的数据统一为加密后的id

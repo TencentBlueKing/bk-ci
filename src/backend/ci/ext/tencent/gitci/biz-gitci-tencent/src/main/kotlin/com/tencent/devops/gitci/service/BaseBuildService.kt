@@ -164,16 +164,20 @@ abstract class BaseBuildService<T> @Autowired constructor(
             logger.error("GitCI Build failed, gitProjectId[${gitProjectConf.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]", e)
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventSaveService.saveRunNotBuildEvent(
                 userId = event.userId,
                 eventId = event.id!!,
                 pipelineId = pipeline.pipelineId,
+                pipelineName = pipeline.displayName,
                 filePath = pipeline.filePath,
                 originYaml = build?.originYaml,
                 normalizedYaml = build?.normalizedYaml,
                 reason = TriggerReason.PIPELINE_RUN_ERROR.name,
                 reasonDetail = e.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
-                gitProjectId = event.gitProjectId
+                gitProjectId = event.gitProjectId,
+                // V1不发送通知
+                sendCommitCheck = false,
+                commitCheckBlock = false
             )
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
         }

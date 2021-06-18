@@ -58,6 +58,7 @@ import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineIdAndName
+import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineWithModel
@@ -1415,5 +1416,16 @@ class PipelineListFacadeService @Autowired constructor(
         if (pipelineNames.isEmpty() || projectId.isBlank()) return mapOf()
 
         return pipelineRepositoryService.listPipelineIdByName(projectId, pipelineNames, filterDelete)
+    }
+
+    fun getPipelineId(
+        projectCode: String
+    ): List<PipelineIdInfo> {
+        val pipelineIdInfos = pipelineInfoDao.listByProject(dslContext, projectCode)
+        val idInfos = mutableListOf<PipelineIdInfo>()
+        pipelineIdInfos.forEach {
+            idInfos.add(PipelineIdInfo(it.get("pipelineId") as String, it.get("id") as Long))
+        }
+        return idInfos
     }
 }

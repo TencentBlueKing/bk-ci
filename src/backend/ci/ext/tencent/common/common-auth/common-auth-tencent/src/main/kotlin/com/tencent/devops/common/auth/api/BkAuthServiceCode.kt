@@ -28,6 +28,7 @@
 package com.tencent.devops.common.auth.api
 
 enum class BkAuthServiceCode(val value: String) {
+    COMMON("bk_ci_auth"),
     BCS("bcs"),
     CODE("code"),
     PIPELINE("pipeline"),

@@ -42,4 +42,5 @@ dependencies {
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":core:artifactory:api-artifactory-push"))
     api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
+    api(project(":core:auth:api-auth"))
 }
