@@ -33,6 +33,7 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.GitCiPipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
@@ -83,6 +84,7 @@ class TxPipelineEngineConfiguration {
     fun gitCIPipelinePermissionServiceImpl(
         client: Client,
         pipelineIndoDao: PipelineInfoDao,
-        dslContext: DSLContext
-    ) = GitCiPipelinePermissionServiceImpl(client, pipelineIndoDao, dslContext)
+        dslContext: DSLContext,
+        checkTokenService: ClientTokenService
+    ) = GitCiPipelinePermissionServiceImpl(client, pipelineIndoDao, dslContext, checkTokenService)
 }

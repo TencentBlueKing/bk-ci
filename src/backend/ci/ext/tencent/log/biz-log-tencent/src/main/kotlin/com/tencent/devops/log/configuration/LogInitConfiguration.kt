@@ -31,6 +31,7 @@ import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.log.service.GitCILogPermissionServiceImpl
 import com.tencent.devops.log.service.LogPermissionServiceImpl
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -60,6 +61,7 @@ class LogInitConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
     fun gitCILogPermissionService(
-        client: Client
-    ) = GitCILogPermissionServiceImpl(client)
+        client: Client,
+        tokenCheckService: ClientTokenService
+    ) = GitCILogPermissionServiceImpl(client, tokenCheckService)
 }
