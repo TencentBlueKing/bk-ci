@@ -38,10 +38,13 @@ import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -102,6 +105,48 @@ interface ServicePipelineResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
+
+    @ApiOperation("导入新流水线, 包含流水线编排和设置")
+    @POST
+    @Path("/projects/{projectId}/pipeline_upload")
+    fun uploadPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线模型与设置", required = true)
+        @Valid
+        modelAndSetting: PipelineModelAndSetting,
+        @ApiParam("渠道号，默认为BS", required = true)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode,
+        @ApiParam("是否使用模板配置", required = false)
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean? = false
+    ): Result<PipelineId>
+
+    @ApiOperation("更新流水线编排和设置")
+    @PUT
+    @Path("/projects/{projectId}/{pipelineId}/pipeline_edit")
+    fun updatePipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "流水线模型与设置", required = true)
+        @Valid
+        modelAndSetting: PipelineModelAndSetting,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<DeployPipelineResult>
 
     @ApiOperation("获取流水线编排")
     @GET

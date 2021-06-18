@@ -52,7 +52,7 @@
             this.leaveConfirm(to, from, next)
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('pipleines', [
                 'resetPipelineSetting'
             ]),
             setState ({ isLoading, isEditing }) {

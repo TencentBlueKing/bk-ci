@@ -17,7 +17,7 @@
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local build_type = ngx.var.http_x_devops_build_type
 local cjson = require("cjson")
-
+ngx.header["X-DEVOPS-ERROR-RETURN"] = '{"status": 500,"data": "buildEnd","result":true,"message": "构建已结束。","errorCode":2101182}'
 if build_type == "AGENT" then
     --- 第三方构建机
     -- if build_type == "AGENT" then 
@@ -62,12 +62,12 @@ if build_type == "AGENT" then
 
         if not redRes then
             ngx.log(ngx.ERR, "failed to get redis result: ", err)
-            ngx.exit(500)
+            ngx.exit(401)
             return
         else
             if redRes == ngx.null then
                 ngx.log(ngx.STDERR, "redis result is null")
-                ngx.exit(404)
+                ngx.exit(401)
                 return
             else
                 local obj = cjson.decode(redRes)
@@ -85,7 +85,7 @@ if build_type == "AGENT" then
                 -- parameter check
                 if obj.projectId == nil then
                     ngx.log(ngx.STDERR, "projectId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
@@ -101,25 +101,25 @@ if build_type == "AGENT" then
 
                 if obj.pipelineId == nil then
                     ngx.log(ngx.STDERR, "pipelineId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
                 if obj.buildId == nil then
                     ngx.log(ngx.STDERR, "buildId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
                 if obj.vmSeqId == nil then
                     ngx.log(ngx.STDERR, "vmSeqId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
                 if obj.agentId == nil then
                     ngx.log(ngx.STDERR, "agentId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
@@ -181,12 +181,12 @@ elseif build_type == "DOCKER" then
 
         if not redRes then
             ngx.log(ngx.ERR, "failed to get redis result: ", err)
-            ngx.exit(500)
+            ngx.exit(401)
             return
         else
             if redRes == ngx.null then
                 ngx.log(ngx.STDERR, "redis result is null")
-                ngx.exit(404)
+                ngx.exit(401)
                 return
             else
                 local obj = cjson.decode(redRes)
@@ -203,13 +203,13 @@ elseif build_type == "DOCKER" then
                 -- parameter check
                 if obj.projectId == nil then
                     ngx.log(ngx.STDERR, "projectId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
                 if obj.pipelineId == nil then
                     ngx.log(ngx.STDERR, "pipelineId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
@@ -225,19 +225,19 @@ elseif build_type == "DOCKER" then
 
                 if obj.buildId == nil then
                     ngx.log(ngx.STDERR, "buildId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
                 if obj.vmName == nil then
                     ngx.log(ngx.STDERR, "vmName is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
                 if obj.vmSeqId == nil then
                     ngx.log(ngx.STDERR, "vmSeqId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
@@ -293,12 +293,12 @@ elseif build_type == "PLUGIN_AGENT" then
 
         if not redRes then
             ngx.log(ngx.ERR, "failed to get redis result: ", err)
-            ngx.exit(500)
+            ngx.exit(401)
             return
         else
             if redRes == ngx.null then
                 ngx.log(ngx.STDERR, "redis result is null")
-                ngx.exit(404)
+                ngx.exit(401)
                 return
             else
                 local obj = cjson.decode(redRes)
@@ -315,7 +315,7 @@ elseif build_type == "PLUGIN_AGENT" then
                 -- parameter check
                 if obj.projectId == nil then
                     ngx.log(ngx.STDERR, "projectId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
@@ -331,25 +331,25 @@ elseif build_type == "PLUGIN_AGENT" then
 
                 if obj.pipelineId == nil then
                     ngx.log(ngx.STDERR, "pipelineId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
                 if obj.buildId == nil then
                     ngx.log(ngx.STDERR, "buildId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
                 if obj.vmName == nil then
                     ngx.log(ngx.STDERR, "vmName is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
                 if obj.vmSeqId == nil then
                     ngx.log(ngx.STDERR, "vmSeqId is null: ")
-                    ngx.exit(500)
+                    ngx.exit(401)
                     return
                 end
 
@@ -378,7 +378,7 @@ elseif build_type == "MACOS" then
     local client_ip, err = ipUtil:clientIp()
     if not client_ip then
         ngx.log(ngx.STDERR, "failed to get client ip: ", err)
-        ngx.exit(500)
+        ngx.exit(401)
         return
     end
     --- redis获取IP对应的buildID
@@ -398,13 +398,13 @@ elseif build_type == "MACOS" then
         --- 处理获取到的buildID
         if not redRes then
             ngx.log(ngx.ERR, "failed to get redis result: ", err)
-            ngx.exit(500)
+            ngx.exit(401)
             return
         else
             if redRes == ngx.null then
                 ngx.log(ngx.STDERR, "client ip: ", client_ip)
                 ngx.log(ngx.STDERR, "redis result is null: ")
-                ngx.exit(500)
+                ngx.exit(401)
                 return
             else
                 local obj = cjson.decode(redRes)
@@ -468,7 +468,7 @@ else
     local client_ip, err = ipUtil:clientIp()
     if not client_ip then
         ngx.log(ngx.STDERR, "failed to get client ip: ", err)
-        ngx.exit(500)
+        ngx.exit(401)
         return
     end
     --- redis获取IP对应的buildID
@@ -488,13 +488,13 @@ else
         --- 处理获取到的buildID
         if not redRes then
             ngx.log(ngx.ERR, "failed to get redis result: ", err)
-            ngx.exit(500)
+            ngx.exit(401)
             return
         else
             if redRes == ngx.null then
                 ngx.log(ngx.STDERR, "client ip: ", client_ip)
                 ngx.log(ngx.STDERR, "redis result is null: ")
-                ngx.exit(500)
+                ngx.exit(401)
                 return
             else
                 local obj = cjson.decode(redRes)

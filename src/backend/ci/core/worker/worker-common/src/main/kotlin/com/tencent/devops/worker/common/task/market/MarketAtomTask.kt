@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -45,6 +46,7 @@ import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
@@ -60,6 +62,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
+import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -148,16 +151,31 @@ open class MarketAtomTask : ITask() {
         try {
             val inputMap = map["input"] as Map<String, Any>?
             inputMap?.forEach { (name, value) ->
+                var valueStr = JsonUtil.toJson(value)
+                valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
+                    override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+                        return CredentialUtils.getCredentialContextValue(key) ?: if (doubleCurlyBraces) {
+                                "\${{$key}}"
+                            } else {
+                                "\${$key}"
+                            }
+                    }
+                })
+
                 // 只有构建环境下运行的插件才有workspace变量
                 if (buildTask.containerType == VMBuildContainer.classType) {
                     atomParams[name] = EnvUtils.parseEnv(
-                        command = JsonUtil.toJson(value),
+                        command = valueStr,
                         data = systemVariables,
                         contextMap = contextMap(buildTask).plus(
-                            mapOf(WORKSPACE_CONTEXT to workspace.absolutePath))
+                            mapOf(
+                                WORKSPACE_CONTEXT to workspace.absolutePath,
+                                CI_TOKEN_CONTEXT to (buildVariables.variables[CI_TOKEN_CONTEXT] ?: "")
+                            )
+                        )
                     )
                 } else {
-                    atomParams[name] = JsonUtil.toJson(value)
+                    atomParams[name] = valueStr
                 }
             }
         } catch (e: Throwable) {
@@ -294,7 +312,8 @@ open class MarketAtomTask : ITask() {
                         runtimeVariables = environment,
                         dir = atomTmpSpace,
                         workspace = workspace,
-                        errorMessage = errorMessage
+                        errorMessage = errorMessage,
+                        elementId = buildTask.elementId
                     )
                 }
                 AgentEnv.getOS() == OSType.LINUX || AgentEnv.getOS() == OSType.MAC_OS -> {
@@ -312,7 +331,8 @@ open class MarketAtomTask : ITask() {
                         buildEnvs = buildEnvs,
                         runtimeVariables = environment,
                         systemEnvVariables = systemEnvVariables,
-                        errorMessage = errorMessage
+                        errorMessage = errorMessage,
+                        elementId = buildTask.elementId
                     )
                 }
             }
@@ -631,15 +651,16 @@ open class MarketAtomTask : ITask() {
         }
         params["reportName"] = output["label"] as String
         val reportArchTask = BuildTask(
-            buildTask.buildId,
-            buildTask.vmSeqId,
-            buildTask.status,
-            buildTask.taskId,
-            buildTask.elementId,
-            buildTask.elementName,
-            buildTask.type,
-            params,
-            buildTask.buildVariable
+            buildId = buildTask.buildId,
+            vmSeqId = buildTask.vmSeqId,
+            status = buildTask.status,
+            taskId = buildTask.taskId,
+            elementId = buildTask.elementId,
+            elementName = buildTask.elementName,
+            type = buildTask.type,
+            params = params,
+            buildVariable = buildTask.buildVariable,
+            containerType = buildTask.containerType
         )
         logger.info("${buildTask.buildId}|reportArchTask|atomWorkspacePath=${atomWorkspace.absolutePath}")
 
