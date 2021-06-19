@@ -30,7 +30,6 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.UUIDUtil
