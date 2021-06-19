@@ -61,6 +61,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.IllegalArgumentException
 
 /**
  * 流水线webhook存储服务
@@ -209,7 +210,7 @@ class PipelineWebhookService @Autowired constructor(
                 ScmType.CODE_TGIT
             }
             else -> {
-                throw RuntimeException("Unknown web hook type($type)")
+                throw IllegalArgumentException("Unknown web hook type($type)")
             }
         }
 

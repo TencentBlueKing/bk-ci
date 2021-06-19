@@ -49,6 +49,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_INCLUDE_USERS
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_RELATIVE_PATH
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_REVERSION
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_USERNAME
+import java.lang.IllegalArgumentException
 
 @Suppress("ALL")
 class GitGenericWebHookElementStartParam(
@@ -70,7 +71,7 @@ class GitGenericWebHookElementStartParam(
             ScmType.CODE_SVN.name ->
                 svnStartParam(element = element, startParams = startParams)
             else ->
-                throw RuntimeException("Unknown scm type")
+                throw IllegalArgumentException("Unknown scm type")
         }
         return startParams
     }

@@ -133,7 +133,7 @@ class EnvServiceExt @Autowired constructor(
             if (noExistsEnvIds.isNotEmpty()) {
                 logger.warn("The envIds not exists, id:$noExistsEnvIds")
                 throw ErrorCodeException(
-                    errorCode  = PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS,
+                    errorCode = PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS,
                     params = arrayOf(noExistsEnvIds.toString())
                 )
             }
@@ -149,7 +149,7 @@ class EnvServiceExt @Autowired constructor(
             if (noExistsNodeIds.isNotEmpty()) {
                 logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
                 throw ErrorCodeException(
-                    errorCode  = PushMessageCode.NODE_NAME_MACHINE_NOT_EXITS,
+                    errorCode = PushMessageCode.NODE_NAME_MACHINE_NOT_EXITS,
                     params = arrayOf(noExistsNodeIds.toString())
                 )
             }

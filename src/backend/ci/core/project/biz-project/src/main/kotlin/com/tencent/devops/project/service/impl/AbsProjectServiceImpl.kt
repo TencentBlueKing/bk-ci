@@ -30,6 +30,7 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -75,6 +76,7 @@ import java.io.File
 import java.io.InputStream
 import java.util.ArrayList
 import java.util.regex.Pattern
+import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -273,7 +275,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     val projectId = projectDao.getByEnglishName(
                         dslContext = dslContext,
                         englishName = englishName
-                    )?.projectId ?: throw RuntimeException("项目 -$englishName 不存在")
+                    )?.projectId ?: throw NotFoundException("项目 -$englishName 不存在")
                     projectDao.update(
                         dslContext = context,
                         userId = userId,
@@ -536,7 +538,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
 
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
-            ?: throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+            ?: throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NOT_EXIST)
         val verify = validatePermission(
             userId = userId,
             projectCode = englishName,
