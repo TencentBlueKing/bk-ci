@@ -44,12 +44,12 @@ import com.tencent.devops.process.pojo.code.github.GithubWebhook
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
-import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
+import com.tencent.devops.scm.pojo.Project
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -221,7 +221,7 @@ class GithubService @Autowired constructor(
         val url = "https://raw.githubusercontent.com/$projectName/$ref/$filePath"
         OkhttpUtils.doGet(url).use {
             logger.info("github content url: $url")
-            if (!it.isSuccessful){
+            if (!it.isSuccessful) {
                 throw CustomException(
                     status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
                     message = it.body()!!.toString()
