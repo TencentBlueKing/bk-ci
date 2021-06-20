@@ -64,13 +64,21 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
         val paramValueStr = paramValue.toString()
         val minLength = attributes[MIN_LENGTH] as Int
         if (minLength > 0 && paramValueStr.length < minLength) {
-            message = MessageCodeUtil.getCodeLanMessage(CommonMessageCode.PARAMETER_LENGTH_TOO_SHORT, message)
+            message = MessageCodeUtil.getCodeLanMessage(
+                messageCode = CommonMessageCode.PARAMETER_LENGTH_TOO_SHORT,
+                defaultMessage = message,
+                params = arrayOf(minLength.toString())
+            )
             setErrorMessage(constraintValidatorContext, message)
             return false
         }
         val maxLength = attributes[MAX_LENGTH] as Int
         if (maxLength > 0 && paramValueStr.length > maxLength) {
-            message = MessageCodeUtil.getCodeLanMessage(CommonMessageCode.PARAMETER_LENGTH_TOO_LONG, message)
+            message = MessageCodeUtil.getCodeLanMessage(
+                messageCode = CommonMessageCode.PARAMETER_LENGTH_TOO_LONG,
+                defaultMessage = message,
+                params = arrayOf(maxLength.toString())
+            )
             setErrorMessage(constraintValidatorContext, message)
             return false
         }
