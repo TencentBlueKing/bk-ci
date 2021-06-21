@@ -49,16 +49,16 @@ class ExperienceHotJob @Autowired constructor(
                 publicUnique.forEach {
                     val countForHot = experienceDownloadDetailDao.countForHot(
                         dslContext = dslContext,
-                        projectId = it.get("PROJECT_ID", String::class.java),
-                        bundleIdentifier = it.get("BUNDLE_IDENTIFIER", String::class.java),
-                        platform = it.get("PLATFORM", String::class.java),
+                        projectId = it.projectId,
+                        bundleIdentifier = it.bundleIdentifier,
+                        platform = it.platform,
                         hotDaysAgo = hotDaysAgo
                     )
 
                     val updateTime = try {
                         experienceDao.get(dslContext, it.get("RECORD_ID", Long::class.java)).updateTime
                     } catch (e: Exception) {
-                        LocalDateTime.now()
+                        it.createTime
                     }
 
                     experiencePublicDao.updateById(
