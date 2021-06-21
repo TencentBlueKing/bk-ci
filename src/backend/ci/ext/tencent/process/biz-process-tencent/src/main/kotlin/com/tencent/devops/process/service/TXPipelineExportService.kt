@@ -54,7 +54,6 @@ import com.tencent.devops.common.ci.task.WindowsScriptTask
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Variable
-import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.ci.yaml.JobDetail
 import com.tencent.devops.common.ci.yaml.ResourceType
