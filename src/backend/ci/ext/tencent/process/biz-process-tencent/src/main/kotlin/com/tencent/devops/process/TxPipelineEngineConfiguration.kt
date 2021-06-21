@@ -87,4 +87,12 @@ class TxPipelineEngineConfiguration {
         dslContext: DSLContext,
         checkTokenService: ClientTokenService
     ) = GitCiPipelinePermissionServiceImpl(client, pipelineIndoDao, dslContext, checkTokenService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun detailPage() = GitCIDetailPageBuild()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun historyPage() = GitCIHistoryPageBuild()
 }
