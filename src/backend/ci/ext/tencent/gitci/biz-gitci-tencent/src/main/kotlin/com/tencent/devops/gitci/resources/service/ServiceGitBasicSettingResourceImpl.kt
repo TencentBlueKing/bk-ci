@@ -54,10 +54,6 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
         val gitProjectId = projectInfo.gitProjectId.toLong()
         checkParam(userId)
-        permissionService.checkGitCIAndOAuth(
-            userId = userId,
-            projectId = projectId
-        )
         val setting = gitCIBasicSettingService.getGitCIConf(gitProjectId)
         val result = if (setting == null) {
             gitCIBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled, projectInfo)
@@ -73,7 +69,6 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     override fun getGitCIConf(userId: String, projectId: String): Result<GitCIBasicSetting?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        permissionService.checkGitCIPermission(userId, projectId)
         return Result(gitCIBasicSettingService.getGitCIConf(gitProjectId))
     }
 
