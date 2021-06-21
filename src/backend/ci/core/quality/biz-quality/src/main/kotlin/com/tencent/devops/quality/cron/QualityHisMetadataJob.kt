@@ -50,6 +50,9 @@ class QualityHisMetadataJob @Autowired constructor(
     @Value("\${quality.metadata.clean.timeGap:12}")
     var cleanTimeGapHour: Long = 12
 
+    @Value("\${quality.metadata.clean.round:100}")
+    var cleanRound: Long = 100
+
     @Scheduled(cron = "0 0 6 * * ?")
     fun clean() {
         val key = this::class.java.name + "#" + Thread.currentThread().stackTrace[1].methodName
@@ -62,12 +65,27 @@ class QualityHisMetadataJob @Autowired constructor(
 
             val deleteTime = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(cleanTimeGapHour)
 
-            logger.info("start to delete quality his meta data before: $deleteTime")
+            logger.info("start to delete quality his meta data: $deleteTime, $cleanTimeGapHour, $cleanRound")
 
-            val detailCount = qualityHisMetadataDao.deleteHisMetadataByCreateTime(dslContext, deleteTime)
-            val originCount = qualityHisMetadataDao.deleteHisOriginMetadataByCreateTime(dslContext, deleteTime)
+            for (i in 1..cleanRound) {
+                val detailCount = qualityHisMetadataDao.deleteHisMetadataByCreateTime(dslContext, deleteTime)
 
-            logger.info("finish to delete quality his meta data before: $deleteTime, $detailCount, $originCount")
+                logger.info("finish to delete quality his detail meta data before: $deleteTime, $detailCount")
+
+                if (detailCount == 0) {
+                    break
+                }
+            }
+
+            for (i in 1..cleanRound) {
+                val originCount = qualityHisMetadataDao.deleteHisOriginMetadataByCreateTime(dslContext, deleteTime)
+
+                logger.info("finish to delete quality his origin meta data before: $deleteTime, $originCount")
+
+                if (originCount == 0) {
+                    break
+                }
+            }
         } finally {
             lock.unlock()
         }

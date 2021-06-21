@@ -132,18 +132,20 @@ class QualityHisMetadataDao {
         }
     }
 
-    fun deleteHisMetadataByCreateTime(dslContext: DSLContext, time: Long): Int {
+    fun deleteHisMetadataByCreateTime(dslContext: DSLContext, time: Long, pageSize: Int = 10000): Int {
         return with(TQualityHisDetailMetadata.T_QUALITY_HIS_DETAIL_METADATA) {
             dslContext.deleteFrom(this)
                 .where(CREATE_TIME.lt(time))
+                .limit(pageSize)
                 .execute()
         }
     }
 
-    fun deleteHisOriginMetadataByCreateTime(dslContext: DSLContext, time: Long): Int {
+    fun deleteHisOriginMetadataByCreateTime(dslContext: DSLContext, time: Long, pageSize: Int = 10000): Int {
         return with(TQualityHisOriginMetadata.T_QUALITY_HIS_ORIGIN_METADATA) {
             dslContext.deleteFrom(this)
                 .where(CREATE_TIME.lt(time))
+                .limit(pageSize)
                 .execute()
         }
     }
