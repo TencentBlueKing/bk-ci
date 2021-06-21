@@ -53,6 +53,9 @@ class QualityHisMetadataJob @Autowired constructor(
     @Value("\${quality.metadata.clean.round:100}")
     var cleanRound: Long = 100
 
+    @Value("\${quality.metadata.clean.roundSize:10000}")
+    var roundSize: Long = 10000
+
     @Value("\${quality.metadata.clean.roundGap:5}")
     var roundGap: Long = 5
 
@@ -71,13 +74,28 @@ class QualityHisMetadataJob @Autowired constructor(
             logger.info("start to delete quality his meta data: $deleteTime, $cleanTimeGapHour, $cleanRound")
 
             for (i in 1..cleanRound) {
-                val detailCount = qualityHisMetadataDao.deleteHisMetadataByCreateTime(dslContext, deleteTime)
+                val result = qualityHisMetadataDao.getHisMetadataByCreateTime(dslContext, deleteTime, i * roundSize)
 
-                logger.info("finish to delete quality his detail meta data before: $deleteTime, $detailCount")
+                val nullResultIds = mutableSetOf<Long>()
+                val resultIds = mutableSetOf<Long>()
 
-                if (detailCount == 0) {
+                result.forEach {
+                    if (it.createTime == null || it.createTime <= 0L) {
+                        nullResultIds.add(it.id)
+                    } else {
+                        resultIds.add(it.id)
+                    }
+                }
+
+                if (nullResultIds.isEmpty() && resultIds.isEmpty()) {
                     break
                 }
+
+                logger.info("start to delete quality his detail meta data before: $deleteTime, ${resultIds.size}")
+                qualityHisMetadataDao.deleteHisMetadataById(dslContext, resultIds)
+
+                logger.info("start to update quality his detail meta data before: $deleteTime, ${nullResultIds.size}")
+                qualityHisMetadataDao.updateHisMetadataTimeById(dslContext, nullResultIds)
 
                 Thread.sleep(roundGap * 1000)
             }
