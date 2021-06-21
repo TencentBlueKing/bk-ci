@@ -43,8 +43,7 @@ class TencentGITCIAgentUrlServiceImpl constructor(
     private val v2GitUrl: String? = null
 
     override fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
-//        val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "$v2GitUrl/external/agents/$agentHashId/agent"
+        return "$v2GitUrl/external/agents/$agentHashId/agent?x-devops-project-id=${agentRecord.projectId}"
     }
 }
