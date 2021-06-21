@@ -69,8 +69,8 @@ class SensitiveApiPermissionAspect constructor(
             atomCode = redisOperation.get(redisKey)
         }
 
-        logger.info("$buildId|$vmSeqId|$atomCode|$apiName|using sensitive api")
         if (apiName != null && atomCode != null) {
+            logger.info("$buildId|$vmSeqId|$atomCode|$apiName|using sensitive api")
             if (enableSensitiveApi &&
                 client.get(ServiceSensitiveApiPermissionResource::class).verifyApi(
                     atomCode = atomCode,
