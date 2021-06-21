@@ -107,11 +107,11 @@ class PipelineWebSocketConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    fun defaultHistoryPage() = DefaultHistoryPageBuild()
+    @ConditionalOnMissingBean(name = ["historyPage"])
+    fun historyPage() = DefaultHistoryPageBuild()
 
     @Bean
-    @ConditionalOnMissingBean
-    fun defaultDetailPage() = DefaultDetailPageBuild()
+    @ConditionalOnMissingBean(name = ["detailPage"])
+    fun detailPage() = DefaultDetailPageBuild()
 
 }
