@@ -29,6 +29,7 @@ package com.tencent.devops.gitci.v2.utils
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.gitci.pojo.git.GitCommit
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
@@ -143,6 +144,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
             return false
         }
 
+        // 先排除exclude和ignore
         // exclude branch of mr
         if (triggerOn.mr!!.sourceBranchesIgnore != null && triggerOn.mr!!.sourceBranchesIgnore!!.isNotEmpty()) {
             logger.info("Exclude branch set(${triggerOn.mr!!.sourceBranchesIgnore})")
@@ -262,7 +264,14 @@ class V2WebHookMatcher(private val event: GitEvent) {
         if (pathList != null && pathList.isNotEmpty()) {
             logger.info("Include path set($pathList)")
             run outside@{
-                (event as GitPushEvent).commits.forEach { commit ->
+                var commits = listOf<GitCommit>()
+                if (event is GitPushEvent) {
+                    commits = event.commits
+                } else if (event is GitMergeRequestEvent) {
+                    commits = listOf(event.object_attributes.last_commit)
+                }
+
+                commits.forEach { commit ->
                     commit.added?.forEach { path ->
                         pathList.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {
