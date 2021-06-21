@@ -404,6 +404,11 @@ class V2WebHookMatcher(private val event: GitEvent) {
      * prefixPath: a/
      */
     private fun isPathMatch(fullPath: String, prefixPath: String): Boolean {
+        logger.info("fullPath: $fullPath, prefixPath: $prefixPath")
+        if (prefixPath.endsWith("*")) {
+            val formatPrefixPath = prefixPath.removePrefix("/").removeSuffix("*")
+            return fullPath.removePrefix("/").startsWith(formatPrefixPath)
+        }
         return fullPath.removePrefix("/").startsWith(prefixPath.removePrefix("/"))
     }
 
