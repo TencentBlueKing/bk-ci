@@ -49,7 +49,7 @@ import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.plugin.api.pojo.PluginGitCheck
 import com.tencent.devops.plugin.dao.PluginGitCheckDao
 import com.tencent.devops.plugin.dao.PluginGithubCheckDao
-import com.tencent.devops.plugin.service.ScmService
+import com.tencent.devops.plugin.service.ScmCheckService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BLOCK
@@ -86,7 +86,7 @@ class CodeWebhookService @Autowired constructor(
     private val pluginGithubCheckDao: PluginGithubCheckDao,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val scmService: ScmService,
+    private val scmCheckService: ScmCheckService,
     private val gitWebhookUnlockService: GitWebhookUnlockService
 ) {
 
@@ -401,7 +401,7 @@ class CodeWebhookService @Autowired constructor(
                     )
 
                     if (record == null) {
-                        scmService.addGitCommitCheck(
+                        scmCheckService.addGitCommitCheck(
                             event = event,
                             targetUrl = targetUrl,
                             context = context,
@@ -420,7 +420,7 @@ class CodeWebhookService @Autowired constructor(
                         )
                     } else {
                         if (buildNum.toInt() >= record.buildNumber) {
-                            scmService.addGitCommitCheck(
+                            scmCheckService.addGitCommitCheck(
                                 event = event,
                                 targetUrl = targetUrl,
                                 context = record.context ?: pipelineName,
@@ -551,7 +551,7 @@ class CodeWebhookService @Autowired constructor(
 
                 val record = pluginGithubCheckDao.getOrNull(dslContext, pipelineId, repositoryConfig, commitId)
                 if (record == null) {
-                    val result = scmService.addGithubCheckRuns(
+                    val result = scmCheckService.addGithubCheckRuns(
                         projectId = projectId,
                         repositoryConfig = repositoryConfig,
                         name = name,
@@ -578,7 +578,7 @@ class CodeWebhookService @Autowired constructor(
                     if (buildNum.toInt() >= record.buildNumber) {
                         // 如果重试或者reopen，需要将状态重新置为in_progress
                         val checkRunId = if (conclusion == null) {
-                            val result = scmService.addGithubCheckRuns(
+                            val result = scmCheckService.addGithubCheckRuns(
                                 projectId = projectId,
                                 repositoryConfig = repositoryConfig,
                                 name = record.checkRunName ?: "$pipelineName #$buildNum",
@@ -596,7 +596,7 @@ class CodeWebhookService @Autowired constructor(
                             )
                             result.id
                         } else {
-                            scmService.updateGithubCheckRuns(
+                            scmCheckService.updateGithubCheckRuns(
                                 checkRunId = record.checkRunId,
                                 projectId = projectId,
                                 repositoryConfig = repositoryConfig,

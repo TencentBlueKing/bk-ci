@@ -25,16 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service.dispatcher
+package com.tencent.devops.misc.resources
 
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.misc.api.OpThirdPartyAgentUpgradeResource
+import com.tencent.devops.misc.service.environment.AgentUpgradeService
+import org.springframework.beans.factory.annotation.Autowired
 
-interface BuildLessDispatcher {
+/**
+ * deng
+ * 2018/5/9
+ */
+@RestResource
+class OpThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
+    private val upgradeService: AgentUpgradeService
+) : OpThirdPartyAgentUpgradeResource {
 
-    fun canDispatch(event: PipelineBuildLessStartupDispatchEvent): Boolean
+    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
+        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
+        return Result(true)
+    }
 
-    fun startUp(event: PipelineBuildLessStartupDispatchEvent)
-
-    fun shutdown(event: PipelineBuildLessShutdownDispatchEvent)
+    override fun getMaxParallelUpgradeCount(): Result<Int> {
+        return Result(upgradeService.getMaxParallelUpgradeCount())
+    }
 }
