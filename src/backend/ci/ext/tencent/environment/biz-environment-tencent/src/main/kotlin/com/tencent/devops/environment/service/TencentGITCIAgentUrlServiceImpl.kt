@@ -27,53 +27,23 @@
 
 package com.tencent.devops.environment.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import org.springframework.beans.factory.annotation.Value
 
 /**
- * 腾讯内部旧版专用Agent下载链接生成服务
+ * GITCI专用Agent下载链接生成服务
  */
-open class TencentAgentUrlServiceImpl constructor(
+class TencentGITCIAgentUrlServiceImpl constructor(
     private val commonConfig: CommonConfig
-) : AgentUrlService {
+) : TencentAgentUrlServiceImpl(commonConfig) {
 
-    override fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
-        val gw = genGateway(agentRecord)
-        val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "http://$gw/external/agents/$agentHashId/install"
-    }
+    @Value("\${gitci.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
 
     override fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
-        val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "http://$gw/external/agents/$agentHashId/agent"
-    }
-
-    override fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
-        val url = genAgentInstallUrl(agentRecord)
-        return if (agentRecord.os != OS.WINDOWS.name) {
-            "curl -H \"$AUTH_HEADER_DEVOPS_PROJECT_ID: ${agentRecord.projectId}\" $url | bash"
-        } else {
-            ""
-        }
-    }
-
-    override fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
-        return fixGateway(agentRecord.gateway)
-    }
-
-    override fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
-        return if (agentRecord.fileGateway.isNullOrBlank())
-            genGateway(agentRecord)
-        else
-            agentRecord.fileGateway.removePrefix("https://").removePrefix("http://").removeSuffix("/")
-    }
-
-    override fun fixGateway(gateway: String?): String {
-        val gw = if (gateway.isNullOrBlank()) commonConfig.devopsBuildGateway!! else gateway!!
-        return gw.removePrefix("https://").removePrefix("http://").removeSuffix("/")
+        return "$v2GitUrl/external/agents/$agentHashId/agent?x-devops-project-id=${agentRecord.projectId}"
     }
 }
