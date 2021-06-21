@@ -39,6 +39,7 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.impl.EnvironmentPermissionServiceImpl
 import com.tencent.devops.environment.permission.impl.GitCIEnvironmentPermissionServiceImpl
 import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
+import com.tencent.devops.environment.service.TencentGITCIAgentUrlServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
@@ -53,6 +54,12 @@ class TencentServiceConfig {
      */
     @Bean
     @Primary
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun gitciAgentUrlService(commonConfig: CommonConfig) = TencentGITCIAgentUrlServiceImpl(commonConfig)
+
+    @Bean
+    @Primary
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
     fun agentUrlService(commonConfig: CommonConfig) = TencentAgentUrlServiceImpl(commonConfig)
 
     @Bean
