@@ -53,7 +53,7 @@ class QualityHisMetadataJob @Autowired constructor(
     @Value("\${quality.metadata.clean.round:100}")
     var cleanRound: Long = 100
 
-    @Scheduled(cron = "0 0 6 * * ?")
+    @Scheduled(cron = "0 */10 * * * ?")
     fun clean() {
         val key = this::class.java.name + "#" + Thread.currentThread().stackTrace[1].methodName
         val lock = RedisLock(redisOperation, key, 3600L)
