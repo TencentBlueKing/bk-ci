@@ -53,6 +53,10 @@ class TokenCheckFilter @Autowired constructor(
         val httpServletRequest = request as HttpServletRequest
         val token = httpServletRequest.getHeader(AUTH_HEADER_DEVOPS_BK_TOKEN)
 
+        if (httpServletRequest.pathInfo == null) {
+            return chain.doFilter(request, response)
+        }
+
         if (!httpServletRequest.pathInfo.contains("/open/")) {
             return chain.doFilter(request, response)
         }

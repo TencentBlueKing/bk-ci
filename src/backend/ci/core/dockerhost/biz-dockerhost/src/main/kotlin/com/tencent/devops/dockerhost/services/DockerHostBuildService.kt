@@ -67,7 +67,6 @@ import com.tencent.devops.dockerhost.docker.DockerBindLoader
 import com.tencent.devops.dockerhost.docker.DockerEnvLoader
 import com.tencent.devops.dockerhost.docker.DockerVolumeLoader
 import com.tencent.devops.dockerhost.exception.ContainerException
-import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
@@ -219,7 +218,6 @@ class DockerHostBuildService(
             return container.id
         } catch (er: Throwable) {
             logger.error(er.toString())
-            logger.error(er.cause.toString())
             logger.error(er.message)
             log(
                 buildId = dockerBuildInfo.buildId,
@@ -229,7 +227,10 @@ class DockerHostBuildService(
                 containerHashId = dockerBuildInfo.containerHashId
             )
             if (er is NotFoundException) {
-                throw NoSuchImageException("Create container failed: ${er.message}")
+                throw ContainerException(
+                    errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
+                    message = "构建镜像不存在"
+                )
             } else {
                 alertApi.alert(
                     AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
