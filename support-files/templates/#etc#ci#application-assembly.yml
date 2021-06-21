@@ -45,6 +45,7 @@ server:
 # 如果微服务是部署多机节点，则以下目录需要做成分布式高可用的，比如NFS，CephFS挂载
 # 保证多节点都能读取到
 artifactory:
+  realm: local  # 如果使用蓝鲸制品库，则该值要修改为 bkrepo
   archiveLocalBasePath: __BK_CI_DATA_DIR__/artifactory  # 如果多节点部署, 需要使用共享存储.
   fileTask:
     savedir: __BK_CI_DATA_DIR__/artifactory-filetask/  # 不一定共享, 但是建议准备较大容量.
