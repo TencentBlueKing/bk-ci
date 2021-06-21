@@ -25,67 +25,57 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.dao.project
+package com.tencent.devops.misc.service.project
 
-import com.tencent.devops.model.project.tables.TProject
-import org.jooq.Condition
+import com.tencent.devops.misc.dao.project.ProjectMiscDao
+import com.tencent.devops.misc.pojo.project.ProjectInfo
 import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
-import org.jooq.impl.DSL
-import org.springframework.stereotype.Repository
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Repository
-class ProjectDao {
+@Service
+class ProjectMiscService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val projectMiscDao: ProjectMiscDao
+) {
 
     fun getMinId(
-        dslContext: DSLContext,
         projectIdList: List<String>? = null
-    ): Long {
-        with(TProject.T_PROJECT) {
-            val baseStep = dslContext.select(DSL.min(ID)).from(this)
-            if (!projectIdList.isNullOrEmpty()) {
-                baseStep.where(ENGLISH_NAME.`in`(projectIdList))
-            }
-            return baseStep.fetchOne(0, Long::class.java)!!
-        }
+    ): Long? {
+        return projectMiscDao.getMinId(dslContext, projectIdList)
     }
 
     fun getMaxId(
-        dslContext: DSLContext,
         projectIdList: List<String>? = null
-    ): Long {
-        with(TProject.T_PROJECT) {
-            val baseStep = dslContext.select(DSL.max(ID)).from(this)
-            if (!projectIdList.isNullOrEmpty()) {
-                baseStep.where(ENGLISH_NAME.`in`(projectIdList))
-            }
-            return baseStep.fetchOne(0, Long::class.java)!!
-        }
+    ): Long? {
+        return projectMiscDao.getMaxId(dslContext, projectIdList)
     }
 
     fun getProjectInfoList(
-        dslContext: DSLContext,
         projectIdList: List<String>? = null,
         minId: Long? = null,
         maxId: Long? = null
-    ): Result<out Record>? {
-        with(TProject.T_PROJECT) {
-            val conditions = mutableListOf<Condition>()
-            if (!projectIdList.isNullOrEmpty()) {
-                conditions.add(ENGLISH_NAME.`in`(projectIdList))
+    ): List<ProjectInfo>? {
+        val projectInfoRecords = projectMiscDao.getProjectInfoList(
+            dslContext = dslContext,
+            projectIdList = projectIdList,
+            minId = minId,
+            maxId = maxId
+        )
+        return if (projectInfoRecords == null) {
+            null
+        } else {
+            val projectInfoList = mutableListOf<ProjectInfo>()
+            projectInfoRecords.forEach { projectInfoRecord ->
+                projectInfoList.add(
+                    ProjectInfo(
+                        id = projectInfoRecord["ID"] as Long,
+                        projectId = projectInfoRecord["ENGLISH_NAME"] as String,
+                        channel = projectInfoRecord["CHANNEL"] as String
+                    )
+                )
             }
-            if (minId != null) {
-                conditions.add(ID.ge(minId))
-            }
-            if (maxId != null) {
-                conditions.add(ID.lt(maxId))
-            }
-            return dslContext.select(
-                ID.`as`("ID"),
-                ENGLISH_NAME.`as`("ENGLISH_NAME"),
-                CHANNEL.`as`("CHANNEL")
-            ).from(this).where(conditions).fetch()
+            projectInfoList
         }
     }
 }
