@@ -405,11 +405,21 @@ class V2WebHookMatcher(private val event: GitEvent) {
      */
     private fun isPathMatch(fullPath: String, prefixPath: String): Boolean {
         logger.info("fullPath: $fullPath, prefixPath: $prefixPath")
-        if (prefixPath.endsWith("*")) {
-            val formatPrefixPath = prefixPath.removePrefix("/").removeSuffix("*")
-            return fullPath.removePrefix("/").startsWith(formatPrefixPath)
+        val fullPathList = fullPath.removePrefix("/").split("/")
+        val prefixPathList = prefixPath.removePrefix("/").split("/")
+        if (fullPathList.size < prefixPathList.size) {
+            return false
         }
-        return fullPath.removePrefix("/").startsWith(prefixPath.removePrefix("/"))
+
+        for (i in prefixPathList.indices) {
+            if (prefixPathList[i] != "*"
+                && (fullPathList[i] != prefixPathList[i])
+            ) {
+                return false
+            }
+        }
+
+        return true
     }
 
     private fun getBranch(ref: String): String {

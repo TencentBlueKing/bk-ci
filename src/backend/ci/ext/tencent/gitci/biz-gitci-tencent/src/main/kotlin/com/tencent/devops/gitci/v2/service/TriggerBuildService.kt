@@ -728,7 +728,7 @@ class TriggerBuildService @Autowired constructor(
         if (!step.with.isNullOrEmpty()) {
             inputMap.putAll(step.with!!)
         }
-        // 非mr下根据commitId拉取本地工程代码
+        // 非mr和tag触发下根据commitId拉取本地工程代码
         if (step.checkout == "self") {
             inputMap["accessToken"] =
                 oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
@@ -737,6 +737,9 @@ class TriggerBuildService @Autowired constructor(
 
             if (event.mergeRequestId != null) {
                 inputMap["pullType"] = "BRANCH"
+            } else if (event.objectKind == OBJECT_KIND_TAG_PUSH) {
+                inputMap["pullType"] = "TAG"
+                inputMap["refName"] = event.branch
             } else {
                 inputMap["pullType"] = "COMMIT_ID"
                 inputMap["refName"] = event.commitId
