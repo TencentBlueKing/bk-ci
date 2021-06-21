@@ -53,7 +53,10 @@ class QualityHisMetadataJob @Autowired constructor(
     @Value("\${quality.metadata.clean.round:100}")
     var cleanRound: Long = 100
 
-    @Scheduled(cron = "0 */10 * * * ?")
+    @Value("\${quality.metadata.clean.roundGap:5}")
+    var roundGap: Long = 5
+
+    @Scheduled(cron = "0 0 6 * * ?")
     fun clean() {
         val key = this::class.java.name + "#" + Thread.currentThread().stackTrace[1].methodName
         val lock = RedisLock(redisOperation, key, 3600L)
@@ -75,6 +78,8 @@ class QualityHisMetadataJob @Autowired constructor(
                 if (detailCount == 0) {
                     break
                 }
+
+                Thread.sleep(roundGap * 1000)
             }
 
             for (i in 1..cleanRound) {
@@ -85,6 +90,8 @@ class QualityHisMetadataJob @Autowired constructor(
                 if (originCount == 0) {
                     break
                 }
+
+                Thread.sleep(roundGap * 1000)
             }
         } finally {
             lock.unlock()
