@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RequestFilter
+import com.tencent.devops.openapi.service.op.AppUserInfoService
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,7 +49,8 @@ import javax.ws.rs.ext.Provider
 @Suppress("ALL")
 class UserFilter @Autowired constructor(
     val client: Client,
-    val redisOperation: RedisOperation
+    val redisOperation: RedisOperation,
+    val appUserInfoService: AppUserInfoService
 ) : ContainerRequestFilter {
 
     override fun filter(requestContext: ContainerRequestContext?) {
@@ -65,9 +67,15 @@ class UserFilter @Autowired constructor(
                 client.get(ServiceTxUserResource::class).get(userId!!)
             } catch (e: Exception) {
                 val appCode = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_APP_CODE)
-                logger.warn("$userId is not rtx user, appCode: $appCode , path: ${requestContext.uriInfo.path}")
-                if (redisOperation.get(FAILTRUNFLAG) != null) {
-                    throw ParamBlankException("非法用户")
+                logger.info("$userId is not rtx user, appCode: $appCode , path: ${requestContext.uriInfo.path}")
+                val appManagerUser = appUserInfoService.get(appCode)
+                if (appManagerUser.isNullOrEmpty()) {
+                    logger.info("$userId is not rtx user, appCode: $appCode not has manager")
+                    if (redisOperation.get(FAILTRUNFLAG) != null) {
+                        throw ParamBlankException("非法用户")
+                    }
+                } else {
+                    requestContext.headers.add(AUTH_HEADER_USER_ID, appManagerUser!!)
                 }
             }
         }
