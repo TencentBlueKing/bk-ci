@@ -43,7 +43,7 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
 @Api(tags = ["BUILD_CODECC"], description = "构建-CODECC相关资源")
-@Path("/build/codecc/")
+@Path("/build/codecc")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildCodeccToolResource {
