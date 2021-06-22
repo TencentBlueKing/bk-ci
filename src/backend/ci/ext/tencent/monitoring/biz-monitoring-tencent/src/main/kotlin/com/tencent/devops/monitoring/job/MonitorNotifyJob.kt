@@ -27,9 +27,11 @@
 
 package com.tencent.devops.monitoring.job
 
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.notify.utils.HashUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
@@ -242,6 +244,40 @@ class MonitorNotifyJob @Autowired constructor(
                     )
                 )
             }
+
+
+            val average = rowList.asSequence().map { it.second }.average()
+            val targetId = 19659 // TODO 给oteam发送sla数据
+            val yesterday = LocalDateTime.ofInstant(Instant.ofEpochMilli(startTime), ZoneId.systemDefault())
+            val timestamp = "${System.currentTimeMillis() / 1000}"
+            val token = "9ddf6f56-293d-416e-9ccd-aa1a37487b05" // TODO 给oteam发送sla数据
+            val techmapId = "10681" // TODO 给oteam发送sla数据
+            val techmapType = "oteam"
+            val signature = HashUtils.sha256(timestamp + techmapType + techmapId + token + timestamp)
+            OkhttpUtils.doPost(
+                url = "http://devtechmap.woa.com/api/measureReport", // TODO 给oteam发送sla数据
+                jsonParam = """
+                    {
+                      "method":"measureReport",
+                      "params": {
+                        "type":"daily",
+                        "year":${yesterday.year},
+                        "month":${yesterday.month},
+                        "day":${yesterday.dayOfMonth},
+                        "targetId":$targetId, 
+                        "value":$average
+                      },
+                      "jsonrpc":"2.0",
+                      "id":"$timestamp"
+                    }
+                """.trimIndent(),
+                headers = mapOf(
+                    "timestamp" to timestamp,
+                    "techmapType" to techmapType,
+                    "techmapId" to techmapId,
+                    "signature" to signature
+                )
+            )
 
             return EmailModuleData(
                 "网关统计",
