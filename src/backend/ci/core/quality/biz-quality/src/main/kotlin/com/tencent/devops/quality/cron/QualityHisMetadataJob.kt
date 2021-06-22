@@ -71,11 +71,16 @@ class QualityHisMetadataJob @Autowired constructor(
 
             val deleteTime = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(cleanTimeGapHour)
 
-            logger.info("start to delete quality his meta data: $deleteTime, $cleanTimeGapHour, $cleanRound")
+            logger.info("start to delete quality his meta data: " +
+                "$deleteTime, $cleanTimeGapHour, $cleanRound， $roundSize, $roundGap")
 
+            // 执行cleanRound轮清理详情数据操作
             for (i in 1..cleanRound) {
-                val result = qualityHisMetadataDao.getHisMetadataByCreateTime(dslContext, deleteTime, i * roundSize)
+                // 分页读取12个小时前的数据和创建时间为null的历史数据
+                val result =
+                    qualityHisMetadataDao.getHisMetadataByCreateTime(dslContext, deleteTime, (i - 1) * roundSize)
 
+                // 分成两批，nullResultIds是待更新的ID，resultIds是待删除的ID
                 val nullResultIds = mutableSetOf<Long>()
                 val resultIds = mutableSetOf<Long>()
 
@@ -94,18 +99,25 @@ class QualityHisMetadataJob @Autowired constructor(
                 logger.info("start to delete quality his detail meta data before: $deleteTime, ${resultIds.size}")
                 qualityHisMetadataDao.deleteHisMetadataById(dslContext, resultIds)
 
+                // 更新创建时间为null的数据为当前时间，本次不清理，下一次定时任务清理
                 logger.info("start to update quality his detail meta data before: $deleteTime, ${nullResultIds.size}")
                 qualityHisMetadataDao.updateHisMetadataTimeById(dslContext, nullResultIds)
 
                 Thread.sleep(roundGap * 1000)
+
+                if (result.size < roundSize) {
+                    break
+                }
             }
 
+            // 执行cleanRound轮清理原始数据操作
             for (i in 1..cleanRound) {
-                val originCount = qualityHisMetadataDao.deleteHisOriginMetadataByCreateTime(dslContext, deleteTime)
+                val originCount =
+                    qualityHisMetadataDao.deleteHisOriginMetadataByCreateTime(dslContext, deleteTime, roundSize)
 
                 logger.info("finish to delete quality his origin meta data before: $deleteTime, $originCount")
 
-                if (originCount == 0) {
+                if (originCount < roundSize) {
                     break
                 }
 
