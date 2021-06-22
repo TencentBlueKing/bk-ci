@@ -25,38 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.ticket.resources
+package com.tencent.devops.common.web.handler
 
-import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.ScmException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.ticket.api.BuildAgentCredentialResource
-import com.tencent.devops.ticket.pojo.CredentialInfo
-import com.tencent.devops.ticket.service.CredentialService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-@RestResource
-class BuildAgentCredentialResourceImpl @Autowired constructor(
-    private val credentialService: CredentialService
-) : BuildAgentCredentialResource {
+@BkExceptionMapper
+class ScmExceptionMapper : ExceptionMapper<ScmException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(ScmExceptionMapper::class.java)!!
+    }
 
-    override fun get(
-        projectId: String,
-        buildId: String,
-        agentId: String,
-        secretKey: String,
-        credentialId: String,
-        publicKey: String
-    ): Result<CredentialInfo?> {
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        if (credentialId.isBlank()) {
-            throw ParamBlankException("Invalid credentialId")
-        }
-        if (publicKey.isBlank()) {
-            throw ParamBlankException("Invalid publicKey")
-        }
-        return Result(credentialService.buildGet(buildId, credentialId, publicKey))
+    override fun toResponse(exception: ScmException): Response {
+        logger.error("Failed with scm exception: $exception")
+        val status = Response.Status.BAD_REQUEST
+        return Response.status(status)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result<Void>(status.statusCode, "${exception.scmType}|${exception.message}")).build()
     }
 }
