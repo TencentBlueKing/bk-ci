@@ -39,6 +39,7 @@ import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -217,6 +218,18 @@ class ScmService @Autowired constructor(
                 gitProjectId
             }
         }
+    }
+
+    fun getMergeRequestChangeInfo(
+        gitProjectId: String,
+        mrId: Long
+    ): GitMrChangeInfo? {
+        logger.info("getMergeRequestChangeInfo: [$gitProjectId|$mrId]")
+        return client.getScm(ServiceGitCiResource::class).getMergeRequestChangeInfo(
+            token = getToken(gitProjectId).accessToken,
+            gitProjectId = gitProjectId,
+            mrId = mrId
+        ).data
     }
 
     private fun getTriggerBranch(branch: String): String {
