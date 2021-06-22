@@ -1038,7 +1038,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     sb.append("        - string\r\n")
                     sb.append("        - string\r\n")
                 } else {
-                    sb.append("    $paramKey: ")
+                    sb.append("      $paramKey: ")
                     if (type == "atom-checkbox") {
                         sb.append("boolean")
                     } else {
