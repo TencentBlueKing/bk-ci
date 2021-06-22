@@ -70,12 +70,12 @@ class UserFilter @Autowired constructor(
                 logger.info("$userId is not rtx user, appCode: $appCode , path: ${requestContext.uriInfo.path}")
                 val appManagerUser = appUserInfoService.get(appCode)
                 if (appManagerUser.isNullOrEmpty()) {
-                    logger.info("$userId is not rtx user, appCode: $appCode not has manager")
+                    logger.warn("$userId is not rtx user, appCode: $appCode not has manager")
                     if (redisOperation.get(FAILTRUNFLAG) != null) {
                         throw ParamBlankException("非法用户")
                     }
                 } else {
-                    requestContext.headers.add(AUTH_HEADER_USER_ID, appManagerUser!!)
+                    requestContext.headers.putSingle(AUTH_HEADER_USER_ID, appManagerUser!!)
                 }
             }
         }
