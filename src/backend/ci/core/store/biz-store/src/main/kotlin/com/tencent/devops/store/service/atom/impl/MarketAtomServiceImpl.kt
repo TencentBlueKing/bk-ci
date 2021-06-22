@@ -862,6 +862,34 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return buf.toString()
     }
 
+    override fun generateCiV2Yaml(
+        atomCode: String?,
+        os: String?,
+        classType: String?,
+        defaultShowFlag: Boolean?
+    ): String {
+        val atomCodeList = if (atomCode.isNullOrBlank()) {
+            marketAtomDao.getSupportGitCiAtom(dslContext, os, classType).map { it.value1() }
+        } else {
+            listOf(atomCode)
+        }
+
+        val buf = StringBuffer()
+        atomCodeList.filterNotNull().forEach {
+            val atom = marketAtomDao.getLatestAtomByCode(dslContext, it) ?: return@forEach
+            val feature = marketAtomFeatureDao.getAtomFeature(dslContext, it) ?: return@forEach
+            if (null == feature.recommendFlag || feature.recommendFlag) {
+                buf.append(generateV2Yaml(atom, defaultShowFlag))
+                buf.append("\r\n")
+                buf.append("\r\n")
+            } else {
+                return@forEach
+            }
+        }
+
+        return buf.toString()
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun generateYaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
         val sb = StringBuffer()
@@ -948,6 +976,94 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             }
         } else {
             sb.append("      output: {}\r\n")
+        }
+        if (defaultShowFlag != null && defaultShowFlag) {
+            sb.append("{code}\r\n \r\n")
+        }
+        return sb.toString()
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun generateV2Yaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
+        val sb = StringBuffer()
+        if (defaultShowFlag != null && defaultShowFlag) {
+            sb.append("h2. ${atom.name}\r\n")
+                .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
+        }
+        sb.append("- uses: ${atom.atomCode}@${atom.version}\r\n")
+            .append("  name: ${atom.name}\r\n")
+
+        val props: Map<String, Any> = jacksonObjectMapper().readValue(atom.props)
+        if (null != props["input"]) {
+            sb.append("  with:\r\n")
+            val input = props["input"] as Map<String, Any>
+            input.forEach {
+                val paramKey = it.key
+                val paramValueMap = it.value as Map<String, Any>
+
+                val label = paramValueMap["label"]
+                val text = paramValueMap["text"]
+                val desc = paramValueMap["desc"]
+                val description = if (label?.toString().isNullOrBlank()) {
+                    if (text?.toString().isNullOrBlank()) {
+                        desc
+                    } else {
+                        text
+                    }
+                } else {
+                    label
+                }
+                val type = paramValueMap["type"]
+                val required = paramValueMap["required"]
+                val defaultValue = paramValueMap["default"]
+                val multipleMap = paramValueMap["optionsConf"]
+                val multiple = if (null != multipleMap && null != (multipleMap as Map<String, String>)["multiple"]) {
+                    "true".equals(multipleMap["multiple"].toString(), true)
+                } else {
+                    false
+                }
+                val requiredName = MessageCodeUtil.getCodeLanMessage(REQUIRED)
+                val defaultName = MessageCodeUtil.getCodeLanMessage(DEFAULT)
+                if ((type == "selector" && multiple) ||
+                    type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
+                    sb.append("    $paramKey: ")
+                    sb.append("\t\t# $description")
+                    if (null != required && "true".equals(required.toString(), true)) {
+                        sb.append(", $requiredName")
+                    }
+                    if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
+                        sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
+                    }
+                    sb.append("\r\n")
+                    sb.append("    - string\r\n")
+                    sb.append("    - string\r\n")
+                } else {
+                    sb.append("    $paramKey: ")
+                    if (type == "atom-checkbox") {
+                        sb.append("boolean")
+                    } else {
+                        sb.append("string")
+                    }
+                    sb.append("\t\t# ${description.toString().replace("\n", "")}")
+                    if (null != required && "true".equals(required.toString(), true)) {
+                        sb.append(", $requiredName")
+                    }
+                    if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
+                        sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
+                    }
+                    sb.append("\r\n")
+                }
+            }
+        }
+
+        if (null != props["output"]) {
+            sb.append("  output: \r\n")
+            val output = props["output"] as Map<String, Any>
+            output.forEach {
+                sb.append("    ${it.key}: string \r\n")
+            }
+        } else {
+            sb.append("  output: {}\r\n")
         }
         if (defaultShowFlag != null && defaultShowFlag) {
             sb.append("{code}\r\n \r\n")
