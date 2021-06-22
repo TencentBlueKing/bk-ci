@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
 @Service("opAppUserService")
 class TxOpUserService @Autowired constructor(
     val client: Client
-): OpAppUserService {
+) : OpAppUserService {
 
     private val errorUserId = CacheBuilder.newBuilder()
         .maximumSize(1000)
@@ -33,6 +33,7 @@ class TxOpUserService @Autowired constructor(
             false
         }
     }
+
     companion object {
         val logger = LoggerFactory.getLogger(TxOpUserService::class.java)
     }
