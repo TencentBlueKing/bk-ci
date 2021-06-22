@@ -164,7 +164,7 @@ class QualityHisMetadataDao {
         }
     }
 
-    fun deleteHisOriginMetadataByCreateTime(dslContext: DSLContext, time: Long, pageSize: Int = 10000): Int {
+    fun deleteHisOriginMetadataByCreateTime(dslContext: DSLContext, time: Long, pageSize: Long = 10000): Int {
         return with(TQualityHisOriginMetadata.T_QUALITY_HIS_ORIGIN_METADATA) {
             dslContext.deleteFrom(this)
                 .where(CREATE_TIME.lt(time).or(CREATE_TIME.isNull))
