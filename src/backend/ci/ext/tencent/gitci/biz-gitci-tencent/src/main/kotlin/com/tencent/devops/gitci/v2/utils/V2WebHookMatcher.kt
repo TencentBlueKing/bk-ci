@@ -322,7 +322,7 @@ class V2WebHookMatcher @Autowired constructor(
         var mrPathIncluded = false
         if (pathList != null && pathList.isNotEmpty()) {
             logger.info("Mr Include path set($pathList)")
-            val mrId = (event as GitMergeRequestEvent).object_attributes.iid
+            val mrId = (event as GitMergeRequestEvent).object_attributes.id
             val gitProjectId = event.object_attributes.source_project_id
             val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(event.user.name, gitProjectId, mrId)
 
