@@ -50,5 +50,5 @@ object OpenAPIMessageCode {
     const val ERROR_OPENAPI_JWT_PARSE_FAIL = "2112005" // OpenAPI：JWT解析失败
     const val ERROR_OPENAPI_INNER_SERVICE_FAIL = "2112006" // OpenAPI：内部服务调用失败：{0}
     const val USER_CHECK_FAIL = "2112007" // OpenAPI：用户校验失败
-    const val ERROR_USER_EXIST= "2112008" // OpenAPI：重复添加
+    const val ERROR_USER_EXIST = "2112008" // OpenAPI：重复添加
 }

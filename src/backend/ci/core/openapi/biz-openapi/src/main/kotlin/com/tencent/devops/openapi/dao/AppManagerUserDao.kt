@@ -65,6 +65,16 @@ class AppManagerUserDao {
         }
     }
 
+    fun getById(
+        dslContext: DSLContext,
+        id: Int
+    ): TAppUserInfoRecord? {
+        with(TAppUserInfo.T_APP_USER_INFO) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id)).fetchAny()
+        }
+    }
+
     fun delete(
         dslContext: DSLContext,
         id: Int
