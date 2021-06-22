@@ -37,6 +37,6 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class OpenAPiConfiguration {
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(name = ["OpAppUserService"])
     fun opAppUserService() = DefaultOpAppUserService()
 }

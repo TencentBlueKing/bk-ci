@@ -22,7 +22,7 @@ class AppUserInfoService @Autowired constructor(
 
     private val indexCache = CacheBuilder.newBuilder()
         .maximumSize(200)
-        .expireAfterAccess(2, TimeUnit.HOURS)
+        .expireAfterAccess(5, TimeUnit.MINUTES)
         .build<String/*appCode*/, String/*managerUser*/>()
 
     @PostConstruct
@@ -83,6 +83,8 @@ class AppUserInfoService @Autowired constructor(
 
     fun delete(id: Int): Boolean {
         appManagerUserDao.delete(dslContext, id)
+        // 数据量较小直接清理cache
+        list()
         return true
     }
 

@@ -60,8 +60,18 @@ class AppManagerUserDao {
     ): TAppUserInfoRecord? {
         with(TAppUserInfo.T_APP_USER_INFO) {
             return dslContext.selectFrom(this)
-                .where(APP_CODE.eq(APP_CODE)
+                .where(APP_CODE.eq(appCode)
                     .and(IS_DELETE.eq(false))).fetchAny()
+        }
+    }
+
+    fun getById(
+        dslContext: DSLContext,
+        id: Int
+    ): TAppUserInfoRecord? {
+        with(TAppUserInfo.T_APP_USER_INFO) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id)).fetchAny()
         }
     }
 
