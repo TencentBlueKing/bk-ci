@@ -991,11 +991,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
         }
         sb.append("- uses: ${atom.atomCode}@${atom.version}\r\n")
-            .append("  name: ${atom.name}\r\n")
+            .append("    name: ${atom.name}\r\n")
 
         val props: Map<String, Any> = jacksonObjectMapper().readValue(atom.props)
         if (null != props["input"]) {
-            sb.append("  with:\r\n")
+            sb.append("    with:\r\n")
             val input = props["input"] as Map<String, Any>
             input.forEach {
                 val paramKey = it.key
@@ -1026,7 +1026,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val defaultName = MessageCodeUtil.getCodeLanMessage(DEFAULT)
                 if ((type == "selector" && multiple) ||
                     type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
-                    sb.append("    $paramKey: ")
+                    sb.append("        $paramKey: ")
                     sb.append("\t\t# $description")
                     if (null != required && "true".equals(required.toString(), true)) {
                         sb.append(", $requiredName")
@@ -1035,8 +1035,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
                     }
                     sb.append("\r\n")
-                    sb.append("    - string\r\n")
-                    sb.append("    - string\r\n")
+                    sb.append("        - string\r\n")
+                    sb.append("        - string\r\n")
                 } else {
                     sb.append("    $paramKey: ")
                     if (type == "atom-checkbox") {
@@ -1056,15 +1056,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             }
         }
 
-        if (null != props["output"]) {
-            sb.append("  output: \r\n")
-            val output = props["output"] as Map<String, Any>
-            output.forEach {
-                sb.append("    ${it.key}: string \r\n")
-            }
-        } else {
-            sb.append("  output: {}\r\n")
-        }
         if (defaultShowFlag != null && defaultShowFlag) {
             sb.append("{code}\r\n \r\n")
         }
