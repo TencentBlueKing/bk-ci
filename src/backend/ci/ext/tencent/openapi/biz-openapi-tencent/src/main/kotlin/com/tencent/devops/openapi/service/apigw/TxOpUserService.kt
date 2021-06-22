@@ -5,7 +5,9 @@ import com.tencent.devops.openapi.service.op.OpAppUserService
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
+@Service("opAppUserService")
 class TxOpUserService @Autowired constructor(
     val client: Client
 ): OpAppUserService {
