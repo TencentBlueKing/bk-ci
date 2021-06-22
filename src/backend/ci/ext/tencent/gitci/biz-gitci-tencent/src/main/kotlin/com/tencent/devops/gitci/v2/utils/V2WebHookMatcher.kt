@@ -324,10 +324,10 @@ class V2WebHookMatcher @Autowired constructor(
             logger.info("Mr Include path set($pathList)")
             val mrId = (event as GitMergeRequestEvent).object_attributes.iid
             val gitProjectId = event.object_attributes.source_project_id
-            val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(event.user.name, gitProjectId.toString(), mrId)
+            val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(event.user.name, gitProjectId, mrId)
 
             if (gitMrChangeInfo != null) {
-                logger.info("isMrIncludePathMatch gitMrChangeInfo: ${JsonUtil.toJson(gitMrChangeInfo!!)}")
+                logger.info("isMrIncludePathMatch gitMrChangeInfo: ${JsonUtil.toJson(gitMrChangeInfo)}")
                 val mrChangeFiles = gitMrChangeInfo.files.map {
                     if (it.deletedFile) {
                         it.oldPath
