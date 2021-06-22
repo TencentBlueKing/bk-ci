@@ -36,11 +36,9 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class SampleQualityPermissionServiceImpl @Autowired constructor(
+@Suppress("ALL")
+class SampleQualityPermissionServiceImpl constructor(
     val authPermissionApi: AuthPermissionApi,
     val authResourceApi: AuthResourceApi,
     val qualityAuthServiceCode: QualityAuthServiceCode
@@ -224,7 +222,7 @@ class SampleQualityPermissionServiceImpl @Autowired constructor(
             supplier = null
         )
         val permissionRuleMap = mutableMapOf<AuthPermission, List<Long>>()
-        permissionResourceMap.forEach { permission, list ->
+        permissionResourceMap.forEach { (permission, list) ->
             permissionRuleMap[permission] = list.map { HashUtil.decodeIdToLong(it) }
         }
         return permissionRuleMap
