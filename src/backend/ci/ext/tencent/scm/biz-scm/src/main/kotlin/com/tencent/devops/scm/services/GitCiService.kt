@@ -224,9 +224,9 @@ class GitCiService {
         }
     }
 
-    fun getMergeRequestChangeInfo(gitProjectId: String, token: String?, mrId: Long): Result<GitMrChangeInfo?> {
+    fun getMergeRequestChangeInfo(gitProjectId: Long, token: String?, mrId: Long): Result<GitMrChangeInfo?> {
         logger.info("[gitProjectId=$gitProjectId]|getGitCodeProjectInfo")
-        val url = "$gitCIUrl/api/v3/projects/${GitUtils.urlEncode(gitProjectId)}/merge_request/$mrId/changes?" +
+        val url = "$gitCIUrl/api/v3/projects/$gitProjectId/merge_request/$mrId/changes?" +
                 "access_token=$token"
         val request = Request.Builder()
             .url(url)

@@ -194,7 +194,7 @@ interface ServiceGitCiResource {
     fun getMergeRequestChangeInfo(
         @ApiParam("工蜂项目id", required = true)
         @QueryParam("gitProjectId")
-        gitProjectId: String,
+        gitProjectId: Long,
         @ApiParam("token", required = true)
         @QueryParam("token")
         token: String?,

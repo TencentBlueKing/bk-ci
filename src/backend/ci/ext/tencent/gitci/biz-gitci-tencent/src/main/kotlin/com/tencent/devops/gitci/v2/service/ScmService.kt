@@ -46,7 +46,9 @@ import org.springframework.stereotype.Service
 
 @Service
 class ScmService @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val oauthService: OauthService,
+    private val gitCIBasicSettingService: GitCIBasicSettingService
 ) {
 
     companion object {
@@ -221,12 +223,13 @@ class ScmService @Autowired constructor(
     }
 
     fun getMergeRequestChangeInfo(
-        gitProjectId: String,
+        userId: String,
+        gitProjectId: Long,
         mrId: Long
     ): GitMrChangeInfo? {
         logger.info("getMergeRequestChangeInfo: [$gitProjectId|$mrId]")
         return client.getScm(ServiceGitCiResource::class).getMergeRequestChangeInfo(
-            token = getToken(gitProjectId).accessToken,
+            token = getOauthToken(userId, true, gitProjectId),
             gitProjectId = gitProjectId,
             mrId = mrId
         ).data
@@ -237,6 +240,15 @@ class ScmService @Autowired constructor(
             branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
             branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
             else -> branch
+        }
+    }
+
+    private fun getOauthToken(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
+        return if (isEnableUser) {
+            val setting = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+            oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
+        } else {
+            return oauthService.getAndCheckOauthToken(userId).accessToken
         }
     }
 }

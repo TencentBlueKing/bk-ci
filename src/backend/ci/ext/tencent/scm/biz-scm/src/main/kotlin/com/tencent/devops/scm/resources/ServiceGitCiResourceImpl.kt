@@ -125,7 +125,7 @@ class ServiceGitCiResourceImpl @Autowired constructor(
     }
 
     override fun getMergeRequestChangeInfo(
-        gitProjectId: String,
+        gitProjectId: Long,
         token: String?,
         mrId: Long
     ): Result<GitMrChangeInfo?> {
