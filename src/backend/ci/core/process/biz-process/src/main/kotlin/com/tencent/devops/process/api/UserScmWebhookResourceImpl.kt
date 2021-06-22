@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,17 +28,22 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserScmWebhookResource
+import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.webhook.PipelineWebhook
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
 import com.tencent.devops.process.pojo.webhook.WebhookEventType
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserScmWebhookResourceImpl @Autowired constructor(
-    private val pipelineWebhookService: PipelineWebhookService
+    private val pipelineWebhookService: PipelineWebhookService,
+    private val pipelineWebhookBuildLogService: PipelineWebhookBuildLogService
 ) : UserScmWebhookResource {
 
     override fun updateProjectNameAndTaskId(): Result<Boolean> {
@@ -51,8 +57,14 @@ class UserScmWebhookResourceImpl @Autowired constructor(
                 listOf(
                     WebhookEventType(eventType = CodeEventType.PUSH.name, eventTypeName = "Commit Push Hook"),
                     WebhookEventType(eventType = CodeEventType.TAG_PUSH.name, eventTypeName = "Tag Push Hook"),
-                    WebhookEventType(eventType = CodeEventType.MERGE_REQUEST.name, eventTypeName = "Merge Request Hook"),
-                    WebhookEventType(eventType = CodeEventType.MERGE_REQUEST_ACCEPT.name, eventTypeName = "Merge Request Accept Hook")
+                    WebhookEventType(
+                        eventType = CodeEventType.MERGE_REQUEST.name,
+                        eventTypeName = "Merge Request Hook"
+                    ),
+                    WebhookEventType(
+                        eventType = CodeEventType.MERGE_REQUEST_ACCEPT.name,
+                        eventTypeName = "Merge Request Accept Hook"
+                    )
                 )
             ScmType.GITHUB.name ->
                 listOf(
@@ -66,5 +78,46 @@ class UserScmWebhookResourceImpl @Autowired constructor(
                 )
         }
         return Result(eventTypeList)
+    }
+
+    override fun listScmWebhook(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<PipelineWebhook>> {
+        return Result(
+            pipelineWebhookService.listWebhook(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun listPipelineWebhookBuildLog(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        repoName: String?,
+        commitId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<PipelineWebhookBuildLogDetail>?> {
+        return Result(
+            pipelineWebhookBuildLogService.listWebhookBuildLogDetail(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                repoName = repoName,
+                commitId = commitId,
+                page = page,
+                pageSize = pageSize
+
+            )
+        )
     }
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,7 +30,7 @@ package com.tencent.devops.common.pipeline.event
 /*
 // 构建事件
 {
-    "event": "BUILD_START/BUILD_END/BUILD_TASK_START/BUILD_TASK_END",
+    "event": "BUILD_START/BUILD_END/BUILD_TASK_START/BUILD_TASK_END/BUILD_STAGE_START/BUILD_STAGE_END",
     "data": {
         "pipelineId": "流水线ID",
         "pipelineName": "流水线名称",
@@ -91,17 +92,19 @@ enum class CallBackEvent {
     BUILD_START,
     BUILD_END,
     BUILD_TASK_START,
-    BUILD_TASK_END
+    BUILD_TASK_END,
+    BUILD_STAGE_START,
+    BUILD_STAGE_END
 }
 
-class PipelineEvent(
+data class PipelineEvent(
     val pipelineId: String,
     val pipelineName: String,
     val userId: String,
     val updateTime: Long
 )
 
-class BuildEvent(
+data class BuildEvent(
     val buildId: String,
     val pipelineId: String,
     val pipelineName: String,
@@ -111,14 +114,16 @@ class BuildEvent(
     val endTime: Long = 0,
     val model: SimpleModel,
     val projectId: String,
-    val trigger: String
+    val trigger: String,
+    val stageId: String?, // 仅当 BUILD_STAGE_START/BUILD_STAGE_END
+    val taskId: String? // 仅当 BUILD_TASK_START/BUILD_TASK_END
 )
 
-class SimpleModel(
+data class SimpleModel(
     val stages: List<SimpleStage>
 )
 
-class SimpleStage(
+data class SimpleStage(
     val stageName: String,
     var status: String,
     var startTime: Long = 0,
@@ -126,7 +131,7 @@ class SimpleStage(
     val jobs: List<SimpleJob>
 )
 
-class SimpleJob(
+data class SimpleJob(
     val jobName: String,
     val status: String,
     val startTime: Long = 0,
@@ -134,7 +139,7 @@ class SimpleJob(
     val tasks: List<SimpleTask>
 )
 
-class SimpleTask(
+data class SimpleTask(
     val taskId: String,
     val taskName: String,
     val atomCode: String,

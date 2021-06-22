@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -47,7 +48,10 @@ object BatScriptUtil {
         "    goto:eof\r\n"
 
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
-    private val specialKey = listOf<String>()
+
+    // 2021-06-11 batchScript需要过滤掉上下文产生的变量，防止注入到环境变量中
+    private val specialKey = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.")
+
     private val specialValue = listOf("\n", "\r")
     private val escapeValue = mapOf(
         "&" to "^&",
@@ -57,16 +61,17 @@ object BatScriptUtil {
         "\"" to "\\\""
     )
 
+    @Suppress("ALL")
     fun execute(
         buildId: String,
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
-        systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
-        print2Logger: Boolean = true
+        print2Logger: Boolean = true,
+        elementId: String? = null
     ): String {
         try {
             val file = getCommandFile(
@@ -74,29 +79,30 @@ object BatScriptUtil {
                 script = script,
                 runtimeVariables = runtimeVariables,
                 dir = dir,
-                workspace = workspace,
-                systemEnvVariables = systemEnvVariables
+                workspace = workspace
             )
             return CommandLineUtils.execute(
                 command = "cmd.exe /C \"${file.canonicalPath}\"",
                 workspace = dir,
                 print2Logger = print2Logger,
                 prefix = prefix,
-                executeErrorMessage = ""
+                executeErrorMessage = "",
+                buildId = buildId,
+                elementId = elementId
             )
-        } catch (e: Throwable) {
+        } catch (ignore: Throwable) {
             val errorInfo = errorMessage ?: "Fail to execute bat script $script"
-            logger.warn(errorInfo, e)
-            throw e
+            logger.warn(errorInfo, ignore)
+            throw ignore
         }
     }
 
+    @Suppress("ALL")
     fun getCommandFile(
         buildId: String,
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
-        systemEnvVariables: Map<String, String>? = null,
         workspace: File = dir
     ): File {
         val tmpDir = System.getProperty("java.io.tmpdir")
@@ -129,8 +135,14 @@ object BatScriptUtil {
             .append("\r\n")
             .append("exit")
             .append("\r\n")
-            .append(setEnv.replace("##resultFile##", File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
-            .append(setGateValue.replace("##gateValueFile##", File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath))
+            .append(setEnv.replace(
+                oldValue = "##resultFile##",
+                newValue = File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath
+            ))
+            .append(setGateValue.replace(
+                oldValue = "##gateValueFile##",
+                newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
+            ))
 
         val charset = Charset.defaultCharset()
         logger.info("The default charset is $charset")
@@ -141,18 +153,21 @@ object BatScriptUtil {
     }
 
     private fun specialEnv(key: String, value: String): Boolean {
-        specialKey.forEach {
-            if (key.contains(it)) {
-                return true
+        var match = false
+        for (it in specialKey) {
+            if (key.trim().startsWith(it)) {
+                match = true
+                break
             }
         }
 
-        specialValue.forEach {
+        for (it in specialValue) {
             if (value.contains(it)) {
-                return true
+                match = true
+                break
             }
         }
-        return false
+        return match
     }
 
     private fun escapeEnv(value: String): String {

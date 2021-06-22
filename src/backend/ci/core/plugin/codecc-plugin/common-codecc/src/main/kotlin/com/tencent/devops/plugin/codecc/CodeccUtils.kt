@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -32,6 +33,8 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScri
 object CodeccUtils {
 
     const val BK_CI_CODECC_TASK_ID = "BK_CI_CODECC_TASK_ID"
+
+    const val BK_CI_CODECC_V3_ATOM = "CodeccCheckAtomDebug"
 
     fun isCodeccAtom(atomName: String?): Boolean {
         return isCodeccNewAtom(atomName) || isCodeccV1Atom(atomName)
@@ -51,14 +54,14 @@ object CodeccUtils {
     }
 
     fun isCodeccV3Atom(atomName: String?): Boolean {
-        return atomName == "CodeccCheckAtomDebug"
+        return atomName == BK_CI_CODECC_V3_ATOM
     }
 
     // 主要是因为codecc插件版本太多，又要统一处理，故加此map
     val realAtomCodeMap = mapOf(
-        LinuxCodeCCScriptElement.classType to "CodeccCheckAtomDebug",
-        LinuxPaasCodeCCScriptElement.classType to "CodeccCheckAtomDebug",
-        "CodeccCheckAtom" to "CodeccCheckAtomDebug",
-        "CodeccCheckAtomDebug" to "CodeccCheckAtomDebug"
+        LinuxCodeCCScriptElement.classType to BK_CI_CODECC_V3_ATOM,
+        LinuxPaasCodeCCScriptElement.classType to BK_CI_CODECC_V3_ATOM,
+        "CodeccCheckAtom" to BK_CI_CODECC_V3_ATOM,
+        BK_CI_CODECC_V3_ATOM to BK_CI_CODECC_V3_ATOM
     )
 }

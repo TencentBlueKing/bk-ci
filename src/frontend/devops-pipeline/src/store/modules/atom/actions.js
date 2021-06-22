@@ -27,6 +27,7 @@ import {
 import {
     SET_STAGE_TAG_LIST,
     SET_PIPELINE_STAGE,
+    SET_COMMON_SETTING,
     SET_PIPELINE_CONTAINER,
     SET_TEMPLATE,
     SET_CONTAINER_DETAIL,
@@ -47,6 +48,7 @@ import {
     UPDATE_STAGE,
     CONTAINER_TYPE_SELECTION_VISIBLE,
     SET_INSERT_STAGE_INDEX,
+    SET_INSERT_STAGE_ISFINALLY,
     SET_PIPELINE,
     SET_BUILD_PARAM,
     DELETE_ATOM_PROP,
@@ -69,7 +71,8 @@ import {
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_REVIEW_DIALOG,
     TOGGLE_STAGE_REVIEW_PANEL,
-    SET_IMPORTED_JSON
+    SET_IMPORTED_JSON,
+    SET_EDIT_FROM
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import { hashID, randomString } from '@/utils/util'
@@ -90,8 +93,8 @@ function getMapByKey (list, key) {
 }
 
 export default {
-    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel }) {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`)
+    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel, reviewParams }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`, { reviewParams })
     },
     async fetchStageTagList ({ commit }) {
         try {
@@ -99,6 +102,14 @@ export default {
             const defaultStageTag = res.data.filter(item => item.defaultFlag).map(item => item.id)
             commit(SET_STAGE_TAG_LIST, res.data)
             commit(SET_DEFAULT_STAGE_TAG, defaultStageTag)
+        } catch (error) {
+            console.log(error)
+        }
+    },
+    async fetchCommonSetting ({ commit }) {
+        try {
+            const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/setting/common/get`)
+            commit(SET_COMMON_SETTING, res.data)
         } catch (error) {
             console.log(error)
         }
@@ -159,15 +170,6 @@ export default {
     setPipelineContainer ({ commit }, { oldContainers, containers }) {
         commit(SET_PIPELINE_CONTAINER, { oldContainers, containers })
     },
-    /**
-     * 根据projectcode获取项目详情
-     */
-    requestProjectDetail: async ({ commit }, { projectId }) => {
-        return request.get(`project/api/user/projects/${projectId}/`).then(response => {
-            // Object.assign(response.data, { ccAppName: response.ccAppName })
-            return response.data
-        })
-    },
     requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
         try {
             const url = version ? `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}?version=${version}` : `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`
@@ -216,6 +218,7 @@ export default {
         }
     },
     setPipeline: actionCreator(SET_PIPELINE),
+    setEditFrom: actionCreator(SET_EDIT_FROM),
     setPipelineEditing: actionCreator(SET_PIPELINE_EDITING),
     fetchContainers: async ({ commit }, { projectCode }) => {
         try {
@@ -223,7 +226,6 @@ export default {
             const containerList = containers.filter(container => container.type !== 'trigger')
             const triggerContainer = containers.find(container => container.type === 'trigger')
             const [containerTypeList, containerModalMap] = getMapByKey(containerList, 'baseOS')
-
             commit(SET_CONTAINER_DETAIL, {
                 containerTypeList: ['TRIGGER', ...containerTypeList],
                 containerModalMap: {
@@ -295,6 +297,7 @@ export default {
         }
     },
     setInertStageIndex: actionCreator(SET_INSERT_STAGE_INDEX),
+    setInsertStageIsFinally: actionCreator(SET_INSERT_STAGE_ISFINALLY),
     toggleStageSelectPopup: actionCreator(CONTAINER_TYPE_SELECTION_VISIBLE),
     addStage: PipelineEditActionCreator(ADD_STAGE),
     deleteStage: ({ commit }, payload) => {
@@ -427,7 +430,7 @@ export default {
 
     // 获取项目下已安装的插件列表
     getInstallAtomList ({ commit }, projectCode) {
-        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=1000`)
+        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=2000`)
     },
 
     // 获取已安装的插件详情
@@ -451,24 +454,27 @@ export default {
     },
 
     // 第一次拉取日志
-    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, subTag }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
+
+    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, subTag, debug }) {
+        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
             params: {
                 tag,
                 executeCount: currentExe,
-                subTag
+                subTag,
+                debug
             }
         })
     },
 
     // 后续拉取日志
-    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo, subTag }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
+    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo, subTag, debug }) {
+        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
             params: {
                 start: lineNo,
                 executeCount: currentExe,
                 tag,
-                subTag
+                subTag,
+                debug
             }
         })
     },

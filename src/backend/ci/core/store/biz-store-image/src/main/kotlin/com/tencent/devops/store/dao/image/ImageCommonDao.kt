@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,7 +27,10 @@
 package com.tencent.devops.store.dao.image
 
 import com.tencent.devops.model.store.tables.TImage
+import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -77,5 +81,38 @@ class ImageCommonDao : AbstractStoreCommonDao() {
 
     override fun getStoreDevLanguages(dslContext: DSLContext, storeCode: String): List<String>? {
         return null
+    }
+
+    override fun getNewestStoreBaseInfoByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeStatus: Byte?
+    ): StoreBaseInfo? {
+        val ti = TImage.T_IMAGE
+        val tif = TImageFeature.T_IMAGE_FEATURE
+        val conditions = mutableListOf<Condition>()
+        conditions.add(ti.IMAGE_CODE.eq(storeCode))
+        if (storeStatus != null) {
+            conditions.add(ti.IMAGE_STATUS.eq(storeStatus))
+        }
+        val imageRecord = dslContext.selectFrom(ti)
+            .where(conditions)
+            .orderBy(ti.CREATE_TIME.desc())
+            .limit(1)
+            .fetchOne()
+        return if (imageRecord != null) {
+            val publicFlag = dslContext.select(tif.PUBLIC_FLAG).from(tif)
+                .where(tif.IMAGE_CODE.eq(storeCode))
+                .fetchOne(0, Boolean::class.java)!!
+            StoreBaseInfo(
+                storeId = imageRecord.id,
+                storeCode = imageRecord.imageCode,
+                storeName = imageRecord.imageName,
+                version = imageRecord.version,
+                publicFlag = publicFlag
+            )
+        } else {
+            null
+        }
     }
 }

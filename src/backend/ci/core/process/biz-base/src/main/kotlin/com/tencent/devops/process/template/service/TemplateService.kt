@@ -1,0 +1,120 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.process.template.service
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.process.engine.dao.template.TemplateDao
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.pojo.template.TemplateType
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Suppress("ALL")
+@Service
+class TemplateService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val templateDao: TemplateDao,
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val objectMapper: ObjectMapper
+) {
+
+    fun getTemplateIdByPipeline(pipelineId: String): String? {
+        return templatePipelineDao.get(dslContext = dslContext, pipelineId = pipelineId)?.templateId
+    }
+
+    fun isTemplatePipeline(pipelineId: String): Boolean {
+        return templatePipelineDao.isTemplatePipeline(dslContext = dslContext, pipelineId = pipelineId)
+    }
+
+    /**
+     * 创建模板和流水线关联关系
+     */
+    fun createRelationBtwTemplate(
+        userId: String,
+        templateId: String,
+        pipelineId: String,
+        instanceType: String,
+        buildNo: BuildNo? = null,
+        param: List<BuildFormProperty>? = null,
+        fixTemplateVersion: Long? = null
+    ): Boolean {
+        logger.info("start createRelationBtwTemplate: $userId|$templateId|$pipelineId|$instanceType")
+        val latestTemplate = templateDao.getLatestTemplate(dslContext, templateId)
+        var rootTemplateId = templateId
+        val templateVersion: Long
+        val versionName: String
+
+        when {
+            latestTemplate.type == TemplateType.CONSTRAINT.name -> { // 如果是强制模式，则查找父模板
+                logger.info("template[$templateId] is from store, srcTemplateId is ${latestTemplate.srcTemplateId}")
+                val rootTemplate = templateDao.getLatestTemplate(dslContext, latestTemplate.srcTemplateId)
+                rootTemplateId = rootTemplate.id
+                templateVersion = rootTemplate.version
+                versionName = rootTemplate.versionName
+            }
+            fixTemplateVersion != null -> { // 否则以指定的版本
+                templateVersion = fixTemplateVersion
+                versionName = templateDao.getTemplate(dslContext, fixTemplateVersion).versionName
+            }
+            else -> { // 以指定的模板Id创建
+                templateVersion = latestTemplate.version
+                versionName = latestTemplate.versionName
+            }
+        }
+
+        templatePipelineDao.create(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            instanceType = instanceType,
+            rootTemplateId = rootTemplateId,
+            templateVersion = templateVersion,
+            versionName = versionName,
+            templateId = templateId,
+            userId = userId,
+            buildNo = if (buildNo == null) {
+                null
+            } else {
+                objectMapper.writeValueAsString(buildNo)
+            },
+            param = if (param == null) {
+                null
+            } else {
+                objectMapper.writeValueAsString(param)
+            }
+        )
+        return true
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TemplateService::class.java)
+    }
+}

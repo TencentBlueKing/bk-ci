@@ -4,6 +4,7 @@ import com.tencent.bk.codecc.defect.api.ServiceReportTaskLogRestResource
 import com.tencent.bk.codecc.defect.dao.mongotemplate.TaskLogDao
 import com.tencent.bk.codecc.defect.dto.ScanTaskTriggerDTO
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.constant.ComConstants
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,8 +12,8 @@ import org.springframework.stereotype.Component
 
 @Component
 class ExpireTaskHandleComponent @Autowired constructor(
-    private val taskLogDao: TaskLogDao,
-    private val serviceReportTaskLogRestResource: ServiceReportTaskLogRestResource
+        private val taskLogDao: TaskLogDao,
+        private val client: Client
 ){
 
     companion object{
@@ -42,11 +43,11 @@ class ExpireTaskHandleComponent @Autowired constructor(
                         stepNum = it.currStep
                         pipelineBuildId = it.buildId
                         triggerFrom = it.triggerFrom
-                        serviceReportTaskLogRestResource.uploadTaskLog(this)
+                        client.get(ServiceReportTaskLogRestResource::class.java).uploadTaskLog(this)
                     }
                 }
             }
-        } catch (e : Exception){
+        } catch (e: Exception){
             logger.error("set expire task fail! task id: ${scanTaskTriggerDTO.taskId}")
         }
 

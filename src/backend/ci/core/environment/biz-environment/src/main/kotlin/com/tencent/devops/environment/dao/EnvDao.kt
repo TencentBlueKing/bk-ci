@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("ALL")
 class EnvDao {
     fun get(dslContext: DSLContext, projectId: String, envId: Long): TEnvRecord {
         return getOrNull(dslContext, projectId, envId)
@@ -99,7 +101,7 @@ class EnvDao {
             )
                 .returning(ENV_ID)
                 .fetchOne()
-            return record.envId
+            return record!!.envId!!
         }
     }
 
@@ -169,10 +171,10 @@ class EnvDao {
     fun listServerEnvByIdsAllType(dslContext: DSLContext, envIds: Collection<Long>): List<TEnvRecord> {
         with(TEnv.T_ENV) {
             return dslContext.selectFrom(this)
-                    .where(IS_DELETED.eq(false))
-                    .and(ENV_ID.`in`(envIds))
-                    .orderBy(ENV_ID.desc())
-                    .fetch()
+                .where(IS_DELETED.eq(false))
+                .and(ENV_ID.`in`(envIds))
+                .orderBy(ENV_ID.desc())
+                .fetch()
         }
     }
 
@@ -216,14 +218,14 @@ class EnvDao {
                     .and(IS_DELETED.eq(false))
                     .and(ENV_ID.ne(envId))
                     .and(ENV_NAME.eq(envName))
-                    .fetchOne(0, Long::class.java) > 0
+                    .fetchOne(0, Long::class.java)!! > 0
             } else {
                 dslContext.selectCount()
                     .from(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(IS_DELETED.eq(false))
                     .and(ENV_NAME.eq(envName))
-                    .fetchOne(0, Long::class.java) > 0
+                    .fetchOne(0, Long::class.java)!! > 0
             }
         }
     }
@@ -248,7 +250,29 @@ class EnvDao {
     fun countByProject(dslContext: DSLContext, projectId: String?): Int {
         with(TEnv.T_ENV) {
             return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun searchByName(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int,
+        projectId: String?,
+        envName: String
+    ): List<TEnvRecord> {
+        with(TEnv.T_ENV) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId).and(ENV_NAME.like("%$envName%")))
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun countByName(dslContext: DSLContext, projectId: String?, envName: String): Int {
+        with(TEnv.T_ENV) {
+            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId).and(ENV_NAME.like("%$envName%")))
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,6 +39,7 @@ import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.File
 import java.nio.file.Files
 
+@Suppress("ALL")
 object ShellUtil {
 
     private const val setEnv = "setEnv(){\n" +
@@ -90,7 +92,8 @@ object ShellUtil {
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
-        print2Logger: Boolean = true
+        print2Logger: Boolean = true,
+        elementId: String? = null
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
@@ -107,7 +110,9 @@ object ShellUtil {
             prefix = prefix,
             errorMessage = errorMessage,
             print2Logger = print2Logger,
-            executeErrorMessage = ""
+            executeErrorMessage = "",
+            buildId = buildId,
+            elementId = elementId
         )
     }
 
@@ -195,12 +200,14 @@ object ShellUtil {
             command.append("set +e\n")
         }
 
-        command.append(setEnv.replace("##resultFile##", File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
-        command.append(setGateValue.replace("##gateValueFile##", File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
+        command.append(setEnv.replace(oldValue = "##resultFile##",
+            newValue = File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
+        command.append(setGateValue.replace(oldValue = "##gateValueFile##",
+            newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
         command.append(script)
 
         file.writeText(command.toString())
-        executeUnixCommand("chmod +x ${file.absolutePath}", dir)
+        executeUnixCommand(command = "chmod +x ${file.absolutePath}", sourceDir = dir)
 
         return file
     }
@@ -211,7 +218,9 @@ object ShellUtil {
         prefix: String = "",
         errorMessage: String? = null,
         print2Logger: Boolean = true,
-        executeErrorMessage: String? = null
+        executeErrorMessage: String? = null,
+        buildId: String? = null,
+        elementId: String? = null
     ): String {
         try {
             return CommandLineUtils.execute(
@@ -219,7 +228,9 @@ object ShellUtil {
                 workspace = sourceDir,
                 print2Logger = print2Logger,
                 prefix = prefix,
-                executeErrorMessage = executeErrorMessage
+                executeErrorMessage = executeErrorMessage,
+                buildId = buildId,
+                elementId = elementId
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"

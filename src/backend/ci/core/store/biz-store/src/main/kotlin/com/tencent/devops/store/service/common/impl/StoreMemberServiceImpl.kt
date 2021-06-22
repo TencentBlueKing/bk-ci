@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,6 +29,7 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEVOPS
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
@@ -52,6 +54,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.Executors
 
+@Suppress("ALL")
 abstract class StoreMemberServiceImpl : StoreMemberService {
 
     @Autowired
@@ -78,7 +81,6 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         storeType: StoreTypeEnum,
         checkPermissionFlag: Boolean
     ): Result<List<StoreMemberItem?>> {
-        logger.info("getStoreMemberList userId:$userId,storeCode:$storeCode,storeType:$storeType,checkPermissionFlag:$checkPermissionFlag")
         if (checkPermissionFlag && !storeMemberDao.isStoreMember(
                 dslContext = dslContext,
                 userId = userId,
@@ -88,21 +90,35 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
-        val records = storeMemberDao.list(dslContext, storeCode, null, storeType.type.toByte())
-        logger.info("getStoreMemberList records is:$records")
+        val records = storeMemberDao.list(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            type = null,
+            storeType = storeType.type.toByte()
+        )
         // 获取调试项目对应的名称
         val projectCodeList = mutableListOf<String>()
         records?.forEach {
-            val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, it.username, storeCode, storeType)
+            val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
+                dslContext = dslContext,
+                userId = it.username,
+                storeCode = storeCode,
+                storeType = storeType
+            )
             if (null != testProjectCode) projectCodeList.add(testProjectCode)
         }
-        logger.info("getStoreMemberList projectCodeList is:$projectCodeList")
-        val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
+        val projectMap = client.get(ServiceProjectResource::class)
+            .getNameByCode(projectCodeList.joinToString(",")).data
         val members = mutableListOf<StoreMemberItem?>()
         records?.forEach {
-            val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, it.username, storeCode, storeType)
+            val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
+                dslContext = dslContext,
+                userId = it.username,
+                storeCode = storeCode,
+                storeType = storeType
+            )
             members.add(
-                generateStoreMemberItem(it, projectMap?.get(projectCode) ?: "")
+                generateStoreMemberItem(it, projectCode ?: "", projectMap?.get(projectCode) ?: "")
             )
         }
         return Result(members)
@@ -113,22 +129,38 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
      */
     override fun viewMemberInfo(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<StoreMemberItem?> {
         logger.info("viewMemberInfo userId is:$userId,storeCode is:$storeCode,storeType is:$storeType")
-        val memberRecord = storeMemberDao.getMemberInfo(dslContext, userId, storeCode, storeType.type.toByte())
-        logger.info("viewMemberInfo memberRecord is:$memberRecord")
+        val memberRecord = storeMemberDao.getMemberInfo(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
+        )
         return if (null != memberRecord) {
             // 获取调试项目对应的名称
             val projectCodeList = mutableListOf<String>()
-            val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, memberRecord.username, storeCode, storeType)
+            val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
+                dslContext = dslContext,
+                userId = memberRecord.username,
+                storeCode = storeCode,
+                storeType = storeType
+            )
             if (null != projectCode) projectCodeList.add(projectCode)
-            logger.info("getStoreMemberList projectCodeList is:$projectCodeList")
-            val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
-            Result(generateStoreMemberItem(memberRecord, projectMap?.get(projectCode) ?: ""))
+            val projectMap = client.get(ServiceProjectResource::class)
+                .getNameByCode(projectCodeList.joinToString(",")).data
+            Result(generateStoreMemberItem(
+                memberRecord = memberRecord,
+                projectCode = projectCode ?: "",
+                projectName = projectMap?.get(projectCode) ?: ""
+            ))
         } else {
             Result(data = null)
         }
     }
 
-    override fun batchListMember(storeCodeList: List<String?>, storeType: StoreTypeEnum): Result<HashMap<String, MutableList<String>>> {
+    override fun batchListMember(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): Result<HashMap<String, MutableList<String>>> {
         val ret = hashMapOf<String, MutableList<String>>()
         val records = storeMemberDao.batchList(dslContext, storeCodeList, storeType.type.toByte())
         records?.forEach {
@@ -156,8 +188,6 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         checkPermissionFlag: Boolean,
         testProjectCode: String?
     ): Result<Boolean> {
-        logger.info("addMember userId:$userId,storeMemberReq:$storeMemberReq,storeType:$storeType,collaborationFlag:$collaborationFlag")
-        logger.info("addMember sendNotify:$sendNotify,checkPermissionFlag:$checkPermissionFlag,testProjectCode:$testProjectCode")
         val storeCode = storeMemberReq.storeCode
         val type = storeMemberReq.type.type.toByte()
         if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
@@ -191,7 +221,12 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
                         dslContext = context,
                         userId = item,
                         storeCode = storeCode,
-                        projectCode = storeProjectRelDao.getUserStoreTestProjectCode(context, userId, storeCode, storeType)!!,
+                        projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
+                            dslContext = context,
+                            userId = userId,
+                            storeCode = storeCode,
+                            storeType = storeType
+                        )!!,
                         type = StoreProjectTypeEnum.TEST.type.toByte(),
                         storeType = storeType.type.toByte()
                     )
@@ -238,7 +273,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             if ((record.type).toInt() == 0) {
                 val validateAdminResult = isStoreHasAdmins(storeCode, storeType)
                 if (validateAdminResult.isNotOk()) {
-                    return Result(status = validateAdminResult.status, message = validateAdminResult.message, data = false)
+                    return Result(validateAdminResult.status, message = validateAdminResult.message, data = false)
                 }
             }
             dslContext.transaction { t ->
@@ -283,16 +318,14 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         storeCode: String,
         storeType: StoreTypeEnum
     ): Result<Boolean> {
-        logger.info("changeMemberTestProjectCode userId is:$userId,accessToken is:$accessToken,storeMember is:$storeMember")
-        logger.info("changeMemberTestProjectCode projectCode is:$projectCode,storeCode is:$storeCode,storeType is:$storeType")
         if (userId != storeMember) {
             // 如果要修改其他插件成员的调试项目，则要求修改人是插件的管理员
             if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(storeCode))
             }
         } else {
             if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(storeCode))
             }
         }
         val validateFlag: Boolean?
@@ -307,10 +340,13 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             logger.warn("verifyUserProjectPermission error is :$e", e)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         }
-        logger.info("the validateFlag is :$validateFlag")
         if (null == validateFlag || !validateFlag) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCode).data
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_CHANGE_TEST_PROJECT_FAIL,
+                params = arrayOf(storeMember, projectMap?.get(projectCode) ?: "")
+            )
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -352,10 +388,15 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         return storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType)
     }
 
-    private fun generateStoreMemberItem(memberRecord: TStoreMemberRecord, projectName: String): StoreMemberItem {
+    private fun generateStoreMemberItem(
+        memberRecord: TStoreMemberRecord,
+        projectCode: String,
+        projectName: String
+    ): StoreMemberItem {
         return StoreMemberItem(
             id = memberRecord.id as String,
             userName = memberRecord.username as String,
+            projectCode = projectCode,
             projectName = projectName,
             type = StoreMemberTypeEnum.getAtomMemberType((memberRecord.type as Byte).toInt()),
             creator = memberRecord.creator as String,

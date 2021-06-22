@@ -16,15 +16,15 @@
                                                                               'is-intercept': atom.isQualityCheck,
                                                                               'template-compare-atom': atom.templateModify }"
                     v-if="atom['@type'] !== 'qualityGateInTask' && atom['@type'] !== 'qualityGateOutTask'">
-                    <status-icon v-if="atom.status && atom.status !== 'SKIP'" type="element" :status="atom.status" />
+                    <status-icon v-if="atom.status && atom.status !== 'SKIP'" type="element" :status="atom.status" :is-hook="((atom.additionalOptions || {}).elementPostInfo || false)" />
                     <status-icon v-else-if="isWaiting && atom.status !== 'SKIP'" type="element" status="WAITING" />
-                    <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon" :src="atomMap[atom.atomCode].icon" :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" />
-                    <logo v-else :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" :name="getAtomIcon(atom.atomCode)" size="18" />
+                    <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon && !(atom.additionalOptions || {}).elementPostInfo" :src="atomMap[atom.atomCode].icon" :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" />
+                    <logo v-else :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" :name="getAtomIcon(atom)" size="18" />
                     <p class="atom-name">
                         <span :title="atom.name" :class="{ 'skip-name': useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
                     </p>
                     <bk-popover placement="top" v-if="atom.isReviewing">
-                        <span @click.stop="checkAtom(atom)" :class="isCurrentUser(atom.computedReviewers) ? 'atom-reviewing-tips' : 'atom-review-diasbled-tips'">{{ $t('editPage.toCheck') }}</span>
+                        <span @click.stop="checkAtom(atom, index)" :class="isCurrentUser(atom.computedReviewers) ? 'atom-reviewing-tips' : 'atom-review-diasbled-tips'">{{ $t('editPage.toCheck') }}</span>
                         <template slot="content">
                             <p>{{ $t('editPage.checkUser') }}{{ atom.computedReviewers.join(';') }}</p>
                         </template>
@@ -80,7 +80,7 @@
                 <span v-if="atomList.length === 0">{{ $t('editPage.addAtom') }}</span>
             </span>
         </draggable>
-        <check-atom-dialog :is-show-check-dialog="isShowCheckDialog" :atom="currentAtom" :toggle-check="toggleCheckDialog"></check-atom-dialog>
+        <check-atom-dialog :is-show-check-dialog="isShowCheckDialog" :atom="currentAtom" :toggle-check="toggleCheckDialog" :element="element"></check-atom-dialog>
     </section>
 </template>
 
@@ -127,14 +127,15 @@
             }
         },
         computed: {
-            ...mapState('soda', [
+            ...mapState('common', [
                 'ruleList',
                 'templateRuleList'
             ]),
             ...mapState('atom', [
                 'execDetail',
                 'atomMap',
-                'pipeline'
+                'pipeline',
+                'pipelineLimit'
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
@@ -156,10 +157,11 @@
             atomList: {
                 get () {
                     const atoms = this.getElements(this.container)
+                    
                     atoms.forEach(atom => {
-                        if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
+                        if (Array.isArray(this.curMatchRules) && this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
-                            || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
+                                || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
                         } else {
                             atom.isQualityCheck = false
@@ -193,7 +195,7 @@
             }
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'reviewExcuteAtom',
                 'requestAuditUserList'
             ]),
@@ -256,8 +258,9 @@
                     this.currentAtom = {}
                 }
             },
-            checkAtom (atom) {
+            checkAtom (atom, elementIndex) {
                 if (!this.isCurrentUser(atom.computedReviewers)) return
+                this.element = this.container.elements[elementIndex]
                 this.currentAtom = atom
                 this.toggleCheckDialog(true)
             },
@@ -284,7 +287,13 @@
                     return false
                 }
             },
-            getAtomIcon (atomCode) {
+            getAtomIcon (atom) {
+                const additionalOptions = atom.additionalOptions || {}
+                const elementPostInfo = additionalOptions.elementPostInfo
+                if (elementPostInfo) {
+                    return 'icon-build-hooks'
+                }
+                const atomCode = atom.atomCode
                 if (!atomCode) {
                     return 'placeholder'
                 }
@@ -300,7 +309,7 @@
                 const list = atom.reviewUsers || (atom.data && atom.data.input && atom.data.input.reviewers)
                 const reviewUsers = list.map(user => user.split(';').map(val => val.trim())).reduce((prev, curr) => {
                     return prev.concat(curr)
-                })
+                }, [])
                 return reviewUsers
             },
             showPropertyPanel (elementIndex) {
@@ -317,6 +326,13 @@
             editAtom (atomIndex, isAdd) {
                 const { stageIndex, containerIndex, container, addAtom, deleteAtom } = this
                 const editAction = isAdd ? addAtom : deleteAtom
+                if (isAdd && this.container.elements.length >= this.pipelineLimit.atomLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.atomLimit') + this.pipelineLimit.atomLimit
+                    })
+                    return
+                }
                 editAction({
                     container,
                     atomIndex,
@@ -325,6 +341,13 @@
                 })
             },
             copyAtom (atomIndex) {
+                if (this.container.elements.length >= this.pipelineLimit.atomLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.atomLimit') + this.pipelineLimit.atomLimit
+                    })
+                    return
+                }
                 try {
                     const { id, ...element } = this.container.elements[atomIndex]
                     this.container.elements.splice(atomIndex + 1, 0, JSON.parse(JSON.stringify({
@@ -404,7 +427,7 @@
                             name: this.routerParams.pipelineId
                         }],
                         projectId: this.routerParams.projectId
-                    }])
+                    }], this.getPermUrlByRole(this.routerParams.projectId, this.routerParams.pipelineId, this.roleMap.executor))
                 } finally {
                     message && this.$showTips({
                         message,
@@ -637,7 +660,7 @@
 
         .quality-atom {
             margin-left: 84px;
-            width: 70px;
+            width: 55px;
             border-radius: 12px;
             z-index: 9;
             .atom-title {
@@ -657,8 +680,8 @@
                     width: 62px;
                 }
                 &:after {
-                    left: 154px;
-                    width: 85px;
+                    left: 138px;
+                    width: 100px;
                 }
             }
             &.is-success {
@@ -695,7 +718,7 @@
             }
             .handler-list {
                 position: absolute;
-                right: 10px;
+                right: 0;
                 span {
                     color: $primaryColor;
                     font-size: 12px;

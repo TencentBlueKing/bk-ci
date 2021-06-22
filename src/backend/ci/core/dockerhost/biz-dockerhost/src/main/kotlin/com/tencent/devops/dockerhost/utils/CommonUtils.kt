@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,13 +31,16 @@ import com.github.dockerjava.api.model.AuthConfig
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.net.DatagramSocket
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.Socket
+import java.net.UnknownHostException
+import java.util.ArrayList
+import java.util.Enumeration
 
 object CommonUtils {
 
@@ -55,55 +59,78 @@ object CommonUtils {
         }
     }
 
-    fun getInnerIP(): String {
-        val ipMap = getMachineIP()
-        var innerIp = ipMap["eth1"]
-        if (StringUtils.isBlank(innerIp)) {
-            innerIp = ipMap["eth0"]
-        }
-        if (StringUtils.isBlank(innerIp)) {
-            val ipSet = ipMap.entries
-            for ((_, value) in ipSet) {
-                innerIp = value
-                if (!StringUtils.isBlank(innerIp)) {
-                    break
-                }
-            }
+    fun getInnerIP(localIp: String? = ""): String {
+        if (localIp != null && localIp.isNotBlank()) {
+            return localIp
         }
 
-        return if (StringUtils.isBlank(innerIp) || null == innerIp) "" else innerIp
+        val ipByNiList = getLocalIp4AddressFromNetworkInterface()
+        return when {
+            ipByNiList.isEmpty() -> {
+                getIpBySocket()?.hostAddress ?: ""
+            }
+            ipByNiList.size == 1 -> {
+                ipByNiList[0].hostAddress
+            }
+            else -> {
+                getIpBySocket()?.hostAddress ?: ipByNiList[0].hostAddress
+            }
+        }
     }
 
-    private fun getMachineIP(): Map<String, String> {
-        val allIp = HashMap<String, String>()
-
-        try {
-            val allNetInterfaces = NetworkInterface.getNetworkInterfaces() // 获取服务器的所有网卡
-            if (null == allNetInterfaces) {
-                logger.error("#####################getMachineIP Can not get NetworkInterfaces")
-            } else {
-                while (allNetInterfaces.hasMoreElements()) { // 循环网卡获取网卡的IP地址
-                    val netInterface = allNetInterfaces.nextElement()
-                    val netInterfaceName = netInterface.name
-                    if (StringUtils.isBlank(netInterfaceName) || "lo".equals(netInterfaceName, ignoreCase = true)) { // 过滤掉127.0.0.1的IP
-//                        logger.info("loopback地址或网卡名称为空")
-                    } else {
-                        val addresses = netInterface.inetAddresses
-                        while (addresses.hasMoreElements()) {
-                            val ip = addresses.nextElement() as InetAddress
-                            if (ip is Inet4Address && !ip.isLoopbackAddress) {
-                                val machineIp = ip.hostAddress
-                                allIp[netInterfaceName] = machineIp
-                            }
-                        }
-                    }
+    private fun getLocalIp4AddressFromNetworkInterface(): List<Inet4Address> {
+        val addresses: MutableList<Inet4Address> = ArrayList()
+        val e = NetworkInterface.getNetworkInterfaces() ?: return addresses
+        while (e.hasMoreElements()) {
+            val n = e.nextElement() as NetworkInterface
+            if (!isValidInterface(n)) {
+                continue
+            }
+            val ee: Enumeration<*> = n.inetAddresses
+            while (ee.hasMoreElements()) {
+                val i = ee.nextElement() as InetAddress
+                if (isValidAddress(i)) {
+                    addresses.add(i as Inet4Address)
                 }
             }
-        } catch (e: Exception) {
-            logger.error("获取网卡失败", e)
+        }
+        return addresses
+    }
+
+    /**
+     * 过滤回环网卡、点对点网卡、非活动网卡、虚拟网卡并要求网卡名字是eth或ens开头
+     *
+     * @param ni 网卡
+     * @return 如果满足要求则true，否则false
+     */
+    private fun isValidInterface(ni: NetworkInterface): Boolean {
+        return (!ni.isLoopback && !ni.isPointToPoint && ni.isUp && !ni.isVirtual &&
+                (ni.name.startsWith("eth") || ni.name.startsWith("ens")))
+    }
+
+    /**
+     * 判断是否是IPv4，并过滤回环地址.
+     */
+    private fun isValidAddress(address: InetAddress): Boolean {
+        return address is Inet4Address && !address.isLoopbackAddress()
+    }
+
+    /**
+     * 建立一个socket链接，当存在多网卡时会返回合适的出口IP，8.8.8.8是个测试地址 not needed to be reachable
+     */
+    private fun getIpBySocket(): Inet4Address? {
+        try {
+            DatagramSocket().use { socket ->
+                socket.connect(InetAddress.getByName("8.8.8.8"), 10002)
+                if (socket.localAddress is Inet4Address) {
+                    return socket.localAddress as Inet4Address
+                }
+            }
+        } catch (e: UnknownHostException) {
+            return null
         }
 
-        return allIp
+        return null
     }
 
     fun normalizeImageName(imageNameStr: String): String {
@@ -119,6 +146,7 @@ object CommonUtils {
         return Triple(url.trim(), name.trim(), tag.trim())
     }
 
+    @Suppress("ALL")
     private fun parseImageWithoutTrim(imageNameInput: String): Triple<String, String, String> {
         val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
         val arry = imageNameStr.split(":")
@@ -138,7 +166,9 @@ object CommonUtils {
                 } else {
                     if (str.last().contains(":")) {
                         val nameTag = str.last().split(":")
-                        Triple(str[0], imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]), nameTag[1])
+                        Triple(str[0],
+                            imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]),
+                            nameTag[1])
                     } else {
                         Triple(str[0], str.last(), "latest")
                     }
@@ -168,7 +198,13 @@ object CommonUtils {
         }
     }
 
-    fun getAuthConfig(imageType: String?, dockerHostConfig: DockerHostConfig, imageName: String, registryUser: String?, registryPwd: String?): AuthConfig? {
+    fun getAuthConfig(
+        imageType: String?,
+        dockerHostConfig: DockerHostConfig,
+        imageName: String,
+        registryUser: String?,
+        registryPwd: String?
+    ): AuthConfig? {
         return if (imageType == ImageType.THIRD.type) {
             val (registryHost, _, _) = parseImage(imageName)
             logger.info("registry host: $registryHost")

@@ -65,7 +65,7 @@
         },
         methods: {
             renderLog (buildNo) {
-                this.SodaLog.render(this.$refs.logContainer, `${GW_URL_PREFIX}/${this.logUrl}`, buildNo, this.showTime, this.buildTag)
+                this.SodaLog.render(this.$refs.logContainer, `${API_URL_PREFIX}/${this.logUrl}`, buildNo, this.showTime, this.buildTag)
             },
             _destroyLog () {
                 this.SodaLog.unMount(this.$refs.logContainer)

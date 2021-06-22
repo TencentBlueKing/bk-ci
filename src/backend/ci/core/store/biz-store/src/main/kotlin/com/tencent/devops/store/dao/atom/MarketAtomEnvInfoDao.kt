@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,14 +34,16 @@ import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record19
+import org.jooq.Record21
 import org.jooq.SelectOnConditionStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class MarketAtomEnvInfoDao {
 
@@ -57,6 +60,8 @@ class MarketAtomEnvInfoDao {
                 TARGET,
                 SHA_CONTENT,
                 PRE_CMD,
+                POST_ENTRY_PARAM,
+                POST_CONDITION,
                 CREATOR,
                 MODIFIER
             )
@@ -70,6 +75,8 @@ class MarketAtomEnvInfoDao {
                     atomEnvRequest.target,
                     atomEnvRequest.shaContent,
                     atomEnvRequest.preCmd,
+                    atomEnvRequest.atomPostInfo?.postEntryParam,
+                    atomEnvRequest.atomPostInfo?.postCondition,
                     atomEnvRequest.userId,
                     atomEnvRequest.userId
                 ).execute()
@@ -108,14 +115,14 @@ class MarketAtomEnvInfoDao {
                     atomStatusList = atomStatusList
                 ))
         }.asTable("t")
-        return dslContext.selectFrom(t).orderBy(t.field("createTime").desc()).limit(1).fetchOne()
+        return dslContext.selectFrom(t).orderBy(t.field("createTime")!!.desc()).limit(1).fetchOne()
     }
 
     private fun getAtomEnvInfoBaseStep(
         dslContext: DSLContext,
         a: TAtom,
         b: TAtomEnvInfo
-    ): SelectOnConditionStep<Record19<String, String, Byte, String, String, String, String, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String>> {
+    ): SelectOnConditionStep<Record21<String, String, Byte, String, String, String, String, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
         return dslContext.select(
             a.ID.`as`("atomId"),
             a.ATOM_CODE.`as`("atomCode"),
@@ -135,7 +142,9 @@ class MarketAtomEnvInfoDao {
             b.MIN_VERSION.`as`("minVersion"),
             b.TARGET.`as`("target"),
             b.SHA_CONTENT.`as`("shaContent"),
-            b.PRE_CMD.`as`("preCmd")
+            b.PRE_CMD.`as`("preCmd"),
+            b.POST_ENTRY_PARAM.`as`("postEntryParam"),
+            b.POST_CONDITION.`as`("postCondition")
         ).from(a)
             .join(b)
             .on(a.ID.eq(b.ATOM_ID))
@@ -149,7 +158,7 @@ class MarketAtomEnvInfoDao {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(a.ATOM_CODE.eq(atomCode))
-        conditions.add(a.VERSION.like("$version%"))
+        conditions.add(a.VERSION.like(VersionUtils.generateQueryVersion(version)))
         if (atomStatusList != null && atomStatusList.isNotEmpty()) {
             conditions.add(a.ATOM_STATUS.`in`(atomStatusList))
         }
@@ -212,7 +221,9 @@ class MarketAtomEnvInfoDao {
             if (!atomEnvRequest.pkgName.isNullOrEmpty()) {
                 baseStep.set(PKG_NAME, atomEnvRequest.pkgName)
             }
-
+            val atomPostInfo = atomEnvRequest.atomPostInfo
+            baseStep.set(POST_ENTRY_PARAM, atomPostInfo?.postEntryParam)
+            baseStep.set(POST_CONDITION, atomPostInfo?.postCondition)
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, atomEnvRequest.userId)
                 .where(ATOM_ID.eq(atomId))

@@ -4,7 +4,7 @@
             {{ $t('atomManage.installedAtom') }}
             <span @click="goToStore">{{ $t('atomManage.moreAtom') }}</span>
         </h3>
-        <bk-tab :active.sync="active" class="atom-manage-main">
+        <bk-tab :active.sync="active" class="atom-manage-main" @tab-change="tabChange">
             <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
                 <template slot="label">
                     <span>{{panel.label}}</span>
@@ -44,6 +44,14 @@
                 </bk-table>
             </bk-tab-panel>
         </bk-tab>
+
+        <bk-pagination @change="pageChange"
+            @limit-change="limitChange"
+            :current.sync="defaultPaging.current"
+            :count.sync="defaultPaging.count"
+            :limit="defaultPaging.limit"
+            class="atom-pagination">
+        </bk-pagination>
 
         <bk-dialog v-model="deleteObj.showDialog" :title="`${$t('atomManage.uninstall')}${deleteObj.detail.name}：`" :close-icon="false" :width="538" @confirm="deleteAtom" @cancel="clearReason">
             <span class="choose-reason-title">{{ $t('atomManage.uninstallReason') }}</span>
@@ -121,7 +129,12 @@
                     detail: {},
                     list: []
                 },
-                isLoading: false
+                isLoading: false,
+                defaultPaging: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                }
             }
         },
 
@@ -131,7 +144,11 @@
             },
 
             atomList () {
-                return this.installAtomList.filter((atom) => (this.active === 'all' || atom.classifyCode === this.active)) || []
+                const curTabAtomList = this.installAtomList.filter((atom) => (this.active === 'all' || atom.classifyCode === this.active)) || []
+                this.defaultPaging.count = curTabAtomList.length
+                const startIndex = this.defaultPaging.limit * (this.defaultPaging.current - 1)
+                const endIndex = this.defaultPaging.limit * this.defaultPaging.current
+                return curTabAtomList.slice(startIndex, endIndex)
             },
 
             showOtherReason () {
@@ -154,7 +171,6 @@
                 Promise.all([this.getInstallAtomList(this.projectId), this.getAtomClassify(), this.getDeleteReasons()]).then(([{ data: atomList }, { data: classifyList }, { data: reasons }]) => {
                     this.installAtomList = atomList.records || []
                     this.deleteReasons = reasons || []
-
                     this.panels = (classifyList || []).map((classify) => {
                         const count = (this.installAtomList.filter((atom) => (atom.classifyCode === classify.classifyCode)) || []).length
                         return { name: classify.classifyCode, label: classify.classifyName, count }
@@ -163,6 +179,10 @@
                 }).catch(err => this.$bkMessage({ theme: 'error', message: err.message })).finally(() => {
                     this.isLoading = false
                 })
+            },
+
+            tabChange () {
+                this.defaultPaging.current = 1
             },
 
             showDetail (row) {
@@ -204,6 +224,17 @@
                 })
             },
 
+            pageChange (page) {
+                if (page) this.defaultPaging.current = page
+            },
+
+            limitChange (limit) {
+                if (limit === this.defaultPaging.limit) return
+
+                this.defaultPaging.limit = limit
+                this.defaultPaging.current = 1
+            },
+
             clearReason () {
                 this.deleteObj.reasonList = []
                 this.deleteObj.otherStr = ''
@@ -216,15 +247,15 @@
             },
 
             goToStoreDetail (atomCode) {
-                window.open(`${WEB_URL_PIRFIX}/store/atomStore/detail/atom/${atomCode}`, '_blank')
+                window.open(`${WEB_URL_PREFIX}/store/atomStore/detail/atom/${atomCode}`, '_blank')
             },
 
             goToPipeline (pipelineId) {
-                window.open(`${WEB_URL_PIRFIX}/pipeline/${this.projectId}/${pipelineId}/edit`, '_blank')
+                window.open(`${WEB_URL_PREFIX}/pipeline/${this.projectId}/${pipelineId}/edit`, '_blank')
             },
 
             goToStore () {
-                window.open(`${WEB_URL_PIRFIX}/store/market/home?pipeType=atom`, '_blank')
+                window.open(`${WEB_URL_PREFIX}/store/market/home?pipeType=atom`, '_blank')
             }
         }
     }
@@ -251,6 +282,10 @@
                 font-size: 14px;
                 cursor: pointer;
             }
+        }
+        .atom-pagination {
+            margin: 10px 150px;
+            min-width: 1000px;
         }
         .atom-manage-main {
             margin: 0 150px;
@@ -295,8 +330,12 @@
                     -webkit-line-clamp: 1;
                 }
             }
-            /deep/ .bk-table-body-wrapper .primary-color {
-                color: $primaryColor;
+            /deep/ .bk-table-body-wrapper {
+                max-height: calc(100vh - 250px);
+                overflow-y: auto;
+                .primary-color {
+                    color: $primaryColor;
+                }
             }
             /deep/ .bk-table-body-wrapper .cursor-pointer {
                 cursor: pointer;

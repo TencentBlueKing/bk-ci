@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,7 +34,7 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.common.notify.utils.ChineseStringUtil
-import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.Configuration
 import com.tencent.devops.model.notify.tables.records.TNotifyRtxRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
@@ -54,6 +55,7 @@ import java.util.LinkedList
 import java.util.stream.Collectors
 
 @Service
+@Suppress("ALL")
 class RtxServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val rtxNotifyDao: RtxNotifyDao,
@@ -73,7 +75,7 @@ class RtxServiceImpl @Autowired constructor(
     override fun sendMessage(rtxNotifyMessageWithOperation: RtxNotifyMessageWithOperation) {
         val rtxNotifyPosts = generateRtxNotifyPost(rtxNotifyMessageWithOperation)
         if (rtxNotifyPosts.isEmpty()) {
-            logger.warn("List<RtxNotifyPost> is empty after being processed, RtxNotifyMessageWithOperation: $rtxNotifyMessageWithOperation")
+            logger.warn("List<RtxNotifyPost> is empty after being processed: $rtxNotifyMessageWithOperation")
             return
         }
 
@@ -109,7 +111,13 @@ class RtxServiceImpl @Autowired constructor(
         }
     }
 
-    private fun reSendMessage(post: RtxNotifyPost, notifySource: EnumNotifySource, retryCount: Int, id: String, batchId: String) {
+    private fun reSendMessage(
+        post: RtxNotifyPost,
+        notifySource: EnumNotifySource,
+        retryCount: Int,
+        id: String,
+        batchId: String
+    ) {
         val rtxNotifyMessageWithOperation = RtxNotifyMessageWithOperation()
         rtxNotifyMessageWithOperation.apply {
             this.batchId = batchId
@@ -150,7 +158,7 @@ class RtxServiceImpl @Autowired constructor(
                 bodyList[i]
             }
 
-            val contentMd5 = CommonUtils.getMessageContentMD5(rtxNotifyMessage.title, body)
+            val contentMd5 = NotifyDigestUtils.getMessageContentMD5(rtxNotifyMessage.title, body)
             val receivers = Lists.newArrayList(filterReceivers(
                 rtxNotifyMessage.getReceivers(), contentMd5, rtxNotifyMessage.frequencyLimit)
             )
@@ -223,10 +231,13 @@ class RtxServiceImpl @Autowired constructor(
         return NotificationResponseWithPage(count, page, pageSize, result)
     }
 
-    private fun parseFromTNotifyRtxToResponse(record: TNotifyRtxRecord): NotificationResponse<RtxNotifyMessageWithOperation> {
+    private fun parseFromTNotifyRtxToResponse(
+        record: TNotifyRtxRecord
+    ): NotificationResponse<RtxNotifyMessageWithOperation> {
         val receivers: MutableSet<String> = mutableSetOf()
-        if (!record.receivers.isNullOrEmpty())
+        if (!record.receivers.isNullOrEmpty()) {
             receivers.addAll(record.receivers.split(";"))
+        }
 
         val message = RtxNotifyMessageWithOperation()
         message.apply {
@@ -243,13 +254,19 @@ class RtxServiceImpl @Autowired constructor(
             lastError = record.lastError
         }
 
-        return NotificationResponse(record.id, record.success,
-            if (record.createdTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
-            if (record.updatedTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-            record.contentMd5, message)
+        return NotificationResponse(
+            id = record.id,
+            success = record.success,
+            createdTime = if (record.createdTime == null) null
+            else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime)
+            },
+            updatedTime = if (record.updatedTime == null) null
+            else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime)
+            },
+            contentMD5 = record.contentMd5,
+            notificationMessage = message
+        )
     }
 }

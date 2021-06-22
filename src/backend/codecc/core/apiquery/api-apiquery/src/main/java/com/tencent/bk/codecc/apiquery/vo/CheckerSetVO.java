@@ -1,125 +1,212 @@
-/*
- * Tencent is pleased to support the open source community by making BlueKing available.
- * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
- * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.tencent.bk.codecc.apiquery.vo;
 
-import com.tencent.bk.codecc.apiquery.defect.model.CheckerPropsModel;
-import com.tencent.bk.codecc.apiquery.defect.model.CheckerSetCategoryModel;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.tencent.devops.common.api.CommonVO;
+import com.tencent.devops.common.api.checkerset.CheckerPropVO;
+import com.tencent.devops.common.api.checkerset.CheckerSetVersionVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 规则集视图
  *
- * @version V2.0
- * @date 2020/5/13
+ * @version V4.0
+ * @date 2020/02/07
  */
 @Data
-@ApiModel("规则集视图")
-public class CheckerSetVO
-{
-
-    @ApiModelProperty("规则集ID")
+@ApiModel("规则集管理视图")
+public class CheckerSetVO extends CommonVO {
+    /**
+     * 规则集ID
+     */
+    @ApiModelProperty(value = "规则集ID", required = true)
     private String checkerSetId;
 
-
-    @ApiModelProperty("版本号")
-    private Integer version;
-
-
-    @ApiModelProperty("规则集名称")
+    /**
+     * 规则集名称
+     */
+    @ApiModelProperty(value = "规则集名称", required = true)
     private String checkerSetName;
 
-
-    @ApiModelProperty("规则集支持的语言")
+    /**
+     * 规则集支持的语言
+     */
     private Long codeLang;
 
-
-    @ApiModelProperty("规则集语言文本,用于查询展示使用")
+    /**
+     * 语言
+     */
     private String checkerSetLang;
 
+    /**
+     * 规则集支持的语言，给流水线使用
+     */
+    private List<String> codeLangList;
 
-    @ApiModelProperty("规则集可见范围1：公开；2：仅我的项目")
+    /**
+     * 规则集包含的工具
+     */
+    private Set<String> toolList;
+
+    /**
+     * 规则集可见范围1：公开；2：仅我的项目；
+     */
+    @ApiModelProperty(value = "规则集可见范围", required = true)
     private Integer scope;
 
-
-    @ApiModelProperty("创建者")
+    /**
+     * 创建者
+     */
     private String creator;
 
-
-    @ApiModelProperty("创建时间")
+    /**
+     * 创建时间
+     */
     private Long createTime;
 
+    /**
+     * 创建时间(字符串格式)
+     */
+    private String createStrTime;
 
-    @ApiModelProperty("最近修改时间")
+    /**
+     * 最近修改时间
+     */
     private Long lastUpdateTime;
 
+    /**
+     * 版本号
+     */
+    private Integer version;
 
-    @ApiModelProperty("规则数")
+    /**
+     * 最新版本号
+     */
+    private Integer latestVersion;
+
+    /**
+     * 规则数
+     */
     private Integer checkerCount;
 
+    /**
+     * 是否推荐
+     */
+    private Integer recommended;
 
-    @ApiModelProperty("规则集包含的规则和参数")
-    private List<CheckerPropsModel> checkerProps;
+    /**
+     * 是否是默认规则集
+     */
+    private Boolean defaultCheckerSet;
 
+    /**
+     * 规则状态
+     */
+    private Integer status;
 
-    @ApiModelProperty("规则集被任务使用的量")
+    /**
+     * 工具特殊参数
+     */
+    private String paramJson;
+
+    /**
+     * 任务使用量
+     */
     private Integer taskUsage;
 
+    /**
+     * 规则集包含的规则和参数
+     */
+    private List<CheckerPropVO> checkerProps;
 
-    @ApiModelProperty("是否启用1：启用；2：下架")
+    /**
+     * 是否启用1：启用；2：下架
+     */
     private Integer enable;
 
-
-    @ApiModelProperty("排序权重")
+    /**
+     * 排序权重
+     */
     private Integer sortWeight;
 
+    /**
+     * 规则类型
+     */
+    private String catagories;
 
-    @ApiModelProperty("项目ID")
-    private String projectId;
-
-
-    @ApiModelProperty("规则集描述")
+    /**
+     * 规则集描述
+     */
     private String description;
 
-
-    @ApiModelProperty("规则类型")
-    private List<CheckerSetCategoryModel> catagories;
-
-
-    @ApiModelProperty("基准规则集ID")
+    /**
+     * 基准规则集ID
+     */
     private String baseCheckerSetId;
 
-
-    @ApiModelProperty("基准规则集版本号")
+    /**
+     * 基准规则集版本号
+     */
     private Integer baseCheckerSetVersion;
 
+    /**
+     * 使用中的任务列表
+     */
+    private List<Long> tasksInUse;
 
-    @ApiModelProperty("是否已初始化规则列表")
-    private Boolean initCheckers;
+    /**
+     * 任务使用中
+     */
+    private Boolean taskUsing;
 
+    /**
+     * 版本列表
+     */
+    private List<CheckerSetVersionVO> versionList;
 
-    @ApiModelProperty("是否官方")
+    /**
+     * 是否官方
+     */
+    @JsonIgnore
     private Integer official;
 
-
-    @ApiModelProperty("是否是V2版本规则集，V2版本规则集只用于旧版本流水线插件")
+    /**
+     * 是否是V2版本规则集，V2版本规则集只用于旧版本流水线插件
+     */
     private Boolean legacy;
 
+    /**
+     * 项目ID
+     */
+    private String projectId;
 
-    @ApiModelProperty("来源标签")
+    /**
+     * 是否初始化过规则列表，如果刚创建的规则集没有添加过规则集，值为false，其他情况为true
+     */
+    private Boolean initCheckers;
+
+    /**
+     * 规则集来源
+     */
     private String checkerSetSource;
 
+    /**
+     * --------------已废弃-----------工具名称
+     */
+    @JsonIgnore
+    private String toolName;
 
+    /**
+     * 项目是否已安装
+     */
+    private Boolean projectInstalled;
+
+    /**
+     * 工具数
+     */
+    private Integer toolCount;
 }

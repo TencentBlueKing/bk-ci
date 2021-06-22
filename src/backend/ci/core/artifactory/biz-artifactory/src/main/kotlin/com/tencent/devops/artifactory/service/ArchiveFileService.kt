@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,21 +36,18 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 interface ArchiveFileService {
-
-    fun getBasePath(): String
     /**
-     * 获取真正的文件路径
+     * 获取报告根路径
      */
-    fun getRealPath(filePath: String): String
+    fun getReportRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): String
 
     /**
      * 上传文件
@@ -63,7 +61,7 @@ interface ArchiveFileService {
         fileType: FileTypeEnum? = null,
         props: Map<String, String?>? = null,
         fileChannelType: FileChannelTypeEnum
-    ): Result<String?>
+    ): String
 
     /**
      * 上传文件
@@ -77,22 +75,22 @@ interface ArchiveFileService {
         fileType: FileTypeEnum? = null,
         props: Map<String, String?>? = null,
         fileChannelType: FileChannelTypeEnum
-    ): Result<String?>
+    ): String
 
     /**
      * 归档文件
      */
     fun archiveFile(
         userId: String,
-        projectId: String?,
-        pipelineId: String?,
-        buildId: String?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
         fileType: FileTypeEnum,
         customFilePath: String?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
         fileChannelType: FileChannelTypeEnum
-    ): Result<String?>
+    ): String
 
     /**
      * 下载文件至输出流
@@ -107,7 +105,19 @@ interface ArchiveFileService {
     /**
      * 下载文件到本地
      */
-    fun downloadFile(filePath: String): Response
+    fun downloadFileToLocal(filePath: String, response: HttpServletResponse)
+
+    /**
+     * 下载报告文件
+     */
+    fun downloadReport(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        path: String
+    )
 
     /**
      * 下载归档文件
@@ -133,7 +143,7 @@ interface ArchiveFileService {
         artifactoryType: ArtifactoryType,
         customFilePath: String?,
         fileChannelType: FileChannelTypeEnum
-    ): Result<GetFileDownloadUrlsResponse?>
+    ): GetFileDownloadUrlsResponse
 
     /**
      * 获取仓库指定路径下的文件下载路径列表
@@ -142,7 +152,7 @@ interface ArchiveFileService {
         filePath: String,
         artifactoryType: ArtifactoryType,
         fileChannelType: FileChannelTypeEnum
-    ): Result<GetFileDownloadUrlsResponse?>
+    ): GetFileDownloadUrlsResponse
 
     /**
      * 根据文件元数据查找文件列表
@@ -153,7 +163,7 @@ interface ArchiveFileService {
         page: Int?,
         pageSize: Int?,
         searchProps: SearchProps
-    ): Result<Page<FileInfo>>
+    ): Page<FileInfo>
 
     /**
      * 展示文件详情
@@ -166,6 +176,7 @@ interface ArchiveFileService {
     fun show(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): FileDetail
 
     /**
+     * // TODO remove this method
      * 根据用户自定义路径与 fileType 来生成真正存储文件的路径
      * @param fileType 文件存储的类型
      * @param projectId 项目id 英文名称
@@ -175,22 +186,11 @@ interface ArchiveFileService {
      */
     fun generateDestPath(
         fileType: FileTypeEnum,
-        projectId: String?,
+        projectId: String,
         customFilePath: String?,
         pipelineId: String?,
         buildId: String?
-    ): Result<String>
-
-    /**
-     * 根据文件路径生成下载连接
-     */
-    fun transformFileUrl(
-        fileType: FileTypeEnum,
-        wildFlag: Boolean,
-        pathPattern: String,
-        fileChannelType: FileChannelTypeEnum,
-        filePath: String
-    ): String?
+    ): String
 
     /**
      * 校验用户是否有下载文件的权限
@@ -198,20 +198,23 @@ interface ArchiveFileService {
      * @param filePath 下载路径
      * @return Result<Boolean>
      */
-    fun validateUserDownloadFilePermission(userId: String, filePath: String): Result<Boolean>
+    fun validateUserDownloadFilePermission(userId: String, filePath: String): Boolean
 
+    /**
+     * 跨项目拷贝文件
+     */
     fun acrossProjectCopy(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
         targetProjectId: String,
         targetPath: String
-    ): Result<Count>
+    ): Count
 
     /**
      * 删除文件
      */
     fun deleteFile(
         filePath: String
-    ): Result<Boolean>
+    )
 }

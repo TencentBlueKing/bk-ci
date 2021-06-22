@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -32,6 +33,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 import java.io.File
 
+@Suppress("ALL")
 interface ArchiveSDKApi : WorkerRestApiSDK {
 
     /**
@@ -54,12 +56,14 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      *
      * @param uri 下载路径
      * @param destPath 下载后存放的文件
+     * @param isVmBuildEnv 是否是有编译环境
      */
     fun downloadCustomizeFile(
         userId: String,
         projectId: String,
         uri: String,
-        destPath: File
+        destPath: File,
+        isVmBuildEnv: Boolean
     )
 
     /**
@@ -68,6 +72,7 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @param buildId 构建id
      * @param uri 下载uri
      * @param destPath 下载后存放的文件
+     * @param isVmBuildEnv 是否是有编译环境
      */
     fun downloadPipelineFile(
         userId: String,
@@ -75,7 +80,8 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
         pipelineId: String,
         buildId: String,
         uri: String,
-        destPath: File
+        destPath: File,
+        isVmBuildEnv: Boolean
     )
 
     /**
@@ -106,11 +112,13 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @param destPath 上传目标文件路径
      * @param file 上传的文件
      * @param headers 请求头
+     * @param isVmBuildEnv 是否是有编译环境
      */
     fun uploadFile(
         url: String,
         destPath: String,
         file: File,
-        headers: Map<String, String>? = emptyMap()
+        headers: Map<String, String>? = emptyMap(),
+        isVmBuildEnv: Boolean
     ): Result<Boolean>
 }

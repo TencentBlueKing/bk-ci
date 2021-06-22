@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,7 +32,6 @@ import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 
@@ -49,11 +49,14 @@ fun LocalDateTime.timestampmilli(): Long {
     return this.atZone(zoneId).toInstant().toEpochMilli()
 }
 
+@Suppress("ALL")
 object DateTimeUtil {
 
     private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
 
     private val logger = LoggerFactory.getLogger(DateTimeUtil::class.java)
+
+    const val YYYY_MM_DD = "yyyy-MM-dd"
 
     /**
      * 单位转换，分钟转换秒
@@ -77,8 +80,19 @@ object DateTimeUtil {
      * @return 日期类实例
      */
     fun getFutureDateFromNow(unit: Int, timeSpan: Int): Date {
+        return getFutureDate(LocalDateTime.now(), unit, timeSpan)
+    }
+
+    /**
+     * 获取从指定时间开始一定单位时间间隔的日期
+     * @param localDateTime 指定时间
+     * @param unit 单位
+     * @param timeSpan 实际间隔
+     * @return 日期类实例
+     */
+    fun getFutureDate(localDateTime: LocalDateTime, unit: Int, timeSpan: Int): Date {
         val cd = Calendar.getInstance()
-        cd.time = Date()
+        cd.time = convertLocalDateTimeToDate(localDateTime)
         cd.add(unit, timeSpan)
         return cd.time
     }
@@ -94,8 +108,21 @@ object DateTimeUtil {
         return simpleDateFormat.format(date)
     }
 
+    fun convertDateToFormatLocalDateTime(date: Date, format: String = "yyyy-MM-dd HH:mm:ss"): LocalDateTime {
+        val simpleDateFormat = SimpleDateFormat(format)
+        return convertDateToLocalDateTime(simpleDateFormat.parse(simpleDateFormat.format(date)))
+    }
+
     fun convertLocalDateTimeToTimestamp(localDateTime: LocalDateTime?): Long {
         return localDateTime?.toEpochSecond(ZoneOffset.ofHours(8)) ?: 0L
+    }
+
+    fun convertLocalDateTimeToDate(localDateTime: LocalDateTime): Date {
+        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant())
+    }
+
+    fun convertDateToLocalDateTime(date: Date): LocalDateTime {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
     }
 
     fun toDateTime(dateTime: LocalDateTime?, format: String = "yyyy-MM-dd HH:mm:ss"): String {
@@ -181,7 +208,8 @@ object DateTimeUtil {
      * 将格式化的日期时间字符串转换为LocalDateTime对象
      */
     fun stringToLocalDateTime(dateTimeStr: String, formatStr: String = "yyyy-MM-dd HH:mm:ss"): LocalDateTime {
-        val formatter = DateTimeFormatter.ofPattern(formatStr)
-        return LocalDateTime.parse(dateTimeStr, formatter)
+        val format = SimpleDateFormat(formatStr)
+        val date = format.parse(dateTimeStr)
+        return convertDateToLocalDateTime(date)
     }
 }

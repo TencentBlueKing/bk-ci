@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,7 +36,7 @@ data class IpaSignInfo(
     var userId: String = "",
     @ApiModelProperty("是否采用通配符重签", required = true)
     var wildcard: Boolean = true,
-    @ApiModelProperty("文件名称", required = false)
+    @ApiModelProperty("文件名称", required = true)
     var fileName: String = "",
     @ApiModelProperty("文件大小", required = false)
     var fileSize: Long = 0L,
@@ -55,6 +56,8 @@ data class IpaSignInfo(
     var buildNum: Int? = null,
     @ApiModelProperty("任务ID", required = false)
     var taskId: String? = null,
+    @ApiModelProperty("结果文件名后缀", required = false)
+    var resultSuffix: String? = "_enterprise_sign",
     @ApiModelProperty("归档路径", required = false)
     var archivePath: String? = "/",
     @ApiModelProperty("主App描述文件ID", required = false)
@@ -66,5 +69,7 @@ data class IpaSignInfo(
     @ApiModelProperty("是否替换bundleId", required = false)
     var replaceBundleId: Boolean? = false,
     @ApiModelProperty("拓展应用名和对应的描述文件ID", required = false)
-    var appexSignInfo: List<AppexSignInfo>? = null
+    var appexSignInfo: List<AppexSignInfo>? = null,
+    @ApiModelProperty("待替换的plist信息", required = false)
+    var replaceKeyList: Map<String, String>? = null
 )

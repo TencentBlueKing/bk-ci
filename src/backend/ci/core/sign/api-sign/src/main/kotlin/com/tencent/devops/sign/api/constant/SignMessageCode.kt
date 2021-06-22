@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,7 +35,7 @@ package com.tencent.devops.sign.api.constant
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
  *    05:environment-持续集成环境 06：experience-版本体验 07：image-镜像 08：log-持续集成日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-持续集成支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 22:sign-签名服务）
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店  21： auth-权限 22:sign-签名服务）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -57,10 +58,10 @@ object SignMessageCode {
     const val ERROR_PARS_INFO_PLIST = "2122010" // 解析Info.plist失败
     const val ERROR_RESIGN_TASK_NOT_EXIST = "2122011" // 签名任务不存在
     const val ERROR_CREATE_DOWNLOAD_URL = "2122012" // 创建下载连接失败
-    const val ERROR_INFO_PLIST_NOT_EXIST = "2122013" // 寻找Info.plist失败
+    const val ERROR_INFO_PLIST_NOT_EXIST = "2122013" // ipa文件解压并检查签名信息失败
     const val ERROR_WILDCARD_MP_NOT_EXIST = "2122014" // 通配符描述文件不存在
     const val ERROR_INSERT_KEYCHAIN_GROUPS = "2122015" // entitlement插入keychain失败
-    const val ERROR_NOT_AUTH_UPLOAD = "2122016" // 无发起iOS重签名权限。
+    const val ERROR_NOT_AUTH_UPLOAD = "2122016" // 无发起iOS重签名权限
     const val ERROR_UPLOAD_TOKEN_INVALID = "2122017" // 上传IPA使用的token不存在
     const val ERROR_UPLOAD_TOKEN_EXPIRED = "2122018" // 上传IPA使用的token已过期
 }

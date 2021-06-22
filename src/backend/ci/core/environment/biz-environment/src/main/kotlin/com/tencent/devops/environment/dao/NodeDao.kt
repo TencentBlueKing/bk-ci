@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,6 +27,7 @@
 
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
@@ -36,6 +38,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class NodeDao {
     fun get(dslContext: DSLContext, projectId: String, nodeId: Long): TNodeRecord? {
@@ -51,6 +54,16 @@ class NodeDao {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .orderBy(NODE_ID.desc())
+                .fetch()
+        }
+    }
+
+    fun listThirdpartyNodes(dslContext: DSLContext, projectId: String): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_TYPE.eq(NodeType.THIRDPARTY.name))
                 .orderBy(NODE_ID.desc())
                 .fetch()
         }
@@ -100,7 +113,7 @@ class NodeDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_TYPE.eq(NodeType.BCSVM.name))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -110,7 +123,7 @@ class NodeDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_TYPE.eq(NodeType.DEVCLOUD.name))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -120,7 +133,7 @@ class NodeDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_TYPE.`in`(NodeType.CC.name, NodeType.CMDB.name, NodeType.OTHER.name))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -131,7 +144,7 @@ class NodeDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_ID.`in`(nodeIds))
                 .and(NODE_STATUS.eq(status.name))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -149,9 +162,9 @@ class NodeDao {
     fun listServerNodesByIds(dslContext: DSLContext, nodeIds: Collection<Long>): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
-                    .where(NODE_ID.`in`(nodeIds))
-                    .orderBy(NODE_ID.desc())
-                    .fetch()
+                .where(NODE_ID.`in`(nodeIds))
+                .orderBy(NODE_ID.desc())
+                .fetch()
         }
     }
 
@@ -241,7 +254,7 @@ class NodeDao {
                     LocalDateTime.now()
                 )
                 .returning(NODE_ID)
-                .fetchOne().nodeId
+                .fetchOne()!!.nodeId
         }
     }
 
@@ -319,12 +332,65 @@ class NodeDao {
         }
     }
 
-    fun batchAddNode(dslContext: DSLContext, nodeList: List<TNodeRecord>) {
-        if (nodeList.isEmpty()) {
+    fun batchAddNode(dslContext: DSLContext, nodes: List<CreateNodeModel>) {
+        if (nodes.isEmpty()) {
             return
         }
 
-        dslContext.batchInsert(nodeList).execute()
+        val now = LocalDateTime.now()
+        with(TNode.T_NODE) {
+            val addStep = nodes.map {
+                dslContext.insertInto(
+                    this,
+                    NODE_STRING_ID,
+                    PROJECT_ID,
+                    NODE_IP,
+                    NODE_NAME,
+                    NODE_STATUS,
+                    NODE_TYPE,
+                    NODE_CLUSTER_ID,
+                    NODE_NAMESPACE,
+                    CREATED_USER,
+                    CREATED_TIME,
+                    EXPIRE_TIME,
+                    OS_NAME,
+                    OPERATOR,
+                    BAK_OPERATOR,
+                    AGENT_STATUS,
+                    DISPLAY_NAME,
+                    IMAGE,
+                    TASK_ID,
+                    LAST_MODIFY_TIME,
+                    LAST_MODIFY_USER,
+                    PIPELINE_REF_COUNT,
+                    LAST_BUILD_TIME
+                ).values(
+                    it.nodeStringId,
+                    it.projectId,
+                    it.nodeIp,
+                    it.nodeName,
+                    it.nodeStatus,
+                    it.nodeType,
+                    it.nodeClusterId,
+                    it.nodeNamespace,
+                    it.createdUser,
+                    now,
+                    it.expireTime,
+                    it.osName,
+                    it.operator,
+                    it.bakOperator,
+                    it.agentStatus,
+                    it.displayName,
+                    it.image,
+                    it.taskId,
+                    now,
+                    it.createdUser,
+                    it.pipelineRefCount,
+                    it.lastBuildTime
+                )
+            }
+            dslContext.batch(addStep).execute()
+        }
     }
 
     fun batchDeleteNode(dslContext: DSLContext, projectId: String, nodeIds: List<Long>) {
@@ -444,13 +510,13 @@ class NodeDao {
                     .where(PROJECT_ID.eq(projectId))
                     .and(NODE_ID.ne(nodeId))
                     .and(DISPLAY_NAME.eq(displayName))
-                    .fetchOne(0, Long::class.java) > 0
+                    .fetchOne(0, Long::class.java)!! > 0
             } else {
                 dslContext.selectCount()
                     .from(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(DISPLAY_NAME.eq(displayName))
-                    .fetchOne(0, Long::class.java) > 0
+                    .fetchOne(0, Long::class.java)!! > 0
             }
         }
     }
@@ -475,12 +541,12 @@ class NodeDao {
             return if (name.isNullOrBlank()) {
                 dslContext.selectCount()
                     .from(TNode.T_NODE)
-                    .fetchOne(0, Int::class.java)
+                    .fetchOne(0, Int::class.java)!!
             } else {
                 dslContext.selectCount()
                     .from(TNode.T_NODE)
                     .where(NODE_NAME.like("%$name%"))
-                    .fetchOne(0, Int::class.java)
+                    .fetchOne(0, Int::class.java)!!
             }
         }
     }
@@ -493,7 +559,7 @@ class NodeDao {
                     .fetch()
             } else {
                 dslContext.selectFrom(this)
-                    .where(PROJECT_ID.like(projectId))
+                    .where(PROJECT_ID.eq(projectId))
                     .limit(limit).offset(offset)
                     .fetch()
             }
@@ -505,17 +571,60 @@ class NodeDao {
             return if (project.isNullOrBlank()) {
                 dslContext.selectCount()
                     .from(TNode.T_NODE)
-                    .fetchOne(0, Int::class.java)
+                    .fetchOne(0, Int::class.java)!!
             } else {
                 dslContext.selectCount()
                     .from(TNode.T_NODE)
                     .where(PROJECT_ID.eq(project))
-                    .fetchOne(0, Int::class.java)
+                    .fetchOne(0, Int::class.java)!!
             }
+        }
+    }
+
+    fun searchByDisplayName(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int,
+        projectId: String?,
+        displayName: String
+    ): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(DISPLAY_NAME.like("$%$displayName%")))
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun countByDisplayName(dslContext: DSLContext, project: String?, displayName: String): Int {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                .from(TNode.T_NODE)
+                .where(PROJECT_ID.eq(project).and(DISPLAY_NAME.like("%$displayName%")))
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
     fun saveNode(dslContext: DSLContext, nodeRecord: TNodeRecord) {
         dslContext.executeUpdate(nodeRecord)
+    }
+
+    fun updateLastBuildTime(dslContext: DSLContext, nodeId: Long, time: LocalDateTime) {
+        with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(LAST_BUILD_TIME, time)
+                .where(NODE_ID.eq(nodeId))
+                .execute()
+        }
+    }
+
+    fun updatePipelineRefCount(dslContext: DSLContext, nodeId: Long, count: Int) {
+        with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(PIPELINE_REF_COUNT, count)
+                .where(NODE_ID.eq(nodeId))
+                .execute()
+        }
     }
 }

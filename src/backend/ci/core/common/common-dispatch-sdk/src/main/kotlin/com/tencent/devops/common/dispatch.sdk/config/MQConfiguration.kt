@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -92,11 +93,12 @@ class MQConfiguration @Autowired constructor() {
         container.setQueueNames(pipelineBuildStartQueue.name)
         container.setConcurrentConsumers(10)
         container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
+        container.setPrefetchCount(1)
 
         val adapter = MessageListenerAdapter(buildListener, buildListener::onPipelineStartup.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -134,11 +136,12 @@ class MQConfiguration @Autowired constructor() {
         container.setQueueNames(pipelineBuildFinishQueue.name)
         container.setConcurrentConsumers(10)
         container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
+        container.setPrefetchCount(1)
 
         val adapter = MessageListenerAdapter(buildListener, buildListener::onPipelineShutdown.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -174,13 +177,14 @@ class MQConfiguration @Autowired constructor() {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(buildStartQueue.name)
-        container.setConcurrentConsumers(20)
+        container.setConcurrentConsumers(60)
         container.setMaxConcurrentConsumers(100)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
+        container.setPrefetchCount(1)
         val messageListenerAdapter = MessageListenerAdapter(buildListener, buildListener::handleStartMessage.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
+        container.setMessageListener(messageListenerAdapter)
         logger.info("Start listener")
         return container
     }
@@ -205,13 +209,14 @@ class MQConfiguration @Autowired constructor() {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(buildShutdownQueue.name)
-        container.setConcurrentConsumers(20)
+        container.setConcurrentConsumers(60)
         container.setMaxConcurrentConsumers(100)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
+        container.setPrefetchCount(1)
         val messageListenerAdapter = MessageListenerAdapter(buildListener, buildListener::handleShutdownMessage.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
+        container.setMessageListener(messageListenerAdapter)
         logger.info("Start shutdown listener")
         return container
     }

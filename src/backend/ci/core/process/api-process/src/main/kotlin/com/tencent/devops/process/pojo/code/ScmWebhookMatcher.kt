@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -32,6 +33,24 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.repository.pojo.Repository
 
 interface ScmWebhookMatcher {
+
+    companion object {
+        const val REPOSITORY_TYPE_NOT_MATCH = "repository type isn't match"
+        const val REPOSITORY_URL_NOT_MATCH = "repository url isn't match"
+        const val EVENT_TYPE_NOT_MATCH = "event type isn't match"
+        const val BRANCH_NAME_NOT_MATCH = "branch name isn't match"
+        const val EXCLUDE_BRANCH_NAME_NOT_MATCH = "exclude branch name is match"
+        const val TAG_NAME_NOT_MATCH = "tag name isn't match"
+        const val EXCLUDE_TAG_NAME_NOT_MATCH = "exclude tag name is match"
+        const val INCLUDE_PATHS_NOT_MATCH = "include paths isn't match"
+        const val EXCLUDE_PATHS_NOT_MATCH = "exclude paths is match"
+        const val EXCLUDE_USERS_NOT_MATCH = "exclude users is match"
+        const val INCLUDE_USERS_NOT_MATCH = "include users isn't match"
+        const val RELATIVEPATH_NOT_MATCH = "relativepath isn't match"
+        const val EXCLUDE_SOURCE_BRANCH_NAME_NOT_MATCH = "exclude source branch name is match"
+        const val INCLUDE_SOURCE_BRANCH_NAME_NOT_MATCH = "include source branch name isn't match"
+        const val EXCLUDE_MSG_NOT_MATCH = "exclude msg is match"
+    }
 
     fun isMatch(
         projectId: String,
@@ -95,6 +114,8 @@ interface ScmWebhookMatcher {
 
     fun getMessage(): String?
 
+    fun getWebHookParamsMap(): Map<String/*pipelineId*/, WebHookParams/*pipeline webhookParams*/> = emptyMap()
+
     data class WebHookParams(
         val repositoryConfig: RepositoryConfig,
         var branchName: String? = null,
@@ -110,11 +131,13 @@ interface ScmWebhookMatcher {
         var includeUsers: String? = null,
         var codeType: CodeType = CodeType.GIT,
         var excludeSourceBranchName: String? = null,
-        var includeSourceBranchName: String? = null
+        var includeSourceBranchName: String? = null,
+        var webhookQueue: Boolean = false
     )
 
     data class MatchResult(
         val isMatch: Boolean,
-        val extra: Map<String, String> = mapOf()
+        val extra: Map<String, String> = mapOf(),
+        val failedReason: String? = null
     )
 }

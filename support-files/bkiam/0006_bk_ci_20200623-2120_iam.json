@@ -25,6 +25,9 @@
             },
             {
               "id": "project_manage"
+            },
+            {
+              "id": "project_views_manager"
             }
           ]
         },

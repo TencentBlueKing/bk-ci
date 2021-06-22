@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,29 +28,28 @@
 package com.tencent.devops.common.dispatch.sdk.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
+import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.dispatch.sdk.pojo.RedisBuild
+import com.tencent.devops.common.dispatch.sdk.pojo.SecretInfo
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.pojo.redis.RedisBuild
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
-import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.common.dispatch.sdk.pojo.SecretInfo
 import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
 import java.util.Date
 
@@ -105,7 +105,8 @@ class DispatchService constructor(
             containerId = event.containerId,
             containerType = event.containerType,
             stageId = event.stageId,
-            dispatchType = event.dispatchType
+            dispatchType = event.dispatchType,
+            customBuildEnv = event.customBuildEnv
         )
     }
 
@@ -121,13 +122,13 @@ class DispatchService constructor(
             if (event.vmSeqId == null) {
                 // 流水线结束
                 keysSet.forEach {
-                    finishBuild(it, event.buildId)
+                    finishBuild(it, event.buildId, event.executeCount ?: 1)
                 }
                 redisOperation.delete(secretInfoKey)
             } else {
                 // job结束
-                finishBuild(event.vmSeqId!!, event.buildId)
-                redisOperation.hdelete(secretInfoKey, event.vmSeqId!!)
+                finishBuild(event.vmSeqId!!, event.buildId, event.executeCount ?: 1)
+                redisOperation.hdelete(secretInfoKey, secretInfoRedisMapKey(event.vmSeqId!!, event.executeCount ?: 1))
             }
         }
     }
@@ -145,41 +146,41 @@ class DispatchService constructor(
         )
         if (record.isNotOk() || record.data == null) {
             logger.warn("The build event($event) fail to check if pipeline is running because of ${record.message}")
-            throw BuildFailureException(ErrorType.SYSTEM, DispatchSdkErrorCode.PIPELINE_STATUS_ERROR, "无法获取流水线状态", "无法获取流水线状态")
+            throw BuildFailureException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
+                formatErrorMessage = "无法获取流水线状态",
+                errorMessage = "无法获取流水线状态"
+            )
         }
         val status = BuildStatus.parse(record.data)
-        if (!BuildStatus.isRunning(status)) {
+        if (!status.isRunning()) {
             logger.warn("The build event($event) is not running")
-            throw BuildFailureException(ErrorType.USER, DispatchSdkErrorCode.PIPELINE_NOT_RUNNING, "流水线已经不再运行", "流水线已经不再运行")
+            throw BuildFailureException(
+                errorType = ErrorType.USER,
+                errorCode = DispatchSdkErrorCode.PIPELINE_NOT_RUNNING,
+                formatErrorMessage = "流水线已经不再运行",
+                errorMessage = "流水线已经不再运行"
+            )
         }
     }
 
     fun onContainerFailure(event: PipelineAgentStartupEvent, e: BuildFailureException) {
         logger.warn("[${event.buildId}|${event.vmSeqId}] Container startup failure")
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildContainerEvent(
-                source = "container_startup_sdk",
+        try {
+            client.get(ServiceBuildResource::class).setVMStatus(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 buildId = event.buildId,
-                userId = event.userId,
-                stageId = event.stageId,
-                containerId = event.containerId,
-                containerType = event.containerType,
-                actionType = ActionType.TERMINATE
+                vmSeqId = event.vmSeqId,
+                status = BuildStatus.FAILED,
+                errorType = e.errorType,
+                errorCode = e.errorCode,
+                errorMsg = e.formatErrorMessage
             )
-        )
-
-        client.get(ServiceBuildResource::class).setVMStatus(
-            projectId = event.projectId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            vmSeqId = event.vmSeqId,
-            status = BuildStatus.FAILED,
-            errorType = e.errorType,
-            errorCode = e.errorCode,
-            errorMsg = e.formatErrorMessage
-        )
+        } catch (ignore: ClientException) {
+            logger.error("SystemErrorLogMonitor|onContainerFailure|${event.buildId}|error=${e.message},${e.errorCode}")
+        }
     }
 
     fun redispatch(event: PipelineAgentStartupEvent) {
@@ -224,8 +225,8 @@ class DispatchService constructor(
         }
     }
 
-    private fun finishBuild(vmSeqId: String, buildId: String) {
-        val result = redisOperation.hget(secretInfoRedisKey(buildId), vmSeqId)
+    private fun finishBuild(vmSeqId: String, buildId: String, executeCount: Int) {
+        val result = redisOperation.hget(secretInfoRedisKey(buildId), secretInfoRedisMapKey(vmSeqId, executeCount))
         if (result != null) {
             val secretInfo = JsonUtil.to(result, SecretInfo::class.java)
             redisOperation.delete(redisKey(secretInfo.hashId, secretInfo.secretKey))
@@ -244,8 +245,10 @@ class DispatchService constructor(
     }
 
     private fun setRedisAuth(event: PipelineAgentStartupEvent): SecretInfo {
-        val redisKey = secretInfoRedisKey(event.buildId)
-        val redisResult = redisOperation.hget(redisKey, event.vmSeqId)
+        val secretInfoRedisKey = secretInfoRedisKey(event.buildId)
+        val redisResult = redisOperation.hget(key = secretInfoRedisKey,
+            hashKey = secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1)
+        )
         if (redisResult != null) {
             return JsonUtil.to(redisResult, SecretInfo::class.java)
         }
@@ -263,7 +266,8 @@ class DispatchService constructor(
                     vmSeqId = event.vmSeqId,
                     channelCode = event.channelCode,
                     zone = event.zone,
-                    atoms = event.atoms
+                    atoms = event.atoms,
+                    executeCount = event.executeCount ?: 1
                 )
             )
         )
@@ -271,11 +275,11 @@ class DispatchService constructor(
         // 一周过期时间
         redisOperation.hset(
             secretInfoRedisKey(event.buildId),
-            event.vmSeqId,
+            secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1),
             JsonUtil.toJson(SecretInfo(hashId, secretKey))
         )
-        val expireAt = System.currentTimeMillis() + 24 * 7 * 3600
-        redisOperation.expireAt(redisKey, Date(expireAt))
+        val expireAt = System.currentTimeMillis() + 24 * 7 * 3600 * 1000
+        redisOperation.expireAt(secretInfoRedisKey, Date(expireAt))
         return SecretInfo(
             hashId = hashId,
             secretKey = secretKey
@@ -300,6 +304,8 @@ class DispatchService constructor(
 
     private fun secretInfoRedisKey(buildId: String) =
         "secret_info_key_$buildId"
+
+    private fun secretInfoRedisMapKey(vmSeqId: String, executeCount: Int) = "$vmSeqId-$executeCount"
 
     private fun executeCountKey(startupQueue: String) =
         "dispatcher:sdk:execute:count:key:$startupQueue"

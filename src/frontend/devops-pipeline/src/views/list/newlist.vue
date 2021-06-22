@@ -49,7 +49,7 @@
         </infinite-scroll>
 
         <pipeline-template-popup :toggle-popup="toggleTemplatePopup" :is-show="templatePopupShow"></pipeline-template-popup>
-        <import-pipeline-popup :toggle-import-pipeline-popup="toggleImportPipelinePopup" :is-show="importPipelinePopupShow"></import-pipeline-popup>
+        <import-pipeline-popup :is-show.sync="importPipelinePopupShow"></import-pipeline-popup>
 
         <pipeline-filter v-if="slideShow" :is-show="slideShow" @showSlide="showSlide" :is-disabled="isDisabled" :selected-filter="currentFilter" @filter="filterCommit" class="pipeline-filter"></pipeline-filter>
 
@@ -458,6 +458,8 @@
                         viewId: this.currentViewId
                     })
 
+                    $store.commit('pipelines/updateAllPipelineList', response.records)
+
                     const pipelineFeConfMap = response.records.reduce((pipelineFeConfMap, item, index) => {
                         pipelineFeConfMap[item.pipelineId] = {
                             name: item.pipelineName,
@@ -679,7 +681,7 @@
                             content: [
                                 {
                                     key: this.$t('lastBuildNum'),
-                                    value: item.latestBuildNum ? `#${item.latestBuildNum}` : '--'
+                                    value: item.latestBuildNumAlias ? item.latestBuildNumAlias : (item.latestBuildNum ? `#${item.latestBuildNum}` : '--')
                                 },
                                 {
                                     key: this.$t('lastExecTime'),
@@ -1151,7 +1153,6 @@
             cursor: pointer;
         }
         .table-list-name {
-            max-width: 300px;
             padding-left: 30px;
         }
         .table-list-progress {
@@ -1191,7 +1192,6 @@
         }
         .row-task-count,
         .row-build-count {
-            display: block;
             width: 30px;
             height: 30px;
             line-height: 30px;

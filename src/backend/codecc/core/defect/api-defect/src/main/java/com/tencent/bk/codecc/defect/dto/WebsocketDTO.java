@@ -12,6 +12,7 @@
  
 package com.tencent.bk.codecc.defect.dto;
 
+import com.tencent.bk.codecc.defect.vo.TaskLogOverviewVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.TaskOverviewVO;
@@ -38,4 +39,6 @@ public class WebsocketDTO
 
 
     TaskDetailVO taskDetailVO;
+
+    TaskLogOverviewVO taskLogOverviewVO;
 }

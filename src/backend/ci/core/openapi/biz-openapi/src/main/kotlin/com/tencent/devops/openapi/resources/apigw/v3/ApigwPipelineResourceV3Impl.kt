@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -37,13 +38,15 @@ import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Client) :
     ApigwPipelineResourceV3 {
-
     override fun status(
         appCode: String?,
         apigwType: String?,
@@ -66,7 +69,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         projectId: String,
         pipeline: Model
     ): Result<PipelineId> {
-        logger.info("Create a pipeline at project:$projectId with model: $pipeline")
+        logger.info("Create pipeline at project:$projectId")
         return client.get(ServicePipelineResource::class).create(
             userId = userId,
             projectId = projectId,
@@ -83,12 +86,46 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         pipelineId: String,
         pipeline: Model
     ): Result<Boolean> {
-        logger.info("Edit a pipeline at project:$projectId, pipelineId:$pipelineId with model: $pipeline")
+        logger.info("Edit a pipeline at project:$projectId, pipelineId:$pipelineId")
         return client.get(ServicePipelineResource::class).edit(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             pipeline = pipeline,
+            channelCode = ChannelCode.BS
+        )
+    }
+
+    override fun updatePipeline(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        modelAndSetting: PipelineModelAndSetting
+    ): Result<DeployPipelineResult> {
+        logger.info("updatePipeline|project:$projectId|userId:$userId|pipelineId:$pipelineId")
+        return client.get(ServicePipelineResource::class).updatePipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            modelAndSetting = modelAndSetting,
+            channelCode = ChannelCode.BS
+        )
+    }
+
+    override fun uploadPipeline(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        modelAndSetting: PipelineModelAndSetting
+    ): Result<PipelineId> {
+        logger.info("uploadPipeline|project:$projectId|userId:$userId")
+        return client.get(ServicePipelineResource::class).uploadPipeline(
+            userId = userId,
+            projectId = projectId,
+            modelAndSetting = modelAndSetting,
             channelCode = ChannelCode.BS
         )
     }
@@ -182,6 +219,23 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
     ): Result<Boolean> {
         logger.info("restore: userId[$userId] projectId[$projectId] pipelineId[$pipelineId]")
         return client.get(ServicePipelineResource::class).restore(userId, projectId, pipelineId)
+    }
+
+    override fun saveSetting(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        setting: PipelineSetting
+    ): Result<Boolean> {
+        logger.info("saveSetting: userId[$userId] projectId[$projectId] pipelineId[$pipelineId]")
+        return client.get(ServicePipelineResource::class).saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = setting
+        )
     }
 
     companion object {

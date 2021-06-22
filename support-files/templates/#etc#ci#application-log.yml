@@ -1,7 +1,7 @@
 # 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_log?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_log?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
 
@@ -20,9 +20,9 @@ log:
     indexMaxSize: __BK_CI_LUCENE_INDEX_MAX_SIZE__   # 单个构建的最大日志行数，建议设在100万内
   # 通过Elasticsearch服务进行存储的必要配置
   elasticsearch:
-    ip: __BKCI_ES_IP__
-    port: __BKCI_ES_PORT__
-    cluster: __BKCI_ES_CLUSTER__
+    ip: __BK_CI_ES_REST_ADDR__   # 今后只使用REST client.
+    port: __BK_CI_ES_REST_PORT__
+    cluster: __BK_CI_ES_CLUSTER_NAME__
     name: DEVOPS
     #  ES集群如果不要求账号密码认证，则可以去掉以下2个ES的访问账号密码配置项或留空
     username: __BK_CI_ES_USER__

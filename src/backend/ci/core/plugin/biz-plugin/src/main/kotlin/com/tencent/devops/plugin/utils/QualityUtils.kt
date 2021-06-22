@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,7 +30,6 @@ package com.tencent.devops.plugin.utils
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
@@ -41,8 +41,12 @@ import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 
+@Suppress("ALL")
 object QualityUtils {
-    fun getQualityGitMrResult(client: Client, event: GitCommitCheckEvent): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
+    fun getQualityGitMrResult(
+        client: Client,
+        event: GitCommitCheckEvent
+    ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
         val projectId = event.projectId
         val pipelineId = event.pipelineId
         val buildId = event.buildId
@@ -68,7 +72,7 @@ object QualityUtils {
                 val indicatorElementName = indicator?.elementType ?: ""
                 val elementCnName = ElementUtils.getElementCnName(indicatorElementName, projectId)
                 val resultList = resultMap[elementCnName] ?: mutableListOf()
-                val actualValue = if (indicatorElementName == LinuxPaasCodeCCScriptElement.classType) {
+                val actualValue = if (CodeccUtils.isCodeccAtom(indicatorElementName)) {
                     getActualValue(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -92,18 +96,30 @@ object QualityUtils {
     }
 
     // codecc要跳转到具体详情
-    private fun getActualValue(projectId: String, pipelineId: String, buildId: String, detail: String?, value: String, client: Client): String {
-        val variable = client.get(ServiceVarResource::class).getBuildVar(buildId, CodeccUtils.BK_CI_CODECC_TASK_ID).data
+    private fun getActualValue(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        detail: String?,
+        value: String,
+        client: Client
+    ): String {
+        val variable = client.get(ServiceVarResource::class).getBuildVar(
+            buildId = buildId,
+            varName = CodeccUtils.BK_CI_CODECC_TASK_ID
+        ).data
         var taskId = variable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID)
         if (taskId.isNullOrBlank()) {
             taskId = client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
         }
 
         return if (detail.isNullOrBlank() || detail!!.split(",").size > 1) {
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail'>$value</a>"
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/" +
+                "console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
         } else {
             val detailValue = codeccToolUrlPathMap[detail] ?: "defect/lint"
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detailValue/$detail/list'>$value</a>"
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/" +
+                "codecc/$projectId/task/$taskId/$detailValue/$detail/list?buildId=$buildId'>$value</a>"
         }
     }
 }

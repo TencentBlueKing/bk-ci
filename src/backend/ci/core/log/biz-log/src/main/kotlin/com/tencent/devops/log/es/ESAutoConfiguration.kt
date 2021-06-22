@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,12 +39,11 @@ import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.service.impl.LogServiceESImpl
-import org.apache.http.HttpHost
+import com.tencent.devops.log.util.ESConfigUtils
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.ssl.SSLContexts
-import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestHighLevelClient
 import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,6 +61,7 @@ import java.io.FileInputStream
 import java.security.KeyStore
 import javax.net.ssl.SSLContext
 
+@Suppress("ALL")
 @Configuration
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
@@ -68,38 +69,56 @@ import javax.net.ssl.SSLContext
 @EnableConfigurationProperties(ESProperties::class)
 class ESAutoConfiguration : DisposableBean {
     @Value("\${log.elasticsearch.ip}")
-    private val ip: String? = null
+    private val host: String? = null
     @Value("\${log.elasticsearch.port}")
-    private val port: Int? = 9200
+    private val port: Int? = null
+
     @Value("\${log.elasticsearch.cluster}")
     private val cluster: String? = null
+
     @Value("\${log.elasticsearch.name}")
     private val name: String? = null
+
     @Value("\${log.elasticsearch.username:#{null}}")
     private val username: String? = null
+
     @Value("\${log.elasticsearch.password:#{null}}")
     private val password: String? = null
+
     @Value("\${log.elasticsearch.https:#{null}}")
     private val https: String? = null
+
     @Value("\${log.elasticsearch.keystore.filePath:#{null}}")
     private val keystoreFilePath: String? = null
+
     @Value("\${log.elasticsearch.keystore.password:#{null}}")
     private val keystorePassword: String? = null
+
     @Value("\${log.elasticsearch.truststore.filePath:#{null}}")
     private val truststoreFilePath: String? = null
+
     @Value("\${log.elasticsearch.truststore.password:#{null}}")
     private val truststorePassword: String? = null
+
+    @Value("\${log.elasticsearch.shards:#{null}}")
+    private val shards: Int? = null
+
+    @Value("\${log.elasticsearch.replicas:#{null}}")
+    private val replicas: Int? = null
+
+    @Value("\${log.elasticsearch.shardsPerNode:#{null}}")
+    private val shardsPerNode: Int? = null
+
+    @Value("\${log.elasticsearch.socketTimeout:#{null}}")
+    private val socketTimeout: Int? = null
 
     private var client: RestHighLevelClient? = null
 
     @Bean
     @Primary
     fun transportClient(): ESClient {
-        if (ip.isNullOrBlank()) {
+        if (host.isNullOrBlank()) {
             throw IllegalArgumentException("ip of elasticsearch not config: log.elasticsearch.ip")
-        }
-        if (port == null || port!! <= 0) {
-            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.port")
         }
         if (cluster.isNullOrBlank()) {
             throw IllegalArgumentException("cluster of elasticsearch not config: log.elasticsearch.cluster")
@@ -108,35 +127,50 @@ class ESAutoConfiguration : DisposableBean {
             throw IllegalArgumentException("name of elasticsearch not config: log.elasticsearch.name")
         }
 
-        var httpHost = HttpHost(ip, port ?: 9200, "http")
+        val httpPort = port ?: 9200
+        val indexShards = shards ?: 1                           // 索引总分片数
+        val indexReplicas = replicas ?: 1                       // 分片副本数
+        val indexShardsPerNode = shardsPerNode ?: 1             // 每个节点分片数
+        val socketTimeout = socketTimeout ?: 30000              // 等待连接响应超时
+        val tcpKeepAliveSeconds = 30000                         // 探活连接时长
+        val connectTimeOut = 1000                               // 请求连接超时
+        val connectionRequestTimeOut = 500                      // 获取连接的超时时间
+        val maxConnectNum = 10                                  // 最大连接数
+        val maxConnectPerRoute = 30                             // 最大路由连接数
+        val requestTimeout = if (socketTimeout > 0) {           // ES响应超时，取主动超时的一半
+            socketTimeout / 2
+        } else {
+            30000
+        }
+
         var sslContext: SSLContext? = null
 
         // 基础鉴权 - 账号密码
         val credentialsProvider = if (!username.isNullOrBlank() || !password.isNullOrBlank()) {
             if (username.isNullOrBlank()) {
-                throw IllegalArgumentException("credentials config invaild: log.elasticsearch.username")
+                throw IllegalArgumentException("credentials config invalid: log.elasticsearch.username")
             }
             if (password.isNullOrBlank()) {
-                throw IllegalArgumentException("credentials config invaild: log.elasticsearch.password")
+                throw IllegalArgumentException("credentials config invalid: log.elasticsearch.password")
             }
             val provider = BasicCredentialsProvider()
             provider.setCredentials(AuthScope.ANY, UsernamePasswordCredentials(username, password))
             provider
         } else null
 
-        // HTTPS鉴权 - SSL证书
-        if (enableSSL(https)) {
+        // SSL证书配置
+        if (hasCertificateConfig()) {
             if (keystoreFilePath.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.keystore.filePath")
+                throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.keystore.filePath")
             }
             if (truststoreFilePath.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard  config invaild: log.elasticsearch.keystore.password")
+                throw IllegalArgumentException("SearchGuard  config invalid: log.elasticsearch.keystore.password")
             }
             if (keystorePassword.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.truststore.filePath")
+                throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.truststore.filePath")
             }
             if (truststorePassword.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.truststore.password")
+                throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.truststore.password")
             }
 
             val keystoreFile = File(keystoreFilePath!!)
@@ -155,23 +189,33 @@ class ESAutoConfiguration : DisposableBean {
             val truststorePasswordCharArray = truststorePassword!!.toCharArray()
             truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
 
-            httpHost = HttpHost(ip, port ?: 9200, "https")
             sslContext = SSLContexts.custom()
                 .loadTrustMaterial(truststore, null)
                 .loadKeyMaterial(keyStore, keystorePasswordCharArray)
                 .build()
         }
 
-        // 初始化 RestClient 配置
-        val builder = RestClient.builder(httpHost)
-        builder.setHttpClientConfigCallback { httpClientBuilder ->
-            if (sslContext != null) httpClientBuilder.setSSLContext(sslContext)
-            if (credentialsProvider != null) httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
-            httpClientBuilder
-        }
-
-        client = RestHighLevelClient(builder)
-        return ESClient(name!!, client!!)
+        client = RestHighLevelClient(ESConfigUtils.getClientBuilder(
+            host = host!!,
+            port = httpPort,
+            https = boolConvert(https),
+            tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
+            connectTimeout = connectTimeOut,
+            socketTimeout = socketTimeout,
+            connectionRequestTimeout = connectionRequestTimeOut,
+            maxConnectNum = maxConnectNum,
+            maxConnectPerRoute = maxConnectPerRoute,
+            sslContext = sslContext,
+            credentialsProvider = credentialsProvider
+        ))
+        return ESClient(
+            clusterName = name!!,
+            restClient = client!!,
+            shards = indexShards,
+            replicas = indexReplicas,
+            shardsPerNode = indexShardsPerNode,
+            requestTimeout = requestTimeout.toLong()
+        )
     }
 
     @Bean
@@ -187,7 +231,7 @@ class ESAutoConfiguration : DisposableBean {
         @Autowired logMQEventDispatcher: LogMQEventDispatcher
     ): LogService {
         return LogServiceESImpl(
-            client = logESClient,
+            logClient = logESClient,
             indexService = indexService,
             logStatusService = logStatusService,
             logTagService = logTagService,
@@ -206,11 +250,18 @@ class ESAutoConfiguration : DisposableBean {
         client?.close()
     }
 
-    private fun enableSSL(https: String?): Boolean {
-        return if (!https.isNullOrBlank()) {
-            https!!.toBoolean()
+    private fun boolConvert(value: String?): Boolean {
+        return if (!value.isNullOrBlank()) {
+            value!!.toBoolean()
         } else {
             false
         }
+    }
+
+    private fun hasCertificateConfig(): Boolean {
+        return !keystoreFilePath.isNullOrBlank() ||
+            !truststoreFilePath.isNullOrBlank() ||
+            !keystorePassword.isNullOrBlank() ||
+            !truststorePassword.isNullOrBlank()
     }
 }

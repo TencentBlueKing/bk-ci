@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.artifactory.service
 
 import com.tencent.devops.artifactory.constant.PushMessageCode
@@ -20,7 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
 
-@Service
+@Service@Suppress("ALL")
 class PushFileServiceExt @Autowired constructor(
     private val authPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
@@ -36,7 +63,7 @@ class PushFileServiceExt @Autowired constructor(
         pushResourceInfo: RemoteResourceInfo,
         fileResourceInfo: FileResourceInfo
     ): Result<Long> {
-        logger.info("pushFileByJob user[$userId], pushResourceInfo[$pushResourceInfo] fileResourceInfo[$fileResourceInfo]")
+        logger.info("pushFileByJob|$userId|pushResourceInfo[$pushResourceInfo]|fileResourceInfo[$fileResourceInfo]")
         var jobInstanceId = 0L
         val projectId = fileResourceInfo.projectId
         val pipelineId = fileResourceInfo.pipelineId
@@ -52,14 +79,15 @@ class PushFileServiceExt @Autowired constructor(
         )
 
         if (!validatePermission) {
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeMessage(PushMessageCode.FUSH_FILE_VALIDATE_FAIL, null))
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeMessage(
+                messageCode = PushMessageCode.FUSH_FILE_VALIDATE_FAIL,
+                params = null))
         }
-        var downloadFiles = mutableListOf<File>()
         // 解析目标机器，需校验用户是否有权限操作目标机
         val envSet = envService.parsingAndValidateEnv(pushResourceInfo, userId, projectId)
         try {
             // 下载目标文件到本地
-            downloadFiles = fileService.downloadFileTolocal(
+            val downloadFiles = fileService.downloadFileTolocal(
                 projectId, pipelineId, buildId, fileResourceInfo.fileName,
                 fileResourceInfo.isCustom!!
             ).toMutableList()

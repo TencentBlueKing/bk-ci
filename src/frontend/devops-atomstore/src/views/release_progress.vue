@@ -133,7 +133,19 @@
                         </div>
                         <div class="detail-form-item">
                             <div class="info-label"> {{ $t('store.发布描述：') }} </div>
-                            <div class="info-value">{{ versionDetail.versionContent }}</div>
+                            <div class="info-value">
+                                <mavon-editor
+                                    :editable="false"
+                                    default-open="preview"
+                                    :subfield="false"
+                                    :toolbars-flag="false"
+                                    :external-link="false"
+                                    :box-shadow="false"
+                                    preview-background="#fafbfd"
+                                    v-model="versionDetail.versionContent"
+                                >
+                                </mavon-editor>
+                            </div>
                         </div>
                     </div>
                     <div class="atom-logo-box">
@@ -173,7 +185,7 @@
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
-                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008942',
+                docsLink: `${DOCS_URL_PREFIX}/store/plugins/create-plugin`,
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,
@@ -226,13 +238,13 @@
                 return str
             },
             postUrl () {
-                return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
+                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
             },
             navList () {
                 return [
                     { name: this.$t('store.工作台') },
                     { name: this.$t('store.流水线插件'), to: { name: 'atomWork' } },
-                    { name: this.versionDetail.atomCode, to: { name: 'overView', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
+                    { name: this.versionDetail.atomCode, to: { name: 'statisticData', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
                     { name: this.curTitle }
                 ]
             }
@@ -409,7 +421,7 @@
                     }
                 }
             },
-            uploadFile (fileObj) {
+            uploadFile (fileObj, fieldCheckConfirmFlag = false) {
                 const formData = new FormData()
                 formData.append('file', fileObj.origin)
                 formData.append('os', `["${this.versionDetail.os.join('","')}"]`)
@@ -418,7 +430,8 @@
                 fileObj.xhr = xhr // 保存，用于中断请求
 
                 xhr.withCredentials = true
-                xhr.open('POST', this.postUrl, true)
+                const url = this.postUrl + `?fieldCheckConfirmFlag=${fieldCheckConfirmFlag}`
+                xhr.open('POST', url, true)
                 xhr.onreadystatechange = () => {
                     if (xhr.readyState === 4) {
                         let theme, message
@@ -431,6 +444,9 @@
 
                                 this.requestRelease(this.routerParams.atomId)
                                 this.requestAtomDetail(this.routerParams.atomId)
+                            } else if ([2120030, 2120031].includes(response.status)) {
+                                this.confirmSubmit(response.message, () => this.uploadFile(fileObj, true))
+                                return
                             } else {
                                 theme = 'error'
                                 message = response.message
@@ -458,6 +474,23 @@
                 xhr.setRequestHeader('X-CSRFToken', CSRFToken)
                 xhr.send(formData)
                 document.querySelector('.upload-input').value = ''
+            },
+            confirmSubmit (message, confirmFn) {
+                const h = this.$createElement
+                const subHeader = h('p', { style: {
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    whiteSpace: 'normal',
+                    textAlign: 'left',
+                    lineHeight: '24px'
+                } }, message)
+                this.$bkInfo({
+                    type: 'warning',
+                    subHeader,
+                    width: 440,
+                    okText: this.$t('store.已确认兼容新增参数，继续'),
+                    confirmFn
+                })
             },
             atomOs (os) {
                 const target = []

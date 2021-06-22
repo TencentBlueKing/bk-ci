@@ -17,7 +17,7 @@ import com.tencent.bk.codecc.codeccjob.dao.mongorepository.LintDefectV2Repositor
 import com.tencent.bk.codecc.codeccjob.dao.mongotemplate.LintDefectV2Dao;
 import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
 import com.tencent.bk.codecc.defect.vo.ConfigCheckersPkgReqVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.IBizService;
@@ -46,7 +46,7 @@ public class LintConfigCheckerPkgBizServiceImpl implements IBizService<ConfigChe
     private LintDefectV2Repository lintDefectV2Repository;
 
     @Override
-    public CodeCCResult processBiz(ConfigCheckersPkgReqVO configCheckersPkgReqVO)
+    public Result processBiz(ConfigCheckersPkgReqVO configCheckersPkgReqVO)
     {
         Long taskId = configCheckersPkgReqVO.getTaskId();
         String toolName = configCheckersPkgReqVO.getToolName();
@@ -107,6 +107,6 @@ public class LintConfigCheckerPkgBizServiceImpl implements IBizService<ConfigChe
 
             lintDefectV2Dao.batchUpdateDefectStatusExcludeBit(taskId, needUpdateDefectList);
         }
-        return new CodeCCResult(CommonMessageCode.SUCCESS);
+        return new Result(CommonMessageCode.SUCCESS);
     }
 }

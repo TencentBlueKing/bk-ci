@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -45,6 +46,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -56,6 +58,7 @@ import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class MarketAtomDao : AtomBaseDao() {
 
@@ -74,7 +77,7 @@ class MarketAtomDao : AtomBaseDao() {
     ): Int {
         val (ta, conditions) = formatConditions(keyword, rdType, classifyCode, dslContext)
         val taf = TAtomFeature.T_ATOM_FEATURE.`as`("taf")
-        val baseStep = dslContext.select(ta.ID.countDistinct()).from(ta).leftJoin(taf)
+        val baseStep = dslContext.select(DSL.countDistinct(ta.ID)).from(ta).leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
 
         val storeType = StoreTypeEnum.ATOM.type.toByte()
@@ -90,7 +93,7 @@ class MarketAtomDao : AtomBaseDao() {
             yamlFlag = yamlFlag,
             recommendFlag = recommendFlag
         )
-        return baseStep.where(conditions).fetchOne(0, Int::class.java)
+        return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     private fun formatConditions(
@@ -154,6 +157,8 @@ class MarketAtomDao : AtomBaseDao() {
             ta.OS,
             ta.BUILD_LESS_RUN_FLAG,
             ta.DOCS_LINK,
+            ta.MODIFIER,
+            ta.UPDATE_TIME,
             taf.RECOMMEND_FLAG,
             taf.YAML_FLAG
         ).from(ta)
@@ -175,24 +180,31 @@ class MarketAtomDao : AtomBaseDao() {
         )
 
         if (null != sortType) {
-            if (sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT && score == null) {
+            val flag =
+                sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT || sortType == MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM
+            if (flag && score == null) {
                 val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
                 val t =
-                    dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name))
+                    dslContext.select(
+                        tas.STORE_CODE,
+                        tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
+                        tas.RECENT_EXECUTE_NUM.`as`(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name)
+                    )
                         .from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
                 baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
-            val realSortType = if (sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT) {
-                DSL.field(sortType.name)
-            } else {
-                ta.field(sortType.name)
-            }
+            val realSortType =
+                if (flag) {
+                    DSL.field(sortType.name)
+                } else {
+                    ta.field(sortType.name)
+                }
 
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType.desc())
+                baseStep.where(conditions).orderBy(realSortType!!.desc())
             } else {
-                baseStep.where(conditions).orderBy(realSortType.asc())
+                baseStep.where(conditions).orderBy(realSortType!!.asc())
             }
         } else {
             baseStep.where(conditions)
@@ -232,11 +244,12 @@ class MarketAtomDao : AtomBaseDao() {
                 tas.STORE_CODE,
                 tas.STORE_TYPE,
                 tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
+                tas.RECENT_EXECUTE_NUM.`as`(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name),
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
-            conditions.add(t.field("STORE_TYPE", Byte::class.java).eq(storeType))
+            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
+            conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType))
         }
         if (null != yamlFlag) {
             conditions.add(taf.YAML_FLAG.eq(yamlFlag))
@@ -252,15 +265,20 @@ class MarketAtomDao : AtomBaseDao() {
             conditions.add(ATOM_CODE.eq(atomCode))
             conditions.add(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
             if (version != null) {
-                conditions.add(VERSION.like("$version%"))
+                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
             }
             return dslContext.selectCount().from(this)
                 .where(conditions)
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
-    private fun generateGetMyAtomConditions(a: TAtom, userId: String, b: TStoreMember, atomName: String?): MutableList<Condition> {
+    private fun generateGetMyAtomConditions(
+        a: TAtom,
+        userId: String,
+        b: TStoreMember,
+        atomName: String?
+    ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         conditions.add(b.USERNAME.eq(userId))
@@ -279,12 +297,12 @@ class MarketAtomDao : AtomBaseDao() {
         val a = TAtom.T_ATOM.`as`("a")
         val b = TStoreMember.T_STORE_MEMBER.`as`("b")
         val conditions = generateGetMyAtomConditions(a, userId, b, atomName)
-        return dslContext.select(a.ATOM_CODE.countDistinct())
+        return dslContext.select(DSL.countDistinct(a.ATOM_CODE))
             .from(a)
             .leftJoin(b)
             .on(a.ATOM_CODE.eq(b.STORE_CODE))
             .where(conditions)
-            .fetchOne(0, Int::class.java)
+            .fetchOne(0, Int::class.java)!!
     }
 
     fun getMyAtoms(
@@ -297,7 +315,8 @@ class MarketAtomDao : AtomBaseDao() {
         val a = TAtom.T_ATOM.`as`("a")
         val b = TStoreMember.T_STORE_MEMBER.`as`("b")
         val d = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("d")
-        val t = dslContext.select(a.ATOM_CODE.`as`("atomCode"), a.CREATE_TIME.max().`as`("createTime")).from(a).groupBy(a.ATOM_CODE) // 查找每组atomCode最新的记录
+        val t = dslContext.select(a.ATOM_CODE.`as`("atomCode"), DSL.max(a.CREATE_TIME).`as`("createTime"))
+            .from(a).groupBy(a.ATOM_CODE) // 查找每组atomCode最新的记录
         val conditions = generateGetMyAtomConditions(a, userId, b, atomName)
         val baseStep = dslContext.select(
             a.ID.`as`("atomId"),
@@ -315,7 +334,8 @@ class MarketAtomDao : AtomBaseDao() {
         )
             .from(a)
             .join(t)
-            .on(a.ATOM_CODE.eq(t.field("atomCode", String::class.java)).and(a.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java))))
+            .on(a.ATOM_CODE.eq(t.field("atomCode", String::class.java))
+                .and(a.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java))))
             .join(b)
             .on(a.ATOM_CODE.eq(b.STORE_CODE))
             .leftJoin(d)
@@ -402,7 +422,11 @@ class MarketAtomDao : AtomBaseDao() {
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
-        val classifyId = dslContext.select(a.ID).from(a).where(a.CLASSIFY_CODE.eq(marketAtomUpdateRequest.classifyCode).and(a.TYPE.eq(0))).fetchOne(0, String::class.java)
+        val classifyId = dslContext.select(a.ID)
+            .from(a)
+            .where(a.CLASSIFY_CODE.eq(marketAtomUpdateRequest.classifyCode)
+                .and(a.TYPE.eq(0)))
+            .fetchOne(0, String::class.java)
         with(TAtom.T_ATOM) {
             dslContext.update(this)
                 .set(NAME, marketAtomUpdateRequest.name)
@@ -438,7 +462,11 @@ class MarketAtomDao : AtomBaseDao() {
         atomRequest: MarketAtomUpdateRequest
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
-        val classifyId = dslContext.select(a.ID).from(a).where(a.CLASSIFY_CODE.eq(atomRequest.classifyCode).and(a.TYPE.eq(0))).fetchOne(0, String::class.java)
+        val classifyId = dslContext.select(a.ID)
+            .from(a)
+            .where(a.CLASSIFY_CODE.eq(atomRequest.classifyCode)
+                .and(a.TYPE.eq(0)))
+            .fetchOne(0, String::class.java)
         with(TAtom.T_ATOM) {
             dslContext.insertInto(this,
                 ID,
@@ -533,12 +561,21 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun getAtomsByAtomCode(dslContext: DSLContext, atomCode: String): Result<TAtomRecord>? {
+    fun getAtomsByAtomCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Result<TAtomRecord>? {
         return with(TAtom.T_ATOM) {
-            dslContext.selectFrom(this)
+            val baseStep = dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .orderBy(CREATE_TIME.desc())
-                .fetch()
+            if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
         }
     }
 

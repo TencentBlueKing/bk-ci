@@ -2,10 +2,11 @@ package com.tencent.bk.codecc.defect.resources;
 
 import com.tencent.bk.codecc.defect.api.ServiceCheckerSetRestResource;
 import com.tencent.bk.codecc.defect.service.IV3CheckerSetBizService;
+import com.tencent.bk.codecc.defect.vo.CheckerSetListQueryReq;
 import com.tencent.bk.codecc.task.vo.TaskBaseVO;
 import com.tencent.devops.common.api.checkerset.CheckerSetRelationshipVO;
 import com.tencent.devops.common.api.checkerset.CheckerSetVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -25,44 +26,57 @@ public class ServiceCheckerSetRestResourceImpl implements ServiceCheckerSetRestR
     private IV3CheckerSetBizService checkerSetBizService;
 
     @Override
-    public CodeCCResult<Boolean> batchRelateTaskAndCheckerSet(String user, String projectId, Long taskId, List<CheckerSetVO> checkerSetList, Boolean isOpenSource) {
-        return new CodeCCResult<>(checkerSetBizService.batchRelateTaskAndCheckerSet(projectId, taskId, checkerSetList, user, isOpenSource));
+    public Result<Boolean> batchRelateTaskAndCheckerSet(String user, String projectId, Long taskId, List<CheckerSetVO> checkerSetList, Boolean isOpenSource) {
+        return new Result<>(checkerSetBizService.batchRelateTaskAndCheckerSet(projectId, taskId, checkerSetList, user, isOpenSource));
     }
 
     @Override
-    public CodeCCResult<List<CheckerSetVO>> queryCheckerSets(Set<String> checkerSetList, String projectId) {
-        return new CodeCCResult<>(checkerSetBizService.queryCheckerSets(checkerSetList, projectId));
+    public Result<List<CheckerSetVO>> queryCheckerSets(Set<String> checkerSetList, String projectId) {
+        return new Result<>(checkerSetBizService.queryCheckerSets(checkerSetList, projectId));
     }
 
     @Override
-    public CodeCCResult<List<CheckerSetVO>> getCheckerSets(Long taskId) {
-        return new CodeCCResult<>(checkerSetBizService.getCheckerSetsByTaskId(taskId));
+    public Result<List<CheckerSetVO>> getCheckerSets(Long taskId) {
+        return new Result<>(checkerSetBizService.getCheckerSetsByTaskId(taskId));
     }
 
     @Override
-    public CodeCCResult<Map<String, List<CheckerSetVO>>> getCheckerSetListByCategory(String projectId) {
-        return new CodeCCResult<>(checkerSetBizService.getAvailableCheckerSetsOfProject(projectId));
+    public Result<Map<String, List<CheckerSetVO>>> getCheckerSetListByCategory(String projectId) {
+        return new Result<>(checkerSetBizService.getAvailableCheckerSetsOfProject(projectId));
     }
 
     @Override
-    public CodeCCResult<Boolean> updateCheckerSetAndTaskRelation(Long taskId, Long codeLang, String user) {
-        return new CodeCCResult<>(checkerSetBizService.updateCheckerSetAndTaskRelation(taskId, codeLang, user));
+    public Result<Boolean> updateCheckerSetAndTaskRelation(Long taskId, Long codeLang, String user) {
+        return new Result<>(checkerSetBizService.updateCheckerSetAndTaskRelation(taskId, codeLang, user));
     }
 
     @Override
-    public CodeCCResult<TaskBaseVO> getCheckerAndCheckerSetCount(Long taskId, String projectId) {
-        return new CodeCCResult<>(checkerSetBizService.getCheckerAndCheckerSetCount(taskId, projectId));
+    public Result<TaskBaseVO> getCheckerAndCheckerSetCount(Long taskId, String projectId) {
+        return new Result<>(checkerSetBizService.getCheckerAndCheckerSetCount(taskId, projectId));
     }
 
     @Override
-    public CodeCCResult<Boolean> setRelationships(String checkerSetId, String user, CheckerSetRelationshipVO checkerSetRelationshipVO)
+    public Result<Boolean> setRelationships(String checkerSetId, String user, CheckerSetRelationshipVO checkerSetRelationshipVO)
     {
         checkerSetBizService.setRelationships(checkerSetId, user, checkerSetRelationshipVO);
-        return new CodeCCResult<>(true);
+        return new Result<>(true);
     }
 
     @Override
-    public CodeCCResult<List<CheckerSetVO>> queryCheckerSetsForOpenScan(Set<CheckerSetVO> checkerSetList, String projectId) {
-        return new CodeCCResult<>(checkerSetBizService.queryCheckerSetsForOpenScan(checkerSetList, projectId));
+    public Result<List<CheckerSetVO>> queryCheckerSetsForOpenScan(Set<CheckerSetVO> checkerSetList, String projectId) {
+        return new Result<>(checkerSetBizService.queryCheckerSetsForOpenScan(checkerSetList, projectId));
+    }
+
+    @Override
+    public Result<List<CheckerSetVO>> getCheckerSets(CheckerSetListQueryReq queryCheckerSetReq)
+    {
+        if (queryCheckerSetReq.getTaskId() != null)
+        {
+            return new Result<>(checkerSetBizService.getCheckerSetsOfTask(queryCheckerSetReq));
+        }
+        else
+        {
+            return new Result<>(checkerSetBizService.getCheckerSetsOfProject(queryCheckerSetReq));
+        }
     }
 }

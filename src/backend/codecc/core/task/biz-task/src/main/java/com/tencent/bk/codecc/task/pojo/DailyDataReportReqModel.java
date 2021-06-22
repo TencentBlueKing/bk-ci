@@ -82,4 +82,9 @@ public class DailyDataReportReqModel
      * 工具基本信息的映射表
      */
     private Map<String, ToolBaseInfoModel> toolInfoMap;
+
+    /**
+     * 创建来源
+     */
+    private String createFromCn;
 }

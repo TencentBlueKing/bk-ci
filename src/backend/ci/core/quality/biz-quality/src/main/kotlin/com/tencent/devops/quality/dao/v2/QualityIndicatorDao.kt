@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,7 +37,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class QualityIndicatorDao {
     fun listByType(dslContext: DSLContext, type: IndicatorType = IndicatorType.SYSTEM): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
@@ -86,7 +87,7 @@ class QualityIndicatorDao {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             return dslContext.selectCount().from(this)
                 .where(TYPE.eq(IndicatorType.SYSTEM.name))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -99,7 +100,7 @@ class QualityIndicatorDao {
             if (enable != null) {
                 sql.where(ENABLE.eq(enable))
             }
-            return sql.fetchOne(0, Long::class.java)
+            return sql.fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -155,7 +156,7 @@ class QualityIndicatorDao {
                 indicatorUpdate.elementVersion ?: "",
                 indicatorUpdate.logPrompt ?: "",
                 indicatorUpdate.range ?: ""
-            ).returning(ID).fetchOne()
+            ).returning(ID).fetchOne()!!
             return record.id
         }
     }
@@ -206,7 +207,7 @@ class QualityIndicatorDao {
         return with(TQualityIndicator.T_QUALITY_INDICATOR) {
             dslContext.selectFrom(this)
                 .where(ID.eq(indicatorId))
-                .fetchOne()
+                .fetchOne()!!
         }
     }
 }

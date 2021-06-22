@@ -219,7 +219,6 @@
             changeProject () {
                 this.$toggleProjectMenu(true)
             },
-
             async toApplyPermission () {
                 try {
                     const { projectId } = this.$route.params
@@ -351,7 +350,7 @@
                             message: err.message || err,
                             theme: 'error'
                         })
-                        if (err.code === 404) {
+                        if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'pipelinesList') {
                             this.$router.push({
                                 name: 'pipelinesList'
                             })
@@ -380,7 +379,7 @@
                             message: err.message || err,
                             theme: 'error'
                         })
-                        if (err.code === 404) {
+                        if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'pipelinesList') {
                             this.$router.push({
                                 name: 'pipelinesList'
                             })

@@ -5,7 +5,7 @@
                 <input class="bk-form-input" :placeholder="$t('settings.namePlaceholder')" v-model="pipelineSetting.pipelineName" name="name" v-validate.initial="&quot;required|max:40&quot;" />
             </form-field>
 
-            <form-field :required="false" :label="$t('settings.group')" v-if="tagGroupList.length">
+            <form-field :required="false" :label="$t('settings.label')" v-if="tagGroupList.length">
                 <div class="form-group form-group-inline">
                     <div :class="grouInlineCol"
                         v-for="(filter, index) in tagGroupList"
@@ -103,7 +103,7 @@
             }
         },
         computed: {
-            ...mapState('soda', [
+            ...mapState('pipelines', [
                 'pipelineSetting'
             ]),
             ...mapGetters({
@@ -162,7 +162,7 @@
             this.list = this.groupIdStorage = localStorage.getItem('groupIdStr') ? localStorage.getItem('groupIdStr').split(';').filter(item => item) : []
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('pipelines', [
                 'requestTemplateSetting',
                 'updatePipelineSetting'
             ]),

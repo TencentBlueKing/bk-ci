@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -59,6 +60,7 @@ import java.util.stream.Collectors
 import javax.ws.rs.NotFoundException
 
 @Service
+@Suppress("ALL")
 class VMService @Autowired constructor(
     private val vmDao: VMDao,
     private val machineDao: MachineDao,
@@ -73,11 +75,19 @@ class VMService @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(VMService::class.java)
 
-    fun queryVMs(ip: String?, name: String?, typeId: Int?, os: String?, osVersion: String?, offset: Int?, limit: Int?): VMWithPage {
+    fun queryVMs(
+        ip: String?,
+        name: String?,
+        typeId: Int?,
+        os: String?,
+        osVersion: String?,
+        offset: Int?,
+        limit: Int?
+    ): VMWithPage {
         val vms = ArrayList<VMResponse>()
         vmDao.findVms(dslContext, ip, name, typeId, os, osVersion, offset, limit)?.forEach {
             val vm = VMResponse(
-                    id = it["id"] as Int,
+                id = it["id"] as Int,
                 machineId = it["machineId"] as Int,
                 machineName = it["machineName"] as String,
                 typeId = it["typeId"] as Int,
@@ -106,12 +116,18 @@ class VMService @Autowired constructor(
         // 判断ip是否重复
         val ipCount = vmDao.countByIp(dslContext, vm.ip)
         if (ipCount > 0) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(vm.ip), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(vm.ip),
+                data = false)
         }
         // 判断名字是否重复
         val nameCount = vmDao.countByName(dslContext, vm.name)
         if (nameCount > 0) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(vm.name), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(vm.name),
+                data = false)
         }
         // Check the machine exist
         machineDao.findMachineById(dslContext, vm.machineId)
@@ -133,14 +149,16 @@ class VMService @Autowired constructor(
         if (ipCount > 0) {
             val vmObj = vmDao.findVMById(dslContext, vm.id)
             if (null != vmObj && vmObj.vmIp != vm.ip) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(vm.ip), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(vm.ip), data = false)
             }
         }
         val nameCount = vmDao.countByName(dslContext, vm.name)
         if (nameCount > 0) {
             val vmObj = vmDao.findVMById(dslContext, vm.id)
             if (null != vmObj && vmObj.vmName != vm.name) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(vm.name), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(vm.name), data = false)
             }
         }
         machineDao.findMachineById(dslContext, vm.machineId)
@@ -201,8 +219,8 @@ class VMService @Autowired constructor(
             return null
         }
         if (!(from.equals("macos", ignoreCase = true) ||
-            from.equals("WINDOWS", ignoreCase = true) ||
-            from.equals("LINUX", ignoreCase = true))) {
+                from.equals("WINDOWS", ignoreCase = true) ||
+                from.equals("LINUX", ignoreCase = true))) {
             logger.warn("The os is illegal($from)")
             return null
         }
@@ -223,7 +241,13 @@ class VMService @Autowired constructor(
         return getIdleVM(projectId, preferVMName, from, filterVms, preVMs)
     }
 
-    private fun getIdleVM(projectId: String, preferVMName: String?, from: String, vms: List<VirtualMachine>, preVMs: List<Long>): VM? {
+    private fun getIdleVM(
+        projectId: String,
+        preferVMName: String?,
+        from: String,
+        vms: List<VirtualMachine>,
+        preVMs: List<Long>
+    ): VM? {
         val vmNames = if (preferVMName.isNullOrBlank()) {
             emptyArray()
         } else {

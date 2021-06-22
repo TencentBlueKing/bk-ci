@@ -17,7 +17,7 @@ import com.tencent.bk.codecc.codeccjob.dao.mongotemplate.LintDefectV2Dao;
 import com.tencent.bk.codecc.codeccjob.service.AbstractFilterPathBizService;
 import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
 import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,7 @@ public class LintFilterPathBizServiceImpl extends AbstractFilterPathBizService
     private LintDefectV2Dao lintDefectV2Dao;
 
     @Override
-    public CodeCCResult processBiz(FilterPathInputVO filterPathInputVO)
+    public Result processBiz(FilterPathInputVO filterPathInputVO)
     {
         Long taskId = filterPathInputVO.getTaskId();
         String toolName = filterPathInputVO.getToolName();
@@ -90,7 +90,7 @@ public class LintFilterPathBizServiceImpl extends AbstractFilterPathBizService
 
             lintDefectV2Dao.batchUpdateDefectStatusExcludeBit(taskId, needUpdateDefectList);
         }
-        return new CodeCCResult(CommonMessageCode.SUCCESS);
+        return new Result(CommonMessageCode.SUCCESS);
     }
 
 }

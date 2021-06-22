@@ -4,7 +4,7 @@
             <component
                 :is="obj.component"
                 :name="key"
-                v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
                 :handle-change="handleMethods"
                 :value="element[key]"
                 v-bind="obj">
@@ -24,24 +24,6 @@
                 this.handleUpdateElement('repositoryType', 'ID')
             }
             this.handleChooseCodelibType('repositoryType', this.element.repositoryType)
-
-            // 把includeUsers、excludeUsers转换成字符串
-            this.handleUpdateElement('includeUsers', this.element.includeUsers ? this.element.includeUsers.join(',') : '')
-            this.handleUpdateElement('excludeUsers', this.element.excludeUsers ? this.element.excludeUsers.join(',') : '')
-        },
-        destroyed () {
-            // 把includeUsers、excludeUsers转换成数组
-            let arr = []
-            if (this.element.includeUsers) {
-                arr = this.element.includeUsers.split(',')
-            }
-            this.handleUpdateElement('includeUsers', arr)
-
-            let arr1 = []
-            if (this.element.excludeUsers) {
-                arr1 = this.element.excludeUsers.split(',')
-            }
-            this.handleUpdateElement('excludeUsers', arr1)
         },
         methods: {
             handleMethods (name, value) {

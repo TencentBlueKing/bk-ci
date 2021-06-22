@@ -119,7 +119,7 @@
             return {
                 isLoading: true,
                 hasNoPermission: false,
-                linkUrl: WEB_URL_PIRFIX + location.pathname,
+                linkUrl: WEB_URL_PREFIX + location.pathname,
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -136,7 +136,7 @@
                             handler: () => {
                                 this.toApplyPermission(this.$permissionActionMap.execute, {
                                     id: this.routerParams.pipelineId,
-                                    name: this.routerParams.pipelineId
+                                    type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT
                                 })
                             },
                             text: this.$t('applyPermission')
@@ -159,7 +159,6 @@
             ...mapState([
                 'fetchError'
             ]),
-
             panels () {
                 return [{
                     name: 'executeDetail',
@@ -316,7 +315,7 @@
 
         mounted () {
             this.requestPipelineExecDetail(this.routerParams)
-            this.$store.dispatch('soda/requestInterceptAtom', {
+            this.$store.dispatch('common/requestInterceptAtom', {
                 projectId: this.routerParams.projectId,
                 pipelineId: this.routerParams.pipelineId
             })
@@ -340,7 +339,7 @@
                 'getInitLog',
                 'getAfterLog'
             ]),
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestInterceptAtom'
             ]),
             convertMStoStringByRule,
@@ -366,8 +365,11 @@
 
         .pipeline-detail-tab-card {
             height: 100%;
-            .bk-tab-section {
-                height: calc(100% - 52px);
+            display: flex;
+            flex-direction: column;
+            .bk-tab-content {
+                height: calc(100% - 25px);
+                overflow: auto;
             }
         }
         .exec-pipeline {

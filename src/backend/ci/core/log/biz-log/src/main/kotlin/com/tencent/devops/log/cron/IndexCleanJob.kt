@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,14 +27,14 @@
 
 package com.tencent.devops.log.cron
 
-import com.tencent.devops.log.util.IndexNameUtils.LOG_PREFIX
+import com.tencent.devops.log.util.IndexNameUtils.LOG_INDEX_PREFIX
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 interface IndexCleanJob {
 
-    fun closeIndex()
+    fun cleanIndex()
 
     fun updateExpireIndexDay(expired: Int)
 
@@ -41,10 +42,10 @@ interface IndexCleanJob {
 
     fun expire(deathLine: LocalDateTime, index: String): Boolean {
         try {
-            if (!index.startsWith(LOG_PREFIX)) {
+            if (!index.startsWith(LOG_INDEX_PREFIX)) {
                 return false
             }
-            val dateStr = index.replace(LOG_PREFIX, "") + " 00:00"
+            val dateStr = index.replace(LOG_INDEX_PREFIX, "") + " 00:00"
             val format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
             val date = LocalDateTime.parse(dateStr, format)
 
@@ -60,6 +61,5 @@ interface IndexCleanJob {
 
     companion object {
         private val logger = LoggerFactory.getLogger(IndexCleanJob::class.java)
-        private const val ES_INDEX_CLOSE_JOB_KEY = "log:es:index:close:job:lock:key"
     }
 }

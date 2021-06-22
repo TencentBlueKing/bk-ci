@@ -247,6 +247,25 @@ public class TaskInfoModel
     private List<String> filterPath;
 
     /**
+     * code.yml的自定义过滤路径
+     */
+    @JsonProperty("test_source_filter_path")
+    private List<String> testSourceFilterPath;
+
+
+    /**
+     * code.yml的自定义过滤路径
+     */
+    @JsonProperty("auto_gen_filter_path")
+    private List<String> autoGenFilterPath;
+
+    /**
+     * code.yml自定义过滤路径
+     */
+    @JsonProperty("third_party_filter_path")
+    private List<String> thirdPartyFilterPath;
+
+    /**
      * 用于存储停用任务之后保存的定时执行任务信息
      */
     @JsonProperty("last_disable_task_info")
@@ -368,4 +387,9 @@ public class TaskInfoModel
     @JsonProperty("latest_scan_result")
     private TaskFailRecordModel taskFailRecordModel;
 
+    /**
+     * 创建者
+     */
+    @JsonProperty("created_by")
+    private String createdBy;
 }

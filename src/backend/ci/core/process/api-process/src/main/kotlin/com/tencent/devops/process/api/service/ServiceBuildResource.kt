@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryVariables
@@ -63,6 +65,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/builds")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceBuildResource {
 
     @ApiOperation("Notify process that the vm startup for the build")
@@ -96,6 +99,7 @@ interface ServiceBuildResource {
         errorMsg: String? = null
     ): Result<Boolean>
 
+    @Deprecated("早已经没有使用，已经作废，请不要使用，未来将会进行删除")
     @ApiOperation("Notify process that the vm startup for the build")
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmStarted")
@@ -199,6 +203,9 @@ interface ServiceBuildResource {
         @ApiParam("要重试的原子任务ID", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
+        @ApiParam("仅重试所有失败Job", required = false)
+        @QueryParam("failedContainer")
+        failedContainer: Boolean? = false,
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
@@ -405,6 +412,29 @@ interface ServiceBuildResource {
         channelCode: ChannelCode = ChannelCode.BS
     ): Result<BuildHistoryVariables>
 
+    @ApiOperation("获取构建中的变量值")
+    @POST
+    @Path("/{projectId}/{pipelineId}/{buildId}/variables")
+    fun getBuildVariableValue(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode = ChannelCode.BS,
+        @ApiParam("变量名列表", required = true)
+        variableNames: List<String>
+    ): Result<Map<String, String>>
+
     @ApiOperation("批量获取构建详情")
     @POST
     // @Path("/projects/{projectId}/batchStatus")
@@ -513,6 +543,8 @@ interface ServiceBuildResource {
         stageId: String,
         @ApiParam("取消执行", required = false)
         @QueryParam("cancel")
-        cancel: Boolean?
+        cancel: Boolean?,
+        @ApiParam("审核请求体", required = false)
+        reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 }

@@ -26,15 +26,15 @@
 
 package com.tencent.bk.codecc.defect.service;
 
-import com.tencent.bk.codecc.defect.model.TaskLogEntity;
 import com.tencent.bk.codecc.defect.vo.TaskLogRepoInfoVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.defect.vo.common.BuildVO;
 import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,13 +74,22 @@ public interface TaskLogService
     List<ToolLastAnalysisResultVO> getLastAnalysisResults(long taskId, Set<String> toolSet);
 
     /**
+     * 批量查询最新任务分析记录
+     *
+     * @param taskId
+     * @param buildId
+     * @return
+     */
+    List<ToolLastAnalysisResultVO> getAnalysisResultsByBuildId(long taskId, String buildId);
+
+    /**
      * 查询任务分析记录清单
      *
      * @param taskId
-     * @param toolName
+     * @param buildNum
      * @return
      */
-    List<ToolLastAnalysisResultVO> getAnalysisResultsList(long taskId, String toolName);
+    List<ToolLastAnalysisResultVO> getAnalysisResults(long taskId, String buildNum);
 
     /**
      * 获取最近一次分析记录
@@ -90,6 +99,15 @@ public interface TaskLogService
      * @return
      */
     BaseLastAnalysisResultVO getLastAnalysisResult(ToolLastAnalysisResultVO toolLastAnalysisResultVO, String toolName);
+
+    /**
+     * 获取最近一次分析记录
+     *
+     * @param toolLastAnalysisResultVO
+     * @param toolName
+     * @return
+     */
+    BaseLastAnalysisResultVO getAnalysisResult(ToolLastAnalysisResultVO toolLastAnalysisResultVO, String toolName);
 
     /**
      * 更新go语言的参数建议值信息
@@ -121,11 +139,20 @@ public interface TaskLogService
     TaskLogVO getBuildTaskLog(long taskId, String toolName, String buildId);
 
     /**
+     * 获取当前构建的分析记录
+     * @param taskId
+     * @param toolNameSet
+     * @param buildId
+     * @return
+     */
+    List<TaskLogVO> getBuildTaskLog(long taskId, List<String> toolNameSet, String buildId);
+
+    /**
      * 上传分析记录
      * @param uploadTaskLogStepVO
      * @return
      */
-    CodeCCResult uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO);
+    Result uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO);
 
     /**
      * 流水线运行失败调用接口
@@ -170,6 +197,14 @@ public interface TaskLogService
     Map<String, TaskLogRepoInfoVO> getLastAnalyzeRepoInfo(long taskId);
 
     /**
+     * 获取最新构建的指定工具代码库信息
+     *
+     * @param taskId
+     * @param toolName
+     */
+    TaskLogRepoInfoVO getLastAnalyzeRepoInfo(long taskId, String toolName);
+
+    /**
      * 通过任务id查询最近一次分析记录信息，不分工具
      *
      * @param taskId
@@ -177,4 +212,11 @@ public interface TaskLogService
      */
     List<TaskLogVO> findLastBuildInfo(long taskId);
 
+    /**
+     * 获取本次构建执行情况
+     *
+     */
+    List<TaskLogVO> getCurrBuildInfo(long taskId, String buildId);
+
+    Map<String, Boolean> defectCommitSuccess(long taskId, List<String> toolNameSet, String buildId, int stepNum);
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -57,19 +58,21 @@ data class AtomEnv(
     @ApiModelProperty("插件最后修改时间", required = true)
     val updateTime: Long,
     @ApiModelProperty("插件初始化项目代码", required = false)
-    val projectCode: String?,
-    @ApiModelProperty("安装包路径", required = true)
-    val pkgPath: String,
+    val projectCode: String? = null,
+    @ApiModelProperty("安装包路径", required = false)
+    val pkgPath: String? = null,
     @ApiModelProperty("插件开发语言", required = false)
-    val language: String?,
+    val language: String? = null,
     @ApiModelProperty("支持插件开发语言的最低版本", required = false)
-    val minVersion: String?,
-    @ApiModelProperty("插件执行入口", required = true)
-    val target: String,
+    val minVersion: String? = null,
+    @ApiModelProperty("插件执行入口", required = false)
+    val target: String? = null,
     @ApiModelProperty("插件SHA签名串", required = false)
-    val shaContent: String?,
+    val shaContent: String? = null,
     @ApiModelProperty("插件执行前置命令", required = false)
-    val preCmd: String?,
+    val preCmd: String? = null,
     @ApiModelProperty("Job类型", required = false)
-    val jobType: JobTypeEnum?
+    val jobType: JobTypeEnum? = null,
+    @ApiModelProperty("插件post信息", required = false)
+    val atomPostInfo: AtomPostInfo? = null
 )

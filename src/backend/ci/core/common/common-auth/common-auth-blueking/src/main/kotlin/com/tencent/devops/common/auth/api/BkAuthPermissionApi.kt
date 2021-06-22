@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -39,6 +40,7 @@ import com.tencent.devops.common.auth.code.PROJECT_SCOPE_TYPE
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class BkAuthPermissionApi constructor(
     private val bkAuthProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper,
@@ -53,9 +55,7 @@ class BkAuthPermissionApi constructor(
         resourceCode: String,
         userIdList: List<String>,
         supplier: (() -> List<String>)?
-    ): Boolean {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
-    }
+    ): Boolean = false
 
     override fun validateUserResourcePermission(
         user: String,
@@ -110,10 +110,7 @@ class BkAuthPermissionApi constructor(
         appCode: String,
         appSecret: String
     ): Boolean {
-//        val epoch = System.currentTimeMillis()
         val uri = "/bkiam/api/v1/perm/systems/${systemId.id()}/resources-perms/batch-verify"
-
-//        logger.info("开始调用权限中心校验权限，uri:$uri , systemId= ${systemId.id()}")
 
         val requestBean = BkUserAuthVerifyRequest(
             principalId = principalId, principalType = principalType,
@@ -145,7 +142,7 @@ class BkAuthPermissionApi constructor(
         return try {
             responseBean.data!![0]!!.pass
         } catch (ignored: Exception) {
-            logger.error("bkiam, An exception occurs in the parse response bean, msg: $ignored", ignored)
+            logger.warn("bkiam, An exception occurs in the parse response bean, msg: $ignored", ignored)
             false
         }
     }
@@ -233,7 +230,7 @@ class BkAuthPermissionApi constructor(
             }
             return resultMap
         } catch (ignored: Exception) {
-            logger.error("bkiam, An exception occurs in the parse response bean, msg: $ignored")
+            logger.warn("bkiam, An exception occurs in the parse response bean, msg: $ignored")
             throw RemoteServiceException("bkiam, An exception occurs in the parse response bean, msg: $ignored")
         }
     }

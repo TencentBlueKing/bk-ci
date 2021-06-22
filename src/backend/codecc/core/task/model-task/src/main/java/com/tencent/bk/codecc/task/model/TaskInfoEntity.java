@@ -29,6 +29,8 @@ package com.tencent.bk.codecc.task.model;
 import com.tencent.codecc.common.db.CommonEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -47,8 +49,11 @@ import java.util.Set;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Document(collection = "t_task_detail")
-public class TaskInfoEntity extends CommonEntity
-{
+@CompoundIndexes({
+        @CompoundIndex(name = "project_id_1_create_from_1", def = "{'project_id': 1, 'create_from': 1}",
+                background = true)
+})
+public class TaskInfoEntity extends CommonEntity {
     /**
      * 项目主键id
      */
@@ -103,7 +108,6 @@ public class TaskInfoEntity extends CommonEntity
     /***
      * 项目id
      */
-    @Indexed
     @Field("project_id")
     private String projectId;
 
@@ -283,6 +287,12 @@ public class TaskInfoEntity extends CommonEntity
     private List<String> thirdPartyFilterPath;
 
     /**
+     * 路径白名单
+     */
+    @Field("white_paths")
+    private List<String> whitePaths;
+
+    /**
      * 用于存储停用任务之后保存的定时执行任务信息
      */
     @Field("last_disable_task_info")
@@ -387,6 +397,12 @@ public class TaskInfoEntity extends CommonEntity
     */
     @Field("mr_comment_enable")
     private Boolean mrCommentEnable;
+
+    /*
+     * 是否扫描测试代码，true-扫描，false-不扫描，默认不扫描
+     */
+    @Field("scan_test_source")
+    private Boolean scanTestSource;
 
     /**
      * 任务失败记录

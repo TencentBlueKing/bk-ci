@@ -19,10 +19,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 config = {
   env = "__BK_CI_ENV__",
+  internal_file_dir = "__BK_CI_DATA_DIR__/gateway/files/",
   static_dir = "__BK_CI_HOME__/frontend",
   static_dir_gray = "__BK_CI_HOME__/frontend-gray",
   docs_dir = "__BK_CI_HOME__/docs",
   static_dir_codecc = "__BK_CODECC_HOME__/frontend",
+  static_dir_codecc_gray = "__BK_CODECC_HOME__/frontend-gray",
   http_schema = "__BK_HTTP_SCHEMA__", -- 蓝鲸PaaS平台访问协议 http or https, 如果有对接才配置修改，开源默认没对接
   paas_host = "__BK_PAAS_FQDN__", -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接
   paas_http_port = "__BK_PAAS_HTTPS_PORT__", -- 蓝鲸PaaS平台域名的端口, 如果有对接才配置修改，开源默认没对接
@@ -43,31 +45,9 @@ config = {
     suffix = "-__BK_CI_CONSUL_DISCOVERY_TAG__",
     nodes_url = "/v1/catalog/nodes"
   },
-  ns_gray = {
-    ip = {
-      "__BK_CI_CONSUL_GRAY_IP__"
-    },
-    port = __BK_CI_CONSUL_DNS_PORT__,
-    http_port = __BK_CI_CONSUL_PORT__,
-    domain = "__BK_CI_CONSUL_DOMAIN__",
-    tag = "__BK_CI_CONSUL_DISCOVERY_TAG__",
-    suffix = "-__BK_CI_CONSUL_DISCOVERY_TAG__",
-    nodes_url = "/v1/catalog/nodes"
-  },
   ns_devnet = {
     ip = {
       "__BK_CI_CONSUL_DEVNET_IP__"
-    },
-    port = __BK_CI_CONSUL_DNS_PORT__,
-    http_port = __BK_CI_CONSUL_PORT__,
-    domain = "__BK_CI_CONSUL_DOMAIN__",
-    tag = "__BK_CI_CONSUL_DISCOVERY_TAG__",
-    suffix = "-__BK_CI_CONSUL_DISCOVERY_TAG__",
-    nodes_url = "/v1/catalog/nodes"
-  },
-  ns_devnet_gray = {
-    ip = {
-      "__BK_CI_CONSUL_DEVNET_GRAY_IP__"
     },
     port = __BK_CI_CONSUL_DNS_PORT__,
     http_port = __BK_CI_CONSUL_PORT__,

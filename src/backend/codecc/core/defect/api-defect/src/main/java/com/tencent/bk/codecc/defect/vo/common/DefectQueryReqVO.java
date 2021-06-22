@@ -45,8 +45,10 @@ import java.util.Set;
 public class DefectQueryReqVO
 {
     @ApiModelProperty("工具名")
-    @NotNull(message = "工具名不能为空")
     protected String toolName;
+
+    @ApiModelProperty("维度")
+    protected String dimension;
 
     @ApiModelProperty("任务名称")
     private String taskName;
@@ -100,4 +102,14 @@ public class DefectQueryReqVO
 
     @ApiModelProperty(value = "CLOC聚类类型：文件（FILE），语言（LANGUAGE）")
     private ComConstants.CLOCOrder order;
+
+    @ApiModelProperty(value = "规则集列表")
+    private CheckerSet checkerSet;
+
+    @Data
+    public static class CheckerSet {
+        private String checkerSetId;
+
+        private int version;
+    }
 }

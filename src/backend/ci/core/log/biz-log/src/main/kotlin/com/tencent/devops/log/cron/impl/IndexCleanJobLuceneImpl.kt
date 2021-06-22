@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -51,12 +52,12 @@ class IndexCleanJobLuceneImpl @Autowired constructor(
      * 2 am every day
      */
     @Scheduled(cron = "0 0 2 * * ?")
-    override fun closeIndex() {
-        logger.info("Start to close index")
+    override fun cleanIndex() {
+        logger.info("Start to clean index")
         try {
-            deleteESIndexes()
+            deleteLuceneIndexes()
         } catch (t: Throwable) {
-            logger.warn("Fail to close the index", t)
+            logger.warn("Fail to clean the index", t)
         }
     }
 
@@ -71,7 +72,7 @@ class IndexCleanJobLuceneImpl @Autowired constructor(
 
     override fun getExpireIndexDay() = deleteIndexInDay
 
-    private fun deleteESIndexes() {
+    private fun deleteLuceneIndexes() {
         val indexes = luceneClient.listIndices()
         if (indexes.isEmpty()) {
             return
@@ -88,6 +89,5 @@ class IndexCleanJobLuceneImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(IndexCleanJobLuceneImpl::class.java)
-        private const val ES_INDEX_CLOSE_JOB_KEY = "log:es:index:close:job:lock:key"
     }
 }

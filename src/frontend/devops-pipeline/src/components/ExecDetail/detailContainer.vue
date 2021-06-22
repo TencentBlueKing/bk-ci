@@ -2,7 +2,7 @@
     <article class="log-home">
         <section :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']">
             <header class="log-head">
-                <span class="log-title"><status-icon :status="status"></status-icon>{{ title }}</span>
+                <span class="log-title"><status-icon :status="status" :is-hook="isHook"></status-icon>{{ title }}</span>
                 <slot name="tab"></slot>
                 <slot name="tool"></slot>
             </header>
@@ -29,6 +29,9 @@
             },
             currentTab: {
                 type: String
+            },
+            isHook: {
+                type: Boolean
             }
         },
 
@@ -51,8 +54,9 @@
 
 <style lang="scss" scoped>
     /deep/ .head-tab {
-        font-size: 14px;
+        font-size: 0;
         span {
+            font-size: 14px;
             cursor: pointer;
             font-weight: normal;
             padding: 4px 12px;

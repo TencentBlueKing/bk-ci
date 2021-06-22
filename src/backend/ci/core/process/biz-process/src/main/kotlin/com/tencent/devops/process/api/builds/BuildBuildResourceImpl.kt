@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,33 +32,38 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.PipelineBuildService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.engine.service.PipelineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.pojo.RedisAtomsBuild
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 @RestResource
 class BuildBuildResourceImpl @Autowired constructor(
     private val vmBuildService: PipelineVMBuildService,
-    private val buildService: PipelineBuildService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val subPipelineStartUpService: SubPipelineStartUpService
 ) : BuildBuildResource {
 
+    @Deprecated("replace by BuildJobResourceImpl")
     override fun setStarted(buildId: String, vmSeqId: String, vmName: String): Result<BuildVariables> {
         checkParam(buildId, vmSeqId, vmName)
         return Result(vmBuildService.buildVMStarted(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
+    @Deprecated("replace by BuildJobResourceImpl")
     override fun claimTask(buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
         checkParam(buildId, vmSeqId, vmName)
         return Result(vmBuildService.buildClaimTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
+    @Deprecated("replace by BuildJobResourceImpl")
     override fun completeTask(
         buildId: String,
         vmSeqId: String,
@@ -69,11 +75,13 @@ class BuildBuildResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @Deprecated("replace by BuildJobResourceImpl")
     override fun endTask(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(vmBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
+    @Deprecated("replace by BuildJobResourceImpl")
     override fun timeoutTheBuild(
         projectId: String,
         pipelineId: String,
@@ -91,6 +99,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @Deprecated("replace by BuildJobResourceImpl")
     override fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(data = vmBuildService.heartbeat(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
@@ -103,7 +112,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         return Result(
-            data = buildService.getSingleHistoryBuild(
+            data = pipelineBuildFacadeService.getSingleHistoryBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildNum = buildNum.toInt(),
@@ -118,7 +127,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         return Result(
-            data = buildService.getLatestSuccessBuild(
+            data = pipelineBuildFacadeService.getLatestSuccessBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode ?: ChannelCode.BS
@@ -136,18 +145,31 @@ class BuildBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         return Result(
-            data = buildService.getBuildDetail(
+            data = pipelineBuildFacadeService.getBuildDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                channelCode = channelCode,
-                checkPermission = ChannelCode.isNeedAuth(channelCode)
+                channelCode = channelCode
             )
         )
     }
 
     override fun getSubBuildVars(buildId: String, taskId: String): Result<Map<String, String>> {
         return subPipelineStartUpService.getSubVar(buildId = buildId, taskId = taskId)
+    }
+
+    override fun updateRedisAtoms(
+        projectId: String,
+        buildId: String,
+        redisAtomsBuild: RedisAtomsBuild
+    ): Result<Boolean> {
+        if (redisAtomsBuild.projectId.isBlank() ||
+            redisAtomsBuild.pipelineId.isBlank() ||
+            redisAtomsBuild.buildId.isBlank()) {
+            throw ParamBlankException("Invalid params(projectId,pipelineId,buildId)")
+        }
+
+        return Result(pipelineBuildFacadeService.updateRedisAtoms(buildId, projectId, redisAtomsBuild))
     }
 
     companion object {

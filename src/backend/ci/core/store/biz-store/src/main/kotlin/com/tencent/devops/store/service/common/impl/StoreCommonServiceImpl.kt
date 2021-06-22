@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,7 +31,6 @@ import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.configuration.StoreDetailUrlConfig
-import com.tencent.devops.store.configuration.StoreRepoNameSpaceNameConfig
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.OperationLogDao
 import com.tencent.devops.store.dao.common.ReasonRelDao
@@ -47,6 +47,7 @@ import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
+import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
@@ -65,6 +66,7 @@ import org.springframework.stereotype.Service
  * store公共
  * since: 2019-07-23
  */
+@Suppress("ALL")
 @Service
 class StoreCommonServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -85,8 +87,8 @@ class StoreCommonServiceImpl @Autowired constructor(
     private val storeReleaseDao: StoreReleaseDao,
     private val storeStatisticDao: StoreStatisticDao,
     private val storeStatisticTotalDao: StoreStatisticTotalDao,
-    private val storeDetailUrlConfig: StoreDetailUrlConfig,
-    private val storeRepoNameSpaceNameConfig: StoreRepoNameSpaceNameConfig
+    private val storeStatisticDailyDao: StoreStatisticDailyDao,
+    private val storeDetailUrlConfig: StoreDetailUrlConfig
 ) : StoreCommonService {
 
     private val logger = LoggerFactory.getLogger(StoreCommonServiceImpl::class.java)
@@ -207,18 +209,6 @@ class StoreCommonServiceImpl @Autowired constructor(
         return url
     }
 
-    override fun getStoreRepoNameSpaceName(storeType: StoreTypeEnum): String {
-        logger.info("getStoreRepoNameSpaceName storeType is :$storeType,")
-        val repoNameSpaceName = when (storeType) {
-            StoreTypeEnum.ATOM -> "${storeRepoNameSpaceNameConfig.pluginNameSpaceName}"
-            StoreTypeEnum.IDE_ATOM -> "${storeRepoNameSpaceNameConfig.idePluginNameSpaceName}"
-            StoreTypeEnum.SERVICE -> "${storeRepoNameSpaceNameConfig.serviceNameSpaceName}"
-            else -> ""
-        }
-        logger.info("getStoreDetailUrl repoNameSpaceName is :$repoNameSpaceName")
-        return repoNameSpaceName
-    }
-
     override fun deleteStoreInfo(storeCode: String, storeType: Byte): Boolean {
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -239,6 +229,7 @@ class StoreCommonServiceImpl @Autowired constructor(
             storeReleaseDao.deleteStoreReleaseInfo(context, storeCode, storeType)
             storeStatisticDao.deleteStoreStatistic(context, storeCode, storeType)
             storeStatisticTotalDao.deleteStoreStatisticTotal(context, storeCode, storeType)
+            storeStatisticDailyDao.deleteDailyStatisticData(context, storeCode, storeType)
         }
         return true
     }
