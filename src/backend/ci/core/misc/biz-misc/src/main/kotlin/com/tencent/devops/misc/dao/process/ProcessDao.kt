@@ -87,10 +87,43 @@ class ProcessDao {
 
     fun getPipelineIdListByProjectId(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        minId: Long,
+        limit: Long
     ): Result<out Record>? {
         with(TPipelineInfo.T_PIPELINE_INFO) {
-            return dslContext.select(PIPELINE_ID).from(this).where(PROJECT_ID.eq(projectId)).fetch()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(ID.ge(minId))
+            return dslContext.select(PIPELINE_ID).from(this)
+                .where(conditions)
+                .orderBy(ID.asc())
+                .limit(limit)
+                .fetch()
+        }
+    }
+
+    fun getMinPipelineInfoIdListByProjectId(
+        dslContext: DSLContext,
+        projectId: String
+    ): Long {
+        with(TPipelineInfo.T_PIPELINE_INFO) {
+            return dslContext.select(DSL.min(ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun getMaxPipelineInfoIdListByProjectId(
+        dslContext: DSLContext,
+        projectId: String
+    ): Long {
+        with(TPipelineInfo.T_PIPELINE_INFO) {
+            return dslContext.select(DSL.max(ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

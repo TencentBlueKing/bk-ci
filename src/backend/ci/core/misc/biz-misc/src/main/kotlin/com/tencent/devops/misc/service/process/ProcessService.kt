@@ -75,10 +75,16 @@ class ProcessService @Autowired constructor(
         return generateIdList(pipelineIdRecords)
     }
 
-    fun getPipelineIdListByProjectId(projectId: String): List<String>? {
+    fun getPipelineIdListByProjectId(
+        projectId: String,
+        minId: Long,
+        limit: Long
+    ): List<String>? {
         val pipelineIdRecords = processDao.getPipelineIdListByProjectId(
             dslContext = dslContext,
-            projectId = projectId
+            projectId = projectId,
+            minId = minId,
+            limit = limit
         )
         return generateIdList(pipelineIdRecords)
     }
@@ -89,10 +95,18 @@ class ProcessService @Autowired constructor(
         } else {
             val idList = mutableListOf<String>()
             records.forEach { record ->
-                idList.add(record.getValue(0, String::class.java))
+                idList.add(record.getValue(0) as String)
             }
             idList
         }
+    }
+
+    fun getMinPipelineInfoIdListByProjectId(projectId: String): Long {
+        return processDao.getMinPipelineInfoIdListByProjectId(dslContext, projectId)
+    }
+
+    fun getMaxPipelineInfoIdListByProjectId(projectId: String): Long {
+        return processDao.getMaxPipelineInfoIdListByProjectId(dslContext, projectId)
     }
 
     fun getMaxPipelineBuildNum(
