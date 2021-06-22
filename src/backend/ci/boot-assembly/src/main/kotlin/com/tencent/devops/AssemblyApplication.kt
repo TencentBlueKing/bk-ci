@@ -29,11 +29,28 @@ package com.tencent.devops
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
+import org.jooq.SQLDialect
+import org.jooq.impl.DefaultConfiguration
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
+import javax.sql.DataSource
 
 @MicroService
 @ComponentScan("com.tencent.devops")
-class AssemblyApplication
+class AssemblyApplication {
+
+    @Bean
+    fun defaultJooqConfiguration(
+        @Qualifier("dataSource")
+        dataSource: DataSource
+    ): DefaultConfiguration {
+        val configuration = DefaultConfiguration()
+        configuration.set(SQLDialect.MYSQL)
+        configuration.set(dataSource)
+        return configuration
+    }
+}
 
 fun main(args: Array<String>) {
     MicroServiceApplication.run(AssemblyApplication::class, args)
