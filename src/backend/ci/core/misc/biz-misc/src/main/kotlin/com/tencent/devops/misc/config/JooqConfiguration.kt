@@ -73,30 +73,14 @@ class JooqConfiguration {
             val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
             val packageName = declaringClass.getPackage().name
             val matchResult = regex.find(packageName)
-                ?: return defaultContext(configurationMap["defaultJooqConfiguration"]!!)
-            val configuration = configurationMap["${matchResult.groupValues[1]}JooqConfiguration"]
-                ?: throw NoSuchBeanDefinitionException("no ${matchResult.groupValues[1]}JooqConfiguration")
-            LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
-            return DSL.using(configuration)
+            if (matchResult != null) {
+                val configuration = configurationMap["${matchResult.groupValues[1]}JooqConfiguration"]
+                    ?: throw NoSuchBeanDefinitionException("no ${matchResult.groupValues[1]}JooqConfiguration")
+                LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
+                return DSL.using(configuration)
+            }
         }
-        return defaultContext(configurationMap["defaultJooqConfiguration"]!!)
-    }
-
-    private fun defaultContext(defaultConfiguration: DefaultConfiguration): DSLContext {
-        return DSL.using(defaultConfiguration)
-    }
-
-    @Bean
-    @Autowired(required = false)
-    fun defaultJooqConfiguration(
-        @Qualifier("dataSource")
-        @Autowired(required = false)
-        dataSource: DataSource?
-    ): DefaultConfiguration {
-        val configuration = DefaultConfiguration()
-        configuration.set(SQLDialect.MYSQL)
-        configuration.set(dataSource)
-        return configuration
+        return DSL.using(configurationMap["defaultJooqConfiguration"]!!)
     }
 
     @Bean
