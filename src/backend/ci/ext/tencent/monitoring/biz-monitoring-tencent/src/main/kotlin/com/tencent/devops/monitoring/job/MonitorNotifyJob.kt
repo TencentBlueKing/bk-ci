@@ -108,6 +108,30 @@ class MonitorNotifyJob @Autowired constructor(
     @Value("\${sla.url.observable.codecc:#{null}}")
     private var codeccObservableUrl: String? = null
 
+    @Value("\${sla.oteam.token:#{null}}")
+    private var oteamToken: String? = null
+
+    @Value("\${sla.oteam.techmap:#{null}}")
+    private var oteamTechmap: String? = null
+
+    @Value("\${sla.oteam.url:#{null}}")
+    private var oteamUrl: String? = null
+
+    @Value("\${sla.oteam.gateway.target:#{null}}")
+    private var oteamGatewayTarget: Int? = null
+
+    @Value("\${sla.oteam.scm.target:#{null}}")
+    private var oteamScmTarget: Int? = null
+
+    @Value("\${sla.oteam.atom.target:#{null}}")
+    private var oteamAtomTarget: Int? = null
+
+    @Value("\${sla.oteam.job.success.target:#{null}}")
+    private var oteamJobSuccessTarget: Int? = null
+
+    @Value("\${sla.oteam.job.time.target:#{null}}")
+    private var oteamJobTimeTarget: Int? = null
+
     /**
      * 每天发送日报
      */
@@ -191,6 +215,8 @@ class MonitorNotifyJob @Autowired constructor(
                 logger.error("commitCheck , get map error , errorMsg:${queryResult?.error}")
             }
 
+            oteamStatus(rowList[0].second, oteamScmTarget, startTime)
+
             return EmailModuleData("工蜂回写统计", rowList, getObservableUrl(startTime, endTime, Module.COMMIT_CHECK))
         } catch (e: Throwable) {
             logger.error("commitCheck", e)
@@ -245,39 +271,7 @@ class MonitorNotifyJob @Autowired constructor(
                 )
             }
 
-
-            val average = rowList.asSequence().map { it.second }.average()
-            val targetId = 19659 // TODO 给oteam发送sla数据
-            val yesterday = LocalDateTime.ofInstant(Instant.ofEpochMilli(startTime), ZoneId.systemDefault())
-            val timestamp = "${System.currentTimeMillis() / 1000}"
-            val token = "9ddf6f56-293d-416e-9ccd-aa1a37487b05" // TODO 给oteam发送sla数据
-            val techmapId = "10681" // TODO 给oteam发送sla数据
-            val techmapType = "oteam"
-            val signature = HashUtils.sha256(timestamp + techmapType + techmapId + token + timestamp)
-            OkhttpUtils.doPost(
-                url = "http://devtechmap.woa.com/api/measureReport", // TODO 给oteam发送sla数据
-                jsonParam = """
-                    {
-                      "method":"measureReport",
-                      "params": {
-                        "type":"daily",
-                        "year":${yesterday.year},
-                        "month":${yesterday.month},
-                        "day":${yesterday.dayOfMonth},
-                        "targetId":$targetId, 
-                        "value":$average
-                      },
-                      "jsonrpc":"2.0",
-                      "id":"$timestamp"
-                    }
-                """.trimIndent(),
-                headers = mapOf(
-                    "timestamp" to timestamp,
-                    "techmapType" to techmapType,
-                    "techmapId" to techmapId,
-                    "signature" to signature
-                )
-            )
+            oteamStatus(rowList.asSequence().map { it.second }.average(), oteamGatewayTarget, startTime)
 
             return EmailModuleData(
                 "网关统计",
@@ -291,6 +285,53 @@ class MonitorNotifyJob @Autowired constructor(
                 emptyList(),
                 getObservableUrl(startTime, endTime, Module.GATEWAY)
             )
+        }
+    }
+
+    /**
+     * 上报数据到oteam
+     */
+    @SuppressWarnings("MagicNumber", "TooGenericExceptionCaught")
+    private fun oteamStatus(
+        data: Double,
+        targetId: Int?,
+        startTime: Long
+    ) {
+        try {
+            val yesterday = LocalDateTime.ofInstant(Instant.ofEpochMilli(startTime), ZoneId.systemDefault())
+            val timestamp = "${System.currentTimeMillis() / 1000}"
+            val token = oteamToken
+            val techmapId = oteamTechmap
+            val techmapType = "oteam"
+            val signature = HashUtils.sha256(timestamp + techmapType + techmapId + token + timestamp)
+            val response = OkhttpUtils.doPost(
+                url = oteamUrl!!,
+                jsonParam = """
+                        {
+                          "method":"measureReport",
+                          "params": {
+                            "type":"daily",
+                            "year":${yesterday.year},
+                            "month":${yesterday.month.value},
+                            "day":${yesterday.dayOfMonth},
+                            "targetId":${targetId!!}, 
+                            "value":$data
+                          },
+                          "jsonrpc":"2.0",
+                          "id":"$timestamp"
+                        }
+                    """.trimIndent(),
+                headers = mapOf(
+                    "timestamp" to timestamp,
+                    "techmapType" to techmapType,
+                    "techmapId" to techmapId!!,
+                    "signature" to signature,
+                    "content-type" to "application/json;charset=UTF-8"
+                )
+            )
+            logger.info("oteam status , id:{} , resp:{}", timestamp, response.body()!!.string())
+        } catch (e: Exception) {
+            logger.error("error , ", e)
         }
     }
 
@@ -390,59 +431,77 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
+    private fun getInfluxValue(sql: String, defaultValue: Int): Int {
+        val queryResult = influxdbClient.select(sql)
+        return if (null != queryResult && !queryResult.hasError()) {
+            try {
+                queryResult.results[0].series[0].values[0][1].let { if (it is Number) it.toInt() else defaultValue }
+            } catch (e: Exception) {
+                defaultValue
+            }
+        } else {
+            defaultValue
+        }
+    }
+
     @SuppressWarnings("ComplexMethod", "NestedBlockDepth")
     fun atomMonitor(startTime: Long, endTime: Long): EmailModuleData {
         try {
-            val sql =
-                "SELECT sum(total_count),sum(success_count),sum(CODE_GIT_total_count),sum(CODE_GIT_success_count)" +
-                        ",sum(UploadArtifactory_total_count),sum(UploadArtifactory_success_count)," +
-                        "sum(linuxscript_total_count),sum(linuxscript_success_count) " +
-                        "FROM AtomMonitorData_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
-            val queryResult = influxdbClient.select(sql)
 
-            var totalCount = 1
-            var totalSuccess = 0
-            var gitCount = 1
-            var gitSuccess = 0
-            var artiCount = 1
-            var artiSuccess = 0
-            var shCount = 1
-            var shSuccess = 0
+            val atomTotalTemplateSql =
+                "select count(errorCode) FROM AtomMonitorData where errorCode != -1 AND atomCode = '%s' " +
+                        "AND time>${startTime}000000 AND time<${endTime}000000"
+            val atomFailedTemplateSql =
+                "select count(errorCode) FROM AtomMonitorData where errorCode != -1 AND errorCode!=0 " +
+                        "AND errorType != 'USER' AND atomCode = '%s' " +
+                        "AND time>${startTime}000000 AND time<${endTime}000000"
 
-            if (null != queryResult && !queryResult.hasError()) {
-                queryResult.results.forEach { result ->
-                    result.series?.forEach { serie ->
-                        totalCount = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
-                        totalSuccess = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
-                        gitCount = serie.values[0][3].let { if (it is Number) it.toInt() else 1 }
-                        gitSuccess = serie.values[0][4].let { if (it is Number) it.toInt() else 0 }
-                        artiCount = serie.values[0][5].let { if (it is Number) it.toInt() else 1 }
-                        artiSuccess = serie.values[0][6].let { if (it is Number) it.toInt() else 0 }
-                        shCount = serie.values[0][7].let { if (it is Number) it.toInt() else 1 }
-                        shSuccess = serie.values[0][8].let { if (it is Number) it.toInt() else 0 }
-                    }
-                }
-            } else {
-                logger.error("atomMonitor , get map error , errorMsg:${queryResult?.error}")
-            }
+            val totalCount = getInfluxValue(
+                "select count(errorCode) FROM AtomMonitorData where errorCode != -1 " +
+                        "AND time>${startTime}000000 AND time<${endTime}000000",
+                1
+            )
+            val totalFailed = getInfluxValue(
+                "select count(errorCode) FROM AtomMonitorData where errorCode != -1 AND errorCode!=0 " +
+                        "AND time>${startTime}000000 AND time<${endTime}000000" +
+                        "AND errorType != 'USER'",
+                0
+            )
+            val gitCount = getInfluxValue(String.format(atomTotalTemplateSql, "CODE_GIT"), 1)
+            val gitFailed = getInfluxValue(String.format(atomFailedTemplateSql, "CODE_GIT"), 0)
+            val artiCount = getInfluxValue(String.format(atomTotalTemplateSql, "UploadArtifactory"), 1)
+            val artiFailed = getInfluxValue(String.format(atomFailedTemplateSql, "CODE_GIT"), 0)
+            val shCount = getInfluxValue(String.format(atomTotalTemplateSql, "linuxScript"), 1)
+            val shFailed = getInfluxValue(String.format(atomFailedTemplateSql, "CODE_GIT"), 0)
+
 
             val rowList = mutableListOf(
-                Triple("所有插件", totalSuccess * 100.0 / totalCount, getDetailUrl(startTime, endTime, Module.ATOM)),
+                Triple(
+                    "所有插件",
+                    (totalCount - totalFailed) * 100.0 / totalCount,
+                    getDetailUrl(startTime, endTime, Module.ATOM)
+                ),
                 Triple(
                     "Git插件",
-                    gitSuccess * 100.0 / gitCount,
+                    (gitCount - gitFailed) * 100.0 / gitCount,
                     getDetailUrl(startTime, endTime, Module.ATOM, "CODE_GIT")
                 ),
                 Triple(
                     "artifactory插件",
-                    artiSuccess * 100.0 / artiCount,
+                    (artiCount - artiFailed) * 100.0 / artiCount,
                     getDetailUrl(startTime, endTime, Module.ATOM, "UploadArtifactory")
                 ),
                 Triple(
                     "linuxScript插件",
-                    shSuccess * 100.0 / shCount,
+                    (shCount - shFailed) * 100.0 / shCount,
                     getDetailUrl(startTime, endTime, Module.ATOM, "linuxScript")
                 )
+            )
+
+            oteamStatus(
+                100 - (artiFailed + gitFailed + shFailed) * 100.0 / (artiCount + gitCount + shCount),
+                oteamAtomTarget,
+                startTime
             )
 
             return EmailModuleData(
@@ -600,3 +659,4 @@ class MonitorNotifyJob @Autowired constructor(
         private val logger = LoggerFactory.getLogger(MonitorNotifyJob::class.java)
     }
 }
+
