@@ -27,7 +27,7 @@
 
 package com.tencent.devops.misc
 
-import com.mysql.jdbc.Driver
+import com.mysql.cj.jdbc.Driver
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import com.zaxxer.hikari.HikariDataSource
