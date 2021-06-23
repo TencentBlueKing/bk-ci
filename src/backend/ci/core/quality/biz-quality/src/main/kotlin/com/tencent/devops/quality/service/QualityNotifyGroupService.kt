@@ -38,7 +38,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.quality.constant.QualityMessageCode
-import com.tencent.devops.quality.dao.GroupDao
+import com.tencent.devops.quality.dao.QualityNotifyGroupDao
 import com.tencent.devops.quality.pojo.Group
 import com.tencent.devops.quality.pojo.GroupCreate
 import com.tencent.devops.quality.pojo.GroupPermission
@@ -54,10 +54,10 @@ import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
 @Service
-class GroupService @Autowired constructor(
+class QualityNotifyGroupService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
-    private val groupDao: GroupDao,
+    private val qualityNotifyGroupDao: QualityNotifyGroupDao,
     private val bkAuthProjectApi: AuthProjectApi,
     private val serviceCode: QualityAuthServiceCode,
     private val qualityPermissionService: QualityPermissionService
@@ -73,9 +73,9 @@ class GroupService @Autowired constructor(
             authPermissions = setOf(AuthPermission.EDIT, AuthPermission.DELETE)
         )
 
-        val count = groupDao.count(dslContext, projectId)
+        val count = qualityNotifyGroupDao.count(dslContext, projectId)
         val finalLimit = if (limit == -1) count.toInt() else limit
-        val list = groupDao.list(dslContext, projectId, offset, finalLimit).map {
+        val list = qualityNotifyGroupDao.list(dslContext, projectId, offset, finalLimit).map {
             val canEdit = groupPermissionListMap[AuthPermission.EDIT]!!.contains(it.id)
             val canDelete = groupPermissionListMap[AuthPermission.DELETE]!!.contains(it.id)
             GroupSummaryWithPermission(
@@ -108,7 +108,7 @@ class GroupService @Autowired constructor(
     }
 
     fun create(userId: String, projectId: String, group: GroupCreate) {
-        if (groupDao.has(dslContext, projectId, group.name)) {
+        if (qualityNotifyGroupDao.has(dslContext, projectId, group.name)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = QualityMessageCode.USER_GROUP_IS_EXISTS,
@@ -121,7 +121,7 @@ class GroupService @Autowired constructor(
         val outerUsersCount = outerUsers.filter { it.isNotBlank() && it.isNotEmpty() }.size
         val innerUsersCount = group.innerUsers.size
 
-        val groupId = groupDao.create(
+        val groupId = qualityNotifyGroupDao.create(
             dslContext = dslContext,
             projectId = projectId,
             name = group.name,
@@ -142,7 +142,7 @@ class GroupService @Autowired constructor(
 
     fun serviceGet(groupHashId: String): Group {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
-        val groupRecord = groupDao.get(dslContext, groupId)
+        val groupRecord = qualityNotifyGroupDao.get(dslContext, groupId)
         return Group(
             groupHashId = groupHashId,
             name = groupRecord.name,
@@ -158,14 +158,14 @@ class GroupService @Autowired constructor(
 
     fun serviceGetUsers(groupHashId: String): GroupUsers {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
-        val groupRecord = groupDao.get(dslContext, groupId)
+        val groupRecord = qualityNotifyGroupDao.get(dslContext, groupId)
         val innerUsers = objectMapper.readValue<Set<String>>(groupRecord.innerUsers)
         val outerUsers = regex.split(groupRecord.outerUsers).toSet()
         return GroupUsers(innerUsers, outerUsers)
     }
 
     fun serviceGetUsers(groupIdList: Collection<Long>): GroupUsers {
-        val result = groupDao.list(dslContext, groupIdList)
+        val result = qualityNotifyGroupDao.list(dslContext, groupIdList)
         val innerUsersSet = mutableSetOf<String>()
         val outerUsersSet = mutableSetOf<String>()
 
@@ -187,7 +187,7 @@ class GroupService @Autowired constructor(
             authPermission = AuthPermission.EDIT,
             message = "用户没有用户组的编辑权限"
         )
-        if (groupDao.getOrNull(dslContext, groupId) == null) {
+        if (qualityNotifyGroupDao.getOrNull(dslContext, groupId) == null) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = QualityMessageCode.USER_GROUP_NOT_EXISTS,
@@ -195,7 +195,7 @@ class GroupService @Autowired constructor(
                 params = arrayOf(groupHashId)
             )
         }
-        if (groupDao.has(dslContext, projectId, group.name, groupId)) {
+        if (qualityNotifyGroupDao.has(dslContext, projectId, group.name, groupId)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = QualityMessageCode.USER_GROUP_IS_EXISTS,
@@ -208,7 +208,7 @@ class GroupService @Autowired constructor(
         val outerUsersCount = outerUsers.filter { it.isNotBlank() && it.isNotEmpty() }.size
         val innerUsersCount = group.innerUsers.size
 
-        groupDao.update(
+        qualityNotifyGroupDao.update(
             dslContext = dslContext,
             id = groupId,
             name = group.name,
@@ -233,10 +233,10 @@ class GroupService @Autowired constructor(
         )
 
         qualityPermissionService.deleteGroupResource(projectId = projectId, groupId = groupId)
-        groupDao.delete(dslContext, groupId)
+        qualityNotifyGroupDao.delete(dslContext, groupId)
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(GroupService::class.java)
+        private val logger = LoggerFactory.getLogger(QualityNotifyGroupService::class.java)
     }
 }

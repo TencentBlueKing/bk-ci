@@ -47,7 +47,7 @@ class QualityConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
-    fun sampleProjectPermissionService(
+    fun sampleQualityPermissionService(
         authPermissionApi: AuthPermissionApi,
         authResourceApi: AuthResourceApi,
         qualityAuthServiceCode: QualityAuthServiceCode
