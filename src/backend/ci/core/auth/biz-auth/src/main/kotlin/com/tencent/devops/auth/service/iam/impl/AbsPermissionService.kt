@@ -103,7 +103,7 @@ open class AbsPermissionService @Autowired constructor(
             val actionDto = ActionDTO()
             actionDto.id = action
             val expression = (policyService.getPolicyByAction(userId, actionDto, null) ?: return emptyList())
-            logger.info("[iam V3] getUserResourceByPermission expression:$expression")
+            logger.info("[iam V3] getUserResourceByPermission action: $actionDto, expression:$expression")
 
             if (expression.operator == null && expression.content == null) {
                 return emptyList()

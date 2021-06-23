@@ -466,6 +466,18 @@ class AuthUtilsTest {
         print(AuthUtils.getResourceInstance(expression1, "jttest", resourceType))
     }
 
+    @Test
+    fun getResourceInstanceTest10() {
+        val expression = ExpressionDTO()
+        expression.operator = ExpressionOperationEnum.EQUAL
+        expression.value = "testProject"
+        expression.field = "project.id"
+        val resourceType = AuthResourceType.PIPELINE_DEFAULT.value
+        val mockSet = mutableSetOf<String>()
+        mockSet.add("*")
+        Assert.assertEquals(mockSet, AuthUtils.getResourceInstance(expression, "testProject", resourceType))
+    }
+
     private fun print(projectList: List<String>) {
         println(projectList)
         projectList.map {

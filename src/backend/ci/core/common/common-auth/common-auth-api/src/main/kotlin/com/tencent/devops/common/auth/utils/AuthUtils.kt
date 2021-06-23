@@ -242,6 +242,12 @@ object AuthUtils {
         val instanceList = mutableSetOf<String>()
         val value = expression.value
 
+        // 如果权限为整个项目, 直接返回
+        if (expression.value == projectId && expression.operator == ExpressionOperationEnum.EQUAL) {
+            instanceList.add("*")
+            return instanceList
+        }
+
         if (!checkField(expression.field, resourceType)) {
             return emptySet()
         }
