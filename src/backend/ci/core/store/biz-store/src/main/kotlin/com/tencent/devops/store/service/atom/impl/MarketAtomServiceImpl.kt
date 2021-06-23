@@ -1035,6 +1035,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
                         sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
                     }
+                    val multipleOptions = paramValueMap["options"]
+                    if (null != multipleOptions && !(multipleOptions as List<AtomParamOption>).isNullOrEmpty()) {
+                        sb.append("      # ")
+                        multipleOptions.forEach { option ->
+                            sb.append("${option.id}[${option.name}] ||")
+                        }
+                    }
+                    sb.removeSuffix("||")
                     sb.append("\r\n")
                     sb.append("      - string\r\n")
                     sb.append("      - string\r\n")
@@ -1098,4 +1106,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         repositoryHashId: String,
         tokenType: TokenTypeEnum
     ): Result<Boolean>
+
+    data class AtomParamOption(val id: String, val name: String)
 }
