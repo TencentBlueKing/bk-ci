@@ -28,6 +28,7 @@
 package com.tencent.devops.misc.cron.environment
 
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.DEFAULT_SYTEM_USER
 import com.tencent.devops.misc.dao.environment.EnvironmentNodeDao
@@ -38,6 +39,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("ALL", "UNUSED")
 class UpdateAgentStatus @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: EnvironmentNodeDao,
@@ -47,22 +49,18 @@ class UpdateAgentStatus @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(UpdateAgentStatus::class.java)
         private const val LOCK_KEY = "env_cron_updateAgentStatus"
-        private const val LOCK_VALUE = "env_cron_updateAgentStatus"
-        private const val EXPIRED_IN_SECOND = 30L
+        private const val EXPIRED_IN_SECOND = 600L
     }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 15000)
     fun runUpdateAgentStatus() {
         logger.info("runUpdateAgentStatus")
-        val lockValue = redisOperation.get(LOCK_KEY)
-        if (lockValue != null) {
-            logger.info("get lock failed, skip")
-            return
-        } else {
-            redisOperation.set(key = LOCK_KEY, value = LOCK_VALUE, expiredInSecond = EXPIRED_IN_SECOND)
-        }
-
+        val lock = RedisLock(redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = EXPIRED_IN_SECOND)
         try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return
+            }
 
             val allServerNodes = nodeDao.listAllServerNodes(dslContext)
             if (allServerNodes.isEmpty()) {
