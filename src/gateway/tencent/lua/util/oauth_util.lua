@@ -95,7 +95,6 @@ function _M:get_ticket(bk_ticket)
         user_cache:set(bk_ticket, responseBody, 180)
         return result.data
     else
-        ngx.log(ngx.STDERR, "has user info:", user_cache_value)
         return json.decode(user_cache_value).data
     end
 
