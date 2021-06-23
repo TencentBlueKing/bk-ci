@@ -58,7 +58,6 @@ class V3CertPermissionService @Autowired constructor(
 
     override fun supplierForPermission(projectId: String): () -> MutableList<String> {
         return { mutableListOf() }
-
     }
 
     override fun validatePermission(
