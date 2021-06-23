@@ -103,6 +103,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.StringUtils
+import java.lang.StringBuilder
 import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.concurrent.Callable
@@ -1008,15 +1009,16 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val desc = paramValueMap["desc"]
                 val description = if (label?.toString().isNullOrBlank()) {
                     if (text?.toString().isNullOrBlank()) {
-                        desc
+                        desc.toString()
                     } else {
-                        text
+                        text.toString()
                     }
                 } else {
-                    label
+                    label.toString()
                 }
                 val type = paramValueMap["type"]
-                val required = paramValueMap["required"]
+                val required = null != paramValueMap["required"] &&
+                    "true".equals(paramValueMap["required"].toString(), true)
                 val defaultValue = paramValueMap["default"]
                 val multipleMap = paramValueMap["optionsConf"]
                 val multiple = if (null != multipleMap && null != (multipleMap as Map<String, String>)["multiple"]) {
@@ -1029,54 +1031,32 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val valueName = MessageCodeUtil.getCodeLanMessage(VALUE)
                 if ((type == "selector" && multiple) ||
                     type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
-                    sb.append("      # $description")
-                    if (null != required && "true".equals(required.toString(), true)) {
-                        sb.append(", $requiredName")
-                    }
-                    if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
-                        sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
-                    }
-                    val options = paramValueMap["options"]
-                    if (options != null) {
-                        try {
-                            options as List<Map<String, String>>
-                            sb.append(", $valueName:")
-                            options.forEachIndexed { index, map ->
-                                if (index == options.size - 1) sb.append(" ${map["id"]}[${map["name"]}]")
-                                else sb.append(" ${map["id"]}[${map["name"]}] |")
-                            }
-                            sb.removeSuffix("|")
-                        } catch (e: Exception) {
-                            println("load atom input[$paramKey] with error: ${e.message}")
-                        }
-                    }
-                    sb.append("\r\n")
+                    addParamComment(
+                        builder = sb,
+                        description = description,
+                        paramKey = paramKey,
+                        required = required,
+                        valueName = valueName,
+                        paramValueMap = paramValueMap,
+                        requiredName = requiredName,
+                        defaultValue = defaultValue,
+                        defaultName = defaultName
+                    )
                     sb.append("      $paramKey: ")
                     sb.append("        - string\r\n")
                     sb.append("        - string\r\n")
                 } else {
-                    sb.append("    # ${description.toString().replace("\n", "")}")
-                    if (null != required && "true".equals(required.toString(), true)) {
-                        sb.append(", $requiredName")
-                    }
-                    if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
-                        sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
-                    }
-                    val options = paramValueMap["options"]
-                    if (options != null) {
-                        try {
-                            options as List<Map<String, String>>
-                            sb.append(", $valueName:")
-                            options.forEachIndexed { index, map ->
-                                if (index == options.size - 1) sb.append(" ${map["id"]}[${map["name"]}]")
-                                else sb.append(" ${map["id"]}[${map["name"]}] |")
-                            }
-                            sb.removeSuffix("|")
-                        } catch (e: Exception) {
-                            println("load atom input[$paramKey] with error: ${e.message}")
-                        }
-                    }
-                    sb.append("\r\n")
+                    addParamComment(
+                        builder = sb,
+                        description = description,
+                        paramKey = paramKey,
+                        required = required,
+                        valueName = valueName,
+                        paramValueMap = paramValueMap,
+                        requiredName = requiredName,
+                        defaultValue = defaultValue,
+                        defaultName = defaultName
+                    )
                     sb.append("    $paramKey: ")
                     if (type == "atom-checkbox") {
                         sb.append("boolean")
@@ -1129,4 +1109,39 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         repositoryHashId: String,
         tokenType: TokenTypeEnum
     ): Result<Boolean>
+
+    private fun addParamComment(
+        builder: StringBuffer,
+        description: String,
+        paramKey: String,
+        required: Boolean,
+        valueName: String,
+        paramValueMap: Map<String, Any>,
+        requiredName: Any?,
+        defaultValue: Any?,
+        defaultName: Any?
+    ) {
+        builder.append("    # ${description.replace("\n", "")}")
+        if (required) {
+            builder.append(", $requiredName")
+        }
+        if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
+            builder.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
+        }
+        val options = paramValueMap["options"]
+        if (options != null) {
+            try {
+                options as List<Map<String, String>>
+                builder.append(", $valueName:")
+                options.forEachIndexed { index, map ->
+                    if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
+                    else builder.append(" ${map["id"]}[${map["name"]}] |")
+                }
+                builder.removeSuffix("|")
+            } catch (e: Exception) {
+                println("load atom input[$paramKey] with error: ${e.message}")
+            }
+        }
+        builder.append("\r\n")
+    }
 }
