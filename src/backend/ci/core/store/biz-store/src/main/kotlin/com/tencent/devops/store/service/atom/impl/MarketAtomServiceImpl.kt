@@ -33,6 +33,7 @@ import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT
 import com.tencent.devops.common.api.constant.REQUIRED
+import com.tencent.devops.common.api.constant.VALUE
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -1025,10 +1026,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 val requiredName = MessageCodeUtil.getCodeLanMessage(REQUIRED)
                 val defaultName = MessageCodeUtil.getCodeLanMessage(DEFAULT)
+                val valueName = MessageCodeUtil.getCodeLanMessage(VALUE)
                 if ((type == "selector" && multiple) ||
                     type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
-                    sb.append("      $paramKey: ")
-                    sb.append("\t\t# $description")
+                    sb.append("      # $description")
                     if (null != required && "true".equals(required.toString(), true)) {
                         sb.append(", $requiredName")
                     }
@@ -1037,28 +1038,38 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     }
                     val multipleOptions = paramValueMap["options"]
                     if (null != multipleOptions && !(multipleOptions as List<AtomParamOption>).isNullOrEmpty()) {
-                        sb.append("      # ")
+                        sb.append(", ")
                         multipleOptions.forEach { option ->
                             sb.append("${option.id}[${option.name}] ||")
                         }
                     }
                     sb.removeSuffix("||")
                     sb.append("\r\n")
-                    sb.append("      - string\r\n")
-                    sb.append("      - string\r\n")
+                    sb.append("      $paramKey: ")
+                    sb.append("        - string\r\n")
+                    sb.append("        - string\r\n")
                 } else {
-                    sb.append("    $paramKey: ")
-                    if (type == "atom-checkbox") {
-                        sb.append("boolean")
-                    } else {
-                        sb.append("string")
-                    }
-                    sb.append("\t\t# ${description.toString().replace("\n", "")}")
+                    sb.append("    # ${description.toString().replace("\n", "")}")
                     if (null != required && "true".equals(required.toString(), true)) {
                         sb.append(", $requiredName")
                     }
                     if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
                         sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
+                    }
+                    val multipleOptions = paramValueMap["options"]
+                    if (null != multipleOptions && !(multipleOptions as List<AtomParamOption>).isNullOrEmpty()) {
+                        sb.append(", $valueName: ")
+                        multipleOptions.forEach { option ->
+                            sb.append("${option.id}[${option.name}] ||")
+                        }
+                    }
+                    sb.removeSuffix("||")
+                    sb.append("\r\n")
+                    sb.append("    $paramKey: ")
+                    if (type == "atom-checkbox") {
+                        sb.append("boolean")
+                    } else {
+                        sb.append("string")
                     }
                     sb.append("\r\n")
                 }
