@@ -33,7 +33,6 @@ import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecor
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Record1
-import org.jooq.Record5
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -345,10 +344,9 @@ class ExperiencePublicDao {
         }
     }
 
-    fun listAllUnique(dslContext: DSLContext): Result<Record5<Long, Long, String, String, String>> {
+    fun listAllUnique(dslContext: DSLContext): Result<TExperiencePublicRecord> {
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
-            return dslContext.select(ID, RECORD_ID, PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM)
-                .from(this)
+            return dslContext.selectFrom(this)
                 .where(END_DATE.gt(LocalDateTime.now()))
                 .and(ONLINE.eq(true))
                 .orderBy(UPDATE_TIME.desc())
