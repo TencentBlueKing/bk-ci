@@ -39,9 +39,9 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 
 @Suppress("ALL")
 abstract class AbsQualityPermissionServiceImpl constructor(
-    val authPermissionApi: AuthPermissionApi,
-    val authResourceApi: AuthResourceApi,
-    val qualityAuthServiceCode: QualityAuthServiceCode
+    open val authPermissionApi: AuthPermissionApi,
+    open val authResourceApi: AuthResourceApi,
+    open val qualityAuthServiceCode: QualityAuthServiceCode
 ) : QualityPermissionService {
 
     override fun validateGroupPermission(

@@ -34,9 +34,9 @@ import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 
 @Suppress("ALL")
 class V3QualityPermissionServiceImpl constructor(
-    val authPermissionApi: AuthPermissionApi,
-    val authResourceApi: AuthResourceApi,
-    val qualityAuthServiceCode: QualityAuthServiceCode
+    override val authPermissionApi: AuthPermissionApi,
+    override val authResourceApi: AuthResourceApi,
+    override val qualityAuthServiceCode: QualityAuthServiceCode
 ) : AbsQualityPermissionServiceImpl(authPermissionApi, authResourceApi, qualityAuthServiceCode) {
     override fun validateGroupPermission(
         userId: String,

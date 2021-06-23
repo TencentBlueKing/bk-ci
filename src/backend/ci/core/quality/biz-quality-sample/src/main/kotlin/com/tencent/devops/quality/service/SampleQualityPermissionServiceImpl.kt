@@ -37,9 +37,9 @@ import org.jooq.DSLContext
 
 @Suppress("ALL")
 class SampleQualityPermissionServiceImpl constructor(
-    val authPermissionApi: AuthPermissionApi,
-    val authResourceApi: AuthResourceApi,
-    val qualityAuthServiceCode: QualityAuthServiceCode,
+    override val authPermissionApi: AuthPermissionApi,
+    override val authResourceApi: AuthResourceApi,
+    override val qualityAuthServiceCode: QualityAuthServiceCode,
     val qualityRuleDao: QualityRuleDao,
     val groupDao: QualityNotifyGroupDao,
     val dslContext: DSLContext
