@@ -1037,14 +1037,20 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
                         sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
                     }
-                    val multipleOptions = paramValueMap["options"]
-                    if (null != multipleOptions && !(multipleOptions as List<AtomParamOption>).isNullOrEmpty()) {
-                        sb.append(", ")
-                        multipleOptions.forEach { option ->
-                            sb.append("${option.id}[${option.name}] ||")
+                    val options = paramValueMap["options"]
+                    if (options != null) {
+                        try {
+                            options as List<Map<String, String>>
+                            sb.append(", $valueName:")
+                            options.forEachIndexed { index, map ->
+                                if (index == options.size - 1) sb.append(" ${map["id"]}[${map["name"]}]")
+                                else sb.append(" ${map["id"]}[${map["name"]}] |")
+                            }
+                            sb.removeSuffix("|")
+                        } catch (e: Exception) {
+                            println("load atom input[$paramKey] with error: ${e.message}")
                         }
                     }
-                    sb.removeSuffix("||")
                     sb.append("\r\n")
                     sb.append("      $paramKey: ")
                     sb.append("        - string\r\n")
@@ -1057,14 +1063,20 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
                         sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
                     }
-                    val multipleOptions = paramValueMap["options"]
-                    if (null != multipleOptions && !(multipleOptions as List<AtomParamOption>).isNullOrEmpty()) {
-                        sb.append(", $valueName: ")
-                        multipleOptions.forEach { option ->
-                            sb.append("${option.id}[${option.name}] ||")
+                    val options = paramValueMap["options"]
+                    if (options != null) {
+                        try {
+                            options as List<Map<String, String>>
+                            sb.append(", $valueName:")
+                            options.forEachIndexed { index, map ->
+                                if (index == options.size - 1) sb.append(" ${map["id"]}[${map["name"]}]")
+                                else sb.append(" ${map["id"]}[${map["name"]}] |")
+                            }
+                            sb.removeSuffix("|")
+                        } catch (e: Exception) {
+                            println("load atom input[$paramKey] with error: ${e.message}")
                         }
                     }
-                    sb.removeSuffix("||")
                     sb.append("\r\n")
                     sb.append("    $paramKey: ")
                     if (type == "atom-checkbox") {
