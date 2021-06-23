@@ -91,13 +91,13 @@ class V3CertPermissionService @Autowired constructor(
             return true
         }
         return authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = ticketAuthServiceCode,
-                resourceType = AuthResourceType.TICKET_CERT,
-                projectCode = projectId,
-                resourceCode = projectId,
-                permission = AuthPermission.CREATE,
-                relationResourceType = AuthResourceType.PROJECT
+            user = userId,
+            serviceCode = ticketAuthServiceCode,
+            resourceType = AuthResourceType.TICKET_CERT,
+            projectCode = projectId,
+            resourceCode = projectId,
+            permission = AuthPermission.CREATE,
+            relationResourceType = AuthResourceType.PROJECT
         )
     }
 
