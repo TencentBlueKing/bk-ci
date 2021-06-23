@@ -250,7 +250,7 @@ class GitCIEventSaveService @Autowired constructor(
                         buildId = null,
                         projectId = "git_$gitProjectId",
                         userId = userId,
-                        pushType = WebSocketType.AMD,
+                        pushType = WebSocketType.NOTIFY,
                         redisOperation = redisOperation,
                         objectMapper = objectMapper,
                         page = "",
@@ -260,7 +260,7 @@ class GitCIEventSaveService @Autowired constructor(
                             dealUrl = null,
                             code = 200,
                             message = "",
-                            webSocketType = WebSocketType.changWebType(WebSocketType.AMD),
+                            webSocketType = WebSocketType.changWebType(WebSocketType.NOTIFY),
                             page = ""
                         )
                     )
