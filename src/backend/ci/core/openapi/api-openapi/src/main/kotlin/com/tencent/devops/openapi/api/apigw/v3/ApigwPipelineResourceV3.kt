@@ -308,7 +308,7 @@ interface ApigwPipelineResourceV3 {
 
     @ApiOperation("更新流水线设置")
     @POST
-    @Path("/{projectId}/{pipelineId}/setting_update")
+    @Path("/{pipelineId}/setting_update")
     fun saveSetting(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
