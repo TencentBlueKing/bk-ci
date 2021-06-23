@@ -10,7 +10,6 @@ import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.scm.api.ServiceGitCiResource
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
@@ -41,10 +40,16 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         resourceType: String?
     ): Boolean {
         // review管理员校验
-        if (reviewManagerCheck(userId, projectCode, action, resourceType ?: "")) {
-            logger.info("$projectCode $userId $action $resourceType is review manager")
-            return true
+        try {
+            if (reviewManagerCheck(userId, projectCode, action, resourceType ?: "")) {
+                logger.info("$projectCode $userId $action $resourceType is review manager")
+                return true
+            }
+        } catch (e: Exception) {
+            // 管理员报错不影响主流程, 有种场景gitCI会在项目未创建得时候调权限校验,通过projectId匹配组织会报空指针
+            logger.warn("reviewManager fail $e")
         }
+
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
         // 操作类action需要校验用户oauth, 查看类的无需oauth校验
         if (!checkListOrViewAction(action)) {
