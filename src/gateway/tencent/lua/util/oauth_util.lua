@@ -262,7 +262,6 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
 end
 
 function _M:verify_token(access_token)
-    local requestBody = {access_token = access_token}
     --- 初始化HTTP连接
     local httpc = http.new()
     --- 开始连接
