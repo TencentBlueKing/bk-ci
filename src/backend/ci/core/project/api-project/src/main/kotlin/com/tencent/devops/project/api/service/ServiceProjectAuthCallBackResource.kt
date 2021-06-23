@@ -44,7 +44,7 @@ import javax.ws.rs.core.MediaType
 @Path("/open/project/callback")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceProjectAuthResource {
+interface ServiceProjectAuthCallBackResource {
     @POST
     @Path("/")
     @ApiOperation("iam项目回调接口")

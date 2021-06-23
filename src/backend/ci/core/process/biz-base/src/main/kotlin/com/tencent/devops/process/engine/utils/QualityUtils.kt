@@ -164,6 +164,7 @@ object QualityUtils {
         task: PipelineBuildTask,
         interceptTask: String,
         checkResult: RuleCheckResult,
+        runVariables: Map<String, String>,
         buildLogPrinter: BuildLogPrinter,
         pipelineBuildDetailService: PipelineBuildDetailService,
         pipelineBuildQualityService: PipelineBuildQualityService
@@ -248,7 +249,8 @@ object QualityUtils {
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    taskId = interceptTask
+                    taskId = interceptTask,
+                    variablesParam = runVariables
                 )
                 buildLogPrinter.addLine(
                     buildId = buildId,

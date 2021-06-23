@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.BuildTask
 
@@ -66,5 +67,9 @@ object TaskUtil {
 
     fun removeTaskId() {
         taskThreadLocal.remove()
+    }
+
+    fun isVmBuildEnv(containerType: String? = null): Boolean {
+        return containerType != NormalContainer.classType
     }
 }

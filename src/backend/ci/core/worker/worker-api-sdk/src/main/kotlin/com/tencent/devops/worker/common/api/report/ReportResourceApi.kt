@@ -36,6 +36,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -57,7 +58,11 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             .addFormDataPart("file", file.name, fileBody)
             .build()
 
-        val request = buildPost(url, requestBody, useFileGateway = true)
+        val request = buildPost(
+            path = url,
+            requestBody = requestBody,
+            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+        )
 
         val response = request(request, "上传自定义报告失败")
 
