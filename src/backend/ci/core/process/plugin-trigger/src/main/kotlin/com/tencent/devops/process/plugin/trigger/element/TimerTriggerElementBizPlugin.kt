@@ -64,6 +64,7 @@ class TimerTriggerElementBizPlugin constructor(
         container: Container
     ) {
         val crontabExpressions = mutableSetOf<String>()
+        val params = (container as TriggerContainer).params.associate { it.id to it.defaultValue.toString() }
         logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.isElementEnable()}")
         if (element.isElementEnable()) {
 
@@ -75,10 +76,7 @@ class TimerTriggerElementBizPlugin constructor(
                 )
             }
             eConvertExpressions.forEach { eCron ->
-                val cron = EnvUtils.parseEnv(
-                    command = eCron,
-                    data = (container as TriggerContainer).params.associate { it.id to it.defaultValue.toString() }
-                )
+                val cron = EnvUtils.parseEnv(command = eCron, data = params)
                 if (!CronExpression.isValidExpression(cron)) {
                     throw ErrorCodeException(
                         defaultMessage = "定时触发器的定时参数[$cron]不合法",
@@ -93,8 +91,8 @@ class TimerTriggerElementBizPlugin constructor(
                         params = arrayOf(cron)
                     )
                 }
+                crontabExpressions.add(cron)
             }
-            crontabExpressions.addAll(eConvertExpressions)
         }
 
         if (crontabExpressions.isNotEmpty()) {
