@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.CheckImageInitPipelineReq
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.image.api.ServiceImageResource
@@ -82,6 +83,7 @@ import com.tencent.devops.store.pojo.image.request.ImageFeatureCreateRequest
 import com.tencent.devops.store.pojo.image.request.ImageStatusInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
+import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
@@ -156,8 +158,11 @@ abstract class ImageReleaseService {
 
     private val logger = LoggerFactory.getLogger(ImageReleaseService::class.java)
 
-    @Value("\${store.imageApproveSwitch}")
+    @Value("\${store.imageApproveSwitch:close}")
     protected lateinit var imageApproveSwitch: String
+
+    @Value("\${store.imageAgentTypes:DOCKER}")
+    protected lateinit var imageAgentTypes: String
 
     fun addMarketImage(
         accessToken: String,
@@ -1157,5 +1162,19 @@ abstract class ImageReleaseService {
             image.imageCode,
             JsonUtil.to(image.agentTypeScope, object : TypeReference<List<ImageAgentTypeEnum>>() {})
         )
+    }
+
+    fun getImageAgentTypes(userId: String): List<ImageAgentTypeInfo> {
+        val types = imageAgentTypes.split(",")
+        val imageAgentTypes = mutableListOf<ImageAgentTypeInfo>()
+        types.forEach { type ->
+            val buildType = BuildType.valueOf(type)
+            val i18nTypeName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_BUILD_TYPE_PREFIX}${buildType.name}",
+                defaultMessage = buildType.value
+            )
+            imageAgentTypes.add(ImageAgentTypeInfo(buildType.name, i18nTypeName))
+        }
+        return imageAgentTypes
     }
 }
