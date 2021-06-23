@@ -31,8 +31,11 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
+import com.tencent.devops.common.webhook.service.code.filter.UrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
+import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
@@ -43,7 +46,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @CodeWebhookHandler
-class TGitTagPushTriggerHandler : GitHookTriggerHandler<GitTagPushEvent> {
+class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
 
     override fun eventClass(): Class<GitTagPushEvent> {
         return GitTagPushEvent::class.java
@@ -77,16 +80,6 @@ class TGitTagPushTriggerHandler : GitHookTriggerHandler<GitTagPushEvent> {
         return event.commits[0].message
     }
 
-    override fun getEventFilters(
-        event: GitTagPushEvent,
-        projectId: String,
-        pipelineId: String,
-        repository: Repository,
-        webHookParams: WebHookParams
-    ): List<WebhookFilter> {
-        return emptyList()
-    }
-
     override fun retrieveParams(
         event: GitTagPushEvent,
         projectId: String?,
@@ -100,5 +93,34 @@ class TGitTagPushTriggerHandler : GitHookTriggerHandler<GitTagPushEvent> {
         startParams[BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM] = event.create_from ?: ""
         startParams.putAll(WebhookUtils.genCommitsParam(commits = event.commits))
         return startParams
+    }
+
+    override fun getWebhookFilters(
+        event: GitTagPushEvent,
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: WebHookParams
+    ): List<WebhookFilter> {
+        with(webHookParams) {
+            val urlFilter = UrlFilter(
+                pipelineId = pipelineId,
+                triggerOnUrl = getUrl(event),
+                repositoryUrl = repository.url,
+                includeHost = includeHost
+            )
+            val eventTypeFilter = EventTypeFilter(
+                pipelineId = pipelineId,
+                triggerOnEventType = getEventType(),
+                eventType = eventType
+            )
+            val branchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = getBranchName(event),
+                includedBranches = WebhookUtils.convert(tagName),
+                excludedBranches = WebhookUtils.convert(excludeTagName)
+            )
+            return listOf(urlFilter, eventTypeFilter, branchFilter)
+        }
     }
 }
