@@ -36,6 +36,7 @@ import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.services.GitCiService
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
@@ -120,6 +121,16 @@ class ServiceGitCiResourceImpl @Autowired constructor(
             gitProjectId = gitProjectId,
             token = gitService.getToken(gitProjectId).accessToken,
             useAccessToken = true
+        )
+    }
+
+    override fun getMergeRequestChangeInfo(
+        gitProjectId: Long,
+        token: String?,
+        mrId: Long
+    ): Result<GitMrChangeInfo?> {
+        return gitCiService.getMergeRequestChangeInfo(
+            gitProjectId, token, mrId
         )
     }
 }
