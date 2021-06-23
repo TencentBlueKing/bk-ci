@@ -23,7 +23,6 @@ function _M:get_ticket(bk_ticket)
     local user_cache = ngx.shared.user_info_store
     local user_cache_value = user_cache:get(bk_ticket)
     if user_cache_value == nil then
-        ngx.log(ngx.STDERR, "no user info")
         --- 初始化HTTP连接
         local httpc = http.new()
         --- 开始连接

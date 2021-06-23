@@ -29,13 +29,13 @@ local querysArgs = urlUtil:parseUrl(ngx.var.request_uri)
 
 local resource_code = querysArgs["pipelineId"]
 if (resource_code == "" or resource_code == nil) then
-    ngx.log(ngx.STDERR, "Auth docker console resource_code not found: ")
+    ngx.log(ngx.ERR, "Auth docker console resource_code not found: ")
     ngx.exit(403)
     return
 end
 local project_code = querysArgs["projectId"]
 if (project_code == "" or project_code == nil) then
-    ngx.log(ngx.STDERR, "Auth docker console project_code not found: ")
+    ngx.log(ngx.ERR, "Auth docker console project_code not found: ")
     ngx.exit(403)
     return
 end
@@ -44,6 +44,7 @@ local verfiy = ciAuthUtil:relation_validate(ticket.user_id, "XybK7-.L*(o5lU~N?^)
                                             "edit", project_code, resource_code, "pipeline")
 
 if not verfiy then
+    ngx.log(ngx.ERR, "ci auth failed")
     ngx.exit(403)
     return
 end
