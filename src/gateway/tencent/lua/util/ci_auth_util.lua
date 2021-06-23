@@ -39,7 +39,7 @@ function _M:relation_validate(user_id, bk_token, action, project_code, resource_
     httpc:connect(config.bkci.host, config.bkci.port)
     --- 发送请求
     local res, err = httpc:request({
-        path = "/ms/auth/api/open/service/auth/permission/projects/" .. project_code .. "/action/validate?action=" .. action ..
+        path = "/ms/auth/api/open/service/auth/permission/projects/" .. project_code .. "/relation/validate?action=" .. action ..
             "&resourceCode=" .. resource_code .. "&resourceType=" .. resource_type,
         method = "GET",
         headers = {
