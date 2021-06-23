@@ -31,7 +31,6 @@ import com.cronutils.mapper.CronMapper
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel

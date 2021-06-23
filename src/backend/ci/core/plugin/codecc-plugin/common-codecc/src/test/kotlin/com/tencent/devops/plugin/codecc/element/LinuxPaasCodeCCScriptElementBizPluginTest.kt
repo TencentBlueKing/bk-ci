@@ -69,7 +69,6 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
         id = "1"
     )
 
-
     @Test
     fun elementClass() {
         assertEquals(
