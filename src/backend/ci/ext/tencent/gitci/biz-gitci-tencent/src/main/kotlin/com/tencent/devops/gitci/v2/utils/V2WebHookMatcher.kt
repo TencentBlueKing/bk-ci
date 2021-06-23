@@ -27,9 +27,8 @@
 
 package com.tencent.devops.gitci.v2.utils
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.gitci.pojo.git.GitCommit
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
@@ -460,8 +459,8 @@ class V2WebHookMatcher @Autowired constructor(
         }
 
         for (i in prefixPathList.indices) {
-            if (prefixPathList[i] != "*"
-                && (fullPathList[i] != prefixPathList[i])
+            if (prefixPathList[i] != "*" &&
+                (fullPathList[i] != prefixPathList[i])
             ) {
                 return false
             }
