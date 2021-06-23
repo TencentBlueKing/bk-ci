@@ -1041,6 +1041,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         defaultValue = defaultValue,
                         defaultName = defaultName
                     )
+                    sb.append("\r\n")
                     sb.append("      $paramKey: ")
                     sb.append("        - string\r\n")
                     sb.append("        - string\r\n")
@@ -1056,6 +1057,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         defaultValue = defaultValue,
                         defaultName = defaultName
                     )
+                    sb.append("\r\n")
                     sb.append("    $paramKey: ")
                     if (type == "atom-checkbox") {
                         sb.append("boolean")
@@ -1127,20 +1129,17 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
             builder.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
         }
-        val options = paramValueMap["options"]
-        if (options != null) {
-            try {
-                options as List<Map<String, String>>
-                builder.append(", $valueName:")
-                options.forEachIndexed { index, map ->
-                    if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
-                    else builder.append(" ${map["id"]}[${map["name"]}] |")
-                }
-                builder.removeSuffix("|")
-            } catch (e: Exception) {
-                println("load atom input[$paramKey] with error: ${e.message}")
+        val options = paramValueMap["options"] ?: return
+        try {
+            options as List<Map<String, String>>
+            builder.append(", $valueName:")
+            options.forEachIndexed { index, map ->
+                if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
+                else builder.append(" ${map["id"]}[${map["name"]}] |")
             }
+            builder.removeSuffix("|")
+        } catch (e: Exception) {
+            println("load atom input[$paramKey] with error: ${e.message}")
         }
-        builder.append("\r\n")
     }
 }
