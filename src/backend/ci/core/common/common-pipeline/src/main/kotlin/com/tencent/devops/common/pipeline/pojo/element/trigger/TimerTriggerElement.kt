@@ -73,7 +73,7 @@ data class TimerTriggerElement(
             val qaurtzCron = parser.parse(expression)
             val mapper = CronMapper.fromUnixToQuartz()
             mapper.map(qaurtzCron).asString()
-        } catch (e: IllegalArgumentException) {
+        } catch (ignore: IllegalArgumentException) {
             // The old cron, just return it
             expression
         }
@@ -111,19 +111,6 @@ data class TimerTriggerElement(
             newExpressionParts.joinToString(separator = " ")
         } else {
             newExpression
-        }
-    }
-
-    private fun checkLength(expression: String) {
-        val newExpression = expression.trim()
-        val expressionParts = newExpression.split(" ")
-        // minutes hours dayOfMonth month dayOfWeek
-        if (expressionParts.size != 5) {
-            throw InvalidParamException(
-                message = "Cron expression contains ${expressionParts.size} " +
-                    "parts but we expect one of 5(minutes hours dayOfMonth month dayOfWeek)",
-                params = arrayOf(expression)
-            )
         }
     }
 
