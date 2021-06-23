@@ -103,7 +103,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.StringUtils
-import java.lang.StringBuilder
 import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.concurrent.Callable
