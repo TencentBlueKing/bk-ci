@@ -31,6 +31,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildHisDataClear
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineDataClear
 import com.tencent.devops.model.process.tables.TPipelineInfo
+import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -103,24 +104,23 @@ class ProcessDao {
         }
     }
 
+    fun getPipelineInfoByPipelineId(
+        dslContext: DSLContext,
+        pipelineId: String
+    ): TPipelineInfoRecord? {
+        with(TPipelineInfo.T_PIPELINE_INFO) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .fetchAny()
+        }
+    }
+
     fun getMinPipelineInfoIdListByProjectId(
         dslContext: DSLContext,
         projectId: String
     ): Long {
         with(TPipelineInfo.T_PIPELINE_INFO) {
             return dslContext.select(DSL.min(ID))
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .fetchOne(0, Long::class.java)!!
-        }
-    }
-
-    fun getMaxPipelineInfoIdListByProjectId(
-        dslContext: DSLContext,
-        projectId: String
-    ): Long {
-        with(TPipelineInfo.T_PIPELINE_INFO) {
-            return dslContext.select(DSL.max(ID))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .fetchOne(0, Long::class.java)!!

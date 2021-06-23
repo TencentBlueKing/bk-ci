@@ -206,6 +206,10 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 minId = minId,
                 limit = DEFAULT_PAGE_SIZE.toLong()
             )
+            if (!pipelineIdList.isNullOrEmpty()) {
+                // 重置minId的值
+                minId = processService.getPipelineInfoIdListByPipelineId(pipelineIdList[pipelineIdList.size - 1]) + 1
+            }
             val deletePipelineIdList = if (pipelineIdList.isNullOrEmpty()) {
                 null
             } else {
@@ -226,9 +230,6 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     // 清理正常流水线记录
                     cleanNormalPipelineData(pipelineId, projectId, projectDataClearConfig)
                 }
-            }
-            if (!pipelineIdList.isNullOrEmpty()) {
-                minId = processService.getMaxPipelineInfoIdListByProjectId(projectId) + 1
             }
         } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
     }

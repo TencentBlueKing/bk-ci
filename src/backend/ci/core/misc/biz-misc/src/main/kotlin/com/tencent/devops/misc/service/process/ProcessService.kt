@@ -105,8 +105,8 @@ class ProcessService @Autowired constructor(
         return processDao.getMinPipelineInfoIdListByProjectId(dslContext, projectId)
     }
 
-    fun getMaxPipelineInfoIdListByProjectId(projectId: String): Long {
-        return processDao.getMaxPipelineInfoIdListByProjectId(dslContext, projectId)
+    fun getPipelineInfoIdListByPipelineId(pipelineId: String): Long {
+        return processDao.getPipelineInfoByPipelineId(dslContext, pipelineId)?.id ?: 0L
     }
 
     fun getMaxPipelineBuildNum(
