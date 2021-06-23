@@ -990,7 +990,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             sb.append("h2. ${atom.name}\r\n")
                 .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
         }
-        sb.append("- uses: ${atom.atomCode}@${atom.version}\r\n")
+        val latestVersion = "${atom.version.split('.').first()}.*"
+        sb.append("- uses: ${atom.atomCode}@$latestVersion\r\n")
             .append("  name: ${atom.name}\r\n")
 
         val props: Map<String, Any> = jacksonObjectMapper().readValue(atom.props)
