@@ -49,7 +49,6 @@ dependencies {
     implementation(project(":core:notify:biz-notify-blueking"))
     implementation(project(":core:openapi:biz-openapi"))
     implementation(project(":core:plugin:biz-plugin"))
-    implementation(project(":core:plugin:codecc-plugin:biz-codecc"))
     implementation(project(":core:process:plugin-load"))
     implementation(project(":core:process:plugin-trigger"))
     implementation(project(":core:process:biz-engine"))
