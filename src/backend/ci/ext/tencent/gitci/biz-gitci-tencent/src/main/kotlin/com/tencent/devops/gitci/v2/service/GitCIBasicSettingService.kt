@@ -192,7 +192,7 @@ class GitCIBasicSettingService @Autowired constructor(
             Thread.sleep(100)
             startId += limitCount.toLong()
             endId += limitCount.toLong()
-            currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, limitCount.toLong())
+            currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, endId)
         }
         logger.info("fixProjectInfo finished count: $count")
         return count
