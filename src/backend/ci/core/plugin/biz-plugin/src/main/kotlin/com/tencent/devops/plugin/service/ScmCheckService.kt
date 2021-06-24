@@ -59,8 +59,8 @@ import java.net.URLEncoder
 import java.util.Base64
 
 @Service@Suppress("ALL")
-class ScmService @Autowired constructor(private val client: Client) {
-    private val logger = LoggerFactory.getLogger(ScmService::class.java)
+class ScmCheckService @Autowired constructor(private val client: Client) {
+    private val logger = LoggerFactory.getLogger(ScmCheckService::class.java)
 
     fun addGitCommitCheck(
         event: GitCommitCheckEvent,

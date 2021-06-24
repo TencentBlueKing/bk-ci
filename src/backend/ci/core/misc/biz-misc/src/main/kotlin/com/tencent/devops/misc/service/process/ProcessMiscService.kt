@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class ProcessService @Autowired constructor(
+class ProcessMiscService @Autowired constructor(
     private val dslContext: DSLContext,
     private val processDao: ProcessDao
 ) {
