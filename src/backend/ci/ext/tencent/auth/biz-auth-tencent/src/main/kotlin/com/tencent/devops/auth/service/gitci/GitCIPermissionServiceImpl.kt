@@ -76,7 +76,8 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             return false
         }
 
-        val checkResult = client.getScm(ServiceGitCiResource::class).checkUserGitAuth(gitUserId, gitProjectId).data ?: false
+        val checkResult = client.getScm(ServiceGitCiResource::class)
+            .checkUserGitAuth(gitUserId, gitProjectId).data ?: false
         if (!checkResult) {
             logger.warn("$projectCode $userId $action $resourceType check permission fail")
         }
@@ -162,7 +163,12 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         return false
     }
 
-    private fun reviewManagerCheck(userId: String, projectCode: String, action: String, resourceTypeStr: String): Boolean {
+    private fun reviewManagerCheck(
+        userId: String,
+        projectCode: String,
+        action: String,
+        resourceTypeStr: String
+    ): Boolean {
         if (resourceTypeStr.isNullOrEmpty()) {
             return false
         }
