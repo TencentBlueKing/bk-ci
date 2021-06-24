@@ -94,7 +94,7 @@ class GitProjectConfService @Autowired constructor(
         var count = 0
         val allPipeline = gitPipelineResourceDao.getAllPipeline(dslContext)
         allPipeline.forEach {
-            if (it.latestBuildId.isNullOrBlank()) {
+            if (!it.latestBuildId.isNullOrBlank()) {
                 val build = gitRequestEventBuildDao.getLatestBuild(dslContext, it.gitProjectId, it.pipelineId) ?: return@forEach
                 logger.info("Pipeline[${it.displayName}][${it.pipelineId}] latest build: $build")
                 if (build.normalizedYaml.contains("v2.0")) {
