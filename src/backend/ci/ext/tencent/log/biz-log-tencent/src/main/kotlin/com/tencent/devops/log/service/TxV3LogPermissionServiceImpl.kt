@@ -22,12 +22,14 @@ class TxV3LogPermissionServiceImpl @Autowired constructor(
         permission: AuthPermission?
     ): Boolean {
         val action = TActionUtils.buildAction(permission ?: AuthPermission.VIEW, AuthResourceType.PIPELINE_DEFAULT)
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             token = tokenCheckService.getSystemToken(null) ?: "",
             action = action,
             projectCode = projectCode,
-            resourceCode = getPipelineId(pipelineId, projectCode)
+            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+            resourceCode = getPipelineId(pipelineId, projectCode),
+            relationResourceType = null
         ).data ?: false
     }
 

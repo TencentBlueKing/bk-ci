@@ -43,14 +43,16 @@ class TxV3ArtPipelineServiceImpl @Autowired constructor(
                 projectCode = projectId
             ).data ?: false
         } else {
-            client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
                 userId = userId,
                 token = tokenCheckService.getSystemToken(null) ?: "",
                 action = TActionUtils.buildAction(
                     authPermission = permission ?: AuthPermission.VIEW,
                     authResourceType = AuthResourceType.PIPELINE_DEFAULT),
                 projectCode = projectId,
-                resourceCode = getPipelineId(pipelineId!!, projectId)
+                resourceCode = getPipelineId(pipelineId!!, projectId),
+                resourceType =  AuthResourceType.PIPELINE_DEFAULT.value,
+                relationResourceType = null
             ).data ?: false
         }
     }
