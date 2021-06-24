@@ -81,6 +81,7 @@ const val PIPELINE_URL = "pipelineUrl" // 流水线链接
 const val ARTIFACT = "artifact" // 构件
 const val REPORT = "report" // 报告
 const val VALUE = "value" // 值
+const val OPTIONS = "options" // 可选项
 const val LABEL = "label" // 标签
 const val URL = "url" // url链接
 const val PATH = "path" // 路径
