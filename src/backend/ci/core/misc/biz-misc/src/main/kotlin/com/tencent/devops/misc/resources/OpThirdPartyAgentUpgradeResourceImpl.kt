@@ -29,7 +29,7 @@ package com.tencent.devops.misc.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.misc.api.OpThirdPartyAgentResource
+import com.tencent.devops.misc.api.OpThirdPartyAgentUpgradeResource
 import com.tencent.devops.misc.service.environment.AgentUpgradeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -38,9 +38,9 @@ import org.springframework.beans.factory.annotation.Autowired
  * 2018/5/9
  */
 @RestResource
-class OpThirdPartyAgentResourceImpl @Autowired constructor(
+class OpThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
     private val upgradeService: AgentUpgradeService
-) : OpThirdPartyAgentResource {
+) : OpThirdPartyAgentUpgradeResource {
 
     override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
         upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)

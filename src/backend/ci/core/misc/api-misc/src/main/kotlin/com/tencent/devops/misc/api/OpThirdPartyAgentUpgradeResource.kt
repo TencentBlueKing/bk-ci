@@ -41,7 +41,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/thirdPartyAgent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpThirdPartyAgentResource {
+interface OpThirdPartyAgentUpgradeResource {
 
     @ApiOperation("设置agent最大并发升级数量")
     @POST

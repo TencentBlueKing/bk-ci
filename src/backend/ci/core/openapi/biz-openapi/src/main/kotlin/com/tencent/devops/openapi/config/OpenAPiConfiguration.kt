@@ -25,16 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service.dispatcher
+package com.tencent.devops.openapi.config
+import com.tencent.devops.openapi.service.op.DefaultOpAppUserService
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
-
-interface BuildLessDispatcher {
-
-    fun canDispatch(event: PipelineBuildLessStartupDispatchEvent): Boolean
-
-    fun startUp(event: PipelineBuildLessStartupDispatchEvent)
-
-    fun shutdown(event: PipelineBuildLessShutdownDispatchEvent)
+/**
+ * 流水线构建核心配置
+ */
+@Configuration
+class OpenAPiConfiguration {
+    @Bean
+    @ConditionalOnMissingBean(name = ["opAppUserService"])
+    fun opAppUserService() = DefaultOpAppUserService()
 }

@@ -36,7 +36,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
-class ProjectDao {
+class ProjectMiscDao {
 
     fun getMinId(
         dslContext: DSLContext,

@@ -58,18 +58,7 @@ class V3CredentialPermissionService @Autowired constructor(
 ) {
 
     override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
-        return {
-            val fakeList = mutableListOf<String>()
-            credentialDao.listByProject(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    offset = 0,
-                    limit = 500 // 一个项目不会有太多凭证
-            ).forEach {
-                fakeList.add(it.credentialId)
-            }
-            fakeList
-        }
+        return { mutableListOf() }
     }
 
     override fun validatePermission(

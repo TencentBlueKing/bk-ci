@@ -27,28 +27,28 @@
 
 package com.tencent.devops.misc.service.project
 
-import com.tencent.devops.misc.dao.project.ProjectDao
+import com.tencent.devops.misc.dao.project.ProjectMiscDao
 import com.tencent.devops.misc.pojo.project.ProjectInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ProjectService @Autowired constructor(
+class ProjectMiscService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val projectDao: ProjectDao
+    private val projectMiscDao: ProjectMiscDao
 ) {
 
     fun getMinId(
         projectIdList: List<String>? = null
     ): Long? {
-        return projectDao.getMinId(dslContext, projectIdList)
+        return projectMiscDao.getMinId(dslContext, projectIdList)
     }
 
     fun getMaxId(
         projectIdList: List<String>? = null
     ): Long? {
-        return projectDao.getMaxId(dslContext, projectIdList)
+        return projectMiscDao.getMaxId(dslContext, projectIdList)
     }
 
     fun getProjectInfoList(
@@ -57,7 +57,7 @@ class ProjectService @Autowired constructor(
         maxId: Long? = null,
         channelCodeList: List<String>? = null
     ): List<ProjectInfo>? {
-        val projectInfoRecords = projectDao.getProjectInfoList(
+        val projectInfoRecords = projectMiscDao.getProjectInfoList(
             dslContext = dslContext,
             projectIdList = projectIdList,
             minId = minId,

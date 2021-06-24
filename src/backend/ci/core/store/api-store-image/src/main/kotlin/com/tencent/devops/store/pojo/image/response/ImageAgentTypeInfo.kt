@@ -24,42 +24,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.pojo.image.response
 
-package com.tencent.devops.dispatch.listener
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.tencent.devops.dispatch.service.PipelineBuildLessDispatchService
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+@ApiModel("镜像支持的机器类型详情")
+data class ImageAgentTypeInfo(
 
-@Service
-class BuildLessAgentStartupListener @Autowired
-constructor(private val pipelineDispatchService: PipelineBuildLessDispatchService) {
+    @ApiModelProperty("类型代码", required = true)
+    val code: String,
 
-/*    @RabbitListener(
-        bindings = [(QueueBinding(
-            key = [MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH], value = Queue(
-                value = MQ.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH, durable = "true"
-            ),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.DIRECT
-            )
-        ))]
-    )*/
-    fun listenAgentStartUpEvent(event: PipelineBuildLessStartupDispatchEvent) {
-        try {
-            logger.info("start build less($event)")
-            pipelineDispatchService.startUpBuildLess(event)
-        } catch (ignored: Throwable) {
-            logger.error("Fail to start the pipe build($event)", ignored)
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(BuildLessAgentStartupListener::class.java)
-    }
-}
+    @ApiModelProperty("类型名称", required = true)
+    val name: String
+)
