@@ -174,7 +174,7 @@ class GitCIBasicSettingService @Autowired constructor(
                 }
                 val userInfo = projectResult.data!!
                 logger.info("fixProjectInfo ${it.enableUserId} userInfo $userInfo")
-                gitCIBasicSettingDao.fixProjectInfo(
+                count += gitCIBasicSettingDao.fixProjectInfo(
                     dslContext = dslContext,
                     gitProjectId = it.id,
                     creatorBgName = userInfo.bgName,
@@ -182,7 +182,6 @@ class GitCIBasicSettingService @Autowired constructor(
                     creatorCenterName = userInfo.centerName
                 )
                 startId = it.id
-                count++
             }
             logger.info("fixProjectInfo project ${currProjects.map { it.id }.toList()}, fixed count: $count")
             Thread.sleep(100)

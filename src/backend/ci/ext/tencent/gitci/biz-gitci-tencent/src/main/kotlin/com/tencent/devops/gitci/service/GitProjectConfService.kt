@@ -97,10 +97,9 @@ class GitProjectConfService @Autowired constructor(
             if (!it.latestBuildId.isNullOrBlank()) {
                 val build = gitRequestEventBuildDao.getLatestBuild(dslContext, it.gitProjectId, it.pipelineId) ?: return@forEach
                 if (build.normalizedYaml.contains("v2.0")) {
-                    gitPipelineResourceDao.fixPipelineVersion(dslContext, it.pipelineId, "v2.0")
+                    count += gitPipelineResourceDao.fixPipelineVersion(dslContext, it.pipelineId, "v2.0")
                     logger.info("fixPipelineVersion gitProjectId: ${it.gitProjectId}, pipelineId: ${it.pipelineId}, buildId: ${build.buildId}, createTime:${build.createTime}")
                 }
-                count++
             }
             Thread.sleep(100)
         }
