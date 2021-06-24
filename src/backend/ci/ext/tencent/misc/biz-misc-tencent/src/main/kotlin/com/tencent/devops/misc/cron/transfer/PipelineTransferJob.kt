@@ -41,9 +41,9 @@ import org.springframework.stereotype.Component
  * 迁移PROD集群上的Auto流水线定时任务
  */
 @Component
-@Suppress("UNUSED")
+@Suppress("ALL", "UNUSED")
 class PipelineTransferJob @Autowired constructor(
-    private val projectService: ProjectMiscService,
+    private val projectMiscService: ProjectMiscService,
     private val sourcePipelineService: SourcePipelineService,
     private val targetPipelineService: TargetPipelineService,
     private val miscPipelineTransferContext: MiscPipelineTransferContext
@@ -72,9 +72,9 @@ class PipelineTransferJob @Autowired constructor(
 
             var handleProjectPrimaryId = miscPipelineTransferContext.getLastTransferProjectSeqId()
             if (handleProjectPrimaryId == null) {
-                handleProjectPrimaryId = projectService.getMinId(needTransferProjectIdList) ?: 0L
+                handleProjectPrimaryId = projectMiscService.getMinId(needTransferProjectIdList) ?: 0L
             } else {
-                val maxProjectPrimaryId = projectService.getMaxId(needTransferProjectIdList) ?: 0L
+                val maxProjectPrimaryId = projectMiscService.getMaxId(needTransferProjectIdList) ?: 0L
                 if (handleProjectPrimaryId >= maxProjectPrimaryId) {
                     logger.info("transfer|END|ALL_FINISH")
                     return
@@ -86,10 +86,10 @@ class PipelineTransferJob @Autowired constructor(
                 maxHandleProjectPrimaryId = handleProjectPrimaryId + miscPipelineTransferContext.dealProjectBatchSize()
                 logger.info("transfer|startId=$handleProjectPrimaryId|maxId=$maxHandleProjectPrimaryId")
 
-                projectService.getProjectInfoList(minId = handleProjectPrimaryId, maxId = maxHandleProjectPrimaryId)
+                projectMiscService.getProjectInfoList(minId = handleProjectPrimaryId, maxId = maxHandleProjectPrimaryId)
             } else {
 
-                projectService.getProjectInfoList(projectIdList = needTransferProjectIdList)
+                projectMiscService.getProjectInfoList(projectIdList = needTransferProjectIdList)
             }
 
             logger.info("transfer|projectSize=${transferProjectList?.size}")
