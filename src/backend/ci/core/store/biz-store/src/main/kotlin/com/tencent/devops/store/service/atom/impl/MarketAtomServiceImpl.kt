@@ -32,8 +32,10 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT
+import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
 import com.tencent.devops.common.api.constant.REQUIRED
-import com.tencent.devops.common.api.constant.VALUE
+import com.tencent.devops.common.api.constant.OPTIONS
+import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -1027,7 +1029,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 val requiredName = MessageCodeUtil.getCodeLanMessage(REQUIRED)
                 val defaultName = MessageCodeUtil.getCodeLanMessage(DEFAULT)
-                val valueName = MessageCodeUtil.getCodeLanMessage(VALUE)
+                val optionsName = MessageCodeUtil.getCodeLanMessage(OPTIONS)
+                val multipleName = MessageCodeUtil.getCodeLanMessage(MULTIPLE_SELECTOR)
+                val singleName = MessageCodeUtil.getCodeLanMessage(SINGLE_SELECTOR)
                 if ((type == "selector" && multiple) ||
                     type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
                     addParamComment(
@@ -1035,7 +1039,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         description = description,
                         paramKey = paramKey,
                         required = required,
-                        valueName = valueName,
+                        optionsName = optionsName,
+                        selectorTypeName = multipleName,
                         paramValueMap = paramValueMap,
                         requiredName = requiredName,
                         defaultValue = defaultValue,
@@ -1051,7 +1056,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         description = description,
                         paramKey = paramKey,
                         required = required,
-                        valueName = valueName,
+                        optionsName = optionsName,
+                        selectorTypeName = singleName,
                         paramValueMap = paramValueMap,
                         requiredName = requiredName,
                         defaultValue = defaultValue,
@@ -1116,7 +1122,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         description: String,
         paramKey: String,
         required: Boolean,
-        valueName: String,
+        optionsName: String,
+        selectorTypeName: String,
         paramValueMap: Map<String, Any>,
         requiredName: Any?,
         defaultValue: Any?,
@@ -1132,7 +1139,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val options = paramValueMap["options"] ?: return
         try {
             options as List<Map<String, String>>
-            builder.append(", $valueName:")
+            builder.append(", $selectorTypeName:")
+            builder.append(", $optionsName:")
             options.forEachIndexed { index, map ->
                 if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
                 else builder.append(" ${map["id"]}[${map["name"]}] |")
