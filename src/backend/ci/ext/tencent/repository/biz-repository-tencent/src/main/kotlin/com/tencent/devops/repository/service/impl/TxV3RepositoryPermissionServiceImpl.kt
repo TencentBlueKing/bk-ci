@@ -80,7 +80,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
             userId = userId,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,
-            action = buildRepertory(authPermission)
+            action = TActionUtils.buildAction(authPermission, AuthResourceType.CODE_REPERTORY)
         ).data ?: emptyList()
 
         if (resourceCodeList.contains("*")) {
@@ -99,7 +99,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
     ): Map<AuthPermission, List<Long>> {
         val actions = mutableListOf<String>()
         authPermissions.forEach {
-            actions.add(buildRepertory(it))
+            actions.add(TActionUtils.buildAction(it, AuthResourceType.CODE_REPERTORY))
         }
 
         val permissionResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
@@ -155,9 +155,9 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
-            resourceType = AuthResourceType.CODE_REPERTORY.toString(),
+            resourceType = AuthResourceType.CODE_REPERTORY.value,
             relationResourceType = null,
-            action = buildRepertory(authPermission),
+            action = TActionUtils.buildAction(authPermission, AuthResourceType.CODE_REPERTORY),
             resourceCode = resourceCode
         ).data ?: false
     }
@@ -179,9 +179,5 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
 
     override fun deleteResource(projectId: String, repositoryId: Long) {
         return
-    }
-
-    private fun buildRepertory(permission: AuthPermission): String {
-        return TActionUtils.buildAction(permission, AuthResourceType.CODE_REPERTORY)
     }
 }
