@@ -44,4 +44,13 @@ class ProjectUserDao {
             dslContext.selectFrom(this).limit(offset, limit).fetch()
         }
     }
+
+    fun delete(
+        dslContext: DSLContext,
+        userId: String
+    ) {
+        return with(TUser.T_USER) {
+            dslContext.delete(this).where(USER_ID.eq(userId))
+        }
+    }
 }

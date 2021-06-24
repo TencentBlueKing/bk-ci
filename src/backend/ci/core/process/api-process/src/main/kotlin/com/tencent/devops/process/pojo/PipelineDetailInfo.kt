@@ -25,11 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2
+package com.tencent.devops.process.pojo
 
-enum class NoticeIfType {
-    SUCCESS,
-    FAILURE,
-    CANCELLED,
-    ALWAYS
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("流水线名称与Id")
+data class PipelineDetailInfo(
+    @ApiModelProperty("流水线Id")
+    val pipelineId: String,
+    @ApiModelProperty("流水线名称")
+    val pipelineName: String,
+    @ApiModelProperty("是否收藏")
+    val hasCollect: Boolean,
+    @ApiModelProperty("canManualStartup")
+    val canManualStartup: Int,
+    @ApiModelProperty("是否关联模板")
+    val instanceFromTemplate: Boolean,
+    @ApiModelProperty("流水线版本")
+    val pipelineVersion: String,
+    @ApiModelProperty("部署时间")
+    val deploymentTime: String,
+    @ApiModelProperty("是否有编辑权限")
+    val hasPermission: Boolean
+)

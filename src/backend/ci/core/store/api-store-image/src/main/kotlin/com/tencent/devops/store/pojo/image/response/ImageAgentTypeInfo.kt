@@ -24,35 +24,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.pojo.image.response
 
-package com.tencent.devops.project.api.service
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+@ApiModel("镜像支持的机器类型详情")
+data class ImageAgentTypeInfo(
 
-@Api(tags = ["AUTH_CALLBACK_PROJECT"], description = "iam回调project接口")
-@Path("/open/project/callback")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceProjectAuthResource {
-    @POST
-    @Path("/")
-    @ApiOperation("iam项目回调接口")
-    fun projectInfo(
-        @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @ApiParam("token")
-        token: String,
-        @ApiParam(value = "回调信息")
-        callBackInfo: CallbackRequestDTO
-    ): CallbackBaseResponseDTO?
-}
+    @ApiModelProperty("类型代码", required = true)
+    val code: String,
+
+    @ApiModelProperty("类型名称", required = true)
+    val name: String
+)

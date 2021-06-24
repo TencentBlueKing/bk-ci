@@ -94,7 +94,7 @@ fi
 
 echo "检查 install.config, 请根据提示处理."
 # 蓝鲸冲突检测
-install_config_conflict "${BK_NGINX_IP_COMMA:-},$BK_CI_GATEWAY_IP_COMMA" \
+install_config_conflict "${BK_NGINX_IP_COMMA:-},${BK_CI_GATEWAY_IP_COMMA:-}" \
   "ci(gateway)与nginx" "需要独占80端口" \
   "将ci(gateway)移到其他节点"
 

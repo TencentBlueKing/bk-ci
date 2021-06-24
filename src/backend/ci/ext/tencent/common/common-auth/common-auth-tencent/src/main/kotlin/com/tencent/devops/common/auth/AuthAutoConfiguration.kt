@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.code.BSArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.code.BSBcsAuthServiceCode
 import com.tencent.devops.common.auth.code.BSCodeAuthServiceCode
+import com.tencent.devops.common.auth.code.BSCommonAuthServiceCode
 import com.tencent.devops.common.auth.code.BSEnvironmentAuthServiceCode
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
@@ -139,4 +140,7 @@ class AuthAutoConfiguration {
 
     @Bean
     fun artifactoryAuthServiceCode() = BSArtifactoryAuthServiceCode()
+
+    @Bean
+    fun commonAuthServiceCode() = BSCommonAuthServiceCode()
 }

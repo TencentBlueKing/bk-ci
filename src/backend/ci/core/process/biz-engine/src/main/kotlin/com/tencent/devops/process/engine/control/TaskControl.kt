@@ -109,7 +109,11 @@ class TaskControl @Autowired constructor(
             // 构建机上运行中任务目前无法直接后台干预，便在此处设置状态，使流程继续
             if (actionType.isEnd()) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|code=$errorCode")
-                val buildStatus = BuildStatus.CANCELED
+                val buildStatus = if (actionType.isTerminate()) { // 区分系统终止还是用户手动终止
+                    BuildStatus.TERMINATE
+                } else {
+                    BuildStatus.CANCELED
+                }
                 val atomResponse = AtomResponse(
                     buildStatus = buildStatus,
                     errorCode = errorCode,

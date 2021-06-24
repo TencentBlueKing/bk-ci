@@ -25,8 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.pojo
+package com.tencent.devops.process.pojo
 
-data class FileGatewayInfo(
-    val fileGateway: String
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("流水线名称与Id")
+data class PipelineIdAndName(
+    @ApiModelProperty("流水线Id")
+    val pipelineId: String,
+    @ApiModelProperty("流水线名称")
+    val pipelineName: String
 )
