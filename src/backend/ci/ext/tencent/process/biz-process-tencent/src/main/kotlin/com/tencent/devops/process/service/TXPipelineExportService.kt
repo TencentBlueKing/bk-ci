@@ -230,7 +230,6 @@ class TXPipelineExportService @Autowired constructor(
                         }
                     }
 
-
                     jobs.add(
                         V2Job(
                             id = job.jobId,

@@ -51,8 +51,6 @@ import com.tencent.devops.common.ci.task.MarketBuildLessTask
 import com.tencent.devops.common.ci.task.MarketBuildTask
 import com.tencent.devops.common.ci.task.WindowsScriptInput
 import com.tencent.devops.common.ci.task.WindowsScriptTask
-import com.tencent.devops.common.ci.v2.RunsOn
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.ci.yaml.JobDetail
@@ -65,10 +63,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.JobRunCondition
-import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
@@ -106,9 +101,6 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
-import com.tencent.devops.common.ci.v2.Stage as V2Stage
-import com.tencent.devops.common.ci.v2.Job as V2Job
-import com.tencent.devops.common.ci.v2.Step as V2Step
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
