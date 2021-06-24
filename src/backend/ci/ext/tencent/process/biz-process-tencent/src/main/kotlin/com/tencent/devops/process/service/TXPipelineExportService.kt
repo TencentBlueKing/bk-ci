@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -59,7 +58,6 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.CodeCCExportYamlData
 import com.tencent.devops.common.ci.v2.Stage as V2Stage
 import com.tencent.devops.common.ci.v2.Job as V2Job
 import com.tencent.devops.common.ci.v2.Step as V2Step
@@ -119,8 +117,9 @@ class TXPipelineExportService @Autowired constructor(
             notices = null,
             finally = getV2FinalFromStage(model.stages.last(), yamlSb)
         )
-        val yamlStr = toYamlStr(yamlObj)
-        return exportToFile(yamlStr, model.name)
+        val modelYaml = toYamlStr(yamlObj)
+        yamlSb.append(modelYaml)
+        return exportToFile(yamlSb.toString(), model.name)
     }
 
     private fun getV2StageFromModel(
@@ -296,26 +295,12 @@ class TXPipelineExportService @Autowired constructor(
                         )
                     )
                 }
-                MarketBuildAtomElement.classType -> {
+                MarketBuildAtomElement.classType, MarketBuildLessAtomElement.classType -> {
                     val step = element as MarketBuildAtomElement
-                    var elementData = mutableMapOf<String, Any>()
-                    // 针对CodeCC的插件导出参数做处理
-                    if (element.getAtomCode() == "CodeccCheckAtomDebug") {
-                        element.data.forEach dataLoop@{ (key, value) ->
-                            if (key == "input") {
-                                elementData[key] = objectMapper.convertValue<CodeCCExportYamlData>(
-                                    value,
-                                    object : TypeReference<CodeCCExportYamlData>() {}
-                                )
-                            } else if (key == "output" || key == "namespace") {
-                                return@dataLoop
-                            } else {
-                                elementData[key] = value
-                            }
-                        }
-                    } else {
-                        elementData = element.data.toMutableMap()
-                    }
+                    val input = element.data["input"]
+                    val inputMap = if (input != null && !(input as MutableMap<String, Any>).isNullOrEmpty()) {
+                        input
+                    } else null
                     stepList.add(
                         V2Step(
                             name = step.name,
@@ -327,40 +312,7 @@ class TXPipelineExportService @Autowired constructor(
                                 null
                             },
                             uses = "${step.getAtomCode()}@${step.version}",
-                            with = mapOf(
-                                "atomCode" to element.getAtomCode(),
-                                "name" to element.name,
-                                "version" to element.version,
-                                "data" to elementData
-                            ),
-                            timeoutMinutes = timeoutMinutes,
-                            continueOnError = continueOnError,
-                            retryTimes = retryTimes,
-                            env = null,
-                            run = null,
-                            checkout = null
-                        )
-                    )
-                }
-                MarketBuildLessAtomElement.classType -> {
-                    val step = element as MarketBuildLessAtomElement
-                    stepList.add(
-                        V2Step(
-                            name = step.name,
-                            id = null,
-                            ifFiled = if (step.additionalOptions?.runCondition ==
-                                RunCondition.CUSTOM_CONDITION_MATCH) {
-                                step.additionalOptions?.customCondition
-                            } else {
-                                null
-                            },
-                            uses = "${step.getAtomCode()}@${step.version}",
-                            with = mapOf(
-                                "atomCode" to element.getAtomCode(),
-                                "name" to element.name,
-                                "version" to element.version,
-                                "data" to element.data
-                            ),
+                            with = inputMap,
                             timeoutMinutes = timeoutMinutes,
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
