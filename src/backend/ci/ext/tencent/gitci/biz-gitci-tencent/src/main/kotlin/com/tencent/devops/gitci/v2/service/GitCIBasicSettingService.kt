@@ -173,14 +173,10 @@ class GitCIBasicSettingService @Autowired constructor(
                     return@forEach
                 }
                 val userInfo = projectResult.data!!
-                gitCIBasicSettingDao.updateProjectSetting(
+                logger.info("fixProjectInfo ${it.enableUserId} userInfo $userInfo")
+                gitCIBasicSettingDao.fixProjectInfo(
                     dslContext = dslContext,
                     gitProjectId = it.id,
-                    buildPushedBranches = null,
-                    buildPushedPullRequest = null,
-                    enableMrBlock = null,
-                    enableCi = null,
-                    enableUserId = null,
                     creatorBgName = userInfo.bgName,
                     creatorDeptName = userInfo.deptName,
                     creatorCenterName = userInfo.centerName

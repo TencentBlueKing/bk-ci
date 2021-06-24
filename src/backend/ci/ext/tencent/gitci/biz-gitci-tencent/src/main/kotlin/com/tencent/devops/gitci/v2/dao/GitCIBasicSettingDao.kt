@@ -217,4 +217,21 @@ class GitCIBasicSettingDao {
                 .fetch()
         }
     }
+
+    fun fixProjectInfo(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        creatorBgName: String,
+        creatorDeptName: String,
+        creatorCenterName: String
+    ): Int {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.update(this)
+                .set(CREATOR_BG_NAME, creatorBgName)
+                .set(CREATOR_DEPT_NAME, creatorDeptName)
+                .set(CREATOR_CENTER_NAME, creatorCenterName)
+                .where(ID.eq(gitProjectId))
+                .execute()
+        }
+    }
 }
