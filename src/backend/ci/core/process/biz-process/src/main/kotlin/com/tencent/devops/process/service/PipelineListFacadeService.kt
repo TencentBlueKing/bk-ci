@@ -450,9 +450,11 @@ class PipelineListFacadeService @Autowired constructor(
         watcher.start("s_r_summary")
         try {
             val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
-            val (filterByPipelineNames: List<PipelineViewFilterByName>,
+            val (
+                filterByPipelineNames: List<PipelineViewFilterByName>,
                 filterByPipelineCreators: List<PipelineViewFilterByCreator>,
-                filterByPipelineLabels: List<PipelineViewFilterByLabel>) = generatePipelineFilterInfo(
+                filterByPipelineLabels: List<PipelineViewFilterByLabel>
+            ) = generatePipelineFilterInfo(
                 filterByName = filterByPipelineName,
                 filterByCreator = filterByCreator,
                 filterByLabels = filterByLabels
@@ -1329,7 +1331,7 @@ class PipelineListFacadeService @Autowired constructor(
         return pipelineRepositoryService.listPipelineIdByName(projectId, pipelineNames, filterDelete)
     }
 
-    fun getPipelineId(
+    fun getProjectPipelineId(
         projectCode: String
     ): List<PipelineIdInfo> {
         val pipelineIdInfos = pipelineInfoDao.listByProject(dslContext, projectCode)
@@ -1338,5 +1340,16 @@ class PipelineListFacadeService @Autowired constructor(
             idInfos.add(PipelineIdInfo(it.get("pipelineId") as String, it.get("id") as Long))
         }
         return idInfos
+    }
+
+    fun getPipelineId(
+        projectId: String,
+        pipelineId: String
+    ): PipelineIdInfo? {
+        val pipelineInfo = pipelineInfoDao.getPipelineId(dslContext, projectId, pipelineId) ?: return null
+        return PipelineIdInfo(
+            id = pipelineInfo.id,
+            pipelineId = pipelineId
+        )
     }
 }
