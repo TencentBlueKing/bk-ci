@@ -91,7 +91,13 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun validPipelinePermission(userId: String, projectId: String, pipelineId: String, permission: AuthPermission, message: String?) {
+    override fun validPipelinePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission,
+        message: String?
+    ) {
         if (pipelineId == "*") {
             if (!checkPipelinePermission(
                     userId = userId,
@@ -110,7 +116,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         val permissionCheck = authPermissionApi.validateUserResourcePermission(
             user = userId,
             projectCode = projectId,
-            resourceCode = pipelineId,
+            resourceCode = iamId,
             permission = permission,
             resourceType = AuthResourceType.PIPELINE_DEFAULT,
             serviceCode = bsPipelineAuthServiceCode
