@@ -173,7 +173,6 @@ class GitCIBasicSettingService @Autowired constructor(
                     return@forEach
                 }
                 val userInfo = projectResult.data!!
-                logger.info("fixProjectInfo ${it.enableUserId} userInfo $userInfo")
                 count += gitCIBasicSettingDao.fixProjectInfo(
                     dslContext = dslContext,
                     gitProjectId = it.id,
