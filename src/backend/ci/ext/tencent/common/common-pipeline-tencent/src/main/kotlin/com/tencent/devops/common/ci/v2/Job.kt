@@ -90,7 +90,7 @@ data class RunsOn(
         credentials = null
     ),
     @JsonProperty("agent-selector")
-    val agentSelector: List<String>? = emptyList()
+    val agentSelector: List<String>? = null
 )
 
 enum class JobRunsOnType(val type: String) {

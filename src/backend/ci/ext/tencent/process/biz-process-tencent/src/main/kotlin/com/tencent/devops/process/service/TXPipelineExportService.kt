@@ -1044,7 +1044,7 @@ class TXPipelineExportService @Autowired constructor(
         val yamlObj = ScriptBuildYaml(
             version = "v2.0",
             name = model.name,
-            label = model.labels,
+            label = if (model.labels.isNullOrEmpty()) null else model.labels,
             triggerOn = null,
             variables = getVariableFromModel(model),
             stages = getV2StageFromModel(model, yamlSb, stageTagsMap),
@@ -1053,7 +1053,7 @@ class TXPipelineExportService @Autowired constructor(
             notices = null,
             finally = getV2FinalFromStage(model.stages.last(), yamlSb)
         )
-        var yamlStr = YamlUtil.toYaml(yamlObj)
+        val yamlStr = YamlUtil.toYaml(yamlObj)
         yamlSb.append(replaceTaskType(yamlStr))
         return exportToFile(yamlSb.toString(), model.name)
     }
@@ -1113,7 +1113,7 @@ class TXPipelineExportService @Autowired constructor(
                     val job = it as NormalContainer
                     jobs.add(
                         V2Job(
-                            id = job.id,
+                            id = null,
                             name = job.name,
                             // TODO: 问下对应关系
                             runsOn = RunsOn(),
