@@ -66,7 +66,10 @@ class GitCIBasicSettingDao {
                         UPDATE_TIME,
                         PROJECT_CODE,
                         ENABLE_MR_BLOCK,
-                        ENABLE_USER_ID
+                        ENABLE_USER_ID,
+                        CREATOR_BG_NAME,
+                        CREATOR_DEPT_NAME,
+                        CREATOR_CENTER_NAME
                     )
                         .values(
                             conf.gitProjectId,
@@ -82,7 +85,10 @@ class GitCIBasicSettingDao {
                             LocalDateTime.now(),
                             projectCode,
                             conf.enableMrBlock,
-                            conf.enableUserId
+                            conf.enableUserId,
+                            conf.creatorBgName,
+                            conf.creatorDeptName,
+                            conf.creatorCenterName
                         ).execute()
                 } else {
                     context.update(this)
@@ -93,6 +99,9 @@ class GitCIBasicSettingDao {
                         .set(PROJECT_CODE, projectCode)
                         .set(ENABLE_MR_BLOCK, conf.enableMrBlock)
                         .set(ENABLE_USER_ID, conf.enableUserId)
+                        .set(CREATOR_BG_NAME, conf.creatorBgName)
+                        .set(CREATOR_DEPT_NAME, conf.creatorDeptName)
+                        .set(CREATOR_CENTER_NAME, conf.creatorCenterName)
                         .where(ID.eq(conf.gitProjectId))
                         .execute()
                 }
@@ -127,6 +136,7 @@ class GitCIBasicSettingDao {
     fun updateProjectSetting(
         dslContext: DSLContext,
         gitProjectId: Long,
+        conf: GitCIBasicSetting,
         buildPushedBranches: Boolean?,
         buildPushedPullRequest: Boolean?,
         enableMrBlock: Boolean?,
@@ -151,6 +161,9 @@ class GitCIBasicSettingDao {
                 dsl.set(ENABLE_USER_ID, enableUserId)
             }
             dsl.set(UPDATE_TIME, LocalDateTime.now())
+                .set(CREATOR_BG_NAME, conf.creatorBgName)
+                .set(CREATOR_DEPT_NAME, conf.creatorDeptName)
+                .set(CREATOR_CENTER_NAME, conf.creatorCenterName)
                 .where(ID.eq(gitProjectId))
                 .execute()
         }
@@ -178,7 +191,10 @@ class GitCIBasicSettingDao {
                     updateTime = conf.updateTime.timestampmilli(),
                     projectCode = conf.projectCode,
                     enableMrBlock = conf.enableMrBlock,
-                    enableUserId = conf.enableUserId
+                    enableUserId = conf.enableUserId,
+                    creatorBgName = conf.creatorBgName,
+                    creatorDeptName = conf.creatorDeptName,
+                    creatorCenterName = conf.creatorCenterName
                 )
             }
         }
