@@ -68,7 +68,7 @@ class QualityConfiguration {
     )
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "v3")
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
     fun v3QualityPermissionServiceImpl(
         authPermissionApi: AuthPermissionApi,
         authResourceApi: AuthResourceApi,
