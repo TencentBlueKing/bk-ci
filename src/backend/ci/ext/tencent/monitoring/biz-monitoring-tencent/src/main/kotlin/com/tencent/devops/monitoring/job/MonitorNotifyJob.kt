@@ -178,7 +178,8 @@ class MonitorNotifyJob @Autowired constructor(
             dispatchStatus(startTime, endTime),
             userStatus(startTime, endTime),
             commitCheck(startTime, endTime),
-            codecc(startTime, endTime)
+            codecc(startTime, endTime),
+            dispatchTime(startTime, endTime)
         )
 
         // 发送邮件
@@ -199,6 +200,12 @@ class MonitorNotifyJob @Autowired constructor(
                 }
             }
         }
+
+        //
+    }
+
+    private fun dispatchTime(startTime: Long, endTime: Long): EmailModuleData {
+        TODO("Not yet implemented")
     }
 
     private fun commitCheck(startTime: Long, endTime: Long): EmailModuleData {
@@ -391,6 +398,12 @@ class MonitorNotifyJob @Autowired constructor(
             } else {
                 logger.error("dispatchStatus , get map error , errorMsg:${queryResult?.error}")
             }
+
+            oteamStatus(
+                rowList.filter { it.first == "third" || it.first == ".docker.vm" }.map { it.second }.average(),
+                oteamJobSuccessTarget,
+                startTime
+            )
 
             return EmailModuleData(
                 "公共构建机统计",
