@@ -25,8 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.pojo
+package com.tencent.devops.common.api.exception
 
-data class FileGatewayInfo(
-    val fileGateway: String
-)
+import com.tencent.devops.common.api.constant.CommonMessageCode.OAUTH_TOKEN_IS_INVALID
+
+class TokenForbiddenException(
+    message: String?,
+    errorCode: String = OAUTH_TOKEN_IS_INVALID,
+    params: Array<String>? = null
+) :
+    ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params)

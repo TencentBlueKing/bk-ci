@@ -24,47 +24,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.pojo.image.response
 
-package com.tencent.devops.auth.cron
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.tencent.devops.auth.entity.ManagerChangeType
-import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
-import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
-import com.tencent.devops.auth.service.ManagerOrganizationService
-import com.tencent.devops.auth.service.ManagerUserService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+@ApiModel("镜像支持的机器类型详情")
+data class ImageAgentTypeInfo(
 
-@Component
-class ManagerUserTimeoutCron @Autowired constructor(
-    val managerUserService: ManagerUserService,
-    val managerOrganizationService: ManagerOrganizationService,
-    val refreshDispatch: AuthRefreshDispatch
-) {
+    @ApiModelProperty("类型代码", required = true)
+    val code: String,
 
-    /**
-     * 每2分钟，清理过期管理员
-     */
-    @Scheduled(cron = "0 0/2 * * * ?")
-    fun newClearTimeoutCache() {
-        managerUserService.deleteTimeoutUser()
-    }
-
-    /**
-     * 每5分钟，刷新缓存数据
-     */
-    @Scheduled(cron = "0 0/5 * * * ?")
-    fun refreshCache() {
-        val managerList = managerOrganizationService.listManager() ?: return
-        managerList.forEach {
-            refreshDispatch.dispatch(
-                ManagerOrganizationChangeEvent(
-                    refreshType = "updateManagerOrganization",
-                    managerId = it.id!!,
-                    managerChangeType = ManagerChangeType.UPDATE
-                )
-            )
-        }
-    }
-}
+    @ApiModelProperty("类型名称", required = true)
+    val name: String
+)

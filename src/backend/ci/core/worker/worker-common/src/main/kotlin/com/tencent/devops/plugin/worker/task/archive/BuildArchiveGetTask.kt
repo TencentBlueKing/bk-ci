@@ -44,6 +44,7 @@ import com.tencent.devops.worker.common.api.process.BuildSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
@@ -98,7 +99,8 @@ class BuildArchiveGetTask : ITask() {
                     pipelineId = pipelineId,
                     buildId = buildId,
                     uri = fileUrl,
-                    destPath = file
+                    destPath = file,
+                    isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
                 )
                 count++
             }

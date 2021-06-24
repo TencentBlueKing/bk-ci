@@ -305,6 +305,8 @@ object Runner {
         LoggerService.addFoldEndLine("-----")
     }
 
+    private val contextKeys = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.")
+
     /**
      * 显示用户预定义变量
      */
@@ -312,6 +314,11 @@ object Runner {
         LoggerService.addNormalLine("")
         LoggerService.addFoldStartLine("[Build Environment Properties]")
         variables.forEach { v ->
+            for (it in contextKeys) {
+                if (v.key.trim().startsWith(it)) {
+                    return@forEach
+                }
+            }
             if (v.valueType == BuildFormPropertyType.PASSWORD) {
                 LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a("******").toString())
             } else {

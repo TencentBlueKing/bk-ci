@@ -5,8 +5,8 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,7 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class GitCiPipelinePermissionServiceImpl @Autowired constructor(
     val client: Client,
     val pipelineInfoDao: PipelineInfoDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val checkTokenService: ClientTokenService
 ) : PipelinePermissionService {
 
     override fun checkPipelinePermission(
@@ -23,7 +24,12 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
         permission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, permission.value, projectId, AuthResourceType.PIPELINE_DEFAULT.value).data ?: false
+            userId = userId,
+            token = checkTokenService.getSystemToken(null) ?: "",
+            action = permission.value,
+            projectCode = projectId,
+            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
+        ).data ?: false
     }
 
     override fun checkPipelinePermission(
@@ -73,7 +79,12 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
 
     override fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, "", projectId, null).data ?: false
+            userId = userId,
+            token = checkTokenService.getSystemToken(null) ?: "",
+            action = "",
+            projectCode = projectId,
+            resourceCode = null
+        ).data ?: false
     }
 
     private fun getProjectAllInstance(projectId: String): List<String> {

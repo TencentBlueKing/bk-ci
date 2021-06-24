@@ -51,6 +51,7 @@ import com.tencent.devops.worker.common.api.store.ExtServiceResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.worker.common.utils.TaskUtil
 import io.fabric8.kubernetes.client.internal.readiness.Readiness
 import okhttp3.MediaType
 import okhttp3.Request
@@ -121,7 +122,8 @@ class ExtServiceBuildDeployTask : ITask() {
             url = uploadFileUrl,
             destPath = destPath,
             file = file,
-            headers = headers
+            headers = headers,
+            isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
         logger.info("ExtServiceBuildDeployTask uploadResult: $uploadResult")
         val uploadFlag = uploadResult.data

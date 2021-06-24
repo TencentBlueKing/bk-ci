@@ -30,8 +30,8 @@ package com.tencent.devops.ticket.service
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.ticket.dao.CertDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -40,7 +40,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class GitCICertPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val certDao: CertDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val tokenService: ClientTokenService
 ) : CertPermissionService {
     override fun validatePermission(
         userId: String,
@@ -70,7 +71,12 @@ class GitCICertPermissionServiceImpl @Autowired constructor(
     override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
         logger.info("GitCICredentialPermission user:$userId projectId: $projectId ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, authPermission.value, projectId, null).data ?: false
+            userId = userId,
+            token = tokenService.getSystemToken(null) ?: "",
+            action = authPermission.value,
+            projectCode = projectId,
+            resourceCode = null
+        ).data ?: false
     }
 
     override fun validatePermission(

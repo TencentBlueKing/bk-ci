@@ -52,8 +52,8 @@ interface ServiceUserGroupResource {
         @ApiParam(name = "用户名", required = true)
         @PathParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "用户组名称", required = true)
+        @ApiParam(name = "用户组Id", required = true)
         @PathParam("groupId")
-        groupId: String
+        groupId: Int
     ): Result<Boolean>
 }

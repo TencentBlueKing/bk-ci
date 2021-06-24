@@ -882,5 +882,6 @@
     },
     "permissionRefreshtitle": "Permission Request form has been submitted",
     "permissionRefreshSubtitle": "Please fill in the permission request form in the permission center and refresh the page after submission",
-    "permissionRefreshOkText": "Reload Page"
+    "permissionRefreshOkText": "Reload Page",
+    "searchForMore": "search for pipelines"
 }

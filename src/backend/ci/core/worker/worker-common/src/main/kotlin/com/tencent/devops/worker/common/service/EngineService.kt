@@ -71,7 +71,8 @@ object EngineService {
                 containerId = ret.containerId,
                 containerHashId = ret.containerHashId,
                 variablesWithType = ret.variablesWithType,
-                timeoutMills = ret.timeoutMills
+                timeoutMills = ret.timeoutMills,
+                containerType = ret.containerType
             )
         }
     }

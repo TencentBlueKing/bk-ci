@@ -58,13 +58,13 @@ interface ICommand {
             } else {
                 try {
                     CredentialUtils.getCredential(buildId, key, false)[0]
-                } catch (ignored: Exception) {
-                    logger.warn("环境变量($key)不存在", ignored)
-                    if (doubleCurlyBraces) {
-                        "\${{$key}}"
-                    } else {
-                        "\${$key}"
-                    }
+                } catch (e: Exception) {
+                    logger.warn("环境变量($key)不存在", e.message)
+                    CredentialUtils.getCredentialContextValue(key) ?: if (doubleCurlyBraces) {
+                            "\${{$key}}"
+                        } else {
+                            "\${$key}"
+                        }
                 }
             }
         }, mapOf(
