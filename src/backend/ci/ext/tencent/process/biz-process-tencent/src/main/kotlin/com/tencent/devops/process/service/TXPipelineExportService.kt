@@ -27,94 +27,46 @@
 
 package com.tencent.devops.process.service
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.ci.NORMAL_JOB
-import com.tencent.devops.common.ci.VM_JOB
-import com.tencent.devops.common.ci.image.Credential
-import com.tencent.devops.common.ci.image.MacOS
-import com.tencent.devops.common.ci.image.Pool
-import com.tencent.devops.common.ci.image.PoolType
-import com.tencent.devops.common.ci.task.BashTask
-import com.tencent.devops.common.ci.task.LinuxScriptInput
-import com.tencent.devops.common.ci.task.MarketBuildInput
-import com.tencent.devops.common.ci.task.MarketBuildLessTask
-import com.tencent.devops.common.ci.task.MarketBuildTask
-import com.tencent.devops.common.ci.task.WindowsScriptInput
-import com.tencent.devops.common.ci.task.WindowsScriptTask
+import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Variable
-import com.tencent.devops.common.ci.yaml.Job
-import com.tencent.devops.common.ci.yaml.JobDetail
-import com.tencent.devops.common.ci.yaml.ResourceType
-import com.tencent.devops.common.ci.yaml.Stage
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
-import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
-import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
-import com.tencent.devops.process.api.quality.pojo.PipelineListRequest
+import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.CodeCCExportYamlData
-import com.tencent.devops.process.pojo.JobData
-import com.tencent.devops.process.pojo.OldVersionTask
-import com.tencent.devops.process.pojo.Pipeline
-import com.tencent.devops.process.pojo.PipelineExportYamlData
-import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.process.pojo.PoolData
-import com.tencent.devops.process.pojo.TaskData
-import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
-import com.tencent.devops.process.pojo.quality.QualityPipeline
-import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.process.service.op.GitCiMarketAtomService
-import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
-import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
-import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
-import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
 import com.tencent.devops.common.ci.v2.Stage as V2Stage
 import com.tencent.devops.common.ci.v2.Job as V2Job
 import com.tencent.devops.common.ci.v2.Step as V2Step
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
-import java.io.BufferedReader
-import java.io.StringReader
 import java.net.URLEncoder
 import java.time.LocalDateTime
 import javax.ws.rs.core.MediaType
@@ -124,923 +76,38 @@ import javax.ws.rs.core.StreamingOutput
 @Suppress("ALL")
 @Service("TXPipelineExportService")
 class TXPipelineExportService @Autowired constructor(
-    private val bkAuthPermissionApi: AuthPermissionApi,
-    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineGroupService: PipelineGroupService,
-    private val pipelineListFacadeService: PipelineListFacadeService,
     private val stageTagService: StageTagService,
-    private val processJmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val gitCiMarketAtomService: GitCiMarketAtomService,
-    private val client: Client,
     private val objectMapper: ObjectMapper
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TXPipelineExportService::class.java)
-    }
-
-    fun listQualityViewPipelines(
-        userId: String,
-        projectId: String,
-        page: Int?,
-        pageSize: Int?,
-        sortType: PipelineSortType,
-        channelCode: ChannelCode,
-        viewId: String,
-        checkPermission: Boolean = true,
-        filterByPipelineName: String? = null,
-        filterByCreator: String? = null,
-        filterByLabels: String? = null,
-        callByApp: Boolean? = false,
-        authPipelineIds: List<String> = emptyList(),
-        skipPipelineIds: List<String> = emptyList()
-    ): PipelineViewPipelinePage<QualityPipeline> {
-
-        val watch = StopWatch()
-        watch.start("perm_r_perm")
-        val authPipelines = if (authPipelineIds.isEmpty()) {
-            bkAuthPermissionApi.getUserResourceByPermission(
-                userId, bsPipelineAuthServiceCode,
-                AuthResourceType.PIPELINE_DEFAULT, projectId, AuthPermission.LIST,
-                null
-            )
-        } else {
-            authPipelineIds
+        private val yamlObjectMapper = ObjectMapper(YAMLFactory()).apply {
+            registerModule(KotlinModule())
         }
-        watch.stop()
-
-        watch.start("s_r_summary")
-        val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(projectId, channelCode)
-        watch.stop()
-
-        watch.start("s_r_fav")
-        val skipPipelineIdsNew = mutableListOf<String>()
-        if (pipelineBuildSummary.isNotEmpty) {
-            pipelineBuildSummary.forEach {
-                skipPipelineIdsNew.add(it["PIPELINE_ID"] as String)
-            }
-        }
-        if (skipPipelineIds.isNotEmpty()) {
-            skipPipelineIdsNew.addAll(skipPipelineIds)
-        }
-
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: -1
-        var slqLimit: SQLLimit? = null
-        if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-
-        val offset = slqLimit?.offset ?: 0
-        val limit = slqLimit?.limit ?: -1
-        var count = 0L
-        try {
-
-            val list = if (pipelineBuildSummary.isNotEmpty) {
-
-                val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-                val pipelines =
-                    pipelineListFacadeService.buildPipelines(pipelineBuildSummary, favorPipelines, authPipelines)
-                val allFilterPipelines =
-                    pipelineListFacadeService.filterViewPipelines(
-                        pipelines,
-                        filterByPipelineName,
-                        filterByCreator,
-                        filterByLabels
-                    )
-
-                val hasPipelines = allFilterPipelines.isNotEmpty()
-
-                if (!hasPipelines) {
-                    return PipelineViewPipelinePage(pageNotNull, pageSizeNotNull, 0, emptyList())
-                }
-
-                val filterPipelines = when (viewId) {
-                    PIPELINE_VIEW_FAVORITE_PIPELINES -> {
-                        logger.info("User($userId) favorite pipeline ids($favorPipelines)")
-                        allFilterPipelines.filter { favorPipelines.contains(it.pipelineId) }
-                    }
-                    PIPELINE_VIEW_MY_PIPELINES -> {
-                        logger.info("User($userId) my pipelines")
-                        allFilterPipelines.filter {
-                            authPipelines.contains(it.pipelineId)
-                        }
-                    }
-                    PIPELINE_VIEW_ALL_PIPELINES -> {
-                        logger.info("User($userId) all pipelines")
-                        allFilterPipelines
-                    }
-                    else -> {
-                        logger.info("User($userId) filter view($viewId)")
-                        pipelineListFacadeService.filterViewPipelines(userId, projectId, allFilterPipelines, viewId)
-                    }
-                }
-
-                val permissionList = filterPipelines.filter { it.hasPermission }.toMutableList()
-                pipelineListFacadeService.sortPipelines(permissionList, sortType)
-                count = permissionList.size.toLong()
-
-                val toIndex =
-                    if (limit == -1 || permissionList.size <= (offset + limit)) permissionList.size else offset + limit
-
-                if (offset >= permissionList.size) mutableListOf() else permissionList.subList(offset, toIndex)
-            } else {
-                mutableListOf()
-            }
-            watch.stop()
-
-            val records = list.map {
-                QualityPipeline(
-                    projectId = it.projectId,
-                    pipelineId = it.pipelineId,
-                    pipelineName = it.pipelineName,
-                    pipelineDesc = it.pipelineDesc,
-                    taskCount = it.taskCount,
-                    buildCount = it.buildCount,
-                    latestBuildStartTime = it.latestBuildStartTime,
-                    latestBuildEndTime = it.latestBuildEndTime
-                )
-            }
-            return PipelineViewPipelinePage(pageNotNull, pageSizeNotNull, count, records)
-        } finally {
-            logger.info("listViewPipelines|[$projectId]|$userId|watch=$watch")
-            processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watch.totalTimeMillis)
-        }
-    }
-
-    fun listPipelineInfo(userId: String, projectId: String, request: PipelineListRequest?): List<Pipeline> {
-        return pipelineListFacadeService.listPipelineInfo(userId, projectId, request?.pipelineId, request?.templateId)
-    }
-
-    private fun replaceTaskType(yamlStr: String): String {
-        val sb = StringBuilder()
-        val taskTypeRegex = Regex("\\- \\!\\<.*\\>")
-        val br = BufferedReader(StringReader(yamlStr))
-        var line: String? = br.readLine()
-        while (line != null) {
-            val taskTypeMatches = taskTypeRegex.find(line)
-            if (null != taskTypeMatches) {
-                line = line.replace("- !<", "- taskType: ").replace(">", "")
-            }
-            sb.append(line).append("\n")
-            line = br.readLine()
-        }
-        return sb.toString()
-    }
-
-    private fun getStageFromModel(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        model: Model,
-        comment: StringBuilder,
-        isGitCI: Boolean = false
-    ): List<PipelineExportYamlData> {
-        val stages = mutableListOf<PipelineExportYamlData>()
-        model.stages.drop(1).forEach {
-            val jobs = getJobsFromStage(userId, projectId, pipelineId, it, comment, isGitCI)
-            val jobList = jobs.map { job -> job.job }
-            if (jobList.isNotEmpty()) {
-                stages.add(
-                    PipelineExportYamlData(
-                        Stage(jobList),
-                        jobs
-                    )
-                )
-            }
-        }
-        return stages
-    }
-
-    private fun getJobsFromStage(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        stage: com.tencent.devops.common.pipeline.container.Stage,
-        comment: StringBuilder,
-        isGitCI: Boolean = false
-    ): List<JobData> {
-        val jobs = mutableListOf<JobData>()
-        stage.containers.forEach {
-            val pool = getPoolFromModelContainer(userId, projectId, pipelineId, it, comment, isGitCI)
-            // 目前仅工蜂CI，当注释项不为空时，说明当前pool不支持，直接跳过steps
-            if (isGitCI && pool.tip != null && pool.replaceYamlStr != null) {
-                val jobDetail = JobDetail(
-                    name = null, // 推荐用displayName
-                    displayName = it.name,
-                    type = when (it.getClassType()) {
-                        VMBuildContainer.classType -> VM_JOB
-                        NormalContainer.classType -> NORMAL_JOB
-                        else -> {
-                            logger.error("get jobs from stage failed, unknown classType:(${it.getClassType()})")
-                            VM_JOB
-                        }
-                    },
-                    pool = pool.pool,
-                    steps = emptyList(),
-                    condition = null,
-                    resourceType = if (pool.pool != null) {
-                        ResourceType.REMOTE
-                    } else {
-                        ResourceType.LOCAL
-                    }
-                )
-                // pool不能用时注释掉的是整个job
-                jobs.add(
-                    JobData(
-                        Job(jobDetail),
-                        PoolData(pool.pool, pool.tip, toYamlStr(Job(jobDetail))),
-                        emptyList()
-                    )
-                )
-                return@forEach
-            }
-
-            val steps = getStepsFromModelContainer(it, comment, isGitCI)
-            val stepsList = steps.map { step -> step.task }
-            if (steps.isNotEmpty()) {
-                val jobDetail = JobDetail(
-                    name = null, // 推荐用displayName
-                    displayName = it.name,
-                    type = when (it.getClassType()) {
-                        VMBuildContainer.classType -> VM_JOB
-                        NormalContainer.classType -> NORMAL_JOB
-                        else -> {
-                            logger.error("get jobs from stage failed, unknown classType:(${it.getClassType()})")
-                            VM_JOB
-                        }
-                    },
-                    pool = pool.pool,
-                    steps = stepsList,
-                    condition = null,
-                    resourceType = if (pool.pool != null) {
-                        ResourceType.REMOTE
-                    } else {
-                        ResourceType.LOCAL
-                    }
-                )
-                jobs.add(
-                    JobData(
-                        Job(jobDetail),
-                        pool,
-                        steps
-                    )
-                )
-            }
-        }
-        return jobs
-    }
-
-    private fun getStepsFromModelContainer(
-        modelContainer: Container,
-        comment: StringBuilder,
-        isGitCI: Boolean = false
-    ): List<TaskData> {
-        val taskList = mutableListOf<TaskData>()
-        modelContainer.elements.forEach {
-            val gitCINotSupportTip =
-                "# ======== 插件 ${it.name} 尚未确认是否可以在工蜂CI执行" +
-                    "，请联系插件开发者（https://iwiki.woa.com/x/CqARHg） ======== "
-            when (it.getClassType()) {
-                LinuxScriptElement.classType -> {
-                    val element = it as LinuxScriptElement
-                    taskList.add(
-                        TaskData(
-                            BashTask(
-                                displayName = element.name,
-                                inputs = LinuxScriptInput(
-                                    scriptType = element.scriptType,
-                                    content = element.script,
-                                    continueOnError = element.continueNoneZero
-                                ),
-                                condition = null
-                            ),
-                            null,
-                            null
-                        )
-                    )
-                }
-                WindowsScriptElement.classType -> {
-                    val element = it as WindowsScriptElement
-                    val task = WindowsScriptTask(
-                        displayName = element.name,
-                        inputs = WindowsScriptInput(
-                            content = element.script,
-                            scriptType = element.scriptType
-                        ),
-                        condition = null
-                    )
-                    val tip = if (isGitCI) {
-                        gitCINotSupportTip
-                    } else {
-                        null
-                    }
-                    val replaceYamlStr = if (isGitCI) {
-                        toYamlStr(task)
-                    } else {
-                        null
-                    }
-                    taskList.add(
-                        TaskData(task, tip, replaceYamlStr)
-                    )
-                }
-                MarketBuildAtomElement.classType -> {
-                    val element = it as MarketBuildAtomElement
-                    var elementData = mutableMapOf<String, Any>()
-                    // 针对CodeCC的插件导出参数做处理
-                    if (element.getAtomCode() == "CodeccCheckAtomDebug") {
-                        element.data.forEach dataLoop@{ (key, value) ->
-                            if (key == "input") {
-                                elementData[key] = objectMapper.convertValue<CodeCCExportYamlData>(
-                                    value,
-                                    object : TypeReference<CodeCCExportYamlData>() {}
-                                )
-                            } else if (key == "output" || key == "namespace") {
-                                return@dataLoop
-                            } else {
-                                elementData[key] = value
-                            }
-                        }
-                    } else {
-                        elementData = element.data.toMutableMap()
-                    }
-                    val task = MarketBuildTask(
-                        displayName = element.name,
-                        inputs = MarketBuildInput(
-                            atomCode = element.getAtomCode(),
-                            name = element.name,
-                            version = element.version,
-                            data = elementData
-                        ),
-                        condition = null
-                    )
-                    // 工蜂CI仅支持部分商店插件导出
-                    if (isGitCI) {
-                        val codeList = gitCiMarketAtomService.list(
-                            atomCode = element.getAtomCode(),
-                            page = null,
-                            pageSize = null
-                        ).records.map { atom -> atom.atomCode }
-                        if (element.getAtomCode() !in codeList) {
-                            taskList.add(
-                                TaskData(
-                                    task,
-                                    gitCINotSupportTip,
-                                    toYamlStr(task)
-                                )
-                            )
-                            return@forEach
-                        }
-                    }
-                    taskList.add(
-                        TaskData(task, null, null)
-                    )
-                }
-                MarketBuildLessAtomElement.classType -> {
-                    val element = it as MarketBuildLessAtomElement
-                    val task = MarketBuildLessTask(
-                        displayName = element.name,
-                        inputs = MarketBuildInput(
-                            atomCode = element.getAtomCode(),
-                            name = element.name,
-                            version = element.version,
-                            data = element.data
-                        ),
-                        condition = null
-                    )
-                    // 工蜂CI仅支持部分商店插件导出
-                    if (isGitCI) {
-                        val codeList = gitCiMarketAtomService.list(
-                            atomCode = element.getAtomCode(),
-                            page = null,
-                            pageSize = null
-                        ).records.map { atom -> atom.atomCode }
-                        if (element.getAtomCode() !in codeList) {
-                            taskList.add(
-                                TaskData(
-                                    task,
-                                    gitCINotSupportTip,
-                                    toYamlStr(task)
-                                )
-                            )
-                            return@forEach
-                        }
-                    }
-                    taskList.add(TaskData(task, null, null))
-                }
-                else -> {
-                    logger.info("Not support plugin:${it.getClassType()}, skip...")
-                    comment.append(
-                        "# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！" +
-                            "请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n"
-                    )
-                    if (isGitCI) {
-                        val task = OldVersionTask(
-                            displayName = it.name,
-                            inputs = null,
-                            condition = null
-                        )
-                        taskList.add(
-                            TaskData(
-                                task,
-                                "# ======== 工蜂CI不支持蓝盾老版本插件 ${it.name} ，" +
-                                    "请在研发商店搜索新插件替换 ======== \n ${it.getClassType()}@latest",
-                                toYamlStr(task)
-                            )
-                        )
-                    }
-                }
-            }
-        }
-        return taskList
-    }
-
-    private fun getPoolFromModelContainer(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        modelContainer: Container,
-        comment: StringBuilder,
-        isGitCI: Boolean = false
-    ): PoolData {
-        when (modelContainer) {
-            is VMBuildContainer -> {
-                val dispatchType = modelContainer.dispatchType ?: return PoolData(null, null, null)
-                // 工蜂CI仅支持docker，devCloud，macos
-                val tip =
-                    "# 注意：工蜂CI暂不支持当前类型的构建机" +
-                        "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
-                        "需检查JOB(${modelContainer.name})的Pool字段 "
-                when (dispatchType.buildType()) {
-                    BuildType.DOCKER, BuildType.PUBLIC_DEVCLOUD -> {
-                        return PoolData(
-                            getPublicDockerPool(
-                                dispatchType = dispatchType,
-                                userId = userId,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                modelContainer = modelContainer,
-                                isGitCI = isGitCI
-                            ), null, null
-                        )
-                    }
-                    BuildType.MACOS -> {
-                        return PoolData(getMacOSPool(dispatchType), null, null)
-                    }
-                    BuildType.THIRD_PARTY_PCG -> {
-                        val pool = getPcgPool(dispatchType, comment)
-                        return if (isGitCI) {
-                            PoolData(
-                                pool,
-                                tip,
-                                toYamlStr(pool)
-                            )
-                        } else {
-                            PoolData(pool, null, null)
-                        }
-                    }
-                    BuildType.THIRD_PARTY_AGENT_ID -> {
-                        val pool = getThirdPartyAgentPool(dispatchType, projectId, comment)
-                        return if (isGitCI) {
-                            PoolData(
-                                pool,
-                                tip,
-                                toYamlStr(pool)
-                            )
-                        } else {
-                            PoolData(pool, null, null)
-                        }
-                    }
-                    BuildType.THIRD_PARTY_AGENT_ENV -> {
-                        val pool = getThirdPartyEnvPool(dispatchType, projectId, comment)
-                        return if (isGitCI) {
-                            PoolData(
-                                pool,
-                                tip,
-                                toYamlStr(pool)
-                            )
-                        } else {
-                            PoolData(pool, null, null)
-                        }
-                    }
-                    else -> {
-                        comment.append(
-                            "# 注意：暂不支持当前类型的构建机" +
-                                "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
-                                "需检查JOB(${modelContainer.name})的Pool字段 \n"
-                        )
-                        return PoolData(null, null, null)
-                    }
-                }
-            }
-            else -> {
-                return PoolData(null, null, null)
-            }
-        }
-    }
-
-    private fun getThirdPartyEnvPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
-        comment.append(
-            "# 注意：【${BuildType.THIRD_PARTY_AGENT_ENV.value}】的环境【${dispatchType.value}】在新业务下可能不存在，" +
-                "请手动修改成存在的环境，并检查操作系统是否正确！ \n"
-        )
-        return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
-            val agentsResult = if (dispatchType.agentType == AgentType.ID) {
-                client.get(ServiceThirdPartyAgentResource::class)
-                    .getAgentsByEnvId(projectId, dispatchType.value)
-            } else {
-                client.get(ServiceThirdPartyAgentResource::class)
-                    .getAgentsByEnvName(projectId, dispatchType.value)
-            }
-            val os = if (agentsResult.isNotOk() || null == agentsResult.data || agentsResult.data!!.isEmpty()) {
-                logger.error(
-                    "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , " +
-                        "not found agent:${dispatchType.envName}"
-                )
-                VMBaseOS.LINUX
-            } else {
-                when (agentsResult.data!![0].os) {
-                    "MACOS" -> VMBaseOS.MACOS
-                    "WINDOWNS" -> VMBaseOS.WINDOWS
-                    else -> VMBaseOS.LINUX
-                }
-            }
-
-            Pool(
-                container = null,
-                credential = null,
-                macOS = null,
-                third = null,
-                performanceConfigId = null,
-                env = null,
-                type = PoolType.SelfHosted,
-                agentName = null,
-                agentId = null,
-                envName = if (dispatchType.agentType == AgentType.NAME) {
-                    dispatchType.value
-                } else {
-                    null
-                },
-                envId = if (dispatchType.agentType == AgentType.ID) {
-                    dispatchType.value
-                } else {
-                    null
-                },
-                os = os,
-                workspace = dispatchType.workspace
-            )
-        } else {
-            logger.error("Unknown dispatchType: ${dispatchType.buildType()}")
-            null
-        }
-    }
-
-    private fun getThirdPartyAgentPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
-        comment.append(
-            "# 注意：【${BuildType.THIRD_PARTY_AGENT_ID.value}】的节点【${dispatchType.value}】在新业务下可能不存在，" +
-                "请手动修改成存在的节点！ \n"
-        )
-        return if (dispatchType is ThirdPartyAgentIDDispatchType) {
-            val agentResult = if (dispatchType.agentType == AgentType.ID) {
-                client.get(ServiceThirdPartyAgentResource::class)
-                    .getAgentById(projectId, dispatchType.value)
-            } else {
-                client.get(ServiceThirdPartyAgentResource::class)
-                    .getAgentByDisplayName(projectId, dispatchType.value)
-            }
-            val os = if (agentResult.isNotOk() || null == agentResult.data) {
-                logger.error(
-                    "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , " +
-                        "not found agent:${dispatchType.displayName}"
-                )
-                VMBaseOS.LINUX
-            } else {
-                when (agentResult.data!!.os) {
-                    "MACOS" -> VMBaseOS.MACOS
-                    "WINDOWNS" -> VMBaseOS.WINDOWS
-                    else -> VMBaseOS.LINUX
-                }
-            }
-
-            Pool(
-                container = null,
-                credential = null,
-                macOS = null,
-                third = null,
-                performanceConfigId = null,
-                env = null,
-                type = PoolType.SelfHosted,
-                agentName = if (dispatchType.agentType == AgentType.NAME) {
-                    dispatchType.value
-                } else {
-                    null
-                },
-                agentId = if (dispatchType.agentType == AgentType.ID) {
-                    dispatchType.value
-                } else {
-                    null
-                },
-                envName = null,
-                envId = null,
-                os = os,
-                workspace = dispatchType.workspace
-            )
-        } else {
-            logger.error("Unknown dispatchType: ${dispatchType.buildType()}")
-            null
-        }
-    }
-
-    private fun getPcgPool(dispatchType: DispatchType, comment: StringBuilder): Pool? {
-        comment.append("# 注意：【${BuildType.THIRD_PARTY_PCG.value}】仅对PCG业务可见，请检查当前业务是否属于PCG！ \n")
-        return if (dispatchType is PCGDispatchType) {
-            Pool(
-                container = dispatchType.value,
-                credential = null,
-                macOS = null,
-                third = null,
-                performanceConfigId = null,
-                env = null,
-                type = PoolType.DockerOnPcg,
-                agentName = null,
-                agentId = null,
-                envName = null,
-                envId = null,
-                workspace = null
-            )
-        } else {
-            logger.error("Unknown dispatchType: ${dispatchType.buildType()}")
-            null
-        }
-    }
-
-    private fun getMacOSPool(dispatchType: DispatchType): Pool? {
-        if (dispatchType !is MacOSDispatchType) {
-            logger.error("Unknown dispatchType: ${dispatchType.buildType()}")
-            return null
-        } else {
-            return Pool(
-                container = null,
-                credential = null,
-                macOS = MacOS(
-                    systemVersion = dispatchType.systemVersion,
-                    xcodeVersion = dispatchType.xcodeVersion
-                ),
-                third = null,
-                performanceConfigId = null,
-                env = null,
-                type = PoolType.Macos,
-                agentName = null,
-                agentId = null,
-                envName = null,
-                envId = null,
-                workspace = null
-            )
-        }
-    }
-
-    private fun getPublicDockerPool(
-        dispatchType: DispatchType,
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        modelContainer: VMBuildContainer,
-        isGitCI: Boolean = false
-    ): Pool? {
-        // 工蜂CI中的pool仅有container，和credential两个字段
-        val poolType = if (isGitCI) {
-            null
-        } else {
-            if (dispatchType.buildType().name == BuildType.DOCKER.name) {
-                PoolType.DockerOnVm
-            } else {
-                PoolType.DockerOnDevCloud
-            }
-        }
-
-        val env = if (isGitCI) {
-            null
-        } else {
-            modelContainer.buildEnv
-        }
-
-        if (dispatchType is StoreDispatchType) {
-            when (dispatchType.imageType) {
-                ImageType.BKSTORE -> {
-                    // 调商店接口获取镜像信息
-                    val imageRepoInfo = client.get(ServiceStoreImageResource::class)
-                        .getImageRepoInfoByCodeAndVersion(
-                            userId = userId,
-                            projectCode = projectId,
-                            imageCode = dispatchType.imageCode!!,
-                            imageVersion = dispatchType.imageVersion,
-                            pipelineId = pipelineId,
-                            buildId = null
-                        ).data!!
-                    val completeImageName = if (imageRepoInfo.repoUrl.isBlank()) {
-                        imageRepoInfo.repoName
-                    } else {
-                        "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
-                    } + ":" + imageRepoInfo.repoTag
-                    return Pool(
-                        container = completeImageName,
-                        credential = Credential(null, null, imageRepoInfo.ticketId),
-                        macOS = null,
-                        third = null,
-                        performanceConfigId = null,
-                        env = env,
-                        type = poolType,
-                        agentName = null,
-                        agentId = null,
-                        envName = null,
-                        envId = null,
-                        workspace = null
-                    )
-                }
-                ImageType.BKDEVOPS -> {
-                    // 在商店发布的蓝盾源镜像，无需凭证
-                    return Pool(
-                        container = if (dispatchType is DockerDispatchType) {
-                            dispatchType.value.removePrefix("paas/")
-                        } else {
-                            dispatchType.value.removePrefix("/")
-                        },
-                        credential = null,
-                        macOS = null,
-                        third = null,
-                        performanceConfigId = null,
-                        env = env,
-                        type = poolType,
-                        agentName = null,
-                        agentId = null,
-                        envName = null,
-                        envId = null,
-                        workspace = null
-                    )
-                }
-                else -> {
-                    return Pool(
-                        container = dispatchType.value,
-                        credential = if (dispatchType is PublicDevCloudDispathcType) {
-                            Credential(null, null, dispatchType.credentialId)
-                        } else {
-                            null
-                        },
-                        macOS = null,
-                        third = null,
-                        performanceConfigId = null,
-                        env = env,
-                        type = poolType,
-                        agentName = null,
-                        agentId = null,
-                        envName = null,
-                        envId = null,
-                        workspace = null
-                    )
-                }
-            }
-        }
-        logger.error("Unknown dispatchType: ${dispatchType.buildType()}")
-        return null
-    }
-
-    private fun getVariableFromModel(model: Model): Map<String, Variable>? {
-        val params = (model.stages[0].containers[0] as TriggerContainer).params
-        val result = mutableMapOf<String, Variable>()
-        params.forEach {
-            result[it.id] = Variable(it.defaultValue.toString())
-        }
-        return if (result.isEmpty()) {
-            null
-        } else {
-            result
-        }
-    }
-
-    // 方便为可能为空值的对象转为yaml
-    private fun toYamlStr(bean: Any?): String {
-        return bean?.let { YamlUtil.toYaml(it) } ?: ""
-    }
-
-    // 对Job对象的Yaml字符串按行进行带注释的替换
-    private fun replaceJobYamlStrLineToComment(yamlStr: String?, tip: String?, replaceYamlStr: String?): String {
-        if (yamlStr == null || yamlStr.isBlank()) {
-            return ""
-        }
-        if (replaceYamlStr == null || replaceYamlStr.isBlank()) {
-            return yamlStr
-        }
-        if (tip == null || tip.isBlank()) {
-            return yamlStr
-        }
-        val yamlList = yamlStr.split("\n").toMutableList()
-        val replaceYamlList = replaceYamlStr.split("\n")
-
-        /**
-         *  目前生成的replaceJob对象 [---, job:, displayName:xxx, ...]
-         *  源串的Job对象 [ - job:, displayName:xxx, ...]
-         *  前两个根据生成对象的方式不同，所以为了方便对比取第三个
-         */
-        val tipIndex = yamlList.indexOf(yamlList.find { it.trim() == replaceYamlList[2].trim() }) - 1
-        if (tipIndex < 0) {
-            return yamlStr
-        }
-        val startIndex = tipIndex + 1
-        // replaceJob 比 源对象多了 "---" 和 "- job" 所以 -3
-        val endIndex = startIndex + replaceYamlList.size - 3
-        yamlList.add(tipIndex, tip)
-        for (index in startIndex..endIndex) {
-            if (yamlList[index].isBlank()) {
-                continue
-            }
-            yamlList[index] = "# ${yamlList[index]}"
-        }
-        val sb = StringBuilder()
-        yamlList.forEach {
-            if (it.isBlank()) {
-                return@forEach
-            }
-            sb.append("${it}\n")
-        }
-        return sb.toString()
-    }
-
-    // 对Task对象的Yaml字符串按行进行带注释的替换, 针对task的列表形式的重载
-    private fun replaceTaskYamlStrLineToComment(yamlStr: String?, replaceList: List<Pair<String?, String?>>): String {
-        if (yamlStr == null || yamlStr.isBlank()) {
-            return ""
-        }
-        if (replaceList.isEmpty()) {
-            return yamlStr
-        }
-        val yamlList = yamlStr.split("\n").toMutableList()
-        val sb = StringBuilder()
-        replaceList.forEach {
-            val tip = it.first
-            val replaceYamlStr = it.second
-            if (replaceYamlStr == null || replaceYamlStr.isBlank()) {
-                return@forEach
-            }
-            if (tip == null || tip.isBlank()) {
-                return@forEach
-            }
-
-            val replaceYamlList = replaceYamlStr.split("\n")
-
-            /**
-             *  目前生成的replaceTask对象 [---, - taskType:, displayName:xxx, ...]
-             *  源串的replaceTask对象 [ - taskType:, displayName:xxx, ...]
-             *  前两个根据生成对象的方式不同，所以为了方便对比取第二个
-             */
-            val tipIndex = yamlList.indexOf(yamlList.find { line -> line.trim() == replaceYamlList[1].trim() }) - 1
-            if (tipIndex < 0) {
-                return@forEach
-            }
-            val startIndex = tipIndex + 1
-            // replaceTask 比 源对象多了 "---" 所以 -2
-            val endIndex = startIndex + replaceYamlList.size - 2
-            // 针对老版本无法生成市场插件classType的插件单独替换
-            if (tip.contains("\n")) {
-                val tipAndType = tip.split("\n")
-                yamlList.add(tipIndex, tipAndType[0])
-                for (index in startIndex..endIndex) {
-                    if (yamlList[index].isBlank()) {
-                        continue
-                    }
-                    // 替换classType
-                    if (index == startIndex) {
-                        yamlList[index] = "# " + yamlList[index].replace("OldVersionTask", tipAndType[1])
-                    } else {
-                        yamlList[index] = "# ${yamlList[index]}"
-                    }
-                }
-            } else {
-                yamlList.add(tipIndex, tip)
-                for (index in startIndex..endIndex) {
-                    if (yamlList[index].isBlank()) {
-                        continue
-                    }
-                    yamlList[index] = "# ${yamlList[index]}"
-                }
-            }
-        }
-        yamlList.forEach { line ->
-            if (line.isNotBlank()) {
-                sb.append("${line}\n")
-            }
-        }
-        return sb.toString()
     }
 
     // 导出工蜂CI-2.0的yml
     fun exportV2Yaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Response {
-        val (model, yamlSb) = checkPermissionAndGetHead(userId, projectId, pipelineId, isGitCI)
-        yamlSb.append("########################################################" +
-            "#############################################################\n\n")
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT,
+            message = "用户($userId)无权限在工程($projectId)下导出流水线"
+        )
+        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw CustomException(
+            Response.Status.BAD_REQUEST,
+            "流水线已不存在！"
+        )
+        val yamlSb = getYamlStringBuilder(projectId, pipelineId, model, isGitCI)
+
         val stageTagsMap = stageTagService.getAllStageTag().data?.map {
             it.id to it.stageTagName
         }?.toMap() ?: emptyMap()
+
         val yamlObj = ScriptBuildYaml(
             version = "v2.0",
             name = model.name,
@@ -1053,9 +120,8 @@ class TXPipelineExportService @Autowired constructor(
             notices = null,
             finally = getV2FinalFromStage(model.stages.last(), yamlSb)
         )
-        val yamlStr = YamlUtil.toYaml(yamlObj)
-        yamlSb.append(replaceTaskType(yamlStr))
-        return exportToFile(yamlSb.toString(), model.name)
+        val yamlStr = toYamlStr(yamlObj)
+        return exportToFile(yamlStr, model.name)
     }
 
     private fun getV2StageFromModel(
@@ -1077,7 +143,7 @@ class TXPipelineExportService @Autowired constructor(
             stages.add(
                 V2Stage(
                     name = stage.name,
-                    id = stage.id,
+                    id = null,
                     label = tags,
                     ifField = if (stage.stageControlOption?.runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
                         stage.stageControlOption?.customCondition
@@ -1111,13 +177,12 @@ class TXPipelineExportService @Autowired constructor(
             when (it.getClassType()) {
                 NormalContainer.classType -> {
                     val job = it as NormalContainer
+                    val timeoutMinutes = job.jobControlOption?.timeout ?: 480
                     jobs.add(
                         V2Job(
-                            id = null,
+                            id = job.jobId,
                             name = job.name,
-                            // TODO: 问下对应关系
-                            runsOn = RunsOn(),
-                            // TODO: 问下对应关系
+                            runsOn = RunsOn(poolName = JobRunsOnType.AGENT_LESS.type),
                             services = null,
                             ifField = if (job.jobControlOption?.runCondition ==
                                 JobRunCondition.CUSTOM_CONDITION_MATCH) {
@@ -1126,25 +191,53 @@ class TXPipelineExportService @Autowired constructor(
                                 null
                             },
                             steps = getV2StepFromJob(job, comment),
-                            timeoutMinutes = job.jobControlOption?.timeout,
+                            timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                             env = null,
-                            continueOnError = job.jobControlOption?.continueWhenFailed,
-                            // TODO: 未实施功能
+                            continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
                             strategy = null,
-                            // TODO: 支持哪些流水线Job标识参数
+                            // 蓝盾这边是自定义Job ID
                             dependOn = job.jobControlOption?.dependOnId
                         )
                     )
                 }
                 VMBuildContainer.classType -> {
                     val job = it as VMBuildContainer
+                    val timeoutMinutes = job.jobControlOption?.timeout ?: 480
+
+                    // 编译环境的相关映射处理
+                    val runsOn = when (val dispatchType = getDispatchType(job)) {
+                        is ThirdPartyAgentEnvDispatchType -> {
+                            RunsOn(
+                                selfHosted = true,
+                                poolName = dispatchType.envName,
+                                agentSelector = listOf(job.baseOS.name.toLowerCase())
+                            )
+                        }
+                        is DockerDispatchType -> {
+                            RunsOn(
+                                poolName = JobRunsOnType.DOCKER.type,
+                                container = com.tencent.devops.common.ci.v2.Container(
+                                    image = "# 请直接填入镜像(${dispatchType.imageName})的URL地址，若存在鉴权请增加 credentials 字段",
+                                    credentials = null
+                                ),
+                                agentSelector = listOf(job.baseOS.name.toLowerCase())
+                            )
+                        }
+                        else -> {
+                            RunsOn(
+                                poolName = "# 该环境不支持转换，请重新填写",
+                                agentSelector = listOf(job.baseOS.name.toLowerCase())
+                            )
+                        }
+                    }
+
+
                     jobs.add(
                         V2Job(
-                            id = job.id,
+                            id = job.jobId,
                             name = job.name,
-                            // TODO: 问下对应关系
-                            runsOn = RunsOn(),
-                            // TODO: 问下对应关系
+                            // TODO: 工蜂CI仅支持环境ID（多对一无法映射），单节点时占位符注释提示，poolName是环境名
+                            runsOn = runsOn,
                             services = null,
                             ifField = if (job.jobControlOption?.runCondition ==
                                 JobRunCondition.CUSTOM_CONDITION_MATCH) {
@@ -1153,19 +246,16 @@ class TXPipelineExportService @Autowired constructor(
                                 null
                             },
                             steps = getV2StepFromJob(job, comment),
-                            timeoutMinutes = job.jobControlOption?.timeout,
-                            env = job.customBuildEnv,
-                            continueOnError = job.jobControlOption?.continueWhenFailed,
-                            // TODO: 未实施功能
+                            timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
+                            env = null,
+                            continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
                             strategy = null,
-                            // TODO: 支持哪些流水线Job标识参数
                             dependOn = job.jobControlOption?.dependOnId
                         )
                     )
                 }
                 else -> {
                     logger.error("get jobs from stage failed, unknown classType:(${it.getClassType()})")
-                    // TODO: 看看是否抛异常
                 }
             }
         }
@@ -1178,64 +268,32 @@ class TXPipelineExportService @Autowired constructor(
     ): List<V2Step> {
         val stepList = mutableListOf<V2Step>()
         job.elements.forEach { element ->
+            val step = element as LinuxScriptElement
+            val originRetryTimes = step.additionalOptions?.retryCount ?: 0
+            val originTimeout = step.additionalOptions?.timeout?.toInt() ?: 480
+            val retryTimes = if (originRetryTimes > 0) originRetryTimes else null
+            val timeoutMinutes = if (originTimeout < 480) originTimeout else null
+            val continueOnError = if (step.additionalOptions?.continueWhenFailed == true) true else null
             when (element.getClassType()) {
-                LinuxScriptElement.classType -> {
-                    val step = element as LinuxScriptElement
+                // Bash脚本插件直接转为run
+                LinuxScriptElement.classType, WindowsScriptElement.classType -> {
                     stepList.add(
                         V2Step(
                             name = step.name,
-                            id = step.id,
+                            id = null,
                             ifFiled = if (step.additionalOptions?.runCondition ==
                                 RunCondition.CUSTOM_CONDITION_MATCH) {
                                 step.additionalOptions?.customCondition
                             } else {
                                 null
                             },
-                            uses = "${step.getAtomCode()}@${step.version}",
-                            // TODO: 问下对应关系
-                            with = mapOf(
-                                "scriptType" to element.scriptType,
-                                "content" to element.script,
-                                "continueOnError" to element.continueNoneZero
-                            ),
-                            timeoutMinutes = step.additionalOptions?.timeout?.toInt(),
-                            continueOnError = step.additionalOptions?.continueWhenFailed,
-                            retryTimes = step.additionalOptions?.retryCount,
-                            // TODO: 问下对应关系
-                            env = step.additionalOptions?.customEnv,
-                            // TODO: 问下对应关系
-                            run = null,
-                            // TODO: 问下对应关系
-                            checkout = null
-                        )
-                    )
-                }
-                WindowsScriptElement.classType -> {
-                    val step = element as WindowsScriptElement
-                    stepList.add(
-                        V2Step(
-                            name = step.name,
-                            id = step.id,
-                            ifFiled = if (step.additionalOptions?.runCondition ==
-                                RunCondition.CUSTOM_CONDITION_MATCH) {
-                                step.additionalOptions?.customCondition
-                            } else {
-                                null
-                            },
-                            uses = "${step.getAtomCode()}@${step.version}",
-                            // TODO: 问下对应关系
-                            with = mapOf(
-                                "content" to element.script,
-                                "scriptType" to element.scriptType
-                            ),
-                            timeoutMinutes = step.additionalOptions?.timeout?.toInt(),
-                            continueOnError = step.additionalOptions?.continueWhenFailed,
-                            retryTimes = step.additionalOptions?.retryCount,
-                            // TODO: 问下对应关系
-                            env = step.additionalOptions?.customEnv,
-                            // TODO: 问下对应关系
-                            run = null,
-                            // TODO: 问下对应关系
+                            uses = null,
+                            with = null,
+                            timeoutMinutes = timeoutMinutes,
+                            continueOnError = continueOnError,
+                            retryTimes = retryTimes,
+                            env = null,
+                            run = " |\r\n ${element.script}",
                             checkout = null
                         )
                     )
@@ -1263,7 +321,7 @@ class TXPipelineExportService @Autowired constructor(
                     stepList.add(
                         V2Step(
                             name = step.name,
-                            id = step.id,
+                            id = null,
                             ifFiled = if (step.additionalOptions?.runCondition ==
                                 RunCondition.CUSTOM_CONDITION_MATCH) {
                                 step.additionalOptions?.customCondition
@@ -1277,14 +335,11 @@ class TXPipelineExportService @Autowired constructor(
                                 "version" to element.version,
                                 "data" to elementData
                             ),
-                            timeoutMinutes = step.additionalOptions?.timeout?.toInt(),
-                            continueOnError = step.additionalOptions?.continueWhenFailed,
-                            retryTimes = step.additionalOptions?.retryCount,
-                            // TODO: 问下对应关系
-                            env = step.additionalOptions?.customEnv,
-                            // TODO: 问下对应关系
+                            timeoutMinutes = timeoutMinutes,
+                            continueOnError = continueOnError,
+                            retryTimes = retryTimes,
+                            env = null,
                             run = null,
-                            // TODO: 问下对应关系
                             checkout = null
                         )
                     )
@@ -1294,7 +349,7 @@ class TXPipelineExportService @Autowired constructor(
                     stepList.add(
                         V2Step(
                             name = step.name,
-                            id = step.id,
+                            id = null,
                             ifFiled = if (step.additionalOptions?.runCondition ==
                                 RunCondition.CUSTOM_CONDITION_MATCH) {
                                 step.additionalOptions?.customCondition
@@ -1308,14 +363,11 @@ class TXPipelineExportService @Autowired constructor(
                                 "version" to element.version,
                                 "data" to element.data
                             ),
-                            timeoutMinutes = step.additionalOptions?.timeout?.toInt(),
-                            continueOnError = step.additionalOptions?.continueWhenFailed,
-                            retryTimes = step.additionalOptions?.retryCount,
-                            // TODO: 问下对应关系
-                            env = step.additionalOptions?.customEnv,
-                            // TODO: 问下对应关系
+                            timeoutMinutes = timeoutMinutes,
+                            continueOnError = continueOnError,
+                            retryTimes = retryTimes,
+                            env = null,
                             run = null,
-                            // TODO: 问下对应关系
                             checkout = null
                         )
                     )
@@ -1332,23 +384,13 @@ class TXPipelineExportService @Autowired constructor(
         return stepList
     }
 
-    private fun checkPermissionAndGetHead(
-        userId: String,
+    private fun getYamlStringBuilder(
         projectId: String,
         pipelineId: String,
+        model: Model,
         isGitCI: Boolean
-    ): Pair<Model, StringBuilder> {
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EDIT,
-            message = "用户($userId)无权限在工程($projectId)下导出流水线"
-        )
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw CustomException(
-            Response.Status.BAD_REQUEST,
-            "流水线已不存在！"
-        )
+    ): StringBuilder {
+
         val yamlSb = StringBuilder()
         yamlSb.append("############################################################################" +
             "#########################################\n")
@@ -1364,7 +406,9 @@ class TXPipelineExportService @Autowired constructor(
                 "请联系插件开发者改造插件，改造指引：https://iwiki.woa.com/x/CqARHg \n")
             yamlSb.append("# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
         }
-        return Pair(model, yamlSb)
+        yamlSb.append("########################################################" +
+            "#############################################################\n\n")
+        return yamlSb
     }
 
     private fun exportToFile(yaml: String, pipelineName: String): Response {
@@ -1381,5 +425,50 @@ class TXPipelineExportService @Autowired constructor(
             .header("content-disposition", "attachment; filename = $fileName")
             .header("Cache-Control", "no-cache")
             .build()
+    }
+
+    private fun getVariableFromModel(model: Model): Map<String, Variable>? {
+        val params = (model.stages[0].containers[0] as TriggerContainer).params
+        val result = mutableMapOf<String, Variable>()
+        params.forEach {
+            result[it.id] = Variable(it.defaultValue.toString())
+        }
+        return if (result.isEmpty()) {
+            null
+        } else {
+            result
+        }
+    }
+
+    private fun toYamlStr(bean: Any?): String {
+        return bean?.let {
+            yamlObjectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .writeValueAsString(it)!!
+        } ?: ""
+    }
+
+    /**
+     * 新版的构建环境直接传入指定的构建机方式
+     */
+    private fun getDispatchType(param: VMBuildContainer): DispatchType {
+        if (param.dispatchType != null) {
+            return param.dispatchType!!
+        } else {
+            // 第三方构建机ID
+            val agentId = param.thirdPartyAgentId ?: ""
+            // 构建环境ID
+            val envId = param.thirdPartyAgentEnvId ?: ""
+            val workspace = param.thirdPartyWorkspace ?: ""
+            return if (agentId.isNotBlank()) {
+                ThirdPartyAgentIDDispatchType(displayName = agentId, workspace = workspace, agentType = AgentType.ID)
+            } else if (envId.isNotBlank()) {
+                ThirdPartyAgentEnvDispatchType(envName = envId, workspace = workspace, agentType = AgentType.ID)
+            } // docker建机指定版本(旧)
+            else if (!param.dockerBuildVersion.isNullOrBlank()) {
+                DockerDispatchType(param.dockerBuildVersion!!)
+            } else {
+                ESXiDispatchType()
+            }
+        }
     }
 }
