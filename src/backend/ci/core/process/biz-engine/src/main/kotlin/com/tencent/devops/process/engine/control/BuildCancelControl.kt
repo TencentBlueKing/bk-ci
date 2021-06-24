@@ -181,12 +181,12 @@ class BuildCancelControl @Autowired constructor(
                         endTime = LocalDateTime.now(),
                         buildStatus = BuildStatusSwitcher.jobStatusMaker.cancel(containerBuildStatus)
                     )
-                    // 构建机关机
+/*                    // 构建机关机
                     if (container is VMBuildContainer) {
                         container.shutdown(event = event, executeCount = executeCount)
                     } else if (container is NormalContainer) { // 非编译环境关机
                         container.shutdown(event = event, executeCount = executeCount)
-                    }
+                    }*/
                     buildLogPrinter.addYellowLine(
                         buildId = event.buildId,
                         message = "[$executeCount]|Job#${container.id} was cancel by ${event.userId}",
