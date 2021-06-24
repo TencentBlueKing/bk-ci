@@ -90,19 +90,21 @@ class GitProjectConfService @Autowired constructor(
         return gitProjectConfDao.count(dslContext, gitProjectId, name, url)
     }
 
-    fun fixPipelineBuildInfo(): Int {
+    fun fixPipelineVersion(): Int {
         var count = 0
         val allPipeline = gitPipelineResourceDao.getAllPipeline(dslContext)
         allPipeline.forEach {
             if (it.latestBuildId.isNullOrBlank()) {
                 val build = gitRequestEventBuildDao.getLatestBuild(dslContext, it.gitProjectId, it.pipelineId) ?: return@forEach
-                gitPipelineResourceDao.fixPipelineBuildInfo(dslContext, it.pipelineId, build.buildId, build.createTime)
-                logger.info("fixPipelineBuildInfo gitProjectId: ${it.gitProjectId}, pipelineId: ${it.pipelineId}, buildId: ${build.buildId}, createTime:${build.createTime}")
+                if (build.normalizedYaml.contains("v2.0")) {
+                    gitPipelineResourceDao.fixPipelineVersion(dslContext, it.pipelineId, "v2.0")
+                    logger.info("fixPipelineVersion gitProjectId: ${it.gitProjectId}, pipelineId: ${it.pipelineId}, buildId: ${build.buildId}, createTime:${build.createTime}")
+                }
                 count++
             }
             Thread.sleep(100)
         }
-        logger.info("fixPipelineBuildInfo count: $count")
+        logger.info("fixPipelineVersion count: $count")
         return count
     }
 }

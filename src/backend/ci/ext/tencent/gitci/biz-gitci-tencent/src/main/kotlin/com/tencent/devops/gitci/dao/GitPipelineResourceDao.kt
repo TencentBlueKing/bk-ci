@@ -262,16 +262,14 @@ class GitPipelineResourceDao {
         }
     }
 
-    fun fixPipelineBuildInfo(
+    fun fixPipelineVersion(
         dslContext: DSLContext,
         pipelineId: String,
-        buildId: String,
-        buildTime: LocalDateTime
+        version: String
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.update(this)
-                .set(LATEST_BUILD_ID, buildId)
-                .set(UPDATE_TIME, buildTime)
+                .set(VERSION, version)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }

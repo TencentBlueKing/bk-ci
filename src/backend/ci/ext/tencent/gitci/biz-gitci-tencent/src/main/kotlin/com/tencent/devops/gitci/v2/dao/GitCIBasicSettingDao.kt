@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.v2.dao
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.model.gitci.tables.TGitBasicSetting
+import com.tencent.devops.model.gitci.tables.records.TGitBasicSettingRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -136,12 +137,14 @@ class GitCIBasicSettingDao {
     fun updateProjectSetting(
         dslContext: DSLContext,
         gitProjectId: Long,
-        conf: GitCIBasicSetting,
         buildPushedBranches: Boolean?,
         buildPushedPullRequest: Boolean?,
         enableMrBlock: Boolean?,
         enableCi: Boolean?,
-        enableUserId: String?
+        enableUserId: String?,
+        creatorBgName: String?,
+        creatorDeptName: String?,
+        creatorCenterName: String?
     ) {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             val dsl = dslContext.update(this)
@@ -160,10 +163,16 @@ class GitCIBasicSettingDao {
             if (enableUserId != null) {
                 dsl.set(ENABLE_USER_ID, enableUserId)
             }
+            if (enableUserId != null) {
+                dsl.set(CREATOR_BG_NAME, creatorBgName)
+            }
+            if (enableUserId != null) {
+                dsl.set(CREATOR_DEPT_NAME, creatorDeptName)
+            }
+            if (enableUserId != null) {
+                dsl.set(CREATOR_CENTER_NAME, creatorCenterName)
+            }
             dsl.set(UPDATE_TIME, LocalDateTime.now())
-                .set(CREATOR_BG_NAME, conf.creatorBgName)
-                .set(CREATOR_DEPT_NAME, conf.creatorDeptName)
-                .set(CREATOR_CENTER_NAME, conf.creatorCenterName)
                 .where(ID.eq(gitProjectId))
                 .execute()
         }
@@ -197,6 +206,15 @@ class GitCIBasicSettingDao {
                     creatorCenterName = conf.creatorCenterName
                 )
             }
+        }
+    }
+
+    fun getProjectAfterId(dslContext: DSLContext, startId: Long, endId: Long): List<TGitBasicSettingRecord> {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.selectFrom(this)
+                .where(ID.ge(startId))
+                .and(ID.le(endId))
+                .fetch()
         }
     }
 }
