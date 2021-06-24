@@ -46,6 +46,8 @@ import org.apache.commons.lang3.tuple.MutablePair
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.client.RestHighLevelClient
 import org.elasticsearch.index.query.QueryBuilders
+import org.elasticsearch.search.aggregations.AggregationBuilders
+import org.elasticsearch.search.aggregations.metrics.avg.Avg
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.influxdb.dto.QueryResult
 import org.jooq.DSLContext
@@ -62,6 +64,7 @@ import java.time.ZoneOffset
 
 @Component
 @RefreshScope
+@SuppressWarnings("LongParameterList", "TooManyFunctions", "TooGenericExceptionCaught", "MagicNumber")
 class MonitorNotifyJob @Autowired constructor(
     private val client: Client,
     private val influxdbClient: InfluxdbClient,
@@ -107,6 +110,9 @@ class MonitorNotifyJob @Autowired constructor(
 
     @Value("\${sla.url.observable.codecc:#{null}}")
     private var codeccObservableUrl: String? = null
+
+    @Value("\${sla.url.observable.jobTime:#{null}}")
+    private var jobTimeObservableUrl: String? = null
 
     @Value("\${sla.oteam.token:#{null}}")
     private var oteamToken: String? = null
@@ -179,7 +185,7 @@ class MonitorNotifyJob @Autowired constructor(
             userStatus(startTime, endTime),
             commitCheck(startTime, endTime),
             codecc(startTime, endTime),
-            dispatchTime(startTime, endTime)
+            dispatchTime(startTime)
         )
 
         // 发送邮件
@@ -200,12 +206,26 @@ class MonitorNotifyJob @Autowired constructor(
                 }
             }
         }
-
-        //
     }
 
-    private fun dispatchTime(startTime: Long, endTime: Long): EmailModuleData {
-        TODO("Not yet implemented")
+    private fun dispatchTime(startTime: Long): EmailModuleData {
+        val sourceBuilder = SearchSourceBuilder()
+        sourceBuilder.aggregation(AggregationBuilders.avg("avg_ms").field("ms"))
+
+        val searchRequest = SearchRequest()
+        searchRequest.indices("v2_9_bklog_prod_ci_service_access_${DateFormatUtils.format(startTime, "yyyyMMdd")}*")
+        searchRequest.source(sourceBuilder)
+
+        val aggregations = restHighLevelClient.search(searchRequest).aggregations
+        val avg = aggregations.get<Avg>("avg_ms").value
+
+        oteamStatus(avg, oteamJobTimeTarget, startTime)
+
+        return EmailModuleData(
+            module = "构建机启动耗时",
+            rowList = listOf(Triple("dispatch", avg, jobTimeObservableUrl!!)),
+            observableUrl = jobTimeObservableUrl
+        )
     }
 
     private fun commitCheck(startTime: Long, endTime: Long): EmailModuleData {
@@ -304,6 +324,9 @@ class MonitorNotifyJob @Autowired constructor(
         targetId: Int?,
         startTime: Long
     ) {
+        if (null == oteamUrl) {
+            return
+        }
         try {
             val yesterday = LocalDateTime.ofInstant(Instant.ofEpochMilli(startTime), ZoneId.systemDefault())
             val timestamp = "${System.currentTimeMillis() / 1000}"
@@ -444,6 +467,7 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
+    @SuppressWarnings("NestedBlockDepth", "SwallowedException")
     private fun getInfluxValue(sql: String, defaultValue: Int): Int {
         val queryResult = influxdbClient.select(sql)
         return if (null != queryResult && !queryResult.hasError()) {
@@ -457,7 +481,7 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
-    @SuppressWarnings("ComplexMethod", "NestedBlockDepth")
+    @SuppressWarnings("ComplexMethod", "NestedBlockDepth", "LongMethod")
     fun atomMonitor(startTime: Long, endTime: Long): EmailModuleData {
         try {
 
@@ -486,7 +510,6 @@ class MonitorNotifyJob @Autowired constructor(
             val artiFailed = getInfluxValue(String.format(atomFailedTemplateSql, "CODE_GIT"), 0)
             val shCount = getInfluxValue(String.format(atomTotalTemplateSql, "linuxScript"), 1)
             val shFailed = getInfluxValue(String.format(atomFailedTemplateSql, "CODE_GIT"), 0)
-
 
             val rowList = mutableListOf(
                 Triple(
@@ -599,9 +622,9 @@ class MonitorNotifyJob @Autowired constructor(
         val sourceBuilder = SearchSourceBuilder()
         val queryStringQuery = QueryBuilders.queryStringQuery(
             """
-                    path:"/data/bkci/logs/$name/access_log.log" 
-                    ${if (error) " AND status:[500 TO *] " else ""}
-                """.trimIndent()
+            path:"/data/bkci/logs/$name/access_log.log" 
+            ${if (error) " AND status:[500 TO *] " else ""}
+            """.trimIndent()
         )
         val query =
             QueryBuilders.boolQuery()
@@ -672,4 +695,3 @@ class MonitorNotifyJob @Autowired constructor(
         private val logger = LoggerFactory.getLogger(MonitorNotifyJob::class.java)
     }
 }
-
