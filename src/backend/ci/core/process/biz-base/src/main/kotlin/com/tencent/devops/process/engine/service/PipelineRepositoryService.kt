@@ -532,6 +532,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 version = 1,
                 pipelineName = model.name,
+                pipelineDesc = model.desc ?: model.name,
                 userId = userId,
                 channelCode = channelCode,
                 manualStartup = canManualStartup,

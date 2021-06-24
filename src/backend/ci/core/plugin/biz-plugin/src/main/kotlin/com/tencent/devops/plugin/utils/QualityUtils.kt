@@ -30,7 +30,6 @@ package com.tencent.devops.plugin.utils
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
@@ -73,7 +72,7 @@ object QualityUtils {
                 val indicatorElementName = indicator?.elementType ?: ""
                 val elementCnName = ElementUtils.getElementCnName(indicatorElementName, projectId)
                 val resultList = resultMap[elementCnName] ?: mutableListOf()
-                val actualValue = if (indicatorElementName == LinuxPaasCodeCCScriptElement.classType) {
+                val actualValue = if (CodeccUtils.isCodeccAtom(indicatorElementName)) {
                     getActualValue(
                         projectId = projectId,
                         pipelineId = pipelineId,
