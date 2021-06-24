@@ -234,21 +234,21 @@ class PipelineInfoDao {
     fun searchByPipelineName(dslContext: DSLContext, pipelineName: String, projectId: String, limit: Int, offset: Int): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_NAME.like("%$pipelineName%"))
-                    .and(DELETE.eq(false)).orderBy(CREATE_TIME.desc())
-                    .limit(limit).offset(offset)
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_NAME.like("%$pipelineName%"))
+                .and(DELETE.eq(false)).orderBy(CREATE_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 
     fun countPipelineInfoByProject(dslContext: DSLContext, pipelineName: String, projectId: String): Int {
         return with(T_PIPELINE_INFO) {
             dslContext.selectCount().from(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_NAME.like("%$pipelineName%"))
-                    .and(DELETE.eq(false))
-                    .fetchOne(0, Int::class.java)!!
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_NAME.like("%$pipelineName%"))
+                .and(DELETE.eq(false))
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -524,6 +524,18 @@ class PipelineInfoDao {
         return with(T_PIPELINE_INFO) {
             dslContext.select(PIPELINE_ID.`as`("pipelineId"), ID.`as`("id")).from(this)
                 .where(PROJECT_ID.eq(projectCode)).fetch()
+        }
+    }
+
+    fun getPipelineId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): TPipelineInfoRecord? {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .fetchAny()
         }
     }
 
