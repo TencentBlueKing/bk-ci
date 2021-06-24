@@ -37,6 +37,7 @@ import com.tencent.devops.misc.service.plugin.PluginDataClearService
 import com.tencent.devops.misc.service.process.ProcessDataClearService
 import com.tencent.devops.misc.service.process.ProcessMiscService
 import com.tencent.devops.misc.service.project.ProjectDataClearConfigFactory
+import com.tencent.devops.misc.service.project.ProjectDataClearConfigService
 import com.tencent.devops.misc.service.project.ProjectMiscService
 import com.tencent.devops.misc.service.quality.QualityDataClearService
 import com.tencent.devops.misc.service.repository.RepositoryDataClearService
@@ -46,6 +47,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Component
 @Suppress("ALL")
@@ -64,7 +68,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildHistoryDataClearJob::class.java)
         private const val LOCK_KEY = "pipelineBuildHistoryDataClear"
-        private const val PIPELINE_BUILD_HISTORY_PAGE_SIZE = 100
+        private const val DEFAULT_PAGE_SIZE = 100
         private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY =
             "pipeline:build:history:data:clear:project:id"
         private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_KEY =
@@ -73,6 +77,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
 
     @Value("\${process.deletedPipelineStoreDays:30}")
     private val deletedPipelineStoreDays: Long = 30 // 回收站已删除流水线保存天数
+
+    private val executor = Executors.newFixedThreadPool(miscBuildDataClearConfig.maxThreadHandleProjectNum)
 
     @Scheduled(initialDelay = 10000, fixedDelay = 12000)
     fun pipelineBuildHistoryDataClear() {
@@ -93,25 +99,73 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             // 组装查询项目的条件
             var projectIdList: List<String>? = null
             if (!projectIdListConfig.isNullOrBlank()) {
-                projectIdList = projectIdListConfig!!.split(",")
+                projectIdList = projectIdListConfig.split(",")
             }
-            var handleProjectPrimaryId = redisOperation.get(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY)?.toLong()
-            if (handleProjectPrimaryId == null) {
-                handleProjectPrimaryId = projectMiscService.getMinId(projectIdList) ?: 0L
+            val maxProjectNum = if (!projectIdList.isNullOrEmpty()) {
+                projectIdList.size.toLong()
             } else {
-                val maxProjectPrimaryId = projectMiscService.getMaxId(projectIdList) ?: 0L
-                if (handleProjectPrimaryId >= maxProjectPrimaryId) {
+                projectMiscService.getMaxId(projectIdList) ?: 0L
+            }
+            // 获取清理项目构建数据的线程数量
+            val maxThreadHandleProjectNum = miscBuildDataClearConfig.maxThreadHandleProjectNum
+            val futureList = mutableListOf<Future<Boolean>>()
+            val avgProjectNum = maxProjectNum / maxThreadHandleProjectNum
+            for (index in 1..maxThreadHandleProjectNum) {
+                // 计算线程能处理的最大项目主键ID
+                val maxThreadProjectPrimaryId = if (index != maxThreadHandleProjectNum) {
+                    index * avgProjectNum
+                } else {
+                    index * avgProjectNum + maxProjectNum % maxThreadHandleProjectNum
+                }
+                futureList.add(
+                    doClearBus(
+                        threadNo = index,
+                        projectIdList = projectIdList,
+                        minThreadProjectPrimaryId = (index - 1) * avgProjectNum,
+                        maxThreadProjectPrimaryId = maxThreadProjectPrimaryId
+                    )
+                )
+            }
+            futureList.forEachIndexed { index, future ->
+                logger.info("future-$index doClearBus result:${future.get()}")
+            }
+        } catch (t: Throwable) {
+            logger.warn("pipelineBuildHistoryDataClear failed", t)
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    private fun doClearBus(
+        threadNo: Int,
+        projectIdList: List<String>?,
+        minThreadProjectPrimaryId: Long,
+        maxThreadProjectPrimaryId: Long
+    ): Future<Boolean> {
+        val threadName = "Thread-$threadNo"
+        return executor.submit(Callable<Boolean> {
+            var handleProjectPrimaryId =
+                redisOperation.get("$threadName:$PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY")?.toLong()
+            if (handleProjectPrimaryId == null) {
+                handleProjectPrimaryId = minThreadProjectPrimaryId
+            } else {
+                if (handleProjectPrimaryId >= maxThreadProjectPrimaryId) {
                     // 已经清理完全部项目的流水线的过期构建记录，再重新开始清理
-                    redisOperation.delete(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY)
+                    redisOperation.delete("$threadName:$PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY")
                     logger.info("pipelineBuildHistoryDataClear reStart")
-                    return
+                    return@Callable true
                 }
             }
             val maxEveryProjectHandleNum = miscBuildDataClearConfig.maxEveryProjectHandleNum
             var maxHandleProjectPrimaryId = handleProjectPrimaryId ?: 0L
-            val projectInfoList = if (projectIdListConfig.isNullOrBlank()) {
+            val projectInfoList = if (projectIdList.isNullOrEmpty()) {
+                val channelCodeList = miscBuildDataClearConfig.clearChannelCodes.split(",")
                 maxHandleProjectPrimaryId = handleProjectPrimaryId + maxEveryProjectHandleNum
-                projectMiscService.getProjectInfoList(minId = handleProjectPrimaryId, maxId = maxHandleProjectPrimaryId)
+                projectMiscService.getProjectInfoList(
+                    minId = handleProjectPrimaryId,
+                    maxId = maxHandleProjectPrimaryId,
+                    channelCodeList = channelCodeList
+                )
             } else {
                 projectMiscService.getProjectInfoList(projectIdList = projectIdList)
             }
@@ -119,47 +173,65 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             projectInfoList?.forEach { projectInfo ->
                 val channel = projectInfo.channel
                 // 获取项目对应的流水线数据清理配置类，如果不存在说明无需清理该项目下的构建记录
-                val projectDataClearConfigService = ProjectDataClearConfigFactory.getProjectDataClearConfigService(channel)
-                    ?: return@forEach
+                val projectDataClearConfigService =
+                    ProjectDataClearConfigFactory.getProjectDataClearConfigService(channel) ?: return@forEach
                 val projectPrimaryId = projectInfo.id
                 if (projectPrimaryId > maxHandleProjectPrimaryId) {
                     maxHandleProjectPrimaryId = projectPrimaryId
                 }
                 val projectId = projectInfo.projectId
-                val pipelineIdList = processMiscService.getPipelineIdListByProjectId(projectId)
-                val deletePipelineIdList = if (pipelineIdList.isNullOrEmpty()) {
-                    null
-                } else {
-                    processMiscService.getClearDeletePipelineIdList(
-                        projectId = projectId,
-                        pipelineIdList = pipelineIdList,
-                        gapDays = deletedPipelineStoreDays
-                    )
-                }
-                val projectDataClearConfig = projectDataClearConfigService.getProjectDataClearConfig()
-                pipelineIdList?.forEach { pipelineId ->
-                    logger.info("pipelineBuildHistoryPastDataClear start..............")
-                    val deleteFlag = deletePipelineIdList?.contains(pipelineId) == true
-                    if (deleteFlag) {
-                        // 清理已删除流水线记录
-                        cleanDeletePipelineData(pipelineId, projectId)
-                    } else {
-                        // 清理正常流水线记录
-                        cleanNormalPipelineData(pipelineId, projectId, projectDataClearConfig)
-                    }
-                }
+                // 清理流水线构建数据
+                clearPipelineBuildData(projectId, projectDataClearConfigService)
             }
             // 将当前已处理完的最大项目Id存入redis
             redisOperation.set(
-                key = PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY,
+                key = "$threadName:$PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY",
                 value = maxHandleProjectPrimaryId.toString(),
                 expired = false
             )
-        } catch (t: Throwable) {
-            logger.warn("pipelineBuildHistoryDataClear failed", t)
-        } finally {
-            lock.unlock()
-        }
+            return@Callable true
+        })
+    }
+
+    private fun clearPipelineBuildData(
+        projectId: String,
+        projectDataClearConfigService: ProjectDataClearConfigService
+    ) {
+        // 获取当前项目下流水线记录的最小主键ID值
+        var minId = processMiscService.getMinPipelineInfoIdListByProjectId(projectId)
+        do {
+            logger.info("pipelineBuildHistoryPastDataClear clearPipelineBuildData projectId:$projectId,minId:$minId")
+            val pipelineIdList = processMiscService.getPipelineIdListByProjectId(
+                projectId = projectId,
+                minId = minId,
+                limit = DEFAULT_PAGE_SIZE.toLong()
+            )
+            if (!pipelineIdList.isNullOrEmpty()) {
+                // 重置minId的值
+                minId = processMiscService.getPipelineInfoIdListByPipelineId(pipelineIdList[pipelineIdList.size - 1]) + 1
+            }
+            val deletePipelineIdList = if (pipelineIdList.isNullOrEmpty()) {
+                null
+            } else {
+                processMiscService.getClearDeletePipelineIdList(
+                    projectId = projectId,
+                    pipelineIdList = pipelineIdList,
+                    gapDays = deletedPipelineStoreDays
+                )
+            }
+            val projectDataClearConfig = projectDataClearConfigService.getProjectDataClearConfig()
+            pipelineIdList?.forEach { pipelineId ->
+                logger.info("pipelineBuildHistoryPastDataClear start..............")
+                val deleteFlag = deletePipelineIdList?.contains(pipelineId) == true
+                if (deleteFlag) {
+                    // 清理已删除流水线记录
+                    cleanDeletePipelineData(pipelineId, projectId)
+                } else {
+                    // 清理正常流水线记录
+                    cleanNormalPipelineData(pipelineId, projectId, projectDataClearConfig)
+                }
+            }
+        } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
     }
 
     private fun cleanNormalPipelineData(
@@ -214,7 +286,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             val pipelineHistoryBuildIdList = processMiscService.getHistoryBuildIdList(
                 pipelineId = pipelineId,
                 totalHandleNum = totalHandleNum,
-                handlePageSize = PIPELINE_BUILD_HISTORY_PAGE_SIZE,
+                handlePageSize = DEFAULT_PAGE_SIZE,
                 isCompletelyDelete = isCompletelyDelete,
                 maxBuildNum = maxBuildNum,
                 maxStartTime = maxStartTime
@@ -232,7 +304,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     processDataClearService.clearOtherBuildData(projectId, pipelineId, buildId)
                 }
             }
-            totalHandleNum += PIPELINE_BUILD_HISTORY_PAGE_SIZE
+            totalHandleNum += DEFAULT_PAGE_SIZE
         }
     }
 }
