@@ -123,19 +123,19 @@ class MonitorNotifyJob @Autowired constructor(
     @Value("\${sla.oteam.url:#{null}}")
     private var oteamUrl: String? = null
 
-    @Value("\${sla.oteam.gateway.target:#{null}}")
+    @Value("\${sla.oteam.target.gateway:#{null}}")
     private var oteamGatewayTarget: Int? = null
 
-    @Value("\${sla.oteam.scm.target:#{null}}")
+    @Value("\${sla.oteam.target.scm:#{null}}")
     private var oteamScmTarget: Int? = null
 
-    @Value("\${sla.oteam.atom.target:#{null}}")
+    @Value("\${sla.oteam.target.atom:#{null}}")
     private var oteamAtomTarget: Int? = null
 
-    @Value("\${sla.oteam.job.success.target:#{null}}")
+    @Value("\${sla.oteam.target.job.success:#{null}}")
     private var oteamJobSuccessTarget: Int? = null
 
-    @Value("\${sla.oteam.job.time.target:#{null}}")
+    @Value("\${sla.oteam.target.job.time:#{null}}")
     private var oteamJobTimeTarget: Int? = null
 
     /**
