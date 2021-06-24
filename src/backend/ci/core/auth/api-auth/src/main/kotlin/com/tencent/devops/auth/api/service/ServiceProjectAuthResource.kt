@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -36,6 +37,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -44,18 +46,18 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["AUTH_SERVICE_PROJECT"], description = "权限校验--项目相关")
-@Path("/service/auth/project")
+@Path("/open/service/auth/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceProjectAuthResource {
 
     @GET
-    @Path("/projectCodes/{projectCode}/users/byGroup")
+    @Path("/{projectCode}/users/byGroup")
     @ApiOperation("获取项目成员 (需要对接的权限中心支持该功能才可以)")
     fun getProjectUsers(
-        @QueryParam("serviceCode")
-        @ApiParam("服务code", required = true)
-        serviceCode: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String,
@@ -65,12 +67,12 @@ interface ServiceProjectAuthResource {
     ): Result<List<String>>
 
     @GET
-    @Path("/projectCodes/{projectCode}/users")
+    @Path("/{projectCode}/users")
     @ApiOperation("拉取项目所有成员，并按项目角色组分组成员信息返回")
     fun getProjectGroupAndUserList(
-        @QueryParam("serviceCode")
-        @ApiParam("服务code", required = true)
-        serviceCode: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String
@@ -80,15 +82,21 @@ interface ServiceProjectAuthResource {
     @Path("/users/{userId}")
     @ApiOperation("获取用户有管理权限的项目Code")
     fun getUserProjects(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
         @PathParam("userId")
         @ApiParam("用户userId", required = true)
         userId: String
     ): Result<List<String>>
 
     @GET
-    @Path("projects/{projectCode}/users/{userId}/isProjectUsers")
+    @Path("/{projectCode}/users/{userId}/isProjectUsers")
     @ApiOperation("判断是否某个项目中某个组角色的成员")
     fun isProjectUser(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
         @PathParam("userId")
         @ApiParam("用户Id", required = true)
         userId: String,
@@ -101,9 +109,12 @@ interface ServiceProjectAuthResource {
     ): Result<Boolean>
 
     @POST
-    @Path("projects/{projectCode}/createUser")
+    @Path("/{projectCode}/createUser")
     @ApiOperation("添加用户到指定项目指定分组")
     fun createProjectUser(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
         @QueryParam("userId")
         @ApiParam("用户Id", required = true)
         userId: String,
@@ -116,9 +127,12 @@ interface ServiceProjectAuthResource {
     ): Result<Boolean>
 
     @GET
-    @Path("/projects/{projectCode}/roles")
+    @Path("/{projectCode}/roles")
     @ApiOperation("获取项目角色")
     fun getProjectRoles(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String,

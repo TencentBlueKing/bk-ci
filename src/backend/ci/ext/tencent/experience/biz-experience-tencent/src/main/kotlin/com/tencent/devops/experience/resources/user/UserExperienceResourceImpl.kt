@@ -101,7 +101,7 @@ class UserExperienceResourceImpl @Autowired constructor(
 
     override fun downloadCount(userId: String, projectId: String, experienceHashId: String): Result<ExperienceCount> {
         checkParam(userId, projectId)
-        val result = experienceDownloadService.downloadCount(userId, projectId, experienceHashId)
+        val result = experienceDownloadService.downloadCount(experienceHashId)
         return Result(result)
     }
 

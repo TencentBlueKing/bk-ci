@@ -32,6 +32,7 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.service.CertPermissionServiceImpl
@@ -58,16 +59,18 @@ class TicketConfiguration {
     fun gitCICertPermissionServiceImpl(
         client: Client,
         certDao: CertDao,
-        dslContext: DSLContext
-    ) = GitCICertPermissionServiceImpl(client, certDao, dslContext)
+        dslContext: DSLContext,
+        tokenService: ClientTokenService
+    ) = GitCICertPermissionServiceImpl(client, certDao, dslContext, tokenService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
     fun gitCICredentialPermissionServiceImpl(
         client: Client,
         credentialDao: CredentialDao,
-        dslContext: DSLContext
-    ) = GitCICredentialPermissionServiceImpl(client, credentialDao, dslContext)
+        dslContext: DSLContext,
+        tokenService: ClientTokenService
+    ) = GitCICredentialPermissionServiceImpl(client, credentialDao, dslContext, tokenService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")

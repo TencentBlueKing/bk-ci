@@ -1,6 +1,6 @@
 resources:
   repositories:
-    - repository: ruotiantang/gitci2-template-1
+    - repository: repoA
       name: repoA
       ref: master  # 可选
       credentials:

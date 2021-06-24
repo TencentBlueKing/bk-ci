@@ -155,6 +155,7 @@ class ExperiencePublicDao {
         }
     }
 
+    @SuppressWarnings("LongParameterList")
     fun create(
         dslContext: DSLContext,
         recordId: Long,
@@ -254,17 +255,19 @@ class ExperiencePublicDao {
         necessary: Boolean? = null,
         bannerUrl: String? = null,
         necessaryIndex: Int? = null,
-        bannerIndex: Int? = null
+        bannerIndex: Int? = null,
+        downloadTime: Int? = null,
+        updateTime: LocalDateTime? = LocalDateTime.now()
     ) {
-        val now = LocalDateTime.now()
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             dslContext.update(this)
-                .set(UPDATE_TIME, now)
+                .set(UPDATE_TIME, updateTime)
                 .let { if (null == online) it else it.set(ONLINE, online) }
                 .let { if (null == necessary) it else it.set(NECESSARY, necessary) }
                 .let { if (null == bannerUrl) it else it.set(BANNER_URL, bannerUrl) }
                 .let { if (null == necessaryIndex) it else it.set(NECESSARY_INDEX, necessaryIndex) }
                 .let { if (null == bannerIndex) it else it.set(BANNER_INDEX, bannerIndex) }
+                .let { if (null == downloadTime) it else it.set(DOWNLOAD_TIME, downloadTime) }
                 .where(ID.eq(id))
                 .execute()
         }
@@ -332,20 +335,22 @@ class ExperiencePublicDao {
         }
     }
 
-    fun addDownloadTimeByRecordId(dslContext: DSLContext, recordId: Long) {
-        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
-            dslContext.update(this)
-                .set(DOWNLOAD_TIME, DOWNLOAD_TIME.plus(1))
-                .where(RECORD_ID.eq(recordId))
-                .execute()
-        }
-    }
-
     fun filterRecordId(dslContext: DSLContext, records: Set<Long>): Result<Record1<Long>>? {
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             dslContext.select(RECORD_ID)
                 .from(this)
                 .where(RECORD_ID.`in`(records))
+                .fetch()
+        }
+    }
+
+    fun listAllUnique(dslContext: DSLContext): Result<TExperiencePublicRecord> {
+        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            return dslContext.selectFrom(this)
+                .where(END_DATE.gt(LocalDateTime.now()))
+                .and(ONLINE.eq(true))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(10000)
                 .fetch()
         }
     }

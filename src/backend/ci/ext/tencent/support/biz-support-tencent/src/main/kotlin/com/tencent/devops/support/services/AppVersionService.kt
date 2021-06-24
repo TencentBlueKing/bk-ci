@@ -28,14 +28,14 @@
 package com.tencent.devops.support.services
 
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.model.support.tables.records.TAppVersionRecord
 import com.tencent.devops.support.dao.AppVersionDao
 import com.tencent.devops.support.model.app.AppVersionRequest
 import com.tencent.devops.support.model.app.pojo.AppVersion
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import com.tencent.devops.model.support.tables.records.TAppVersionRecord
-import org.jooq.DSLContext
 
 @Service
 class AppVersionService @Autowired constructor(
@@ -49,13 +49,13 @@ class AppVersionService @Autowired constructor(
         var appVersionRecords = appVersionDao.getAllAppVersion(dslContext)
         appVersionRecords?.forEach {
             appVersionResult.add(
-                    AppVersion(
-                            it.id,
-                            it.versionId,
-                            it.releaseDate.timestampmilli(),
-                            it.releaseContent,
-                            it.channelType
-                    )
+                AppVersion(
+                    it.id,
+                    it.versionId,
+                    it.releaseDate.timestampmilli(),
+                    it.releaseContent,
+                    it.channelType
+                )
             )
         }
         return appVersionResult
@@ -66,13 +66,13 @@ class AppVersionService @Autowired constructor(
         var appVersionRecords = appVersionDao.getAllAppVersionByChannelType(dslContext, channelType)
         appVersionRecords?.forEach {
             appVersionResult.add(
-                    AppVersion(
-                            it.id,
-                            it.versionId,
-                            it.releaseDate.timestampmilli(),
-                            it.releaseContent,
-                            it.channelType
-                    )
+                AppVersion(
+                    it.id,
+                    it.versionId,
+                    it.releaseDate.timestampmilli(),
+                    it.releaseContent,
+                    it.channelType
+                )
             )
         }
         return appVersionResult
@@ -103,13 +103,15 @@ class AppVersionService @Autowired constructor(
             convertAppVersion(appVersionRecord)
         }
     }
+
     fun convertAppVersion(appVersionRecord: TAppVersionRecord): AppVersion {
         return AppVersion(
-                appVersionRecord.id,
-                appVersionRecord.versionId,
-                appVersionRecord.releaseDate.timestampmilli(),
-                appVersionRecord.releaseContent,
-                appVersionRecord.channelType
+            appVersionRecord.id,
+            appVersionRecord.versionId,
+            appVersionRecord.releaseDate.timestampmilli(),
+            appVersionRecord.releaseContent,
+            appVersionRecord.channelType,
+            appVersionRecord.updateType
         )
     }
 }

@@ -24,12 +24,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.pojo.image.response
 
-package com.tencent.devops.common.ci.v2
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-enum class NoticeIfType {
-    SUCCESS,
-    FAILURE,
-    CANCELLED,
-    ALWAYS
-}
+@ApiModel("镜像支持的机器类型详情")
+data class ImageAgentTypeInfo(
+
+    @ApiModelProperty("类型代码", required = true)
+    val code: String,
+
+    @ApiModelProperty("类型名称", required = true)
+    val name: String
+)
