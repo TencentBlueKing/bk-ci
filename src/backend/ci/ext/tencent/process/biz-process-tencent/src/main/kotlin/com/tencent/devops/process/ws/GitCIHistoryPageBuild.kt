@@ -5,6 +5,6 @@ import com.tencent.devops.process.websocket.page.HistoryPageBuild
 
 class GitCIHistoryPageBuild : HistoryPageBuild() {
     override fun extHistoryPage(buildPageInfo: BuildPageInfo): String? {
-        return "/pipeline/${buildPageInfo.pipelineId}"
+        return "/pipeline/${buildPageInfo.pipelineId}/${buildPageInfo.projectId}"
     }
 }
