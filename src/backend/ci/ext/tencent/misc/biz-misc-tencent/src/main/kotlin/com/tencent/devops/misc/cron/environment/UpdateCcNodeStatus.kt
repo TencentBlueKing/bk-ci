@@ -67,6 +67,8 @@ class UpdateCcNodeStatus @Autowired constructor(
             updateCmdbNodeStatus()
         } catch (ignore: Throwable) {
             logger.warn("update server node status failed", ignore)
+        } finally {
+            lock.unlock()
         }
     }
 
@@ -98,6 +100,8 @@ class UpdateCcNodeStatus @Autowired constructor(
             }
         } catch (ignore: Throwable) {
             logger.warn("update server node status failed", ignore)
+        } finally {
+            lock.unlock()
         }
     }
 

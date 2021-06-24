@@ -77,6 +77,8 @@ class UpdateAgentStatus @Autowired constructor(
             nodeDao.batchUpdateNode(dslContext, allServerNodes)
         } catch (ignore: Throwable) {
             logger.warn("update agent status failed", ignore)
+        } finally {
+            lock.unlock()
         }
     }
 }
