@@ -25,40 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.listener
+package com.tencent.devops.dispatch.controller
 
-import com.tencent.devops.dispatch.service.PipelineBuildLessDispatchService
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.api.BuildCodeccToolResource
+import com.tencent.devops.dispatch.service.CodeccDownloaderService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
-@Service
-class BuildLessAgentShutdownListener @Autowired
-constructor(private val pipelineDispatchService: PipelineBuildLessDispatchService) {
-
-/*    @RabbitListener(
-        bindings = [(QueueBinding(
-            key = [MQ.ROUTE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH], value = Queue(
-                value = MQ.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH, durable = "true"
-            ),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.DIRECT
-            )
-        ))]
-    )*/
-    fun listenAgentStartUpEvent(pipelineBuildLessDockerAgentShutdownEvent: PipelineBuildLessShutdownDispatchEvent) {
-        try {
-            pipelineDispatchService.shutdown(pipelineBuildLessDockerAgentShutdownEvent)
-        } catch (ignored: Throwable) {
-            logger.error("Fail to start the pipe build($pipelineBuildLessDockerAgentShutdownEvent)", ignored)
-        }
+@RestResource
+class BuildCodeccToolResourceImpl @Autowired constructor(
+    private val codeccDownloaderService: CodeccDownloaderService
+) : BuildCodeccToolResource {
+    override fun downloadTool(toolName: String, osType: OSType, fileMd5: String, is32Bit: Boolean?): Response {
+        return codeccDownloaderService.downloadTool(toolName, osType, fileMd5, is32Bit)
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(BuildLessAgentShutdownListener::class.java)
+    override fun downloadCovScript(osType: OSType, fileMd5: String): Response {
+        return codeccDownloaderService.downloadCovScript(osType, fileMd5)
+    }
+
+    override fun downloadToolsScript(osType: OSType, fileMd5: String): Response {
+        return codeccDownloaderService.downloadToolsScript(osType, fileMd5)
     }
 }

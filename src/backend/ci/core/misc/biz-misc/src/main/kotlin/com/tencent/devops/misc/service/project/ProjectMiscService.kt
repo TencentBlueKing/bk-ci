@@ -25,41 +25,57 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.listener
+package com.tencent.devops.misc.service.project
 
-import com.tencent.devops.dispatch.service.PipelineBuildLessDispatchService
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
-import org.slf4j.LoggerFactory
+import com.tencent.devops.misc.dao.project.ProjectMiscDao
+import com.tencent.devops.misc.pojo.project.ProjectInfo
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BuildLessAgentStartupListener @Autowired
-constructor(private val pipelineDispatchService: PipelineBuildLessDispatchService) {
+class ProjectMiscService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val projectMiscDao: ProjectMiscDao
+) {
 
-/*    @RabbitListener(
-        bindings = [(QueueBinding(
-            key = [MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH], value = Queue(
-                value = MQ.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH, durable = "true"
-            ),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.DIRECT
-            )
-        ))]
-    )*/
-    fun listenAgentStartUpEvent(event: PipelineBuildLessStartupDispatchEvent) {
-        try {
-            logger.info("start build less($event)")
-            pipelineDispatchService.startUpBuildLess(event)
-        } catch (ignored: Throwable) {
-            logger.error("Fail to start the pipe build($event)", ignored)
-        }
+    fun getMinId(
+        projectIdList: List<String>? = null
+    ): Long? {
+        return projectMiscDao.getMinId(dslContext, projectIdList)
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(BuildLessAgentStartupListener::class.java)
+    fun getMaxId(
+        projectIdList: List<String>? = null
+    ): Long? {
+        return projectMiscDao.getMaxId(dslContext, projectIdList)
+    }
+
+    fun getProjectInfoList(
+        projectIdList: List<String>? = null,
+        minId: Long? = null,
+        maxId: Long? = null
+    ): List<ProjectInfo>? {
+        val projectInfoRecords = projectMiscDao.getProjectInfoList(
+            dslContext = dslContext,
+            projectIdList = projectIdList,
+            minId = minId,
+            maxId = maxId
+        )
+        return if (projectInfoRecords == null) {
+            null
+        } else {
+            val projectInfoList = mutableListOf<ProjectInfo>()
+            projectInfoRecords.forEach { projectInfoRecord ->
+                projectInfoList.add(
+                    ProjectInfo(
+                        id = projectInfoRecord["ID"] as Long,
+                        projectId = projectInfoRecord["ENGLISH_NAME"] as String,
+                        channel = projectInfoRecord["CHANNEL"] as String
+                    )
+                )
+            }
+            projectInfoList
+        }
     }
 }
