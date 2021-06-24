@@ -2,11 +2,11 @@ version: v2.0
 
 name: pipelineName
 
-on:
-#  push: [master, gray ]
-  push:
-    - master
-    - release/*
+trigger-on:
+  push: [master, gray ]
+#  push:
+#    - master
+#    - release/*
 #  push:
 #    branches:
 #      - master
@@ -22,34 +22,34 @@ on:
 #      - zhangsan
 #    users-ignore:
 #      - lisi
-#  tag:
-#    tags:
-#      - release_*
-#    tags-ignore:
-#      - master
-#    from-branches:
-#      - master
-#    users:
-#      - zhangsan
-#    users-ignore:
-#      - lisi
-#  mr:
-#    target-branches:
-#      - master
-#    source-branches-ignore:
-#      - story
-#    paths:
-#      - src/*/*
-#    paths-ignore:
-#      - build/
-#    action:
-#      - open
-#      - reopen
-#      - push-update
-#    users:
-#      - zhangsan
-#    users-ignore:
-#      - lisi
+  tag:
+    tags:
+      - release_*
+    tags-ignore:
+      - master
+    from-branches:
+      - master
+    users:
+      - zhangsan
+    users-ignore:
+      - lisi
+  mr:
+    target-branches:
+      - master
+    source-branches-ignore:
+      - story
+    paths:
+      - src/*/*
+    paths-ignore:
+      - build/
+    action:
+      - open
+      - reopen
+      - push-update
+    users:
+      - zhangsan
+    users-ignore:
+      - lisi
   schedules:
     cron: 0 0/5 0 0 0
     branches:
@@ -57,14 +57,19 @@ on:
       - develop
     always: false
 
+#variables:
+#  DEPLOY_TYPE:
+#    value: dev
+#  APPROVE:
+#    value: ${{ sss }}_${{ approve22 }}
+#  GIT_USERNAME:
+#    value: user1
+#    readonly: true
+
 variables:
-  DEPLOY_TYPE:
-    value: dev
-  APPROVE:
-    value: ${{ sss }}_${{ approve22 }}
-  GIT_USERNAME:
-    value: user1
-    readonly: true
+  - template: templates/vars.yml@repoA
+  - name: var_1
+    value: val_1
 
 stages:
   - name: "stage1"
@@ -122,6 +127,7 @@ stages:
         runs-on:
           self-hosted: true
           pool-name: sawyer-test
+          agent-selector: [ windows ]
         steps:
           - checkout: self
           - uses: DockerBuildAndPushImage@3.*
@@ -135,14 +141,21 @@ stages:
                 username: ${{ settings.CSIGHUB_USER }}
                 password: ${{ settings.CSIGHUB_PWD }}
 
-on-fail:
-#  job1:
-#    name: test1
-#  job2:
-#    name: test2
-  steps:
-    - run: |
-        echo "do something when the upstream fails"
+finally:
+  f_job_1:
+    name: f-job-1
+    if: FAILURE
+    steps:
+      - run: |
+          echo "[f-job-1]variables.a is ${{ variables.a }}"
+      - template: steps.yml
+  f_job_2:
+    name: f-job-2
+    steps:
+      - run: |
+          echo "[f-job-2]variables.a is ${{ variables.a }}"
+  template:
+    - name: jobs.yml
 
 extends:
   template: epc-build.yml
@@ -154,22 +167,3 @@ resources:
       name: ieg/epc-ieg-bk-common
       ref: refs/tags/v1.0
 
-#notices:
-#  - type: email
-#    title: this is a email notice
-#    content: this is a email notice,content is hello.
-#    receivers:
-#      - user1
-#      - user2
-#    ccs:
-#      - user3
-#    if: FAILURE
-#  - type: wework-message
-#    title: this is a wework-message notice
-#    content: this is a wework-message notice,content is hello.
-#    receivers:
-#      - user1
-#      - user2
-#  - type: wework-chat
-#    chat-id: xxxxxxxxxx
-#    content: this is a wework-chat notice,content is hello.

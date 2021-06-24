@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.v2.service.trigger
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -35,6 +36,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
@@ -216,6 +218,10 @@ class V2RequestTrigger @Autowired constructor(
             originYaml = originYaml,
             pipelineName = pipelineName
         )
+    }
+
+    override fun checkYamlSchema(userId: String, yaml: GitYamlString): Result<String> {
+        TODO("Not yet implemented")
     }
 
     private fun formatAndCheckYaml(

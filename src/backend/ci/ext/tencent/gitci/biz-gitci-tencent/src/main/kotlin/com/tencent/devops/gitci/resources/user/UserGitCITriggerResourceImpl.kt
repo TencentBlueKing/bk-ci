@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.resources.user
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.ci.CiYamlUtils
+import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCITriggerResource
 import com.tencent.devops.gitci.permission.GitCIV2PermissionService
@@ -38,6 +39,7 @@ import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.pojo.V2TriggerBuildReq
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.service.GitCITriggerService
+import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.GitCIV2PipelineService
 import org.slf4j.LoggerFactory
@@ -47,7 +49,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserGitCITriggerResourceImpl @Autowired constructor(
     private val gitCITriggerService: GitCITriggerService,
     private val gitCIV2PipelineService: GitCIV2PipelineService,
-    private val permissionService: GitCIV2PermissionService
+    private val permissionService: GitCIV2PermissionService,
+    private val requestTriggerFactory: RequestTriggerFactory
 ) : UserGitCITriggerResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserGitCITriggerResourceImpl::class.java)
@@ -80,22 +83,10 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
     }
 
     override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
-        try {
-            val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
-            logger.debug("yaml str : $yamlStr")
-
-            val (validate, message) = gitCITriggerService.validateCIBuildYaml(yamlStr)
-            if (!validate) {
-                logger.error("Validate yaml failed, message: $message")
-                return Result(1, "Invalid yaml: $message", message)
-            }
-            gitCITriggerService.createCIBuildYaml(yaml.yaml)
-        } catch (e: Throwable) {
-            logger.error("check yaml failed, error: ${e.message}, yaml: $yaml")
-            return Result(1, "Invalid yaml", e.message)
-        }
-
-        return Result("OK")
+        // 检查yml版本，根据yml版本选择不同的实现
+        val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
+        val triggerInterface = requestTriggerFactory.getGitCIRequestTrigger(ymlVersion)
+        return triggerInterface.checkYamlSchema(userId, yaml)
     }
 
     override fun getYamlSchema(userId: String): Result<String> {

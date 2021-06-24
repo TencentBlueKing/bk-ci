@@ -28,6 +28,7 @@
 package com.tencent.devops.gitci.service.trigger
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
@@ -41,9 +42,12 @@ import com.tencent.devops.gitci.listener.GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.gitci.resources.user.UserGitCITriggerResourceImpl
+import com.tencent.devops.gitci.service.GitCITriggerService
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.utils.GitCIWebHookMatcher
 import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
@@ -63,7 +67,7 @@ class RequestTrigger @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
+    private val gitCITriggerService: GitCITriggerService,
     private val repositoryConfService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate,
     private val gitCIEventSaveService: GitCIEventSaveService
@@ -189,6 +193,25 @@ class RequestTrigger @Autowired constructor(
         }
 
         return yamlObject
+    }
+
+    override fun checkYamlSchema(userId: String, yaml: GitYamlString): Result<String> {
+        try {
+            val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
+            logger.debug("yaml str : $yamlStr")
+
+            val (validate, message) = gitCITriggerService.validateCIBuildYaml(yamlStr)
+            if (!validate) {
+                logger.error("Check yaml failed, error: $message")
+                return Result(1, "Invalid yaml: $message", message)
+            }
+            gitCITriggerService.createCIBuildYaml(yaml.yaml)
+        } catch (e: Throwable) {
+            logger.error("Check yaml failed, error: ${e.message}, yaml: $yaml")
+            return Result(1, "Invalid yaml", e.message)
+        }
+
+        return Result("OK")
     }
 
     fun createCIBuildYaml(yamlStr: String, gitProjectId: Long? = null): CIBuildYaml {
