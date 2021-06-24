@@ -30,7 +30,7 @@ package com.tencent.devops.misc.cron.transfer
 import com.tencent.devops.misc.config.MiscPipelineTransferContext
 import com.tencent.devops.misc.service.auto.tsource.SourcePipelineService
 import com.tencent.devops.misc.service.auto.ttarget.TargetPipelineService
-import com.tencent.devops.misc.service.project.ProjectService
+import com.tencent.devops.misc.service.project.ProjectMiscService
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component
 @Component
 @Suppress("UNUSED")
 class PipelineTransferJob @Autowired constructor(
-    private val projectService: ProjectService,
+    private val projectService: ProjectMiscService,
     private val sourcePipelineService: SourcePipelineService,
     private val targetPipelineService: TargetPipelineService,
     private val miscPipelineTransferContext: MiscPipelineTransferContext
