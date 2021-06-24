@@ -366,7 +366,7 @@ class TriggerBuildService @Autowired constructor(
                 .getGroups(event.userId, gitBasicSetting.projectCode!!)
                 .data
 
-            yaml.label.forEach {
+            yaml.label?.forEach {
                 // 要设置的标签组不存在，新建标签组和标签（同名）
                 if (!checkPipelineLabel(it, pipelineGroups)) {
                     client.get(UserPipelineGroupResource::class).addGroup(
@@ -545,7 +545,7 @@ class TriggerBuildService @Autowired constructor(
         }
 
         // 第三方构建机
-        if (job.runsOn.selfHosted) {
+        if (job.runsOn.selfHosted == true) {
             return ThirdPartyAgentEnvDispatchType(
                 envName = job.runsOn.poolName,
                 workspace = "",
