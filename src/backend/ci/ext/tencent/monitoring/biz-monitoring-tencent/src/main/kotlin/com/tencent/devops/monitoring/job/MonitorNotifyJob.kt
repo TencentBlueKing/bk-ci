@@ -325,6 +325,7 @@ class MonitorNotifyJob @Autowired constructor(
         startTime: Long
     ) {
         if (null == oteamUrl) {
+            logger.warn("null oteamUrl , can not oteam status")
             return
         }
         try {
