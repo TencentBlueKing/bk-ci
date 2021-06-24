@@ -1139,7 +1139,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val options = paramValueMap["options"] ?: return
         try {
             options as List<Map<String, String>>
-            builder.append(", $selectorTypeName:")
+            builder.append(", $selectorTypeName")
             builder.append(", $optionsName:")
             options.forEachIndexed { index, map ->
                 if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
