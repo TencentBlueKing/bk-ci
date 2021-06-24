@@ -194,7 +194,9 @@ class TXPipelineExportService @Autowired constructor(
                             continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
                             strategy = null,
                             // 蓝盾这边是自定义Job ID
-                            dependOn = job.jobControlOption?.dependOnId
+                            dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
+                                job.jobControlOption?.dependOnId
+                            } else null
                         )
                     )
                 }
@@ -233,7 +235,6 @@ class TXPipelineExportService @Autowired constructor(
                         V2Job(
                             id = job.jobId,
                             name = job.name,
-                            // TODO: 工蜂CI仅支持环境ID（多对一无法映射），单节点时占位符注释提示，poolName是环境名
                             runsOn = runsOn,
                             services = null,
                             ifField = if (job.jobControlOption?.runCondition ==
@@ -247,7 +248,9 @@ class TXPipelineExportService @Autowired constructor(
                             env = null,
                             continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
                             strategy = null,
-                            dependOn = job.jobControlOption?.dependOnId
+                            dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
+                                job.jobControlOption?.dependOnId
+                            } else null
                         )
                     )
                 }
@@ -267,7 +270,7 @@ class TXPipelineExportService @Autowired constructor(
         job.elements.forEach { element ->
             val originRetryTimes = element.additionalOptions?.retryCount ?: 0
             val originTimeout = element.additionalOptions?.timeout?.toInt() ?: 480
-            val retryTimes = if (originRetryTimes > 0) originRetryTimes else null
+            val retryTimes = if (originRetryTimes > 1) originRetryTimes else null
             val timeoutMinutes = if (originTimeout < 480) originTimeout else null
             val continueOnError = if (element.additionalOptions?.continueWhenFailed == true) true else null
             when (element.getClassType()) {

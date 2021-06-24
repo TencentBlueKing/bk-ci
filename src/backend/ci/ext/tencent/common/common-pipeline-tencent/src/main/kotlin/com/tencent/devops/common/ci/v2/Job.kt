@@ -82,7 +82,7 @@ data class Strategy(
 
 data class RunsOn(
     @JsonProperty("self-hosted")
-    val selfHosted: Boolean = false,
+    val selfHosted: Boolean? = false,
     @JsonProperty("pool-name")
     val poolName: String = JobRunsOnType.DOCKER.type,
     val container: Container = Container(
