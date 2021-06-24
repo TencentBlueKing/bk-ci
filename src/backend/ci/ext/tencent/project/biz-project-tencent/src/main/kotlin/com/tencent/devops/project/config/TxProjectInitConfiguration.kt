@@ -37,12 +37,8 @@ import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
-import com.tencent.devops.project.service.iam.IamV3Service
 import com.tencent.devops.project.service.impl.V0ProjectPermissionServiceImpl
-import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -78,18 +74,5 @@ class TxProjectInitConfiguration {
         bsProjectAuthServiceCode = bsProjectAuthServiceCode,
         managerService = managerService,
         authPermissionApi = authPermissionApi
-    )
-
-
-    @Bean
-    fun iamV3Service(
-        iamManagerService: com.tencent.bk.sdk.iam.service.ManagerService,
-        iamConfiguration: IamConfiguration,
-        projectDao: ProjectDao,
-        dslContext: DSLContext,
-        projectDispatcher: ProjectDispatcher,
-        client: Client
-    ) = IamV3Service(
-        iamManagerService, iamConfiguration, projectDao, dslContext, projectDispatcher, client
     )
 }

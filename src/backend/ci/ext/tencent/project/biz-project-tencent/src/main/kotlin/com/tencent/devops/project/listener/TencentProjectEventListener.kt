@@ -48,7 +48,8 @@ class TencentProjectEventListener @Autowired constructor(
     val projectPaasCCService: ProjectPaasCCService,
     val bsAuthTokenApi: BSAuthTokenApi,
     val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
-    val iamV3Service: IamV3Service
+    @Autowired(required = false)
+    val iamV3Service: IamV3Service?
 ) : ProjectEventListener {
 
     override fun execute(event: ProjectBroadCastEvent) {
@@ -64,7 +65,7 @@ class TencentProjectEventListener @Autowired constructor(
                     onReceiveProjectUpdateLogo(event)
                 }
                 is TxIamV3CreateEvent -> {
-                    iamV3Service.createIamV3Project(event)
+                    iamV3Service?.createIamV3Project(event)
                 }
             }
         } catch (ex: Exception) {
