@@ -69,7 +69,7 @@ class V2RequestTrigger @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(V2RequestTrigger::class.java)
-
+        private const val ymlVersion = "v2.0"
         // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
         private const val GIT_CI_TEMPLATE_ROOT_FILE = "GIT_CI_TEMPLATE_ROOT_FILE"
     }
@@ -122,7 +122,8 @@ class V2RequestTrigger @Autowired constructor(
                 description = gitRequestEvent.commitMsg,
                 triggerUser = gitRequestEvent.userId,
                 sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
-                buildStatus = BuildStatus.RUNNING
+                buildStatus = BuildStatus.RUNNING,
+                version = ymlVersion
             )
             V2GitCIRequestDispatcher.dispatch(
                 rabbitTemplate,

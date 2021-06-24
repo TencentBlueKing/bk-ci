@@ -65,7 +65,7 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(V2BaseBuildService::class.java)
-        private val ymlVersion = "v2.0"
+        private const val ymlVersion = "v2.0"
     }
 
     private val channelCode = ChannelCode.GIT
