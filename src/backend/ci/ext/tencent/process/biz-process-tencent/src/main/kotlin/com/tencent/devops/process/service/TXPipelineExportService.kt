@@ -57,7 +57,6 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.CodeCCExportYamlData
@@ -268,15 +267,15 @@ class TXPipelineExportService @Autowired constructor(
     ): List<V2Step> {
         val stepList = mutableListOf<V2Step>()
         job.elements.forEach { element ->
-            val step = element as LinuxScriptElement
-            val originRetryTimes = step.additionalOptions?.retryCount ?: 0
-            val originTimeout = step.additionalOptions?.timeout?.toInt() ?: 480
+            val originRetryTimes = element.additionalOptions?.retryCount ?: 0
+            val originTimeout = element.additionalOptions?.timeout?.toInt() ?: 480
             val retryTimes = if (originRetryTimes > 0) originRetryTimes else null
             val timeoutMinutes = if (originTimeout < 480) originTimeout else null
-            val continueOnError = if (step.additionalOptions?.continueWhenFailed == true) true else null
+            val continueOnError = if (element.additionalOptions?.continueWhenFailed == true) true else null
             when (element.getClassType()) {
                 // Bash脚本插件直接转为run
                 LinuxScriptElement.classType, WindowsScriptElement.classType -> {
+                    val step = element as LinuxScriptElement
                     stepList.add(
                         V2Step(
                             name = step.name,
@@ -293,7 +292,7 @@ class TXPipelineExportService @Autowired constructor(
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
                             env = null,
-                            run = " |\r\n ${element.script}",
+                            run = " |\r\n ${step.script}",
                             checkout = null
                         )
                     )
