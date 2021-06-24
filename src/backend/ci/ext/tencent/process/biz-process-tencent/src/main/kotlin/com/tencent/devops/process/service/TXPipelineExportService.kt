@@ -148,7 +148,7 @@ class TXPipelineExportService @Autowired constructor(
                     } else {
                         null
                     },
-                    fastKill = stage.fastKill,
+                    fastKill = if (stage.fastKill == true) true else null,
                     jobs = jobs
                 )
             )
@@ -215,6 +215,7 @@ class TXPipelineExportService @Autowired constructor(
                         }
                         is DockerDispatchType -> {
                             RunsOn(
+                                selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
                                 container = com.tencent.devops.common.ci.v2.Container(
                                     image = "# 请直接填入镜像(${dispatchType.imageName})的URL地址，若存在鉴权请增加 credentials 字段",
@@ -225,6 +226,7 @@ class TXPipelineExportService @Autowired constructor(
                         }
                         else -> {
                             RunsOn(
+                                selfHosted = null,
                                 poolName = "# 该环境不支持转换，请重新填写",
                                 agentSelector = listOf(job.baseOS.name.toLowerCase())
                             )
