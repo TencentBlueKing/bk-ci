@@ -209,11 +209,11 @@ class GitCIBasicSettingDao {
         }
     }
 
-    fun getProjectAfterId(dslContext: DSLContext, startId: Long, endId: Long): List<TGitBasicSettingRecord> {
+    fun getProjectAfterId(dslContext: DSLContext, startId: Long, limit: Int): List<TGitBasicSettingRecord> {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             return dslContext.selectFrom(this)
-                .where(ID.ge(startId))
-                .and(ID.le(endId))
+                .where(ID.gt(startId))
+                .limit(limit)
                 .fetch()
         }
     }

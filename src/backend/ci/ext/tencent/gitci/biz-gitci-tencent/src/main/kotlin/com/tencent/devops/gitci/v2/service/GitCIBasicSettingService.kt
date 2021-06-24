@@ -163,8 +163,7 @@ class GitCIBasicSettingService @Autowired constructor(
         val limitCount = 5
         var count = 0
         var startId = 0L
-        var endId = startId + limitCount.toLong()
-        var currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, endId)
+        var currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, limitCount)
         while (currProjects.isNotEmpty()) {
             currProjects.forEach {
                 val projectResult =
@@ -186,13 +185,12 @@ class GitCIBasicSettingService @Autowired constructor(
                     creatorDeptName = userInfo.deptName,
                     creatorCenterName = userInfo.centerName
                 )
+                startId = it.id
                 count++
             }
             logger.info("fixProjectInfo project ${currProjects.map { it.id }.toList()}, fixed count: $count")
             Thread.sleep(100)
-            startId += limitCount.toLong()
-            endId += limitCount.toLong()
-            currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, endId)
+            currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, limitCount)
         }
         logger.info("fixProjectInfo finished count: $count")
         return count
