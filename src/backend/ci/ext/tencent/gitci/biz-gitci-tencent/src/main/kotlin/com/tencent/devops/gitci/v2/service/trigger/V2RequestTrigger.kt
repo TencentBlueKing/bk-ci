@@ -27,12 +27,14 @@
 
 package com.tencent.devops.gitci.v2.service.trigger
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
@@ -43,6 +45,7 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.v2.YamlObjects
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.service.trigger.RequestTriggerInterface
+import com.tencent.devops.gitci.v2.common.CommonConst
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
@@ -66,7 +69,8 @@ class V2RequestTrigger @Autowired constructor(
     private val gitBasicSettingService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate,
     private val gitCIEventSaveService: GitCIEventSaveService,
-    private val yamlTemplateService: YamlTemplateService
+    private val yamlTemplateService: YamlTemplateService,
+    private val redisOperation: RedisOperation
 ) : RequestTriggerInterface<YamlObjects> {
 
     companion object {
@@ -221,7 +225,30 @@ class V2RequestTrigger @Autowired constructor(
     }
 
     override fun checkYamlSchema(userId: String, yaml: GitYamlString): Result<String> {
-        TODO("Not yet implemented")
+        val formatYamlStr = ScriptYmlUtils.formatYaml(yaml.yaml)
+        val yamlJsonStr = ScriptYmlUtils.convertYamlToJson(formatYamlStr)
+        val (schemaPassed, errorMessage) = ScriptYmlUtils.validate(
+            schema = redisOperation.get(CommonConst.REDIS_GITCI_YAML_SCHEMA)!!,
+            yamlJson = yamlJsonStr
+        )
+
+        // 先做总体的schema校验
+        if (!schemaPassed) {
+            logger.error("Check yaml schema failed. $errorMessage")
+            return Result(1, "Invalid yaml: $errorMessage")
+        }
+
+        return try {
+            val preTemplateYamlObject =
+                YamlUtil.getObjectMapper().readValue(formatYamlStr, PreTemplateScriptBuildYaml::class.java)
+            // 检查Yaml语法的格式问题
+            ScriptYmlUtils.checkYaml(preTemplateYamlObject, yaml.yaml)
+
+            Result("OK")
+        } catch (e: Exception) {
+            logger.error("Check yaml schema failed.", e)
+            Result(1, "Invalid yaml: ${e.message}")
+        }
     }
 
     private fun formatAndCheckYaml(

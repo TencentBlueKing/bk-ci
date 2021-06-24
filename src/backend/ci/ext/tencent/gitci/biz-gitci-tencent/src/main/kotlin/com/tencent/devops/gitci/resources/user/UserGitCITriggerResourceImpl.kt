@@ -29,8 +29,10 @@ package com.tencent.devops.gitci.resources.user
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCITriggerResource
 import com.tencent.devops.gitci.permission.GitCIV2PermissionService
@@ -41,6 +43,7 @@ import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.service.GitCITriggerService
 import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
 import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.common.CommonConst
 import com.tencent.devops.gitci.v2.service.GitCIV2PipelineService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,7 +53,8 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
     private val gitCITriggerService: GitCITriggerService,
     private val gitCIV2PipelineService: GitCIV2PipelineService,
     private val permissionService: GitCIV2PermissionService,
-    private val requestTriggerFactory: RequestTriggerFactory
+    private val requestTriggerFactory: RequestTriggerFactory,
+    private val redisOperation: RedisOperation
 ) : UserGitCITriggerResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserGitCITriggerResourceImpl::class.java)
@@ -87,6 +91,17 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
         val triggerInterface = requestTriggerFactory.getGitCIRequestTrigger(ymlVersion)
         return triggerInterface.checkYamlSchema(userId, yaml)
+    }
+
+    override fun saveYamlSchema(userId: String, yamlSchema: String): Result<String> {
+        logger.info("User: $userId save yamlSchema: $yamlSchema")
+        redisOperation.set(
+            key = CommonConst.REDIS_GITCI_YAML_SCHEMA,
+            value = JsonUtil.toJson(yamlSchema),
+            expired = false
+        )
+
+        return Result("OK")
     }
 
     override fun getYamlSchema(userId: String): Result<String> {

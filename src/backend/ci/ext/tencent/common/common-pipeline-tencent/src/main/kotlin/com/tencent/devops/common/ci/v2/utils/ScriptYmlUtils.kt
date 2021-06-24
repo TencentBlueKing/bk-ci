@@ -608,29 +608,11 @@ object ScriptYmlUtils {
         )
     }
 
-    fun validateYaml(yamlStr: String): Pair<Boolean, String> {
-        val yamlJsonStr = try {
-            convertYamlToJson(yamlStr)
-        } catch (e: Throwable) {
-            logger.error("", e)
-            throw CustomException(Response.Status.BAD_REQUEST, "${e.cause}")
-        }
-
-        try {
-            val schema = getPreScriptBuildYamlSchema()
-            println("schema ===== :\n$schema")
-            return validate(schema, yamlJsonStr)
-        } catch (e: Throwable) {
-            logger.error("", e)
-            throw CustomException(Response.Status.BAD_REQUEST, "${e.message}")
-        }
-    }
-
-    fun validate(schema: String, json: String): Pair<Boolean, String> {
+    fun validate(schema: String, yamlJson: String): Pair<Boolean, String> {
         val schemaNode =
             jsonNodeFromString(schema)
         val jsonNode =
-            jsonNodeFromString(json)
+            jsonNodeFromString(yamlJson)
         val report = JsonSchemaFactory.byDefault().validator.validate(schemaNode, jsonNode)
         val itr = report.iterator()
         val sb = java.lang.StringBuilder()
