@@ -64,7 +64,8 @@ class V2RequestTrigger @Autowired constructor(
     private val gitBasicSettingService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate,
     private val gitCIEventSaveService: GitCIEventSaveService,
-    private val yamlTemplateService: YamlTemplateService
+    private val yamlTemplateService: YamlTemplateService,
+    private val v2WebHookMatcher: V2WebHookMatcher
 ) : RequestTriggerInterface<YamlObjects> {
 
     companion object {
@@ -177,7 +178,7 @@ class V2RequestTrigger @Autowired constructor(
     }
 
     override fun isMatch(event: GitEvent, ymlObject: YamlObjects): Pair<Boolean, Boolean> {
-        return V2WebHookMatcher(event).isMatch(ymlObject.normalYaml.triggerOn!!)
+        return v2WebHookMatcher.isMatch(ymlObject.normalYaml.triggerOn!!, event)
     }
 
     override fun prepareCIBuildYaml(
