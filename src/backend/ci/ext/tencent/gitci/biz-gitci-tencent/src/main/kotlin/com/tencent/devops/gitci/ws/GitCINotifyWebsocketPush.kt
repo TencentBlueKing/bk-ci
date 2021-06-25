@@ -12,7 +12,7 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
-class GitCINotifyWebsocketPush (
+class GitCINotifyWebsocketPush(
     val buildId: String?,
     val projectId: String,
     override val userId: String,
@@ -21,7 +21,7 @@ class GitCINotifyWebsocketPush (
     override val objectMapper: ObjectMapper,
     override var page: String?,
     override var notifyPost: NotifyPost
-): WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
+) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
 
     override fun findSession(page: String): List<String>? {
         val userSessionList = RedisUtlis.getSessionIdByUserId(redisOperation, userId)

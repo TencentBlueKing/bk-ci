@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class GitCIV2WebsocketService  @Autowired constructor(
+class GitCIV2WebsocketService @Autowired constructor(
     val webSocketDispatcher: WebSocketDispatcher,
     val redisOperation: RedisOperation,
     val objectMapper: ObjectMapper
