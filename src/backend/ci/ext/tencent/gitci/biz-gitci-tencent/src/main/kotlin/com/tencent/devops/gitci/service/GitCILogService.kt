@@ -111,13 +111,20 @@ class GitCILogService @Autowired constructor(
     ): Response {
         logger.info("download logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
-        val response = OkhttpUtils.doLongGet("http://$gatewayUrl/log/api/service/logs/${GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId)}/${pipeline.pipelineId}/$buildId/download?jobId=${jobId ?: ""}")
+        val path = StringBuilder("http://$gatewayUrl/log/api/service/logs/")
+        path.append(GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId))
+        path.append("/${pipeline.pipelineId}/$buildId/download?executeCount=${executeCount ?: 1}")
+
+        if (!tag.isNullOrBlank()) path.append("&tag=$tag")
+        if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
+
+        val response = OkhttpUtils.doLongGet(path.toString())
         return Response
-                .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .header("content-disposition", "attachment; filename = ${pipeline.pipelineId}-$buildId-log.txt")
-                .header("Cache-Control", "no-cache")
-                .header("X-DEVOPS-PROJECT-ID", "gitciproject")
-                .build()
+            .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("content-disposition", "attachment; filename = ${pipeline.pipelineId}-$buildId-log.txt")
+            .header("Cache-Control", "no-cache")
+            .header("X-DEVOPS-PROJECT-ID", "gitciproject")
+            .build()
     }
 
     private fun getProjectPipeline(gitProjectId: Long, pipelineId: String) =
