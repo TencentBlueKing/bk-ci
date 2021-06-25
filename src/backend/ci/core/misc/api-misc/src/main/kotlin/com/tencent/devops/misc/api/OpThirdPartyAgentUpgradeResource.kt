@@ -25,41 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.listener
+package com.tencent.devops.misc.api
 
-import com.tencent.devops.dispatch.service.PipelineBuildLessDispatchService
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Service
-class BuildLessAgentStartupListener @Autowired
-constructor(private val pipelineDispatchService: PipelineBuildLessDispatchService) {
+@Api(tags = ["OP_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "第三方构建机资源")
+@Path("/op/thirdPartyAgent")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpThirdPartyAgentUpgradeResource {
 
-/*    @RabbitListener(
-        bindings = [(QueueBinding(
-            key = [MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH], value = Queue(
-                value = MQ.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH, durable = "true"
-            ),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.DIRECT
-            )
-        ))]
-    )*/
-    fun listenAgentStartUpEvent(event: PipelineBuildLessStartupDispatchEvent) {
-        try {
-            logger.info("start build less($event)")
-            pipelineDispatchService.startUpBuildLess(event)
-        } catch (ignored: Throwable) {
-            logger.error("Fail to start the pipe build($event)", ignored)
-        }
-    }
+    @ApiOperation("设置agent最大并发升级数量")
+    @POST
+    @Path("/agents/setMaxParallelUpgradeCount")
+    fun setMaxParallelUpgradeCount(
+        @ApiParam("maxParallelUpgradeCount", required = true)
+        maxParallelUpgradeCount: Int
+    ): Result<Boolean>
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(BuildLessAgentStartupListener::class.java)
-    }
+    @ApiOperation("获取agent最大并发升级数量")
+    @POST
+    @Path("/agents/getMaxParallelUpgradeCount")
+    fun getMaxParallelUpgradeCount(): Result<Int?>
 }
