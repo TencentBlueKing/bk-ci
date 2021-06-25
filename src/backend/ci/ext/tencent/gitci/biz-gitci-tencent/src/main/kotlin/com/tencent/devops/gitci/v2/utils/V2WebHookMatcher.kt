@@ -307,9 +307,6 @@ class V2WebHookMatcher @Autowired constructor(
                     }
                 }
             }
-
-            logger.info("trigger path commits no (add, modified, removed).")
-            pathIncluded = true
         } else {
             logger.info("trigger path include is empty.")
             pathIncluded = true
