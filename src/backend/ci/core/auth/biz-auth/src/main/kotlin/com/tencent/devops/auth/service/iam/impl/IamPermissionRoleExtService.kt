@@ -135,7 +135,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
     override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
         val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId)
         val groupInfo = mutableListOf<GroupInfoVo>()
-        groupInfos.result.forEach {
+        groupInfos.results.forEach {
             groupInfo.add(
                 GroupInfoVo(
                     id = it.id,
