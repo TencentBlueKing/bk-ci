@@ -210,6 +210,12 @@ class MonitorNotifyJob @Autowired constructor(
 
     private fun dispatchTime(startTime: Long): EmailModuleData {
         val sourceBuilder = SearchSourceBuilder()
+        val queryStringQuery = QueryBuilders.queryStringQuery(
+            """
+              ms:[10000 TO *] AND status:200 AND host:"devnet-backend.devops.oa.com" 
+            """.trimIndent()
+        )
+        sourceBuilder.query(QueryBuilders.boolQuery().filter(queryStringQuery))
         sourceBuilder.aggregation(AggregationBuilders.avg("avg_ms").field("ms"))
 
         val searchRequest = SearchRequest()
@@ -217,13 +223,13 @@ class MonitorNotifyJob @Autowired constructor(
         searchRequest.source(sourceBuilder)
 
         val aggregations = restHighLevelClient.search(searchRequest).aggregations
-        val avg = aggregations.get<Avg>("avg_ms").value
+        val avgMs = aggregations.get<Avg>("avg_ms").value
 
-        oteamStatus(avg, oteamJobTimeTarget, startTime)
+        oteamStatus(avgMs / 1000.0, oteamJobTimeTarget, startTime)
 
         return EmailModuleData(
             module = "构建机启动耗时",
-            rowList = listOf(Triple("dispatch", avg, jobTimeObservableUrl!!)),
+            rowList = listOf(Triple("dispatch", avgMs, jobTimeObservableUrl!!)),
             observableUrl = jobTimeObservableUrl
         )
     }
