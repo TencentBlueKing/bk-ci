@@ -65,6 +65,7 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(V2BaseBuildService::class.java)
+        private const val ymlVersion = "v2.0"
     }
 
     private val channelCode = ChannelCode.GIT
@@ -92,7 +93,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
             gitPipelineResourceDao.createPipeline(
                 dslContext = dslContext,
                 gitProjectId = gitCIBasicSetting.gitProjectId,
-                pipeline = pipeline
+                pipeline = pipeline,
+                version = ymlVersion
             )
         } else if (needReCreate(processClient, event, gitCIBasicSetting, pipeline)) {
             // 先删除已有数据
@@ -109,7 +111,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
             gitPipelineResourceDao.createPipeline(
                 dslContext = dslContext,
                 gitProjectId = gitCIBasicSetting.gitProjectId,
-                pipeline = pipeline
+                pipeline = pipeline,
+                version = ymlVersion
             )
         } else if (pipeline.pipelineId.isNotBlank()) {
             // 已有的流水线需要更新下工蜂CI这里的状态
@@ -118,7 +121,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 dslContext = dslContext,
                 gitProjectId = gitCIBasicSetting.gitProjectId,
                 pipelineId = pipeline.pipelineId,
-                displayName = pipeline.displayName
+                displayName = pipeline.displayName,
+                version = ymlVersion
             )
         }
     }
@@ -139,7 +143,7 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 startupPipelineBuild(processClient, gitBuildId, model, event, gitCIBasicSetting, pipeline.pipelineId)
             logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
-            gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
+            gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
             // 推送启动构建消息,当人工触发时不推送构建消息
             if (event.objectKind != OBJECT_KIND_MANUAL) {
