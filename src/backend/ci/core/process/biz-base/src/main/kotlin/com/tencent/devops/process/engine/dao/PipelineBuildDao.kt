@@ -447,7 +447,8 @@ class PipelineBuildDao {
                 } catch (ignored: Exception) {
                     null
                 },
-                retryFlag = t.isRetry
+                retryFlag = t.isRetry,
+                executeTime = t.executeTime ?: 0
             )
         }
     }

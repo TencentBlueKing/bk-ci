@@ -167,7 +167,8 @@ class PipelineBuildDetailService @Autowired constructor(
             cancelUserId = record.cancelUser ?: "",
             curVersion = buildInfo.version,
             latestVersion = latestVersion,
-            latestBuildNum = buildSummaryRecord?.buildNum ?: -1
+            latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
+            executeTime = buildInfo.executeTime
         )
     }
 
@@ -234,7 +235,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                     return Traverse.BREAK
                 }
-                return Traverse.BREAK
+                return Traverse.CONTINUE
             }
 
             override fun needUpdate(): Boolean {
@@ -438,18 +439,11 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (!container.status.isNullOrBlank() && BuildStatus.valueOf(container.status!!).isRunning()) {
                     container.status = buildStatus.name
                     update = true
-
-                    var containerElapsed = 0L
-                    run lit@{
-                        stage.containers.forEach {
-                            containerElapsed += it.elementElapsed ?: 0
-                            if (it == container) {
-                                return@lit
-                            }
-                        }
+                    if (container.startEpoch == null) {
+                        container.elementElapsed = 0
+                    } else {
+                        container.elementElapsed = System.currentTimeMillis() - container.startEpoch!!
                     }
-
-                    stage.elapsed = containerElapsed
                 }
                 return Traverse.CONTINUE
             }
