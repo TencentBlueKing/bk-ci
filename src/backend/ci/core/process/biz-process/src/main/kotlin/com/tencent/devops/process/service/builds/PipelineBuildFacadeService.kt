@@ -102,9 +102,8 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -315,6 +314,7 @@ class PipelineBuildFacadeService(
         buildId: String,
         taskId: String? = null,
         failedContainer: Boolean? = false,
+        skipFailedTask: Boolean? = false,
         isMobile: Boolean = false,
         channelCode: ChannelCode? = ChannelCode.BS,
         checkPermission: Boolean? = true
@@ -372,29 +372,50 @@ class PipelineBuildFacadeService(
             val model = buildDetailService.getBuildModel(buildId) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
-            val params = mutableMapOf<String, Any>()
+            val startParamsWithType = mutableListOf<BuildParameters>()
             val originVars = buildVariableService.getAllVariable(buildId)
             if (!taskId.isNullOrBlank()) {
                 // stage/job/task级重试，获取buildVariable构建参数，恢复环境变量
-                params.putAll(originVars)
+                originVars.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
+
                 // stage/job/task级重试
                 run {
                     model.stages.forEach { s ->
                         // stage 级重试
                         if (s.id == taskId) {
-                            params[PIPELINE_RETRY_START_TASK_ID] = s.id!!
-                            params[PIPELINE_RETRY_ALL_FAILED_CONTAINER] = failedContainer == true
+                            startParamsWithType.add(BuildParameters(key = PIPELINE_RETRY_START_TASK_ID, value = s.id!!))
+                            startParamsWithType.add(BuildParameters(
+                                key = PIPELINE_RETRY_ALL_FAILED_CONTAINER,
+                                value = failedContainer ?: false,
+                                valueType = BuildFormPropertyType.TEMPORARY
+                            ))
+                            startParamsWithType.add(BuildParameters(
+                                key = PIPELINE_SKIP_FAILED_TASK,
+                                value = skipFailedTask ?: false,
+                                valueType = BuildFormPropertyType.TEMPORARY
+                            ))
                             return@run
                         }
                         s.containers.forEach { c ->
                             val pos = if (c.id == taskId) 0 else -1 // 容器job级别的重试，则找job的第一个原子
                             c.elements.forEachIndexed { index, element ->
                                 if (index == pos) {
-                                    params[PIPELINE_RETRY_START_TASK_ID] = element.id!!
+                                    startParamsWithType.add(BuildParameters(
+                                        key = PIPELINE_RETRY_START_TASK_ID,
+                                        value = element.id!!
+                                    ))
                                     return@run
                                 }
                                 if (element.id == taskId) {
-                                    params[PIPELINE_RETRY_START_TASK_ID] = element.id!!
+                                    startParamsWithType.add(BuildParameters(
+                                        key = PIPELINE_RETRY_START_TASK_ID,
+                                        value = element.id!!
+                                    ))
+                                    startParamsWithType.add(BuildParameters(
+                                        key = PIPELINE_SKIP_FAILED_TASK,
+                                        value = skipFailedTask ?: false,
+                                        valueType = BuildFormPropertyType.TEMPORARY
+                                    ))
                                     return@run
                                 }
                             }
@@ -406,7 +427,11 @@ class PipelineBuildFacadeService(
                 try {
                     val startupParam = buildStartupParamService.getParam(buildId)
                     if (startupParam != null && startupParam.isNotEmpty()) {
-                        params.putAll(JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID })
+                        startParamsWithType.addAll(
+                            JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID }.map {
+                                BuildParameters(key = it.key, value = it.value)
+                            }
+                        )
                     }
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
@@ -417,27 +442,21 @@ class PipelineBuildFacadeService(
             buildDetailService.updateElementWhenPauseRetry(buildId, model)
 
             logger.info("ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                "retryCount=${params[PIPELINE_RETRY_COUNT]}|startParams=$params")
+                "retryCount=${originVars[PIPELINE_RETRY_COUNT]}|fc=$failedContainer|skip=$skipFailedTask")
 
             // rebuild重试计数
-            params[PIPELINE_RETRY_COUNT] = if (originVars[PIPELINE_RETRY_COUNT] != null) {
+            val retryCount = if (originVars[PIPELINE_RETRY_COUNT] != null) {
                 originVars[PIPELINE_RETRY_COUNT].toString().toInt() + 1
             } else {
                 1
             }
-
-            params[PIPELINE_START_USER_ID] = userId
-            params[PIPELINE_RETRY_BUILD_ID] = buildId
-            params[PIPELINE_START_TYPE] = originVars[PIPELINE_START_TYPE] ?: ""
-            params[PIPELINE_START_TASK_ID] = originVars[PIPELINE_START_TASK_ID] ?: ""
-
-            val startParamsWithType = mutableListOf<BuildParameters>()
-            params.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
+            startParamsWithType.add(BuildParameters(key = PIPELINE_RETRY_COUNT, value = retryCount))
+            startParamsWithType.add(BuildParameters(key = PIPELINE_RETRY_BUILD_ID, value = buildId))
 
             return pipelineBuildService.startPipeline(
                 userId = userId,
                 readyToBuildPipelineInfo = readyToBuildPipelineInfo,
-                startType = StartType.toStartType(params[PIPELINE_START_TYPE]?.toString() ?: ""),
+                startType = StartType.toStartType(originVars[PIPELINE_START_TYPE] ?: ""),
                 startParamsWithType = startParamsWithType,
                 channelCode = channelCode ?: ChannelCode.BS,
                 isMobile = isMobile,
