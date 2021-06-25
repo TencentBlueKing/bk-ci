@@ -60,7 +60,8 @@ import java.net.URLEncoder
 import java.util.Base64
 import javax.ws.rs.NotFoundException
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class ScmCheckService @Autowired constructor(private val client: Client) {
     private val logger = LoggerFactory.getLogger(ScmCheckService::class.java)
 

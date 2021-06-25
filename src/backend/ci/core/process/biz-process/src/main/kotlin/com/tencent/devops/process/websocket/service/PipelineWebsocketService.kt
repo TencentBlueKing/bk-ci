@@ -46,7 +46,10 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineWebsocketService @Autowired constructor(
     val redisOperation: RedisOperation,
-    val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper,
+    val historyPageBuild: HistoryPageBuild,
+    val detailPageBuild: DetailPageBuild,
+    val statusPageBuild: StatusPageBuild
 ) {
     fun buildDetailMessage(
         buildId: String,
@@ -54,7 +57,7 @@ class PipelineWebsocketService @Autowired constructor(
         pipelineId: String,
         userId: String
     ): DetailWebsocketPush {
-        val page = DetailPageBuild().buildPage(
+        val page = detailPageBuild.buildPage(
             buildPageInfo = BuildPageInfo(
                 buildId = buildId,
                 pipelineId = pipelineId,
@@ -90,7 +93,7 @@ class PipelineWebsocketService @Autowired constructor(
         pipelineId: String,
         userId: String
     ): HistoryWebsocketPush {
-        val page = HistoryPageBuild().buildPage(
+        val page = historyPageBuild.buildPage(
             buildPageInfo = BuildPageInfo(
                 buildId = buildId,
                 pipelineId = pipelineId,
@@ -126,7 +129,7 @@ class PipelineWebsocketService @Autowired constructor(
         pipelineId: String,
         userId: String
     ): StatusWebsocketPush {
-        val page = StatusPageBuild().buildPage(
+        val page = statusPageBuild.buildPage(
             buildPageInfo = BuildPageInfo(
                 buildId = buildId,
                 pipelineId = pipelineId,
