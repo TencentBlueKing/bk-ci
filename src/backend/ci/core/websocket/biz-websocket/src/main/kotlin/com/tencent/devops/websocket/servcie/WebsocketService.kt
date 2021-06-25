@@ -145,7 +145,7 @@ class WebsocketService @Autowired constructor(
             } else if (redisPage != null) {
                 RedisUtlis.cleanPageSessionBySessionId(redisOperation, redisPage, sessionId)
             }
-            cleanUserSessionBySessionId(redisOperation, userId, sessionId)
+//            cleanUserSessionBySessionId(redisOperation, userId, sessionId)
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
                     LoginOutTransferEvent(
