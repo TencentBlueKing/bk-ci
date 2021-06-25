@@ -46,7 +46,7 @@
             @confirm="saveTemplate">
             <div>
                 <form-field v-if="showVersionDialog" required="true" :label="$t('template.saveAsVersion')" :is-error="errors.has(&quot;versionName&quot;)" :error-msg="errors.first(&quot;versionName&quot;)">
-                    <auto-complete v-validate="'required'" :list="versionList" name="versionName" open-list="true" :placeholder="$t('template.versionInputTips')" :value="saveVersionName" display-key="name" setting-key="versionName" :handle-change="handleVersionChange"></auto-complete>
+                    <auto-complete v-validate.initial="Object.assign({}, { max: 64, required: true })" :list="versionList" name="versionName" open-list="true" :placeholder="$t('template.versionInputTips')" :value="saveVersionName" display-key="name" setting-key="versionName" :handle-change="handleVersionChange"></auto-complete>
                 </form-field>
             </div>
         </bk-dialog>
