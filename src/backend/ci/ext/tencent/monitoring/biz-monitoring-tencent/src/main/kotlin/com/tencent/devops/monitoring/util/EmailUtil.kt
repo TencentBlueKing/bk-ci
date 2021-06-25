@@ -170,7 +170,6 @@ object EmailUtil {
     private const val SHARE_EMAIL_HTML_PREFIX = """
 <!DOCTYPE html
   PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<!-- saved from url=(0064)http://open.oa.com/static_api/v3/templates/template10/index.html -->
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
