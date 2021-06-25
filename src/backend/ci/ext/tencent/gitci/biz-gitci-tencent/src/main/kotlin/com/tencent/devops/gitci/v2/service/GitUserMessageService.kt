@@ -145,8 +145,10 @@ class GitUserMessageService @Autowired constructor(
 
     fun readMessage(
         userId: String,
-        id: Int
+        id: Int,
+        projectId: String
     ): Boolean {
+        websocketService.pushNotifyWebsocket(userId, projectId)
         return gitUserMessageDao.readMessage(dslContext, id) >= 0
     }
 
