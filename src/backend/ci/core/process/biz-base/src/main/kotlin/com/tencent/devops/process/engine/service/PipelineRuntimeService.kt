@@ -1812,8 +1812,19 @@ class PipelineRuntimeService @Autowired constructor(
         val executeTask = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
             .filter { !filter.contains(it.taskType) }
         var executeTime = 0L
-        executeTask.forEach {
-            executeTime += it.totalTime ?: 0
+        val stageTotalTime = mutableMapOf<String, MutableMap<String, Long>>()
+        executeTask.forEach { task ->
+            val jobTime = stageTotalTime.computeIfAbsent(task.stageId) { mutableMapOf(task.containerId to 0L) }
+            jobTime[task.containerId] = jobTime[task.containerId] ?: 0L + task.totalTime
+        }
+        stageTotalTime.forEach { job ->
+            var maxJobTime = 0L
+            job.value.forEach {
+                if (maxJobTime < it.value) {
+                    maxJobTime = it.value
+                }
+            }
+            executeTime += maxJobTime
         }
         return executeTime
     }
