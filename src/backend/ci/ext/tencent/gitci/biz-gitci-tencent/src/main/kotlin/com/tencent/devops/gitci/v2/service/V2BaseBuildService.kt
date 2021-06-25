@@ -61,7 +61,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val websocketService: GitCIV2WebsocketService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(V2BaseBuildService::class.java)
