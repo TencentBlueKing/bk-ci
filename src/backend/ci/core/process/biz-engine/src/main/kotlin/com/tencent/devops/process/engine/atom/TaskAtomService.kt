@@ -164,7 +164,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = atomResponse.errorCode,
                 errorMsg = atomResponse.errorMsg
             )
-            pipelineBuildDetailService.pipelineTaskEnd(
+            pipelineBuildDetailService.taskEnd(
                 buildId = task.buildId,
                 taskId = task.taskId,
                 buildStatus = atomResponse.buildStatus,

@@ -114,10 +114,11 @@ class PipelineBuildDetailService @Autowired constructor(
 
         val model = JsonUtil.to(record.model, Model::class.java)
 
-        // 判断需要刷新状态，目前只会改变canRetry状态
+        // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         if (refreshStatus) {
-            val canRetry = buildInfo.status.isFailure() || buildInfo.status.isCancel() // 已经失败或者取消
-            ModelUtils.refreshCanRetry(model, canRetry)
+            if (buildInfo.status.isFailure() || buildInfo.status.isCancel()) { // 已经失败或者取消(终态)
+                ModelUtils.refreshCanRetry(model)
+            }
         }
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
@@ -247,7 +248,6 @@ class PipelineBuildDetailService @Autowired constructor(
         buildId: String,
         taskId: String,
         buildStatus: BuildStatus,
-        canRetry: Boolean? = false,
         errorType: ErrorType? = null,
         errorCode: Int? = null,
         errorMsg: String? = null
@@ -257,14 +257,12 @@ class PipelineBuildDetailService @Autowired constructor(
             var update = false
             override fun onFindElement(e: Element, c: Container): Traverse {
                 if (e.id == taskId) {
-                    e.canRetry = canRetry
                     e.status = buildStatus.name
                     if (e.startEpoch == null) {
                         e.elapsed = 0
                     } else {
                         e.elapsed = System.currentTimeMillis() - e.startEpoch!!
                     }
-                    c.canRetry = canRetry ?: false
                     if (errorType != null) {
                         e.errorType = errorType.name
                         e.errorCode = errorCode
@@ -295,25 +293,6 @@ class PipelineBuildDetailService @Autowired constructor(
                 return update
             }
         }, BuildStatus.RUNNING)
-    }
-
-    fun pipelineTaskEnd(
-        buildId: String,
-        taskId: String,
-        buildStatus: BuildStatus,
-        errorType: ErrorType?,
-        errorCode: Int?,
-        errorMsg: String?
-    ) {
-        taskEnd(
-            buildId = buildId,
-            taskId = taskId,
-            buildStatus = buildStatus,
-            canRetry = buildStatus.isFailure(),
-            errorType = errorType,
-            errorCode = errorCode,
-            errorMsg = errorMsg
-        )
     }
 
     fun containerSkip(buildId: String, containerId: String) {

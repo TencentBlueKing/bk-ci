@@ -533,7 +533,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             }
         }
 
-        pipelineBuildDetailService.pipelineTaskEnd(
+        pipelineBuildDetailService.taskEnd(
             buildId = buildId, taskId = result.elementId, buildStatus = buildStatus,
             errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
         )
