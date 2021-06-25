@@ -97,10 +97,17 @@ class GitProjectConfService @Autowired constructor(
         val allPipeline = gitPipelineResourceDao.getAllPipeline(dslContext)
         allPipeline.forEach {
             if (!it.latestBuildId.isNullOrBlank()) {
-                val build = gitRequestEventBuildDao.getLatestBuild(dslContext, it.gitProjectId, it.pipelineId) ?: return@forEach
+                val build = gitRequestEventBuildDao.getLatestBuild(
+                    dslContext = dslContext,
+                    gitProjectId = it.gitProjectId,
+                    pipelineId = it.pipelineId
+                ) ?: return@forEach
                 if (build.normalizedYaml.contains("v2.0")) {
-                    count += gitPipelineResourceDao.fixPipelineVersion(dslContext, it.pipelineId, "v2.0")
-                    logger.info("fixPipelineVersion gitProjectId: ${it.gitProjectId}, pipelineId: ${it.pipelineId}, buildId: ${build.buildId}, createTime:${build.createTime}")
+                    count += gitPipelineResourceDao.fixPipelineVersion(
+                        dslContext = dslContext,
+                        pipelineId = it.pipelineId,
+                        version = "v2.0"
+                    )
                 }
             }
             Thread.sleep(100)
@@ -115,7 +122,11 @@ class GitProjectConfService @Autowired constructor(
         val limitCount = 5
         var count = 0
         var startId = 0L
-        var currBuilds = gitRequestEventBuildDao.getProjectAfterId(dslContext, startId, limitCount)
+        var currBuilds = gitRequestEventBuildDao.getProjectAfterId(
+            dslContext = dslContext,
+            startId = startId,
+            limit = limitCount
+        )
         while (currBuilds.isNotEmpty()) {
             currBuilds.forEach {
                 if (it.normalizedYaml.contains("v2.0")) {
@@ -140,7 +151,7 @@ class GitProjectConfService @Autowired constructor(
         var currBuilds = gitRequestEventNotBuildDao.getProjectAfterId(dslContext, startId, limitCount)
         while (currBuilds.isNotEmpty()) {
             currBuilds.forEach {
-                if (it.normalizedYaml.contains("v2.0")) {
+                if (it.normalizedYaml?.contains("v2.0") == true) {
                     it.version = "v2.0"
                     count++
                 }
