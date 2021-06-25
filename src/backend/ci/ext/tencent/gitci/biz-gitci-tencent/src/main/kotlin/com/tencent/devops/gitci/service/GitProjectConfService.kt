@@ -145,9 +145,9 @@ class GitProjectConfService @Autowired constructor(
     }
 
     fun fixNotBuildVersion(): Int {
-        val limitCount = 5
+        val limitCount = 10
         var count = 0
-        var startId = 0L
+        var startId = 22000000L
         var currBuilds = gitRequestEventNotBuildDao.getProjectAfterId(dslContext, startId, limitCount)
         while (currBuilds.isNotEmpty()) {
             currBuilds.forEach {
