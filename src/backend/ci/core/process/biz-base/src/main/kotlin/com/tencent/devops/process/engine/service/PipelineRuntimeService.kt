@@ -888,8 +888,9 @@ class PipelineRuntimeService @Autowired constructor(
                         }
                     }
 
-                    val status = atomElement.initStatus(params = params, rerun = context.needRerun(stage))
+                    atomElement.disableBySkipVar(variables = params) // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
 
+                    val status = atomElement.initStatus(rerun = context.needRerun(stage))
                     if (status.isFinish()) {
                         logger.info("[$buildId|${atomElement.id}] status=$status")
                         atomElement.status = status.name
@@ -929,7 +930,6 @@ class PipelineRuntimeService @Autowired constructor(
                     } else {
                         // 如果是失败的插件重试，并且当前插件不是要重试的插件，则检查其之前的状态，如果已经执行过，则跳过
                         if (context.needSkipTaskWhenRetry(stage, atomElement.id)) {
-//                        if (!retryStage && !retryStartTaskId.isNullOrBlank() && retryStartTaskId != atomElement.id) {
                             val target = findTaskRecord(
                                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                                 container = container,
@@ -1108,16 +1108,13 @@ class PipelineRuntimeService @Autowired constructor(
             val projectName = projectCacheService.getProjectName(pipelineInfo.projectId) ?: ""
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                // 保存参数
-                val buildVariables = startParamsWithType.toMutableList()
-                val varMap = mapOf(
-                    PIPELINE_BUILD_ID to buildId,
-                    PROJECT_NAME to pipelineInfo.projectId,
-                    PROJECT_NAME_CHINESE to projectName
-                )
-                buildVariables.addAll(
-                    varMap.map { BuildParameters(it.key, it.value, BuildFormPropertyType.STRING) }
-                )
+                // 保存参数 过滤掉不需要保存持久化的临时参数
+                val buildVariables = startParamsWithType
+                    .filter { it.valueType != BuildFormPropertyType.TEMPORARY }.toMutableList()
+                buildVariables.add(BuildParameters(PIPELINE_BUILD_ID, buildId, BuildFormPropertyType.STRING))
+                buildVariables.add(BuildParameters(PROJECT_NAME, pipelineInfo.projectId, BuildFormPropertyType.STRING))
+                buildVariables.add(BuildParameters(PROJECT_NAME_CHINESE, projectName, BuildFormPropertyType.STRING))
+
                 buildVariableService.batchSetVariable(
                     dslContext = transactionContext,
                     projectId = pipelineInfo.projectId,
