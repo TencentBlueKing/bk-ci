@@ -91,7 +91,7 @@ class CheckPauseReviewStageCmd(
 
             commandContext.cmdFlowState = CmdFlowState.CONTINUE
             // #3742 只有经过手动审核才做审核变量的保存
-            if (stage.controlOption?.stageControlOption?.manualTrigger == true) {
+            if (stageControlOption?.manualTrigger == true) {
                 saveStageReviewParams(stage = stage, stageControlOption = stageControlOption)
             }
         }
