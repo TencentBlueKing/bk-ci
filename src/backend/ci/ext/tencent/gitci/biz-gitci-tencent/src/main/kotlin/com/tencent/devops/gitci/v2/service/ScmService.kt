@@ -39,13 +39,16 @@ import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class ScmService @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val oauthService: OauthService,
+    private val gitCIBasicSettingService: GitCIBasicSettingService
 ) {
 
     companion object {
@@ -219,11 +222,33 @@ class ScmService @Autowired constructor(
         }
     }
 
+    fun getMergeRequestChangeInfo(
+        userId: String,
+        gitProjectId: Long,
+        mrId: Long
+    ): GitMrChangeInfo? {
+        logger.info("getMergeRequestChangeInfo: [$gitProjectId|$mrId]")
+        return client.getScm(ServiceGitCiResource::class).getMergeRequestChangeInfo(
+            token = getOauthToken(userId, true, gitProjectId),
+            gitProjectId = gitProjectId,
+            mrId = mrId
+        ).data
+    }
+
     private fun getTriggerBranch(branch: String): String {
         return when {
             branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
             branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
             else -> branch
+        }
+    }
+
+    private fun getOauthToken(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
+        return if (isEnableUser) {
+            val setting = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+            oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
+        } else {
+            return oauthService.getAndCheckOauthToken(userId).accessToken
         }
     }
 }
