@@ -8,7 +8,7 @@ allprojects {
     group = "com.tencent.bk.devops.ci"
 
     // 版本
-    version = "1.6.0"
+    version = "1.5.5"
     val devopsVersion = System.getProperty("ci_version")
     if (devopsVersion != null) {
         version = devopsVersion

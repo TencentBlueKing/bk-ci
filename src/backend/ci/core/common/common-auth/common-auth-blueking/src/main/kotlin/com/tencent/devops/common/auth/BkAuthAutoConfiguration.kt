@@ -33,6 +33,7 @@ import com.tencent.devops.common.auth.api.BkAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.BkAuthResourceApi
 import com.tencent.devops.common.auth.api.BkAuthTokenApi
+import com.tencent.devops.common.auth.api.BkAuthUserApi
 import com.tencent.devops.common.auth.api.utils.AuthUtils
 import com.tencent.devops.common.auth.code.BkArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.code.BkBcsAuthServiceCode
@@ -74,6 +75,10 @@ class BkAuthAutoConfiguration {
         authProperties.appSecret,
         authProperties.bkloginUrl
     )
+
+    @Bean
+    @Primary
+    fun bkAuthUserApi(objectMapper: ObjectMapper, authUtils: AuthUtils) = BkAuthUserApi(objectMapper, authUtils)
 
     @Bean
     @Primary

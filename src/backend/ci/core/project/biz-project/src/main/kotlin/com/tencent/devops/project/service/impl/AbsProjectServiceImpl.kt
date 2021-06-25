@@ -74,7 +74,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import java.io.File
 import java.io.InputStream
-import java.util.ArrayList
 import java.util.regex.Pattern
 import javax.ws.rs.NotFoundException
 
@@ -157,89 +156,79 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
         }
 
-        // 随机生成首字母图片
-        val logoFile = drawFile(projectCreateInfo.englishName)
+        val userDeptDetail = getDeptInfo(userId)
+        var projectId = defaultProjectId
         try {
-            // 保存Logo文件
-            val logoAddress = saveLogoAddress(userId, projectCreateInfo.englishName, logoFile)
-            val userDeptDetail = getDeptInfo(userId)
-            var projectId = defaultProjectId
-            try {
-                if (createExtInfo.needAuth!!) {
-                    // 注册项目到权限中心
-                    projectId = projectPermissionService.createResources(
-                        userId = userId,
-                        accessToken = accessToken,
-                        resourceRegisterInfo = ResourceRegisterInfo(
-                            resourceCode = projectCreateInfo.englishName,
-                            resourceName = projectCreateInfo.projectName
-                        ),
-                        userDeptDetail = userDeptDetail
-                    )
-                }
-            } catch (e: PermissionForbiddenException) {
-                throw e
-            } catch (e: Exception) {
-                logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
-            }
-            if (projectId.isNullOrEmpty()) {
-                projectId = UUIDUtil.generate()
-            }
-
-            try {
-                dslContext.transaction { configuration ->
-                    val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
-                    val context = DSL.using(configuration)
-                    projectDao.create(
-                        dslContext = context,
-                        userId = userId,
-                        logoAddress = logoAddress,
-                        projectCreateInfo = projectInfo,
-                        userDeptDetail = userDeptDetail,
-                        projectId = projectId!!,
-                        channelCode = projectChannel
-                    )
-
-                    try {
-                        createExtProjectInfo(
-                            userId = userId,
-                            projectId = projectId!!,
-                            accessToken = accessToken,
-                            projectCreateInfo = projectInfo,
-                            createExtInfo = createExtInfo
-                        )
-                    } catch (e: Exception) {
-                        logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
-                        projectDao.delete(dslContext, projectId!!)
-                        throw e
-                    }
-                    if (projectInfo.secrecy) {
-                        redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
-                    }
-                }
-            } catch (e: DuplicateKeyException) {
-                logger.warn("Duplicate project $projectCreateInfo", e)
-                if (createExtInfo.needAuth!!) {
-                    deleteAuth(projectId!!, accessToken)
-                }
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
-            } catch (ignored: Throwable) {
-                logger.warn(
-                    "Fail to create the project ($projectCreateInfo)",
-                    ignored
+            if (createExtInfo.needAuth!!) {
+                // 注册项目到权限中心
+                projectId = projectPermissionService.createResources(
+                    userId = userId,
+                    accessToken = accessToken,
+                    resourceRegisterInfo = ResourceRegisterInfo(
+                        resourceCode = projectCreateInfo.englishName,
+                        resourceName = projectCreateInfo.projectName
+                    ),
+                    userDeptDetail = userDeptDetail
                 )
-                if (createExtInfo.needAuth!!) {
-                    deleteAuth(projectId!!, accessToken)
-                }
-                throw ignored
             }
-            return projectId!!
-        } finally {
-            if (logoFile.exists()) {
-                logoFile.delete()
-            }
+        } catch (e: PermissionForbiddenException) {
+            throw e
+        } catch (e: Exception) {
+            logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
         }
+        if (projectId.isNullOrEmpty()) {
+            projectId = UUIDUtil.generate()
+        }
+
+        try {
+            dslContext.transaction { configuration ->
+                val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
+                val context = DSL.using(configuration)
+                projectDao.create(
+                    dslContext = context,
+                    userId = userId,
+                    logoAddress = "",
+                    projectCreateInfo = projectInfo,
+                    userDeptDetail = userDeptDetail,
+                    projectId = projectId,
+                    channelCode = projectChannel
+                )
+
+                try {
+                    createExtProjectInfo(
+                        userId = userId,
+                        projectId = projectId,
+                        accessToken = accessToken,
+                        projectCreateInfo = projectInfo,
+                        createExtInfo = createExtInfo
+                    )
+                } catch (e: Exception) {
+                    logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
+                    projectDao.delete(dslContext, projectId)
+                    throw e
+                }
+                if (projectInfo.secrecy) {
+                    redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
+                }
+            }
+        } catch (e: DuplicateKeyException) {
+            logger.warn("Duplicate project $projectCreateInfo", e)
+            if (createExtInfo.needAuth) {
+                deleteAuth(projectId, accessToken)
+            }
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+        } catch (ignored: Throwable) {
+            logger.warn(
+                "Fail to create the project ($projectCreateInfo)",
+                ignored
+            )
+            if (createExtInfo.needAuth) {
+                deleteAuth(projectId, accessToken)
+            }
+            throw ignored
+        }
+        return projectId
     }
 
     // 内部版独立实现
@@ -654,7 +643,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         createExtInfo: ProjectCreateExtInfo
     )
 
-    abstract fun saveLogoAddress(userId: String, projectCode: String, file: File): String
+    abstract fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String
 
     abstract fun deleteAuth(projectId: String, accessToken: String?)
 
@@ -664,7 +653,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun drawFile(projectCode: String): File
 
-    abstract fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo
+    abstract fun organizationMarkUp(
+        projectCreateInfo: ProjectCreateInfo,
+        userDeptDetail: UserDeptDetail
+    ): ProjectCreateInfo
 
     abstract fun modifyProjectAuthResource(projectCode: String, projectName: String)
 

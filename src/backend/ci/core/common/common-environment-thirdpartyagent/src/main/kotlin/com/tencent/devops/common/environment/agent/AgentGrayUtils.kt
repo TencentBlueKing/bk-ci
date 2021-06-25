@@ -54,6 +54,8 @@ class AgentGrayUtils constructor(
         private const val DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:default_file_gateway"
         private const val USE_DEFAULT_GATEWAY_KEY = "environment:thirdparty:use_default_gateway"
         private const val USE_DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:use_default_file_gateway"
+        private const val PARALLEL_UPGRADE_COUNT = "environment.thirdparty.agent.parallel.upgrade.count"
+        private const val DEFAULT_PARALLEL_UPGRADE_COUNT = 50
     }
 
     fun checkForceUpgrade(agentHashId: String): Boolean {
@@ -75,7 +77,7 @@ class AgentGrayUtils constructor(
 
     fun getAllForceUpgradeAgents(): List<Long> {
         return (redisOperation.getSetMembers(FORCE_UPGRADE_AGENT_SET_KEY)
-            ?: setOf()).filter { !it.isBlank() }.map { it.toLong() }
+            ?: setOf()).filter { it.isNotBlank() }.map { it.toLong() }
     }
 
     fun cleanAllForceUpgradeAgents() {
@@ -88,7 +90,7 @@ class AgentGrayUtils constructor(
     fun checkLockUpgrade(agentHashId: String): Boolean {
         val agentId = HashUtil.decodeIdToLong(agentHashId)
         return (redisOperation.getSetMembers(LOCK_UPGRADE_AGENT_SET_KEY)
-            ?: setOf()).filter { !it.isBlank() }.contains(agentId.toString())
+            ?: setOf()).filter { it.isNotBlank() }.contains(agentId.toString())
     }
 
     fun setLockUpgradeAgents(agentIds: List<Long>) {
@@ -105,7 +107,7 @@ class AgentGrayUtils constructor(
 
     fun getAllLockUpgradeAgents(): List<Long> {
         return (redisOperation.getSetMembers(LOCK_UPGRADE_AGENT_SET_KEY)
-            ?: setOf()).filter { !it.isBlank() }.map { it.toLong() }
+            ?: setOf()).filter { it.isNotBlank() }.map { it.toLong() }
     }
 
     fun cleanAllLockUpgradeAgents() {
@@ -138,7 +140,7 @@ class AgentGrayUtils constructor(
 
     fun getCanUpgradeAgents(): List<Long> {
         return (redisOperation.getSetMembers(getCanUpgradeAgentSetKey())
-            ?: setOf()).filter { !it.isBlank() }.map { it.toLong() }
+            ?: setOf()).filter { it.isNotBlank() }.map { it.toLong() }
     }
 
     fun getAgentMasterVersionKey(): String {
@@ -179,5 +181,13 @@ class AgentGrayUtils constructor(
 
     fun useDefaultFileGateway(): Boolean {
         return redisOperation.get(USE_DEFAULT_FILE_GATEWAY_KEY) == "true"
+    }
+
+    fun setMaxParallelUpgradeCount(count: Int) {
+        redisOperation.set(PARALLEL_UPGRADE_COUNT, count.toString())
+    }
+
+    fun getMaxParallelUpgradeCount(): Int {
+        return redisOperation.get(PARALLEL_UPGRADE_COUNT)?.toInt() ?: DEFAULT_PARALLEL_UPGRADE_COUNT
     }
 }

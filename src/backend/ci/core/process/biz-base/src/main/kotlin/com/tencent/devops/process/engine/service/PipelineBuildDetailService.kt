@@ -930,7 +930,6 @@ class PipelineBuildDetailService @Autowired constructor(
 
             watcher.start("model")
             val model = JsonUtil.to(record!!.model, Model::class.java)
-            Preconditions.checkArgument(model.stages.size > 1, "Trigger container only")
 
             watcher.start("updateModel")
             update(model, modelInterface)

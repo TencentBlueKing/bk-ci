@@ -36,9 +36,9 @@ import io.swagger.annotations.ApiResponses
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
-import javax.ws.rs.PathParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
@@ -46,14 +46,14 @@ import javax.ws.rs.core.Response
 @Path("/build/codecc")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildCodeccResource {
+interface BuildCodeccToolResource {
 
     @ApiOperation("下载toolName对应的tool")
     @GET
     @Path("/{toolName}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @ApiResponses(
-            ApiResponse(code = 304, message = "tool已是最新，无需下载")
+        ApiResponse(code = 304, message = "tool已是最新，无需下载")
     )
     fun downloadTool(
         @ApiParam("工具类型", required = true)
@@ -75,7 +75,7 @@ interface BuildCodeccResource {
     @Path("/coverity/script")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @ApiResponses(
-            ApiResponse(code = 304, message = "本地的coverity script已是最新，无需下载")
+        ApiResponse(code = 304, message = "本地的coverity script已是最新，无需下载")
     )
     fun downloadCovScript(
         @ApiParam("系统类型", required = true)
@@ -91,7 +91,7 @@ interface BuildCodeccResource {
     @Path("/tools/script")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @ApiResponses(
-            ApiResponse(code = 304, message = "本地的多工具script已是最新，无需下载")
+        ApiResponse(code = 304, message = "本地的多工具script已是最新，无需下载")
     )
     fun downloadToolsScript(
         @ApiParam("系统类型", required = true)

@@ -60,10 +60,9 @@ import java.net.URLEncoder
 import java.util.Base64
 import javax.ws.rs.NotFoundException
 
-@Service
-@Suppress("ALL")
-class ScmService @Autowired constructor(private val client: Client) {
-    private val logger = LoggerFactory.getLogger(ScmService::class.java)
+@Service@Suppress("ALL")
+class ScmCheckService @Autowired constructor(private val client: Client) {
+    private val logger = LoggerFactory.getLogger(ScmCheckService::class.java)
 
     fun addGitCommitCheck(
         event: GitCommitCheckEvent,

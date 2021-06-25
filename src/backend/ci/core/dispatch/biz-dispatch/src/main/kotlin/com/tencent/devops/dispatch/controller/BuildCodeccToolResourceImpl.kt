@@ -25,16 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service.dispatcher
+package com.tencent.devops.dispatch.controller
 
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.api.BuildCodeccToolResource
+import com.tencent.devops.dispatch.service.CodeccDownloaderService
+import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
-interface BuildLessDispatcher {
+@RestResource
+class BuildCodeccToolResourceImpl @Autowired constructor(
+    private val codeccDownloaderService: CodeccDownloaderService
+) : BuildCodeccToolResource {
+    override fun downloadTool(toolName: String, osType: OSType, fileMd5: String, is32Bit: Boolean?): Response {
+        return codeccDownloaderService.downloadTool(toolName, osType, fileMd5, is32Bit)
+    }
 
-    fun canDispatch(event: PipelineBuildLessStartupDispatchEvent): Boolean
+    override fun downloadCovScript(osType: OSType, fileMd5: String): Response {
+        return codeccDownloaderService.downloadCovScript(osType, fileMd5)
+    }
 
-    fun startUp(event: PipelineBuildLessStartupDispatchEvent)
-
-    fun shutdown(event: PipelineBuildLessShutdownDispatchEvent)
+    override fun downloadToolsScript(osType: OSType, fileMd5: String): Response {
+        return codeccDownloaderService.downloadToolsScript(osType, fileMd5)
+    }
 }
