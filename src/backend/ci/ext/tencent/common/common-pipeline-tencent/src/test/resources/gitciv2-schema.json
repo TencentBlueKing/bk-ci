@@ -13,7 +13,7 @@
         "type": "string"
       }
     },
-    "trigger-on": {
+    "triggerOn": {
       "type": "object",
       "properties": {
         "push": {

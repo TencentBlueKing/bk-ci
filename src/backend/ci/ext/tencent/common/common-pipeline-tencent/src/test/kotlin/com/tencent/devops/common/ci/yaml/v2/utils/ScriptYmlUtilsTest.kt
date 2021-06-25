@@ -99,6 +99,7 @@ class ScriptYmlUtilsTest {
             throw CustomException(Response.Status.BAD_REQUEST, "${e.cause}")
         }
 
+        println(yamlJsonStr)
         val schema = getFileStr("gitciv2-schema.json")
         println(ScriptYmlUtils.validate(schema, yamlJsonStr))
     }
@@ -112,6 +113,12 @@ class ScriptYmlUtilsTest {
         val sb = StringBuffer()
         var str: String?
         while (reader.readLine().also { str = it } != null) {
+/*            if (str != null && str!!.startsWith("on:")) {
+                sb.append(str!!.replace("on", "trigger-on")).append("\n")
+            } else {
+                sb.append(str).append("\n")
+            }*/
+
             sb.append(str).append("\n")
         }
 

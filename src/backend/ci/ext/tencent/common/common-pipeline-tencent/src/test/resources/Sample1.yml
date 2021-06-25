@@ -2,7 +2,7 @@ version: v2.0
 
 name: pipelineName
 
-trigger-on:
+on:
   push: [master, gray ]
 #  push:
 #    - master
@@ -22,54 +22,54 @@ trigger-on:
 #      - zhangsan
 #    users-ignore:
 #      - lisi
-  tag:
-    tags:
-      - release_*
-    tags-ignore:
-      - master
-    from-branches:
-      - master
-    users:
-      - zhangsan
-    users-ignore:
-      - lisi
-  mr:
-    target-branches:
-      - master
-    source-branches-ignore:
-      - story
-    paths:
-      - src/*/*
-    paths-ignore:
-      - build/
-    action:
-      - open
-      - reopen
-      - push-update
-    users:
-      - zhangsan
-    users-ignore:
-      - lisi
-  schedules:
-    cron: 0 0/5 0 0 0
-    branches:
-      - master
-      - develop
-    always: false
-
-#variables:
-#  DEPLOY_TYPE:
-#    value: dev
-#  APPROVE:
-#    value: ${{ sss }}_${{ approve22 }}
-#  GIT_USERNAME:
-#    value: user1
-#    readonly: true
+#  tag:
+#    tags:
+#      - release_*
+#    tags-ignore:
+#      - master
+#    from-branches:
+#      - master
+#    users:
+#      - zhangsan
+#    users-ignore:
+#      - lisi
+#  mr:
+#    target-branches:
+#      - master
+#    source-branches-ignore:
+#      - story
+#    paths:
+#      - src/*/*
+#    paths-ignore:
+#      - build/
+#    action:
+#      - open
+#      - reopen
+#      - push-update
+#    users:
+#      - zhangsan
+#    users-ignore:
+#      - lisi
+#  schedules:
+#    cron: 0 0/5 0 0 0
+#    branches:
+#      - master
+#      - develop
+#    always: false
 
 variables:
-  - template: templates/vars.yml@repoA
-  - name: var_1
-    value: val_1
+  DEPLOY_TYPE:
+    value: dev
+  APPROVE:
+    value: ${{ sss }}_${{ approve22 }}
+  GIT_USERNAME:
+    value: user1
+    readonly: true
+
+#variables:
+#  - template: templates/vars.yml@repoA
+#  - name: var_1
+#    value: val_1
 
 stages:
   - name: "stage1"
@@ -142,20 +142,20 @@ stages:
                 password: ${{ settings.CSIGHUB_PWD }}
 
 finally:
-  f_job_1:
-    name: f-job-1
-    if: FAILURE
-    steps:
-      - run: |
-          echo "[f-job-1]variables.a is ${{ variables.a }}"
-      - template: steps.yml
-  f_job_2:
-    name: f-job-2
-    steps:
-      - run: |
-          echo "[f-job-2]variables.a is ${{ variables.a }}"
-  template:
-    - name: jobs.yml
+#  f_job_1:
+#    name: f-job-1
+#    if: FAILURE
+#    steps:
+#      - run: |
+#          echo "[f-job-1]variables.a is ${{ variables.a }}"
+#      - template: steps.yml
+#  f_job_2:
+#    name: f-job-2
+#    steps:
+#      - run: |
+#          echo "[f-job-2]variables.a is ${{ variables.a }}"
+#  template:
+#    - name: jobs.yml
 
 extends:
   template: epc-build.yml

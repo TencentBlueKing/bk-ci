@@ -60,6 +60,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.io.BufferedReader
+import java.io.StringReader
 
 @Component
 class V2RequestTrigger @Autowired constructor(
