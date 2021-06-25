@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.configuration
 
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.gitci.GitCIPermissionProjectServiceImpl
 import com.tencent.devops.auth.service.gitci.GitCIPermissionServiceImpl
 import com.tencent.devops.common.client.Client
@@ -8,14 +9,14 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
+@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
 class GitCIConfiguration {
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
     fun gitCIPermissionServiceImpl(
-        client: Client
-    ) = GitCIPermissionServiceImpl(client)
+        client: Client,
+        managerService: ManagerService
+    ) = GitCIPermissionServiceImpl(client, managerService)
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
     fun gitCIPermissionProjectServiceImpl() = GitCIPermissionProjectServiceImpl()
 }
