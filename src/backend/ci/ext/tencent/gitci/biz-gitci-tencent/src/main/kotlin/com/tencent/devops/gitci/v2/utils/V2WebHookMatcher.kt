@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
+import java.util.regex.Pattern
 
 @Suppress("ALL")
 @Component
@@ -374,12 +375,37 @@ class V2WebHookMatcher @Autowired constructor(
 
     private fun isBranchMatch(branchName: String, ref: String): Boolean {
         val eventBranch = ref.removePrefix("refs/heads/")
-        return matcher.match(branchName, eventBranch)
+        return matcher.match(branchName.replace("*", "**"), eventBranch)
     }
 
     private fun isTagMatch(tagName: String, ref: String): Boolean {
         val eventTag = ref.removePrefix("refs/tags/")
-        return matcher.match(tagName, eventTag)
+        return matcher.match(tagName.replace("*", "**"), eventTag)
+    }
+
+    /**
+     * Check if the path match
+     * example:
+     * fullPath: a/1.txt
+     * prefixPath: a/
+     */
+    private fun isPathMatch(fullPath: String, prefixPath: String): Boolean {
+        logger.info("fullPath: $fullPath, prefixPath: $prefixPath")
+        val fullPathList = fullPath.removePrefix("/").split("/")
+        val prefixPathList = prefixPath.removePrefix("/").split("/")
+        if (fullPathList.size < prefixPathList.size) {
+            return false
+        }
+
+        for (i in prefixPathList.indices) {
+            val pattern = Pattern.compile(prefixPathList[i].replace("*", "\\S*"))
+            val matcher = pattern.matcher(fullPathList[i])
+            if (prefixPathList[i] != "*" && !matcher.matches()) {
+                return false
+            }
+        }
+
+        return true
     }
 
     private fun matchUrl(url: String, event: GitEvent): Boolean {
@@ -442,31 +468,6 @@ class V2WebHookMatcher @Autowired constructor(
             is GitMergeRequestEvent -> CodeEventType.MERGE_REQUEST
             else -> CodeEventType.PUSH
         }
-    }
-
-    /**
-     * Check if the path match
-     * example:
-     * fullPath: a/1.txt
-     * prefixPath: a/
-     */
-    private fun isPathMatch(fullPath: String, prefixPath: String): Boolean {
-        logger.info("fullPath: $fullPath, prefixPath: $prefixPath")
-        val fullPathList = fullPath.removePrefix("/").split("/")
-        val prefixPathList = prefixPath.removePrefix("/").split("/")
-        if (fullPathList.size < prefixPathList.size) {
-            return false
-        }
-
-        for (i in prefixPathList.indices) {
-            if (prefixPathList[i] != "*" &&
-                (fullPathList[i] != prefixPathList[i])
-            ) {
-                return false
-            }
-        }
-
-        return true
     }
 
     private fun getBranch(ref: String): String {
