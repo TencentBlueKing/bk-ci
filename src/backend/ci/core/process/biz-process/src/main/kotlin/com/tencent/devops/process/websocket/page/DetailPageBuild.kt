@@ -32,7 +32,8 @@ import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 abstract class DetailPageBuild : IPath {
     override fun buildPage(buildPageInfo: BuildPageInfo): String {
-        val defaultPage = "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}/detail/${buildPageInfo.buildId}"
+        val defaultPage = "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}" +
+            "/detail/${buildPageInfo.buildId}"
         if (!extDetailPage(buildPageInfo).isNullOrEmpty()) {
             return extDetailPage(buildPageInfo)!!
         }
