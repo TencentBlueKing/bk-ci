@@ -46,7 +46,8 @@ class GitRequestEventNotBuildDao {
         reasonDetail: String?,
         pipelineId: String?,
         filePath: String?,
-        gitProjectId: Long
+        gitProjectId: Long,
+        version: String? = null
     ): Long {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
             val record = dslContext.insertInto(this,
@@ -59,7 +60,8 @@ class GitRequestEventNotBuildDao {
                 REASON,
                 REASON_DETAIL,
                 GIT_PROJECT_ID,
-                CREATE_TIME
+                CREATE_TIME,
+                VERSION
             ).values(
                 eventId,
                 originYaml,
@@ -70,7 +72,8 @@ class GitRequestEventNotBuildDao {
                 reason,
                 reasonDetail,
                 gitProjectId,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                version
             ).returning(ID)
                 .fetchOne()!!
             return record.id
@@ -123,5 +126,18 @@ class GitRequestEventNotBuildDao {
                 .where(ID.eq(recordId))
                 .execute() == 1
         }
+    }
+
+    fun getProjectAfterId(dslContext: DSLContext, startId: Long, limit: Int): List<TGitRequestEventNotBuildRecord> {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(ID.gt(startId))
+                .limit(limit)
+                .fetch()
+        }
+    }
+
+    fun batchUpdateBuild(dslContext: DSLContext, builds: List<TGitRequestEventNotBuildRecord>) {
+        dslContext.batchUpdate(builds).execute()
     }
 }

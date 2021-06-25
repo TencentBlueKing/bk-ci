@@ -170,7 +170,8 @@ class V2RequestTrigger @Autowired constructor(
                 reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = false,
-                commitCheckBlock = false
+                commitCheckBlock = false,
+                version = ymlVersion
             )
         }
 
@@ -250,7 +251,8 @@ class V2RequestTrigger @Autowired constructor(
                 reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message),
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = true,
-                commitCheckBlock = isMr
+                commitCheckBlock = isMr,
+                version = ymlVersion
             )
             null
         }
@@ -306,7 +308,8 @@ class V2RequestTrigger @Autowired constructor(
                 reasonDetail = TriggerReason.CI_YAML_TEMPLATE_ERROR.detail.format(message),
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = true,
-                commitCheckBlock = isMr
+                commitCheckBlock = isMr,
+                version = ymlVersion
             )
             return null
         }

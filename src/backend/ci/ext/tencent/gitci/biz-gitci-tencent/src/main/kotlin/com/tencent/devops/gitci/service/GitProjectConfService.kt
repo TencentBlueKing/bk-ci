@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitProjectConfDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
+import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitProjectConf
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -44,7 +45,8 @@ class GitProjectConfService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitProjectConfDao: GitProjectConfDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitProjectConfService::class.java)
@@ -104,6 +106,52 @@ class GitProjectConfService @Autowired constructor(
             Thread.sleep(100)
         }
         logger.info("fixPipelineVersion count: $count")
+        fixBuildVersion()
+        fixNotBuildVersion()
+        return count
+    }
+
+    fun fixBuildVersion(): Int {
+        val limitCount = 5
+        var count = 0
+        var startId = 0L
+        var currBuilds = gitRequestEventBuildDao.getProjectAfterId(dslContext, startId, limitCount)
+        while (currBuilds.isNotEmpty()) {
+            currBuilds.forEach {
+                if (it.normalizedYaml.contains("v2.0")) {
+                    it.version = "v2.0"
+                    count++
+                }
+                startId = it.id
+            }
+            gitRequestEventBuildDao.batchUpdateBuild(dslContext, currBuilds)
+            logger.info("fixBuildVersion project ${currBuilds.map { it.id }.toList()}, fixed count: $count")
+            Thread.sleep(100)
+            currBuilds = gitRequestEventBuildDao.getProjectAfterId(dslContext, startId, limitCount)
+        }
+        logger.info("fixBuildVersion finished count: $count")
+        return count
+    }
+
+    fun fixNotBuildVersion(): Int {
+        val limitCount = 5
+        var count = 0
+        var startId = 0L
+        var currBuilds = gitRequestEventNotBuildDao.getProjectAfterId(dslContext, startId, limitCount)
+        while (currBuilds.isNotEmpty()) {
+            currBuilds.forEach {
+                if (it.normalizedYaml.contains("v2.0")) {
+                    it.version = "v2.0"
+                    count++
+                }
+                startId = it.id
+            }
+            gitRequestEventNotBuildDao.batchUpdateBuild(dslContext, currBuilds)
+            logger.info("fixNotBuildVersion project ${currBuilds.map { it.id }.toList()}, fixed count: $count")
+            Thread.sleep(100)
+            currBuilds = gitRequestEventNotBuildDao.getProjectAfterId(dslContext, startId, limitCount)
+        }
+        logger.info("fixNotBuildVersion finished count: $count")
         return count
     }
 }

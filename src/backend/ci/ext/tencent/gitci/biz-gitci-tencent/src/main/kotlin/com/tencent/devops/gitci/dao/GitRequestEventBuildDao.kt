@@ -578,4 +578,17 @@ class GitRequestEventBuildDao {
             return dsl
         }
     }
+
+    fun getProjectAfterId(dslContext: DSLContext, startId: Long, limit: Int): List<TGitRequestEventBuildRecord> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(ID.gt(startId))
+                .limit(limit)
+                .fetch()
+        }
+    }
+
+    fun batchUpdateBuild(dslContext: DSLContext, builds: List<TGitRequestEventBuildRecord>) {
+        dslContext.batchUpdate(builds).execute()
+    }
 }
