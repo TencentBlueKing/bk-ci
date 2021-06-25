@@ -129,7 +129,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         pageInfo.offset = 1500
 
         val members = mutableSetOf<MemberInfo>()
-        groupInfos.result.forEach { group ->
+        groupInfos.results.forEach { group ->
             val membersInfos = iamManagerService.getRoleGroupMember(group.id, pageInfo).results
             membersInfos.forEach { member ->
                 members.add(MemberInfo(
