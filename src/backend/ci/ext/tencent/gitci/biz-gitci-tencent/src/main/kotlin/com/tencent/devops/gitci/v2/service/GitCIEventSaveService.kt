@@ -60,7 +60,8 @@ class GitCIEventSaveService @Autowired constructor(
     private val userMessageDao: GitUserMessageDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitCIBasicSettingService: GitCIBasicSettingService
+    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val websocketService: GitCIV2WebsocketService
 ) {
 
     companion object {
@@ -240,6 +241,7 @@ class GitCIEventSaveService @Autowired constructor(
                     messageId = event.id.toString(),
                     messageTitle = messageTitle
                 )
+                websocketService.pushNotifyWebsocket(userId, gitProjectId.toString())
             }
         }
         return messageId

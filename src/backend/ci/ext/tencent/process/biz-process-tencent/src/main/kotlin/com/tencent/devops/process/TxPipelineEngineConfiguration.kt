@@ -37,6 +37,9 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.GitCiPipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
+import com.tencent.devops.process.ws.GitCIDetailPageBuild
+import com.tencent.devops.process.ws.GitCIHistoryPageBuild
+import com.tencent.devops.process.ws.GitCIStatusPageBuild
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -87,4 +90,16 @@ class TxPipelineEngineConfiguration {
         dslContext: DSLContext,
         checkTokenService: ClientTokenService
     ) = GitCiPipelinePermissionServiceImpl(client, pipelineIndoDao, dslContext, checkTokenService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun detailPage() = GitCIDetailPageBuild()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun historyPage() = GitCIHistoryPageBuild()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun statusPage() = GitCIStatusPageBuild()
 }
