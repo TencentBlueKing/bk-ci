@@ -93,6 +93,9 @@ class MonitorNotifyJob @Autowired constructor(
     @Value("\${sla.url.detail.commitCheck:#{null}}")
     private var commitCheckDetailUrl: String? = null
 
+    @Value("\${sla.url.detail.jobTime:#{null}}")
+    private var jobTimeDetailUrl: String? = null
+
     @Value("\${sla.url.detail.codecc:#{null}}")
     private var codeccDetailUrl: String? = null
 
@@ -169,9 +172,12 @@ class MonitorNotifyJob @Autowired constructor(
     }
 
     private fun illegalConfig() =
-        null == receivers || null == title || null == atomDetailUrl || null == dispatchDetailUrl ||
-                null == userStatusDetailUrl || null == codeccDetailUrl || null == atomObservableUrl ||
-                null == dispatchObservableUrl || null == userStatusObservableUrl || null == codeccObservableUrl
+        null == receivers || null == title || null == atomDetailUrl ||
+                null == dispatchDetailUrl || null == userStatusDetailUrl ||
+                null == codeccDetailUrl || null == jobTimeDetailUrl ||
+                null == atomObservableUrl || null == dispatchObservableUrl ||
+                null == userStatusObservableUrl || null == codeccObservableUrl ||
+                null == jobTimeObservableUrl
 
     private fun doNotify() {
         val yesterday = LocalDateTime.now().minusDays(1)
@@ -223,14 +229,16 @@ class MonitorNotifyJob @Autowired constructor(
         searchRequest.source(sourceBuilder)
 
         val aggregations = restHighLevelClient.search(searchRequest).aggregations
-        val avgMs = aggregations.get<Avg>("avg_ms").value
+        val avgSecs = aggregations.get<Avg>("avg_ms").value / 1000.0
 
-        oteamStatus(avgMs / 1000.0, oteamJobTimeTarget, startTime)
+        oteamStatus(avgSecs, oteamJobTimeTarget, startTime)
 
         return EmailModuleData(
             module = "构建机启动耗时",
-            rowList = listOf(Triple("dispatch", avgMs, jobTimeObservableUrl!!)),
-            observableUrl = jobTimeObservableUrl
+            rowList = listOf(Triple("dispatch", avgSecs, jobTimeDetailUrl!!)),
+            observableUrl = jobTimeObservableUrl,
+            amountKey = "耗时",
+            amountUnit = "secs"
         )
     }
 
