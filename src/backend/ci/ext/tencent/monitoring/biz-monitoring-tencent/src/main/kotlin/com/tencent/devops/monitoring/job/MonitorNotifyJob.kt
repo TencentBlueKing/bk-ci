@@ -242,7 +242,9 @@ class MonitorNotifyJob @Autowired constructor(
                 logger.error("commitCheck , get map error , errorMsg:${queryResult?.error}")
             }
 
-            oteamStatus(rowList[0].second, oteamScmTarget, startTime)
+            if (rowList.size > 0) {
+                oteamStatus(rowList[0].second, oteamScmTarget, startTime)
+            }
 
             return EmailModuleData("工蜂回写统计", rowList, getObservableUrl(startTime, endTime, Module.COMMIT_CHECK))
         } catch (e: Throwable) {
@@ -488,21 +490,21 @@ class MonitorNotifyJob @Autowired constructor(
 
             val atomTotalTemplateSql =
                 "select count(errorCode) FROM AtomMonitorData where errorCode != -1 AND atomCode = '%s' " +
-                        "AND time>${startTime}000000 AND time<${endTime}000000"
+                        "AND time>${startTime}000000 AND time<${endTime}000000 "
             val atomFailedTemplateSql =
                 "select count(errorCode) FROM AtomMonitorData where errorCode != -1 AND errorCode!=0 " +
                         "AND errorType != 'USER' AND atomCode = '%s' " +
-                        "AND time>${startTime}000000 AND time<${endTime}000000"
+                        "AND time>${startTime}000000 AND time<${endTime}000000 "
 
             val totalCount = getInfluxValue(
                 "select count(errorCode) FROM AtomMonitorData where errorCode != -1 " +
-                        "AND time>${startTime}000000 AND time<${endTime}000000",
+                        "AND time>${startTime}000000 AND time<${endTime}000000 ",
                 1
             )
             val totalFailed = getInfluxValue(
                 "select count(errorCode) FROM AtomMonitorData where errorCode != -1 AND errorCode!=0 " +
-                        "AND time>${startTime}000000 AND time<${endTime}000000" +
-                        "AND errorType != 'USER'",
+                        "AND time>${startTime}000000 AND time<${endTime}000000 " +
+                        "AND errorType != 'USER' ",
                 0
             )
             val gitCount = getInfluxValue(String.format(atomTotalTemplateSql, "CODE_GIT"), 1)
