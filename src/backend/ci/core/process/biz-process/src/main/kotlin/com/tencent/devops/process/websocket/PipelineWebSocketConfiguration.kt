@@ -34,7 +34,6 @@ import com.tencent.devops.process.websocket.listener.PipelineWebSocketListener
 import com.tencent.devops.process.websocket.page.DefaultDetailPageBuild
 import com.tencent.devops.process.websocket.page.DefaultHistoryPageBuild
 import com.tencent.devops.process.websocket.page.DefaultStatusPageBuild
-import com.tencent.devops.process.websocket.page.DetailPageBuild
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -118,5 +117,4 @@ class PipelineWebSocketConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = ["statusPage"])
     fun statusPage() = DefaultStatusPageBuild()
-
 }
