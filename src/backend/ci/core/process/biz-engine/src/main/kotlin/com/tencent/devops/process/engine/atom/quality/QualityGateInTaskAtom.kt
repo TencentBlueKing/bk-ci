@@ -79,7 +79,6 @@ class QualityGateInTaskAtom @Autowired constructor(
             task = task,
             interceptTask = param.interceptTask!!,
             checkResult = checkResult,
-            runVariables = runVariables,
             buildLogPrinter = buildLogPrinter
         )
     }

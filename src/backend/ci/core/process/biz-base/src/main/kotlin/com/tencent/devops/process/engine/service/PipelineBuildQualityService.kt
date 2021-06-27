@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -208,16 +207,7 @@ class PipelineBuildQualityService(
         }
     }
 
-    fun getAuditUserList(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        taskId: String,
-        variablesParam: Map<String, String> = mapOf()
-    ): Set<String> {
-        val runVariables = variablesParam.ifEmpty {
-            buildVariableService.getAllVariable(buildId)
-        }
+    fun getAuditUserList(projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
         return try {
             val auditUserSet = client.get(ServiceQualityRuleResource::class).getAuditUserList(
                 projectId = projectId,
@@ -226,9 +216,7 @@ class PipelineBuildQualityService(
                 taskId = taskId
             ).data ?: setOf()
 
-            auditUserSet.map {
-                EnvUtils.parseEnv(it, runVariables)
-            }.toSet()
+            auditUserSet.map { buildVariableService.replaceTemplate(buildId, it) }.toSet()
         } catch (ignore: Exception) {
             logger.error("quality get audit user list fail: ${ignore.message}", ignore)
             setOf()
@@ -279,7 +267,6 @@ class PipelineBuildQualityService(
         task: PipelineBuildTask,
         interceptTask: String,
         checkResult: RuleCheckResult,
-        runVariables: Map<String, String>,
         buildLogPrinter: BuildLogPrinter
     ): AtomResponse {
         with(task) {
@@ -362,8 +349,7 @@ class PipelineBuildQualityService(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    taskId = interceptTask,
-                    variablesParam = runVariables
+                    taskId = interceptTask
                 )
                 buildLogPrinter.addLine(
                     buildId = buildId,
