@@ -95,6 +95,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
+import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -127,6 +128,7 @@ class PipelineBuildFacadeService(
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
     private val buildDetailService: PipelineBuildDetailService,
+    private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val jmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
     private val buildStartupParamService: BuildStartupParamService,
@@ -438,8 +440,8 @@ class PipelineBuildFacadeService(
                 }
             }
 
-            // 刷新因暂停而变化的element(需同时支持流水线重试和stage重试, task重试)
-            buildDetailService.updateElementWhenPauseRetry(buildId, model)
+            // 重置因暂停而变化的element(需同时支持流水线重试和stage重试, task重试), model不在这保存，在startBuild中保存
+            pipelineTaskPauseService.resetElementWhenPauseRetry(buildId, model)
 
             logger.info("ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
                 "retryCount=${originVars[PIPELINE_RETRY_COUNT]}|fc=$failedContainer|skip=$skipFailedTask")
