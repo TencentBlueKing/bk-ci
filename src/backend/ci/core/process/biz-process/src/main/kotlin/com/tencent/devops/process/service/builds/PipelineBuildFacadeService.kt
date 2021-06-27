@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -695,7 +694,6 @@ class PipelineBuildFacadeService(
         // 对人工审核提交时的参数做必填和范围校验
         checkManualReviewParam(params = params.params)
 
-        val runtimeVars = buildVariableService.getAllVariable(buildId)
         model.stages.forEachIndexed { index, s ->
             if (index == 0) {
                 return@forEachIndexed
@@ -706,8 +704,7 @@ class PipelineBuildFacadeService(
                         // Replace the review user with environment
                         val reviewUser = mutableListOf<String>()
                         el.reviewUsers.forEach { user ->
-                            reviewUser.addAll(EnvUtils.parseEnv(user, runtimeVars).split(",").map { it.trim() }
-                                .toList())
+                            reviewUser.addAll(buildVariableService.replaceTemplate(buildId, user).split(","))
                         }
                         params.params.forEach {
                             when (it.valueType) {
@@ -715,11 +712,10 @@ class PipelineBuildFacadeService(
                                     it.value = it.value ?: it.value.toString().toBoolean()
                                 }
                                 else -> {
-                                    it.value = EnvUtils.parseEnv(it.value.toString(), runtimeVars)
+                                    it.value = buildVariableService.replaceTemplate(buildId, it.value.toString())
                                 }
                             }
                         }
-//                        elementName = el.name
                         if (!reviewUser.contains(userId)) {
                             throw ErrorCodeException(
                                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -839,7 +835,6 @@ class PipelineBuildFacadeService(
             defaultMessage = "流水线编排不存在"
         )
 
-        val runtimeVars = buildVariableService.getAllVariable(buildId)
         model.stages.forEachIndexed { index, s ->
             if (index == 0) {
                 return@forEachIndexed
@@ -849,8 +844,7 @@ class PipelineBuildFacadeService(
                     if (el is ManualReviewUserTaskElement && el.id == elementId) {
                         val reviewUser = mutableListOf<String>()
                         el.reviewUsers.forEach { user ->
-                            reviewUser.addAll(EnvUtils.parseEnv(user, runtimeVars).split(",").map { it.trim() }
-                                .toList())
+                            reviewUser.addAll(buildVariableService.replaceTemplate(buildId, user).split(","))
                         }
                         el.params.forEach { param ->
                             when (param.valueType) {
@@ -858,11 +852,11 @@ class PipelineBuildFacadeService(
                                     param.value = param.value ?: param.value.toString().toBoolean()
                                 }
                                 else -> {
-                                    param.value = EnvUtils.parseEnv(param.value.toString(), runtimeVars)
+                                    param.value = buildVariableService.replaceTemplate(buildId, param.value.toString())
                                 }
                             }
                         }
-                        el.desc = EnvUtils.parseEnv(el.desc ?: "", runtimeVars)
+                        el.desc = buildVariableService.replaceTemplate(buildId, el.desc)
                         if (!reviewUser.contains(userId)) {
                             throw ErrorCodeException(
                                 statusCode = Response.Status.NOT_FOUND.statusCode,
