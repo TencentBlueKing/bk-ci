@@ -28,15 +28,15 @@
 package com.tencent.devops.process.engine.dao
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_TASK
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
 import org.jooq.InsertSetMoreStep
@@ -306,7 +306,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 
             if (buildStatus.isFinish()) {
-                val record = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).fetchOne()!!
+                val record = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId))
+                    .fetchAny() ?: return
                 val totalTime = if (record.startTime == null || record.endTime == null) {
                     0
                 } else {
