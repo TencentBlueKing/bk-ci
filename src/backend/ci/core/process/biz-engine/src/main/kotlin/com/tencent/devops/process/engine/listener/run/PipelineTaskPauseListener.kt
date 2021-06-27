@@ -34,7 +34,6 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.BS_MANUAL_STOP_PAUSE_ATOM
@@ -47,7 +46,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
-import com.tencent.devops.process.service.BuildVariableService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -59,7 +57,6 @@ class PipelineTaskPauseListener @Autowired constructor(
     val redisOperation: RedisOperation,
     val buildDetailService: PipelineBuildDetailService,
     val dslContext: DSLContext,
-    val buildVariableService: BuildVariableService,
     val pipelineBuildTaskDao: PipelineBuildTaskDao,
     val pipelineRuntimeService: PipelineRuntimeService,
     val objectMapper: ObjectMapper,
@@ -87,15 +84,6 @@ class PipelineTaskPauseListener @Autowired constructor(
 
     private fun taskContinue(task: PipelineBuildTask, userId: String) {
         continuePauseTask(current = task, userId = userId)
-
-        val params = mutableListOf<BuildParameters>()
-        buildVariableService.batchSetVariable(
-            dslContext = dslContext,
-            projectId = task.projectId,
-            pipelineId = task.pipelineId,
-            buildId = task.buildId,
-            variables = params
-        )
 
         val newElementRecord = pipelinePauseValueDao.get(dslContext, task.buildId, task.taskId)
         if (newElementRecord != null) {
