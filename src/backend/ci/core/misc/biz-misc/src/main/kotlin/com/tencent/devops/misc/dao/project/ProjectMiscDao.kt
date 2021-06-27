@@ -36,7 +36,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
-class ProjectDao {
+class ProjectMiscDao {
 
     fun getMinId(
         dslContext: DSLContext,
@@ -68,7 +68,8 @@ class ProjectDao {
         dslContext: DSLContext,
         projectIdList: List<String>? = null,
         minId: Long? = null,
-        maxId: Long? = null
+        maxId: Long? = null,
+        channelCodeList: List<String>? = null
     ): Result<out Record>? {
         with(TProject.T_PROJECT) {
             val conditions = mutableListOf<Condition>()
@@ -80,6 +81,9 @@ class ProjectDao {
             }
             if (maxId != null) {
                 conditions.add(ID.lt(maxId))
+            }
+            if (!channelCodeList.isNullOrEmpty()) {
+                conditions.add(CHANNEL.`in`(channelCodeList))
             }
             return dslContext.select(
                 ID.`as`("ID"),

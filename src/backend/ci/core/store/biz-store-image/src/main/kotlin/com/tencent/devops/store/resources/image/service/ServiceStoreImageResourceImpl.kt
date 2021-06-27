@@ -37,7 +37,7 @@ import com.tencent.devops.store.service.image.ImageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceImageResourceImpl @Autowired constructor(
+class ServiceStoreImageResourceImpl @Autowired constructor(
     private val imageService: ImageService,
     private val imageFeatureService: ImageFeatureService,
     private val storeProjectService: StoreProjectService

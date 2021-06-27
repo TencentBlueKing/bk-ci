@@ -35,8 +35,9 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
-@Repository@Suppress("ALL")
-class GroupDao {
+@Repository
+@Suppress("ALL")
+class QualityNotifyGroupDao {
 
     fun list(dslContext: DSLContext, projectId: String, offset: Int, limit: Int): Result<TGroupRecord> {
         with(TGroup.T_GROUP) {

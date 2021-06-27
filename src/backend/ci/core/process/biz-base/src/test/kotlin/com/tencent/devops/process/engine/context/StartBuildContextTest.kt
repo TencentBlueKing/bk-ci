@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
@@ -101,5 +102,33 @@ class StartBuildContextTest : TestBase() {
         val needSkipTaskWhenRetry = context.needSkipTaskWhenRetry(stage, taskId = "1")
         println("needSkipTaskWhenRetry=$needSkipTaskWhenRetry")
         Assert.assertEquals(true, needSkipTaskWhenRetry)
+    }
+
+    @Test
+    fun needSkipTaskWhenRetrySkip() {
+        // 跳过Stage-2下所有失败插件
+        params[PIPELINE_RETRY_START_TASK_ID] = "stage-2"
+        params[PIPELINE_SKIP_FAILED_TASK] = true
+        var context = StartBuildContext.init(params)
+        val stages = genStages(stageSize = 2, jobSize = 2, elementSize = 2, needFinally = false)
+        var elementId = stages[2].containers[0].elements[0].id
+        var needSkipTaskWhenRetrySkip = context.needSkipTaskWhenRetry(stages[2], taskId = elementId)
+        println("needSkipTaskWhenRetrySkip=$needSkipTaskWhenRetrySkip")
+        Assert.assertEquals(true, needSkipTaskWhenRetrySkip)
+
+        // Stage-1不受影响
+        elementId = stages[1].containers[0].elements[0].id
+        needSkipTaskWhenRetrySkip = context.needSkipTaskWhenRetry(stages[1], taskId = elementId)
+        println("needSkipTaskWhenRetrySkip=$needSkipTaskWhenRetrySkip")
+        Assert.assertEquals(true, needSkipTaskWhenRetrySkip)
+
+        // 指定跳过插件
+        elementId = stages[2].containers[0].elements[0].id
+        params[PIPELINE_RETRY_START_TASK_ID] = elementId!!
+        params[PIPELINE_SKIP_FAILED_TASK] = true
+        context = StartBuildContext.init(params)
+        needSkipTaskWhenRetrySkip = context.needSkipTaskWhenRetry(stages[2], taskId = elementId)
+        println("needSkipTaskWhenRetrySkip=$needSkipTaskWhenRetrySkip")
+        Assert.assertEquals(true, needSkipTaskWhenRetrySkip)
     }
 }

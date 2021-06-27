@@ -54,3 +54,5 @@ build:
       codeccMaxKeepNum: 14
       otherMonthRange: -1
       otherMaxKeepNum: 500
+      clearChannelCodes: "BS,PREBUILD,CI,CODECC"
+      maxThreadHandleProjectNum: 5

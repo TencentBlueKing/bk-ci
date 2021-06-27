@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.db
 
-import com.mysql.jdbc.Driver
+import com.mysql.cj.jdbc.Driver
 import com.zaxxer.hikari.HikariDataSource
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore

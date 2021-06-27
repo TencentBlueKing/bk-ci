@@ -157,6 +157,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildId: String,
         taskId: String?,
         failedContainer: Boolean?,
+        skipFailedTask: Boolean?,
         channelCode: ChannelCode
     ): Result<BuildId> {
         checkUserId(userId)
@@ -171,6 +172,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             buildId = buildId,
             taskId = taskId,
             failedContainer = failedContainer,
+            skipFailedTask = skipFailedTask,
             isMobile = false,
             channelCode = channelCode,
             checkPermission = ChannelCode.isNeedAuth(channelCode)
