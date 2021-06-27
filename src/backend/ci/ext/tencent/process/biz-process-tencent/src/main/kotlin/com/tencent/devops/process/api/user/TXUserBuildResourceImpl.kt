@@ -40,7 +40,14 @@ class TXUserBuildResourceImpl @Autowired constructor(
     private val buildQualityService: PipelineBuildQualityService
 ) : TXUserBuildResource {
 
-    override fun manualQualityGateReview(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, action: ManualReviewAction): Result<Boolean> {
+    override fun manualQualityGateReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        action: ManualReviewAction
+    ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
@@ -48,7 +55,15 @@ class TXUserBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        buildQualityService.buildManualQualityGateReview(userId, projectId, pipelineId, buildId, elementId, action, ChannelCode.BS, ChannelCode.isNeedAuth(ChannelCode.BS))
+        buildQualityService.buildManualQualityGateReview(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            elementId = elementId,
+            action = action,
+            channelCode = ChannelCode.BS // fix me: 没鉴权？
+        )
         return Result(true)
     }
 
