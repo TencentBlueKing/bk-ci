@@ -124,8 +124,7 @@ class PipelineBuildDetailService @Autowired constructor(
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val buildNo = triggerContainer.buildNo
         if (buildNo != null) {
-            buildNo.buildNo = pipelineBuildSummaryDao.get(dslContext, buildInfo.pipelineId)?.buildNo
-                ?: buildNo.buildNo
+            buildNo.buildNo = buildSummaryRecord?.buildNo ?: buildNo.buildNo
         }
         val params = triggerContainer.params
         val newParams = mutableListOf<BuildFormProperty>()

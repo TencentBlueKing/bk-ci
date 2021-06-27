@@ -92,7 +92,7 @@ class PipelineBuildQualityService(
             )
         }
 
-        val modelDetail = buildDetailService.get(buildId)
+        val model = buildDetailService.getBuildModel(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -102,7 +102,7 @@ class PipelineBuildQualityService(
 
         var find = false
         var taskType = ""
-        modelDetail.model.stages.forEachIndexed { index, s ->
+        model.stages.forEachIndexed { index, s ->
             if (index == 0) {
                 return@forEachIndexed
             }
@@ -197,10 +197,8 @@ class PipelineBuildQualityService(
         taskId: String,
         variablesParam: Map<String, String> = mapOf()
     ): Set<String> {
-        val runVariables = if (variablesParam.isEmpty()) {
+        val runVariables = variablesParam.ifEmpty {
             buildVariableService.getAllVariable(buildId)
-        } else {
-            variablesParam
         }
         return try {
             val auditUserSet = client.get(ServiceQualityRuleResource::class).getAuditUserList(
