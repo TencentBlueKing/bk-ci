@@ -50,7 +50,7 @@ class OpGitProjectResourceImpl @Autowired constructor(private val gitProjectConf
     }
 
     override fun fixPipelineInfo(): Result<Int> {
-        return Result(gitProjectConfService.fixPipelineBuildInfo())
+        return Result(gitProjectConfService.fixPipelineVersion())
     }
 
     override fun update(gitProjectId: Long, name: String?, url: String?, enable: Boolean?): Result<Boolean> {

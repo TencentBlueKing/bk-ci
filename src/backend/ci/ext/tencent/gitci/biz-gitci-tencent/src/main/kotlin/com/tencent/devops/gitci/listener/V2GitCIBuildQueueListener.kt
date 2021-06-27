@@ -50,7 +50,7 @@ class V2GitCIBuildQueueListener @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(V2GitCIBuildQueueListener::class.java)
-
+        private const val ymlVersion = "v2.0"
         // 接受广播的队列
         private const val QUEUE_PIPELINE_BUILD_QUEUE_GITCI = "q.engine.pipeline.build.queue.gitci"
     }
@@ -103,7 +103,8 @@ class V2GitCIBuildQueueListener @Autowired constructor(
                 sourceGitProjectId = sourceGitProjectId,
                 pipelineId = buildQueueEvent.pipelineId,
                 buildId = buildQueueEvent.buildId,
-                buildStatus = BuildStatus.RUNNING
+                buildStatus = BuildStatus.RUNNING,
+                version = ymlVersion
             )
         }
     }

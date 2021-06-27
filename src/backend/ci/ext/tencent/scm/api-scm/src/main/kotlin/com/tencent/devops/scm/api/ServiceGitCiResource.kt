@@ -34,6 +34,7 @@ import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -185,4 +186,19 @@ interface ServiceGitCiResource {
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<GitCodeProjectInfo?>
+
+    @ApiOperation("查询合并请求的代码变更")
+    @GET
+    @Path("getMergeRequestChangeInfo")
+    fun getMergeRequestChangeInfo(
+        @ApiParam("工蜂项目id", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @ApiParam("mrId", required = true)
+        @QueryParam("mrId")
+        mrId: Long
+    ): Result<GitMrChangeInfo?>
 }

@@ -64,12 +64,13 @@ class V2RequestTrigger @Autowired constructor(
     private val gitBasicSettingService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate,
     private val gitCIEventSaveService: GitCIEventSaveService,
-    private val yamlTemplateService: YamlTemplateService
+    private val yamlTemplateService: YamlTemplateService,
+    private val v2WebHookMatcher: V2WebHookMatcher
 ) : RequestTriggerInterface<YamlObjects> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(V2RequestTrigger::class.java)
-
+        private const val ymlVersion = "v2.0"
         // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
         private const val GIT_CI_TEMPLATE_ROOT_FILE = "GIT_CI_TEMPLATE_ROOT_FILE"
     }
@@ -122,7 +123,8 @@ class V2RequestTrigger @Autowired constructor(
                 description = gitRequestEvent.commitMsg,
                 triggerUser = gitRequestEvent.userId,
                 sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
-                buildStatus = BuildStatus.RUNNING
+                buildStatus = BuildStatus.RUNNING,
+                version = ymlVersion
             )
             V2GitCIRequestDispatcher.dispatch(
                 rabbitTemplate,
@@ -169,7 +171,8 @@ class V2RequestTrigger @Autowired constructor(
                 reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = false,
-                commitCheckBlock = false
+                commitCheckBlock = false,
+                version = ymlVersion
             )
         }
 
@@ -177,7 +180,7 @@ class V2RequestTrigger @Autowired constructor(
     }
 
     override fun isMatch(event: GitEvent, ymlObject: YamlObjects): Pair<Boolean, Boolean> {
-        return V2WebHookMatcher(event).isMatch(ymlObject.normalYaml.triggerOn!!)
+        return v2WebHookMatcher.isMatch(ymlObject.normalYaml.triggerOn!!, event)
     }
 
     override fun prepareCIBuildYaml(
@@ -249,7 +252,8 @@ class V2RequestTrigger @Autowired constructor(
                 reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message),
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = true,
-                commitCheckBlock = isMr
+                commitCheckBlock = isMr,
+                version = ymlVersion
             )
             null
         }
@@ -305,7 +309,8 @@ class V2RequestTrigger @Autowired constructor(
                 reasonDetail = TriggerReason.CI_YAML_TEMPLATE_ERROR.detail.format(message),
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = true,
-                commitCheckBlock = isMr
+                commitCheckBlock = isMr,
+                version = ymlVersion
             )
             return null
         }

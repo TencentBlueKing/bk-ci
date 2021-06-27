@@ -45,7 +45,9 @@ class DefaultPermissionServiceImpl @Autowired constructor(
             serviceCode = authServiceCode,
             resourceType = AuthResourceType.get(resourceType!!),
             projectCode = projectCode,
-            permission = AuthPermission.get(action)
+            permission = AuthPermission.get(action),
+            resourceCode = resourceCode,
+            relationResourceType = null
         )
     }
 

@@ -4,7 +4,6 @@ import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -34,13 +33,12 @@ class GitCIPipelineService @Autowired constructor(
         pipelineId: String?,
         permission: AuthPermission?
     ): Boolean {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
-        logger.info("GitCIPipelineService user:$userId projectId: $projectId gitProject: $gitProjectId")
+        logger.info("GitCIPipelineService user:$userId projectId: $projectId")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(null) ?: "",
             action = "",
-            projectCode = gitProjectId,
+            projectCode = projectId,
             resourceCode = null
         ).data ?: false
     }

@@ -158,10 +158,11 @@ class TriggerBuildService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val oauthService: OauthService,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val websocketService: GitCIV2WebsocketService
 ) : V2BaseBuildService<ScriptBuildYaml>(
     client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService
+    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService, websocketService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -171,7 +172,7 @@ class TriggerBuildService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TriggerBuildService::class.java)
-
+        private const val ymlVersion = "v2.0"
         const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
         const val VARIABLE_PREFIX = "variables."
     }
@@ -728,7 +729,7 @@ class TriggerBuildService @Autowired constructor(
         if (!step.with.isNullOrEmpty()) {
             inputMap.putAll(step.with!!)
         }
-        // 非mr下根据commitId拉取本地工程代码
+        // 非mr和tag触发下根据commitId拉取本地工程代码
         if (step.checkout == "self") {
             inputMap["accessToken"] =
                 oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
@@ -737,6 +738,9 @@ class TriggerBuildService @Autowired constructor(
 
             if (event.mergeRequestId != null) {
                 inputMap["pullType"] = "BRANCH"
+            } else if (event.objectKind == OBJECT_KIND_TAG_PUSH) {
+                inputMap["pullType"] = "TAG"
+                inputMap["refName"] = event.branch
             } else {
                 inputMap["pullType"] = "COMMIT_ID"
                 inputMap["refName"] = event.commitId

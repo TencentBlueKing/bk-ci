@@ -54,7 +54,8 @@ class AppVersionService @Autowired constructor(
                     it.versionId,
                     it.releaseDate.timestampmilli(),
                     it.releaseContent,
-                    it.channelType
+                    it.channelType,
+                    it.updateType
                 )
             )
         }

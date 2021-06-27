@@ -60,7 +60,8 @@ class GitCIEventSaveService @Autowired constructor(
     private val userMessageDao: GitUserMessageDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitCIBasicSettingService: GitCIBasicSettingService
+    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val websocketService: GitCIV2WebsocketService
 ) {
 
     companion object {
@@ -103,7 +104,8 @@ class GitCIEventSaveService @Autowired constructor(
         filePath: String,
         gitProjectId: Long,
         sendCommitCheck: Boolean,
-        commitCheckBlock: Boolean
+        commitCheckBlock: Boolean,
+        version: String? = null
     ): Long {
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
@@ -133,7 +135,8 @@ class GitCIEventSaveService @Autowired constructor(
             pipelineId = pipelineId,
             filePath = filePath,
             gitProjectId = gitProjectId,
-            gitEvent = event
+            gitEvent = event,
+            version = version
         )
     }
 
@@ -181,7 +184,8 @@ class GitCIEventSaveService @Autowired constructor(
         pipelineId: String?,
         filePath: String?,
         gitProjectId: Long,
-        gitEvent: GitRequestEvent? = null
+        gitEvent: GitRequestEvent? = null,
+        version: String? = null
     ): Long {
         var messageId = -1L
         val event = gitEvent ?: (gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
@@ -224,7 +228,8 @@ class GitCIEventSaveService @Autowired constructor(
                 reasonDetail = reasonDetail,
                 pipelineId = pipelineId,
                 filePath = filePath,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                version = version
             )
             // eventId只用保存一次
             if (!userMessageDao.getMessageExist(context, "git_$gitProjectId", userId, event.id.toString())) {
@@ -236,6 +241,7 @@ class GitCIEventSaveService @Autowired constructor(
                     messageId = event.id.toString(),
                     messageTitle = messageTitle
                 )
+                websocketService.pushNotifyWebsocket(userId, gitProjectId.toString())
             }
         }
         return messageId
