@@ -163,6 +163,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -570,7 +571,7 @@ class PipelineRuntimeService @Autowired constructor(
             val totalTime = if (startTime == null || endTime == null) {
                 0
             } else {
-                Duration.between(startTime, endTime).toMillis()
+                TimeUnit.MILLISECONDS.toSeconds(Duration.between(startTime, endTime).toMillis())
             }
             BuildHistory(
                 id = buildId,
