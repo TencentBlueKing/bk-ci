@@ -100,7 +100,7 @@ class ContainerBuildDetailService(
                         update = true
                         return Traverse.BREAK
                     }
-                    return Traverse.BREAK
+                    return Traverse.CONTINUE
                 }
 
                 override fun needUpdate(): Boolean {
