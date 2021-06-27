@@ -143,7 +143,7 @@ open class BaseBuildDetailService constructor(
     @Suppress("NestedBlockDepth", "ReturnCount")
     private fun traverseModel(model: Model, modelInterface: ModelInterface) {
         var containerId = 1
-        for (i in 1..model.stages.size) {
+        for (i in 1 until model.stages.size) {
             val stage = model.stages[i]
             val traverse = modelInterface.onFindStage(stage, model)
             if (Traverse.BREAK == traverse) {
