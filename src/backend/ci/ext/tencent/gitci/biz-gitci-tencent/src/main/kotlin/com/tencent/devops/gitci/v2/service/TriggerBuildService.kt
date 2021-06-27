@@ -171,7 +171,7 @@ class TriggerBuildService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TriggerBuildService::class.java)
-
+        private const val ymlVersion = "v2.0"
         const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
         const val VARIABLE_PREFIX = "variables."
     }

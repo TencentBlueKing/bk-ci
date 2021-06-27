@@ -749,6 +749,14 @@ class ProjectDao {
         }
     }
 
+    fun updateRelationByCode(dslContext: DSLContext, projectCode: String, relationId: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(RELATION_ID, relationId).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
     fun listSecrecyProject(dslContext: DSLContext): Result<Record1<String>>? {
         with(TProject.T_PROJECT) {
             return dslContext.select(ENGLISH_NAME)

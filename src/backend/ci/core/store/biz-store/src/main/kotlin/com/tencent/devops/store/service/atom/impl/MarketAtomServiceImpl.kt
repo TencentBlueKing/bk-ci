@@ -305,7 +305,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val result = mutableListOf<MarketMainItem>()
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
-        logger.info("[list]get userDeptList")
         val futureList = mutableListOf<Future<MarketAtomResp>>()
         val labelInfoList = mutableListOf<MarketMainItemLabel>()
         labelInfoList.add(MarketMainItemLabel(LATEST, MessageCodeUtil.getCodeLanMessage(LATEST)))
@@ -658,7 +657,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         logger.info("installAtom accessToken is: $accessToken, userId is: $userId")
         logger.info("installAtom channelCode is: $channelCode, installAtomReq is: $installAtomReq")
         val atom = marketAtomDao.getLatestAtomByCode(dslContext, installAtomReq.atomCode)
-        logger.info("the atom is: $atom")
         if (null == atom || atom.deleteFlag == true) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID, false)
         }
@@ -711,6 +709,19 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         page: Int,
         pageSize: Int
     ): Result<Page<AtomVersionListItem>> {
+        // 判断当前用户是否是该插件的成员
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(atomCode)
+            )
+        }
         val totalCount = atomDao.countByCode(dslContext, atomCode)
         val records = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode, page, pageSize)
         val atomVersions = mutableListOf<AtomVersionListItem>()

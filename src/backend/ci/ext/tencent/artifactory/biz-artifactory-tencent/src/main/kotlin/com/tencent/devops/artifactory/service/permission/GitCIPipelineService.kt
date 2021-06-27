@@ -6,13 +6,15 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class GitCIPipelineService @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val tokenCheckService: ClientTokenService
 ) : PipelineService(client) {
     override fun validatePermission(
         userId: String,
@@ -35,7 +37,12 @@ class GitCIPipelineService @Autowired constructor(
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
         logger.info("GitCIPipelineService user:$userId projectId: $projectId gitProject: $gitProjectId")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, "", gitProjectId, null).data ?: false
+            userId = userId,
+            token = tokenCheckService.getSystemToken(null) ?: "",
+            action = "",
+            projectCode = gitProjectId,
+            resourceCode = null
+        ).data ?: false
     }
 
     override fun filterPipeline(user: String, projectId: String): List<String> {

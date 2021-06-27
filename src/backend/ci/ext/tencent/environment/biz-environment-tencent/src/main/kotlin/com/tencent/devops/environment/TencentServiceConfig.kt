@@ -32,6 +32,7 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
@@ -63,8 +64,9 @@ class TencentServiceConfig {
         client: Client,
         dslContext: DSLContext,
         nodeDao: NodeDao,
-        envDao: EnvDao
-    ) = GitCIEnvironmentPermissionServiceImpl(client, dslContext, nodeDao, envDao)
+        envDao: EnvDao,
+        tokenCheckService: ClientTokenService
+    ) = GitCIEnvironmentPermissionServiceImpl(client, dslContext, nodeDao, envDao, tokenCheckService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")

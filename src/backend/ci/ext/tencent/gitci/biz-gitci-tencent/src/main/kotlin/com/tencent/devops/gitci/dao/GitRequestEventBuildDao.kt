@@ -53,7 +53,8 @@ class GitRequestEventBuildDao {
         triggerUser: String,
         description: String?,
         sourceGitProjectId: Long?,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        version: String? = null
     ): Long {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val record = dslContext.insertInto(
@@ -69,7 +70,8 @@ class GitRequestEventBuildDao {
                 TRIGGER_USER,
                 CREATE_TIME,
                 SOURCE_GIT_PROJECT_ID,
-                BUILD_STATUS
+                BUILD_STATUS,
+                VERSION
             ).values(
                 eventId,
                 originYaml,
@@ -82,7 +84,8 @@ class GitRequestEventBuildDao {
                 triggerUser,
                 LocalDateTime.now(),
                 sourceGitProjectId,
-                buildStatus.name
+                buildStatus.name,
+                version
             ).returning(ID)
                 .fetchOne()!!
             return record.id
@@ -103,7 +106,8 @@ class GitRequestEventBuildDao {
         sourceGitProjectId: Long?,
         pipelineId: String,
         buildId: String,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        version: String? = null
     ) {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             dslContext.insertInto(
@@ -120,7 +124,8 @@ class GitRequestEventBuildDao {
                 SOURCE_GIT_PROJECT_ID,
                 PIPELINE_ID,
                 BUILD_ID,
-                BUILD_STATUS
+                BUILD_STATUS,
+                VERSION
             ).values(
                 eventId,
                 originYaml,
@@ -134,7 +139,8 @@ class GitRequestEventBuildDao {
                 sourceGitProjectId,
                 pipelineId,
                 buildId,
-                buildStatus.name
+                buildStatus.name,
+                version
             ).execute()
         }
     }
@@ -170,12 +176,14 @@ class GitRequestEventBuildDao {
         dslContext: DSLContext,
         gitBuildId: Long,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        version: String? = null
     ) {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             dslContext.update(this)
                 .set(PIPELINE_ID, pipelineId)
                 .set(BUILD_ID, buildId)
+                .set(VERSION, version)
                 .where(ID.eq(gitBuildId))
                 .execute()
         }
@@ -569,5 +577,18 @@ class GitRequestEventBuildDao {
             }
             return dsl
         }
+    }
+
+    fun getProjectAfterId(dslContext: DSLContext, startId: Long, limit: Int): List<TGitRequestEventBuildRecord> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(ID.gt(startId))
+                .limit(limit)
+                .fetch()
+        }
+    }
+
+    fun batchUpdateBuild(dslContext: DSLContext, builds: List<TGitRequestEventBuildRecord>) {
+        dslContext.batchUpdate(builds).execute()
     }
 }
