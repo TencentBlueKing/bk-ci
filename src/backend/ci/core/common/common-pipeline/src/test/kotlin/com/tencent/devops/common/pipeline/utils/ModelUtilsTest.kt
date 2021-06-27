@@ -252,7 +252,7 @@ class ModelUtilsTest {
         assertEquals(false, e1.canRetry ?: false) // e1是 受到e2 的永远不会出现 重试或跳过
         assertEquals(false, e1.canSkip ?: false) // 第一个是 失败自动跳过, 永远不会出现 重试或跳过
         assertEquals(false, e2.canSkip ?: false)
-        assertEquals(false, e2.canRetry)
+        assertEquals(false, e2.canRetry ?: false)
 
         resetElement(e1, BuildStatus.SUCCEED)
         resetElement(e2, failStatus)
