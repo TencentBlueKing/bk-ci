@@ -230,7 +230,7 @@ class TXPipelineExportService @Autowired constructor(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
                                 container = com.tencent.devops.common.ci.v2.Container(
-                                    image = "###请直接填入镜像(${dispatchType.imageName})的URL地址，若存在鉴权请增加 credentials 字段###",
+                                    image = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
                                     credentials = null
                                 ),
                                 agentSelector = null
@@ -240,6 +240,10 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = "###该环境不支持转换，请重新填写###",
+                                container = com.tencent.devops.common.ci.v2.Container(
+                                    image = "###该环境不支持转换，请重新填写###",
+                                    credentials = null
+                                ),
                                 agentSelector = null
                             )
                         }
