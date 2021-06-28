@@ -153,7 +153,7 @@ class PipelineContextService@Autowired constructor(
             varMap["job.name"] = c.name
             varMap["job.status"] = getJobStatus(c)
             varMap["job.outcome"] = c.status ?: ""
-            varMap["job.os"] = getOs(c)
+//            varMap["job.os"] = getOs(c)
             varMap["job.container.network"] = getNetWork(c)
             varMap["job.stage_id"] = stage.id ?: ""
             varMap["job.stage_name"] = stage.name ?: ""
