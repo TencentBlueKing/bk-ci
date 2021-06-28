@@ -163,6 +163,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -570,7 +571,7 @@ class PipelineRuntimeService @Autowired constructor(
             val totalTime = if (startTime == null || endTime == null) {
                 0
             } else {
-                Duration.between(startTime, endTime).toMillis()
+                TimeUnit.MILLISECONDS.toSeconds(Duration.between(startTime, endTime).toMillis())
             }
             BuildHistory(
                 id = buildId,
@@ -602,13 +603,7 @@ class PipelineRuntimeService @Autowired constructor(
                 },
                 remark = remark,
                 totalTime = totalTime,
-                executeTime = if (executeTime == null || executeTime == 0L) {
-                    if (buildStatus[status].isFinish()) {
-                        totalTime
-                    } else 0L
-                } else {
-                    executeTime
-                },
+                executeTime = executeTime ?: 0L,
                 buildParameters = if (buildParameters != null) {
                     JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>
                 } else {
@@ -1815,7 +1810,7 @@ class PipelineRuntimeService @Autowired constructor(
         val stageTotalTime = mutableMapOf<String, MutableMap<String, Long>>()
         executeTask.forEach { task ->
             val jobTime = stageTotalTime.computeIfAbsent(task.stageId) { mutableMapOf(task.containerId to 0L) }
-            jobTime[task.containerId] = jobTime[task.containerId] ?: 0L + task.totalTime
+            jobTime[task.containerId] = (jobTime[task.containerId] ?: 0L) + (task.totalTime ?: 0L)
         }
         stageTotalTime.forEach { job ->
             var maxJobTime = 0L
