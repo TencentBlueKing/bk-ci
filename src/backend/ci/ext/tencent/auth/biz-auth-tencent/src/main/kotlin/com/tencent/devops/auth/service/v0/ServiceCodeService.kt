@@ -21,9 +21,9 @@ class ServiceCodeService @Autowired constructor(
     val repoAuthServiceCode: RepoAuthServiceCode,
     val experienceAuthServiceCode: ExperienceAuthServiceCode,
     val commonAuthServiceCode: BSCommonAuthServiceCode
-){
+) {
     fun getServiceCodeByResource(authResourceType: String): AuthServiceCode {
-        val serviceCode = when(authResourceType) {
+        val serviceCode = when (authResourceType) {
             AuthResourceType.PIPELINE_DEFAULT.value -> pipelineAuthServiceCode
             AuthResourceType.EXPERIENCE_GROUP.value -> experienceAuthServiceCode
             AuthResourceType.EXPERIENCE_TASK.value -> experienceAuthServiceCode
