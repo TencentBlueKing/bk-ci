@@ -7,9 +7,9 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-class DefaultPermissionServiceImpl @Autowired constructor(
+class V0AuthPermissionServiceImpl @Autowired constructor(
     private val authPermissionApi: AuthPermissionApi,
-    val authServiceCode: ServiceCodeService
+    val serviceCodeService: ServiceCodeService
 ) : PermissionService {
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
@@ -24,7 +24,7 @@ class DefaultPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
-            serviceCode = authServiceCode.getServiceCodeByResource(resourceType!!),
+            serviceCode = serviceCodeService.getServiceCodeByResource(resourceType!!),
             resourceType = AuthResourceType.get(resourceType!!),
             projectCode = projectCode,
             permission = AuthPermission.get(action)
@@ -41,7 +41,7 @@ class DefaultPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
-            serviceCode = authServiceCode.getServiceCodeByResource(resourceType!!),
+            serviceCode = serviceCodeService.getServiceCodeByResource(resourceType!!),
             resourceType = AuthResourceType.get(resourceType!!),
             projectCode = projectCode,
             permission = AuthPermission.get(action),
@@ -60,7 +60,7 @@ class DefaultPermissionServiceImpl @Autowired constructor(
             user = userId,
             projectCode = projectCode,
             resourceType = AuthResourceType.get(resourceType),
-            serviceCode = authServiceCode.getServiceCodeByResource(resourceType!!),
+            serviceCode = serviceCodeService.getServiceCodeByResource(resourceType!!),
             supplier = null,
             permission = AuthPermission.get(action)
         )
@@ -78,7 +78,7 @@ class DefaultPermissionServiceImpl @Autowired constructor(
         }
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
-            serviceCode = authServiceCode.getServiceCodeByResource(resourceType!!),
+            serviceCode = serviceCodeService.getServiceCodeByResource(resourceType!!),
             resourceType = AuthResourceType.get(resourceType),
             projectCode = projectCode,
             permissions = permissions,
@@ -87,6 +87,6 @@ class DefaultPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(DefaultPermissionServiceImpl::class.java)
+        val logger = LoggerFactory.getLogger(V0AuthPermissionServiceImpl::class.java)
     }
 }
