@@ -36,5 +36,14 @@ data class GitWebhookEvent(
     override val requestContent: String,
     override var retryTime: Int = 3,
     override var delayMills: Int = 0,
-    override val commitEventType: CommitEventType = CommitEventType.GIT
-) : ICodeWebhookEvent(requestContent, retryTime, delayMills, commitEventType)
+    override val commitEventType: CommitEventType = CommitEventType.GIT,
+    override val event: String,
+    override val secret: String?
+) : ICodeWebhookEvent(
+    requestContent = requestContent,
+    retryTime = retryTime,
+    delayMills = delayMills,
+    commitEventType = commitEventType,
+    event = event,
+    secret = secret
+)

@@ -91,5 +91,7 @@ data class CodeTGitWebHookTriggerInput(
     @ApiModelProperty("excludeSourceBranchName", required = false)
     val excludeSourceBranchName: String? = null,
     @ApiModelProperty("includeSourceBranchName", required = false)
-    val includeSourceBranchName: String? = null
+    val includeSourceBranchName: String? = null,
+    @ApiModelProperty("code review 状态", required = false)
+    val includeCrState: List<String>? = null
 )
