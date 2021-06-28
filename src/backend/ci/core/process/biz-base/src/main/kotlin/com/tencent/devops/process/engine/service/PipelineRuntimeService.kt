@@ -600,13 +600,7 @@ class PipelineRuntimeService @Autowired constructor(
                 },
                 remark = remark,
                 totalTime = totalTime,
-                executeTime = if (executeTime == null || executeTime == 0L) {
-                    if (buildStatus[status].isFinish()) {
-                        totalTime
-                    } else 0L
-                } else {
-                    executeTime
-                },
+                executeTime = executeTime ?: 0L,
                 buildParameters = if (buildParameters != null) {
                     JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>
                 } else {
@@ -1810,8 +1804,19 @@ class PipelineRuntimeService @Autowired constructor(
         val executeTask = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
             .filter { it.taskType != ManualReviewUserTaskElement.classType }
         var executeTime = 0L
-        executeTask.forEach {
-            executeTime += it.totalTime ?: 0
+        val stageTotalTime = mutableMapOf<String, MutableMap<String, Long>>()
+        executeTask.forEach { task ->
+            val jobTime = stageTotalTime.computeIfAbsent(task.stageId) { mutableMapOf(task.containerId to 0L) }
+            jobTime[task.containerId] = (jobTime[task.containerId] ?: 0L) + (task.totalTime ?: 0L)
+        }
+        stageTotalTime.forEach { job ->
+            var maxJobTime = 0L
+            job.value.forEach {
+                if (maxJobTime < it.value) {
+                    maxJobTime = it.value
+                }
+            }
+            executeTime += maxJobTime
         }
         return executeTime
     }

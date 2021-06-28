@@ -314,7 +314,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                     Duration.between(record.startTime, record.endTime).toMillis() / 1000
                 }
                 dslContext.update(this)
-                    .set(TOTAL_TIME, (record.totalTime ?: 0) + totalTime)
+                    .set(TOTAL_TIME, totalTime)
                     .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
             }
         }

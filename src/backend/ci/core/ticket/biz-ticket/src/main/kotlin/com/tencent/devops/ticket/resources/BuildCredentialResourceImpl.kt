@@ -30,6 +30,7 @@ package com.tencent.devops.ticket.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.ticket.api.BuildCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.service.CredentialService
@@ -39,13 +40,14 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : BuildCredentialResource {
+    @SensitiveApiPermission("get_credential")
     override fun get(
         buildId: String,
         vmSeqId: String,
         vmName: String,
         credentialId: String,
         publicKey: String
-    ): Result<CredentialInfo> {
+    ): Result<CredentialInfo?> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
@@ -64,6 +66,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
         return Result(credentialService.buildGet(buildId, credentialId, publicKey))
     }
 
+    @SensitiveApiPermission("get_credential")
     override fun getDetail(
         buildId: String,
         vmSeqId: String,

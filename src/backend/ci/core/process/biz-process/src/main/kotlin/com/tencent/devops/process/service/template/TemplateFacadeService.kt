@@ -1968,66 +1968,49 @@ class TemplateFacadeService @Autowired constructor(
             }
         }
         val projectTemplateMap = mutableMapOf<String, String>()
-        if (publicFlag) {
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                projectCodeList.forEach {
-                    val templateId = UUIDUtil.generate()
-                    templateDao.createTemplate(
-                        dslContext = context,
-                        projectId = it,
-                        templateId = templateId,
-                        templateName = addMarketTemplateRequest.templateName,
-                        versionName = "init",
-                        userId = userId,
-                        template = null,
-                        type = TemplateType.CONSTRAINT.name,
-                        category = category,
-                        logoUrl = addMarketTemplateRequest.logoUrl,
-                        srcTemplateId = templateCode,
-                        storeFlag = true,
-                        weight = 0
-                    )
-                    pipelineSettingDao.insertNewSetting(
-                        dslContext = context,
-                        projectId = it,
-                        pipelineId = templateId,
-                        pipelineName = addMarketTemplateRequest.templateName,
-                        isTemplate = true
-                    )
-                    projectTemplateMap[it] = templateId
-                }
-            }
+        val versionName = if (publicFlag) {
+            "init"
         } else {
-            val customizeTemplateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                projectCodeList.forEach {
-                    val templateId = UUIDUtil.generate()
-                    templateDao.createTemplate(
-                        dslContext = context,
-                        projectId = it,
-                        templateId = templateId,
-                        templateName = addMarketTemplateRequest.templateName,
-                        versionName = customizeTemplateRecord.versionName,
-                        userId = userId,
-                        template = null,
-                        type = TemplateType.CONSTRAINT.name,
-                        category = category,
-                        logoUrl = addMarketTemplateRequest.logoUrl,
-                        srcTemplateId = templateCode,
-                        storeFlag = true,
-                        weight = 0
-                    )
-                    pipelineSettingDao.insertNewSetting(
-                        dslContext = context,
-                        projectId = it,
-                        pipelineId = templateId,
-                        pipelineName = addMarketTemplateRequest.templateName,
-                        isTemplate = true
-                    )
-                    projectTemplateMap[it] = templateId
+            templateDao.getLatestTemplate(dslContext, templateCode).versionName
+        }
+        val templateName = addMarketTemplateRequest.templateName
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            projectCodeList.forEach {
+                // 判断模板名称是否已经关联过
+                val pipelineSettingRecord = pipelineSettingDao.getSetting(
+                    dslContext = context,
+                    projectId = it,
+                    name = templateName,
+                    isTemplate = true
+                )
+                if (pipelineSettingRecord.size > 0) {
+                    return@forEach
                 }
+                val templateId = UUIDUtil.generate()
+                templateDao.createTemplate(
+                    dslContext = context,
+                    projectId = it,
+                    templateId = templateId,
+                    templateName = templateName,
+                    versionName = versionName,
+                    userId = userId,
+                    template = null,
+                    type = TemplateType.CONSTRAINT.name,
+                    category = category,
+                    logoUrl = addMarketTemplateRequest.logoUrl,
+                    srcTemplateId = templateCode,
+                    storeFlag = true,
+                    weight = 0
+                )
+                pipelineSettingDao.insertNewSetting(
+                    dslContext = context,
+                    projectId = it,
+                    pipelineId = templateId,
+                    pipelineName = templateName,
+                    isTemplate = true
+                )
+                projectTemplateMap[it] = templateId
             }
         }
         return com.tencent.devops.common.api.pojo.Result(projectTemplateMap)
