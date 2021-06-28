@@ -20,7 +20,8 @@ class ServiceCodeService @Autowired constructor(
     val qualityAuthServiceCode: QualityAuthServiceCode,
     val repoAuthServiceCode: RepoAuthServiceCode,
     val experienceAuthServiceCode: ExperienceAuthServiceCode,
-    val commonAuthServiceCode: BSCommonAuthServiceCode
+    @Autowired(required = false)
+    val commonAuthServiceCode: BSCommonAuthServiceCode?
 ) {
     fun getServiceCodeByResource(authResourceType: String): AuthServiceCode {
         val serviceCode = when (authResourceType) {
@@ -34,7 +35,7 @@ class ServiceCodeService @Autowired constructor(
             AuthResourceType.TICKET_CREDENTIAL.value -> ticketAuthServiceCode
             AuthResourceType.TICKET_CERT.value -> ticketAuthServiceCode
             AuthResourceType.CODE_REPERTORY.value -> repoAuthServiceCode
-            else -> commonAuthServiceCode
+            else -> commonAuthServiceCode!!
         }
         return serviceCode
     }
