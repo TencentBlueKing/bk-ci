@@ -58,6 +58,7 @@ import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineIdAndName
+import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineWithModel
@@ -1155,7 +1156,9 @@ class PipelineListFacadeService @Autowired constructor(
         }
         val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
         pipelines.forEach {
-            it.instanceFromTemplate = pipelineTemplateMap[it.pipelineId] != null
+            val templateId = pipelineTemplateMap[it.pipelineId]
+            it.instanceFromTemplate = templateId != null
+            it.templateId = templateId
             it.groupLabel = pipelineGroupLabel[it.pipelineId]
         }
 
@@ -1379,17 +1382,18 @@ class PipelineListFacadeService @Autowired constructor(
         if (pipelineInfo.projectId != projectId) {
             throw ParamBlankException("$pipelineId 非 $projectId 流水线")
         }
-        val instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null
-        val favorInfos = pipelineFavorDao.listByPipelineId(
-            dslContext = dslContext,
-            userId = userId,
-            pipelineId = pipelineId
-        )
         val hasEditPermission = pipelinePermissionService.checkPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
+        )
+        val templateId = templatePipelineDao.get(dslContext, pipelineId)?.templateId
+        val instanceFromTemplate = templateId != null
+        val favorInfos = pipelineFavorDao.listByPipelineId(
+            dslContext = dslContext,
+            userId = userId,
+            pipelineId = pipelineId
         )
         val hasCollect = if (favorInfos != null) {
             favorInfos.size > 0
@@ -1402,7 +1406,8 @@ class PipelineListFacadeService @Autowired constructor(
             canManualStartup = pipelineInfo.manualStartup,
             pipelineVersion = pipelineInfo.version.toString(),
             deploymentTime = DateTimeUtil.toDateTime(pipelineInfo.updateTime),
-            hasPermission = hasEditPermission
+            hasPermission = hasEditPermission,
+            templateId = templateId
         )
     }
 
@@ -1415,5 +1420,16 @@ class PipelineListFacadeService @Autowired constructor(
         if (pipelineNames.isEmpty() || projectId.isBlank()) return mapOf()
 
         return pipelineRepositoryService.listPipelineIdByName(projectId, pipelineNames, filterDelete)
+    }
+
+    fun getPipelineId(
+        projectCode: String
+    ): List<PipelineIdInfo> {
+        val pipelineIdInfos = pipelineInfoDao.listByProject(dslContext, projectCode)
+        val idInfos = mutableListOf<PipelineIdInfo>()
+        pipelineIdInfos.forEach {
+            idInfos.add(PipelineIdInfo(it.get("pipelineId") as String, it.get("id") as Long))
+        }
+        return idInfos
     }
 }
