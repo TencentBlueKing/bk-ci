@@ -8,7 +8,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.code.BSCommonAuthServiceCode
 import org.springframework.beans.factory.annotation.Autowired
 
-class DefaultPermissionProjectServiceImpl @Autowired constructor(
+class V0AuthPermissionProjectServiceImpl @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     val authServiceCode: BSCommonAuthServiceCode
 ) : PermissionProjectService {
