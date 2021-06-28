@@ -25,40 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.listener
+package com.tencent.devops.misc.resources
 
-import com.tencent.devops.dispatch.service.PipelineBuildLessDispatchService
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.misc.api.OpThirdPartyAgentUpgradeResource
+import com.tencent.devops.misc.service.environment.AgentUpgradeService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class BuildLessAgentShutdownListener @Autowired
-constructor(private val pipelineDispatchService: PipelineBuildLessDispatchService) {
+/**
+ * deng
+ * 2018/5/9
+ */
+@RestResource
+class OpThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
+    private val upgradeService: AgentUpgradeService
+) : OpThirdPartyAgentUpgradeResource {
 
-/*    @RabbitListener(
-        bindings = [(QueueBinding(
-            key = [MQ.ROUTE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH], value = Queue(
-                value = MQ.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH, durable = "true"
-            ),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.DIRECT
-            )
-        ))]
-    )*/
-    fun listenAgentStartUpEvent(pipelineBuildLessDockerAgentShutdownEvent: PipelineBuildLessShutdownDispatchEvent) {
-        try {
-            pipelineDispatchService.shutdown(pipelineBuildLessDockerAgentShutdownEvent)
-        } catch (ignored: Throwable) {
-            logger.error("Fail to start the pipe build($pipelineBuildLessDockerAgentShutdownEvent)", ignored)
-        }
+    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
+        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
+        return Result(true)
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(BuildLessAgentShutdownListener::class.java)
+    override fun getMaxParallelUpgradeCount(): Result<Int> {
+        return Result(upgradeService.getMaxParallelUpgradeCount())
     }
 }

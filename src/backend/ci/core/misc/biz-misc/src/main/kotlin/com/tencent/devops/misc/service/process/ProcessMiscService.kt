@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class ProcessService @Autowired constructor(
+class ProcessMiscService @Autowired constructor(
     private val dslContext: DSLContext,
     private val processDao: ProcessDao
 ) {
@@ -75,10 +75,16 @@ class ProcessService @Autowired constructor(
         return generateIdList(pipelineIdRecords)
     }
 
-    fun getPipelineIdListByProjectId(projectId: String): List<String>? {
+    fun getPipelineIdListByProjectId(
+        projectId: String,
+        minId: Long,
+        limit: Long
+    ): List<String>? {
         val pipelineIdRecords = processDao.getPipelineIdListByProjectId(
             dslContext = dslContext,
-            projectId = projectId
+            projectId = projectId,
+            minId = minId,
+            limit = limit
         )
         return generateIdList(pipelineIdRecords)
     }
@@ -89,10 +95,18 @@ class ProcessService @Autowired constructor(
         } else {
             val idList = mutableListOf<String>()
             records.forEach { record ->
-                idList.add(record.getValue(0, String::class.java))
+                idList.add(record.getValue(0) as String)
             }
             idList
         }
+    }
+
+    fun getMinPipelineInfoIdListByProjectId(projectId: String): Long {
+        return processDao.getMinPipelineInfoIdListByProjectId(dslContext, projectId)
+    }
+
+    fun getPipelineInfoIdListByPipelineId(pipelineId: String): Long {
+        return processDao.getPipelineInfoByPipelineId(dslContext, pipelineId)?.id ?: 0L
     }
 
     fun getMaxPipelineBuildNum(

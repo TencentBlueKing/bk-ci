@@ -31,20 +31,13 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
-import com.tencent.devops.quality.dao.QualityNotifyGroupDao
-import com.tencent.devops.quality.dao.v2.QualityRuleDao
-import org.jooq.DSLContext
 
 @Suppress("ALL")
-class SampleQualityPermissionServiceImpl constructor(
+class V3QualityPermissionServiceImpl constructor(
     override val authPermissionApi: AuthPermissionApi,
     override val authResourceApi: AuthResourceApi,
-    override val qualityAuthServiceCode: QualityAuthServiceCode,
-    val qualityRuleDao: QualityRuleDao,
-    val groupDao: QualityNotifyGroupDao,
-    val dslContext: DSLContext
+    override val qualityAuthServiceCode: QualityAuthServiceCode
 ) : AbsQualityPermissionServiceImpl(authPermissionApi, authResourceApi, qualityAuthServiceCode) {
-
     override fun validateGroupPermission(
         userId: String,
         projectId: String,
@@ -67,11 +60,7 @@ class SampleQualityPermissionServiceImpl constructor(
         super.deleteGroupResource(projectId, groupId)
     }
 
-    override fun filterGroup(
-        user: String,
-        projectId: String,
-        authPermissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<Long>> {
+    override fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
         return super.filterGroup(user, projectId, authPermissions)
     }
 
@@ -79,12 +68,7 @@ class SampleQualityPermissionServiceImpl constructor(
         return super.validateRulePermission(userId, projectId, authPermission)
     }
 
-    override fun validateRulePermission(
-        userId: String,
-        projectId: String,
-        authPermission: AuthPermission,
-        message: String
-    ) {
+    override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
         super.validateRulePermission(userId, projectId, authPermission, message)
     }
 
@@ -119,30 +103,10 @@ class SampleQualityPermissionServiceImpl constructor(
     }
 
     override fun supplierForPermissionGroup(projectId: String): () -> MutableList<String> {
-        return {
-            val fakeList = mutableListOf<String>()
-            groupDao.list(
-                dslContext = dslContext,
-                projectId = projectId,
-                offset = 0,
-                limit = 500
-            ).forEach {
-                fakeList.add(it.id.toString())
-            }
-            fakeList
-        }
+        return { mutableListOf() }
     }
 
     override fun supplierForPermissionRule(projectId: String): () -> MutableList<String> {
-        return {
-            val fakeList = mutableListOf<String>()
-            qualityRuleDao.list(
-                dslContext = dslContext,
-                projectId = projectId
-            )?.forEach {
-                fakeList.add(it.id.toString())
-            }
-            fakeList
-        }
+        return { mutableListOf() }
     }
 }
