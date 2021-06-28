@@ -58,6 +58,7 @@ import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
@@ -67,6 +68,8 @@ import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
+import com.tencent.devops.process.utils.BUILD_STATUS
+import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.jooq.DSLContext
@@ -89,7 +92,8 @@ class PipelineBuildDetailService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val client: Client,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val pipelinePauseValueDao: PipelinePauseValueDao
+    private val pipelinePauseValueDao: PipelinePauseValueDao,
+    private val pipelineBuildTaskDao: PipelineBuildTaskDao
 ) {
 
     companion object {
@@ -252,7 +256,7 @@ class PipelineBuildDetailService @Autowired constructor(
         errorCode: Int? = null,
         errorMsg: String? = null
     ) {
-        var updateTaskStatusInfos:MutableList<Map<String, BuildStatus>>? = null
+        var updateTaskStatusInfos:MutableList<Map<String, Any>>? = null
         update(buildId, object : ModelInterface {
 
             var update = false
@@ -281,39 +285,19 @@ class PipelineBuildDetailService @Autowired constructor(
                     run lit@{
                         val elements = c.elements
                         elements.forEach {
-                            if (it.elapsed == null) {
-                                return@forEach
+                            val elapsed = it.elapsed
+                            if (elapsed != null) {
+                                elementElapsed += elapsed
                             }
-                            elementElapsed += it.elapsed!!
-                            if (cancelTaskPostFlag) {
-                                val elementPostInfo = it.additionalOptions?.elementPostInfo
-                                if (elementPostInfo != null) {
-                                    // 判断post任务的父任务是否执行过
-                                    val parentElementJobIndex = elementPostInfo.parentElementJobIndex
-                                    val parentElement = elements[parentElementJobIndex]
-                                    val taskStatus = BuildStatus.parse(parentElement.status)
-                                    if (taskStatus.isFinish() || parentElement.id == taskId) {
-                                        // 把post任务和取消任务之间的任务置为UNEXEC状态
-                                        val startIndex = index + 1
-                                        val endIndex = parentElementJobIndex - 1
-                                        if (endIndex < startIndex) {
-                                            return@lit
-                                        }
-                                        for (i in startIndex..endIndex) {
-                                            val unExecElement = elements[i]
-                                            val unExecBuildStatus = BuildStatus.UNEXEC
-                                            unExecElement.status = unExecBuildStatus.name
-                                            if (unExecElement.id != null) {
-                                                updateTaskStatusInfos?.add(mapOf(unExecElement.id!! to unExecBuildStatus))
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                if (it == e) {
-                                    return@lit
-                                }
-                            }
+                            if (handleUpdateTaskStatusInfos(
+                                    cancelTaskPostFlag = cancelTaskPostFlag,
+                                    tmpElement = it,
+                                    elements = elements,
+                                    index = index,
+                                    updateTaskStatusInfos = updateTaskStatusInfos,
+                                    endElement = e
+                                )
+                            ) return@lit
                         }
                     }
 
@@ -328,6 +312,79 @@ class PipelineBuildDetailService @Autowired constructor(
                 return update
             }
         }, BuildStatus.RUNNING)
+        updateTaskStatusInfos?.forEach { updateTaskStatusInfo ->
+            pipelineBuildTaskDao.updateStatus(
+                dslContext = dslContext,
+                buildId = buildId,
+                taskId = updateTaskStatusInfo[PIPELINE_ELEMENT_ID] as String,
+                buildStatus = updateTaskStatusInfo[BUILD_STATUS] as BuildStatus
+            )
+        }
+    }
+
+    private fun handleUpdateTaskStatusInfos(
+        cancelTaskPostFlag: Boolean,
+        endElement: Element,
+        index: Int,
+        tmpElement: Element,
+        elements: List<Element>,
+        updateTaskStatusInfos: MutableList<Map<String, Any>>?
+    ): Boolean {
+        if (cancelTaskPostFlag) {
+            handleCancelTaskPost(
+                endElement = endElement,
+                index = index,
+                tmpElement = tmpElement,
+                elements = elements,
+                updateTaskStatusInfos = updateTaskStatusInfos
+            )
+        } else {
+            if (tmpElement == endElement) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun handleCancelTaskPost(
+        endElement: Element,
+        index: Int,
+        tmpElement: Element,
+        elements: List<Element>,
+        updateTaskStatusInfos: MutableList<Map<String, Any>>?
+    ): Boolean {
+        val elementPostInfo = tmpElement.additionalOptions?.elementPostInfo
+        if (elementPostInfo != null) {
+            // 判断post任务的父任务是否执行过
+            val parentElementJobIndex = elementPostInfo.parentElementJobIndex
+            val parentElement = elements[parentElementJobIndex]
+            val taskStatus = BuildStatus.parse(parentElement.status)
+            if (!(taskStatus.isFinish() || parentElement.id == endElement.id)) {
+                return false
+            }
+            // 把post任务和取消任务之间的任务置为UNEXEC状态
+            val startIndex = index + 1
+            val endIndex = parentElementJobIndex - 1
+            if (endIndex < startIndex) {
+                return true
+            }
+            for (i in startIndex..endIndex) {
+                val unExecElement = elements[i]
+                val unExecTaskId = unExecElement.id
+                val unExecBuildStatus = BuildStatus.UNEXEC
+                unExecElement.status = unExecBuildStatus.name
+                if (unExecTaskId != null) {
+                    updateTaskStatusInfos?.add(
+                        mapOf(
+                            PIPELINE_ELEMENT_ID to unExecTaskId,
+                            BUILD_STATUS to unExecBuildStatus
+                        )
+                    )
+                }
+            }
+            return true
+        }
+        return false
     }
 
     fun pipelineTaskEnd(
