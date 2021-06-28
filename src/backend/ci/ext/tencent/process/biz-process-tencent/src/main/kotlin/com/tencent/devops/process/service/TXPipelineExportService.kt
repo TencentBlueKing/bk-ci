@@ -293,7 +293,30 @@ class TXPipelineExportService @Autowired constructor(
             val continueOnError = if (element.additionalOptions?.continueWhenFailed == true) true else null
             when (element.getClassType()) {
                 // Bash脚本插件直接转为run
-                LinuxScriptElement.classType, WindowsScriptElement.classType -> {
+                LinuxScriptElement.classType -> {
+                    val step = element as LinuxScriptElement
+                    stepList.add(
+                        V2Step(
+                            name = step.name,
+                            id = null,
+                            ifFiled = if (step.additionalOptions?.runCondition ==
+                                RunCondition.CUSTOM_CONDITION_MATCH) {
+                                step.additionalOptions?.customCondition
+                            } else {
+                                null
+                            },
+                            uses = null,
+                            with = null,
+                            timeoutMinutes = timeoutMinutes,
+                            continueOnError = continueOnError,
+                            retryTimes = retryTimes,
+                            env = null,
+                            run = " |\r\n ${step.script}",
+                            checkout = null
+                        )
+                    )
+                }
+                WindowsScriptElement.classType -> {
                     val step = element as LinuxScriptElement
                     stepList.add(
                         V2Step(
