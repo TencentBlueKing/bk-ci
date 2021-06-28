@@ -268,11 +268,12 @@ class CallBackControl @Autowired constructor(
         }
     }
 
-    private fun parseModel(model: Model): List<SimpleStage> {
+    internal fun parseModel(model: Model): List<SimpleStage> {
         val stages = mutableListOf<SimpleStage>()
         model.stages.forEachIndexed { pos, s ->
             val jobs = mutableListOf<SimpleJob>()
             val stage = SimpleStage(stageName = "Stage-${pos + 1}", status = "", jobs = jobs)
+            stage.startTime = s.startEpoch ?: 0
             stages.add(stage)
 
             val triple = parseJob(s, jobs)
@@ -280,7 +281,7 @@ class CallBackControl @Autowired constructor(
             val stageEndTimeMills = triple.second
             val stageStatus = triple.third
 
-            if (stageStartTimeMills > 0) {
+            if (stage.startTime == 0L && stageStartTimeMills > 0) {
                 stage.startTime = stageStartTimeMills
             }
 
@@ -294,12 +295,11 @@ class CallBackControl @Autowired constructor(
     }
 
     private fun parseJob(s: Stage, jobs: MutableList<SimpleJob>): Triple<Long, Long, BuildStatus> {
-        var stageStartTimeMills = 0L
-        var stageEndTimeMills = -1L
+        var stageStartTimeMills = Long.MAX_VALUE
+        var stageEndTimeMills = 1L
         var stageStatus = BuildStatus.QUEUE
         s.containers.forEach { c ->
             val jobStatus = BuildStatus.parse(c.status)
-            val tasks = mutableListOf<SimpleTask>()
             val jobStartTimeMills = c.startEpoch ?: 0L
             val jobEndTimeMills = if (jobStatus.isFinish()) {
                 jobStartTimeMills + (c.elementElapsed ?: 0) + (c.systemElapsed ?: 0)
@@ -327,11 +327,9 @@ class CallBackControl @Autowired constructor(
                     status = jobStatus.name,
                     startTime = jobStartTimeMills,
                     endTime = jobEndTimeMills,
-                    tasks = tasks
+                    tasks = parseTask(c)
                 )
             )
-
-            parseTask(c, tasks)
         }
 
         if (stageEndTimeMills > 0 && !stageStatus.isFinish()) {
@@ -340,7 +338,8 @@ class CallBackControl @Autowired constructor(
         return Triple(stageStartTimeMills, stageEndTimeMills, stageStatus)
     }
 
-    private fun parseTask(c: Container, tasks: MutableList<SimpleTask>) {
+    private fun parseTask(c: Container): MutableList<SimpleTask> {
+        val tasks = mutableListOf<SimpleTask>()
         c.elements.forEach { e ->
             val taskStartTimeMills = e.startEpoch ?: 0
             val taskStatus = BuildStatus.parse(e.status)
@@ -360,6 +359,7 @@ class CallBackControl @Autowired constructor(
                 )
             )
         }
+        return tasks
     }
 
     private val executors = Executors.newFixedThreadPool(8)
