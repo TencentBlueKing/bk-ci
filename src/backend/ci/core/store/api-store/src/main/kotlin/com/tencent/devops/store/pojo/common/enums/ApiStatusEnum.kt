@@ -25,23 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.store.pojo.common.enums
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.annotation.SensitiveApiPermission
-import com.tencent.devops.repository.api.BuildOauthResource
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.service.scm.IGitOauthService
-import org.springframework.beans.factory.annotation.Autowired
+/**
+ * api状态
+ */
+enum class ApiStatusEnum {
+    WAIT, // 待审批
+    PASS, // 审批通过
+    REFUSE, // 审批拒绝
+    CANCEL; // 取消
 
-@RestResource
-class BuildOauthResourceImpl @Autowired constructor(
-    private val gitOauthService: IGitOauthService
-) : BuildOauthResource {
-
-    @SensitiveApiPermission("get_oauth_token")
-    override fun gitGet(buildId: String, userId: String): Result<GitToken?> {
-        return Result(gitOauthService.checkAndGetAccessToken(buildId, userId))
+    companion object {
+        fun valueOf(name: String?): ApiStatusEnum? {
+            return when (name) {
+                WAIT.name -> WAIT
+                PASS.name -> PASS
+                REFUSE.name -> REFUSE
+                CANCEL.name -> CANCEL
+                else -> null
+            }
+        }
     }
 }
