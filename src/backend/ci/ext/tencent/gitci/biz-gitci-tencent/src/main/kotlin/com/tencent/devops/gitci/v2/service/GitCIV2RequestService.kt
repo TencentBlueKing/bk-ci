@@ -61,6 +61,7 @@ class GitCIV2RequestService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIV2RequestService::class.java)
+        private const val ymlVersion = "v2.0"
     }
 
     private val channelCode = ChannelCode.GIT

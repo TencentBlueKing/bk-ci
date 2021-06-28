@@ -3,6 +3,7 @@ package com.tencent.devops.experience.job
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import org.jooq.DSLContext
@@ -21,6 +22,7 @@ class ExperienceHotJob @Autowired constructor(
     private val profile: Profile,
     private val redisOperation: RedisOperation,
     private val experiencePublicDao: ExperiencePublicDao,
+    private val experienceDao: ExperienceDao,
     private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val dslContext: DSLContext
 ) {
@@ -28,7 +30,7 @@ class ExperienceHotJob @Autowired constructor(
     private var hotDays: Long = 7
 
     @Scheduled(cron = "0 5 0 * * ?")
-    @SuppressWarnings("MagicNumber")
+    @SuppressWarnings("MagicNumber", "NestedBlockDepth", "SwallowedException")
     fun jobHot() {
         if (profile.isProd() && !profile.isProdGray()) {
             logger.info("profile is prod , no start")
@@ -47,15 +49,23 @@ class ExperienceHotJob @Autowired constructor(
                 publicUnique.forEach {
                     val countForHot = experienceDownloadDetailDao.countForHot(
                         dslContext = dslContext,
-                        projectId = it.get("PROJECT_ID", String::class.java),
-                        bundleIdentifier = it.get("BUNDLE_IDENTIFIER", String::class.java),
-                        platform = it.get("PLATFORM", String::class.java),
+                        projectId = it.projectId,
+                        bundleIdentifier = it.bundleIdentifier,
+                        platform = it.platform,
                         hotDaysAgo = hotDaysAgo
                     )
+
+                    val updateTime = try {
+                        experienceDao.get(dslContext, it.get("RECORD_ID", Long::class.java)).updateTime
+                    } catch (e: Exception) {
+                        it.createTime
+                    }
+
                     experiencePublicDao.updateById(
                         dslContext = dslContext,
                         id = it.get("ID", Long::class.java),
-                        downloadTime = countForHot
+                        downloadTime = countForHot,
+                        updateTime = updateTime
                     )
                 }
                 logger.info("Job hot finish")

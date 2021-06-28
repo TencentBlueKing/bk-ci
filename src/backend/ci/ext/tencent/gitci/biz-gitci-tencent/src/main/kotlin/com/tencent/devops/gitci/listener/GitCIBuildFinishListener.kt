@@ -245,7 +245,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                             return@forEach
                         }
                         val newType = replaceVar(notice.type, variables)
-                        if (newType.isBlank()) {
+                        if (newType.isNullOrBlank()) {
                             return@forEach
                         }
                         sendNotifyV2(
@@ -259,8 +259,8 @@ class GitCIBuildFinishListener @Autowired constructor(
                             pipeline = pipeline,
                             build = build,
                             receivers = replaceVar(notice.receivers, variables),
-                            ccs = replaceVar(notice.ccs, variables).toMutableSet(),
-                            chatIds = replaceVar(notice.chatId, variables).toMutableSet(),
+                            ccs = replaceVar(notice.ccs, variables)?.toMutableSet(),
+                            chatIds = replaceVar(notice.chatId, variables)?.toMutableSet(),
                             title = replaceVar(notice.title, variables),
                             content = replaceVar(notice.content, variables),
                             notifyType = getNoticeType(build.id, newType)
@@ -613,9 +613,9 @@ class GitCIBuildFinishListener @Autowired constructor(
         state: String,
         notifyType: GitCINotifyType?,
         conf: GitCIBasicSetting,
-        receivers: Set<String>,
-        ccs: MutableSet<String>,
-        chatIds: Set<String>,
+        receivers: Set<String>?,
+        ccs: MutableSet<String>?,
+        chatIds: Set<String>?,
         event: TGitRequestEventBuildRecord,
         pipeline: TGitPipelineResourceRecord,
         build: BuildHistory,
@@ -711,7 +711,7 @@ class GitCIBuildFinishListener @Autowired constructor(
     private fun getEmailSendRequestV2(
         state: String,
         receivers: Set<String>,
-        ccs: MutableSet<String>,
+        ccs: MutableSet<String>?,
         projectName: String,
         branchName: String,
         pipelineName: String,
@@ -723,17 +723,20 @@ class GitCIBuildFinishListener @Autowired constructor(
     ): SendNotifyMessageTemplateRequest {
         val isSuccess = state == "success"
         val titleParams = mapOf(
-            "title" to (title
-                ?: V2NotifyTemplate.getEmailTitle(
+            "title" to (if (title.isNullOrBlank()) {
+                V2NotifyTemplate.getEmailTitle(
                     isSuccess = isSuccess,
                     projectName = projectName,
                     branchName = branchName,
                     pipelineName = pipelineName, buildNum = build.buildNum.toString()
-                ))
+                )
+            } else {
+                title
+            })
         )
         val bodyParams = mapOf(
-            "content" to (content
-                ?: V2NotifyTemplate.getEmailContent(
+            "content" to (if (content.isNullOrBlank()) {
+                V2NotifyTemplate.getEmailContent(
                     isSuccess = isSuccess,
                     projectName = projectName,
                     branchName = branchName,
@@ -749,7 +752,10 @@ class GitCIBuildFinishListener @Autowired constructor(
                         pipelineId = pipelineId,
                         buildId = build.id
                     )
-                ))
+                )
+            } else {
+                content
+            })
         )
         return SendNotifyMessageTemplateRequest(
             templateCode = GitCINotifyTemplateEnum.GITCI_V2_BUILD_TEMPLATE.templateCode,
@@ -828,9 +834,9 @@ class GitCIBuildFinishListener @Autowired constructor(
     }
 
     // 替换variables变量
-    private fun replaceVar(value: String?, variables: Map<String, String>?): String {
+    private fun replaceVar(value: String?, variables: Map<String, String>?): String? {
         if (value.isNullOrBlank()) {
-            return ""
+            return value
         }
         if (variables.isNullOrEmpty()) {
             return value
@@ -838,9 +844,9 @@ class GitCIBuildFinishListener @Autowired constructor(
         return EnvUtils.parseEnv(value, variables)
     }
 
-    private fun replaceVar(value: Set<String>?, variables: Map<String, String>?): Set<String> {
+    private fun replaceVar(value: Set<String>?, variables: Map<String, String>?): Set<String>? {
         if (value.isNullOrEmpty()) {
-            return emptySet()
+            return value
         }
         if (variables.isNullOrEmpty()) {
             return value
@@ -866,7 +872,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         }.toMutableSet()
     }
 
-    private fun getNoticeType(buildId: String, type: String): GitCINotifyType? {
+    private fun getNoticeType(buildId: String, type: String?): GitCINotifyType? {
         return when (type) {
             "email" -> {
                 GitCINotifyType.EMAIL

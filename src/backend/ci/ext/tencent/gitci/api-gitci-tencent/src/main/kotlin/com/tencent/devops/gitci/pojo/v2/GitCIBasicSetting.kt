@@ -60,7 +60,13 @@ data class GitCIBasicSetting(
     @ApiModelProperty("是否开启Mr锁定")
     val enableMrBlock: Boolean = true,
     @ApiModelProperty("工蜂CI开启人")
-    val enableUserId: String
+    val enableUserId: String,
+    @ApiModelProperty("工蜂CI开启人所在事业群")
+    var creatorBgName: String?,
+    @ApiModelProperty("工蜂CI开启人所在部门")
+    var creatorDeptName: String?,
+    @ApiModelProperty("工蜂CI开启人所在中心")
+    var creatorCenterName: String?
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
 @ApiModel("蓝盾工蜂页面修改配置")

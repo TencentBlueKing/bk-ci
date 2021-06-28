@@ -52,7 +52,8 @@ class GitCIV2PipelineService @Autowired constructor(
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val gitCIV2DetailService: GitCIV2DetailService,
     private val scmService: ScmService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val websocketService: GitCIV2WebsocketService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIV2PipelineService::class.java)
@@ -183,6 +184,7 @@ class GitCIV2PipelineService @Autowired constructor(
                 pipelineId = pipelineId,
                 enabled = enabled
             ) == 1
+            websocketService.pushPipelineWebSocket(gitProjectId.toString(), pipelineId, userId)
         } catch (e: Exception) {
             logger.error("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled error ${e.message}")
             return false

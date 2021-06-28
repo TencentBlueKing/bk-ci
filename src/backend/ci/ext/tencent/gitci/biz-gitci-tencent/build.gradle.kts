@@ -52,6 +52,7 @@ dependencies {
     api(project(":ext:tencent:notify:api-notify-tencent"))
 
     api(project(":core:auth:api-auth"))
+    api(project(":core:common:common-websocket"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
 
     api("com.zaxxer:HikariCP")

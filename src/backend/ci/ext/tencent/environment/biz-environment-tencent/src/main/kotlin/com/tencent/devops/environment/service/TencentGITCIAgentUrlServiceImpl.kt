@@ -25,16 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc
+package com.tencent.devops.environment.service
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import org.springframework.beans.factory.annotation.Value
 
-@MicroService
-@ComponentScan("com.tencent.devops.common", "com.tencent.devops.misc")
-class Application
+/**
+ * GITCI专用Agent下载链接生成服务
+ */
+class TencentGITCIAgentUrlServiceImpl constructor(
+    private val commonConfig: CommonConfig
+) : TencentAgentUrlServiceImpl(commonConfig) {
 
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    @Value("\${gitci.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
+
+    override fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+        val agentHashId = HashUtil.encodeLongId(agentRecord.id)
+        return "$v2GitUrl/external/agents/$agentHashId/agent?x-devops-project-id=${agentRecord.projectId}"
+    }
 }

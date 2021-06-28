@@ -64,8 +64,8 @@ class UserGitCIUserMessageResourceImpl @Autowired constructor(
         return Result(data = gitUserMessageService.getNoReadMessageCount(projectId, userId))
     }
 
-    override fun readMessage(userId: String, id: Int): Result<Boolean> {
-        return Result(gitUserMessageService.readMessage(userId = userId, id = id))
+    override fun readMessage(userId: String, id: Int, projectId: String): Result<Boolean> {
+        return Result(gitUserMessageService.readMessage(userId = userId, id = id, projectId = projectId))
     }
 
     override fun readAllMessages(userId: String, projectId: String): Result<Boolean> {

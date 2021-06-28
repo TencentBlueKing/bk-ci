@@ -32,12 +32,14 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.impl.EnvironmentPermissionServiceImpl
 import com.tencent.devops.environment.permission.impl.GitCIEnvironmentPermissionServiceImpl
 import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
+import com.tencent.devops.environment.service.TencentGITCIAgentUrlServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
@@ -52,6 +54,12 @@ class TencentServiceConfig {
      */
     @Bean
     @Primary
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun gitciAgentUrlService(commonConfig: CommonConfig) = TencentGITCIAgentUrlServiceImpl(commonConfig)
+
+    @Bean
+    @Primary
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
     fun agentUrlService(commonConfig: CommonConfig) = TencentAgentUrlServiceImpl(commonConfig)
 
     @Bean
@@ -63,8 +71,9 @@ class TencentServiceConfig {
         client: Client,
         dslContext: DSLContext,
         nodeDao: NodeDao,
-        envDao: EnvDao
-    ) = GitCIEnvironmentPermissionServiceImpl(client, dslContext, nodeDao, envDao)
+        envDao: EnvDao,
+        tokenCheckService: ClientTokenService
+    ) = GitCIEnvironmentPermissionServiceImpl(client, dslContext, nodeDao, envDao, tokenCheckService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
