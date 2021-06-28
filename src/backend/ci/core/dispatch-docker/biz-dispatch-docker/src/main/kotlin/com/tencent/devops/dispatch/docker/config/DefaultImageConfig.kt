@@ -43,37 +43,35 @@ class DefaultImageConfig {
     @Value("\${dispatch.imageTLinux2_2:bkci/ci:latest}")
     val imageTLinux2_2: String? = null
 
-    // 无编译环境，末尾需含bkdevops
-    @Value("\${dispatch.dockerBuildLessImagePrefix:#{null}}")
-    var dockerBuildLessImagePrefix: String? = null
+    // 无编译环境镜像仓库
+    @Value("\${dispatch.agentLessRegistryUrl:#{null}}")
+    var agentLessRegistryUrl: String? = null
 
-    @Value("\${dispatch.imageBuildLessTLinux1_2:bkci/ci:alpine}")
-    val imageBuildLessTLinux1_2: String? = null
+    // 无编译环境镜像路径
+    @Value("\${dispatch.agentLessImageName:bkci/ci:alpine}")
+    val agentLessImageName: String? = null
 
-    @Value("\${dispatch.imageBuildLessTLinux2_2:bkci/ci:alpine}")
-    val imageBuildLessTLinux2_2: String? = null
+    // 无编译环境镜像仓库登录信息
+    @Value("\${dispatch.agentLessRegistryUserName:#{null}}")
+    val agentLessRegistryUserName: String? = null
 
-    fun getBuildLessTLinux1_2CompleteUri(): String {
-        return if (dockerBuildLessImagePrefix.isNullOrBlank()) {
-            imageBuildLessTLinux1_2?.trim()?.removePrefix("/")
+    // 无编译环境镜像仓库登录信息
+    @Value("\${dispatch.agentLessRegistryPassword:#{null}}")
+    val agentLessRegistryPassword: String? = null
+
+    fun getAgentLessCompleteUri(): String {
+        return if (agentLessRegistryUrl.isNullOrBlank()) {
+            agentLessImageName?.trim()?.removePrefix("/")
         } else {
-            dockerBuildLessImagePrefix + imageBuildLessTLinux1_2?.trim()
+            agentLessRegistryUrl + agentLessImageName?.trim()
         } ?: ""
     }
 
-    fun getBuildLessTLinux2_2CompleteUri(): String {
-        return if (dockerBuildLessImagePrefix.isNullOrBlank()) {
-            imageBuildLessTLinux2_2?.trim()?.removePrefix("/")
-        } else {
-            dockerBuildLessImagePrefix + imageBuildLessTLinux2_2?.trim()
-        } ?: ""
-    }
-
-    fun getBuildLessCompleteUriByImageName(imageName: String?): String {
-        return if (dockerBuildLessImagePrefix.isNullOrBlank()) {
+    fun getAgentLessCompleteUriByImageName(imageName: String?): String {
+        return if (agentLessRegistryUrl.isNullOrBlank()) {
             imageName?.trim()?.removePrefix("/")
         } else {
-            "$dockerBuildLessImagePrefix/${imageName?.trim()}"
+            "$agentLessRegistryUrl/${imageName?.trim()}"
         } ?: ""
     }
 
