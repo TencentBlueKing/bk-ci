@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.GitlabWebHookMatcher
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
 import com.tencent.devops.repository.pojo.Repository
@@ -49,7 +49,7 @@ class GitlabWebHookStartParam(
     val projectId: String,
     val repo: Repository,
     private val params: WebHookParams,
-    private val matcher: GitWebHookMatcher,
+    private val matcher: GitlabWebHookMatcher,
     private val matchResult: ScmWebhookMatcher.MatchResult
 ) : ScmWebhookStartParams<CodeGitlabWebHookTriggerElement> {
 
