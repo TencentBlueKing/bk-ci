@@ -30,5 +30,6 @@ package com.tencent.devops.common.pipeline.enums
 enum class VMBaseOS {
     MACOS,
     LINUX,
-    WINDOWS
+    WINDOWS,
+    ALL
 }

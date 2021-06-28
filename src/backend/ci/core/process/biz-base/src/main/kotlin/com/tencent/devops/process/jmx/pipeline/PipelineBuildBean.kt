@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger
     objectName = "com.tencent.devops.process:type=builds",
     description = "build jmx metrics"
 )
-class BuildBean @Autowired constructor(
+class PipelineBuildBean @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
@@ -119,6 +119,6 @@ class BuildBean @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BuildBean::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineBuildBean::class.java)
     }
 }
