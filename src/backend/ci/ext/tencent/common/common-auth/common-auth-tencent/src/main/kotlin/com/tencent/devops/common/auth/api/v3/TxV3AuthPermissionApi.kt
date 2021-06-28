@@ -33,6 +33,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,8 +58,7 @@ class TxV3AuthPermissionApi @Autowired constructor(
         projectCode: String,
         permission: AuthPermission
     ): Boolean {
-        val resourceTypeStr = buildResourceType(resourceType)
-        val action = buildAction(resourceTypeStr, permission)
+        val action = TActionUtils.buildAction(permission, resourceType)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             token = tokenService.getSystemToken(null)!!,
             userId = user,
@@ -83,8 +83,8 @@ class TxV3AuthPermissionApi @Autowired constructor(
         }
 
         // 没有allAction权限则按对应的action校验
-        val resourceTypeStr = buildResourceType(resourceType)
-        val action = buildAction(resourceTypeStr, permission)
+        val resourceTypeStr = TActionUtils.extResourceType(resourceType)
+        val action = TActionUtils.buildAction(permission, resourceType)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = user,
@@ -109,8 +109,8 @@ class TxV3AuthPermissionApi @Autowired constructor(
             return arrayListOf("*")
         }
 
-        val resourceTypeStr = buildResourceType(resourceType)
-        val action = buildAction(resourceTypeStr, permission)
+        val resourceTypeStr = TActionUtils.extResourceType(resourceType)
+        val action = TActionUtils.buildAction(permission, resourceType)
         return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
             token = tokenService.getSystemToken(null)!!,
             userId = user,
@@ -129,7 +129,7 @@ class TxV3AuthPermissionApi @Autowired constructor(
         supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
         val actions = mutableListOf<String>()
-        val resourceTypeStr = buildResourceType(resourceType)
+        val resourceTypeStr = TActionUtils.extResourceType(resourceType)
         permissions.forEach {
             actions.add(buildAction(resourceTypeStr, it))
         }
@@ -180,19 +180,6 @@ class TxV3AuthPermissionApi @Autowired constructor(
             allActionMap.put(cacheKey, "1")
         }
         return hasAllAction
-    }
-
-    /**
-     * 为解决历史问题。 体验组与质量红线组对应value相同。但是在iamV3内的权限模型action不相同。
-     */
-    private fun buildResourceType(resourceType: AuthResourceType): String {
-        return when (resourceType) {
-            AuthResourceType.EXPERIENCE_GROUP -> "experience_group"
-            AuthResourceType.EXPERIENCE_TASK -> "experience_task"
-            AuthResourceType.QUALITY_GROUP -> "rule"
-            AuthResourceType.QUALITY_RULE -> "quality_group"
-            else -> resourceType.value
-        }
     }
 
     private fun buildAction(resourceType: String, permission: AuthPermission): String {

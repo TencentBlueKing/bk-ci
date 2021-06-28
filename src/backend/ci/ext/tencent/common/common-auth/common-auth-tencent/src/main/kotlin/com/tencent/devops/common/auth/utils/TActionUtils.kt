@@ -6,7 +6,13 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 object TActionUtils {
 
     fun buildAction(authPermission: AuthPermission, authResourceType: AuthResourceType): String {
-        return "${extResourceType(authResourceType)}_${authPermission.value}"
+        // V3统一把list替换成view
+        val action = if (authPermission == AuthPermission.LIST) {
+            AuthPermission.VIEW.value
+        } else {
+            authPermission.value
+        }
+        return "${extResourceType(authResourceType)}_$action"
     }
 
     fun extResourceType(authResourceType: AuthResourceType): String {
