@@ -288,6 +288,7 @@
         "name": "模板名称",
         "nameInputTips": "请输入模板名称，不能超过30个字符",
         "versionNullTips": "版本名称不能为空",
+        "versionErrTips": "版本名称有误，请修改后重试",
         "nameErrTips": "模板名称不能超过30个字符",
         "emptyDesc": "合理的运用流水线模板，可以大大降低多个流水线的维护成本，开始创建你的第一个模板吧",
         "source": "来源",

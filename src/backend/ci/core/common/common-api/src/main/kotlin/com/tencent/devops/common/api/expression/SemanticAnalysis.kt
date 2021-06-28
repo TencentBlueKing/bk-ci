@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.api.expression
 
+import java.lang.IllegalArgumentException
+
 @Suppress("ALL")
 class SemanticAnalysis(items: List<Word>) {
 
@@ -165,7 +167,7 @@ class SemanticAnalysis(items: List<Word>) {
                 return (!getBool(replaceVal(str))).toString()
             }
             else -> {
-                throw RuntimeException("SemanticAnalysis error Symbol: $symbol")
+                throw IllegalArgumentException("SemanticAnalysis error Symbol: $symbol")
             }
         }
     }
@@ -200,7 +202,7 @@ class SemanticAnalysis(items: List<Word>) {
                 return (getBool(left) && getBool(right)).toString()
             }
             else -> {
-                throw RuntimeException("SemanticAnalysis error Symbol: $symbol")
+                throw IllegalArgumentException("SemanticAnalysis error Symbol: $symbol")
             }
         }
     }
@@ -214,7 +216,7 @@ class SemanticAnalysis(items: List<Word>) {
         try {
             return str.toInt()
         } catch (e: Exception) {
-            throw RuntimeException("SemanticAnalysis: need Number ident")
+            throw IllegalArgumentException("SemanticAnalysis: need Number ident")
         }
     }
 
@@ -227,7 +229,7 @@ class SemanticAnalysis(items: List<Word>) {
                 false
             }
             else -> {
-                throw RuntimeException("SemanticAnalysis: need Boolean ident")
+                throw IllegalArgumentException("SemanticAnalysis: need Boolean ident")
             }
         }
     }

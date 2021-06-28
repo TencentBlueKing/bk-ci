@@ -27,26 +27,17 @@
 
 package com.tencent.devops.store.service.atom.impl
 
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.common.api.constant.ARTIFACT
-import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
 import com.tencent.devops.common.api.constant.COMPONENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
-import com.tencent.devops.common.api.constant.LABEL
-import com.tencent.devops.common.api.constant.PATH
-import com.tencent.devops.common.api.constant.REPORT
-import com.tencent.devops.common.api.constant.REPORT_TYPE
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.TYPE
-import com.tencent.devops.common.api.constant.URL
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
@@ -388,44 +379,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 errorCode = StoreMessageCode.USER_ATOM_OUTPUT_NUM_IS_TOO_MANY,
                 params = arrayOf(maxOutputNum.toString())
             )
-        }
-        outputDataMap?.forEach { _, outputValue ->
-            val type = (outputValue as Map<String, Any>)[TYPE]
-                ?: throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                    params = arrayOf(TYPE)
-                )
-            if (type == ARTIFACT) {
-                val artifactoryType = (outputValue[ARTIFACTORY_TYPE] as? String) ?: ArtifactoryType.PIPELINE.name
-                if (artifactoryType == ArtifactoryType.CUSTOM_DIR.name && outputValue[PATH] == null) {
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                        params = arrayOf(PATH)
-                    )
-                }
-            } else if (type == REPORT) {
-                val reportType = (outputValue[REPORT_TYPE] as? String) ?: ReportTypeEnum.INTERNAL.name
-                outputValue[LABEL] ?: throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                    params = arrayOf(LABEL)
-                )
-                if (reportType == ReportTypeEnum.INTERNAL.name) {
-                    outputValue[PATH] ?: throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                        params = arrayOf(PATH)
-                    )
-                    outputValue[KEY_TARGET] ?: throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                        params = arrayOf(KEY_TARGET)
-                    )
-                }
-                if (reportType == ReportTypeEnum.THIRDPARTY.name) {
-                    outputValue[URL] ?: throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                        params = arrayOf(URL)
-                    )
-                }
-            }
         }
 
         val atomEnvRequest = AtomEnvRequest(

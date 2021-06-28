@@ -64,8 +64,10 @@ import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.IllegalArgumentException
 import java.net.URLEncoder
 import java.util.Base64
+import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Service
@@ -198,7 +200,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                             accessToken = accessToken,
                             projectName = repo.projectName,
                             tag = branchName!!
-                        ).data ?: return Result(-1, "can not find tag $branchName")
+                        ).data ?: return Result(status = -1, message = "can not find tag $branchName")
                     return if (tagData.tagObject != null) {
                         Result(
                             RevisionInfo(
@@ -208,12 +210,12 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                             )
                         )
                     } else {
-                        Result(-2, "can not find tag2 $branchName")
+                        Result(status = -2, message = "can not find tag2 $branchName")
                     }
                 }
             }
             else -> {
-                throw RuntimeException("Unknown repo($repo)")
+                throw IllegalArgumentException("Unknown repo($repo)")
             }
         }
     }
@@ -290,7 +292,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 )
             }
             else -> {
-                throw RuntimeException("Unknown repo($repo)")
+                throw IllegalArgumentException("Unknown repo($repo)")
             }
         }
     }
@@ -349,7 +351,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 )
             }
             else -> {
-                throw RuntimeException("Unknown repo($repo)")
+                throw IllegalArgumentException("Unknown repo($repo)")
             }
         }
     }
@@ -581,7 +583,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             client.get(ServiceRepositoryResource::class).get(projectId, repositoryId, repositoryConfig.repositoryType)
         if (repoResult.isNotOk() || repoResult.data == null) {
             logger.warn("$projectId|GET_REPO|$repositoryId|${repositoryConfig.repositoryType}|${repoResult.message}")
-            throw RuntimeException("Fail to get the repo")
+            throw ErrorCodeException(errorCode = repoResult.status.toString(), defaultMessage = repoResult.message)
         }
         return repoResult.data!!
     }
@@ -596,7 +598,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             encoder.encodeToString(pair.publicKey)
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
+            throw ErrorCodeException(
+                errorCode = credentialResult.status.toString(),
+                defaultMessage = credentialResult.message
+            )
         }
 
         val credential = credentialResult.data!!
@@ -628,13 +633,13 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
 
     private fun getAccessToken(userName: String): Pair<String, String?> {
         val gitOauthData = client.get(ServiceOauthResource::class).gitGet(userName).data
-            ?: throw RuntimeException("cannot found oauth access token for user($userName)")
+            ?: throw NotFoundException("cannot found oauth access token for user($userName)")
         return gitOauthData.accessToken to null
     }
 
     private fun getGithubAccessToken(userName: String): String {
         val accessToken = client.get(ServiceGithubResource::class).getAccessToken(userName).data
-            ?: throw RuntimeException("cannot find github oauth accessToekn for user($userName)")
+            ?: throw NotFoundException("cannot find github oauth accessToekn for user($userName)")
         return accessToken.accessToken
     }
 }

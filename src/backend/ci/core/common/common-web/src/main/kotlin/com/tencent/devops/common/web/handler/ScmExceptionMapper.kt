@@ -25,17 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo
+package com.tencent.devops.common.web.handler
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.exception.ScmException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-@ApiModel("BCS镜像")
-data class BcsImageInfo(
-    @ApiModelProperty("镜像ID", required = true)
-    val imageId: String,
-    @ApiModelProperty("镜像名称", required = true)
-    val imageName: String,
-    @ApiModelProperty("镜像", required = true)
-    val image: String
-)
+@BkExceptionMapper
+class ScmExceptionMapper : ExceptionMapper<ScmException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(ScmExceptionMapper::class.java)!!
+    }
+
+    override fun toResponse(exception: ScmException): Response {
+        logger.error("Failed with scm exception: $exception")
+        val status = Response.Status.BAD_REQUEST
+        return Response.status(status)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result<Void>(status.statusCode, "${exception.scmType}|${exception.message}")).build()
+    }
+}
