@@ -28,6 +28,7 @@
 package com.tencent.devops.misc.cron.environment
 
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.misc.dao.environment.EnvironmentNodeDao
@@ -41,6 +42,7 @@ import kotlin.math.ceil
 import kotlin.math.min
 
 @Component
+@Suppress("ALL", "UNUSED")
 class UpdateCcNodeStatus @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: EnvironmentNodeDao,
@@ -50,48 +52,56 @@ class UpdateCcNodeStatus @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(UpdateCcNodeStatus::class.java)
         private const val CC_LOCK_KEY = "env_cron_updateCcNodeStatus"
-        private const val CC_LOCK_VALUE = "env_cron_updateCcNodeStatus"
         private const val CMDB_LOCK_KEY = "env_cron_updateCmdbNodeStatus"
-        private const val CMDB_LOCK_VALUE = "env_cron_updateCmdbNodeStatus"
     }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 4 * 60 * 1000)
     fun runUpdateCmdbNodeStatus() {
         logger.info("runUpdateCmdbNodeStatus")
-        val lockValue = redisOperation.get(CMDB_LOCK_KEY)
-        if (lockValue != null) {
-            logger.info("get lock failed, skip")
-            return
-        } else {
-            redisOperation.set(
-                CMDB_LOCK_KEY,
-                CMDB_LOCK_VALUE, 3 * 30)
-        }
-
+        val lock = RedisLock(redisOperation, lockKey = CMDB_LOCK_KEY, expiredTimeInSeconds = 3600)
         try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return
+            }
             updateCmdbNodeStatus()
-        } catch (t: Throwable) {
-            logger.warn("update server node status failed", t)
+        } catch (ignore: Throwable) {
+            logger.warn("update server node status failed", ignore)
+        } finally {
+            lock.unlock()
         }
     }
 
     @Scheduled(cron = "0 0 7 * * ?")
     fun runUpdateCcNodeStatus() {
         logger.info("runUpdateCcNodeStatus")
-        val lockValue = redisOperation.get(CC_LOCK_KEY)
-        if (lockValue != null) {
-            logger.info("get lock failed, skip")
-            return
-        } else {
-            redisOperation.set(
-                CC_LOCK_KEY,
-                CC_LOCK_VALUE, 3 * 30)
-        }
-
+        val lock = RedisLock(redisOperation, lockKey = CC_LOCK_KEY, expiredTimeInSeconds = 3600)
         try {
-            updateCcNodeStatus()
-        } catch (t: Throwable) {
-            logger.warn("update server node status failed", t)
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return
+            }
+            logger.info("updateCcNodeStatus")
+            val allCcNodes = nodeDao.listAllNodesByType(dslContext, NodeType.CC)
+
+            if (allCcNodes.isEmpty()) {
+                return
+            }
+
+            // 分页处理
+            val pageSize = 100
+            val totalCount = allCcNodes.size
+            val totalPage = ceil(totalCount * 1.0 / pageSize).toInt()
+            for (page in 0 until totalPage) {
+                val from = pageSize * page
+                val end = from + min(pageSize, totalCount - from)
+                val nodes = allCcNodes.subList(from, end)
+                updateCcStatus(nodes)
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("update server node status failed", ignore)
+        } finally {
+            lock.unlock()
         }
     }
 
@@ -127,26 +137,6 @@ class UpdateCcNodeStatus @Autowired constructor(
             }
         }
         nodeDao.batchUpdateNode(dslContext, nodes)
-    }
-
-    private fun updateCcNodeStatus() {
-        logger.info("updateCcNodeStatus")
-        val allCcNodes = nodeDao.listAllNodesByType(dslContext, NodeType.CC)
-
-        if (allCcNodes.isEmpty()) {
-            return
-        }
-
-        // 分页处理
-        val pageSize = 100
-        val totalCount = allCcNodes.size
-        val totalPage = ceil(totalCount * 1.0 / pageSize).toInt()
-        for (page in 0 until totalPage) {
-            val from = pageSize * page
-            val end = from + min(pageSize, totalCount - from)
-            val nodes = allCcNodes.subList(from, end)
-            updateCcStatus(nodes)
-        }
     }
 
     private fun updateCcStatus(allCcNodes: List<TNodeRecord>) {

@@ -28,7 +28,6 @@
 dependencies {
     api(project(":ext:tencent:common:common-digest-tencent"))
     api(project(":core:environment:biz-environment"))
-    api(project(":ext:tencent:common:common-bcs"))
     api(project(":ext:tencent:common:common-devcloud"))
     api(project(":core:notify:api-notify"))
     api(project(":ext:tencent:scm:api-scm"))
