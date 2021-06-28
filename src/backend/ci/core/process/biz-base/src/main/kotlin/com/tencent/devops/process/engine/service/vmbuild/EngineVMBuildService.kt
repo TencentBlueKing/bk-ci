@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
+import com.tencent.devops.common.api.util.SensitiveApiUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -42,7 +43,9 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -84,7 +87,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val jmxElements: JmxElements,
     private val buildExtService: PipelineBuildExtService,
     private val client: Client,
-    private val buildingHeartBeatUtils: BuildingHeartBeatUtils
+    private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
+    private val redisOperation: RedisOperation
 ) {
 
     /**
@@ -332,6 +336,17 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         userId = task.starter, buildId = buildId, taskId = task.taskId, actionType = ActionType.START
                     )
                 )
+                // 标记正在运行的atom_code
+                if (!task.atomCode.isNullOrBlank()) {
+                    redisOperation.set(
+                        key = SensitiveApiUtil.getRunningAtomCodeKey(
+                            buildId = buildId,
+                            vmSeqId = vmSeqId
+                        ),
+                        value = task.atomCode!!,
+                        expiredInSecond = transMinuteTimeoutToMills(task.additionalOptions?.timeout?.toInt()).second
+                    )
+                }
                 BuildTask(
                     buildId = buildId,
                     vmSeqId = vmSeqId,
@@ -416,6 +431,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         )
         // 发送度量数据
         sendElementData(buildId = buildId, result = result)
+
+        redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
 
         LOG.info("ENGINE|$buildId|Agent|END_TASK|j($vmSeqId)|${result.taskId}|$buildStatus|" +
             "type=$errorType|code=${result.errorCode}|msg=${result.message}]")
