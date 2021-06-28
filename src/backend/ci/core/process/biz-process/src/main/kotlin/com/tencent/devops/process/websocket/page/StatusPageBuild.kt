@@ -30,6 +30,14 @@ package com.tencent.devops.process.websocket.page
 import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
-class StatusPageBuild : IPath {
-    override fun buildPage(buildPageInfo: BuildPageInfo): String = "/console/pipeline/${buildPageInfo.projectId}/list"
+abstract class StatusPageBuild : IPath {
+    override fun buildPage(buildPageInfo: BuildPageInfo): String {
+        val defaultPage = "/console/pipeline/${buildPageInfo.projectId}/list"
+        if (!extStatusPage(buildPageInfo).isNullOrEmpty()) {
+            return extStatusPage(buildPageInfo)!!
+        }
+        return defaultPage
+    }
+
+    abstract fun extStatusPage(buildPageInfo: BuildPageInfo): String?
 }

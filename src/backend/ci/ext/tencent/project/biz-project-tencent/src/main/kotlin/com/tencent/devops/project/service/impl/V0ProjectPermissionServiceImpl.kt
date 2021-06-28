@@ -51,10 +51,8 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.MessageProperties
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class ProjectPermissionServiceImpl @Autowired constructor(
+class V0ProjectPermissionServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val authProperties: BkAuthProperties,
     private val authProjectApi: BSAuthProjectApi,

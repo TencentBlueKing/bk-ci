@@ -158,10 +158,11 @@ class TriggerBuildService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val oauthService: OauthService,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val websocketService: GitCIV2WebsocketService
 ) : V2BaseBuildService<ScriptBuildYaml>(
     client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService
+    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService, websocketService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
