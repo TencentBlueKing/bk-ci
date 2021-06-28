@@ -22,9 +22,10 @@ class V0AuthPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String?
     ): Boolean {
+        val serviceCodeService = serviceCodeService.getServiceCodeByResource(resourceType!!)
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
-            serviceCode = serviceCodeService.getServiceCodeByResource(resourceType!!),
+            serviceCode = serviceCodeService,
             resourceType = AuthResourceType.get(resourceType!!),
             projectCode = projectCode,
             permission = AuthPermission.get(action)
@@ -39,9 +40,10 @@ class V0AuthPermissionServiceImpl @Autowired constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
+        val serviceCodeService = serviceCodeService.getServiceCodeByResource(resourceType!!)
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
-            serviceCode = serviceCodeService.getServiceCodeByResource(resourceType!!),
+            serviceCode = serviceCodeService,
             resourceType = AuthResourceType.get(resourceType!!),
             projectCode = projectCode,
             permission = AuthPermission.get(action),
@@ -56,11 +58,12 @@ class V0AuthPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): List<String> {
+        val serviceCodeService = serviceCodeService.getServiceCodeByResource(resourceType!!)
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
             projectCode = projectCode,
             resourceType = AuthResourceType.get(resourceType),
-            serviceCode = serviceCodeService.getServiceCodeByResource(resourceType!!),
+            serviceCode = serviceCodeService,
             supplier = null,
             permission = AuthPermission.get(action)
         )
@@ -72,13 +75,15 @@ class V0AuthPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): Map<AuthPermission, List<String>> {
+        val serviceCodeService = serviceCodeService.getServiceCodeByResource(resourceType!!)
+
         val permissions = mutableSetOf<AuthPermission>()
         actions.forEach {
             permissions.add(AuthPermission.get(it))
         }
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
-            serviceCode = serviceCodeService.getServiceCodeByResource(resourceType!!),
+            serviceCode = serviceCodeService,
             resourceType = AuthResourceType.get(resourceType),
             projectCode = projectCode,
             permissions = permissions,
