@@ -556,10 +556,10 @@ class TriggerBuildService @Autowired constructor(
         // 公共docker构建机
         if (job.runsOn.poolName == "docker") {
             val containerPool = Pool(
-                container = job.runsOn.container.image,
+                container = job.runsOn.container?.image,
                 credential = Credential(
-                    user = job.runsOn.container.credentials?.username ?: "",
-                    password = job.runsOn.container.credentials?.password ?: ""
+                    user = job.runsOn.container?.credentials?.username,
+                    password = job.runsOn.container?.credentials?.password ?: ""
                 ),
                 macOS = null,
                 third = null,

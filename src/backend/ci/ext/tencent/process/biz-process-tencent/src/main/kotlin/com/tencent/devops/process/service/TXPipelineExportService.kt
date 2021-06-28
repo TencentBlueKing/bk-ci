@@ -35,8 +35,10 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.ci.v2.JobRunsOnType
+import com.tencent.devops.common.ci.v2.PreJob
+import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
+import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.RunsOn
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Variable
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -59,8 +61,6 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.common.ci.v2.Stage as V2Stage
-import com.tencent.devops.common.ci.v2.Job as V2Job
 import com.tencent.devops.common.ci.v2.Step as V2Step
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,8 +76,7 @@ import javax.ws.rs.core.StreamingOutput
 class TXPipelineExportService @Autowired constructor(
     private val stageTagService: StageTagService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineRepositoryService: PipelineRepositoryService,
-    private val objectMapper: ObjectMapper
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     companion object {
@@ -106,7 +105,7 @@ class TXPipelineExportService @Autowired constructor(
             it.id to it.stageTagName
         }?.toMap() ?: emptyMap()
 
-        val yamlObj = ScriptBuildYaml(
+        val yamlObj = PreScriptBuildYaml(
             version = "v2.0",
             name = model.name,
             label = if (model.labels.isNullOrEmpty()) null else model.labels,
@@ -114,7 +113,7 @@ class TXPipelineExportService @Autowired constructor(
             variables = getVariableFromModel(model),
             stages = getV2StageFromModel(model, yamlSb, stageTagsMap),
             extends = null,
-            resource = null,
+            resources = null,
             notices = null,
             finally = getV2FinalFromStage(model.stages.last(), yamlSb)
         )
@@ -127,8 +126,8 @@ class TXPipelineExportService @Autowired constructor(
         model: Model,
         comment: StringBuilder,
         stageTagsMap: Map<String, String>
-    ): List<V2Stage> {
-        val stages = mutableListOf<V2Stage>()
+    ): List<PreStage> {
+        val stages = mutableListOf<PreStage>()
         model.stages.drop(1).forEach { stage ->
             if (stage.finally) {
                 return@forEach
@@ -140,7 +139,7 @@ class TXPipelineExportService @Autowired constructor(
                 if (!tagName.isNullOrBlank()) tags.add(tagName)
             }
             stages.add(
-                V2Stage(
+                PreStage(
                     name = stage.name,
                     id = null,
                     label = tags,
@@ -160,7 +159,7 @@ class TXPipelineExportService @Autowired constructor(
     private fun getV2FinalFromStage(
         stage: com.tencent.devops.common.pipeline.container.Stage,
         comment: StringBuilder
-    ): List<com.tencent.devops.common.ci.v2.Job>? {
+    ): Map<String, PreJob>? {
         if (stage.finally) {
             return getV2JobFromStage(stage, comment)
         }
@@ -170,35 +169,33 @@ class TXPipelineExportService @Autowired constructor(
     private fun getV2JobFromStage(
         stage: com.tencent.devops.common.pipeline.container.Stage,
         comment: StringBuilder
-    ): List<V2Job> {
-        val jobs = mutableListOf<V2Job>()
+    ): Map<String, PreJob>? {
+        val jobs = mutableMapOf<String, PreJob>()
         stage.containers.forEach {
             when (it.getClassType()) {
                 NormalContainer.classType -> {
                     val job = it as NormalContainer
                     val timeoutMinutes = job.jobControlOption?.timeout ?: 480
-                    jobs.add(
-                        V2Job(
-                            id = job.jobId,
-                            name = job.name,
-                            runsOn = RunsOn(poolName = JobRunsOnType.AGENT_LESS.type),
-                            services = null,
-                            ifField = if (job.jobControlOption?.runCondition ==
-                                JobRunCondition.CUSTOM_CONDITION_MATCH) {
-                                job.jobControlOption?.customCondition
-                            } else {
-                                null
-                            },
-                            steps = getV2StepFromJob(job, comment),
-                            timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
-                            env = null,
-                            continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
-                            strategy = null,
-                            // 蓝盾这边是自定义Job ID
-                            dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
-                                job.jobControlOption?.dependOnId
-                            } else null
-                        )
+                    jobs[job.jobId ?: "job_${job.id}"] = PreJob(
+                        name = job.name,
+                        runsOn = RunsOn(poolName = JobRunsOnType.AGENT_LESS.type),
+                        container = null,
+                        services = null,
+                        ifField = if (job.jobControlOption?.runCondition ==
+                            JobRunCondition.CUSTOM_CONDITION_MATCH) {
+                            job.jobControlOption?.customCondition
+                        } else {
+                            null
+                        },
+                        steps = getV2StepFromJob(job, comment),
+                        timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
+                        env = null,
+                        continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
+                        strategy = null,
+                        // 蓝盾这边是自定义Job ID
+                        dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
+                            job.jobControlOption?.dependOnId
+                        } else null
                     )
                 }
                 VMBuildContainer.classType -> {
@@ -211,6 +208,7 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = true,
                                 poolName = dispatchType.envName,
+                                container = null,
                                 agentSelector = listOf(job.baseOS.name.toLowerCase())
                             )
                         }
@@ -229,47 +227,38 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
-                                container = com.tencent.devops.common.ci.v2.Container(
-                                    image = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
-                                    credentials = null
-                                ),
                                 agentSelector = null
                             )
                         }
                         else -> {
                             RunsOn(
                                 selfHosted = null,
-                                poolName = "###该环境不支持转换，请重新填写###",
-                                container = com.tencent.devops.common.ci.v2.Container(
-                                    image = "###该环境不支持转换，请重新填写###",
-                                    credentials = null
-                                ),
+                                poolName = "### 该环境不支持自动导出，请参考 https://iwiki.woa.com/x/2ebDKw 手动配置 ###",
+                                container = null,
                                 agentSelector = null
                             )
                         }
                     }
 
-                    jobs.add(
-                        V2Job(
-                            id = job.jobId,
-                            name = job.name,
-                            runsOn = runsOn,
-                            services = null,
-                            ifField = if (job.jobControlOption?.runCondition ==
-                                JobRunCondition.CUSTOM_CONDITION_MATCH) {
-                                job.jobControlOption?.customCondition
-                            } else {
-                                null
-                            },
-                            steps = getV2StepFromJob(job, comment),
-                            timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
-                            env = null,
-                            continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
-                            strategy = null,
-                            dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
-                                job.jobControlOption?.dependOnId
-                            } else null
-                        )
+                    jobs[job.jobId ?: "job_${job.id}"] = PreJob(
+                        name = job.name,
+                        runsOn = runsOn,
+                        container = null,
+                        services = null,
+                        ifField = if (job.jobControlOption?.runCondition ==
+                            JobRunCondition.CUSTOM_CONDITION_MATCH) {
+                            job.jobControlOption?.customCondition
+                        } else {
+                            null
+                        },
+                        steps = getV2StepFromJob(job, comment),
+                        timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
+                        env = null,
+                        continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
+                        strategy = null,
+                        dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
+                            job.jobControlOption?.dependOnId
+                        } else null
                     )
                 }
                 else -> {
@@ -394,7 +383,7 @@ class TXPipelineExportService @Autowired constructor(
         yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
         yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
-        yamlSb.append("# 注意：[插件]内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
+        yamlSb.append("# 注意：[插件]输入参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
         if (isGitCI) {
             yamlSb.append("# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
         }
