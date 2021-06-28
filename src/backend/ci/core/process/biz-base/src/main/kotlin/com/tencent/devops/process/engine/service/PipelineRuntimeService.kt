@@ -571,7 +571,7 @@ class PipelineRuntimeService @Autowired constructor(
             val totalTime = if (startTime == null || endTime == null) {
                 0
             } else {
-                TimeUnit.MILLISECONDS.toSeconds(Duration.between(startTime, endTime).toMillis())
+                Duration.between(startTime, endTime).toMillis()
             }
             BuildHistory(
                 id = buildId,
