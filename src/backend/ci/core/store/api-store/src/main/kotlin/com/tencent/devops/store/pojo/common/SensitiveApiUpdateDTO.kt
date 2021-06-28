@@ -25,23 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.annotation.SensitiveApiPermission
-import com.tencent.devops.repository.api.BuildOauthResource
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.service.scm.IGitOauthService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.pojo.common.enums.ApiStatusEnum
 
-@RestResource
-class BuildOauthResourceImpl @Autowired constructor(
-    private val gitOauthService: IGitOauthService
-) : BuildOauthResource {
-
-    @SensitiveApiPermission("get_oauth_token")
-    override fun gitGet(buildId: String, userId: String): Result<GitToken?> {
-        return Result(gitOauthService.checkAndGetAccessToken(buildId, userId))
-    }
-}
+data class SensitiveApiUpdateDTO(
+    val id: String,
+    val userId: String,
+    val apiStatus: ApiStatusEnum,
+    val approveMsg: String? = null
+)

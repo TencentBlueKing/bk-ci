@@ -68,4 +68,5 @@ object CommonMessageCode {
     const val ERROR_QUERY_TIME_RANGE_TOO_LARGE = "2100018" // 查询的时间范围跨度最大，最长时间范围跨度不能超过{0}天
     const val ERROR_HTTP_RESPONSE_BODY_TOO_LARGE = "2100019" // http请求返回体太大
     const val PERMISSION_DENIED_FOR_APP = "2100020" // APP的无权限{0}
+    const val ERROR_SENSITIVE_API_NO_AUTH = "2100021" // 无敏感API访问权限
 }

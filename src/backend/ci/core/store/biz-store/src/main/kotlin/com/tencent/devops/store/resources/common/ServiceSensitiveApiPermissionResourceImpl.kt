@@ -25,23 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.annotation.SensitiveApiPermission
-import com.tencent.devops.repository.api.BuildOauthResource
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.service.scm.IGitOauthService
+import com.tencent.devops.common.web.service.ServiceSensitiveApiPermissionResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.SensitiveApiService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildOauthResourceImpl @Autowired constructor(
-    private val gitOauthService: IGitOauthService
-) : BuildOauthResource {
+class ServiceSensitiveApiPermissionResourceImpl @Autowired constructor(
+    private val sensitiveApiService: SensitiveApiService
+) : ServiceSensitiveApiPermissionResource {
 
-    @SensitiveApiPermission("get_oauth_token")
-    override fun gitGet(buildId: String, userId: String): Result<GitToken?> {
-        return Result(gitOauthService.checkAndGetAccessToken(buildId, userId))
+    override fun verifyApi(atomCode: String, apiName: String): Result<Boolean> {
+        return sensitiveApiService.verifyApi(
+            storeType = StoreTypeEnum.ATOM,
+            storeCode = atomCode,
+            apiName = apiName
+        )
     }
 }

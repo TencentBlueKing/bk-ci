@@ -25,23 +25,54 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.store.service.common
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.annotation.SensitiveApiPermission
-import com.tencent.devops.repository.api.BuildOauthResource
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.service.scm.IGitOauthService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.pojo.common.SensitiveApiApplyReq
+import com.tencent.devops.store.pojo.common.SensitiveApiApproveReq
+import com.tencent.devops.store.pojo.common.SensitiveApiInfo
+import com.tencent.devops.store.pojo.common.SensitiveApiNameInfo
+import com.tencent.devops.store.pojo.common.SensitiveApiSearchDTO
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-@RestResource
-class BuildOauthResourceImpl @Autowired constructor(
-    private val gitOauthService: IGitOauthService
-) : BuildOauthResource {
+interface SensitiveApiService {
 
-    @SensitiveApiPermission("get_oauth_token")
-    override fun gitGet(buildId: String, userId: String): Result<GitToken?> {
-        return Result(gitOauthService.checkAndGetAccessToken(buildId, userId))
-    }
+    fun unApprovalApiList(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        language: String
+    ): Result<List<SensitiveApiNameInfo>>
+
+    fun apply(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        sensitiveApiApplyReq: SensitiveApiApplyReq
+    ): Result<Boolean>
+
+    fun list(
+        page: Int?,
+        pageSize: Int?,
+        sensitiveApiSearchDTO: SensitiveApiSearchDTO
+    ): Result<Page<SensitiveApiInfo>>
+
+    fun cancel(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        id: String
+    ): Result<Boolean>
+
+    fun approve(
+        userId: String,
+        sensitiveApiApproveReq: SensitiveApiApproveReq
+    ): Result<Boolean>
+
+    fun verifyApi(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        apiName: String
+    ): Result<Boolean>
 }

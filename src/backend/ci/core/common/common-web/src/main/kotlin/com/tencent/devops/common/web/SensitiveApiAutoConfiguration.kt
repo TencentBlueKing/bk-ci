@@ -25,23 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.common.web
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.annotation.SensitiveApiPermission
-import com.tencent.devops.repository.api.BuildOauthResource
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.service.scm.IGitOauthService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.aop.SensitiveApiPermissionAspect
+import org.springframework.beans.factory.annotation.Configurable
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
+import org.springframework.core.Ordered
 
-@RestResource
-class BuildOauthResourceImpl @Autowired constructor(
-    private val gitOauthService: IGitOauthService
-) : BuildOauthResource {
+@Configurable
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class SensitiveApiAutoConfiguration {
 
-    @SensitiveApiPermission("get_oauth_token")
-    override fun gitGet(buildId: String, userId: String): Result<GitToken?> {
-        return Result(gitOauthService.checkAndGetAccessToken(buildId, userId))
-    }
+    @Value("\${bkci.sensitive.api.enable:#{false}}")
+    private val enableSensitiveApi: Boolean = false
+
+    @Bean
+    fun sensitiveApiPermissionAspect(client: Client, redisOperation: RedisOperation) =
+        SensitiveApiPermissionAspect(
+            client = client,
+            redisOperation = redisOperation,
+            enableSensitiveApi = enableSensitiveApi
+        )
 }
