@@ -106,7 +106,7 @@ class GitRequestEventBuildDao {
         buildStatus: BuildStatus
     ) {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val record = dslContext.insertInto(
+            dslContext.insertInto(
                 this,
                 EVENT_ID,
                 ORIGIN_YAML,
@@ -117,7 +117,6 @@ class GitRequestEventBuildDao {
                 OBJECT_KIND,
                 DESCRIPTION,
                 TRIGGER_USER,
-                CREATE_TIME,
                 SOURCE_GIT_PROJECT_ID,
                 PIPELINE_ID,
                 BUILD_ID,
@@ -132,12 +131,11 @@ class GitRequestEventBuildDao {
                 objectKind,
                 description,
                 triggerUser,
-                LocalDateTime.now(),
                 sourceGitProjectId,
                 pipelineId,
                 buildId,
                 buildStatus.name
-            )
+            ).execute()
         }
     }
 
@@ -190,7 +188,7 @@ class GitRequestEventBuildDao {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .fetchOne()
+                .fetchAny()
         }
     }
 
@@ -202,11 +200,11 @@ class GitRequestEventBuildDao {
         val t2 = TGitRequestEvent.T_GIT_REQUEST_EVENT.`as`("t2")
         return dslContext.select(
             t2.OBJECT_KIND, t2.COMMIT_ID, t2.GIT_PROJECT_ID, t2.MERGE_REQUEST_ID, t2
-                .DESCRIPTION, t2.EVENT, t2.SOURCE_GIT_PROJECT_ID, t1.PIPELINE_ID, t1.ID
+            .DESCRIPTION, t2.EVENT, t2.SOURCE_GIT_PROJECT_ID, t1.PIPELINE_ID, t1.ID
         )
             .from(t2).leftJoin(t1).on(t1.EVENT_ID.eq(t2.ID))
             .where(t1.BUILD_ID.eq(buildId))
-            .fetchOne()
+            .fetchAny()
     }
 
     fun getByEventIds(
@@ -276,11 +274,11 @@ class GitRequestEventBuildDao {
         gitProjectId: Long
     ): List<BranchBuilds> {
         val sql = "SELECT BRANCH, GIT_PROJECT_ID, SOURCE_GIT_PROJECT_ID, \n" +
-                "SUBSTRING_INDEX(GROUP_CONCAT(BUILD_ID ORDER BY EVENT_ID DESC), ',', 5) as BUILD_IDS, SUBSTRING_INDEX(GROUP_CONCAT(EVENT_ID ORDER BY EVENT_ID DESC), ',', 5) as EVENT_IDS, COUNT(BUILD_ID) as BUILD_TOTAL\n" +
-                "FROM T_GIT_REQUEST_EVENT_BUILD\n" +
-                "WHERE BUILD_ID IS NOT NULL AND GIT_PROJECT_ID = $gitProjectId \n" +
-                "GROUP BY BRANCH, SOURCE_GIT_PROJECT_ID\n" +
-                "order by EVENT_ID desc"
+            "SUBSTRING_INDEX(GROUP_CONCAT(BUILD_ID ORDER BY EVENT_ID DESC), ',', 5) as BUILD_IDS, SUBSTRING_INDEX(GROUP_CONCAT(EVENT_ID ORDER BY EVENT_ID DESC), ',', 5) as EVENT_IDS, COUNT(BUILD_ID) as BUILD_TOTAL\n" +
+            "FROM T_GIT_REQUEST_EVENT_BUILD\n" +
+            "WHERE BUILD_ID IS NOT NULL AND GIT_PROJECT_ID = $gitProjectId \n" +
+            "GROUP BY BRANCH, SOURCE_GIT_PROJECT_ID\n" +
+            "order by EVENT_ID desc"
         val result = dslContext.fetch(sql)
         return if (null == result || result.isEmpty()) {
             emptyList()

@@ -37,17 +37,19 @@ import org.springframework.stereotype.Service
 class FileGatewayService @Autowired constructor(
     val redisOperation: RedisOperation
 ) {
-    @Value("\${artifactory.fileGateway:}")
-    private lateinit var fileGateway: String
+    @Value("\${artifactory.fileDevnetGateway:}")
+    private lateinit var fileDevnetGateway: String
+
+    @Value("\${artifactory.fileIdcGateway:}")
+    private lateinit var fileIdcGateway: String
 
     fun getFileGateway(projectId: String): FileGatewayInfo {
         val allGray = redisOperation.get(FILE_GATEWAY_ALL_GRAY_KEY) == "true"
-        val fileGateway = if (allGray || redisOperation.isMember(FILE_GATEWAY_GRAY_KEY, projectId)) {
-            fileGateway
+        return if (allGray || redisOperation.isMember(FILE_GATEWAY_GRAY_KEY, projectId)) {
+            FileGatewayInfo(fileDevnetGateway, fileIdcGateway)
         } else {
-            ""
+            FileGatewayInfo("", "")
         }
-        return FileGatewayInfo(fileGateway)
     }
 
     companion object {

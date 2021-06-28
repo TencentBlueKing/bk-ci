@@ -28,6 +28,7 @@
 package com.tencent.devops.misc.service.auto.tsource
 
 import com.tencent.devops.misc.dao.auto.tsource.SourcePipelineDao
+import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -66,5 +67,9 @@ class SourcePipelineService @Autowired constructor(
 
     fun getPipelineSummary(pipelineId: String): TPipelineBuildSummaryRecord? {
         return sourcePipelineDao.getPipelineSummary(dslContext, pipelineId)
+    }
+
+    fun getPipelineBuildDetail(buildId: String): TPipelineBuildDetailRecord? {
+        return sourcePipelineDao.getPipelineBuildDetail(dslContext, buildId)
     }
 }

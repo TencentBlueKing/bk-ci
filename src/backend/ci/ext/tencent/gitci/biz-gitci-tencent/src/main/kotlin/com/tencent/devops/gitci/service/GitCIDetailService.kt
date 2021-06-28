@@ -37,7 +37,6 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
@@ -45,6 +44,7 @@ import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.TXUserReportResource
 import com.tencent.devops.process.pojo.Report
@@ -60,7 +60,7 @@ import javax.ws.rs.core.Response
 class GitCIDetailService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitCISettingDao: GitCISettingDao,
+    private val gitCIBasicSettingService: GitCIBasicSettingService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val repositoryConfService: GitRepositoryConfService,
@@ -76,7 +76,7 @@ class GitCIDetailService @Autowired constructor(
     private val channelCode = ChannelCode.GIT
 
     fun getProjectLatestBuildDetail(userId: String, gitProjectId: Long, pipelineId: String?): GitCIModelDetail? {
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
@@ -96,7 +96,7 @@ class GitCIDetailService @Autowired constructor(
     }
 
     fun getBuildDetail(userId: String, gitProjectId: Long, buildId: String): GitCIModelDetail? {
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
@@ -116,7 +116,7 @@ class GitCIDetailService @Autowired constructor(
     }
 
     fun batchGetBuildDetail(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitCIBuildHistory> {
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
@@ -150,7 +150,7 @@ class GitCIDetailService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): FileInfoPage<FileInfo> {
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
@@ -163,6 +163,7 @@ class GitCIDetailService @Autowired constructor(
         val prop = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId))
 
         return client.get(ServiceArtifactoryResource::class).search(
+            userId = userId,
             projectId = conf.projectCode!!,
             page = page,
             pageSize = pageSize,
@@ -177,7 +178,7 @@ class GitCIDetailService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Url {
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
@@ -217,7 +218,7 @@ class GitCIDetailService @Autowired constructor(
     }
 
     fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): List<Report> {
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
@@ -239,7 +240,7 @@ class GitCIDetailService @Autowired constructor(
         pipelineId: String
     ): GitProjectPipeline? {
         logger.info("get pipeline with pipelineId: $pipelineId, gitProjectId: $gitProjectId")
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
             return null

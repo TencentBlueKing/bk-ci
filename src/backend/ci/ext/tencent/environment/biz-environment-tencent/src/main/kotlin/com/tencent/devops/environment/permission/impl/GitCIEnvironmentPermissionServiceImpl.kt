@@ -50,14 +50,14 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
     val envDao: EnvDao,
     val tokenCheckService: ClientTokenService
 ) : EnvironmentPermissionService {
-    
+
     override fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         if (!checkPermission(userId, projectId)) {
             return emptySet()
         }
         return getAllEnvInstance(projectId).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
-    
+
     override fun listEnvByPermissions(
         userId: String,
         projectId: String,
@@ -73,7 +73,7 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
         }
         return resultMap
     }
-    
+
     override fun checkEnvPermission(
         userId: String,
         projectId: String,
@@ -82,30 +82,30 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return checkPermission(userId, projectId)
     }
-    
+
     override fun checkEnvPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
         return checkPermission(userId, projectId)
     }
-    
+
     override fun createEnv(userId: String, projectId: String, envId: Long, envName: String) {
         return
     }
-    
+
     override fun updateEnv(userId: String, projectId: String, envId: Long, envName: String) {
         return
     }
-    
+
     override fun deleteEnv(projectId: String, envId: Long) {
         return
     }
-    
+
     override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         if (!checkPermission(userId, projectId)) {
             return emptySet()
         }
         return getAllNodeInstance(projectId).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
-    
+
     override fun listNodeByPermissions(
         userId: String,
         projectId: String,
@@ -121,7 +121,7 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
         }
         return resultMap
     }
-    
+
     override fun checkNodePermission(
         userId: String,
         projectId: String,
@@ -130,23 +130,23 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return checkPermission(userId, projectId)
     }
-    
+
     override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
         return checkPermission(userId, projectId)
     }
-    
+
     override fun createNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
         return
     }
-    
+
     override fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
         return
     }
-    
+
     override fun deleteNode(projectId: String, nodeId: Long) {
         return
     }
-    
+
     private fun checkPermission(userId: String, projectId: String): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
         logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
@@ -158,7 +158,7 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
             resourceCode = ""
         ).data ?: false
     }
-    
+
     // 拿到的数据统一为加密后的id
     private fun getAllNodeInstance(projectId: String): List<String> {
         val instanceIds = mutableListOf<String>()
@@ -168,18 +168,18 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
         }
         return instanceIds
     }
-    
+
     // 拿到的数据统一为加密后的id
     private fun getAllEnvInstance(projectId: String): List<String> {
         val instanceIds = mutableListOf<String>()
-        
+
         val repositoryInfos = envDao.list(dslContext, projectId)
         repositoryInfos.map {
             instanceIds.add(HashUtil.encodeLongId(it.envId))
         }
         return instanceIds
     }
-    
+
     companion object {
         val logger = LoggerFactory.getLogger(GitCIEnvironmentPermissionServiceImpl::class.java)
     }

@@ -28,7 +28,9 @@
 package com.tencent.devops.misc.dao.auto.ttarget
 
 import com.tencent.devops.model.process.Tables
+import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineSetting
+import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -269,6 +271,33 @@ class TargetPipelineDao {
 
         if (LOG.isDebugEnabled) {
             LOG.debug("savePipelineSetting|pipelineId=${record.pipelineId}|insert=$insert")
+        }
+    }
+
+    fun savePipelineBuildDetail(dslContext: DSLContext, record: TPipelineBuildDetailRecord) {
+        with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
+            dslContext.insertInto(
+                this,
+                BUILD_ID,
+                TRIGGER,
+                BUILD_NUM,
+                MODEL,
+                START_TIME,
+                STATUS,
+                START_USER,
+                END_TIME,
+                CANCEL_USER
+            ).values(
+                record.buildId,
+                record.trigger,
+                record.buildNum,
+                record.model,
+                record.startTime,
+                record.status,
+                record.startUser,
+                record.endTime,
+                record.cancelUser
+            ).execute()
         }
     }
 

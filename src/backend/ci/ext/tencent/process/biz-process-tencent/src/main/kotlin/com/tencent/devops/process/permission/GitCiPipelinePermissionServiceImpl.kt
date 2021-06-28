@@ -18,7 +18,7 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
     val dslContext: DSLContext,
     val checkTokenService: ClientTokenService
 ) : PipelinePermissionService {
-    
+
     override fun checkPipelinePermission(
         userId: String,
         projectId: String,
@@ -33,7 +33,7 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
             resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
         ).data ?: false
     }
-    
+
     override fun checkPipelinePermission(
         userId: String,
         projectId: String,
@@ -42,7 +42,7 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return checkPipelinePermission(userId, projectId, permission)
     }
-    
+
     override fun validPipelinePermission(
         userId: String,
         projectId: String,
@@ -55,7 +55,7 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
             throw PermissionForbiddenException(message)
         }
     }
-    
+
     override fun getResourceByPermission(
         userId: String,
         projectId: String,
@@ -66,19 +66,19 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
         }
         return getProjectAllInstance(projectId)
     }
-    
+
     override fun createResource(userId: String, projectId: String, pipelineId: String, pipelineName: String) {
         return
     }
-    
+
     override fun modifyResource(projectId: String, pipelineId: String, pipelineName: String) {
         return
     }
-    
+
     override fun deleteResource(projectId: String, pipelineId: String) {
         return
     }
-    
+
     override fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
@@ -89,7 +89,7 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
             resourceCode = null
         ).data ?: false
     }
-    
+
     private fun getProjectAllInstance(projectId: String): List<String> {
         return pipelineInfoDao.searchByPipelineName(dslContext, projectId)?.map { it.pipelineId } ?: emptyList()
     }

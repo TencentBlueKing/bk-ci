@@ -4,15 +4,14 @@ import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.BSCommonAuthServiceCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-class DefaultPermissionServiceImpl @Autowired constructor(
+class V0AuthPermissionServiceImpl @Autowired constructor(
     private val authPermissionApi: AuthPermissionApi,
-    val authServiceCode: BSCommonAuthServiceCode
+    val serviceCodeService: ServiceCodeService
 ) : PermissionService {
- 
+
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return false
     }
@@ -23,9 +22,10 @@ class DefaultPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String?
     ): Boolean {
+        val serviceCodeService = serviceCodeService.getServiceCodeByResource(resourceType!!)
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
-            serviceCode = authServiceCode,
+            serviceCode = serviceCodeService,
             resourceType = AuthResourceType.get(resourceType!!),
             projectCode = projectCode,
             permission = AuthPermission.get(action)
@@ -40,12 +40,15 @@ class DefaultPermissionServiceImpl @Autowired constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
+        val serviceCodeService = serviceCodeService.getServiceCodeByResource(resourceType!!)
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
-            serviceCode = authServiceCode,
+            serviceCode = serviceCodeService,
             resourceType = AuthResourceType.get(resourceType!!),
             projectCode = projectCode,
-            permission = AuthPermission.get(action)
+            permission = AuthPermission.get(action),
+            resourceCode = resourceCode,
+            relationResourceType = null
         )
     }
 
@@ -55,11 +58,12 @@ class DefaultPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): List<String> {
+        val serviceCodeService = serviceCodeService.getServiceCodeByResource(resourceType!!)
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
             projectCode = projectCode,
             resourceType = AuthResourceType.get(resourceType),
-            serviceCode = authServiceCode,
+            serviceCode = serviceCodeService,
             supplier = null,
             permission = AuthPermission.get(action)
         )
@@ -71,13 +75,15 @@ class DefaultPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): Map<AuthPermission, List<String>> {
+        val serviceCodeService = serviceCodeService.getServiceCodeByResource(resourceType!!)
+
         val permissions = mutableSetOf<AuthPermission>()
         actions.forEach {
             permissions.add(AuthPermission.get(it))
         }
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
-            serviceCode = authServiceCode,
+            serviceCode = serviceCodeService,
             resourceType = AuthResourceType.get(resourceType),
             projectCode = projectCode,
             permissions = permissions,
@@ -86,6 +92,6 @@ class DefaultPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(DefaultPermissionServiceImpl::class.java)
+        val logger = LoggerFactory.getLogger(V0AuthPermissionServiceImpl::class.java)
     }
 }

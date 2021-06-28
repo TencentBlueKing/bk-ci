@@ -35,6 +35,7 @@ import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -132,6 +133,7 @@ class ScmClient @Autowired constructor(
 
     /**
      * V2版本的同名方法，因为表结构发生了改变，所以数据结构变化
+     * 有回填信息
      */
     fun pushCommitCheck(
         commitId: String,
@@ -178,9 +180,7 @@ class ScmClient @Autowired constructor(
         logger.error("user $userId buildId $buildId pushCommitCheck error.", e)
     }
 
-    // 用来进行锁定提交的CommitCheck
-    // 有流水线前锁定的key为 noPipelineBuildEvent
-    // 有流水线后锁定的key为 pipelineId(buildId)
+    // 用来进行锁定提交的CommitCheck，无回填信息
     fun pushCommitCheckWithBlock(
         commitId: String,
         mergeRequestId: Long,
@@ -236,10 +236,7 @@ class ScmClient @Autowired constructor(
 
     private fun getProjectName(conf: GitCIBasicSetting): String {
         return try {
-            val names = conf.homepage.split("/")
-            val userName = names[names.lastIndex - 1]
-            val projectName = names.last()
-            "$userName/$projectName"
+            GitCommonUtils.getRepoName(conf.gitHttpUrl, conf.name)
         } catch (e: java.lang.Exception) {
             conf.name
         }

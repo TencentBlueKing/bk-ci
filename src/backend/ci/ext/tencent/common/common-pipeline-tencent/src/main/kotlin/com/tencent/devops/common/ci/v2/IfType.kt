@@ -25,8 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.pojo
+package com.tencent.devops.common.ci.v2
 
-data class FileGatewayInfo(
-    val fileGateway: String
-)
+enum class IfType {
+    SUCCESS,
+    FAILURE,
+    CANCELLED,
+    ALWAYS
+}

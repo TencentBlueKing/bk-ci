@@ -62,7 +62,7 @@ class GitCIV2PermissionService @Autowired constructor(
     ) {
         checkPermission(userId, projectId, permission)
     }
-    
+
     // 校验只需要OAuth的
     fun checkGitCIAndOAuth(
         userId: String,
@@ -71,7 +71,7 @@ class GitCIV2PermissionService @Autowired constructor(
     ) {
         checkPermission(userId, projectId, permission)
     }
-    
+
     fun checkGitCIAndOAuthAndEnable(
         userId: String,
         projectId: String,
@@ -81,7 +81,7 @@ class GitCIV2PermissionService @Autowired constructor(
         checkPermission(userId, projectId, permission)
         checkEnableGitCI(gitProjectId)
     }
-    
+
     fun checkEnableGitCI(
         gitProjectId: Long
     ) {
@@ -90,7 +90,7 @@ class GitCIV2PermissionService @Autowired constructor(
             throw GitCINoEnableException(gitProjectId.toString())
         }
     }
-    
+
     private fun checkPermission(userId: String, projectId: String, permission: AuthPermission) {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
         logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
@@ -109,7 +109,7 @@ class GitCIV2PermissionService @Autowired constructor(
             )
         }
     }
-    
+
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIV2PermissionService::class.java)
     }

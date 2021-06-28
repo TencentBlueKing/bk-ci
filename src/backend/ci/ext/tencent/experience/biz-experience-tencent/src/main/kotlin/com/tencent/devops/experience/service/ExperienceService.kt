@@ -424,8 +424,6 @@ class ExperienceService @Autowired constructor(
                 logoUrl = logoUrl,
                 scheme = scheme
             )
-        } else {
-            offlinePublicExperience(projectId, platform, appBundleIdentifier)
         }
 
         experiencePermissionService.createTaskResource(
@@ -437,16 +435,6 @@ class ExperienceService @Autowired constructor(
         sendNotification(experienceId)
 
         return experienceId
-    }
-
-    private fun offlinePublicExperience(projectId: String, platform: PlatformEnum, appBundleIdentifier: String) {
-        experiencePublicDao.updateByBundleId(
-            dslContext = dslContext,
-            projectId = projectId,
-            platform = platform.name,
-            bundleIdentifier = appBundleIdentifier,
-            online = false
-        )
     }
 
     private fun onlinePublicExperience(

@@ -27,6 +27,9 @@
 
 package com.tencent.devops.gitci.v2.listener
 
+import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.TriggerBuildService
@@ -37,11 +40,18 @@ import org.springframework.stereotype.Service
 @Service
 class V2GitCIRequestTriggerListener @Autowired constructor(
     private val triggerBuildService: TriggerBuildService,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val redisOperation: RedisOperation
 ) {
 
     fun listenGitCIRequestTriggerEvent(v2GitCIRequestTriggerEvent: V2GitCIRequestTriggerEvent) {
+        val triggerLock = GitCITriggerLock(
+            redisOperation = redisOperation,
+            gitProjectId = v2GitCIRequestTriggerEvent.event.gitProjectId,
+            pipelineId = v2GitCIRequestTriggerEvent.pipeline.pipelineId
+        )
         try {
+            triggerLock.lock()
             // 如果事件未传gitBuildId说明是不做触发只做流水线保存
             if (v2GitCIRequestTriggerEvent.gitBuildId != null) triggerBuildService.gitStartBuild(
                 pipeline = v2GitCIRequestTriggerEvent.pipeline,
@@ -58,19 +68,24 @@ class V2GitCIRequestTriggerListener @Autowired constructor(
         } catch (e: Throwable) {
             logger.error("Fail to start the git ci build(${v2GitCIRequestTriggerEvent.event})", e)
             with(v2GitCIRequestTriggerEvent) {
-                gitCIEventSaveService.saveNotBuildEvent(
+                gitCIEventSaveService.saveRunNotBuildEvent(
                     userId = event.userId,
                     eventId = event.id!!,
                     originYaml = originYaml,
                     parsedYaml = parsedYaml,
                     normalizedYaml = normalizedYaml,
-                    reason = TriggerReason.CI_RUN_FAILED.name,
-                    reasonDetail = TriggerReason.CI_RUN_FAILED.detail.format(e.message),
+                    reason = TriggerReason.PIPELINE_PREPARE_ERROR.name,
+                    reasonDetail = TriggerReason.PIPELINE_PREPARE_ERROR.detail.format(e.message),
                     pipelineId = pipeline.pipelineId,
+                    pipelineName = pipeline.displayName,
                     filePath = pipeline.filePath,
-                    gitProjectId = event.gitProjectId
+                    gitProjectId = event.gitProjectId,
+                    sendCommitCheck = true,
+                    commitCheckBlock = (event.objectKind == OBJECT_KIND_MERGE_REQUEST)
                 )
             }
+        } finally {
+            triggerLock.unlock()
         }
     }
 

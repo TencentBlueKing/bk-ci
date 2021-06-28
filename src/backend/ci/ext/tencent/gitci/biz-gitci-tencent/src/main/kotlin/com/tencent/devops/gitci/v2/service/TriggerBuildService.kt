@@ -45,9 +45,11 @@ import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
+import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -73,6 +75,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -107,6 +110,7 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.common.ci.v2.Stage as GitCIV2Stage
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
@@ -285,17 +289,18 @@ class TriggerBuildService @Autowired constructor(
         if (yaml.triggerOn?.schedules != null &&
             yaml.triggerOn?.schedules!!.cron != null
         ) {
-            triggerElementList.add(
-                TimerTriggerElement(
-                    id = "T-1-1-2",
-                    name = "定时触发",
-                    advanceExpression = listOf(
-                        yaml.triggerOn!!.schedules!!.cron!!
-                    )
+            val timerTrigger = TimerTriggerElement(
+                id = "T-1-1-2",
+                name = "定时触发",
+                advanceExpression = listOf(
+                    yaml.triggerOn!!.schedules!!.cron!!
                 )
             )
+            timerTrigger.additionalOptions = ElementAdditionalOptions(
+                runCondition = RunCondition.PRE_TASK_SUCCESS
+            )
+            triggerElementList.add(timerTrigger)
         }
-
         val params = createPipelineParams(yaml, gitBasicSetting, event)
         val triggerContainer = TriggerContainer(
             id = "0",
@@ -308,16 +313,34 @@ class TriggerBuildService @Autowired constructor(
             params = params
         )
 
-        val stage1 = Stage(listOf(triggerContainer), id = "stage-0", name = "stage_0")
+        val stage1 = Stage(listOf(triggerContainer), id = "stage-0", name = "Stage-0")
         stageList.add(stage1)
 
         // 其他的stage
         yaml.stages.forEachIndexed { stageIndex, stage ->
-            stageList.add(createStage(stage, event, gitBasicSetting))
+            stageList.add(createStage(
+                stage = stage,
+                event = event,
+                gitBasicSetting = gitBasicSetting,
+                stageIndex = stageIndex + 1
+            ))
         }
-
-        yaml.finally?.forEach {
-            stageList.add(createStage(it, event, gitBasicSetting, true))
+        // 添加finally
+        if (!yaml.finally.isNullOrEmpty()) {
+            stageList.add(
+                createStage(
+                    stage = GitCIV2Stage(
+                        name = "Finally",
+                        id = null,
+                        label = emptyList(),
+                        ifField = null,
+                        fastKill = false,
+                        jobs = yaml.finally!!
+                    ),
+                    event = event,
+                    gitBasicSetting = gitBasicSetting,
+                    finalStage = true)
+            )
         }
 
         return Model(
@@ -348,18 +371,18 @@ class TriggerBuildService @Autowired constructor(
                 if (!checkPipelineLabel(it, pipelineGroups)) {
                     client.get(UserPipelineGroupResource::class).addGroup(
                         event.userId, PipelineGroupCreate(
-                            projectId = gitBasicSetting.projectCode!!,
-                            name = it
-                        )
+                        projectId = gitBasicSetting.projectCode!!,
+                        name = it
+                    )
                     )
 
                     val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
                     if (pipelineGroup != null) {
                         client.get(UserPipelineGroupResource::class).addLabel(
                             event.userId, PipelineLabelCreate(
-                                groupId = pipelineGroup.id,
-                                name = it
-                            )
+                            groupId = pipelineGroup.id,
+                            name = it
+                        )
                         )
                     }
                 }
@@ -401,24 +424,25 @@ class TriggerBuildService @Autowired constructor(
     }
 
     private fun createStage(
-        stage: com.tencent.devops.common.ci.v2.Stage,
+        stage: GitCIV2Stage,
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
+        stageIndex: Int = 0,
         finalStage: Boolean = false
     ): Stage {
         val containerList = mutableListOf<Container>()
         stage.jobs.forEachIndexed { jobIndex, job ->
-            val elementList = makeElementList(job, gitBasicSetting, event.userId)
+            val elementList = makeElementList(job, gitBasicSetting, event)
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
-                addNormalContainer(job, elementList, containerList, jobIndex)
+                addNormalContainer(job, elementList, containerList, jobIndex, finalStage)
             } else {
-                addVmBuildContainer(job, elementList, containerList, jobIndex)
+                addVmBuildContainer(job, elementList, containerList, jobIndex, finalStage)
             }
         }
 
         // 根据if设置stageController
         var stageControlOption = StageControlOption()
-        if (stage.ifField != null) {
+        if (!finalStage && !stage.ifField.isNullOrBlank()) {
             stageControlOption = StageControlOption(
                 runCondition = StageRunCondition.CUSTOM_CONDITION_MATCH,
                 customCondition = stage.ifField.toString()
@@ -427,7 +451,9 @@ class TriggerBuildService @Autowired constructor(
 
         return Stage(
             id = stage.id,
-            name = stage.name ?: "",
+            name = stage.name ?: if (finalStage) {
+                "Final"
+            } else { "Stage-$stageIndex" },
             tag = stage.label,
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
@@ -440,7 +466,8 @@ class TriggerBuildService @Autowired constructor(
         job: Job,
         elementList: List<Element>,
         containerList: MutableList<Container>,
-        jobIndex: Int
+        jobIndex: Int,
+        finalStage: Boolean = false
     ) {
 
 /*        val listPreAgentResult =
@@ -468,13 +495,13 @@ class TriggerBuildService @Autowired constructor(
 
         val vmContainer = VMBuildContainer(
             jobId = job.id,
-            name = job.name ?: "",
+            name = job.name ?: "Job-${jobIndex + 1}",
             elements = elementList,
             status = null,
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            baseOS = getBaseOs(job.runsOn.agentSelector),
+            baseOS = getBaseOs(job),
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = job.timeoutMinutes ?: 900,
@@ -485,17 +512,21 @@ class TriggerBuildService @Autowired constructor(
             thirdPartyWorkspace = null,
             dockerBuildVersion = null,
             tstackAgentId = null,
-            jobControlOption = getJobControlOption(job),
+            jobControlOption = getJobControlOption(job, finalStage),
             dispatchType = getDispatchType(job)
         )
         containerList.add(vmContainer)
     }
 
-    private fun getBaseOs(agentSelector: List<String>?): VMBaseOS {
-        if (agentSelector.isNullOrEmpty()) {
+    private fun getBaseOs(job: Job): VMBaseOS {
+        if (job.runsOn.poolName.startsWith("macos")) {
+            return VMBaseOS.MACOS
+        }
+
+        if (job.runsOn.agentSelector.isNullOrEmpty()) {
             return VMBaseOS.LINUX
         }
-        return when (agentSelector[0]) {
+        return when (job.runsOn.agentSelector!![0]) {
             "linux" -> VMBaseOS.LINUX
             "macos" -> VMBaseOS.MACOS
             "windows" -> VMBaseOS.WINDOWS
@@ -507,9 +538,9 @@ class TriggerBuildService @Autowired constructor(
         // macos构建机
         if (job.runsOn.poolName.startsWith("macos")) {
             return MacOSDispatchType(
-                macOSEvn = "",
-                systemVersion = "10.15",
-                xcodeVersion = "12.4"
+                macOSEvn = "Catalina10.15.4:12.2",
+                systemVersion = "Catalina10.15.4",
+                xcodeVersion = "12.2"
             )
         }
 
@@ -546,14 +577,15 @@ class TriggerBuildService @Autowired constructor(
         job: Job,
         elementList: List<Element>,
         containerList: MutableList<Container>,
-        jobIndex: Int
+        jobIndex: Int,
+        finalStage: Boolean = false
     ) {
 
         containerList.add(
             NormalContainer(
                 containerId = null,
                 id = job.id,
-                name = job.name ?: "",
+                name = job.name ?: "Job-${jobIndex + 1}",
                 elements = elementList,
                 status = null,
                 startEpoch = null,
@@ -562,22 +594,40 @@ class TriggerBuildService @Autowired constructor(
                 enableSkip = false,
                 conditions = null,
                 canRetry = false,
-                jobControlOption = getJobControlOption(job),
+                jobControlOption = getJobControlOption(job, finalStage),
                 mutexGroup = null
             )
         )
     }
 
-    private fun getJobControlOption(job: Job): JobControlOption {
-        return if (job.ifField != null) {
-            JobControlOption(
-                timeout = job.timeoutMinutes,
-                runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
-                customCondition = job.ifField.toString(),
-                dependOnType = DependOnType.ID,
-                dependOnId = job.dependOn,
-                continueWhenFailed = job.continueOnError
-            )
+    private fun getJobControlOption(
+        job: Job,
+        finalStage: Boolean = false
+    ): JobControlOption {
+        return if (!job.ifField.isNullOrBlank()) {
+            if (finalStage) {
+                JobControlOption(
+                    timeout = job.timeoutMinutes,
+                    runCondition = when (job.ifField) {
+                        IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
+                        IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
+                        IfType.CANCELLED.name -> JobRunCondition.PREVIOUS_STAGE_CANCEL
+                        else -> JobRunCondition.STAGE_RUNNING
+                    },
+                    dependOnType = DependOnType.ID,
+                    dependOnId = job.dependOn,
+                    continueWhenFailed = job.continueOnError
+                )
+            } else {
+                JobControlOption(
+                    timeout = job.timeoutMinutes,
+                    runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
+                    customCondition = job.ifField.toString(),
+                    dependOnType = DependOnType.ID,
+                    dependOnId = job.dependOn,
+                    continueWhenFailed = job.continueOnError
+                )
+            }
         } else {
             JobControlOption(
                 timeout = job.timeoutMinutes,
@@ -591,14 +641,13 @@ class TriggerBuildService @Autowired constructor(
     private fun makeElementList(
         job: Job,
         gitBasicSetting: GitCIBasicSetting,
-        userId: String
+        event: GitRequestEvent
     ): MutableList<Element> {
         // 解析service
         val elementList = makeServiceElementList(job)
 
         // 解析job steps
         job.steps!!.forEach { step ->
-            // bash
             val additionalOptions = ElementAdditionalOptions(
                 continueWhenFailed = step.continueOnError ?: false,
                 timeout = step.timeoutMinutes?.toLong(),
@@ -606,52 +655,43 @@ class TriggerBuildService @Autowired constructor(
                 retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
                 customEnv = emptyList(),
-                runCondition = RunCondition.CUSTOM_CONDITION_MATCH,
+                runCondition = if (step.ifFiled.isNullOrBlank()) {
+                    RunCondition.PRE_TASK_SUCCESS
+                } else {
+                    RunCondition.CUSTOM_CONDITION_MATCH
+                },
                 customCondition = step.ifFiled
             )
 
+            // bash
             val element: Element = when {
                 step.run != null -> {
-                    LinuxScriptElement(
+                    val linux = LinuxScriptElement(
                         name = step.name ?: "run",
                         id = step.id,
-                        // todo: 如何判断类型
                         scriptType = BuildScriptType.SHELL,
                         script = step.run!!,
                         continueNoneZero = false,
                         additionalOptions = additionalOptions
                     )
+                    if (job.runsOn.agentSelector.isNullOrEmpty()) {
+                        linux
+                    } else {
+                        when (job.runsOn.agentSelector!!.first()) {
+                            "linux" -> linux
+                            "macos" -> linux
+                            "windows" -> WindowsScriptElement(
+                                name = step.name ?: "run",
+                                id = step.id,
+                                scriptType = BuildScriptType.BAT,
+                                script = step.run!!
+                            )
+                            else -> linux
+                        }
+                    }
                 }
                 step.checkout != null -> {
-                    // checkout插件装配
-                    val inputMap = mutableMapOf<String, Any?>()
-                    if (!step.with.isNullOrEmpty()) {
-                        inputMap.putAll(step.with!!)
-                    }
-                    // 拉取本地工程代码
-                    if (step.checkout == "self") {
-                        inputMap["accessToken"] =
-                            oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
-                        inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl
-                        inputMap["authType"] = "ACCESS_TOKEN"
-                    } else {
-                        inputMap["repositoryUrl"] = step.checkout!!
-                    }
-
-                    // 拼装插件固定参数
-                    inputMap["repositoryType"] = "URL"
-
-                    val data = mutableMapOf<String, Any>()
-                    data["input"] = inputMap
-
-                    MarketBuildAtomElement(
-                        name = step.name ?: "checkout",
-                        id = step.id,
-                        atomCode = "checkout",
-                        version = "1.*",
-                        data = data,
-                        additionalOptions = additionalOptions
-                    )
+                    makeCheckoutElement(step, gitBasicSetting, event).copy(additionalOptions = additionalOptions)
                 }
                 else -> {
                     val data = mutableMapOf<String, Any>()
@@ -671,11 +711,56 @@ class TriggerBuildService @Autowired constructor(
 
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
-                installMarketAtom(gitBasicSetting, userId, element.getAtomCode())
+                installMarketAtom(gitBasicSetting, event.userId, element.getAtomCode())
             }
         }
 
         return elementList
+    }
+
+    private fun makeCheckoutElement(
+        step: Step,
+        gitBasicSetting: GitCIBasicSetting,
+        event: GitRequestEvent
+    ): MarketBuildAtomElement {
+        // checkout插件装配
+        val inputMap = mutableMapOf<String, Any?>()
+        if (!step.with.isNullOrEmpty()) {
+            inputMap.putAll(step.with!!)
+        }
+        // 非mr和tag触发下根据commitId拉取本地工程代码
+        if (step.checkout == "self") {
+            inputMap["accessToken"] =
+                oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
+            inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl
+            inputMap["authType"] = "ACCESS_TOKEN"
+
+            if (event.mergeRequestId != null) {
+                inputMap["pullType"] = "BRANCH"
+            } else if (event.objectKind == OBJECT_KIND_TAG_PUSH) {
+                inputMap["pullType"] = "TAG"
+                inputMap["refName"] = event.branch
+            } else {
+                inputMap["pullType"] = "COMMIT_ID"
+                inputMap["refName"] = event.commitId
+            }
+        } else {
+            inputMap["repositoryUrl"] = step.checkout!!
+        }
+
+        // 拼装插件固定参数
+        inputMap["repositoryType"] = "URL"
+
+        val data = mutableMapOf<String, Any>()
+        data["input"] = inputMap
+
+        return MarketBuildAtomElement(
+            name = step.name ?: "checkout",
+            id = step.id,
+            atomCode = "checkout",
+            version = "1.*",
+            data = data
+        )
     }
 
     private fun makeServiceElementList(job: Job): MutableList<Element> {

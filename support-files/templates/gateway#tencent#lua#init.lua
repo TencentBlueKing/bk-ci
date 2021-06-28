@@ -17,6 +17,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]] config = {
     env = "__BKCI_ENV__",
+    internal_file_dir = "__BK_CI_DATA_DIR__/gateway/files/",
     static_dir = "__INSTALL_PATH__/__MODULE__/frontend",
     static_dir_gray = "__INSTALL_PATH__/__MODULE__/frontend-gray",
     docs_dir = "__INSTALL_PATH__/__MODULE__/docs",
@@ -36,28 +37,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         suffix = "",
         nodes_url = "/v1/catalog/nodes"
     },
-    ns_gray = {
-        ip = {"__BKCI_CONSUL_GRAY_IP__"},
-        port = __BKCI_CONSUL_DNS_PORT__,
-        http_port = __BKCI_CONSUL_GRAY_PORT__,
-        domain = "__BKCI_CONSUL_DOMAIN__",
-        tag = "__BKCI_CONSUL_TAG__",
-        suffix = "",
-        nodes_url = "/v1/catalog/nodes"
-    },
     ns_devnet = {
         ip = {"127.0.0.1"},
         port = __BKCI_CONSUL_DNS_PORT__,
         http_port = __BKCI_CONSUL_PORT__,
-        domain = "__BKCI_CONSUL_DOMAIN__",
-        tag = "__BKCI_CONSUL_TAG__",
-        suffix = "",
-        nodes_url = "/v1/catalog/nodes"
-    },
-    ns_devnet_gray = {
-        ip = {"__BKCI_CONSUL_DEVNET_GRAY_IP__"},
-        port = __BKCI_CONSUL_DNS_PORT__,
-        http_port = __BKCI_CONSUL_GRAY_PORT__,
         domain = "__BKCI_CONSUL_DOMAIN__",
         tag = "__BKCI_CONSUL_TAG__",
         suffix = "",

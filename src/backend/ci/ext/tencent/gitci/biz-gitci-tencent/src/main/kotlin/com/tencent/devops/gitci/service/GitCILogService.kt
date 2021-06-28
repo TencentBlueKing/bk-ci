@@ -116,6 +116,7 @@ class GitCILogService @Autowired constructor(
                 .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
                 .header("content-disposition", "attachment; filename = ${pipeline.pipelineId}-$buildId-log.txt")
                 .header("Cache-Control", "no-cache")
+                .header("X-DEVOPS-PROJECT-ID", "gitciproject")
                 .build()
     }
 

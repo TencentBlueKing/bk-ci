@@ -8,27 +8,27 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.code.BSCommonAuthServiceCode
 import org.springframework.beans.factory.annotation.Autowired
 
-class DefaultPermissionProjectServiceImpl @Autowired constructor(
+class V0AuthPermissionProjectServiceImpl @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     val authServiceCode: BSCommonAuthServiceCode
 ) : PermissionProjectService {
-    
+
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
-        
+
         return authProjectApi.getProjectUsers(
             serviceCode = authServiceCode,
             projectCode = projectCode,
             group = group
         )
     }
-    
+
     override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
         return authProjectApi.getProjectGroupAndUserList(
             serviceCode = authServiceCode,
             projectCode = projectCode
         )
     }
-    
+
     override fun getUserProjects(userId: String): List<String> {
         return authProjectApi.getUserProjects(
             serviceCode = authServiceCode,
@@ -36,7 +36,7 @@ class DefaultPermissionProjectServiceImpl @Autowired constructor(
             supplier = null
         )
     }
-    
+
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
         return authProjectApi.isProjectUser(
             user = userId,
@@ -45,11 +45,11 @@ class DefaultPermissionProjectServiceImpl @Autowired constructor(
             serviceCode = authServiceCode
         )
     }
-    
+
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
         return true
     }
-    
+
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
         return authProjectApi.getProjectRoles(
             serviceCode = authServiceCode,

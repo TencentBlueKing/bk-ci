@@ -37,7 +37,6 @@ import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
-import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
@@ -165,16 +164,19 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 e
             )
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
-            gitCIEventSaveService.saveNotBuildEvent(
+            gitCIEventSaveService.saveRunNotBuildEvent(
                 userId = event.userId,
                 eventId = event.id!!,
                 pipelineId = pipeline.pipelineId,
+                pipelineName = pipeline.displayName,
                 filePath = pipeline.filePath,
                 originYaml = build?.originYaml,
                 normalizedYaml = build?.normalizedYaml,
                 reason = TriggerReason.PIPELINE_RUN_ERROR.name,
                 reasonDetail = e.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
-                gitProjectId = event.gitProjectId
+                gitProjectId = event.gitProjectId,
+                sendCommitCheck = true,
+                commitCheckBlock = (event.objectKind == OBJECT_KIND_MERGE_REQUEST)
             )
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
         }
@@ -190,20 +192,14 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
         gitCIBasicSetting: GitCIBasicSetting,
         pipelineId: String
     ): String {
-        val triggerLock = GitCITriggerLock(redisOperation, gitCIBasicSetting.gitProjectId, pipelineId)
-        try {
-            triggerLock.lock()
-            processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipelineId, model, channelCode)
-            return client.get(ServiceBuildResource::class).manualStartup(
-                userId = event.userId,
-                projectId = gitCIBasicSetting.projectCode!!,
-                pipelineId = pipelineId,
-                values = mapOf(),
-                channelCode = channelCode
-            ).data!!.id
-        } finally {
-            triggerLock.unlock()
-        }
+        processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipelineId, model, channelCode)
+        return client.get(ServiceBuildResource::class).manualStartup(
+            userId = event.userId,
+            projectId = gitCIBasicSetting.projectCode!!,
+            pipelineId = pipelineId,
+            values = mapOf(),
+            channelCode = channelCode
+        ).data!!.id
     }
 
     private fun needReCreate(
