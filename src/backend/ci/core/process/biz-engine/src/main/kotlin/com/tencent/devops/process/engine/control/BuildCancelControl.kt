@@ -166,13 +166,17 @@ class BuildCancelControl @Autowired constructor(
             if (stage.finally) {
                 return@forEach
             }
+            val stageStatus = BuildStatus.parse(stage.status)
             stage.containers.forEach C@{ container ->
                 unlockMutexGroup(variables = variables, container = container,
                     buildId = event.buildId, projectId = event.projectId, stageId = stage.id!!
                 )
                 // 调整Container状态位
                 val containerBuildStatus = BuildStatus.parse(container.status)
-                if (!containerBuildStatus.isFinish()) {
+                // 取消构建当前运行的stage及当前stage下的job不能马上置为取消状态
+                if (!containerBuildStatus.isFinish() && stageStatus != BuildStatus.RUNNING
+                    && containerBuildStatus != BuildStatus.RUNNING
+                ) {
                     pipelineRuntimeService.updateContainerStatus(
                         buildId = event.buildId,
                         stageId = stage.id ?: "",

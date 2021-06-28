@@ -252,10 +252,16 @@ class PipelineBuildDetailService @Autowired constructor(
         errorCode: Int? = null,
         errorMsg: String? = null
     ) {
+        var updateTaskStatusInfos:MutableList<Map<String, BuildStatus>>? = null
         update(buildId, object : ModelInterface {
 
             var update = false
-            override fun onFindElement(e: Element, c: Container): Traverse {
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
+                // 判断取消的task任务对应的container是否包含post任务
+                val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && c.containPostTaskFlag == true
+                if (cancelTaskPostFlag && updateTaskStatusInfos == null) {
+                    updateTaskStatusInfos = mutableListOf()
+                }
                 if (e.id == taskId) {
                     e.canRetry = canRetry
                     e.status = buildStatus.name
@@ -273,13 +279,40 @@ class PipelineBuildDetailService @Autowired constructor(
 
                     var elementElapsed = 0L
                     run lit@{
-                        c.elements.forEach {
+                        val elements = c.elements
+                        elements.forEach {
                             if (it.elapsed == null) {
                                 return@forEach
                             }
                             elementElapsed += it.elapsed!!
-                            if (it == e) {
-                                return@lit
+                            if (cancelTaskPostFlag) {
+                                val elementPostInfo = it.additionalOptions?.elementPostInfo
+                                if (elementPostInfo != null) {
+                                    // 判断post任务的父任务是否执行过
+                                    val parentElementJobIndex = elementPostInfo.parentElementJobIndex
+                                    val parentElement = elements[parentElementJobIndex]
+                                    val taskStatus = BuildStatus.parse(parentElement.status)
+                                    if (taskStatus.isFinish() || parentElement.id == taskId) {
+                                        // 把post任务和取消任务之间的任务置为UNEXEC状态
+                                        val startIndex = index + 1
+                                        val endIndex = parentElementJobIndex - 1
+                                        if (endIndex < startIndex) {
+                                            return@lit
+                                        }
+                                        for (i in startIndex..endIndex) {
+                                            val unExecElement = elements[i]
+                                            val unExecBuildStatus = BuildStatus.UNEXEC
+                                            unExecElement.status = unExecBuildStatus.name
+                                            if (unExecElement.id != null) {
+                                                updateTaskStatusInfos?.add(mapOf(unExecElement.id!! to unExecBuildStatus))
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                if (it == e) {
+                                    return@lit
+                                }
                             }
                         }
                     }
@@ -393,7 +426,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 return Traverse.CONTINUE
             }
 
-            override fun onFindElement(e: Element, c: Container): Traverse {
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (e.status == BuildStatus.RUNNING.name || e.status == BuildStatus.REVIEWING.name) {
                     val status = if (e.status == BuildStatus.RUNNING.name) {
                         BuildStatus.TERMINATE.name
@@ -473,7 +506,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 return Traverse.CONTINUE
             }
 
-            override fun onFindElement(e: Element, c: Container): Traverse {
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (!e.status.isNullOrBlank() && BuildStatus.valueOf(e.status!!).isRunning()) {
                     e.status = buildStatus.name
                     update = true
@@ -558,7 +591,7 @@ class PipelineBuildDetailService @Autowired constructor(
         update(buildId, object : ModelInterface {
             var update = false
 
-            override fun onFindElement(e: Element, c: Container): Traverse {
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (c.id.equals(containerId)) {
                     if (e.id.equals(taskId)) {
                         logger.info("ENGINE|$buildId|pauseTask|$stageId|j($containerId)|t($taskId)|${buildStatus.name}")
@@ -716,7 +749,7 @@ class PipelineBuildDetailService @Autowired constructor(
     fun taskSkip(buildId: String, taskId: String) {
         update(buildId, object : ModelInterface {
             var update = false
-            override fun onFindElement(e: Element, c: Container): Traverse {
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (e.id == taskId) {
                     update = true
                     e.status = BuildStatus.SKIP.name
@@ -735,7 +768,7 @@ class PipelineBuildDetailService @Autowired constructor(
         val variables = buildVariableService.getAllVariable(buildId)
         update(buildId, object : ModelInterface {
             var update = false
-            override fun onFindElement(e: Element, c: Container): Traverse {
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (e.id == taskId) {
                     if (e is ManualReviewUserTaskElement) {
                         e.status = BuildStatus.REVIEWING.name
@@ -778,7 +811,7 @@ class PipelineBuildDetailService @Autowired constructor(
         update(buildId, object : ModelInterface {
             var update = false
 
-            override fun onFindElement(e: Element, c: Container): Traverse {
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (c.id.equals(containerId)) {
                     if (e.id.equals(taskId)) {
                         c.status = BuildStatus.CANCELED.name
@@ -983,8 +1016,8 @@ class PipelineBuildDetailService @Autowired constructor(
                     return
                 }
                 containerId++
-                c.elements.forEach { e ->
-                    if (Traverse.BREAK == modelInterface.onFindElement(e, c)) {
+                c.elements.forEachIndexed { index, e ->
+                    if (Traverse.BREAK == modelInterface.onFindElement(index, e, c)) {
                         return
                     }
                 }
@@ -1033,7 +1066,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
         fun onFindContainer(id: Int, container: Container, stage: Stage) = Traverse.CONTINUE
 
-        fun onFindElement(e: Element, c: Container) = Traverse.CONTINUE
+        fun onFindElement(index: Int, e: Element, c: Container) = Traverse.CONTINUE
 
         fun needUpdate(): Boolean
     }
