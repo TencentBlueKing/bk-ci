@@ -27,13 +27,15 @@
 package com.tencent.bk.codecc.defect.resources;
 
 import com.tencent.bk.codecc.defect.api.ServiceReportTaskLogRestResource;
+import com.tencent.bk.codecc.defect.service.TaskLogService;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.IBizService;
 import com.tencent.devops.common.web.RestResource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -50,7 +52,7 @@ public class ServiceReportTaskLogRestResourceImpl implements ServiceReportTaskLo
     private BizServiceFactory<IBizService> bizServiceFactory;
 
     @Override
-    public CodeCCResult uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO)
+    public Result uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO)
     {
         log.info("recv a task step, step: {}, flag: {}, start: {}, end: {}",
                 uploadTaskLogStepVO.getStepNum(), uploadTaskLogStepVO.getFlag(), uploadTaskLogStepVO.getStartTime(), uploadTaskLogStepVO.getEndTime());

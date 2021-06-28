@@ -93,7 +93,7 @@ class CountRuleDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(DATE.ge(start))
                 .and(DATE.le(end))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -126,7 +126,7 @@ class CountRuleDao {
                 now
             )
                 .returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }

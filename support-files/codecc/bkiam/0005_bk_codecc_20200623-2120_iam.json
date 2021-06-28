@@ -1,0 +1,130 @@
+{
+  "system_id": "bk_codecc",
+  "operations": [
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_analyze",
+        "name": "执行分析",
+        "name_en": "Execute Analyze",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_codecc",
+            "id": "codecc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_codecc",
+                "id": "codecc_task_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_defect_manage",
+        "name": "问题管理",
+        "name_en": "Defect Manage",
+        "type": "manage",
+        "related_resource_types": [
+          {
+            "system_id": "bk_codecc",
+            "id": "codecc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_codecc",
+                "id": "codecc_task_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_defect_view",
+        "name": "查看问题",
+        "name_en": "Defect View",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_codecc",
+            "id": "codecc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_codecc",
+                "id": "codecc_task_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_report_view",
+        "name": "查看报表",
+        "name_en": "Report View",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_codecc",
+            "id": "codecc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_codecc",
+                "id": "codecc_task_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_task_manage",
+        "name": "任务设置",
+        "name_en": "Task Manage",
+        "type": "manage",
+        "related_resource_types": [
+          {
+            "system_id": "bk_codecc",
+            "id": "codecc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_codecc",
+                "id": "codecc_task_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    }
+  ]
+}

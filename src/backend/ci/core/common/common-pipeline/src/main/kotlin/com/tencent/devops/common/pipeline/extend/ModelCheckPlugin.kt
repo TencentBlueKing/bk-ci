@@ -44,7 +44,7 @@ interface ModelCheckPlugin {
      */
     fun checkModelIntegrity(model: Model, projectId: String?)
 
-    fun checkJob(jobContainer: Container, projectId: String, pipelineId: String, userId: String)
+    fun checkJob(jobContainer: Container, projectId: String, pipelineId: String, userId: String, finallyStage: Boolean)
 
     /**
      * 清理Model--不删除里面的Element内的逻辑
@@ -52,9 +52,8 @@ interface ModelCheckPlugin {
     fun clearUpModel(model: Model)
 
     /**
-     * 在删除lement前做的一些处理
+     * 在删除element前做的一些处理
      * 对比sourceModel，并清理model中与之不同的Element
-     * @param userId 操作人
      * @param existModel 目标Model（要清理的Model)
      * @param sourceModel 源要比较的Model
      * @param pipelineId 流水线id

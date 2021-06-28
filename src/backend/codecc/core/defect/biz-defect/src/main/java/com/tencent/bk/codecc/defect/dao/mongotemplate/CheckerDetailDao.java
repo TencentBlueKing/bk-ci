@@ -12,25 +12,39 @@
 
 package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
+import com.google.common.collect.Lists;
 import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.defect.dao.AddFieldOperation;
 import com.tencent.bk.codecc.defect.model.CheckerDetailEntity;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerCategory;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerListSortType;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerRecommendType;
+import com.tencent.devops.common.api.checkerset.CheckerPropVO;
+import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.ComConstants.ToolIntegratedStatus;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.LimitOperation;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.SkipOperation;
+import org.springframework.data.mongodb.core.aggregation.SortOperation;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,11 +59,35 @@ public class CheckerDetailDao {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    public List<CheckerDetailEntity> findByComplexCheckerCondition(String keyWord, Set<String> codeLang, Set<CheckerCategory> checkerCategory,
-                                                                   Set<String> toolName, Set<String> tag, Set<String> severity, Set<Boolean> editable,
-                                                                   Set<CheckerRecommendType> checkerRecommend, Set<String> selectedCheckerKey,
-                                                                   Set<Boolean> checkerSetSelected, Integer pageNum, Integer pageSize, Sort.Direction sortType,
-                                                                   CheckerListSortType sortField) {
+    /**
+     * 按照复合条件查询规则
+     * @param keyWord
+     * @param codeLang
+     * @param checkerCategory
+     * @param toolName
+     * @param tag
+     * @param severity
+     * @param editable
+     * @param checkerRecommend
+     * @param selectedCheckerKey
+     * @param checkerSetSelected
+     * @param pageNum
+     * @param pageSize
+     * @param sortType
+     * @param sortField
+     * @param toolIntegratedStatus
+     * @return
+     */
+    public List<CheckerDetailEntity> findByComplexCheckerCondition(String keyWord, Set<String> codeLang,
+                                                                   Set<CheckerCategory> checkerCategory,
+                                                                   Set<String> toolName, Set<String> tag,
+                                                                   Set<String> severity, Set<Boolean> editable,
+                                                                   Set<CheckerRecommendType> checkerRecommend,
+                                                                   Set<String> selectedCheckerKey,
+                                                                   Set<Boolean> checkerSetSelected, Integer pageNum,
+                                                                   Integer pageSize, Sort.Direction sortType,
+                                                                   CheckerListSortType sortField,
+                                                                   ToolIntegratedStatus toolIntegratedStatus) {
 
         //由于需要根据是否选中排序，所以采用聚合查询
         Criteria criteria = new Criteria();
@@ -75,19 +113,15 @@ public class CheckerDetailDao {
         }
         if (CollectionUtils.isNotEmpty(severity)) {
             andCriteria.add(Criteria.where("severity").in(severity.stream().map(sev -> {
-                if(Integer.valueOf(sev) == ComConstants.PROMPT)
-                {
+                if (Integer.valueOf(sev) == ComConstants.PROMPT) {
                     return ComConstants.PROMPT_IN_DB;
-                }
-                else
-                {
+                } else {
                     return Integer.valueOf(sev);
                 }
             }).collect(Collectors.toList())));
-        }
-        else
-        {
-            andCriteria.add(Criteria.where("severity").in(Arrays.asList(ComConstants.SERIOUS, ComConstants.NORMAL, ComConstants.PROMPT, ComConstants.PROMPT_IN_DB)));
+        } else {
+            andCriteria.add(Criteria.where("severity").in(Arrays.asList(ComConstants.SERIOUS, ComConstants.NORMAL,
+                    ComConstants.PROMPT, ComConstants.PROMPT_IN_DB)));
         }
         if (CollectionUtils.isNotEmpty(editable)) {
             andCriteria.add(Criteria.where("editable").in(editable));
@@ -96,21 +130,28 @@ public class CheckerDetailDao {
             andCriteria.add(Criteria.where("checker_recommend").in(checkerRecommend.stream().map(Enum::name).collect(Collectors.toSet())));
         }
 
-        if(CollectionUtils.isNotEmpty(checkerSetSelected) && CollectionUtils.isNotEmpty(selectedCheckerKey)) {
+        if (CollectionUtils.isNotEmpty(checkerSetSelected) && CollectionUtils.isNotEmpty(selectedCheckerKey)) {
             List<Criteria> criteriaList = new ArrayList<>();
-            if(checkerSetSelected.contains(true))
-            {
+            if (checkerSetSelected.contains(true)) {
                 criteriaList.add(Criteria.where("checker_key").in(selectedCheckerKey));
             }
-            if(checkerSetSelected.contains(false))
-            {
+            if (checkerSetSelected.contains(false)) {
                 criteriaList.add(Criteria.where("checker_key").nin(selectedCheckerKey));
             }
             andCriteria.add(new Criteria().orOperator(criteriaList.toArray(new Criteria[0])));
         }
 
-        if(CollectionUtils.isNotEmpty(andCriteria))
-        {
+        if (toolIntegratedStatus != ToolIntegratedStatus.P) {
+            andCriteria.add(Criteria.where("checker_version").in(Arrays.asList(toolIntegratedStatus.value(),
+                    ToolIntegratedStatus.P.value(),
+                    null)));
+        } else {
+            andCriteria.add(Criteria.where("checker_version").nin(Arrays.asList(
+                    ToolIntegratedStatus.G.value(),
+                    ToolIntegratedStatus.T.value())));
+        }
+
+        if (CollectionUtils.isNotEmpty(andCriteria)) {
             criteria.andOperator(andCriteria.toArray(new Criteria[0]));
         }
 
@@ -119,52 +160,101 @@ public class CheckerDetailDao {
         //查询
         Aggregation agg;
 
-        if(CollectionUtils.isNotEmpty(selectedCheckerKey))
-        {
+        if (CollectionUtils.isNotEmpty(selectedCheckerKey)) {
             //添加字段
-            AddFieldOperation addField = new AddFieldOperation(new BasicDBObject("checkerSetSelected", new BasicDBObject("$in", new Object[]{"$checker_key", selectedCheckerKey})));
+            AddFieldOperation addField = new AddFieldOperation(new BasicDBObject("checkerSetSelected",
+                    new BasicDBObject("$in", new Object[]{"$checker_key", selectedCheckerKey})));
 
-            if(null != pageNum || null != pageSize || null != sortType || null != sortField)
-            {
+            if (null != pageNum || null != pageSize || null != sortType || null != sortField) {
                 Integer queryPageNum = pageNum == null || pageNum - 1 < 0 ? 0 : pageNum - 1;
                 Integer queryPageSize = pageSize == null || pageSize <= 0 ? 10 : pageSize;
                 Sort.Direction querySortType = null == sortType ? Sort.Direction.ASC : sortType;
-                String querySortField = null == sortField ? CheckerListSortType.checkerKey.getName() : sortField.getName();
+                String querySortField = null == sortField ? CheckerListSortType.checkerKey.getName() :
+                        sortField.getName();
                 //根据是否选中排序
-                SortOperation sort = Aggregation.sort(Sort.Direction.DESC, "checkerSetSelected").and(querySortType, querySortField);
-                SkipOperation skip = Aggregation.skip(Long.valueOf(queryPageNum*queryPageSize));
+                SortOperation sort = Aggregation.sort(Sort.Direction.DESC, "checkerSetSelected").and(querySortType,
+                        querySortField);
+                SkipOperation skip = Aggregation.skip(Long.valueOf(queryPageNum * queryPageSize));
                 LimitOperation limit = Aggregation.limit(queryPageSize);
                 agg = Aggregation.newAggregation(match, addField, sort, skip, limit);
-            }
-            else
-            {
+            } else {
                 SortOperation sort = Aggregation.sort(Sort.Direction.DESC, "checkerSetSelected");
                 agg = Aggregation.newAggregation(match, addField, sort);
             }
-        }
-        else
-        {
-            if(null != pageNum || null != pageSize || null != sortType || null != sortField)
-            {
+        } else {
+            if (null != pageNum || null != pageSize || null != sortType || null != sortField) {
                 Integer queryPageNum = pageNum == null || pageNum - 1 < 0 ? 0 : pageNum - 1;
                 Integer queryPageSize = pageSize == null || pageSize <= 0 ? 10 : pageSize;
                 Sort.Direction querySortType = null == sortType ? Sort.Direction.ASC : sortType;
-                String querySortField = null == sortField ? CheckerListSortType.checkerKey.getName() : sortField.getName();
+                String querySortField = null == sortField ? CheckerListSortType.checkerKey.getName() :
+                        sortField.getName();
                 SortOperation sort = Aggregation.sort(querySortType, querySortField);
-                SkipOperation skip = Aggregation.skip(Long.valueOf(queryPageNum*queryPageSize));
+                SkipOperation skip = Aggregation.skip(Long.valueOf(queryPageNum * queryPageSize));
                 LimitOperation limit = Aggregation.limit(queryPageSize);
                 agg = Aggregation.newAggregation(match, sort, skip, limit);
-            }
-            else
-            {
+            } else {
                 agg = Aggregation.newAggregation(match);
             }
         }
 
-        AggregationResults<CheckerDetailEntity> queryResult = mongoTemplate.aggregate(agg, "t_checker_detail", CheckerDetailEntity.class);
+        AggregationResults<CheckerDetailEntity> queryResult = mongoTemplate.aggregate(agg, "t_checker_detail",
+                CheckerDetailEntity.class);
         return queryResult.getMappedResults();
     }
 
+    /**
+     * 根据工具名查找CheckerDetail
+     *
+     * @param toolName
+     * @param pageable
+     * @return
+     */
+    public Page<CheckerDetailEntity> findCheckerDetailByToolName(String toolName, @NotNull Pageable pageable) {
+        Criteria criteria = Criteria.where("tool_name").is(toolName);
+        //总条数
+        long totalCount = mongoTemplate.count(new Query(criteria), "t_checker_detail");
+        // 以tool_name进行过滤
+        MatchOperation match = Aggregation.match(criteria);
+        // 分页排序
+        int pageSize = pageable.getPageSize();
+        int pageNumber = pageable.getPageNumber();
+        SortOperation sort = Aggregation.sort(pageable.getSort());
+        SkipOperation skip = Aggregation.skip((long) (pageNumber * pageSize));
+        LimitOperation limit = Aggregation.limit(pageSize);
+        Aggregation agg = Aggregation.newAggregation(match, sort, skip, limit);
+        AggregationResults<CheckerDetailEntity> queryResults =
+                mongoTemplate.aggregate(agg, "t_checker_detail", CheckerDetailEntity.class);
+        // 计算总页数
+        int totalPageNum = 0;
+        if (totalCount > 0) {
+            totalPageNum = ((int) totalCount + pageSize - 1) / pageSize;
+        }
+        return new Page<>(totalCount, pageNumber + 1, pageSize, totalPageNum, queryResults.getMappedResults());
+    }
 
+    /**
+     * 根据工具和规则key查询规则
+     * @param toolCheckerMap
+     * @return
+     */
+    public List<CheckerDetailEntity> findByToolNameAndCheckers(Map<String, List<CheckerPropVO>> toolCheckerMap) {
+        Criteria criteria = new Criteria();
+        List<Criteria> orCriteriaList = Lists.newArrayList();
+        toolCheckerMap.forEach((toolName, checkerList) -> {
+            Set<String> checkers = checkerList.stream().map(CheckerPropVO::getCheckerKey).collect(Collectors.toSet());
+            orCriteriaList.add(Criteria.where("tool_name").is(toolName).and("checker_key").in(checkers));
+        });
 
+        if (CollectionUtils.isNotEmpty(orCriteriaList)) {
+            criteria.orOperator(orCriteriaList.toArray(new Criteria[0]));
+        }
+
+        BasicDBObject fieldsObj = new BasicDBObject();
+        fieldsObj.put("checker_version", true);
+        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+
+        query.addCriteria(criteria);
+        List<CheckerDetailEntity> checkerList = mongoTemplate.find(query, CheckerDetailEntity.class);
+        return checkerList;
+    }
 }

@@ -96,6 +96,7 @@ import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
+import com.tencent.devops.store.utils.StoreUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -304,7 +305,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val result = mutableListOf<MarketMainItem>()
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
-        logger.info("[list]get userDeptList")
         val futureList = mutableListOf<Future<MarketAtomResp>>()
         val labelInfoList = mutableListOf<MarketMainItemLabel>()
         labelInfoList.add(MarketMainItemLabel(LATEST, MessageCodeUtil.getCodeLanMessage(LATEST)))
@@ -657,7 +657,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         logger.info("installAtom accessToken is: $accessToken, userId is: $userId")
         logger.info("installAtom channelCode is: $channelCode, installAtomReq is: $installAtomReq")
         val atom = marketAtomDao.getLatestAtomByCode(dslContext, installAtomReq.atomCode)
-        logger.info("the atom is: $atom")
         if (null == atom || atom.deleteFlag == true) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID, false)
         }
@@ -710,6 +709,19 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         page: Int,
         pageSize: Int
     ): Result<Page<AtomVersionListItem>> {
+        // 判断当前用户是否是该插件的成员
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(atomCode)
+            )
+        }
         val totalCount = atomDao.countByCode(dslContext, atomCode)
         val records = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode, page, pageSize)
         val atomVersions = mutableListOf<AtomVersionListItem>()
@@ -812,12 +824,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             atomLabelRelDao.deleteByAtomCode(context, atomCode)
             marketAtomVersionLogDao.deleteByAtomCode(context, atomCode)
             marketAtomDao.deleteByAtomCode(context, atomCode)
+            // 删除插件默认标识缓存
+            redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
             // 清空插件post信息缓存
-            val key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode"
-            val hashKeys = redisOperation.hkeys(key)
-            if (hashKeys != null && hashKeys.isNotEmpty()) {
-                redisOperation.hdelete(key, hashKeys)
-            }
+            redisOperation.delete("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode")
+            // 清空插件运行时信息缓存
+            redisOperation.delete(StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode))
         }
         return Result(true)
     }

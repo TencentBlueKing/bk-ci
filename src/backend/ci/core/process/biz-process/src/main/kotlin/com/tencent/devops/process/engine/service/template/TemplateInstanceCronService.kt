@@ -133,7 +133,7 @@ class TemplateInstanceCronService @Autowired constructor(
                                 userId = userId,
                                 useTemplateSettings = templateInstanceBase.useTemplateSettingsFlag,
                                 projectId = projectId,
-                                templateId = template.id,
+                                templateId = templateInstanceBase.templateId,
                                 templateVersion = template.version,
                                 versionName = template.versionName,
                                 templateContent = template.template,

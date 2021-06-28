@@ -37,9 +37,9 @@ import com.tencent.devops.common.auth.api.pojo.external.KEY_CREATE_FROM
 import com.tencent.devops.common.auth.api.pojo.external.PREFIX_TASK_INFO
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.RedisKeyConstants
+import com.tencent.devops.common.constant.RedisKeyConstants.STANDARD_LANG
 import com.tencent.devops.common.service.ToolMetaCacheService
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.util.GsonUtils
 import com.tencent.devops.common.util.ThreadPoolUtil
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
@@ -48,7 +48,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
-import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 
@@ -57,6 +56,7 @@ class InitializationRunner @Autowired constructor(
         private val initResponseCode: InitResponseCode,
         private val taskRepository: TaskRepository,
         private val baseDataRepository: BaseDataRepository,
+        private val redisTemplate: RedisTemplate<String, String>,
         private val toolMetaCacheService: ToolMetaCacheService,
         private val commonDao: CommonDao
 ) : CommandLineRunner {
@@ -69,15 +69,18 @@ class InitializationRunner @Autowired constructor(
     }
 
     override fun run(vararg arg: String?) {
-        val redisTemplate: RedisTemplate<String, String> = SpringContextUtil.getBean(RedisTemplate::class.java, "redisTemplate") as RedisTemplate<String, String>
+        val redisTemplate: RedisTemplate<String, String> =
+            SpringContextUtil.getBean(RedisTemplate::class.java, "redisTemplate") as RedisTemplate<String, String>
         val currentVal = redisTemplate.opsForValue().get(RedisKeyConstants.CODECC_TASK_ID)
         if (null == currentVal || currentVal.toLong() < ComConstants.COMMON_NUM_10000L) {
             logger.info("start to initialize redis key!")
             val taskInfoEntity = taskRepository.findFirstByTaskIdExistsOrderByTaskIdDesc(true)
             if (null == taskInfoEntity) {
-                redisTemplate.opsForValue().set(RedisKeyConstants.CODECC_TASK_ID, ComConstants.COMMON_NUM_10000L.toString())
+                redisTemplate.opsForValue()
+                    .set(RedisKeyConstants.CODECC_TASK_ID, ComConstants.COMMON_NUM_10000L.toString())
             } else {
-                redisTemplate.opsForValue().set(RedisKeyConstants.CODECC_TASK_ID, (taskInfoEntity.taskId + 1).toString())
+                redisTemplate.opsForValue()
+                    .set(RedisKeyConstants.CODECC_TASK_ID, (taskInfoEntity.taskId + 1).toString())
             }
         }
 
@@ -93,13 +96,15 @@ class InitializationRunner @Autowired constructor(
         // 初始化工具缓存
         toolMetaCacheService.loadToolDetailCache()
 
-        //将工具顺序设置在缓存中
+        // 将工具顺序设置在缓存中
         setToolOrder()
 
-        //初始化开源配置规则集
+        // 缓存 语言-工具 映射关系
+        setLangToolMapping()
+
+        // 初始化开源配置规则集
 //        updateOpenCheckerSet()
     }
-
 
     /**
      * 国际化处理
@@ -113,7 +118,8 @@ class InitializationRunner @Autowired constructor(
 
         // 规则包国际化
         val checkerPackageMap = initResponseCode.getCheckerPackage()
-        redisTemplate.opsForHash<String, String>().putAll(RedisKeyConstants.GLOBAL_CHECKER_PACKAGE_MSG, checkerPackageMap)
+        redisTemplate.opsForHash<String, String>()
+            .putAll(RedisKeyConstants.GLOBAL_CHECKER_PACKAGE_MSG, checkerPackageMap)
 
         // 数据报表日期国际化
         val dataReportDate = initResponseCode.getDataReportDate()
@@ -137,7 +143,6 @@ class InitializationRunner @Autowired constructor(
 
         val checkDescMap = initResponseCode.getCheckerDescMap()
         redisTemplate.opsForHash<String, String>().putAll(RedisKeyConstants.GLOBAL_CHECKER_DESC, checkDescMap)
-
     }
 
     /**
@@ -147,11 +152,11 @@ class InitializationRunner @Autowired constructor(
         val baseDataEntities = baseDataRepository.findAllByParamTypeAndParamCode("ADMIN_MEMBER", "ADMIN_MEMBER")
         if (!baseDataEntities.isNullOrEmpty()) {
             val baseDataEntity = baseDataEntities[0]
-            if (!baseDataEntity.paramValue.isNullOrEmpty()){
+            if (!baseDataEntity.paramValue.isNullOrEmpty()) {
                 redisTemplate.opsForValue().set(KEY_ADMIN_MEMBER, baseDataEntity.paramValue)
             }
         }
-        //添加bg管理员清单
+        // 添加bg管理员清单
         /**
          * 953: CDG
          * 29294: CSIG
@@ -165,9 +170,10 @@ class InitializationRunner @Autowired constructor(
          * 955: 其他
          */
         val baseDataEntityList = baseDataRepository.findAllByParamType("BG_ADMIN_MEMBER")
-        if(!baseDataEntityList.isNullOrEmpty()){
+        if (!baseDataEntityList.isNullOrEmpty()) {
             baseDataEntityList.forEach {
-                redisTemplate.opsForHash<String, String>().put(RedisKeyConstants.KEY_USER_BG_ADMIN, it.paramCode, it.paramValue)
+                redisTemplate.opsForHash<String, String>()
+                    .put(RedisKeyConstants.KEY_USER_BG_ADMIN, it.paramCode, it.paramValue)
             }
         }
     }
@@ -176,13 +182,16 @@ class InitializationRunner @Autowired constructor(
      * 所有项目的创建来源
      */
     private fun taskCreateFrom(redisTemplate: RedisTemplate<String, String>) {
-        //判断是否需要缓存createFrom
+        // 判断是否需要缓存createFrom
         val newestTaskId = redisTemplate.opsForValue().get(RedisKeyConstants.CODECC_TASK_ID)
-        val newestTaskCreateFrom = redisTemplate.opsForHash<String, String>().get(PREFIX_TASK_INFO + (newestTaskId.toLong() - 1), KEY_CREATE_FROM)
-        //判断是否需要缓存bg映射
-        val maxTaskInfoEntity = taskRepository.findFirstByCreateFromOrderByTaskIdDesc(ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value())
-        val latestBgMapping = redisTemplate.opsForHash<String, String>().get(RedisKeyConstants.KEY_TASK_BG_MAPPING, maxTaskInfoEntity.taskId.toString())
-        if(StringUtils.isNotEmpty(newestTaskCreateFrom) && !latestBgMapping.isNullOrBlank()){
+        val newestTaskCreateFrom = redisTemplate.opsForHash<String, String>()
+            .get(PREFIX_TASK_INFO + (newestTaskId.toLong() - 1), KEY_CREATE_FROM)
+        // 判断是否需要缓存bg映射
+        val maxTaskInfoEntity =
+            taskRepository.findFirstByCreateFromOrderByTaskIdDesc(ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value())
+        val latestBgMapping = redisTemplate.opsForHash<String, String>()
+            .get(RedisKeyConstants.KEY_TASK_BG_MAPPING, maxTaskInfoEntity.taskId.toString())
+        if (StringUtils.isNotEmpty(newestTaskCreateFrom) && !latestBgMapping.isNullOrBlank()) {
             return
         }
         var pageable: Pageable = PageRequest(0, 1000)
@@ -195,15 +204,18 @@ class InitializationRunner @Autowired constructor(
                 var needBgCache = false
                 val lastTask = pageTasks.last()
                 if (lastTask != null) {
-                    val lastTaskCreateFrom = redisTemplate.opsForHash<String, String>().get(PREFIX_TASK_INFO + lastTask.taskId, KEY_CREATE_FROM)
+                    val lastTaskCreateFrom = redisTemplate.opsForHash<String, String>()
+                        .get(PREFIX_TASK_INFO + lastTask.taskId, KEY_CREATE_FROM)
                     if (lastTaskCreateFrom.isNullOrEmpty()) {
                         needCache = true
                     }
                 }
-                val lastGongfengTask = pageTasks.findLast { it.createFrom == ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value() }
-                if(lastGongfengTask != null){
-                    val lastGongfengBgId = redisTemplate.opsForHash<String, String>().get(RedisKeyConstants.KEY_TASK_BG_MAPPING, lastGongfengTask.taskId.toString())
-                    if(lastGongfengBgId.isNullOrBlank()){
+                val lastGongfengTask =
+                    pageTasks.findLast { it.createFrom == ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value() }
+                if (lastGongfengTask != null) {
+                    val lastGongfengBgId = redisTemplate.opsForHash<String, String>()
+                        .get(RedisKeyConstants.KEY_TASK_BG_MAPPING, lastGongfengTask.taskId.toString())
+                    if (lastGongfengBgId.isNullOrBlank()) {
                         needBgCache = true
                     }
                 }
@@ -211,23 +223,30 @@ class InitializationRunner @Autowired constructor(
                     redisTemplate.execute { connection ->
                         for (task in pageTasks) {
                             if (!task.createFrom.isNullOrEmpty()) {
-                                connection.hSet((PREFIX_TASK_INFO + task.taskId).toByteArray(), KEY_CREATE_FROM.toByteArray(), task.createFrom.toByteArray())
+                                connection.hSet(
+                                    (PREFIX_TASK_INFO + task.taskId).toByteArray(),
+                                    KEY_CREATE_FROM.toByteArray(),
+                                    task.createFrom.toByteArray()
+                                )
                             }
                         }
                     }
                 }
 
-                if(needBgCache){
+                if (needBgCache) {
                     redisTemplate.execute { connection ->
                         for (task in pageTasks) {
-                            //如果是工蜂，则要加映射信息
-                            if(ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value() == task.createFrom){
-                                connection.hSet(RedisKeyConstants.KEY_TASK_BG_MAPPING.toByteArray(), task.taskId.toString().toByteArray(), task.bgId.toString().toByteArray())
+                            // 如果是工蜂，则要加映射信息
+                            if (ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value() == task.createFrom) {
+                                connection.hSet(
+                                    RedisKeyConstants.KEY_TASK_BG_MAPPING.toByteArray(),
+                                    task.taskId.toString().toByteArray(),
+                                    task.bgId.toString().toByteArray()
+                                )
                             }
                         }
                     }
                 }
-
 
                 if (taskInfoEntityPage.hasNext()) {
                     pageable = pageable.next()
@@ -236,10 +255,9 @@ class InitializationRunner @Autowired constructor(
         } while (taskInfoEntityPage.hasNext())
     }
 
-
-    private fun setToolOrder()
-    {
-        val redisTemplate: RedisTemplate<String, String> = SpringContextUtil.getBean(RedisTemplate::class.java, "redisTemplate") as RedisTemplate<String, String>
+    private fun setToolOrder() {
+        val redisTemplate: RedisTemplate<String, String> =
+            SpringContextUtil.getBean(RedisTemplate::class.java, "redisTemplate") as RedisTemplate<String, String>
         val toolOrder = commonDao.toolOrder
         val langOrder = commonDao.langOrder
         redisTemplate.opsForValue().set(RedisKeyConstants.KEY_TOOL_ORDER, toolOrder)
@@ -249,8 +267,7 @@ class InitializationRunner @Autowired constructor(
     /**
      * 添加开源扫描规则集配置
      */
-    private fun updateOpenCheckerSet()
-    {
+    private fun updateOpenCheckerSet() {
         logger.info("start to init open checker set!")
         val baseDataEntityList = baseDataRepository.findAllByParamType("LANG")
         baseDataEntityList.forEach {
@@ -488,7 +505,7 @@ class InitializationRunner @Autowired constructor(
                     securityCheckerSet11.version = 6
                     checkerSetList.add(securityCheckerSet11)
                 }
-                //swift 因为只包含coverity工具 所以注释掉
+                // swift 因为只包含coverity工具 所以注释掉
                 /*"Swift" -> {
                     val securityCheckerSet12 = CheckerSetVO()
                     securityCheckerSet12.checkerSetId = "pecker_swift"
@@ -505,6 +522,13 @@ class InitializationRunner @Autowired constructor(
             }
             it.openSourceCheckerSets = checkerSetList
             baseDataRepository.save(it)
+        }
+    }
+
+    fun setLangToolMapping() {
+        val langtoolMapping = baseDataRepository.findAllByParamType(STANDARD_LANG)
+        langtoolMapping.forEach {
+            redisTemplate.opsForHash<String, String>().put(RedisKeyConstants.STANDARD_LANG, it.paramCode, it.paramValue)
         }
     }
 }

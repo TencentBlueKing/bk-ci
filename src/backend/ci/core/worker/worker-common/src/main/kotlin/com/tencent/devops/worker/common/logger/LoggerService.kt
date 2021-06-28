@@ -30,8 +30,11 @@ package com.tencent.devops.worker.common.logger
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.worker.common.LOG_DEBUG_FLAG
+import com.tencent.devops.worker.common.LOG_ERROR_FLAG
 import com.tencent.devops.worker.common.LOG_SUBTAG_FINISH_FLAG
 import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
+import com.tencent.devops.worker.common.LOG_WARN_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import org.slf4j.LoggerFactory
@@ -166,20 +169,26 @@ object LoggerService {
             }
         }
 
+        val logType = when {
+            realMessage.startsWith(LOG_DEBUG_FLAG) -> LogType.DEBUG
+            realMessage.startsWith(LOG_ERROR_FLAG) -> LogType.ERROR
+            realMessage.startsWith(LOG_WARN_FLAG) -> LogType.WARN
+            else -> LogType.LOG
+        }
         val logMessage = LogMessage(
             message = realMessage,
             timestamp = System.currentTimeMillis(),
             tag = elementId,
             subTag = subTag,
             jobId = jobId,
-            logType = LogType.LOG,
+            logType = logType,
             executeCount = executeCount
         )
         logger.info(logMessage.toString())
         try {
             this.queue.put(logMessage)
         } catch (e: InterruptedException) {
-            logger.error("写入普通日志行失败：", e)
+            logger.error("写入 $logType 日志行失败：", e)
         }
     }
 
@@ -208,30 +217,6 @@ object LoggerService {
             tag = elementId,
             jobId = jobId,
             logType = LogType.LOG,
-            executeCount = executeCount
-        )
-        addLog(logMessage)
-    }
-
-    fun addRangeStartLine(rangeName: String) {
-        val logMessage = LogMessage(
-            message = "[START] $rangeName",
-            timestamp = System.currentTimeMillis(),
-            tag = elementId,
-            jobId = jobId,
-            logType = LogType.START,
-            executeCount = executeCount
-        )
-        addLog(logMessage)
-    }
-
-    fun addRangeEndLine(rangeName: String) {
-        val logMessage = LogMessage(
-            message = "[END] $rangeName",
-            timestamp = System.currentTimeMillis(),
-            tag = elementId,
-            jobId = jobId,
-            logType = LogType.END,
             executeCount = executeCount
         )
         addLog(logMessage)

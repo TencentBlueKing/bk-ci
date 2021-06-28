@@ -27,8 +27,9 @@
 package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
+import com.tencent.bk.codecc.task.vo.pipeline.PipelineBuildInfoVO;
 import com.tencent.devops.common.api.annotation.ServiceInterface;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -51,10 +52,10 @@ public interface ServiceAnalyzeConfigRestResource
     @ApiOperation("查询任务的规则配置")
     @Path("/task/checkers")
     @POST
-    CodeCCResult<AnalyzeConfigInfoVO> getTaskCheckerConfig(AnalyzeConfigInfoVO analyzeConfigInfoVO);
+    Result<AnalyzeConfigInfoVO> getTaskCheckerConfig(AnalyzeConfigInfoVO analyzeConfigInfoVO);
 
     @ApiOperation("平台侧工具构建信息")
     @Path("/tasks/buildInfo")
     @POST
-    CodeCCResult<AnalyzeConfigInfoVO> getBuildInfo(AnalyzeConfigInfoVO analyzeConfigInfoVO);
+    Result<AnalyzeConfigInfoVO> getBuildInfo(AnalyzeConfigInfoVO analyzeConfigInfoVO);
 }

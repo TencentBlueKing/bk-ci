@@ -1,6 +1,7 @@
 const Vue = window.Vue
 const vue = new Vue()
 const prefix = 'store/api'
+const processPerfix = 'process/api'
 
 export default {
     getMemberView (params) {
@@ -41,5 +42,22 @@ export default {
 
     requestCancelSensitiveApi (storeType, storeCode, id) {
         return vue.$ajax.put(`${prefix}/user/sdk/${storeType}/${storeCode}/sensitiveApi/cancel/${id}`)
+    },
+    requestStatisticPipeline (code, params) {
+        return vue.$ajax.get(`${processPerfix}/user/pipeline/atoms/${code}/rel/list`, { params })
+    },
+
+    requestSavePipelinesAsCsv (code, params) {
+        const query = []
+        for (const key in params) {
+            const val = params[key]
+            if (val) query.push(`${key}=${val}`)
+        }
+        return fetch(`${processPerfix}/user/pipeline/atoms/${code}/rel/csv/export?${query.join('&')}`, {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            }
+        })
     }
 }

@@ -50,8 +50,9 @@ import com.tencent.bk.codecc.task.vo.pipeline.PipelineTaskVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.exception.UnauthorizedException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.external.AuthExPermissionApi;
+import com.tencent.devops.common.auth.api.external.AuthTaskService;
 import com.tencent.devops.common.auth.api.pojo.external.CodeCCAuthAction;
 import com.tencent.devops.common.auth.api.pojo.external.PipelineAuthAction;
 import com.tencent.devops.common.auth.api.pojo.external.model.BkAuthExResourceActionModel;
@@ -85,7 +86,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * LINT获取分析记录的逻辑实现类
@@ -115,14 +116,17 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
     @Autowired
     private AuthExPermissionApi bkAuthExPermissionApi;
 
+    @Autowired
+    private AuthTaskService authTaskService;
+
     private static Logger logger = LoggerFactory.getLogger(GetTaskLogServiceImpl.class);
 
 
     @Override
-    public CodeCCResult queryTaskLog(QueryTaskLogVO queryTaskLogVO)
+    public Result<QueryTaskLogVO> queryTaskLog(QueryTaskLogVO queryTaskLogVO)
     {
         int pageNum = queryTaskLogVO.getPage() - 1;
-        pageNum = pageNum < 0 ? 0 : pageNum;
+        pageNum = Math.max(pageNum, 0);
         int pageSize = queryTaskLogVO.getPageSize() <= 0 ? 10 : queryTaskLogVO.getPageSize();
         Pageable pageable = new PageRequest(pageNum, pageSize);
 
@@ -130,28 +134,28 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
         List<TaskLogEntity> taskLogEntities = taskLogRepository.findByTaskIdAndToolName(queryTaskLogVO.getTaskId(), queryTaskLogVO.getToolName());
 
         // 排序和分页
-        Collections.sort(taskLogEntities, ((o1, o2) -> Integer.valueOf(StringUtils.isNotEmpty(o2.getBuildNum()) ? o2.getBuildNum() : "-1").
-                compareTo(Integer.valueOf(StringUtils.isNotEmpty(o1.getBuildNum()) ? o1.getBuildNum() : "-1"))));
+        taskLogEntities.sort(((o1, o2) -> {
+            Integer value2 = Integer.valueOf(StringUtils.isNotEmpty(o2.getBuildNum()) ? o2.getBuildNum() : "-1");
+            Integer value1 = Integer.valueOf(StringUtils.isNotEmpty(o1.getBuildNum()) ? o1.getBuildNum() : "-1");
+            return value2.compareTo(value1);
+        }));
         int totalCount = taskLogEntities.size();
-        pageNum = pageNum - 1 < 0 ? 0 : pageNum - 1;
-        pageSize = pageSize <= 0 ? 10 : pageSize;
         int subListBeginIdx = pageNum * pageSize;
         int subListEndIdx = subListBeginIdx + pageSize;
         if (subListBeginIdx > totalCount)
         {
             subListBeginIdx = 0;
         }
-        taskLogEntities = taskLogEntities.subList(subListBeginIdx, subListEndIdx > totalCount ? totalCount : subListEndIdx);
+        taskLogEntities = taskLogEntities.subList(subListBeginIdx, Math.min(subListEndIdx, totalCount));
 
-        String taskLogEntityListSerializseStr = JsonUtil.INSTANCE.toJson(taskLogEntities);
-        List<TaskLogVO> taskLogVOList = JsonUtil.INSTANCE.to(taskLogEntityListSerializseStr, new TypeReference<List<TaskLogVO>>()
-        {
-        });
+        String taskLogEntityListJsonStr = JsonUtil.INSTANCE.toJson(taskLogEntities);
+        List<TaskLogVO> taskLogVOList = JsonUtil.INSTANCE.to(
+            taskLogEntityListJsonStr, new TypeReference<List<TaskLogVO>>() {});
 
         Page<TaskLogVO> taskLogVoPage = new PageImpl<>(taskLogVOList, pageable, totalCount);
         queryTaskLogVO.setTaskLogPage(taskLogVoPage);
 
-        return new CodeCCResult(queryTaskLogVO);
+        return new Result<>(queryTaskLogVO);
     }
 
 
@@ -246,10 +250,10 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
         QueryTaskListReqVO queryTaskListReqVO = new QueryTaskListReqVO();
 
         BeanUtils.copyProperties(deptTaskDefectReqVO, queryTaskListReqVO);
-        CodeCCResult<List<TaskDetailVO>> codeCCResult =
+        Result<List<TaskDetailVO>> result =
                 client.get(ServiceTaskRestResource.class).batchGetTaskList(queryTaskListReqVO);
 
-        List<TaskDetailVO> taskDetailVoList = codeCCResult.getData();
+        List<TaskDetailVO> taskDetailVoList = result.getData();
         if (CollectionUtils.isNotEmpty(taskDetailVoList))
         {
             Set<Long> taskIdSet = taskDetailVoList.stream()
@@ -267,9 +271,9 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
             Map<Long, String> activeTaskMap = getActiveTaskMap(taskLogList);
 
             // 获取语言元数据
-            CodeCCResult<Map<String, List<MetadataVO>>> metaDataCodeCCResult =
+            Result<Map<String, List<MetadataVO>>> metaDataResult =
                     client.get(UserMetaRestResource.class).metadatas(ComConstants.KEY_CODE_LANG);
-            Map<String, List<MetadataVO>> metaDataResultData = metaDataCodeCCResult.getData();
+            Map<String, List<MetadataVO>> metaDataResultData = metaDataResult.getData();
             if (metaDataResultData == null)
             {
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
@@ -278,7 +282,7 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
 
             // 获取组织架构信息
             Map<String, String> deptInfo =
-                    (Map<String, String>) redisTemplate.opsForHash().entries(RedisKeyConstants.KEY_DEPT_INFOS);
+                (Map<String, String>) redisTemplate.opsForHash().entries(RedisKeyConstants.KEY_DEPT_INFOS);
 
             activeTaskList = taskDetailVoList.stream().map(taskDetailVO ->
             {
@@ -353,9 +357,9 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
     {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attributes.getRequest();
-        String userName = request.getHeader(CODECC_AUTH_HEADER_DEVOPS_USER_ID);
+        String userName = request.getHeader(AUTH_HEADER_DEVOPS_USER_ID);
 
-        CodeCCResult<PipelineTaskVO> taskInfo = client.get(ServiceTaskRestResource.class).getPipelineTask(pipelineId, "");
+        Result<PipelineTaskVO> taskInfo = client.get(ServiceTaskRestResource.class).getPipelineTask(pipelineId, "");
         if (taskInfo.isNotOk() || null == taskInfo.getData())
         {
             logger.error("get task detail info fail! pipeline id: {}", pipelineId);
@@ -371,7 +375,7 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
             throw new UnauthorizedException("insufficient param info!");
         }
 
-        String taskCreateFrom = bkAuthExPermissionApi.getTaskCreateFrom(taskId);
+        String taskCreateFrom = authTaskService.getTaskCreateFrom(taskId);
         List<BkAuthExResourceActionModel> result;
         if (ComConstants.BsTaskCreateFrom.BS_PIPELINE.value().equals(taskCreateFrom))
         {
@@ -400,6 +404,5 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
         logger.error("validate permission fail! user: {}", userName);
         throw new UnauthorizedException("unauthorized user permission!");
     }
-
 
 }

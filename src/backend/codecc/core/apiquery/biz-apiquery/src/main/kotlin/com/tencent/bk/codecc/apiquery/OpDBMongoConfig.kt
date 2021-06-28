@@ -27,5 +27,4 @@ class OpDBMongoConfig {
 
     @Bean(MONGO_TEMPLATE)
     fun mongoTemplate() = MongoTemplate(mongoDbFactory(mongoProperties()))
-
 }

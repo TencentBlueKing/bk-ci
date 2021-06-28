@@ -59,7 +59,12 @@ class ParamFacadeService @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
-    fun filterParams(userId: String?, projectId: String, pipelineId: String?, params: List<BuildFormProperty>): List<BuildFormProperty> {
+    fun filterParams(
+        userId: String?,
+        projectId: String,
+        pipelineId: String?,
+        params: List<BuildFormProperty>
+    ): List<BuildFormProperty> {
         val filterParams = mutableListOf<BuildFormProperty>()
         params.forEach {
             if (it.type == BuildFormPropertyType.SVN_TAG && (!it.repoHashId.isNullOrBlank())) {
@@ -94,7 +99,14 @@ class ParamFacadeService @Autowired constructor(
         val options = refs.map {
             BuildFormValue(it, it)
         }
-        return copyFormProperty(formProperty, options)
+        val searchUrl = "/ms/process/api/user/scm/$projectId/${formProperty.repoHashId}/refs?search={words}"
+        val replaceKey = "{words}"
+        return copyFormProperty(
+            property = formProperty,
+            options = options,
+            searchUrl = searchUrl,
+            replaceKey = replaceKey
+        )
     }
 
     /**
@@ -224,7 +236,12 @@ class ParamFacadeService @Autowired constructor(
         }
     }
 
-    private fun copyFormProperty(property: BuildFormProperty, options: List<BuildFormValue>): BuildFormProperty {
+    private fun copyFormProperty(
+        property: BuildFormProperty,
+        options: List<BuildFormValue>,
+        searchUrl: String? = null,
+        replaceKey: String? = null
+    ): BuildFormProperty {
         return BuildFormProperty(
             id = property.id,
             required = property.required,
@@ -237,7 +254,9 @@ class ParamFacadeService @Autowired constructor(
             scmType = property.scmType,
             containerType = property.containerType,
             glob = property.glob,
-            properties = property.properties
+            properties = property.properties,
+            searchUrl = searchUrl,
+            replaceKey = replaceKey
         )
     }
 

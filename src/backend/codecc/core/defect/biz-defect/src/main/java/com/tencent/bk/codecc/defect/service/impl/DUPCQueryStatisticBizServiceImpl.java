@@ -30,12 +30,17 @@ import com.tencent.bk.codecc.defect.dao.mongorepository.DUPCStatisticRepository;
 import com.tencent.bk.codecc.defect.model.DUPCStatisticEntity;
 import com.tencent.bk.codecc.defect.service.IQueryStatisticBizService;
 import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
+import com.tencent.devops.common.api.analysisresult.CCNNotRepairedAuthorVO;
 import com.tencent.devops.common.api.analysisresult.DUPCLastAnalysisResultVO;
+import com.tencent.devops.common.api.analysisresult.DUPCNotRepairedAuthorVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
 import com.tencent.devops.common.constant.ComConstants;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.stream.Collectors;
 
 /**
  * CCN类查询分析统计结果的业务逻辑类
@@ -44,23 +49,49 @@ import org.springframework.stereotype.Service;
  * @date 2019/6/8
  */
 @Service("DUPCQueryStatisticBizService")
-public class DUPCQueryStatisticBizServiceImpl implements IQueryStatisticBizService
-{
+public class DUPCQueryStatisticBizServiceImpl implements IQueryStatisticBizService {
     @Autowired
     private DUPCStatisticRepository dupcStatisticRepository;
 
     @Override
-    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg)
-    {
+    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg, boolean isLast) {
         long taskId = arg.getTaskId();
         String toolName = arg.getToolName();
-        DUPCStatisticEntity statisticEntity = dupcStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        String buildId = arg.getBuildId();
+        DUPCStatisticEntity statisticEntity;
+        if (isLast) {
+            statisticEntity = dupcStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        } else {
+            statisticEntity = dupcStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        }
+
         DUPCLastAnalysisResultVO lastAnalysisResultVO = new DUPCLastAnalysisResultVO();
-        if (statisticEntity != null)
-        {
+        if (statisticEntity != null) {
             BeanUtils.copyProperties(statisticEntity, lastAnalysisResultVO);
+
+            if (!CollectionUtils.isEmpty(statisticEntity.getNewAuthorStatistic())) {
+                lastAnalysisResultVO.setNewAuthorStatistic(
+                        statisticEntity.getNewAuthorStatistic().stream().map(source -> {
+                            DUPCNotRepairedAuthorVO newAuthorVO = new DUPCNotRepairedAuthorVO();
+                            BeanUtils.copyProperties(source, newAuthorVO);
+                            return newAuthorVO;
+                        }).collect(Collectors.toList())
+                );
+            }
+
+            if (!CollectionUtils.isEmpty(statisticEntity.getExistAuthorStatistic())) {
+                lastAnalysisResultVO.setExistAuthorStatistic(
+                        statisticEntity.getExistAuthorStatistic().stream().map(source -> {
+                            DUPCNotRepairedAuthorVO existAuthorVO = new DUPCNotRepairedAuthorVO();
+                            BeanUtils.copyProperties(source, existAuthorVO);
+                            return existAuthorVO;
+                        }).collect(Collectors.toList())
+                );
+            }
+
         }
         lastAnalysisResultVO.setPattern(ComConstants.ToolPattern.DUPC.name());
+
         return lastAnalysisResultVO;
     }
 }

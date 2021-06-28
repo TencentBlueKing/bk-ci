@@ -74,4 +74,12 @@ public interface ToolMetaRepository extends MongoRepository<ToolMetaEntity, Stri
      */
     @Query(fields = "{'name':1,'type':1}")
     List<ToolMetaEntity> findAllByEntityIdIsNotNull();
+
+    /**
+     * 按照名字查询工具元数据
+     * @param name
+     * @return
+     */
+    @Query(fields = "{'name':1, 'lang':1}", value = "{'name' : ?0}")
+    ToolMetaEntity findFirstByName(String name);
 }

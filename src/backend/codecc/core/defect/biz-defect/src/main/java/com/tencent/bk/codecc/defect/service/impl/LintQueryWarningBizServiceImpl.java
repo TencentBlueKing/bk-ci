@@ -26,34 +26,62 @@
 
 package com.tencent.bk.codecc.defect.service.impl;
 
+import static com.tencent.devops.common.constant.ComConstants.MASK_STATUS;
+
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.tencent.bk.codecc.defect.dao.ToolMetaCacheServiceImpl;
 import com.tencent.bk.codecc.defect.dao.mongorepository.BuildDefectRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.CheckerSetRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.LintDefectV2Repository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.LintStatisticRepository;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.LintDefectV2Dao;
 import com.tencent.bk.codecc.defect.model.BuildDefectEntity;
 import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
-import com.tencent.bk.codecc.defect.model.StatisticEntity;
+import com.tencent.bk.codecc.defect.model.checkerset.CheckerPropsEntity;
+import com.tencent.bk.codecc.defect.model.checkerset.CheckerSetEntity;
 import com.tencent.bk.codecc.defect.service.AbstractQueryWarningBizService;
 import com.tencent.bk.codecc.defect.service.CheckerService;
 import com.tencent.bk.codecc.defect.service.TreeService;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
-import com.tencent.bk.codecc.defect.vo.*;
-import com.tencent.bk.codecc.defect.vo.common.*;
+import com.tencent.bk.codecc.defect.utils.ParamUtils;
+import com.tencent.bk.codecc.defect.vo.CheckerCustomVO;
+import com.tencent.bk.codecc.defect.vo.CheckerDetailVO;
+import com.tencent.bk.codecc.defect.vo.CodeCommentVO;
+import com.tencent.bk.codecc.defect.vo.LintDefectDetailQueryReqVO;
+import com.tencent.bk.codecc.defect.vo.LintDefectDetailQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.LintDefectGroupStatisticVO;
+import com.tencent.bk.codecc.defect.vo.LintDefectQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.LintDefectVO;
+import com.tencent.bk.codecc.defect.vo.LintFileVO;
+import com.tencent.bk.codecc.defect.vo.ToolDefectRspVO;
+import com.tencent.bk.codecc.defect.vo.TreeNodeVO;
+import com.tencent.bk.codecc.defect.vo.common.CommonDefectDetailQueryReqVO;
+import com.tencent.bk.codecc.defect.vo.common.CommonDefectDetailQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.common.CommonDefectQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
+import com.tencent.bk.codecc.defect.vo.common.QueryWarningPageInitRspVO;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.api.pojo.Page;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.ComConstants.DefectStatus;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
-import com.tencent.devops.common.util.DateTimeUtils;
+import com.tencent.devops.common.service.ToolMetaCacheService;
 import com.tencent.devops.common.util.GsonUtils;
 import com.tencent.devops.common.util.ListSortUtil;
 import com.tencent.devops.common.util.PathUtils;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -64,9 +92,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Lint类工具的告警查询实现
@@ -87,13 +112,15 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     @Autowired
     private LintDefectV2Repository lintDefectV2Repository;
     @Autowired
-    private ToolMetaCacheServiceImpl toolMetaCache;
+    private ToolMetaCacheService toolMetaCache;
     @Autowired
     private NewDefectJudgeService newDefectJudgeService;
     @Autowired
     private BuildDefectRepository buildDefectRepository;
     @Autowired
     private LintStatisticRepository lintStatisticRepository;
+    @Autowired
+    private CheckerSetRepository checkerSetRepository;
 
     @Override
     public int getSubmitStepNum()
@@ -105,39 +132,85 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     public CommonDefectQueryRspVO processQueryWarningRequest(long taskId, DefectQueryReqVO queryWarningReq, int pageNum, int pageSize, String sortField, Sort.Direction sortType)
     {
         log.info("query task[{}] defect list by {}", taskId, queryWarningReq);
+        LintDefectQueryRspVO lintDefectQueryRsp = new LintDefectQueryRspVO();
+
+        // get tool name params
+        List<String> toolNameSet = ParamUtils.getToolsByDimension(queryWarningReq.getToolName(), queryWarningReq.getDimension(), taskId);
+
+        if (CollectionUtils.isEmpty(toolNameSet)) {
+            return lintDefectQueryRsp;
+        }
+
         //获取任务信息
-        CodeCCResult<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
         TaskDetailVO taskDetailVO = taskInfoResult.getData();
 
-        String toolName = queryWarningReq.getToolName();
-        String buildId = queryWarningReq.getBuildId();
+        log.info("query task defect list by tool:{}, {}", taskId, toolNameSet);
+
+        if (CollectionUtils.isEmpty(toolNameSet)) {
+            return lintDefectQueryRsp;
+        }
 
         // 获取相同包id下的规则集合
-        Set<String> pkgChecker = multitoolCheckerService.queryPkgRealCheckers(queryWarningReq.getPkgId(), toolName, taskDetailVO);
+        Set<String> pkgChecker = multitoolCheckerService.queryPkgRealCheckers(
+            queryWarningReq.getPkgId(), toolNameSet, taskDetailVO);
+
+        // 获取规则集的规则集合
+        if (queryWarningReq.getCheckerSet() != null) {
+            DefectQueryReqVO.CheckerSet queryCheckerSet = queryWarningReq.getCheckerSet();
+            CheckerSetEntity checkerSetItem = checkerSetRepository.findByCheckerSetIdAndVersion(
+                queryCheckerSet.getCheckerSetId(), queryCheckerSet.getVersion());
+            Set<String> allChecker = checkerSetItem.getCheckerProps().stream()
+                .filter((it) -> toolNameSet.contains(it.getToolName()))
+                .map(CheckerPropsEntity::getCheckerKey).collect(Collectors.toSet());
+
+            String checker = queryWarningReq.getChecker();
+            if (StringUtils.isNotEmpty(checker) && allChecker.contains(checker)) {
+                pkgChecker.add(checker);
+            } else {
+                pkgChecker.addAll(allChecker);
+            }
+
+            if (CollectionUtils.isEmpty(pkgChecker)) {
+                return lintDefectQueryRsp;
+            }
+        }
+
+        log.info("get checker for task: {}, {}", taskId, pkgChecker.size());
 
         // 获取某个构建id下的告警id
-        Set<String> defectIdSet = getDefectIdsByBuildId(taskId, toolName, buildId);
+        Set<String> defectIdSet = getDefectIdsByBuildId(taskId, toolNameSet, queryWarningReq.getBuildId());
+
+        log.info("get defect id for task: {}, {}", taskId, defectIdSet.size());
 
         // 获取新旧告警判断时间
-        long newDefectJudgeTime = getNewDefectJudgeTime(taskId, toolName, queryWarningReq.getDefectType(), taskDetailVO);
+        long newDefectJudgeTime = getNewDefectJudgeTime(taskId, queryWarningReq.getDefectType(), taskDetailVO);
+
+        log.info("get new defect judge time for task: {}, {}", taskId, newDefectJudgeTime);
 
         Set<String> condStatusList = queryWarningReq.getStatus();
         if (CollectionUtils.isEmpty(condStatusList))
         {
             condStatusList = new HashSet<>(1);
-            condStatusList.add(String.valueOf(ComConstants.DefectStatus.NEW.value()));
+            condStatusList.add(String.valueOf(DefectStatus.NEW.value()));
             queryWarningReq.setStatus(condStatusList);
         }
 
-        LintDefectQueryRspVO lintDefectQueryRsp = new LintDefectQueryRspVO();
+        if (condStatusList.contains(String.valueOf(DefectStatus.PATH_MASK.value()))) {
+            condStatusList.addAll(MASK_STATUS);
+        }
+
         lintDefectQueryRsp.setNewDefectJudgeTime(newDefectJudgeTime);
 
         // 按文件聚类
         String clusterType = queryWarningReq.getClusterType();
         if (StringUtils.isNotEmpty(clusterType) && ComConstants.ClusterType.file.name().equalsIgnoreCase(clusterType))
         {
-            Page<LintFileVO> pageResult = lintDefectV2Dao.findDefectFilePageByCondition(taskId, queryWarningReq, defectIdSet, pkgChecker,
-                    newDefectJudgeTime, pageNum, pageSize, sortField, sortType);
+            log.info("get defect group by file for task: {}", taskId);
+
+            Page<LintFileVO> pageResult = lintDefectV2Dao.findDefectFilePageByCondition(
+                taskId, queryWarningReq, defectIdSet, pkgChecker,
+                newDefectJudgeTime, pageNum, pageSize, sortField, sortType, toolNameSet);
             lintDefectQueryRsp.setFileList(pageResult);
         }
         // 按问题聚类
@@ -145,23 +218,34 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         {
             Map<String, Boolean> filedMap = getDefectBaseFieldMap();
 
-            Page<LintDefectV2Entity> result = lintDefectV2Dao.findDefectPageByCondition(taskId, queryWarningReq, defectIdSet, pkgChecker,
-                    newDefectJudgeTime, filedMap, pageNum, pageSize, sortField, sortType);
+            Page<LintDefectV2Entity> result = lintDefectV2Dao.findDefectPageByCondition(
+                taskId, queryWarningReq, defectIdSet, pkgChecker,
+                newDefectJudgeTime, filedMap, pageNum, pageSize, sortField, sortType, toolNameSet);
+
+            log.info("get defect group by problem for task: {}, {}, {}", taskId, result.getCount(), pkgChecker);
 
             List<LintDefectVO> defectVOList = new ArrayList<>();
             if (CollectionUtils.isNotEmpty(result.getRecords()))
             {
-                StatisticEntity statisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+                Map<String, Long> lastAnalyzeTimeMap = getLastAnalyzeTimeMap(taskId, toolNameSet);
+
                 defectVOList = result.getRecords().stream().map(defectV2Entity ->
                 {
                     LintDefectVO defectVO = new LintDefectVO();
                     BeanUtils.copyProperties(defectV2Entity, defectVO);
-                    defectVO.setMark(convertMarkStatus(defectV2Entity.getMark(), defectV2Entity.getMarkTime(), statisticEntity));
-                    defectVO.setSeverity(defectVO.getSeverity() == ComConstants.PROMPT_IN_DB ? ComConstants.PROMPT : defectVO.getSeverity());
+                    defectVO.setMark(
+                        convertMarkStatus(defectV2Entity.getMark(),
+                            defectV2Entity.getMarkTime(),
+                            lastAnalyzeTimeMap.get(defectV2Entity.getToolName())));
+                    defectVO.setSeverity(defectVO.getSeverity() == ComConstants.PROMPT_IN_DB
+                        ? ComConstants.PROMPT : defectVO.getSeverity());
                     return defectVO;
                 }).collect(Collectors.toList());
+
+                log.info("fill defect vo list for task: {}, {}", taskId, result.getRecords().get(0));
             }
-            Page<LintDefectVO> pageResult = new Page<>(result.getCount(), result.getPage(), result.getPageSize(), result.getTotalPages(), defectVOList);
+            Page<LintDefectVO> pageResult = new Page<>(result.getCount(), result.getPage(),
+                result.getPageSize(), result.getTotalPages(), defectVOList);
             lintDefectQueryRsp.setDefectList(pageResult);
         }
 
@@ -169,9 +253,12 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     }
 
     @Override
-    public CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(long taskId, String userId, CommonDefectDetailQueryReqVO queryWarningDetailReq,
-                                                                         String sortField, Sort.Direction sortType)
-    {
+    public CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(
+        long taskId,
+        String userId,
+        CommonDefectDetailQueryReqVO queryWarningDetailReq,
+        String sortField,
+        Sort.Direction sortType) {
         log.info("query task{} defects by {}", taskId, GsonUtils.toJson(queryWarningDetailReq));
         if (!(queryWarningDetailReq instanceof LintDefectDetailQueryReqVO))
         {
@@ -179,12 +266,20 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"queryWarningDetailReq"}, null);
         }
 
+        // get tool name set
+        List<String> toolNameSet = ParamUtils.getToolsByDimension(queryWarningDetailReq.getToolName(), queryWarningDetailReq.getDimension(), taskId);
+
+        LintDefectDetailQueryRspVO lintDefectQueryRspVO = new LintDefectDetailQueryRspVO();
+
+        if (CollectionUtils.isEmpty(toolNameSet)) {
+            return lintDefectQueryRspVO;
+        }
+
         //获取任务信息
-        CodeCCResult<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
         TaskDetailVO taskDetailVO = taskInfoResult.getData();
 
         LintDefectDetailQueryReqVO lintDefectQueryReqVO = (LintDefectDetailQueryReqVO) queryWarningDetailReq;
-        String toolName = lintDefectQueryReqVO.getToolName();
 
         List<LintDefectV2Entity> defectList = new ArrayList<>();
 
@@ -192,7 +287,6 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         String clusterType = lintDefectQueryReqVO.getClusterType();
         if (StringUtils.isNotEmpty(clusterType) && ComConstants.ClusterType.defect.name().equalsIgnoreCase(clusterType))
         {
-            log.info("query defects by entity: {}", lintDefectQueryReqVO.getEntityId());
             LintDefectV2Entity defectEntity = lintDefectV2Repository.findByEntityId(lintDefectQueryReqVO.getEntityId());
             if (defectEntity != null)
             {
@@ -203,13 +297,13 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         else
         {
             // 获取相同包id下的规则集合
-            Set<String> pkgChecker = multitoolCheckerService.queryPkgRealCheckers(lintDefectQueryReqVO.getPkgId(), toolName, taskDetailVO);
+            Set<String> pkgChecker = multitoolCheckerService.queryPkgRealCheckers(lintDefectQueryReqVO.getPkgId(), toolNameSet, taskDetailVO);
 
             // 获取某个构建id下的告警id
-            Set<String> defectIdSet = getDefectIdsByBuildId(taskId, toolName, lintDefectQueryReqVO.getBuildId());
+            Set<String> defectIdSet = getDefectIdsByBuildId(taskId, toolNameSet, lintDefectQueryReqVO.getBuildId());
 
             // 获取新旧告警判断时间
-            long newDefectJudgeTime = getNewDefectJudgeTime(taskId, toolName, lintDefectQueryReqVO.getDefectType(), taskDetailVO);
+            long newDefectJudgeTime = getNewDefectJudgeTime(taskId, lintDefectQueryReqVO.getDefectType(), taskDetailVO);
 
             Map<String, Boolean> filedMap = getDefectBaseFieldMap();
             filedMap.put("rel_path", true);
@@ -219,19 +313,19 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
             filedMap.put("branch", true);
             filedMap.put("sub_module", true);
             filedMap.put("code_comment", true);
+            filedMap.put("tool_name", true);
 
             DefectQueryReqVO queryWarningReq = new DefectQueryReqVO();
             BeanUtils.copyProperties(lintDefectQueryReqVO, queryWarningReq);
-            defectList = lintDefectV2Dao.findDefectByCondition(taskId, queryWarningReq, defectIdSet, pkgChecker, newDefectJudgeTime, filedMap);
+            defectList = lintDefectV2Dao.findDefectByCondition(taskId, queryWarningReq, defectIdSet, pkgChecker, newDefectJudgeTime, filedMap, toolNameSet);
         }
 
-        LintDefectDetailQueryRspVO lintDefectQueryRspVO = new LintDefectDetailQueryRspVO();
         if (CollectionUtils.isEmpty(defectList))
         {
             log.info("defect not found by condition: {}", lintDefectQueryReqVO);
             return lintDefectQueryRspVO;
         }
-        StatisticEntity statisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        Map<String, Long> lastAnalyzeTimeMap = getLastAnalyzeTimeMap(taskId, toolNameSet);
 
         if (StringUtils.isEmpty(sortField))
         {
@@ -247,7 +341,7 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         {
             LintDefectVO defectVO = new LintDefectVO();
             BeanUtils.copyProperties(defectV2Entity, defectVO);
-            defectVO.setMark(convertMarkStatus(defectV2Entity.getMark(), defectV2Entity.getMarkTime(), statisticEntity));
+            defectVO.setMark(convertMarkStatus(defectV2Entity.getMark(), defectV2Entity.getMarkTime(), lastAnalyzeTimeMap.get(defectV2Entity.getToolName())));
             //设置告警评论
             if (null != defectV2Entity.getCodeComment() && CollectionUtils.isNotEmpty(defectV2Entity.getCodeComment().getCommentList()))
             {
@@ -260,8 +354,15 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         LintDefectV2Entity defectEntity = defectList.get(0);
         // 赋值告警详情详细信息，包括文件内容，文件路径等
         String relPath = StringUtils.isEmpty(defectEntity.getRelPath()) ? defectEntity.getFilePath().substring(22) : defectEntity.getRelPath();
-        String content = getFileContent(taskId, userId, defectEntity.getUrl(), defectEntity.getRepoId(),
-            relPath, defectEntity.getRevision(), defectEntity.getBranch(), defectEntity.getSubModule());
+        String content = getFileContent(taskId,
+                taskDetailVO.getProjectId(),
+                userId,
+                defectEntity.getUrl(),
+                defectEntity.getRepoId(),
+                relPath,
+                defectEntity.getRevision(),
+                defectEntity.getBranch(),
+                defectEntity.getSubModule());
         if (StringUtils.isBlank(content))
         {
             content = EMPTY_FILE_CONTENT_TIPS;
@@ -273,7 +374,7 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         lintDefectQueryRspVO.setRelativePath(relativePath);
 
         //5.获取告警规则详情和规则类型
-        getCheckerDetailAndType(defectVOList, toolName);
+        getCheckerDetailAndType(defectVOList, toolNameSet, queryWarningDetailReq.getPattern());
 
         String filePath = defectEntity.getFilePath();
 
@@ -299,11 +400,23 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         return newDefectJudgeTime;
     }
 
+    protected long getNewDefectJudgeTime(long taskId, Set<String> conditionDefectType, TaskDetailVO taskDetailVO)
+    {
+        long newDefectJudgeTime = 0;
+        if (CollectionUtils.isNotEmpty(conditionDefectType)
+            && !conditionDefectType.containsAll(Sets.newHashSet(ComConstants.DefectType.NEW.stringValue(), ComConstants.DefectType.HISTORY.stringValue())))
+        {
+            // 查询新老告警判定时间
+            newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, taskDetailVO);
+        }
+        return newDefectJudgeTime;
+    }
+
     @Nullable
     protected Set<String> getDefectIdsByBuildId(long taskId, String toolName, String buildId)
     {
         Set<String> defectIdSet = null;
-        if (StringUtils.isNotEmpty(buildId) && defectCommitSuccess(taskId, toolName, buildId))
+        if (StringUtils.isNotEmpty(buildId) && taskLogService.defectCommitSuccess(taskId, Lists.newArrayList(toolName), buildId, getSubmitStepNum()).get(toolName))
         {
             defectIdSet = new HashSet<>();
             List<BuildDefectEntity> buildFiles = buildDefectRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
@@ -318,6 +431,26 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         return defectIdSet;
     }
 
+    @Nullable
+    protected Set<String> getDefectIdsByBuildId(long taskId, List<String> toolNameSet, String buildId)
+    {
+        Set<String> defectIdSet = new HashSet<>();
+        if (StringUtils.isNotEmpty(buildId))
+        {
+            Map<String, Boolean> commitResult = taskLogService.defectCommitSuccess(taskId, toolNameSet, buildId, getSubmitStepNum());
+            List<String> successTools = commitResult.entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).collect(Collectors.toList());
+
+            List<BuildDefectEntity> buildFiles = buildDefectRepository.findByTaskIdAndToolNameInAndBuildId(taskId, successTools, buildId);
+            if (CollectionUtils.isNotEmpty(buildFiles))
+            {
+                for (BuildDefectEntity buildDefectEntity : buildFiles)
+                {
+                    defectIdSet.addAll(buildDefectEntity.getFileDefectIds());
+                }
+            }
+        }
+        return defectIdSet;
+    }
 
     @NotNull
     protected Map<String, Boolean> getDefectBaseFieldMap()
@@ -338,19 +471,28 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         filedMap.put("status", true);
         filedMap.put("mark", true);
         filedMap.put("mark_time", true);
+        filedMap.put("fixed_time", true);
+        filedMap.put("ignore_time", true);
+        filedMap.put("tool_name", true);
         return filedMap;
     }
 
     @Override
-    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, Set<String> statusSet)
+    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, String dimension, Set<String> statusSet, String checkerSet)
     {
         long beginTime = System.currentTimeMillis();
 
         QueryWarningPageInitRspVO rspVO = new QueryWarningPageInitRspVO();
 
+        List<String> toolNameSet = ParamUtils.getToolsByDimension(toolName, dimension, taskId);
+
+        if (CollectionUtils.isEmpty(toolNameSet)) {
+            return rspVO;
+        }
+
         // 根据状态过滤后获取规则，处理人、文件路径
-        List<LintFileVO> fileInfos = lintDefectV2Dao.getCheckerAuthorPathForPageInit(taskId, toolName, statusSet);
-        log.info("get file info size is: {}, task id: {}, tool name: {}", fileInfos.size(), taskId, toolName);
+        List<LintFileVO> fileInfos = lintDefectV2Dao.getCheckerAuthorPathForPageInit(taskId, toolNameSet, statusSet);
+        log.info("get file info size is: {}, task id: {}, tool name: {}", fileInfos.size(), taskId, toolNameSet);
         Set<String> authors = new HashSet<>();
         Set<String> checkerList = new HashSet<>();
         Set<String> defectPaths = new TreeSet<>();
@@ -361,7 +503,7 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
                 // 设置作者
                 if (CollectionUtils.isNotEmpty(fileInfo.getAuthorList()))
                 {
-                    Set<String> authorSet = fileInfo.getAuthorList().stream().filter(author -> StringUtils.isNotEmpty(author)).collect(Collectors.toSet());
+                    Set<String> authorSet = fileInfo.getAuthorList().stream().filter(StringUtils::isNotEmpty).collect(Collectors.toSet());
                     authors.addAll(authorSet);
                 }
 
@@ -385,34 +527,57 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         }
 
         // 处理文件树
-        TreeService treeService = treeServiceBizServiceFactory.createBizService(toolName, ComConstants.BusinessType.TREE_SERVICE.value(), TreeService.class);
+        TreeService treeService = treeServiceBizServiceFactory.createBizService(toolNameSet.get(0), ComConstants.BusinessType.TREE_SERVICE.value(), TreeService.class);
         TreeNodeVO treeNode = treeService.getTreeNode(taskId, defectPaths);
         rspVO.setFilePathTree(treeNode);
 
         rspVO.setAuthorList(authors);
-        rspVO.setCheckerList(handleCheckerList(toolName, checkerList));
+        rspVO.setCheckerList(handleCheckerList(toolNameSet, checkerList, checkerSet));
 
         log.info("======================getCheckerAuthorPathForPageInit cost: {}", System.currentTimeMillis() - beginTime);
         return rspVO;
     }
 
     @Override
-    public QueryWarningPageInitRspVO pageInit(long taskId, DefectQueryReqVO defectQueryReqVO)
-    {
-        log.info("======================begin pageInit {}, taskId: {}, reqVo: {}", defectQueryReqVO.getStatisticType(), taskId, GsonUtils.toJson(defectQueryReqVO));
+    public QueryWarningPageInitRspVO pageInit(long taskId, DefectQueryReqVO defectQueryReqVO) {
+        log.info("begin pageInit taskId: {}, {}", taskId, GsonUtils.toJson(defectQueryReqVO));
         QueryWarningPageInitRspVO rspVO = new QueryWarningPageInitRspVO();
-        String toolName = defectQueryReqVO.getToolName();
+
+        List<String> toolNameSet =
+            ParamUtils.getToolsByDimension(defectQueryReqVO.getToolName(), defectQueryReqVO.getDimension(), taskId);
+
+        log.info("begin pageInit with tool name set for task {}, {}", taskId, toolNameSet);
+
+        if (CollectionUtils.isEmpty(toolNameSet)) {
+            return rspVO;
+        }
 
         // 获取任务信息
-        CodeCCResult<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
         TaskDetailVO taskDetailVO = taskInfoResult.getData();
-        long newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, toolName, taskDetailVO);
+        long newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, taskDetailVO);
         rspVO.setNewDefectJudgeTime(newDefectJudgeTime);
 
         // 获取相同包id下的规则集合
-        Set<String> pkgChecker = multitoolCheckerService.queryPkgRealCheckers(defectQueryReqVO.getPkgId(), toolName, taskDetailVO);
+        Set<String> pkgChecker = multitoolCheckerService.queryPkgRealCheckers(
+            defectQueryReqVO.getPkgId(), toolNameSet, taskDetailVO);
 
-        Set<String> defectIdSet = getDefectIdsByBuildId(taskId, toolName, defectQueryReqVO.getBuildId());
+        log.info("pageInit in query pkg real checkers for task {}, {}", taskId, pkgChecker.size());
+
+        // 获取规则集对应的规则
+        if (defectQueryReqVO.getCheckerSet() != null) {
+            DefectQueryReqVO.CheckerSet queryCheckerSet = defectQueryReqVO.getCheckerSet();
+            CheckerSetEntity checkerSetItem = checkerSetRepository.findByCheckerSetIdAndVersion(
+                queryCheckerSet.getCheckerSetId(), queryCheckerSet.getVersion());
+            pkgChecker.addAll(checkerSetItem.getCheckerProps().stream()
+                .filter((it) -> toolNameSet.contains(it.getToolName()))
+                .map(CheckerPropsEntity::getCheckerKey).collect(Collectors.toSet()));
+            log.info("get checker for task: {}, {}", taskId, pkgChecker.size());
+        }
+
+        Set<String> defectIdSet = getDefectIdsByBuildId(taskId, toolNameSet, defectQueryReqVO.getBuildId());
+
+        log.info("pageInit in get defect id for task {}, {}", taskId, defectIdSet.size());
 
         defectQueryReqVO.setSeverity(null);
         defectQueryReqVO.setDefectType(null);
@@ -422,7 +587,7 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         if (CollectionUtils.isEmpty(condStatusList))
         {
             condStatusList = new HashSet<>(1);
-            condStatusList.add(String.valueOf(ComConstants.DefectStatus.NEW.value()));
+            condStatusList.add(String.valueOf(DefectStatus.NEW.value()));
             defectQueryReqVO.setStatus(condStatusList);
         }
 
@@ -430,94 +595,100 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         // 1.根据规则、处理人、快照、路径、日期过滤后计算各状态告警数
         if (ComConstants.StatisticType.STATUS.name().equalsIgnoreCase(defectQueryReqVO.getStatisticType()))
         {
-            statisticByStatus(taskId, defectQueryReqVO, pkgChecker, defectIdSet, rspVO);
+            statisticByStatus(taskId, defectQueryReqVO, pkgChecker, defectIdSet, rspVO, toolNameSet);
         }
         // 2.根据规则、处理人、快照、路径、日期、状态过滤后计算: 各严重级别告警数
         else if (ComConstants.StatisticType.SEVERITY.name().equalsIgnoreCase(defectQueryReqVO.getStatisticType()))
         {
-            statisticBySeverity(taskId, defectQueryReqVO, pkgChecker, defectIdSet, rspVO);
+            statisticBySeverity(taskId, defectQueryReqVO, pkgChecker, defectIdSet, rspVO, toolNameSet);
         }
         // 3.根据规则、处理人、快照、路径、日期、状态过滤后计算: 新老告警数
         else if (ComConstants.StatisticType.DEFECT_TYPE.name().equalsIgnoreCase(defectQueryReqVO.getStatisticType()))
         {
-            statisticByDefectType(taskId, defectQueryReqVO, pkgChecker, defectIdSet, newDefectJudgeTime, rspVO);
+            statisticByDefectType(taskId, defectQueryReqVO, pkgChecker, defectIdSet, newDefectJudgeTime, rspVO, toolNameSet);
         }
         else
         {
             log.error("StatisticType is invalid. {}", GsonUtils.toJson(defectQueryReqVO));
         }
-        log.info("======================pageInit {} cost: {}", defectQueryReqVO.getStatisticType(), System.currentTimeMillis() - beginTime);
+        log.info("pageInit finish for task {}", taskId);
         return rspVO;
     }
 
-    protected void statisticBySeverity(long taskId, DefectQueryReqVO defectQueryReqVO, Set<String> pkgChecker, Set<String> defectIdSet, QueryWarningPageInitRspVO rspVO)
+    protected void statisticBySeverity(long taskId, DefectQueryReqVO defectQueryReqVO, Set<String> pkgChecker,
+                                       Set<String> defectIdSet, QueryWarningPageInitRspVO rspVO, List<String> toolNameSet)
     {
-        List<LintDefectGroupStatisticVO> groups = lintDefectV2Dao.statisticBySeverity(taskId, defectQueryReqVO, defectIdSet, pkgChecker);
+        List<LintDefectGroupStatisticVO> groups = lintDefectV2Dao.statisticBySeverity(
+            taskId, defectQueryReqVO, defectIdSet, pkgChecker, toolNameSet);
         groups.forEach(it ->
         {
             if (ComConstants.SERIOUS == it.getSeverity())
             {
-                rspVO.setSeriousCount(it.getDefectCount());
+                rspVO.setSeriousCount(rspVO.getSeriousCount() + it.getDefectCount());
             }
             else if (ComConstants.NORMAL == it.getSeverity())
             {
-                rspVO.setNormalCount(it.getDefectCount());
+                rspVO.setNormalCount(rspVO.getNormalCount() + it.getDefectCount());
             }
-            else if (ComConstants.PROMPT_IN_DB == it.getSeverity())
+            else if (ComConstants.PROMPT_IN_DB == it.getSeverity() || ComConstants.PROMPT == it.getSeverity())
             {
-                rspVO.setPromptCount(it.getDefectCount());
+                rspVO.setPromptCount(rspVO.getPromptCount() + it.getDefectCount());
             }
         });
     }
 
-    protected void statisticByDefectType(long taskId, DefectQueryReqVO defectQueryReqVO, Set<String> pkgChecker, Set<String> defectIdSet, long newDefectJudgeTime, QueryWarningPageInitRspVO rspVO)
+    protected void statisticByDefectType(long taskId, DefectQueryReqVO defectQueryReqVO, Set<String> pkgChecker, Set<String> defectIdSet, long newDefectJudgeTime, QueryWarningPageInitRspVO rspVO, List<String> toolNameSet)
     {
         int newDefectCount = 0;
         int historyDefectCount = 0;
 
-        List<LintDefectGroupStatisticVO> groups = lintDefectV2Dao.statisticByDefectType(taskId, defectQueryReqVO, defectIdSet, pkgChecker);
+        List<LintDefectGroupStatisticVO> newGroups = lintDefectV2Dao.statisticByDefectType(taskId, defectQueryReqVO, defectIdSet, pkgChecker, toolNameSet, newDefectJudgeTime, ComConstants.DefectType.NEW.value());
 
-        for (LintDefectGroupStatisticVO group : groups)
+        for (LintDefectGroupStatisticVO group : newGroups)
         {
-            // 按新告警、历史告警统计
-            long defectCreateTime = DateTimeUtils.getThirteenTimestamp(group.getLineUpdateTime());
-            if (defectCreateTime < newDefectJudgeTime)
-            {
-                historyDefectCount += group.getDefectCount();
-            }
-            else
-            {
-                newDefectCount += group.getDefectCount();
-            }
+            newDefectCount += group.getDefectCount();
         }
         rspVO.setNewCount(newDefectCount);
+
+
+        log.info("statistic by defect type in history count for task: {}", taskId);
+
+        List<LintDefectGroupStatisticVO> hisGroups = lintDefectV2Dao.statisticByDefectType(taskId, defectQueryReqVO, defectIdSet, pkgChecker, toolNameSet, newDefectJudgeTime, ComConstants.DefectType.HISTORY.value());
+
+        for (LintDefectGroupStatisticVO group : hisGroups)
+        {
+            historyDefectCount += group.getDefectCount();
+        }
         rspVO.setHistoryCount(historyDefectCount);
     }
 
-    protected void statisticByStatus(long taskId, DefectQueryReqVO defectQueryReqVO, Set<String> pkgChecker, Set<String> defectIdSet, QueryWarningPageInitRspVO rspVO)
+    protected void statisticByStatus(long taskId, DefectQueryReqVO defectQueryReqVO, Set<String> pkgChecker, Set<String> defectIdSet, QueryWarningPageInitRspVO rspVO, List<String> toolNameSet)
     {
         Set<String> condStatusSet = defectQueryReqVO.getStatus();
 
         // 只需要查状态为待修复，已修复，已忽略的告警
-        Set<String> needQueryStatusSet = Sets.newHashSet(
+        /*Set<String> needQueryStatusSet = Sets.newHashSet(
                 String.valueOf(DefectStatus.NEW.value()),
                 String.valueOf(DefectStatus.NEW.value() | DefectStatus.FIXED.value()),
                 String.valueOf(DefectStatus.NEW.value() | DefectStatus.IGNORE.value()));
-        defectQueryReqVO.setStatus(needQueryStatusSet);
-        List<LintDefectGroupStatisticVO> groups = lintDefectV2Dao.statisticByStatus(taskId, defectQueryReqVO, defectIdSet, pkgChecker);
+        defectQueryReqVO.setStatus(needQueryStatusSet);*/
+        List<LintDefectGroupStatisticVO> groups = lintDefectV2Dao.statisticByStatus(taskId, defectQueryReqVO, defectIdSet, pkgChecker, toolNameSet);
         groups.forEach(it ->
         {
             if (it.getStatus() == DefectStatus.NEW.value())
             {
-                rspVO.setExistCount(it.getDefectCount());
+                rspVO.setExistCount(rspVO.getExistCount() + it.getDefectCount());
             }
             else if (it.getStatus() == (DefectStatus.NEW.value() | DefectStatus.FIXED.value()))
             {
-                rspVO.setFixCount(it.getDefectCount());
+                rspVO.setFixCount(rspVO.getFixCount() + it.getDefectCount());
             }
             else if (it.getStatus() == (DefectStatus.NEW.value() | DefectStatus.IGNORE.value()))
             {
-                rspVO.setIgnoreCount(it.getDefectCount());
+                rspVO.setIgnoreCount(rspVO.getIgnoreCount() + it.getDefectCount());
+            }
+            else {
+                rspVO.setMaskCount(rspVO.getMaskCount() + it.getDefectCount());
             }
         });
         defectQueryReqVO.setStatus(condStatusSet);
@@ -526,17 +697,28 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     /**
      * 获取规则类型
      *
-     * @param toolName
+     * @param toolNameSet
+     * @param checkerSet
      * @return
      */
-    private List<CheckerCustomVO> handleCheckerList(String toolName, Set<String> checkerList)
+    private List<CheckerCustomVO> handleCheckerList(List<String> toolNameSet, Set<String> checkerList, String checkerSet)
     {
         if (CollectionUtils.isEmpty(checkerList))
         {
             return new ArrayList<>();
         }
         // 获取工具对应的所有警告类型 [初始化新增时一定要检查规则名称是否重复]
-        Map<String, CheckerDetailVO> checkerDetailVOMap = multitoolCheckerService.queryAllChecker(toolName);
+        Map<String, CheckerDetailVO> checkerDetailVOMap = multitoolCheckerService.queryAllChecker(toolNameSet, checkerSet);
+
+
+        if (StringUtils.isNotEmpty(checkerSet)) {
+            Set<String> checkerKeySet = new HashSet<>();
+            checkerSetRepository.findByCheckerSetId(checkerSet).forEach(it -> {
+                it.getCheckerProps().forEach(props -> {
+                    checkerKeySet.add(props.getCheckerKey());
+                });
+            });
+        }
 
         if (MapUtils.isNotEmpty(checkerDetailVOMap))
         {
@@ -575,12 +757,11 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     }
 
 
-    private void getCheckerDetailAndType(List<LintDefectVO> lintDefectVOList, String toolName)
+    private void getCheckerDetailAndType(List<LintDefectVO> lintDefectVOList, List<String> toolNameSet, String pattern)
     {
         if (CollectionUtils.isNotEmpty(lintDefectVOList))
         {
-            String pattern = toolMetaCache.getToolPattern(toolName);
-            Map<String, CheckerDetailVO> checkers = multitoolCheckerService.queryAllChecker(toolName);
+            Map<String, CheckerDetailVO> checkers = multitoolCheckerService.queryAllChecker(toolNameSet, null);
 
             lintDefectVOList.forEach(lintDefectVO ->
             {

@@ -90,7 +90,8 @@
         computed: {
             ...mapState('atom', [
                 'execDetail',
-                'pipeline'
+                'pipeline',
+                'pipelineLimit'
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
@@ -202,6 +203,13 @@
                 })
             },
             copyContainer () {
+                if (this.containerLength >= this.pipelineLimit.jobLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.jobLimit') + this.pipelineLimit.jobLimit
+                    })
+                    return
+                }
                 try {
                     const copyContainer = JSON.parse(JSON.stringify(this.container))
                     const container = {

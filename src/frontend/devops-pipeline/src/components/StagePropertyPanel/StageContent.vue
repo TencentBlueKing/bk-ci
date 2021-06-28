@@ -2,7 +2,7 @@
     <section v-if="stage" :class="{ 'readonly': !editable }" class="stage-property-panel bk-form bk-form-vertical">
         <form-field :required="true" :label="$t('name')" :is-error="errors.has('name')" :error-msg="errors.first('name')">
             <div class="stage-name">
-                <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('nameInputTips')" name="name" v-validate.initial="'required'" :value="stageTitle" :handle-change="handleStageChange" />
+                <vuex-input :disabled="!editable || stage.finally === true " input-type="text" :placeholder="$t('nameInputTips')" name="name" v-validate.initial="'required'" :value="stageTitle" :handle-change="handleStageChange" />
             </div>
         </form-field>
         <form-field :required="true" :label="$t('label')" :is-error="errors.has('tag')" :error-msg="errors.first('tag')">
@@ -16,7 +16,7 @@
                 </bk-select>
             </div>
         </form-field>
-        <stage-control v-if="stageIndex > 0" ref="stageControl" :stage-control="stageControl" :disabled="!editable" :handle-stage-change="handleStageChange"></stage-control>
+        <stage-control v-if="stageIndex > 0" ref="stageControl" :stage-control="stageControl" :disabled="!editable" :is-finally="stage.finally === true" :handle-stage-change="handleStageChange"></stage-control>
     </section>
 </template>
 

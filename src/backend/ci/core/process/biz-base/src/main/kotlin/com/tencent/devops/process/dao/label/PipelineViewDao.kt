@@ -74,7 +74,7 @@ class PipelineViewDao {
                     userId
                 )
                 .returning(ID)
-                .fetchOne().id
+                .fetchOne()!!.id
         }
     }
 
@@ -115,7 +115,7 @@ class PipelineViewDao {
                     userId
                 )
                 .returning(ID)
-                .fetchOne().id
+                .fetchOne()!!.id
         }
     }
 

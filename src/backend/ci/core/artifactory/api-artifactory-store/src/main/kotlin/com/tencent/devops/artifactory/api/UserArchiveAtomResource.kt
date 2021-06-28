@@ -43,6 +43,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_ARTIFACTORY"], description = "仓库-插件")
@@ -105,6 +106,9 @@ interface UserArchiveAtomResource {
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        @ApiParam("插件字段校验确认标识", required = false)
+        @QueryParam("fieldCheckConfirmFlag")
+        fieldCheckConfirmFlag: Boolean?
     ): Result<ArchiveAtomResponse?>
 }

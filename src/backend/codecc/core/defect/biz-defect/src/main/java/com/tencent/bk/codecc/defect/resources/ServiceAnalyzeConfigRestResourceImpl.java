@@ -31,7 +31,7 @@ import com.tencent.bk.codecc.defect.service.CheckerService;
 import com.tencent.bk.codecc.defect.service.ToolBuildInfoService;
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.pipeline.PipelineBuildInfoVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -51,14 +51,14 @@ public class ServiceAnalyzeConfigRestResourceImpl implements ServiceAnalyzeConfi
     private ToolBuildInfoService toolBuildInfoService;
 
     @Override
-    public CodeCCResult<AnalyzeConfigInfoVO> getTaskCheckerConfig(AnalyzeConfigInfoVO analyzeConfigInfoVO)
+    public Result<AnalyzeConfigInfoVO> getTaskCheckerConfig(AnalyzeConfigInfoVO analyzeConfigInfoVO)
     {
-        return new CodeCCResult<>(checkerService.getTaskCheckerConfig(analyzeConfigInfoVO));
+        return new Result<>(checkerService.getTaskCheckerConfig(analyzeConfigInfoVO));
     }
 
     @Override
-    public CodeCCResult<AnalyzeConfigInfoVO> getBuildInfo(AnalyzeConfigInfoVO analyzeConfigInfoVO)
+    public Result<AnalyzeConfigInfoVO> getBuildInfo(AnalyzeConfigInfoVO analyzeConfigInfoVO)
     {
-        return new CodeCCResult<>(toolBuildInfoService.getBuildInfo(analyzeConfigInfoVO));
+        return new Result<>(toolBuildInfoService.getBuildInfo(analyzeConfigInfoVO));
     }
 }

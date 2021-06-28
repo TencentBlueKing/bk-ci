@@ -36,9 +36,10 @@ import com.tencent.bk.codecc.defect.vo.checkerset.AddCheckerSet2TaskReqVO;
 import com.tencent.bk.codecc.defect.vo.checkerset.GetCheckerSetsReqVO;
 import com.tencent.bk.codecc.defect.vo.checkerset.PipelineCheckerSetVO;
 import com.tencent.bk.codecc.defect.vo.checkerset.UserCheckerSetsVO;
+import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.checkerset.ClearTaskCheckerSetReqVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -66,39 +67,39 @@ public class ServiceCheckerRestResourceImpl implements ServiceCheckerRestResourc
     private CheckerService checkerService;
 
     @Override
-    public CodeCCResult<List<CheckerPkgRspVO>> queryCheckerConfiguration(Long taskId, String toolName, Long codeLang, ToolConfigInfoVO toolConfig)
+    public Result<List<CheckerPkgRspVO>> queryCheckerConfiguration(Long taskId, String toolName, Long codeLang, ToolConfigInfoVO toolConfig)
     {
-        return new CodeCCResult<>(iConfigCheckerPkgBizService.getConfigCheckerPkg(taskId, toolName, codeLang, toolConfig).getCheckerPackages());
+        return new Result<>(iConfigCheckerPkgBizService.getConfigCheckerPkg(taskId, toolName, codeLang, toolConfig).getCheckerPackages());
     }
 
     @Override
-    public CodeCCResult<Boolean> configCheckerPkg(Long taskId, String toolName, ConfigCheckersPkgReqVO packageVo)
+    public Result<Boolean> configCheckerPkg(Long taskId, String toolName, ConfigCheckersPkgReqVO packageVo)
     {
-        return new CodeCCResult<>(configCheckerPkgBizService.syncConfigCheckerPkg(taskId, toolName, packageVo));
+        return new Result<>(configCheckerPkgBizService.syncConfigCheckerPkg(taskId, toolName, packageVo));
     }
 
     @Override
-    public CodeCCResult<Boolean> addCheckerSet2Task(String user, Long taskId, AddCheckerSet2TaskReqVO addCheckerSet2TaskReqVO)
+    public Result<Boolean> addCheckerSet2Task(String user, Long taskId, AddCheckerSet2TaskReqVO addCheckerSet2TaskReqVO)
     {
-        return new CodeCCResult<>(checkerSetBizService.addCheckerSet2Task(user, taskId, addCheckerSet2TaskReqVO));
+        return new Result<>(checkerSetBizService.addCheckerSet2Task(user, taskId, addCheckerSet2TaskReqVO));
     }
 
     @Override
-    public CodeCCResult<UserCheckerSetsVO> getCheckerSets(GetCheckerSetsReqVO getCheckerSetsReqVO, String user, String projectId)
+    public Result<UserCheckerSetsVO> getCheckerSets(GetCheckerSetsReqVO getCheckerSetsReqVO, String user, String projectId)
     {
-        return new CodeCCResult<>(checkerSetBizService.getCheckerSets(getCheckerSetsReqVO.getToolNames(), user, projectId));
+        return new Result<>(checkerSetBizService.getCheckerSets(getCheckerSetsReqVO.getToolNames(), user, projectId));
     }
 
     @Override
-    public CodeCCResult<PipelineCheckerSetVO> getPipelineCheckerSets(String toolName, String user, String projectId)
+    public Result<PipelineCheckerSetVO> getPipelineCheckerSets(String toolName, String user, String projectId)
     {
-        return new CodeCCResult<>(checkerSetBizService.getPipelineCheckerSets(toolName, user, projectId));
+        return new Result<>(checkerSetBizService.getPipelineCheckerSets(toolName, user, projectId));
     }
 
     @Override
-    public CodeCCResult<Boolean> clearCheckerSet(Long taskId, ClearTaskCheckerSetReqVO clearTaskCheckerSetReqVO, String user)
+    public Result<Boolean> clearCheckerSet(Long taskId, ClearTaskCheckerSetReqVO clearTaskCheckerSetReqVO, String user)
     {
-        return new CodeCCResult<>(checkerSetBizService.clearTaskCheckerSets(taskId, clearTaskCheckerSetReqVO.getToolNames(), user,
+        return new Result<>(checkerSetBizService.clearTaskCheckerSets(taskId, clearTaskCheckerSetReqVO.getToolNames(), user,
                 clearTaskCheckerSetReqVO.getNeedUpdatePipeline()));
     }
 

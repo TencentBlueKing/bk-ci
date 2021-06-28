@@ -37,6 +37,9 @@ object CommonEnv {
     private var svnUser: String? = null
     private var svnPass: String? = null
 
+    var fileDevnetGateway: String? = null
+    var fileIdcGateway: String? = null
+
     fun addCommonEnv(env: Map<String, String>) {
         LoggerService.addNormalLine("Add the env($env) to common environment")
         envMap.putAll(env)
