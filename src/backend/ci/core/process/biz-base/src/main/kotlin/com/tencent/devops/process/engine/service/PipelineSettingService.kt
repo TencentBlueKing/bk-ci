@@ -86,14 +86,12 @@ class PipelineSettingService @Autowired constructor(
         val currentDayStr = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
         val currentDayBuildCountKey = getCurrentDayBuildCountKey(pipelineId, currentDayStr)
         // 判断缓存中是否有值，没有值则从db中实时查
-        return if (!redisOperation.hasKey(currentDayBuildCountKey)) {
+        if (!redisOperation.hasKey(currentDayBuildCountKey)) {
             logger.info("setCurrentDayBuildCount $currentDayBuildCountKey is not exist!")
             getCurrentDayBuildCountFromDb(transactionContext, currentDayStr, pipelineId)
-        } else {
-            // redis有值则每次自增1
-            redisOperation.increment(currentDayBuildCountKey, 1)
-            redisOperation.get(currentDayBuildCountKey)!!.toInt()
         }
+        // redis有值则每次自增1
+        return redisOperation.increment(currentDayBuildCountKey, 1)?.toInt() ?: 1
     }
 
     private fun getCurrentDayBuildCountKey(pipelineId: String, currentDayStr: String): String {

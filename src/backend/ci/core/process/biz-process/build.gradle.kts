@@ -56,4 +56,5 @@ dependencies {
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
     testImplementation(project(":core:common:common-test"))
+    api(project(":core:common:common-webhook:biz-common-webhook"))
 }
