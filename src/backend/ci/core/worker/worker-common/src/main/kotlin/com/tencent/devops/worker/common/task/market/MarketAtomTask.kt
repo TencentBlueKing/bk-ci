@@ -706,6 +706,13 @@ open class MarketAtomTask : ITask() {
             resultData = url
         }
         params["reportName"] = output[LABEL] as String
+        val emailReceivers = output["emailReceivers"] as? String
+        val emailTitle = output["emailTitle"] as? String
+        if (emailReceivers != null && emailTitle != null) {
+            params["enableEmail"] = output["enableEmail"].toString()
+            params["emailReceivers"] = JsonUtil.toJson(emailReceivers)
+            params["emailTitle"] = emailTitle
+        }
         val reportArchTask = BuildTask(
             buildId = buildTask.buildId,
             vmSeqId = buildTask.vmSeqId,
