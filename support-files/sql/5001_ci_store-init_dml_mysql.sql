@@ -94,7 +94,7 @@ REPLACE INTO `T_BUSINESS_CONFIG`(`BUSINESS`, `FEATURE`, `BUSINESS_VALUE`, `CONFI
 REPLACE INTO `T_BUSINESS_CONFIG`(`BUSINESS`, `FEATURE`, `BUSINESS_VALUE`, `CONFIG_VALUE`, `DESCRIPTION`) VALUES ('BUILD_TYPE', 'defaultBuildType', 'LINUX', 'DOCKER', 'Docker公共构建机');
 REPLACE INTO `T_BUSINESS_CONFIG`(`BUSINESS`, `FEATURE`, `BUSINESS_VALUE`, `CONFIG_VALUE`, `DESCRIPTION`) VALUES ('BUILD_TYPE', 'defaultBuildType', 'WINDOWS', 'THIRD_PARTY_AGENT_ID', '私有：单构建机');
 REPLACE INTO `T_BUSINESS_CONFIG`(`BUSINESS`, `FEATURE`, `BUSINESS_VALUE`, `CONFIG_VALUE`, `DESCRIPTION`) VALUES ('BUILD_TYPE', 'defaultBuildType', 'MACOS', 'THIRD_PARTY_AGENT_ID', '私有：单构建机');
-
+REPLACE INTO `T_BUSINESS_CONFIG` (`ID`, `BUSINESS`, `FEATURE`, `BUSINESS_VALUE`, `CONFIG_VALUE`, `DESCRIPTION`) values('54','ATOM','api','sensitiveApi','[{\"apiName\":\"get_oauth_token\",\"apiUrl\":\"/repository/api/build/oauth/git/{userId}\"},{\"apiName\":\"get_credential\",\"apiUrl\":\"ticket/api/build/credentials/{credentialId}?publicKey={publicKey}\"}]','敏感API列表');
 
 
 REPLACE INTO `T_CLASSIFY`(`ID`, `CLASSIFY_CODE`, `CLASSIFY_NAME`, `WEIGHT`, `CREATOR`, `MODIFIER`, `CREATE_TIME`, `UPDATE_TIME`, `TYPE`) VALUES ('32ef49e3daa045caa44f9311072f1f26', 'OTHER', 'other', NULL, 'system', 'system', '2019-12-05 21:19:39', '2019-12-05 21:19:39', 2);

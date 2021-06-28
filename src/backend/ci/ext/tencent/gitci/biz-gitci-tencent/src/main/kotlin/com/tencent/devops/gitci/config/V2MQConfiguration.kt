@@ -27,6 +27,7 @@
 package com.tencent.devops.gitci.config
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.gitci.constant.MQ
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerListener
 import org.springframework.amqp.core.Binding
@@ -96,4 +97,7 @@ class V2MQConfiguration {
         container.setMessageListener(adapter)
         return container
     }
+
+    @Bean
+    fun webSocketDispatcher(rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
 }

@@ -31,7 +31,6 @@ import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.ticket.dao.CredentialDao
@@ -70,13 +69,12 @@ class GitCICredentialPermissionServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
-        logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectId gitProject: $gitProjectId")
+        logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectId ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenService.getSystemToken(null) ?: "",
             action = "",
-            projectCode = gitProjectId,
+            projectCode = projectId,
             resourceCode = null
         ).data ?: false
     }

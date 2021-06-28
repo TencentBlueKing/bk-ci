@@ -46,3 +46,9 @@ CREATE CONTINUOUS QUERY cq_dispatch_devcloud_stop_count ON monitoring BEGIN SELE
 
 -- codecc相关
 CREATE CONTINUOUS QUERY cq_codecc_reduce ON monitoring BEGIN SELECT count(buildId) as total_count,mean(elapseTime) as avg_time INTO monitoring.monitoring_retention.CodeccMonitor_reduce FROM monitoring.monitoring_retention.CodeccMonitor WHERE elapseTime>0 GROUP BY time(5m),errorCode,bgId,toolName END
+
+-- scm
+CREATE CONTINUOUS QUERY cq_commit_total_count ON monitoring BEGIN SELECT count(commitId) AS commit_total_count INTO monitoring.monitoring_retention.CommitCheck_success_rat_count FROM monitoring.monitoring_retention.AddCommitCheckStatus GROUP BY time(5m) END
+CREATE CONTINUOUS QUERY cq_commit_failed_count ON monitoring BEGIN SELECT count(commitId) AS commit_failed_count INTO monitoring.monitoring_retention.CommitCheck_success_rat_count FROM monitoring.monitoring_retention.AddCommitCheckStatus WHERE errorCode != '0' GROUP BY time(5m) END
+CREATE CONTINUOUS QUERY cq_commit_success_count ON monitoring BEGIN SELECT count(commitId) AS commit_success_count INTO monitoring.monitoring_retention.CommitCheck_success_rat_count FROM monitoring.monitoring_retention.AddCommitCheckStatus WHERE errorCode = '0' GROUP BY time(5m) END
+CREATE CONTINUOUS QUERY cq_commit_success_rat ON monitoring BEGIN SELECT sum(commit_success_count) * 100 / sum(commit_total_count) AS commit_success_rat INTO monitoring.monitoring_retention.CommitCheck_success_rat_count FROM monitoring.monitoring_retention.CommitCheck_success_rat_count GROUP BY time(5m) END

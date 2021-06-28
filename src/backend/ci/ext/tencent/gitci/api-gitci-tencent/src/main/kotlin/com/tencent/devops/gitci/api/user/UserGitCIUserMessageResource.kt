@@ -97,7 +97,10 @@ interface UserGitCIUserMessageResource {
         userId: String,
         @ApiParam(value = "消息ID")
         @PathParam("id")
-        id: Int
+        id: Int,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
     ): Result<Boolean>
 
     @ApiOperation("读取所有消息")

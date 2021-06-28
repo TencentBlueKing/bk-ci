@@ -364,14 +364,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         } else {
             getCredential(projectId, repo).privateKey
         }
-        val event = when (codeEventType) {
-            null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
-            CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
-            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
-                CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
-            }
-            else -> null
-        }
+        val event = convertEvent(codeEventType)
 
         logger.info("Add git web hook event($event)")
         if (isOauth) {
@@ -410,14 +403,6 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 defaultMessage = "不是Gitlab代码仓库",
                 errorCode = RepositoryMessageCode.GITLAB_INVALID
             )
-        val event = when (codeEventType) {
-            null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
-            CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
-            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
-                CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
-            }
-            else -> null
-        }
         val token = getCredential(projectId, repo).privateKey
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -428,7 +413,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             token = token,
             region = null,
             userName = repo.userName,
-            event = event
+            event = convertEvent(codeEventType)
         )
         return repo.projectName
     }
@@ -457,14 +442,6 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig) as? CodeTGitRepository
             ?: throw ErrorCodeException(defaultMessage = "TGit", errorCode = RepositoryMessageCode.TGIT_INVALID)
         val token = getCredential(projectId, repo).privateKey
-        val event = when (codeEventType) {
-            null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
-            CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
-            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
-                CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
-            }
-            else -> null
-        }
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
             url = repo.url,
@@ -474,45 +451,23 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             token = token,
             region = null,
             userName = repo.userName,
-            event = event
+            event = convertEvent(codeEventType)
         )
         return repo.projectName
     }
 
-    fun addGenericWebhook(
-        projectId: String,
-        repo: Repository,
-        scmType: ScmType,
-        codeEventType: CodeEventType?,
-        hookUrl: String? = null,
-        token: String? = null
-    ): String {
-        val realToken = if (token.isNullOrBlank()) {
-            getCredential(projectId, repo).privateKey
-        } else {
-            token!!
-        }
-        val event = when (codeEventType) {
+    private fun convertEvent(codeEventType: CodeEventType?): String? {
+        return when (codeEventType) {
             null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
             CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
             CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
                 CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
             }
+            CodeEventType.ISSUES -> CodeGitWebhookEvent.ISSUES_EVENTS.value
+            CodeEventType.NOTE -> CodeGitWebhookEvent.NOTE_EVENTS.value
+            CodeEventType.REVIEW -> CodeGitWebhookEvent.REVIEW_EVENTS.value
             else -> null
         }
-        client.get(ServiceScmResource::class).addWebHook(
-            projectName = repo.projectName,
-            url = repo.url,
-            type = scmType,
-            privateKey = null,
-            passPhrase = null,
-            token = realToken,
-            region = null,
-            userName = repo.userName,
-            event = event,
-            hookUrl = hookUrl
-        )
-        return repo.projectName
     }
 
     fun addGithubCheckRuns(
