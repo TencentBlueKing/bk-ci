@@ -93,10 +93,10 @@ prestart_codecc_gateway (){
 
 # 启动批次. 共分7批, 剩余的随机分批.
 case $MS_NAME in
-  gateway|dispatch*) wait_roll=0;;
-  process|project|environment) wait_roll=1;;
-  auth|store|ticket|image) wait_roll=2;;
-  log|artifactory|websocket|repository) wait_roll=3;;
+  gateway|task|defect) wait_roll=0;;
+  codeccjob|report) wait_roll=1;;
+  asyncreport|apiquery) wait_roll=2;;
+  openapi|quartz) wait_roll=3;;
   *) wait_roll=$((RANDOM%3+4));;
 esac
 wait_cpu_free "$wait_roll"
