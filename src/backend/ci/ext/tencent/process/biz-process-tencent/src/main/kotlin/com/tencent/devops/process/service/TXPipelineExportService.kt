@@ -311,13 +311,13 @@ class TXPipelineExportService @Autowired constructor(
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
                             env = null,
-                            run = " |\r\n ${step.script}",
+                            run = step.script,
                             checkout = null
                         )
                     )
                 }
                 WindowsScriptElement.classType -> {
-                    val step = element as LinuxScriptElement
+                    val step = element as WindowsScriptElement
                     stepList.add(
                         V2Step(
                             name = step.name,
@@ -334,7 +334,7 @@ class TXPipelineExportService @Autowired constructor(
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
                             env = null,
-                            run = " |\r\n ${step.script}",
+                            run = step.script,
                             checkout = null
                         )
                     )
