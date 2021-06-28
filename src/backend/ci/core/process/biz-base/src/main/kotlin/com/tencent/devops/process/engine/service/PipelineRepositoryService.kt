@@ -693,6 +693,7 @@ class PipelineRepositoryService constructor(
                 pipelineSettingVersionDao.deleteAllVersion(transactionContext, pipelineId)
                 pipelineResDao.deleteAllVersion(transactionContext, pipelineId)
                 pipelineSettingDao.delete(transactionContext, pipelineId)
+                templatePipelineDao.delete(transactionContext, pipelineId)
             } else {
                 // 删除前改名，防止名称占用
                 val deleteTime = LocalDateTime.now().toString("yyyyMMddHHmm")
