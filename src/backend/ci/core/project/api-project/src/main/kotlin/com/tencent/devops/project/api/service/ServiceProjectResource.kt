@@ -230,15 +230,4 @@ interface ServiceProjectResource {
         @ApiParam("添加信息", required = true)
         createInfo: ProjectCreateUserInfo
     ): Result<Boolean>
-
-    @PUT
-    @Path("/{projectCode}/relationIam")
-    fun relationIamProject(
-        @ApiParam("项目Code", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("IAM关联Id", required = true)
-        @QueryParam("relationId")
-        relationId: String
-    ): Result<Boolean>
 }

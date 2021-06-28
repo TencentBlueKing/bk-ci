@@ -33,8 +33,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWeb
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import java.lang.IllegalArgumentException
 
 @Suppress("ALL")
 class GitGenericWebHookElementParams : ScmWebhookElementParams<CodeGitGenericWebHookTriggerElement> {
@@ -42,8 +43,8 @@ class GitGenericWebHookElementParams : ScmWebhookElementParams<CodeGitGenericWeb
     override fun getWebhookElementParams(
         element: CodeGitGenericWebHookTriggerElement,
         variables: Map<String, String>
-    ): ScmWebhookMatcher.WebHookParams? {
-        val params = ScmWebhookMatcher.WebHookParams(
+    ): WebHookParams {
+        val params = WebHookParams(
             repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
                 repositoryConfig = RepositoryConfigUtils.buildConfig(element),
                 variables = variables
@@ -89,7 +90,7 @@ class GitGenericWebHookElementParams : ScmWebhookElementParams<CodeGitGenericWeb
                 CodeType.GITHUB
             ScmType.CODE_GITLAB.name ->
                 CodeType.GITLAB
-            else -> throw RuntimeException("Unknown scm type")
+            else -> throw IllegalArgumentException("Unknown scm type")
         }
     }
 }

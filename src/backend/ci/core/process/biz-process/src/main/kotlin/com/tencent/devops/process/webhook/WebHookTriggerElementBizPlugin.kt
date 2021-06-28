@@ -30,6 +30,7 @@ package com.tencent.devops.process.webhook
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
@@ -53,7 +54,8 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
         pipelineName: String,
         userId: String,
         channelCode: ChannelCode,
-        create: Boolean
+        create: Boolean,
+        container: Container
     ) = Unit
 
     override fun beforeDelete(element: T, param: BeforeDeleteParam) {
@@ -142,7 +144,8 @@ class CodeGitGenericWebHookTriggerElementBizPlugin constructor(
         pipelineName: String,
         userId: String,
         channelCode: ChannelCode,
-        create: Boolean
+        create: Boolean,
+        container: Container
     ) {
         // 只支持codecc才能自定义hookUrl
         if (channelCode != ChannelCode.CODECC && !element.data.input.hookUrl.isNullOrBlank()) {

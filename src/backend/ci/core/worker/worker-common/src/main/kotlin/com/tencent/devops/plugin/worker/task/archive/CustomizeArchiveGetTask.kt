@@ -40,6 +40,7 @@ import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.net.URLDecoder
 
@@ -87,7 +88,8 @@ class CustomizeArchiveGetTask : ITask() {
                     userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
                     projectId = buildVariables.projectId,
                     uri = fileUrl,
-                    destPath = file
+                    destPath = file,
+                    isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
                 )
                 count++
             }

@@ -125,9 +125,15 @@ object BuildStatusSwitcher {
                 BuildStatus.FAILED
             }
         }
+
+        fun switchByErrorCode(currentBuildStatus: BuildStatus, errorCode: Int?): BuildStatus = currentBuildStatus
     }
 
     class TaskBuildStatusMaker : BuildStatusMaker {
+
+        companion object {
+            private val timeoutCodeSet = setOf(2128006)
+        }
 
         /**
          * 强制结束构建时，[currentBuildStatus]如果是[BuildStatus.isRunning]状态，则为[BuildStatus.TERMINATE]
@@ -151,6 +157,13 @@ object BuildStatusSwitcher {
             }
         }
 
+        override fun switchByErrorCode(currentBuildStatus: BuildStatus, errorCode: Int?): BuildStatus {
+            if (timeoutCodeSet.contains(errorCode)) {
+                return BuildStatus.QUEUE_TIMEOUT
+            }
+            return currentBuildStatus
+        }
+
         private val pipelineStatus = setOf(
             BuildStatus.QUEUE,
             BuildStatus.QUEUE_CACHE,
@@ -158,15 +171,16 @@ object BuildStatusSwitcher {
             BuildStatus.RUNNING,
             BuildStatus.CALL_WAITING,
             BuildStatus.REVIEWING,
-            BuildStatus.PAUSE,
-            BuildStatus.CANCELED,
             BuildStatus.REVIEW_ABORT,
             BuildStatus.REVIEW_PROCESSED,
+            BuildStatus.PAUSE,
+            BuildStatus.CANCELED,
             BuildStatus.SUCCEED,
             BuildStatus.FAILED,
             BuildStatus.TERMINATE,
             BuildStatus.SKIP,
             BuildStatus.UNEXEC,
+            BuildStatus.QUEUE_TIMEOUT,
             BuildStatus.QUALITY_CHECK_FAIL
         )
 
@@ -182,6 +196,7 @@ object BuildStatusSwitcher {
             BuildStatus.CANCELED,
             BuildStatus.SUCCEED,
             BuildStatus.FAILED,
+            BuildStatus.TERMINATE,
             BuildStatus.QUEUE_TIMEOUT,
             BuildStatus.STAGE_SUCCESS
         )
@@ -200,8 +215,10 @@ object BuildStatusSwitcher {
             BuildStatus.CANCELED,
             BuildStatus.SUCCEED,
             BuildStatus.FAILED,
+            BuildStatus.TERMINATE,
             BuildStatus.SKIP,
             BuildStatus.UNEXEC,
+            BuildStatus.QUEUE_TIMEOUT,
             BuildStatus.STAGE_SUCCESS
         )
 
@@ -221,9 +238,9 @@ object BuildStatusSwitcher {
             BuildStatus.SUCCEED,
             BuildStatus.FAILED,
             BuildStatus.TERMINATE,
-            BuildStatus.QUEUE_TIMEOUT,
             BuildStatus.SKIP,
             BuildStatus.UNEXEC,
+            BuildStatus.QUEUE_TIMEOUT,
             BuildStatus.HEARTBEAT_TIMEOUT
         )
 

@@ -28,43 +28,18 @@
 package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.service.code.matcher.GithubWebHookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
-import com.tencent.devops.process.pojo.code.github.GithubCreateEvent
-import com.tencent.devops.process.pojo.code.github.GithubPullRequest
-import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
-import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LABELS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_NUMBER
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TITLE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
 import org.slf4j.LoggerFactory
 
 class GithubWebHookStartParam(
-    private val params: ScmWebhookMatcher.WebHookParams,
+    private val params: WebHookParams,
     private val matcher: GithubWebHookMatcher
 ) : ScmWebhookStartParams<CodeGithubWebHookTriggerElement> {
 
@@ -79,61 +54,7 @@ class GithubWebHookStartParam(
         startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = element.branchName ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = element.excludeBranchName ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers ?: ""
-        getEventTypeStartParams(startParams)
+        startParams.putAll(matcher.retrieveParams())
         return startParams
-    }
-
-    fun getEventTypeStartParams(startParams: MutableMap<String, Any>) {
-        when (params.eventType) {
-            CodeEventType.PULL_REQUEST ->
-                pullRequestEventStartParam(startParams)
-            CodeEventType.CREATE ->
-                createEventStartParam(startParams)
-            CodeEventType.PUSH ->
-                pushEventStartParam(startParams)
-            else ->
-                logger.info("github webhook startparam eventType error, eventType:${params.eventType}, ignore")
-        }
-    }
-
-    private fun pullRequestEventStartParam(startParams: MutableMap<String, Any>) {
-        val githubEvent = matcher.event as GithubPullRequestEvent
-        startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = githubEvent.sender.login
-        startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = githubEvent.number
-        pullRequestStartParam(pullRequest = githubEvent.pull_request, startParams = startParams)
-    }
-
-    private fun pullRequestStartParam(pullRequest: GithubPullRequest, startParams: MutableMap<String, Any>) {
-        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = pullRequest.base.repo.clone_url
-        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = pullRequest.head.repo.clone_url
-        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = pullRequest.base.ref
-        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = pullRequest.head.ref
-        startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = pullRequest.created_at ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = pullRequest.update_at ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = pullRequest.id
-        startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = pullRequest.comments_url ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = pullRequest.title ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] =
-            pullRequest.assignees.joinToString(",") { it.login ?: "" }
-        startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = pullRequest.url
-        startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] =
-            pullRequest.requested_reviewers.joinToString(",") { it.login ?: "" }
-        startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = pullRequest.milestone?.title ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] =
-            pullRequest.milestone?.due_on ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] =
-            pullRequest.labels.joinToString(",") { it.name }
-    }
-
-    private fun createEventStartParam(startParams: MutableMap<String, Any>) {
-        val githubEvent = matcher.event as GithubCreateEvent
-        startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME] = githubEvent.ref
-        startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE] = githubEvent.ref_type
-        startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME] = githubEvent.sender.login
-    }
-
-    private fun pushEventStartParam(startParams: MutableMap<String, Any>) {
-        startParams[BK_REPO_GIT_WEBHOOK_PUSH_USERNAME] = matcher.getUsername()
-        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = matcher.getBranchName()
     }
 }
