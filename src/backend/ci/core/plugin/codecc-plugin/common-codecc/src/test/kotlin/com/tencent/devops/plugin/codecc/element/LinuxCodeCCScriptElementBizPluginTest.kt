@@ -27,6 +27,7 @@
 
 package com.tencent.devops.plugin.codecc.element
 
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
@@ -55,6 +56,9 @@ class LinuxCodeCCScriptElementBizPluginTest {
         path = "/tmp/codecc",
         languages = listOf(ProjectLanguage.JAVA)
     )
+    private val container = TriggerContainer(
+        id = "1"
+    )
 
     @Test
     fun afterCreate() {
@@ -65,7 +69,8 @@ class LinuxCodeCCScriptElementBizPluginTest {
             pipelineName = pipelineName,
             userId = userId,
             channelCode = ChannelCode.BS,
-            create = true
+            create = true,
+            container = container
         )
     }
 

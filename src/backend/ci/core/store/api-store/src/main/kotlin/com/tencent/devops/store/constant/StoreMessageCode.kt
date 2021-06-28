@@ -43,6 +43,7 @@ package com.tencent.devops.store.constant
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
+@Suppress("ALL")
 object StoreMessageCode {
 
     const val MSG_CODE_STORE_CLASSIFY_PREFIX = "MSG_CODE_STORE_CLASSIFY_PREFIX_" // 研发商店插分类国际化前缀
@@ -77,9 +78,12 @@ object StoreMessageCode {
     const val USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID = "2120026" // 研发商店：插件配置文件[task.json]{0}格式不正确，请检查
     const val USER_ATOM_IS_NOT_ALLOW_REPLACE = "2120027" // 研发商店：插件[{0}]的[{1}]版本无法被插件[{2}]的[{3}]版本替换，插件[{2}]的{4}参数无法映射替换
     const val USER_TO_ATOM_IS_NOT_BE_HIS_ATOM = "2120028" // 研发商店：目标替换插件不能是历史内置老插件
-    const val USER_ATOM_NOT_COMPATIBLE_INPUT_FIELD = "2120029" // 研发商店：插件当前版本新增了无默认值的必填入参[{0}]，将导致存量流水线执行异常，请修改发布类型进行非兼容式升级
-    const val USER_ATOM_COMPATIBLE_INPUT_FIELD_CONFIRM = "2120030" // 研发商店：插件当前版本新增了入参[{0}]，请确认插件执行逻辑对这些参数不存在或值为空的情况做了兼容处理，否则有可能导致存量流水线执行异常
-    const val USER_ATOM_COMPATIBLE_OUTPUT_FIELD_CONFIRM = "2120031" // 研发商店：插件当前版本减少了出参[{0}]，请确认插件执行逻辑对这些参数不存在或值为空的情况做了兼容处理，否则有可能导致存量流水线执行异常
+    // 研发商店：插件当前版本新增了无默认值的必填入参[{0}]，将导致存量流水线执行异常，请修改发布类型进行非兼容式升级
+    const val USER_ATOM_NOT_COMPATIBLE_INPUT_FIELD = "2120029"
+    // 研发商店：插件当前版本新增了入参[{0}]，请确认插件执行逻辑对这些参数不存在或值为空的情况做了兼容处理，否则有可能导致存量流水线执行异常
+    const val USER_ATOM_COMPATIBLE_INPUT_FIELD_CONFIRM = "2120030"
+    // 研发商店：插件当前版本减少了出参[{0}]，请确认插件执行逻辑对这些参数不存在或值为空的情况做了兼容处理，否则有可能导致存量流水线执行异常
+    const val USER_ATOM_COMPATIBLE_OUTPUT_FIELD_CONFIRM = "2120031"
     const val USER_ATOM_INPUT_NUM_IS_TOO_MANY = "2120032" // 研发商店：插件入参数量太多，系统规定的数量最大为：{0}
     const val USER_ATOM_OUTPUT_NUM_IS_TOO_MANY = "2120033" // 研发商店：插件出参数量太多，系统规定的数量最大为：{0}
 
@@ -128,4 +132,7 @@ object StoreMessageCode {
     const val USER_SENSITIVE_CONF_EXIST = "2120907" // 研发商店：字段名{0}已存在
     const val USER_START_CODECC_TASK_FAIL = "2120908" // 研发商店：启动代码扫描任务失败
     const val USER_CHANGE_TEST_PROJECT_FAIL = "2120909" // 研发商店：用户[{0}]没有项目[{1}]下的流水线新增/修改/执行权限，请先给用户赋权
+    const val SENSITIVE_API_PASSED_IS_NOT_ALLOW_CANCEL = "2120910" // 研发商店：敏感API已经审批通过不能取消
+    const val SENSITIVE_API_APPROVED_IS_NOT_ALLOW_PASS = "2120911" // 研发商店：敏感API已经取消不能审批
+    const val SENSITIVE_API_NOT_EXIST = "2120912" // 研发商店：敏感API[{0}]不存在
 }

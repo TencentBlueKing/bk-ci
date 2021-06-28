@@ -133,7 +133,6 @@ interface ServicePermissionAuthResource {
         resourceType: String
     ): Result<List<String>>
 
-
     @GET
     @Path("/projects/{projectCode}/actions/instance/map")
     @ApiOperation("获取用户某项目下多资源action的实例列表")

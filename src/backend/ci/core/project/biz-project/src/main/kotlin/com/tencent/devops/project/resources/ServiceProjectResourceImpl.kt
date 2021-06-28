@@ -151,8 +151,4 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Result<Boolean> {
         return Result(projectService.createProjectUser(projectId, createInfo))
     }
-
-    override fun relationIamProject(projectCode: String, relationId: String): Result<Boolean> {
-        return Result(projectService.relationIamProject(projectCode, relationId))
-    }
 }

@@ -44,7 +44,7 @@ import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
-import com.tencent.devops.dispatch.utils.redis.RedisUtils
+import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
@@ -63,7 +63,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val buildLogPrinter: BuildLogPrinter,
-    private val redisUtils: RedisUtils,
+    private val thirdPartyAgentBuildRedisUtils: ThirdPartyAgentBuildRedisUtils,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val thirdPartyAgentBuildService: ThirdPartyAgentService
 ) : Dispatcher {
@@ -219,7 +219,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         try {
 
             if (redisLock.tryLock()) {
-                if (redisUtils.isThirdPartyAgentUpgrading(event.projectId, agentId)) {
+                if (thirdPartyAgentBuildRedisUtils.isThirdPartyAgentUpgrading(event.projectId, agentId)) {
                     logger.warn("The agent($agentId) of project(${event.projectId}) is upgrading")
                     buildLogPrinter.addLine(
                         buildId = event.buildId,
@@ -232,7 +232,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     return false
                 }
 
-                redisUtils.setThirdPartyBuild(
+                thirdPartyAgentBuildRedisUtils.setThirdPartyBuild(
                     agent.secretKey,
                     ThirdPartyRedisBuild(
                         projectId = event.projectId,

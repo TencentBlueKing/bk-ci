@@ -58,6 +58,8 @@ include(":core:common:common-websocket")
 include(":core:common:common-util")
 include(":core:common:common-security")
 include(":core:common:common-dispatch-sdk")
+include(":core:common:common-webhook:api-common-webhook")
+include(":core:common:common-webhook:biz-common-webhook")
 
 include(":core:project")
 include(":core:project:api-project")
@@ -144,7 +146,6 @@ include(":core:store:biz-store-image")
 include(":core:store:biz-store-image-sample")
 include(":core:store:boot-store")
 include(":core:store:model-store")
-
 
 include(":core:process")
 include(":core:process:api-process")

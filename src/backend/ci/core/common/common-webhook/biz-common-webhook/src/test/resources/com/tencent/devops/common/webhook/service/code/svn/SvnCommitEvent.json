@@ -1,0 +1,33 @@
+{
+  "userName": "mingshewhe",
+  "log": "文件匹配",
+  "rep_name": "ddlin/ddlin_proj",
+  "revision": 116,
+  "eventType": 1,
+  "files": [
+    {
+      "type": "A",
+      "file": "trunk/aa/ddd.txt",
+      "isFile": 1,
+      "size": "5"
+    },
+    {
+      "type": "D",
+      "file": "trunk/aaa/test.py",
+      "isFile": 1,
+      "size": 0
+    },
+    {
+      "type": "D",
+      "file": "release/bbb/test.py",
+      "isFile": 1,
+      "size": 0
+    }
+  ],
+  "paths": [
+    "trunk/aa/",
+    "trunk/aaa/",
+    "release/bbb/"
+  ],
+  "commitTime": 1623844619937
+}
