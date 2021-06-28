@@ -4,13 +4,12 @@ import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.BSCommonAuthServiceCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class DefaultPermissionServiceImpl @Autowired constructor(
     private val authPermissionApi: AuthPermissionApi,
-    val authServiceCode: BSCommonAuthServiceCode
+    val authServiceCode: ServiceCodeService
 ) : PermissionService {
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
@@ -25,7 +24,7 @@ class DefaultPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
-            serviceCode = authServiceCode,
+            serviceCode = authServiceCode.getServiceCodeByResource(resourceType!!),
             resourceType = AuthResourceType.get(resourceType!!),
             projectCode = projectCode,
             permission = AuthPermission.get(action)
@@ -42,7 +41,7 @@ class DefaultPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
-            serviceCode = authServiceCode,
+            serviceCode = authServiceCode.getServiceCodeByResource(resourceType!!),
             resourceType = AuthResourceType.get(resourceType!!),
             projectCode = projectCode,
             permission = AuthPermission.get(action),
@@ -61,7 +60,7 @@ class DefaultPermissionServiceImpl @Autowired constructor(
             user = userId,
             projectCode = projectCode,
             resourceType = AuthResourceType.get(resourceType),
-            serviceCode = authServiceCode,
+            serviceCode = authServiceCode.getServiceCodeByResource(resourceType!!),
             supplier = null,
             permission = AuthPermission.get(action)
         )
@@ -79,7 +78,7 @@ class DefaultPermissionServiceImpl @Autowired constructor(
         }
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
-            serviceCode = authServiceCode,
+            serviceCode = authServiceCode.getServiceCodeByResource(resourceType!!),
             resourceType = AuthResourceType.get(resourceType),
             projectCode = projectCode,
             permissions = permissions,
