@@ -91,8 +91,7 @@ class PipelineSettingService @Autowired constructor(
             getCurrentDayBuildCountFromDb(transactionContext, currentDayStr, pipelineId)
         }
         // redis有值则每次自增1
-        redisOperation.increment(currentDayBuildCountKey, 1)
-        return redisOperation.get(currentDayBuildCountKey)!!.toInt()
+        return redisOperation.increment(currentDayBuildCountKey, 1)?.toInt() ?: 1
     }
 
     private fun getCurrentDayBuildCountKey(pipelineId: String, currentDayStr: String): String {
