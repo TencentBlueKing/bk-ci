@@ -28,14 +28,12 @@
 package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.webhook.service.code.matcher.SvnWebHookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_COMMIT_TIME
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_INCLUDE_USERS
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_RELATIVE_PATH
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_REVERSION
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_USERNAME
 
 class SvnWebHookStartParam(
     private val matcher: SvnWebHookMatcher
@@ -43,14 +41,11 @@ class SvnWebHookStartParam(
 
     override fun getStartParams(element: CodeSVNWebHookTriggerElement): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
-        val svnEvent = matcher.event
-        startParams[BK_REPO_SVN_WEBHOOK_REVERSION] = matcher.getRevision()
-        startParams[BK_REPO_SVN_WEBHOOK_USERNAME] = matcher.getUsername()
-        startParams[BK_REPO_SVN_WEBHOOK_COMMIT_TIME] = svnEvent.commitTime ?: 0L
         startParams[BK_REPO_SVN_WEBHOOK_RELATIVE_PATH] = element.relativePath ?: ""
         startParams[BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS] = element.excludePaths ?: ""
         startParams[BK_REPO_SVN_WEBHOOK_INCLUDE_USERS] = element.includeUsers?.joinToString(",") ?: ""
         startParams[BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers?.joinToString(",") ?: ""
+        startParams.putAll(matcher.retrieveParams())
         return startParams
     }
 }

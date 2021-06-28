@@ -280,12 +280,12 @@
                 }
             },
             requestQualityAtom () {
-                this.$store.dispatch('soda/requestQualityAtom', {
+                this.$store.dispatch('common/requestQualityAtom', {
                     projectId: this.projectId
                 })
             },
             requestMatchTemplateRules () {
-                this.$store.dispatch('soda/requestMatchTemplateRuleList', {
+                this.$store.dispatch('common/requestMatchTemplateRuleList', {
                     projectId: this.projectId,
                     templateId: this.templateId
                 })
