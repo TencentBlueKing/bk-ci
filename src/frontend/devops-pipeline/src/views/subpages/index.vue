@@ -63,6 +63,7 @@
                             <li v-if="!isTemplatePipeline" @click="importModifyPipeline">{{ $t('newlist.importModifyPipelineJson') }}</li>
                             <li @click="copyPipeline">{{ $t('newlist.copyAs') }}</li>
                             <li @click="showTemplateDialog">{{ $t('newlist.saveAsTemp') }}</li>
+                            <li v-if="isTemplatePipeline" @click="jumpToTemplate">{{ $t('newlist.jumpToTemp') }}</li>
                             <li @click="deletePipeline">{{ $t('delete') }}</li>
                         </ul>
                     </div>
@@ -463,6 +464,18 @@
                     },
                     handleDialogCancel: this.resetDialog
                 }
+            },
+            /**
+             * 跳转到模板详情
+             */
+            jumpToTemplate () {
+                const { templateId } = this.curPipeline
+                this.$router.push({
+                    name: 'templateEdit',
+                    params: {
+                        'templateId': templateId
+                    }
+                })
             },
             toggleCollect () {
                 this.togglePipelineCollect(this.curPipeline.pipelineId, !this.curPipeline.hasCollect)

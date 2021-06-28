@@ -349,6 +349,7 @@
         "defaultViews": "我的常用视图",
         "copyPipeline": "复制流水线",
         "saveAsTemp": "另存为模板",
+        "jumpToTemp": "跳转至模板",
         "totalAtomNums": "插件总数",
         "execTimes": "已执行次数",
         "known": "知道了",
