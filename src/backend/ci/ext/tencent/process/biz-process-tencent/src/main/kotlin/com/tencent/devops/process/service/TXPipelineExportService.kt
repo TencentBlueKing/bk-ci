@@ -34,12 +34,11 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.ci.v2.ExportPreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
-import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.RunsOn
-import com.tencent.devops.common.ci.v2.Variable
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -59,6 +58,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchTy
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.common.ci.v2.Step as V2Step
@@ -105,7 +105,7 @@ class TXPipelineExportService @Autowired constructor(
             it.id to it.stageTagName
         }?.toMap() ?: emptyMap()
 
-        val yamlObj = PreScriptBuildYaml(
+        val yamlObj = ExportPreScriptBuildYaml(
             version = "v2.0",
             name = model.name,
             label = if (model.labels.isNullOrEmpty()) null else model.labels,
@@ -207,7 +207,7 @@ class TXPipelineExportService @Autowired constructor(
                         is ThirdPartyAgentEnvDispatchType -> {
                             RunsOn(
                                 selfHosted = true,
-                                poolName = dispatchType.envName,
+                                poolName = "### 该环境不支持自动导出，请参考 https://iwiki.woa.com/x/2ebDKw 手动配置 ###",
                                 container = null,
                                 agentSelector = listOf(job.baseOS.name.toLowerCase())
                             )
@@ -227,6 +227,15 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
+                                agentSelector = null
+                            )
+                        }
+                        is MacOSDispatchType -> {
+                            RunsOn(
+                                selfHosted = null,
+                                poolName = "### 可以通过 runs-on: macos-10.15 使用macOS公共构建集群。" +
+                                    "注意默认的Xcode版本为12.2，若需自定义，请在JOB下自行执行 xcode-select 命令切换 ###",
+                                container = null,
                                 agentSelector = null
                             )
                         }
@@ -266,7 +275,7 @@ class TXPipelineExportService @Autowired constructor(
                 }
             }
         }
-        return jobs
+        return if (jobs.isEmpty()) null else jobs
     }
 
     private fun getV2StepFromJob(
@@ -408,11 +417,10 @@ class TXPipelineExportService @Autowired constructor(
             .build()
     }
 
-    private fun getVariableFromModel(model: Model): Map<String, Variable>? {
-        val params = (model.stages[0].containers[0] as TriggerContainer).params
-        val result = mutableMapOf<String, Variable>()
-        params.forEach {
-            result[it.id] = Variable(it.defaultValue.toString())
+    private fun getVariableFromModel(model: Model): Map<String, String>? {
+        val result = mutableMapOf<String, String>()
+        (model.stages[0].containers[0] as TriggerContainer).params.forEach {
+            result[it.id] = it.defaultValue.toString()
         }
         return if (result.isEmpty()) {
             null
