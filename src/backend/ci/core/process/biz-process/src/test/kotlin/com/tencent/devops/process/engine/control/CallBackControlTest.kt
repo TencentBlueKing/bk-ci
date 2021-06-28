@@ -80,7 +80,8 @@ class CallBackControlTest : TestBase() {
             cancelUserId = null,
             curVersion = 2,
             latestBuildNum = 1,
-            latestVersion = 1
+            latestVersion = 1,
+            executeTime = 100
         )
 
         whenever(pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false))
