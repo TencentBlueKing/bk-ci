@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.service.code
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
@@ -187,7 +188,10 @@ class GitScmService @Autowired constructor(
                 publicKey = encoder.encodeToString(pair.publicKey)
             )
             if (credentialResult.isNotOk() || credentialResult.data == null) {
-                throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
+                throw ErrorCodeException(
+                    errorCode = credentialResult.status.toString(),
+                    defaultMessage = credentialResult.message
+                )
             }
 
             val credential = credentialResult.data!!

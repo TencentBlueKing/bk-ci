@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
+import java.lang.IllegalArgumentException
 
 @Suppress("ALL")
 class GitGenericWebHookElementParams : ScmWebhookElementParams<CodeGitGenericWebHookTriggerElement> {
@@ -89,7 +90,7 @@ class GitGenericWebHookElementParams : ScmWebhookElementParams<CodeGitGenericWeb
                 CodeType.GITHUB
             ScmType.CODE_GITLAB.name ->
                 CodeType.GITLAB
-            else -> throw RuntimeException("Unknown scm type")
+            else -> throw IllegalArgumentException("Unknown scm type")
         }
     }
 }
