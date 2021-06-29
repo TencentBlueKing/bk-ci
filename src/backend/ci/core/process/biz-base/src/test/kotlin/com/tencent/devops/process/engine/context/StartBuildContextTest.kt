@@ -102,6 +102,8 @@ class StartBuildContextTest : TestBase() {
         val needSkipTaskWhenRetry = context.needSkipTaskWhenRetry(stage, taskId = "1")
         println("needSkipTaskWhenRetry=$needSkipTaskWhenRetry")
         Assert.assertEquals(true, needSkipTaskWhenRetry)
+        // 确认id不是当前要跳过的插件
+        Assert.assertEquals(false, context.isSkipTask("elementId"))
     }
 
     @Test
@@ -109,16 +111,17 @@ class StartBuildContextTest : TestBase() {
         // 跳过Stage-2下所有失败插件
         params[PIPELINE_RETRY_START_TASK_ID] = "stage-2"
         params[PIPELINE_SKIP_FAILED_TASK] = true
-        var context = StartBuildContext.init(params)
+        val skipStage2Context = StartBuildContext.init(params)
         val stages = genStages(stageSize = 2, jobSize = 2, elementSize = 2, needFinally = false)
         var elementId = stages[2].containers[0].elements[0].id
-        var needSkipTaskWhenRetrySkip = context.needSkipTaskWhenRetry(stages[2], taskId = elementId)
+        var needSkipTaskWhenRetrySkip = skipStage2Context.needSkipTaskWhenRetry(stages[2], taskId = elementId)
         println("needSkipTaskWhenRetrySkip=$needSkipTaskWhenRetrySkip")
-        Assert.assertEquals(true, needSkipTaskWhenRetrySkip)
+        Assert.assertEquals(false, needSkipTaskWhenRetrySkip)
 
-        // Stage-1不受影响
+        // Stage-1不受影响，会跳过
         elementId = stages[1].containers[0].elements[0].id
-        needSkipTaskWhenRetrySkip = context.needSkipTaskWhenRetry(stages[1], taskId = elementId)
+        Assert.assertEquals(false, skipStage2Context.isSkipTask(elementId))
+        needSkipTaskWhenRetrySkip = skipStage2Context.needSkipTaskWhenRetry(stages[1], taskId = elementId)
         println("needSkipTaskWhenRetrySkip=$needSkipTaskWhenRetrySkip")
         Assert.assertEquals(true, needSkipTaskWhenRetrySkip)
 
@@ -126,9 +129,10 @@ class StartBuildContextTest : TestBase() {
         elementId = stages[2].containers[0].elements[0].id
         params[PIPELINE_RETRY_START_TASK_ID] = elementId!!
         params[PIPELINE_SKIP_FAILED_TASK] = true
-        context = StartBuildContext.init(params)
-        needSkipTaskWhenRetrySkip = context.needSkipTaskWhenRetry(stages[2], taskId = elementId)
+        val skipElementContext = StartBuildContext.init(params)
+        Assert.assertEquals(true, skipElementContext.isSkipTask(elementId))
+        needSkipTaskWhenRetrySkip = skipElementContext.needSkipTaskWhenRetry(stages[2], taskId = elementId)
         println("needSkipTaskWhenRetrySkip=$needSkipTaskWhenRetrySkip")
-        Assert.assertEquals(true, needSkipTaskWhenRetrySkip)
+        Assert.assertEquals(false, needSkipTaskWhenRetrySkip)
     }
 }

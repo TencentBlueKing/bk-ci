@@ -922,8 +922,7 @@ class PipelineRuntimeService @Autowired constructor(
                         )
                         needUpdateContainer = true
                     } else {
-                        var retryInitialStatus: BuildStatus = startBuildStatus
-                        // 如果是失败的插件重试，并且当前插件不是要重试的插件，则检查其之前的状态，如果已经执行过，则跳过
+                        // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过
                         if (context.needSkipTaskWhenRetry(stage, atomElement.id)) {
                             val target = findTaskRecord(
                                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
@@ -934,16 +933,17 @@ class PipelineRuntimeService @Autowired constructor(
                             // 如果插件任务之前已经是完成状态，则跳过当前插件
                             try {
                                 if (target == null || BuildStatus.values()[target.status].isFinish()) {
-                                    if (target == null || !context.skipFailedTask) {
-                                        return@nextElement
-                                    } else if (BuildStatus.values()[target.status].isFailure()) {
-                                        retryInitialStatus = BuildStatus.SKIP // #4245 将失败手动跳过的插件置为跳过
-                                    }
+                                    return@nextElement
                                 }
                             } catch (ignored: Exception) { // 如果存在异常的ordinal
                                 logger.error("[$buildId]|BAD_BUILD_STATUS|${target?.taskId}|${target?.status}|$ignored")
                                 return@nextElement
                             }
+                        }
+
+                        var retryInitialStatus: BuildStatus? = null
+                        if (context.isSkipTask(atomElement.id)) {
+                            retryInitialStatus = BuildStatus.SKIP // #4245 将失败跳过的插件置为跳过
                         }
 
                         // Rebuild/Stage-Retry/Fail-Task-Retry  重跑/Stage重试/失败的插件重试
@@ -1451,7 +1451,7 @@ class PipelineRuntimeService @Autowired constructor(
         retryStartTaskId: String,
         retryCount: Int,
         atomElement: Element? = null,
-        retryInitialStatus: BuildStatus = BuildStatus.QUEUE
+        retryInitialStatus: BuildStatus? = null
     ): TPipelineBuildTaskRecord? {
         val target: TPipelineBuildTaskRecord? = findTaskRecord(
             lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
@@ -1478,12 +1478,12 @@ class PipelineRuntimeService @Autowired constructor(
         stage: Stage,
         container: Container,
         atomElement: Element?,
-        retryInitialStatus: BuildStatus = BuildStatus.QUEUE
+        retryInitialStatus: BuildStatus? = null
     ) {
         target.startTime = null
         target.endTime = null
         target.executeCount = retryCount + 1 // 执行次数增1
-        target.status = retryInitialStatus.ordinal // 进入排队状态
+        target.status = retryInitialStatus?.ordinal ?: BuildStatus.QUEUE.ordinal // 如未指定状态，则默认进入排队状态
         stage.status = null
         stage.startEpoch = null
         stage.elapsed = null
@@ -1493,7 +1493,7 @@ class PipelineRuntimeService @Autowired constructor(
         container.systemElapsed = null
         container.executeCount = target.executeCount
         if (atomElement != null) { // 将原子状态重置
-            atomElement.status = null // BuildStatus.QUEUE.name
+            atomElement.status = retryInitialStatus?.name // BuildStatus.QUEUE.name
             atomElement.executeCount = target.executeCount
             atomElement.elapsed = null
             atomElement.startEpoch = null

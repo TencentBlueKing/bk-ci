@@ -94,17 +94,19 @@ data class StartBuildContext(
             stage.finally -> {
                 false // finally stage 不会跳过
             }
-            stage.id!! == retryStartTaskId -> { // 失败重试的Stage，如果不是使用跳过所有失败插件功能，则不会跳过
-                skipFailedTask
+            stage.id!! == retryStartTaskId -> { // 失败重试的Stage，不会跳过
+                false
             }
             retryStartTaskId.isNullOrBlank() -> { // rebuild or start 不会跳过
                 false
             }
-            else -> { // 当前插件不是要失败重试的插件，会跳过, 而如果是指定重试的插件，则要判断是不是要失败跳过，如果是则跳过
-                retryStartTaskId != taskId || skipFailedTask
+            else -> { // 当前插件不是要失败重试或要跳过的插件，会跳过
+                retryStartTaskId != taskId
             }
         }
     }
+
+    fun isSkipTask(taskId: String?) = skipFailedTask && retryStartTaskId == taskId
 
     /**
      * 是否是要重试的失败容器
