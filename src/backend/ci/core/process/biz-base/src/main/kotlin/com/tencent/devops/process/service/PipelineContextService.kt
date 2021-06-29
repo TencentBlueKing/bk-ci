@@ -164,7 +164,7 @@ class PipelineContextService@Autowired constructor(
         varMap["jobs.${c.jobId ?: c.id ?: ""}.name"] = c.name
         varMap["jobs.${c.jobId ?: c.id ?: ""}.status"] = getJobStatus(c)
         varMap["jobs.${c.jobId ?: c.id ?: ""}.outcome"] = c.status ?: ""
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.os"] = getOs(c)
+//        varMap["jobs.${c.jobId ?: c.id ?: ""}.os"] = getOs(c)
         varMap["jobs.${c.jobId ?: c.id ?: ""}.container.network"] = getNetWork(c)
         varMap["jobs.${c.jobId ?: c.id ?: ""}.stage_id"] = stage.id ?: ""
         varMap["jobs.${c.jobId ?: c.id ?: ""}.stage_name"] = stage.name ?: ""
@@ -174,6 +174,9 @@ class PipelineContextService@Autowired constructor(
         val outputMap = mutableMapOf<String, String>()
         buildVar.filterKeys { it.startsWith("steps.${e.id ?: ""}.outputs.") }.forEach { (t, u) ->
             outputMap["jobs.${c.jobId ?: c.id ?: ""}.$t"] = u
+        }
+        buildVar.filterKeys { it.startsWith("steps.${e.id ?: ""}.os") }.forEach { (t, u) ->
+            outputMap["jobs.${c.jobId ?: c.id ?: ""}.os"] = u
         }
         return outputMap
     }
