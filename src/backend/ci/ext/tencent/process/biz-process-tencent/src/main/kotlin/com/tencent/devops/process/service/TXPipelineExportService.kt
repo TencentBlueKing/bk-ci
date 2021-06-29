@@ -545,7 +545,7 @@ class TXPipelineExportService @Autowired constructor(
                     )
                     val completeImageName = if (ImageType.BKDEVOPS == imageRepoInfo.sourceType) {
                         // 蓝盾项目源镜像
-                        imageRepoInfo.repoName
+                        "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
                     } else {
                         // 第三方源镜像
                         // dockerhub镜像名称不带斜杠前缀
