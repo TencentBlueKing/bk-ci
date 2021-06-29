@@ -7,7 +7,7 @@
         <div slot="content" class="bk-form bk-form-vertical">
             <template v-for="(obj, key) in optionModel">
                 <form-field :key="key" v-if="(!isHidden(obj, element) && container['@type'] !== 'trigger') || key === 'enable'" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                    <component :disabled="disabled" :is="obj.component" :container="container" :element="element" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateElementOption" :value="atomOption[key]" v-bind="obj"></component>
+                    <component :disabled="disabled" :is="obj.component" :container="container" :element="element" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateElementOption" :value="atomOption[key]" :key="atomOption[key]" v-bind="obj"></component>
                 </form-field>
             </template>
         </div>
@@ -41,26 +41,27 @@
                 return this.element.version
             },
             optionModel () {
-                // const failControlManualRetryOption = {
-                //     id: 'MANUAL_RETRY',
-                //     name: this.$t('storeMap.manualRetry')
-                // }
-                // this.ATOM_OPTION['failControl'].list = [
-                //     {
-                //         id: 'continueWhenFailed',
-                //         name: this.$t('storeMap.continueWhenFailed')
-                //     },
-                //     {
-                //         id: 'retryWhenFailed',
-                //         name: this.$t('storeMap.automaticRetry')
-                //     }
-                // ]
+                const model = { ...this.ATOM_OPTION }
+                const failControlManualRetryOption = {
+                    id: 'MANUAL_RETRY',
+                    name: this.$t('storeMap.manualRetry')
+                }
+                model['failControl'].list = [
+                    {
+                        id: 'continueWhenFailed',
+                        name: this.$t('storeMap.continueWhenFailed')
+                    },
+                    {
+                        id: 'retryWhenFailed',
+                        name: this.$t('storeMap.automaticRetry')
+                    }
+                ]
 
                 if (!(this.atomOption['manualSkip'] === false && this.atomOption['failControl'].includes('continueWhenFailed'))) {
-                    this.ATOM_OPTION['failControl'].list[2].disabled = false
+                    model['failControl'].list.push(failControlManualRetryOption)
                 }
 
-                return this.ATOM_OPTION
+                return model
             }
         },
         watch: {
@@ -89,13 +90,14 @@
                 const isAutoSkip = continueable && (this.atomOption['manualSkip'] === false || (name === 'manualSkip' && value === false))
                 const retryable = currentfailControl.includes('retryWhenFailed') || (includeManualRetry && !isAutoSkip)
                 const manualRetry = retryable && !isAutoSkip && includeManualRetry
-                debugger
+                // debugger
 
+                console.log(currentfailControl, isAutoSkip, this.atomOption['failControl'], value)
                 const failControl = isAutoSkip ? currentfailControl.filter(item => item !== 'MANUAL_RETRY') : [...currentfailControl]
-
+                // const failControl = currentfailControl.filter(item => item !== 'MANUAL_RETRY')
+                console.log(failControl)
                 this.setPipelineEditing(true)
 
-                console.log(currentfailControl, failControl)
                 this.handleUpdateElement('additionalOptions', {
                     ...this.atomOption,
                     manualRetry,

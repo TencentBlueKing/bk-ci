@@ -86,6 +86,24 @@ const optionConfigMixin = {
                         return !(element.additionalOptions && ((element.additionalOptions.failControl || []).includes('retryWhenFailed')))
                     }
                 },
+                enableCustomEnv: {
+                    rule: {},
+                    type: 'boolean',
+                    component: 'atom-checkbox',
+                    text: this.$t('storeMap.customEnv'),
+                    default: false
+                },
+
+                subscriptionPauseUser: {
+                    rule: {},
+                    component: 'vuex-input',
+                    label: this.$t('storeMap.pauseNotify'),
+                    desc: this.$t('storeMap.pauseNotifyTip'),
+                    default: this.$userInfo.username,
+                    isHidden: (element) => {
+                        return !(element.additionalOptions && (element.additionalOptions.pauseBeforeExec === true))
+                    }
+                },
                 pauseBeforeExec: {
                     rule: {},
                     type: 'boolean',
@@ -131,6 +149,10 @@ const optionConfigMixin = {
                         {
                             id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
                             name: this.$t('storeMap.varNotMatch')
+                        },
+                        {
+                            id: 'CUSTOM_CONDITION_MATCH',
+                            name: this.$t('storeMap.customCondition')
                         }
                     ]
                 },
@@ -144,11 +166,27 @@ const optionConfigMixin = {
                         return !(element.additionalOptions && (element.additionalOptions.runCondition === 'CUSTOM_VARIABLE_MATCH' || element.additionalOptions.runCondition === 'CUSTOM_VARIABLE_MATCH_NOT_RUN'))
                     }
                 },
-                otherTask: {
-                    isHidden: true,
-                    default: ''
+                customEnv: {
+                    rule: {},
+                    component: 'key-value-normal',
+                    default: [{ key: 'param1', value: '' }],
+                    allowNull: false,
+                    label: this.$t('storeMap.customEnv'),
+                    isHidden (element) {
+                        return !(element.additionalOptions && element.additionalOptions.enableCustomEnv === true)
+                    }
                 },
                 customCondition: {
+                    rule: {},
+                    component: 'vuex-input',
+                    default: '',
+                    allowNull: false,
+                    label: this.$t('storeMap.customVar'),
+                    isHidden: (element) => {
+                        return !(element.additionalOptions && element.additionalOptions.runCondition === 'CUSTOM_CONDITION_MATCH')
+                    }
+                },
+                otherTask: {
                     isHidden: true,
                     default: ''
                 }
@@ -171,7 +209,8 @@ const optionConfigMixin = {
 
             atomValues.failControl = [
                 ...(atomValues['continueWhenFailed'] ? ['continueWhenFailed'] : []),
-                ...(atomValues['retryWhenFailed'] ? ['retryWhenFailed'] : atomValues['manualRetry'] ? ['MANUAL_RETRY'] : [])
+                ...(atomValues['retryWhenFailed'] ? ['retryWhenFailed'] : []),
+                ...(atomValues['retryWhenFailed'] && atomValues['manualRetry'] ? ['MANUAL_RETRY'] : [])
             ]
 
             console.log(atomValues)

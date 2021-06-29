@@ -51,6 +51,7 @@
                             <p>{{ atom.elapsed ? localTime(atom.elapsed) : '' }}</p>
                         </template>
                     </bk-popover>
+                    <a href="javascript: void(0);" class="atom-single-skip" v-if="atom.status !== 'SKIP' && atom.canSkip" @click.stop="singleRetry(atom.id, true)">{{ $t('details.statusMap.SKIP') }}</a>
                     <span class="devops-icon copy" v-if="editable && stageIndex !== 0 && !atom.isError" :title="$t('editPage.copyAtom')" @click.stop="copyAtom(index)">
                         <Logo name="copy" size="18"></Logo>
                     </span>
@@ -157,7 +158,7 @@
             atomList: {
                 get () {
                     const atoms = this.getElements(this.container)
-                    
+
                     atoms.forEach(atom => {
                         if (Array.isArray(this.curMatchRules) && this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
@@ -393,15 +394,15 @@
                     }
                 }
             },
-            singleRetry (taskId) {
+            singleRetry (taskId, skip) {
                 if (typeof taskId === 'string') {
-                    this.retryPipeline(taskId)
+                    this.retryPipeline(taskId, skip)
                 }
             },
             /**
              * 重试流水线
              */
-            async retryPipeline (taskId) {
+            async retryPipeline (taskId, skip = false) {
                 let message, theme
                 try {
                     // 请求执行构建
@@ -409,7 +410,8 @@
                         projectId: this.routerParams.projectId,
                         pipelineId: this.routerParams.pipelineId,
                         buildId: this.routerParams.buildNo,
-                        taskId: taskId
+                        taskId: taskId,
+                        skip
                     })
                     if (res.id) {
                         message = this.$t('subpage.retrySuc')
@@ -435,6 +437,7 @@
                     })
                 }
             },
+
             useSkipStyle (atom) {
                 return (atom && (atom.status === 'SKIP' || (atom.additionalOptions && atom.additionalOptions.enable === false))) || this.containerDisabled
             }
@@ -610,7 +613,8 @@
                 margin: 0 8px 0 2px;
                 color: $warningColor;
             }
-            .atom-single-retry {
+            .atom-single-retry,
+            .atom-single-skip {
                 margin: 0 8px 0 2px;
                 color: $primaryColor;
             }
