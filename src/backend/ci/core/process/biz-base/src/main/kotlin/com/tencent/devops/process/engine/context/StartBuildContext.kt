@@ -124,7 +124,7 @@ data class StartBuildContext(
     }
 
     fun needRerun(stage: Stage): Boolean {
-        return stage.finally || stage.id!! == retryStartTaskId
+        return stage.finally || retryStartTaskId == null || stage.id!! == retryStartTaskId
     }
 
     companion object {
