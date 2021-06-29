@@ -101,9 +101,13 @@ data class StartBuildContext(
                 false
             }
             else -> { // 当前插件不是要失败重试的插件，会跳过, 而如果是指定重试的插件，则要判断是不是要失败跳过，如果是则跳过
-                retryStartTaskId != taskId || skipFailedTask
+                isSkipTask(taskId)
             }
         }
+    }
+
+    fun isSkipTask(taskId: String?): Boolean {
+        return skipFailedTask && retryStartTaskId == taskId
     }
 
     /**
