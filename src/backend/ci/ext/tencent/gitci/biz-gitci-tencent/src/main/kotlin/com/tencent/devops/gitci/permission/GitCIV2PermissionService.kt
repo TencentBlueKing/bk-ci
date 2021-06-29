@@ -30,7 +30,6 @@ package com.tencent.devops.gitci.permission
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
@@ -92,13 +91,12 @@ class GitCIV2PermissionService @Autowired constructor(
     }
 
     private fun checkPermission(userId: String, projectId: String, permission: AuthPermission) {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
-        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
+        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId ")
         val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(null) ?: "",
             action = permission.value,
-            projectCode = gitProjectId,
+            projectCode = projectId,
             resourceCode = null
         ).data
         // 说明用户没有工蜂权限

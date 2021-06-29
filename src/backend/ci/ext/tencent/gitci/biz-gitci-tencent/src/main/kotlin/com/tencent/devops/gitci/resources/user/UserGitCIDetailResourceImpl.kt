@@ -38,6 +38,7 @@ import com.tencent.devops.gitci.api.user.UserGitCIDetailResource
 import com.tencent.devops.gitci.permission.GitCIV2PermissionService
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.exception.ErrorCodeEnum
 import com.tencent.devops.gitci.v2.service.GitCIV2DetailService
 import com.tencent.devops.process.pojo.Report
 import org.springframework.beans.factory.annotation.Autowired
@@ -112,7 +113,11 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
     ): Result<List<Report>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        permissionService.checkGitCIPermission(userId, projectId)
+        try {
+            permissionService.checkGitCIPermission(userId, projectId)
+        } catch (e: Exception) {
+            return Result(ErrorCodeEnum.NO_REPORT_AUTH.errorCode, ErrorCodeEnum.NO_REPORT_AUTH.formatErrorMessage)
+        }
         return Result(gitCIV2DetailService.getReports(userId, gitProjectId, pipelineId, buildId))
     }
 

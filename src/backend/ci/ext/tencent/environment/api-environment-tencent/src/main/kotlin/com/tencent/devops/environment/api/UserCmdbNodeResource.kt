@@ -31,13 +31,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.environment.pojo.CcNode
 import com.tencent.devops.environment.pojo.CmdbNode
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -53,21 +51,6 @@ import javax.ws.rs.core.MediaType
 interface UserCmdbNodeResource {
 
     @ApiOperation("获取用户CMDB节点")
-    @GET
-    @Path("/listUserCmdbNodes")
-    fun listUserCmdbNodes(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "分页-开始记录索引", required = true, defaultValue = "1")
-        @QueryParam("start")
-        offset: Int,
-        @ApiParam(value = "分页-页记录数", required = true, defaultValue = "20")
-        @QueryParam("limit")
-        limit: Int
-    ): Result<List<CmdbNode>>
-
-    @ApiOperation("获取用户CMDB节点")
     @POST
     @Path("/listUserCmdbNodesNew")
     fun listUserCmdbNodesNew(
@@ -79,22 +62,13 @@ interface UserCmdbNodeResource {
         bakOperator: Boolean,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "1000")
+        page: Int = 1,
+        @ApiParam("每页多少条", required = false, defaultValue = "100")
         @QueryParam("pageSize")
-        pageSize: Int?,
+        pageSize: Int = 100,
         @ApiParam("指定IP", required = false)
         ips: List<String>?
     ): Result<Page<CmdbNode>>
-
-    @ApiOperation("获取用户CC节点")
-    @GET
-    @Path("/listUserCcNodes")
-    fun listUserCcNodes(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<CcNode>>
 
     @ApiOperation("导入CMDB节点")
     @POST
@@ -107,20 +81,6 @@ interface UserCmdbNodeResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "CMDB节点 IP", required = true)
-        nodeIps: List<String>
-    ): Result<Boolean>
-
-    @ApiOperation("导入CC节点")
-    @POST
-    @Path("/{projectId}/addCcNodes")
-    fun addCcNodes(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam(value = "CC节点 IP", required = true)
         nodeIps: List<String>
     ): Result<Boolean>
 }

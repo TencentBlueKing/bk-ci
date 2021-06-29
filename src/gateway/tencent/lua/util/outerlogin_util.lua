@@ -20,7 +20,7 @@ _M = {}
 function _M:getProfile(otoken)
     if otoken == nil then
         ngx.log(ngx.ERR, "null otoken")
-        ngx.exit(500)
+        ngx.exit(401)
         return
     end
 
@@ -32,7 +32,7 @@ function _M:getProfile(otoken)
         local httpc = http.new()
         --- 开始连接
         httpc:set_timeout(3000)
-        httpc:connect(config.outerlogin.host, config.outerlogin.port)
+        httpc:connect(config.bkci.host, config.bkci.port)
         --- 发送请求
         local res, err = httpc:request({path = "/ms/experience/api/open/experiences/outerAuth?token=" .. otoken, method = "GET"})
 
@@ -42,7 +42,7 @@ function _M:getProfile(otoken)
         --- 判断是否出错了
         if not res then
             ngx.log(ngx.ERR, "failed to request otoken info: ", err)
-            ngx.exit(500)
+            ngx.exit(401)
             return
         end
 

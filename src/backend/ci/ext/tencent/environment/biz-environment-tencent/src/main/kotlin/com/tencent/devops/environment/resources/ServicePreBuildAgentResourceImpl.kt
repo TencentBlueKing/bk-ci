@@ -40,11 +40,21 @@ class ServicePreBuildAgentResourceImpl @Autowired constructor(
     private val preBuildAgentMgrService: PreBuildAgentMgrService
 ) : ServicePreBuildAgentResource {
 
-    override fun createPrebuildAgent(userId: String, projectId: String, os: OS, zoneName: String?, initIp: String?): Result<ThirdPartyAgentStaticInfo> {
+    override fun createPrebuildAgent(
+        userId: String,
+        projectId: String,
+        os: OS,
+        zoneName: String?,
+        initIp: String?
+    ): Result<ThirdPartyAgentStaticInfo> {
         return Result(preBuildAgentMgrService.createPrebuildAgent(userId, projectId, os, zoneName, initIp))
     }
 
-    override fun listPreBuildAgent(userId: String, projectId: String, os: OS?): Result<List<ThirdPartyAgentStaticInfo>> {
+    override fun listPreBuildAgent(
+        userId: String,
+        projectId: String,
+        os: OS?
+    ): Result<List<ThirdPartyAgentStaticInfo>> {
         return Result(preBuildAgentMgrService.listPreBuildAgent(userId, projectId, os))
     }
 }

@@ -236,7 +236,8 @@ class GitCITriggerService @Autowired constructor(
                 description = triggerBuildReq.customCommitMsg,
                 triggerUser = gitRequestEvent.userId,
                 sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
-                buildStatus = BuildStatus.RUNNING
+                buildStatus = BuildStatus.RUNNING,
+                version = "v2.0"
             )
             V2GitCIRequestDispatcher.dispatch(
                 rabbitTemplate,

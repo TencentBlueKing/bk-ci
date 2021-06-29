@@ -37,7 +37,6 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
-import com.tencent.devops.environment.pojo.CcNode
 import com.tencent.devops.environment.pojo.CmdbNode
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -46,10 +45,8 @@ import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class CmdbNodeService @Autowired constructor(
@@ -60,37 +57,17 @@ class CmdbNodeService @Autowired constructor(
     private val esbAgentClient: EsbAgentClient,
     private val environmentPermissionService: EnvironmentPermissionService
 ) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(CmdbNodeService::class.java)
-    }
-
-    fun getUserCmdbNodes(userId: String, offset: Int, limit: Int): List<CmdbNode> {
-        val cmdbNodes =
-            ImportServerNodeUtils.getUserCmdbNode(
-                esbAgentClient = esbAgentClient,
-                redisOperation = redisOperation,
-                userId = userId,
-                offset = offset,
-                limit = limit
-            )
-        return cmdbNodes.map {
-            CmdbNode(it.name, it.operator, it.bakOperator, it.ip, it.displayIp, it.agentStatus, it.osName)
-        }
-    }
 
     fun getUserCmdbNodesNew(
         userId: String,
         bakOperator: Boolean,
-        page: Int?,
-        pageSize: Int?,
+        page: Int,
+        pageSize: Int,
         ips: List<String>
     ): Page<CmdbNode> {
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 1000
-        val sqlLimit =
-            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
-        val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 1000
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val offset = sqlLimit.offset
+        val limit = sqlLimit.limit
 
         val cmdbNodePage =
             ImportServerNodeUtils.getUserCmdbNodeNew(
@@ -103,20 +80,21 @@ class CmdbNodeService @Autowired constructor(
                 limit = limit
             )
         return Page(
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
+            page = page,
+            pageSize = pageSize,
             count = cmdbNodePage.totalRows.toLong(),
             records = cmdbNodePage.nodes.map {
-                CmdbNode(it.name, it.operator, it.bakOperator, it.ip, it.displayIp, it.agentStatus, it.osName)
+                CmdbNode(
+                    name = it.name,
+                    operator = it.operator,
+                    bakOperator = it.bakOperator,
+                    ip = it.ip,
+                    displayIp = it.displayIp,
+                    agentStatus = it.agentStatus,
+                    osName = it.osName
+                )
             }
         )
-    }
-
-    fun getUserCcNodes(userId: String): List<CcNode> {
-        val ccNodes = ImportServerNodeUtils.getUserCcNode(esbAgentClient, redisOperation, userId)
-        return ccNodes.map {
-            CcNode(it.name, it.assetID, it.operator, it.bakOperator, it.ip, it.displayIp, it.agentStatus, it.osName)
-        }
     }
 
     fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>) {
@@ -143,7 +121,6 @@ class CmdbNodeService @Autowired constructor(
         val existIpList = existNodeList.map { it.nodeIp }.toSet()
         val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.toSet()
         ImportServerNodeUtils.checkImportCount(
-            esbAgentClient = esbAgentClient,
             dslContext = dslContext,
             projectConfigDao = projectConfigDao,
             nodeDao = nodeDao,
@@ -152,7 +129,6 @@ class CmdbNodeService @Autowired constructor(
             toAddNodeCount = toAddIpList.size
         )
 
-        val now = LocalDateTime.now()
         val agentStatusMap = esbAgentClient.getAgentStatus(userId, toAddIpList)
         val toAddNodeList = toAddIpList.map {
             val cmdbNode = cmdbIpToNodeMap[it]!!
@@ -174,63 +150,11 @@ class CmdbNodeService @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             nodeDao.batchAddNode(context, toAddNodeList)
-            val insertedNodeList = nodeDao.listServerNodesByIps(context, projectId, toAddNodeList.map { it.nodeIp })
-            batchRegisterNodePermission(insertedNodeList = insertedNodeList, userId = userId, projectId = projectId)
-        }
-    }
-
-    fun addCcNodes(userId: String, projectId: String, nodeIps: List<String>) {
-        val ccNodeList = esbAgentClient.getCcNodeByIps(userId, nodeIps)
-        val ccIpToNodeMap = ccNodeList.associateBy { it.ip }
-        val invalidIps = nodeIps.filter {
-            val ccNode = ccIpToNodeMap[it]
-            if (ccNode == null) true
-            else userId != ccNode.operator && userId != ccNode.bakOperator
-        }
-        if (invalidIps.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
-                params = arrayOf(invalidIps.joinToString(","))
-            )
-        }
-
-        // 只添加不存在的节点
-        val existNodeList = nodeDao.listServerAndDevCloudNodes(dslContext, projectId)
-        val existIpList = existNodeList.map { it.nodeIp }.toSet()
-        val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.toSet()
-        ImportServerNodeUtils.checkImportCount(
-            esbAgentClient = esbAgentClient,
-            dslContext = dslContext,
-            projectConfigDao = projectConfigDao,
-            nodeDao = nodeDao,
-            projectId = projectId,
-            userId = userId,
-            toAddNodeCount = toAddIpList.size
-        )
-
-        val now = LocalDateTime.now()
-        val agentStatusMap = esbAgentClient.getAgentStatus(userId, toAddIpList)
-        val toAddNodeList = nodeIps.filterNot { existIpList.contains(it) }.map {
-            val ccNode = ccIpToNodeMap[it]!!
-            CreateNodeModel(
-                nodeStringId = "",
+            val insertedNodeList = nodeDao.listServerNodesByIps(
+                dslContext = context,
                 projectId = projectId,
-                nodeIp = ccNode.ip,
-                nodeName = ccNode.name,
-                nodeStatus = NodeStatus.NORMAL.name,
-                nodeType = NodeType.CC.name,
-                createdUser = userId,
-                osName = ccNode.osName,
-                operator = ccNode.operator,
-                bakOperator = ccNode.bakOperator,
-                agentStatus = agentStatusMap[ccNode.ip] ?: false
+                ips = toAddNodeList.map { it.nodeIp }
             )
-        }
-
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            nodeDao.batchAddNode(context, toAddNodeList)
-            val insertedNodeList = nodeDao.listServerNodesByIps(context, projectId, toAddNodeList.map { it.nodeIp })
             batchRegisterNodePermission(insertedNodeList = insertedNodeList, userId = userId, projectId = projectId)
         }
     }

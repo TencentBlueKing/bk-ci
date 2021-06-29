@@ -311,7 +311,6 @@ open class DefaultModelCheckPlugin constructor(
         sourceModel: Model?,
         param: BeforeDeleteParam
     ) {
-
         existModel.stages.forEach { s ->
             s.containers.forEach { c ->
                 c.elements.forEach { e ->

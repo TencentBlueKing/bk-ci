@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
@@ -54,6 +55,7 @@ import org.springframework.stereotype.Service
 import java.lang.StringBuilder
 import java.net.URI
 import java.util.Base64
+import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -256,7 +258,7 @@ class RepoFileService @Autowired constructor(
             AESUtil.decrypt(
                 key = aesKey,
                 content = gitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken
-                    ?: throw RuntimeException("get access token for user(${repo.userName}) fail")
+                    ?: throw NotFoundException("get access token for user(${repo.userName}) fail")
             )
         } else {
             getCredential(repo.projectId ?: "", repo).privateKey
@@ -326,7 +328,10 @@ class RepoFileService @Autowired constructor(
             publicKey = encoder.encodeToString(pair.publicKey)
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
+            throw ErrorCodeException(
+                errorCode = credentialResult.status.toString(),
+                defaultMessage = credentialResult.message
+            )
         }
 
         val credential = credentialResult.data!!

@@ -546,8 +546,19 @@ open class MarketAtomTask : ITask() {
                 TaskUtil.setTaskId(buildTask.taskId ?: "")
                 when (type) {
                     STRING -> env[key] = output[VALUE] as String
-                    REPORT -> env[key] = archiveReport(buildTask, output, buildVariables, bkWorkspace)
-                    ARTIFACT -> env[key] = archiveArtifact(output, bkWorkspace, buildVariables)
+                    REPORT -> env[key] = archiveReport(
+                        buildTask = buildTask,
+                        varKey = varKey,
+                        output = output,
+                        buildVariables = buildVariables,
+                        atomWorkspace = bkWorkspace
+                    )
+                    ARTIFACT -> env[key] = archiveArtifact(
+                        varKey = varKey,
+                        output = output,
+                        atomWorkspace = bkWorkspace,
+                        buildVariables = buildVariables
+                    )
                 }
 
                 env["steps.${buildTask.elementId ?: ""}.outputs.$key"] = env[key] ?: ""
@@ -617,6 +628,7 @@ open class MarketAtomTask : ITask() {
      */
     @Suppress("UNCHECKED_CAST")
     private fun archiveArtifact(
+        varKey: String,
         output: Map<String, Any>,
         atomWorkspace: File,
         buildVariables: BuildVariables
@@ -631,7 +643,7 @@ open class MarketAtomTask : ITask() {
                     ArchiveUtils.archivePipelineFiles(artifact, atomWorkspace, buildVariables)
                 } else if (artifactoryType == ArtifactoryType.CUSTOM_DIR.name) {
                     output[PATH] ?: throw TaskExecuteException(
-                        errorMsg = "artifact $PATH cannot be empty",
+                        errorMsg = "$varKey.$PATH cannot be empty",
                         errorType = ErrorType.USER,
                         errorCode = ErrorCode.USER_INPUT_INVAILD
                     )
@@ -651,10 +663,16 @@ open class MarketAtomTask : ITask() {
      */
     private fun archiveReport(
         buildTask: BuildTask,
+        varKey: String,
         output: Map<String, Any>,
         buildVariables: BuildVariables,
         atomWorkspace: File
     ): String {
+        output[LABEL] ?: throw TaskExecuteException(
+            errorMsg = "$varKey.$LABEL cannot be empty",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_INPUT_INVAILD
+        )
         val params = mutableMapOf<String, String>()
         if (buildTask.params != null) {
             params.putAll(buildTask.params!!)
@@ -664,12 +682,12 @@ open class MarketAtomTask : ITask() {
         params[REPORT_TYPE] = reportType.toString()
         if (reportType == ReportTypeEnum.INTERNAL.name) {
             output[PATH] ?: throw TaskExecuteException(
-                errorMsg = "report $PATH cannot be empty",
+                errorMsg = "$varKey.$PATH cannot be empty",
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD
             )
             output[KEY_TARGET] ?: throw TaskExecuteException(
-                errorMsg = "report $KEY_TARGET cannot be empty",
+                errorMsg = "$varKey.$KEY_TARGET cannot be empty",
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD
             )
@@ -679,7 +697,7 @@ open class MarketAtomTask : ITask() {
             resultData = target
         } else {
             output[URL] ?: throw TaskExecuteException(
-                errorMsg = "report $URL cannot be empty",
+                errorMsg = "$varKey.$URL cannot be empty",
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD
             )

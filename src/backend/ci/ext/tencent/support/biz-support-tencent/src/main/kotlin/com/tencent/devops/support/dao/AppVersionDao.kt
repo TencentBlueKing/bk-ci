@@ -82,6 +82,7 @@ class AppVersionDao {
                     .set(RELEASE_DATE, releaseDate)
                     .set(RELEASE_CONTENT, appVersionRequest.releaseContent)
                     .set(CHANNEL_TYPE, appVersionRequest.channelType)
+                    .set(UPDATE_TYPE, appVersionRequest.updateType)
                     .where(ID.eq(versionId))
                     .execute()
             } else {
@@ -91,12 +92,14 @@ class AppVersionDao {
                     VERSION_ID,
                     RELEASE_DATE,
                     RELEASE_CONTENT,
-                    CHANNEL_TYPE
+                    CHANNEL_TYPE,
+                    UPDATE_TYPE
                 ).values(
                     appVersionRequest.versionId,
                     releaseDate,
                     appVersionRequest.releaseContent,
-                    appVersionRequest.channelType
+                    appVersionRequest.channelType,
+                    appVersionRequest.updateType
                 ).execute()
             }
         }

@@ -8,6 +8,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -30,4 +31,9 @@ interface OpGitCIBasicSettingResource {
         @ApiParam(value = "工蜂项目", required = true)
         gitCIBasicSetting: GitCIBasicSetting
     ): Result<Boolean>
+
+    @ApiOperation("填充存量流水线的组织架构信息")
+    @GET
+    @Path("/fixInfo")
+    fun fixProjectInfo(): Result<Int>
 }

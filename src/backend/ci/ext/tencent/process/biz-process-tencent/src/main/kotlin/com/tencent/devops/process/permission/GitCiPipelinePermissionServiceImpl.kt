@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -24,12 +23,11 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
         projectId: String,
         permission: AuthPermission
     ): Boolean {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = checkTokenService.getSystemToken(null) ?: "",
             action = permission.value,
-            projectCode = gitProjectId,
+            projectCode = projectId,
             resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
         ).data ?: false
     }
@@ -80,12 +78,11 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
     }
 
     override fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = checkTokenService.getSystemToken(null) ?: "",
             action = "",
-            projectCode = gitProjectId,
+            projectCode = projectId,
             resourceCode = null
         ).data ?: false
     }
