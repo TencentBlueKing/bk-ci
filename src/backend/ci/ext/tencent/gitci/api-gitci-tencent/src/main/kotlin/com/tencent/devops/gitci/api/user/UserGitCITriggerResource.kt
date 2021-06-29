@@ -84,7 +84,7 @@ interface UserGitCITriggerResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("yamlschema", required = true)
+        @ApiParam("yamlSchema", required = true)
         yamlSchema: String
     ): Result<String>
 
