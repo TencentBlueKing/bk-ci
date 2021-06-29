@@ -90,7 +90,7 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
         val triggerInterface = requestTriggerFactory.getGitCIRequestTrigger(ymlVersion)
-        return triggerInterface.checkYamlSchema(userId, yaml)
+        return triggerInterface.checkYamlSchema(userId, yaml.yaml)
     }
 
     override fun saveYamlSchema(userId: String, yamlSchema: String): Result<String> {
