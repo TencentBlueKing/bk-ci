@@ -181,7 +181,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 os = VMBaseOS.LINUX.name,
                 startTime = System.currentTimeMillis(),
                 channelCode = pipelineInfo.channelCode.name,
-                dispatchType = DockerDispatchType(DockerVersion.TLINUX2_2.value),
+                dispatchType = DockerDispatchType(DockerVersion.CUSTOMIZE.value),
                 zone = getBuildZone(container),
                 atoms = atoms,
                 executeCount = task.executeCount
