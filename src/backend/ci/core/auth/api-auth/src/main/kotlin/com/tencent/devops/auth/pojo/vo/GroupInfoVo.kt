@@ -9,6 +9,8 @@ data class GroupInfoVo (
     val id : Int,
     @ApiModelProperty("用户组名称")
     val name: String,
+    @ApiModelProperty("用户组别名")
+    val displayName: String,
     @ApiModelProperty("是否为默认分组")
     val defaultRole: Boolean,
     @ApiModelProperty("用户组人数")

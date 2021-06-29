@@ -32,6 +32,7 @@ import com.tencent.devops.model.auth.tables.TAuthGroupInfo
 import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -74,6 +75,13 @@ class AuthGroupDao {
         }
     }
 
+    fun getGroupByProject(dslContext: DSLContext, projectCode: String) : Result<TAuthGroupInfoRecord> {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode).and(IS_DELETE.eq(false))).fetch()
+        }
+    }
+
     fun getGroupByCodes(
         dslContext: DSLContext,
         projectCode: String,
@@ -89,6 +97,12 @@ class AuthGroupDao {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(groupId)).fetchOne()
+        }
+    }
+
+    fun getGroupByRelationIds(dslContext: DSLContext, relationIds: List<Int>): Result<TAuthGroupInfoRecord?> {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.selectFrom(this).where(RELATION_ID.`in`(relationIds).and(IS_DELETE.eq(false))).fetch()
         }
     }
 
