@@ -25,41 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.listener
+package com.tencent.devops.openapi.config
+import com.tencent.devops.openapi.service.op.DefaultOpAppUserService
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-import com.tencent.devops.dispatch.service.PipelineBuildLessDispatchService
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-
-@Service
-class BuildLessAgentStartupListener @Autowired
-constructor(private val pipelineDispatchService: PipelineBuildLessDispatchService) {
-
-/*    @RabbitListener(
-        bindings = [(QueueBinding(
-            key = [MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH], value = Queue(
-                value = MQ.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH, durable = "true"
-            ),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.DIRECT
-            )
-        ))]
-    )*/
-    fun listenAgentStartUpEvent(event: PipelineBuildLessStartupDispatchEvent) {
-        try {
-            logger.info("start build less($event)")
-            pipelineDispatchService.startUpBuildLess(event)
-        } catch (ignored: Throwable) {
-            logger.error("Fail to start the pipe build($event)", ignored)
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(BuildLessAgentStartupListener::class.java)
-    }
+/**
+ * 流水线构建核心配置
+ */
+@Configuration
+class OpenAPiConfiguration {
+    @Bean
+    @ConditionalOnMissingBean(name = ["opAppUserService"])
+    fun opAppUserService() = DefaultOpAppUserService()
 }

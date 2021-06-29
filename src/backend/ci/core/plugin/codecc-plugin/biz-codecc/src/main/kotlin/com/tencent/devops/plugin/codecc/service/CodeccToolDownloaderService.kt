@@ -41,7 +41,7 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
 
 @Service
-class CodeccDownloaderService {
+class CodeccToolDownloaderService {
 
     @Value("\${plugin.codecc.path:#{null}}")
     private val codeccPath: String? = null

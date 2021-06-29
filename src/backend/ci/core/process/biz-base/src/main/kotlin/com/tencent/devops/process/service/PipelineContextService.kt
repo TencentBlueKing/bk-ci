@@ -37,14 +37,18 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TIME_TRIGGER_KIND
@@ -120,6 +124,18 @@ class PipelineContextService@Autowired constructor(
             varMap["ci.event"] = PIPELINE_GIT_TIME_TRIGGER_KIND
         } else if (!buildVar[PIPELINE_GIT_EVENT].isNullOrBlank()) {
             varMap["ci.event"] = buildVar[PIPELINE_GIT_EVENT]!!
+        }
+        if (!buildVar[PIPELINE_GIT_REPO_URL].isNullOrBlank()) {
+            varMap["ci.repo_url"] = buildVar[PIPELINE_GIT_REPO_URL]!!
+        }
+        if (!buildVar[PIPELINE_GIT_BASE_REPO_URL].isNullOrBlank()) {
+            varMap["ci.base_repo_url"] = buildVar[PIPELINE_GIT_BASE_REPO_URL]!!
+        }
+        if (!buildVar[PIPELINE_GIT_HEAD_REPO_URL].isNullOrBlank()) {
+            varMap["ci.head_repo_url"] = buildVar[PIPELINE_GIT_HEAD_REPO_URL]!!
+        }
+        if (!buildVar[PIPELINE_GIT_MR_URL].isNullOrBlank()) {
+            varMap["ci.mr_url"] = buildVar[PIPELINE_GIT_MR_URL]!!
         }
     }
 
