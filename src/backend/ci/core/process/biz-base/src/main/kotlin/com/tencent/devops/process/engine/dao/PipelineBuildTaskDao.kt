@@ -306,14 +306,15 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 
             if (buildStatus.isFinish()) {
-                val record = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).fetchOne()!!
+                val record = dslContext.selectFrom(this)
+                    .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).fetchOne()!!
                 val totalTime = if (record.startTime == null || record.endTime == null) {
                     0
                 } else {
                     Duration.between(record.startTime, record.endTime).toMillis() / 1000
                 }
                 dslContext.update(this)
-                    .set(TOTAL_TIME, (record.totalTime ?: 0) + totalTime)
+                    .set(TOTAL_TIME, totalTime)
                     .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
             }
         }

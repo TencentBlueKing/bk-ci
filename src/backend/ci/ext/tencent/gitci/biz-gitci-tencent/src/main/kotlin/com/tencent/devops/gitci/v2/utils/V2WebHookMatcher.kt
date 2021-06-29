@@ -27,17 +27,24 @@
 
 package com.tencent.devops.gitci.v2.utils
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.gitci.pojo.git.GitCommit
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
+import com.tencent.devops.gitci.v2.service.ScmService
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
 
 @Suppress("ALL")
-class V2WebHookMatcher(private val event: GitEvent) {
+@Component
+class V2WebHookMatcher @Autowired constructor(
+    private val scmService: ScmService
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(V2WebHookMatcher::class.java)
@@ -45,22 +52,23 @@ class V2WebHookMatcher(private val event: GitEvent) {
     }
 
     fun isMatch(
-        triggerOn: TriggerOn
+        triggerOn: TriggerOn,
+        event: GitEvent
     ): Pair<Boolean, Boolean> {
-        val eventBranch = getBranch()
-        val eventTag = getTag()
-        val eventType = getEventType()
+        val eventBranch = getBranch(event)
+        val eventTag = getTag(event)
+        val eventType = getEventType(event)
 
         if (triggerOn.mr != null || triggerOn.push != null || triggerOn.tag != null) {
             when (eventType) {
                 CodeEventType.PUSH -> {
-                    if (isPushMatch(triggerOn, eventBranch)) return Pair(first = true, second = false)
+                    if (isPushMatch(triggerOn, eventBranch, event)) return Pair(first = true, second = false)
                 }
                 CodeEventType.TAG_PUSH -> {
-                    if (isTagPushMatch(triggerOn, eventTag)) return Pair(first = true, second = false)
+                    if (isTagPushMatch(triggerOn, eventTag, event)) return Pair(first = true, second = false)
                 }
                 CodeEventType.MERGE_REQUEST -> {
-                    if (isMrMatch(triggerOn, eventBranch)) return Pair(first = true, second = false)
+                    if (isMrMatch(triggerOn, eventBranch, event)) return Pair(first = true, second = false)
                 }
                 else -> {
                     return Pair(first = false, second = false)
@@ -74,7 +82,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
         return Pair(first = false, second = false)
     }
 
-    private fun isPushMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
+    private fun isPushMatch(triggerOn: TriggerOn, eventBranch: String, event: GitEvent): Boolean {
         // 如果没有配置push，默认匹配
         if (triggerOn.push == null) {
             return false
@@ -82,23 +90,23 @@ class V2WebHookMatcher(private val event: GitEvent) {
 
         val pushRule = triggerOn.push!!
         // 1、check branchIgnore，满足屏蔽条件直接返回不匹配
-        if (isIgnoreBranchMatch(pushRule.branchesIgnore)) return false
+        if (isIgnoreBranchMatch(pushRule.branchesIgnore, event)) return false
 
         // 2、check pathIgnore，满足屏蔽条件直接返回不匹配
-        if (isIgnorePathMatch(pushRule.pathsIgnore)) return false
+        if (isIgnorePathMatch(pushRule.pathsIgnore, event)) return false
 
         // 3、check userIgnore,满足屏蔽条件直接返回不匹配
-        if (isIgnoreUserMatch(pushRule.usersIgnore)) return false
+        if (isIgnoreUserMatch(pushRule.usersIgnore, event)) return false
 
         // include
-        if (isBranchMatch(pushRule.branches) && isIncludePathMatch(pushRule.paths) && isUserMatch(pushRule.users)) {
+        if (isBranchMatch(pushRule.branches, event) && isIncludePathMatch(pushRule.paths, event) && isUserMatch(pushRule.users, event)) {
             logger.info("Git trigger branch($eventBranch) is included and path(${pushRule.paths}) is included")
             return true
         }
         return false
     }
 
-    private fun isTagPushMatch(triggerOn: TriggerOn, eventTag: String): Boolean {
+    private fun isTagPushMatch(triggerOn: TriggerOn, eventTag: String, event: GitEvent): Boolean {
         if (triggerOn.tag == null) {
             return false
         }
@@ -114,7 +122,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
             }
         }
 
-        if (isIgnoreUserMatch(tagRule.usersIgnore)) return false
+        if (isIgnoreUserMatch(tagRule.usersIgnore, event)) return false
 
         // include
         var tagIncluded = false
@@ -131,18 +139,19 @@ class V2WebHookMatcher(private val event: GitEvent) {
             }
         }
 
-        if (tagIncluded && isUserMatch(tagRule.users)) {
+        if (tagIncluded && isUserMatch(tagRule.users, event)) {
             logger.info("Git trigger tags($eventTag) is included and path(${triggerOn.tag!!.tags}) is included")
             return true
         }
         return false
     }
 
-    private fun isMrMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
+    private fun isMrMatch(triggerOn: TriggerOn, eventBranch: String, event: GitEvent): Boolean {
         if (triggerOn.mr == null) {
             return false
         }
 
+        // 先排除exclude和ignore
         // exclude branch of mr
         if (triggerOn.mr!!.sourceBranchesIgnore != null && triggerOn.mr!!.sourceBranchesIgnore!!.isNotEmpty()) {
             logger.info("Exclude branch set(${triggerOn.mr!!.sourceBranchesIgnore})")
@@ -154,8 +163,8 @@ class V2WebHookMatcher(private val event: GitEvent) {
             }
         }
 
-        if (isIgnorePathMatch(triggerOn.mr!!.pathsIgnore)) return false
-        if (isIgnoreUserMatch(triggerOn.mr!!.usersIgnore)) return false
+        if (isIgnorePathMatch(triggerOn.mr!!.pathsIgnore, event)) return false
+        if (isIgnoreUserMatch(triggerOn.mr!!.usersIgnore, event)) return false
 
         // include branch of mr
         var targetBranchMatch = false
@@ -169,8 +178,8 @@ class V2WebHookMatcher(private val event: GitEvent) {
             }
         }
 
-        if (targetBranchMatch && isIncludePathMatch(triggerOn.mr!!.paths) &&
-                isUserMatch(triggerOn.mr!!.users)) {
+        if (targetBranchMatch && isMrIncludePathMatch(triggerOn.mr!!.paths, event) &&
+                isUserMatch(triggerOn.mr!!.users, event)) {
             return true
         }
 
@@ -186,8 +195,8 @@ class V2WebHookMatcher(private val event: GitEvent) {
         return true
     }
 
-    private fun isIgnoreBranchMatch(branchList: List<String>?): Boolean {
-        val eventBranch = getBranch()
+    private fun isIgnoreBranchMatch(branchList: List<String>?, event: GitEvent): Boolean {
+        val eventBranch = getBranch(event)
         if (branchList != null && branchList.isNotEmpty()) {
             branchList.forEach {
                 if (isBranchMatch(it, eventBranch)) {
@@ -200,7 +209,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
         return false
     }
 
-    private fun isIgnorePathMatch(pathIgnoreList: List<String>?): Boolean {
+    private fun isIgnorePathMatch(pathIgnoreList: List<String>?, event: GitEvent): Boolean {
         if (pathIgnoreList != null && pathIgnoreList.isNotEmpty()) {
             logger.info("Exclude path set ($pathIgnoreList)")
             (event as GitPushEvent).commits.forEach { commit ->
@@ -234,9 +243,9 @@ class V2WebHookMatcher(private val event: GitEvent) {
         return false
     }
 
-    private fun isBranchMatch(branchList: List<String>?): Boolean {
+    private fun isBranchMatch(branchList: List<String>?, event: GitEvent): Boolean {
         var branchIncluded = false
-        val eventBranch = getBranch()
+        val eventBranch = getBranch(event)
         if (branchList != null && branchList.isNotEmpty()) {
             logger.info("Include branch set($branchList)")
             if (branchList.size == 1 && branchList[0] == "*") {
@@ -257,12 +266,17 @@ class V2WebHookMatcher(private val event: GitEvent) {
         return branchIncluded
     }
 
-    private fun isIncludePathMatch(pathList: List<String>?): Boolean {
+    private fun isIncludePathMatch(pathList: List<String>?, event: GitEvent): Boolean {
         var pathIncluded = false
         if (pathList != null && pathList.isNotEmpty()) {
             logger.info("Include path set($pathList)")
             run outside@{
-                (event as GitPushEvent).commits.forEach { commit ->
+                var commits = listOf<GitCommit>()
+                if (event is GitPushEvent) {
+                    commits = event.commits
+                }
+
+                commits.forEach { commit ->
                     commit.added?.forEach { path ->
                         pathList.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {
@@ -292,6 +306,9 @@ class V2WebHookMatcher(private val event: GitEvent) {
                     }
                 }
             }
+
+            logger.info("trigger path commits no (add, modified, removed).")
+            pathIncluded = true
         } else {
             logger.info("trigger path include is empty.")
             pathIncluded = true
@@ -300,16 +317,55 @@ class V2WebHookMatcher(private val event: GitEvent) {
         return pathIncluded
     }
 
-    private fun isUserMatch(userList: List<String>?): Boolean {
+    private fun isMrIncludePathMatch(pathList: List<String>?, event: GitEvent): Boolean {
+        var mrPathIncluded = false
+        if (pathList != null && pathList.isNotEmpty()) {
+            logger.info("Mr Include path set($pathList)")
+            val mrId = (event as GitMergeRequestEvent).object_attributes.id
+            val gitProjectId = event.object_attributes.source_project_id
+            val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(event.user.name, gitProjectId, mrId)
+
+            if (gitMrChangeInfo != null) {
+                val mrChangeFiles = gitMrChangeInfo.files.map {
+                    if (it.deletedFile) {
+                        it.oldPath
+                    } else {
+                        it.newPath
+                    }
+                }
+
+                run outside@{
+                    mrChangeFiles.forEach { changeFilePath ->
+                        pathList.forEach { includePath ->
+                            if (isPathMatch(changeFilePath, includePath)) {
+                                logger.info("The include path($includePath) include the git mr update one($changeFilePath)")
+                                mrPathIncluded = true
+                                return@outside
+                            }
+                        }
+                    }
+                }
+            } else {
+                logger.info("isMrIncludePathMatch gitMrChangeInfo is null.")
+            }
+        } else {
+            logger.info("isMrIncludePathMatch trigger path include is empty.")
+            mrPathIncluded = true
+        }
+
+        return mrPathIncluded
+    }
+
+    private fun isUserMatch(userList: List<String>?, event: GitEvent): Boolean {
         return if (userList != null && userList.isNotEmpty()) {
-            userList.contains(getUser())
+            userList.contains(getUser(event))
         } else {
             true
         }
     }
 
-    private fun isIgnoreUserMatch(ignoreUserList: List<String>?): Boolean {
-        if (ignoreUserList != null && ignoreUserList.isEmpty() && ignoreUserList.contains(getUser())) {
+    private fun isIgnoreUserMatch(ignoreUserList: List<String>?, event: GitEvent): Boolean {
+        if (ignoreUserList != null && ignoreUserList.isEmpty() && ignoreUserList.contains(getUser(event))) {
             return true
         }
 
@@ -326,7 +382,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
         return matcher.match(tagName, eventTag)
     }
 
-    private fun matchUrl(url: String): Boolean {
+    private fun matchUrl(url: String, event: GitEvent): Boolean {
         return when (event) {
             is GitPushEvent -> {
                 val repoHttpUrl = url.removePrefix("http://").removePrefix("https://")
@@ -352,7 +408,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
         }
     }
 
-    private fun getUser(): String {
+    private fun getUser(event: GitEvent): String {
         return when (event) {
             is GitPushEvent -> event.user_name
             is GitTagPushEvent -> event.user_name
@@ -361,7 +417,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
         }
     }
 
-    private fun getBranch(): String {
+    private fun getBranch(event: GitEvent): String {
         return when (event) {
             is GitPushEvent -> getBranch(event.ref)
             is GitTagPushEvent -> getBranch(event.ref)
@@ -370,7 +426,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
         }
     }
 
-    private fun getTag(): String {
+    private fun getTag(event: GitEvent): String {
         return when (event) {
             is GitPushEvent -> getTag(event.ref)
             is GitTagPushEvent -> getTag(event.ref)
@@ -379,7 +435,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
         }
     }
 
-    private fun getEventType(): CodeEventType {
+    private fun getEventType(event: GitEvent): CodeEventType {
         return when (event) {
             is GitPushEvent -> CodeEventType.PUSH
             is GitTagPushEvent -> CodeEventType.TAG_PUSH
@@ -395,7 +451,22 @@ class V2WebHookMatcher(private val event: GitEvent) {
      * prefixPath: a/
      */
     private fun isPathMatch(fullPath: String, prefixPath: String): Boolean {
-        return fullPath.removePrefix("/").startsWith(prefixPath.removePrefix("/"))
+        logger.info("fullPath: $fullPath, prefixPath: $prefixPath")
+        val fullPathList = fullPath.removePrefix("/").split("/")
+        val prefixPathList = prefixPath.removePrefix("/").split("/")
+        if (fullPathList.size < prefixPathList.size) {
+            return false
+        }
+
+        for (i in prefixPathList.indices) {
+            if (prefixPathList[i] != "*" &&
+                (fullPathList[i] != prefixPathList[i])
+            ) {
+                return false
+            }
+        }
+
+        return true
     }
 
     private fun getBranch(ref: String): String {
