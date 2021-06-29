@@ -30,19 +30,61 @@ const optionConfigMixin = {
                     default: true
                 },
                 continueWhenFailed: {
-                    rule: {},
-                    type: 'boolean',
-                    desc: this.$t('storeMap.continueWhenFailedDesc'),
-                    component: 'atom-checkbox',
-                    text: this.$t('storeMap.continueWhenFailed'),
+                    isHidden: true,
                     default: false
                 },
+
                 retryWhenFailed: {
-                    rule: {},
-                    type: 'boolean',
-                    component: 'atom-checkbox',
-                    text: this.$t('storeMap.retryWhenFailed'),
+                    isHidden: true,
                     default: false
+                },
+                failControl: {
+                    component: 'atom-checkbox-list',
+                    label: this.$t('storeMap.WhenPluginFailed'),
+                    default: [],
+                    list: [
+                        {
+                            id: 'continueWhenFailed',
+                            name: this.$t('storeMap.continueWhenFailed')
+                        },
+                        {
+                            id: 'retryWhenFailed',
+                            name: this.$t('storeMap.automaticRetry')
+                        },
+                        {
+                            id: 'MANUAL_RETRY',
+                            name: this.$t('storeMap.manualRetry')
+                        }
+                    ]
+                },
+                manualSkip: {
+                    component: 'enum-input',
+                    label: this.$t('storeMap.skipType'),
+                    default: false,
+                    list: [{
+                        value: false,
+                        label: '自动跳过'
+                    }, {
+                        value: true,
+                        label: '手动跳过'
+                    }],
+                    isHidden: (element) => {
+                        return !(element.additionalOptions && ((element.additionalOptions.failControl || []).includes('continueWhenFailed')))
+                    }
+                },
+                manualRetry: {
+                    default: false,
+                    isHidden: true
+                },
+                retryCount: {
+                    rule: { 'numeric': true, 'max_value': 5, 'min_value': 1 },
+                    component: 'vuex-input',
+                    label: this.$t('storeMap.retryCount'),
+                    placeholder: this.$t('storeMap.retryCountPlaceholder'),
+                    default: '1',
+                    isHidden: (element) => {
+                        return !(element.additionalOptions && ((element.additionalOptions.failControl || []).includes('retryWhenFailed')))
+                    }
                 },
                 pauseBeforeExec: {
                     rule: {},
@@ -55,16 +97,7 @@ const optionConfigMixin = {
                         return !(element.data && element.data.config && (element.data.config.canPauseBeforeRun === true))
                     }
                 },
-                retryCount: {
-                    rule: { 'numeric': true, 'max_value': 5, 'min_value': 1 },
-                    component: 'vuex-input',
-                    label: this.$t('storeMap.retryCount'),
-                    placeholder: this.$t('storeMap.retryCountPlaceholder'),
-                    default: '1',
-                    isHidden: (element) => {
-                        return !(element.additionalOptions && (element.additionalOptions.retryWhenFailed === true))
-                    }
-                },
+
                 timeout: {
                     rule: { 'numeric': true, 'max_value': 10080 },
                     component: 'vuex-input',
@@ -123,15 +156,26 @@ const optionConfigMixin = {
         }
     },
     methods: {
-        getAtomOptionDefault () {
-            return Object.keys(this.ATOM_OPTION).reduce((formProps, key) => {
-                if (this.ATOM_OPTION[key] && typeof this.ATOM_OPTION[key].default === 'object') {
+        getAtomOptionDefault (additionalOptions) {
+            const atomValues = Object.keys(this.ATOM_OPTION).reduce((formProps, key) => {
+                if (typeof additionalOptions[key] !== 'undefined') {
+                    formProps[key] = additionalOptions[key]
+                } else if (this.ATOM_OPTION[key] && typeof this.ATOM_OPTION[key].default === 'object') {
                     formProps[key] = JSON.parse(JSON.stringify(this.ATOM_OPTION[key].default))
                 } else {
                     formProps[key] = this.ATOM_OPTION[key].default
                 }
+
                 return formProps
             }, {})
+
+            atomValues.failControl = [
+                ...(atomValues['continueWhenFailed'] ? ['continueWhenFailed'] : []),
+                ...(atomValues['retryWhenFailed'] ? ['retryWhenFailed'] : atomValues['manualRetry'] ? ['MANUAL_RETRY'] : [])
+            ]
+
+            console.log(atomValues)
+            return atomValues
         }
     }
 }

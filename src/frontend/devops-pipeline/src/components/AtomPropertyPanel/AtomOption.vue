@@ -41,7 +41,26 @@
                 return this.element.version
             },
             optionModel () {
-                return this.ATOM_OPTION || {}
+                // const failControlManualRetryOption = {
+                //     id: 'MANUAL_RETRY',
+                //     name: this.$t('storeMap.manualRetry')
+                // }
+                // this.ATOM_OPTION['failControl'].list = [
+                //     {
+                //         id: 'continueWhenFailed',
+                //         name: this.$t('storeMap.continueWhenFailed')
+                //     },
+                //     {
+                //         id: 'retryWhenFailed',
+                //         name: this.$t('storeMap.automaticRetry')
+                //     }
+                // ]
+
+                if (!(this.atomOption['manualSkip'] === false && this.atomOption['failControl'].includes('continueWhenFailed'))) {
+                    this.ATOM_OPTION['failControl'].list[2].disabled = false
+                }
+
+                return this.ATOM_OPTION
             }
         },
         watch: {
@@ -59,20 +78,35 @@
             ...mapActions('atom', [
                 'setPipelineEditing'
             ]),
-            // getAtomOptionDefault,
             handleUpdateElementOption (name, value) {
                 if (this.element.additionalOptions && this.element.additionalOptions[name] === undefined) {
                     Vue.set(this.element.additionalOptions, name, value)
                 }
+
+                const currentfailControl = name === 'failControl' ? value : this.atomOption['failControl']
+                const includeManualRetry = currentfailControl.includes('MANUAL_RETRY')
+                const continueable = currentfailControl.includes('continueWhenFailed')
+                const isAutoSkip = continueable && (this.atomOption['manualSkip'] === false || (name === 'manualSkip' && value === false))
+                const retryable = currentfailControl.includes('retryWhenFailed') || (includeManualRetry && !isAutoSkip)
+                const manualRetry = retryable && !isAutoSkip && includeManualRetry
+                debugger
+
+                const failControl = isAutoSkip ? currentfailControl.filter(item => item !== 'MANUAL_RETRY') : [...currentfailControl]
+
                 this.setPipelineEditing(true)
-                this.handleUpdateElement('additionalOptions',
-                                         Object.assign(this.element.additionalOptions || {}, { [name]: value })
-                )
+
+                console.log(currentfailControl, failControl)
+                this.handleUpdateElement('additionalOptions', {
+                    ...this.atomOption,
+                    manualRetry,
+                    [name]: value,
+                    continueWhenFailed: continueable,
+                    retryWhenFailed: retryable,
+                    failControl
+                })
             },
             initOptionConfig () {
-                if (this.element.additionalOptions === undefined) {
-                    this.handleUpdateElement('additionalOptions', this.getAtomOptionDefault())
-                }
+                this.handleUpdateElement('additionalOptions', this.getAtomOptionDefault(this.atomOption))
             }
         }
     }
