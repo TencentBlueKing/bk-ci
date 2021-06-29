@@ -44,7 +44,6 @@ import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.api.ServiceGroupResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.auth.TxAuthGroup
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
