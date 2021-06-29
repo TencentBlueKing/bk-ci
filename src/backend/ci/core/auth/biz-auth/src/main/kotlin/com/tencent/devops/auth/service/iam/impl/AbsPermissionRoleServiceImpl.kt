@@ -60,6 +60,7 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
     }
 
     override fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO) {
+        groupService.updateGroupName(userId, roleId, groupInfo)
         renameRoleExt(
             userId = userId,
             projectId = projectId,

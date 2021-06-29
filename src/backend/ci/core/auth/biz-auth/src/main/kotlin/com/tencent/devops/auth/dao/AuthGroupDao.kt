@@ -100,6 +100,12 @@ class AuthGroupDao {
         }
     }
 
+    fun getGroupByRelationId(dslContext: DSLContext, relationId: Int): TAuthGroupInfoRecord? {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.selectFrom(this).where(RELATION_ID.eq(relationId.toString())).fetchAny()
+        }
+    }
+
     fun getGroupByRelationIds(dslContext: DSLContext, relationIds: List<Int>): Result<TAuthGroupInfoRecord?> {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
             return dslContext.selectFrom(this).where(RELATION_ID.`in`(relationIds).and(IS_DELETE.eq(false))).fetch()
@@ -144,6 +150,22 @@ class AuthGroupDao {
                 )
             }
         }).execute()
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        id: Int,
+        groupName: String,
+        displayName: String,
+        userId: String
+    ): Int {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.update(this).set(GROUP_NAME, groupName)
+                .set(DISPLAY_NAME, displayName)
+                .set(UPDATE_USER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(id)).execute()
+        }
     }
 
     fun updateRelationId(dslContext: DSLContext, id: Int, relationId: String): Int {
