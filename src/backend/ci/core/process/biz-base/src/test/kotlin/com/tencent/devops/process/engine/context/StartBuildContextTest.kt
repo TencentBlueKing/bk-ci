@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.context
 
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.TestBase
@@ -103,7 +104,8 @@ class StartBuildContextTest : TestBase() {
         println("needSkipTaskWhenRetry=$needSkipTaskWhenRetry")
         Assert.assertEquals(true, needSkipTaskWhenRetry)
         // 确认id不是当前要跳过的插件
-        Assert.assertEquals(false, context.isSkipTask("elementId"))
+        val element211 = stage.containers[0].elements[0]
+        Assert.assertEquals(false, context.inSkipStage(stage, element211))
     }
 
     @Test
@@ -111,28 +113,78 @@ class StartBuildContextTest : TestBase() {
         // 跳过Stage-2下所有失败插件
         params[PIPELINE_RETRY_START_TASK_ID] = "stage-2"
         params[PIPELINE_SKIP_FAILED_TASK] = true
-        val skipStage2Context = StartBuildContext.init(params)
+
+        val stage2Context = StartBuildContext.init(params)
         val stages = genStages(stageSize = 2, jobSize = 2, elementSize = 2, needFinally = false)
-        var elementId = stages[2].containers[0].elements[0].id
-        var needSkipTaskWhenRetrySkip = skipStage2Context.needSkipTaskWhenRetry(stages[2], taskId = elementId)
+        val stage1 = stages[1]
+        val stage2 = stages[2]
+
+        var needSkipTaskWhenRetrySkip = stage2Context.needSkipTaskWhenRetry(stage2, stage2.containers[0].elements[0].id)
         println("needSkipTaskWhenRetrySkip=$needSkipTaskWhenRetrySkip")
         Assert.assertEquals(false, needSkipTaskWhenRetrySkip)
 
-        // Stage-1不受影响，会跳过
-        elementId = stages[1].containers[0].elements[0].id
-        Assert.assertEquals(false, skipStage2Context.isSkipTask(elementId))
-        needSkipTaskWhenRetrySkip = skipStage2Context.needSkipTaskWhenRetry(stages[1], taskId = elementId)
+        needSkipTaskWhenRetrySkip = stage2Context.needSkipTaskWhenRetry(stage1, stage1.containers[0].elements[0].id)
         println("needSkipTaskWhenRetrySkip=$needSkipTaskWhenRetrySkip")
         Assert.assertEquals(true, needSkipTaskWhenRetrySkip)
 
-        // 指定跳过插件
-        elementId = stages[2].containers[0].elements[0].id
-        params[PIPELINE_RETRY_START_TASK_ID] = elementId!!
+        // 指定跳过插件是 Stage-1 里的 插件
+        params[PIPELINE_RETRY_START_TASK_ID] = stage1.containers[0].elements[0].id!!
         params[PIPELINE_SKIP_FAILED_TASK] = true
-        val skipElementContext = StartBuildContext.init(params)
-        Assert.assertEquals(true, skipElementContext.isSkipTask(elementId))
-        needSkipTaskWhenRetrySkip = skipElementContext.needSkipTaskWhenRetry(stages[2], taskId = elementId)
+        val skipElement = StartBuildContext.init(params)
+        needSkipTaskWhenRetrySkip = skipElement.needSkipTaskWhenRetry(stages[2], stage2.containers[0].elements[0].id)
         println("needSkipTaskWhenRetrySkip=$needSkipTaskWhenRetrySkip")
-        Assert.assertEquals(false, needSkipTaskWhenRetrySkip)
+        Assert.assertEquals(true, needSkipTaskWhenRetrySkip)
+    }
+
+    @Test
+    fun inSkipStage() {
+        // 跳过Stage-2下所有失败插件
+        params[PIPELINE_RETRY_START_TASK_ID] = "stage-2"
+        params[PIPELINE_SKIP_FAILED_TASK] = true
+
+        val stage2Context = StartBuildContext.init(params)
+        val stages = genStages(stageSize = 2, jobSize = 2, elementSize = 2, needFinally = false)
+        val stage1 = stages[1]
+        val stage2 = stages[2]
+        // 在重试要跳过的Stage-2里面
+        stage2.containers.forEach { c ->
+            c.elements.forEach { e ->
+                e.status = BuildStatus.FAILED.name
+                Assert.assertEquals(true, stage2Context.inSkipStage(stage2, e))
+            }
+        }
+
+        // Stage-1的不受影响
+        stage1.containers.forEach { c ->
+            c.elements.forEach { e ->
+                e.status = BuildStatus.FAILED.name
+                Assert.assertEquals(false, stage2Context.inSkipStage(stage1, e))
+            }
+        }
+
+        // 指定跳过插件是 Stage-1 里 插件
+        params[PIPELINE_RETRY_START_TASK_ID] = stage1.containers[0].elements[0].id!!
+        params[PIPELINE_SKIP_FAILED_TASK] = true
+        val skipElement = StartBuildContext.init(params)
+        // Stage-2 的插件不在重试时跳过的Stage内范围
+        stage2.containers.forEach { c ->
+            c.elements.forEach { e ->
+                e.status = BuildStatus.FAILED.name
+                Assert.assertEquals(false, skipElement.inSkipStage(stage2, e))
+            }
+        }
+
+        // Stage-1 里面只有指定的跳过插件
+        stage1.containers.forEach { c ->
+            c.elements.forEach { e ->
+                e.status = BuildStatus.FAILED.name
+                if (e.id == params[PIPELINE_RETRY_START_TASK_ID]) {
+                    println("Stage-1 里面只有指定的跳过插件: ${stage1.id}, ${e.id}")
+                    Assert.assertEquals(true, skipElement.inSkipStage(stage1, e))
+                } else {
+                    Assert.assertEquals(false, skipElement.inSkipStage(stage1, e))
+                }
+            }
+        }
     }
 }

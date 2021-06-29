@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
@@ -106,7 +107,13 @@ data class StartBuildContext(
         }
     }
 
-    fun isSkipTask(taskId: String?) = skipFailedTask && retryStartTaskId == taskId
+    fun inSkipStage(stage: Stage, atom: Element): Boolean {
+        return if (skipFailedTask && retryStartTaskId == atom.id) {
+            true
+        } else { // 如果是全部跳过Stage下所有失败插件的，则这个插件必须是处于失败的状态
+            skipFailedTask && (stage.id == retryStartTaskId && BuildStatus.parse(atom.status).isFailure())
+        }
+    }
 
     /**
      * 是否是要重试的失败容器
