@@ -540,6 +540,9 @@ open class MarketAtomTask : ITask() {
                         "label": "",  # 报告别名，用于产出物报告界面标识当前报告
                         "path": "",   # 报告目录所在路径，相对于工作空间
                         "target": "", # 报告入口文件
+                        "enableEmail": true, # 是否开启发送邮件
+                        "emailReceivers": [], # 邮件接收人
+                        "emailTitle": "" # 邮件标题
                     }
                 }
                  */
