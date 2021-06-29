@@ -33,9 +33,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.v2.Credentials
 import com.tencent.devops.common.ci.v2.ExportPreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.JobRunsOnType
@@ -64,7 +62,6 @@ import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcTy
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
-import com.tencent.devops.common.pipeline.type.idc.IDCDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
