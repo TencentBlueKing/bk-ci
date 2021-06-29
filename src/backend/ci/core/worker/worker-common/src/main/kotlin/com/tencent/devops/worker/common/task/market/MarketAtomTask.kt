@@ -540,6 +540,9 @@ open class MarketAtomTask : ITask() {
                         "label": "",  # 报告别名，用于产出物报告界面标识当前报告
                         "path": "",   # 报告目录所在路径，相对于工作空间
                         "target": "", # 报告入口文件
+                        "enableEmail": true, # 是否开启发送邮件
+                        "emailReceivers": [], # 邮件接收人
+                        "emailTitle": "" # 邮件标题
                     }
                 }
                  */
@@ -706,6 +709,13 @@ open class MarketAtomTask : ITask() {
             resultData = url
         }
         params["reportName"] = output[LABEL] as String
+        val emailReceivers = output["emailReceivers"] as? String
+        val emailTitle = output["emailTitle"] as? String
+        if (emailReceivers != null && emailTitle != null) {
+            params["enableEmail"] = output["enableEmail"].toString()
+            params["emailReceivers"] = JsonUtil.toJson(emailReceivers)
+            params["emailTitle"] = emailTitle
+        }
         val reportArchTask = BuildTask(
             buildId = buildTask.buildId,
             vmSeqId = buildTask.vmSeqId,
