@@ -184,7 +184,7 @@ interface ServiceBuildResource {
         buildNo: Int? = null
     ): Result<BuildId>
 
-    @ApiOperation("重试流水线")
+    @ApiOperation("重试流水线-重试或者跳过失败插件")
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/retry")
     fun retry(

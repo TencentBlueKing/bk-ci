@@ -45,7 +45,9 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.AppModelDetail
 import com.tencent.devops.process.service.app.AppBuildService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import io.swagger.annotations.ApiParam
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.QueryParam
 
 @Suppress("ALL", "UNUSED")
 @RestResource
@@ -285,7 +287,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         taskId: String?,
-        failedContainer: Boolean?
+        failedContainer: Boolean?,
+        skipFailedTask: Boolean?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -297,7 +300,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             taskId = taskId,
-            failedContainer = failedContainer
+            failedContainer = failedContainer,
+            skipFailedTask = skipFailedTask
         )))
     }
 
