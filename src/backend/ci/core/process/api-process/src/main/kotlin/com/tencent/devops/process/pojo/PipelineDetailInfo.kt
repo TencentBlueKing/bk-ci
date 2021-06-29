@@ -47,5 +47,7 @@ data class PipelineDetailInfo(
     @ApiModelProperty("部署时间")
     val deploymentTime: String,
     @ApiModelProperty("是否有编辑权限")
-    val hasPermission: Boolean
+    val hasPermission: Boolean,
+    @ApiModelProperty("关联模板ID", required = false)
+    var templateId: String? = null
 )

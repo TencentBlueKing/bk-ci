@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.atom.plugin
 
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -50,7 +51,8 @@ class MarketBuildLessAtomElementBizPlugin constructor(
         pipelineName: String,
         userId: String,
         channelCode: ChannelCode,
-        create: Boolean
+        create: Boolean,
+        container: Container
     ) = Unit
 
     override fun beforeDelete(element: MarketBuildLessAtomElement, param: BeforeDeleteParam) {

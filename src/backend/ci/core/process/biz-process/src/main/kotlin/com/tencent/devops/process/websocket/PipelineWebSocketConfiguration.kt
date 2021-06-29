@@ -31,6 +31,9 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.websocket.listener.PipelineWebSocketListener
+import com.tencent.devops.process.websocket.page.DefaultDetailPageBuild
+import com.tencent.devops.process.websocket.page.DefaultHistoryPageBuild
+import com.tencent.devops.process.websocket.page.DefaultStatusPageBuild
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -102,4 +105,16 @@ class PipelineWebSocketConfiguration {
             maxConcurrency = 20
         )
     }
+
+    @Bean
+    @ConditionalOnMissingBean(name = ["historyPage"])
+    fun historyPage() = DefaultHistoryPageBuild()
+
+    @Bean
+    @ConditionalOnMissingBean(name = ["detailPage"])
+    fun detailPage() = DefaultDetailPageBuild()
+
+    @Bean
+    @ConditionalOnMissingBean(name = ["statusPage"])
+    fun statusPage() = DefaultStatusPageBuild()
 }

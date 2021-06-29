@@ -67,6 +67,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
+@Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
@@ -247,20 +248,20 @@ class LogMQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun pipelineBuildFinishQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_LOG)
+    fun pipelineBuildFinishLogQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_LOG)
 
     @Bean
-    fun pipelineBuildFinishQueueBind(
-        @Autowired pipelineBuildFinishQueue: Queue,
+    fun pipelineBuildFinishLogQueueBind(
+        @Autowired pipelineBuildFinishLogQueue: Queue,
         @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
     ): Binding {
-        return BindingBuilder.bind(pipelineBuildFinishQueue).to(pipelineBuildFinishFanoutExchange)
+        return BindingBuilder.bind(pipelineBuildFinishLogQueue).to(pipelineBuildFinishFanoutExchange)
     }
 
     @Bean
-    fun pipelineBuildFinishListenerContainer(
+    fun pipelineBuildFinishLogListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildFinishQueue: Queue,
+        @Autowired pipelineBuildFinishLogQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired logService: LogService,
         @Autowired messageConverter: Jackson2JsonMessageConverter
@@ -269,7 +270,7 @@ class LogMQConfiguration @Autowired constructor() {
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
-            queue = pipelineBuildFinishQueue,
+            queue = pipelineBuildFinishLogQueue,
             rabbitAdmin = rabbitAdmin,
             adapter = adapter,
             startConsumerMinInterval = 5000,

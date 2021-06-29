@@ -81,7 +81,7 @@ class SvnService : ISvnService {
                     svnUrl,
                     false
                 )
-                else -> throw RuntimeException("unknown svn repo type: ${svnType.toUpperCase()}")
+                else -> throw IllegalArgumentException("unknown svn repo type: ${svnType.toUpperCase()}")
             }
             val basicAuthenticationManager = BasicAuthenticationManager(arrayOf(auth))
             repository.authenticationManager = basicAuthenticationManager
@@ -124,7 +124,7 @@ class SvnService : ISvnService {
                     svnUrl,
                     false
                 )
-                else -> throw RuntimeException("unknown svn repo type: ${svnType.toUpperCase()}")
+                else -> throw IllegalArgumentException("unknown svn repo type: ${svnType.toUpperCase()}")
             }
             val entries = mutableListOf<SVNDirEntry>()
             val basicAuthenticationManager = BasicAuthenticationManager(arrayOf(auth))
