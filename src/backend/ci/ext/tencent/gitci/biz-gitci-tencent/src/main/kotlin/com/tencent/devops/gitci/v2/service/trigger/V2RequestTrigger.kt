@@ -62,6 +62,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.io.BufferedReader
 import java.io.StringReader
+import javax.ws.rs.core.Response
 
 @Component
 class V2RequestTrigger @Autowired constructor(
@@ -226,30 +227,45 @@ class V2RequestTrigger @Autowired constructor(
         )
     }
 
-    override fun checkYamlSchema(userId: String, yaml: GitYamlString): Result<String> {
-        val formatYamlStr = ScriptYmlUtils.formatYaml(yaml.yaml)
+    override fun checkYamlSchema(userId: String, yaml: String): Result<String> {
+        return try {
+            checkYamlSchema(yaml)
+
+            Result("OK")
+        } catch (e: Exception) {
+            logger.error("Check yaml schema failed.", e)
+            Result(1, "Invalid yaml: ${e.message}")
+        }
+    }
+
+    private fun checkYamlSchema(yaml: String): PreTemplateScriptBuildYaml {
+        val formatYamlStr = ScriptYmlUtils.formatYaml(yaml)
         val yamlJsonStr = ScriptYmlUtils.convertYamlToJson(formatYamlStr)
+
+        val gitciYamlSchema = redisOperation.get(CommonConst.REDIS_GITCI_YAML_SCHEMA)
+            ?: throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "Check Schema is null.")
+
         val (schemaPassed, errorMessage) = ScriptYmlUtils.validate(
-            schema = redisOperation.get(CommonConst.REDIS_GITCI_YAML_SCHEMA)!!,
+            schema = gitciYamlSchema,
             yamlJson = yamlJsonStr
         )
 
         // 先做总体的schema校验
         if (!schemaPassed) {
             logger.error("Check yaml schema failed. $errorMessage")
-            return Result(1, "Invalid yaml: $errorMessage")
+            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, errorMessage)
         }
 
         return try {
             val preTemplateYamlObject =
                 YamlUtil.getObjectMapper().readValue(formatYamlStr, PreTemplateScriptBuildYaml::class.java)
             // 检查Yaml语法的格式问题
-            ScriptYmlUtils.checkYaml(preTemplateYamlObject, yaml.yaml)
+            ScriptYmlUtils.checkYaml(preTemplateYamlObject, yaml)
 
-            Result("OK")
+            preTemplateYamlObject
         } catch (e: Exception) {
             logger.error("Check yaml schema failed.", e)
-            Result(1, "Invalid yaml: ${e.message}")
+            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, e.message ?: "Check yaml schema failed.")
         }
     }
 
@@ -262,13 +278,7 @@ class V2RequestTrigger @Autowired constructor(
         isMr: Boolean
     ): PreTemplateScriptBuildYaml? {
         return try {
-            // 格式化yaml，替换部分内容
-            val yaml = ScriptYmlUtils.formatYaml(originYaml)
-            val preTemplateYamlObject =
-                YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
-            // 检查Yaml语法的格式问题
-            ScriptYmlUtils.checkYaml(preTemplateYamlObject, yaml)
-            preTemplateYamlObject
+            checkYamlSchema(originYaml)
         } catch (e: Exception) {
             logger.error("git ci yaml is invalid", e)
             gitCIEventSaveService.saveBuildNotBuildEvent(

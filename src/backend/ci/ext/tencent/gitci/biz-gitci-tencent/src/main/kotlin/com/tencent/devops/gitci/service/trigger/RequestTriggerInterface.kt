@@ -59,5 +59,5 @@ interface RequestTriggerInterface<T> {
         pipelineName: String?
     ): T?
 
-    fun checkYamlSchema(userId: String, yaml: GitYamlString): Result<String>
+    fun checkYamlSchema(userId: String, yaml: String): Result<String>
 }

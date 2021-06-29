@@ -195,9 +195,9 @@ class RequestTrigger @Autowired constructor(
         return yamlObject
     }
 
-    override fun checkYamlSchema(userId: String, yaml: GitYamlString): Result<String> {
+    override fun checkYamlSchema(userId: String, yaml: String): Result<String> {
         try {
-            val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
+            val yamlStr = CiYamlUtils.formatYaml(yaml)
             logger.debug("yaml str : $yamlStr")
 
             val (validate, message) = gitCITriggerService.validateCIBuildYaml(yamlStr)
@@ -205,7 +205,7 @@ class RequestTrigger @Autowired constructor(
                 logger.error("Check yaml failed, error: $message")
                 return Result(1, "Invalid yaml: $message", message)
             }
-            gitCITriggerService.createCIBuildYaml(yaml.yaml)
+            gitCITriggerService.createCIBuildYaml(yaml)
         } catch (e: Throwable) {
             logger.error("Check yaml failed, error: ${e.message}, yaml: $yaml")
             return Result(1, "Invalid yaml", e.message)
