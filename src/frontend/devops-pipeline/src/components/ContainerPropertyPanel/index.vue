@@ -66,7 +66,6 @@
             },
             handleContainerChange (e) {
                 const { value } = e.target
-                console.log(value, this.container, 77)
                 this.updateContainer({
                     container: this.container,
                     newParam: {

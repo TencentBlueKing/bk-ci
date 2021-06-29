@@ -56,16 +56,30 @@ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
+@Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class LogMQConfiguration @Autowired constructor() {
+
+    @Value("\${log.rabbitmq.preprocess.concurrency:#{null}}")
+    private val preprocessConcurrency: Int? = null
+
+    @Value("\${log.rabbitmq.preprocess.maxConcurrency:#{null}}")
+    private val preprocessMaxConcurrency: Int? = null
+
+    @Value("\${log.rabbitmq.storage.concurrency:#{null}}")
+    private val storageConcurrency: Int? = null
+
+    @Value("\${log.rabbitmq.storage.maxConcurrency:#{null}}")
+    private val storageMaxConcurrency: Int? = null
 
     @Bean
     fun rabbitAdmin(
@@ -157,8 +171,8 @@ class LogMQConfiguration @Autowired constructor() {
             adapter = messageListenerAdapter,
             startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 5,
-            concurrency = 1,
-            maxConcurrency = 1
+            concurrency = preprocessConcurrency ?: 1,
+            maxConcurrency = preprocessMaxConcurrency ?: 1
         )
     }
 
@@ -181,8 +195,8 @@ class LogMQConfiguration @Autowired constructor() {
             adapter = messageListenerAdapter,
             startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 100
+            concurrency = storageConcurrency ?: 10,
+            maxConcurrency = storageMaxConcurrency ?: 100
         )
     }
 
@@ -221,20 +235,20 @@ class LogMQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun pipelineBuildFinishQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_LOG)
+    fun pipelineBuildFinishLogQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_LOG)
 
     @Bean
-    fun pipelineBuildFinishQueueBind(
-        @Autowired pipelineBuildFinishQueue: Queue,
+    fun pipelineBuildFinishLogQueueBind(
+        @Autowired pipelineBuildFinishLogQueue: Queue,
         @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
     ): Binding {
-        return BindingBuilder.bind(pipelineBuildFinishQueue).to(pipelineBuildFinishFanoutExchange)
+        return BindingBuilder.bind(pipelineBuildFinishLogQueue).to(pipelineBuildFinishFanoutExchange)
     }
 
     @Bean
-    fun pipelineBuildFinishListenerContainer(
+    fun pipelineBuildFinishLogListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildFinishQueue: Queue,
+        @Autowired pipelineBuildFinishLogQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired logService: LogService,
         @Autowired messageConverter: Jackson2JsonMessageConverter
@@ -243,7 +257,7 @@ class LogMQConfiguration @Autowired constructor() {
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
-            queue = pipelineBuildFinishQueue,
+            queue = pipelineBuildFinishLogQueue,
             rabbitAdmin = rabbitAdmin,
             adapter = adapter,
             startConsumerMinInterval = 5000,

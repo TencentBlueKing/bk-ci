@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.service
 
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.GlobalMessageUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
@@ -53,4 +54,7 @@ class ServiceAutoConfiguration {
 
     @Bean
     fun globalMessageUtil() = GlobalMessageUtil()
+
+    @Bean
+    fun gray() = Gray()
 }

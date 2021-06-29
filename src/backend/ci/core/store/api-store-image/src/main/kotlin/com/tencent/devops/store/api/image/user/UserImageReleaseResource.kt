@@ -33,6 +33,7 @@ import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.request.OfflineMarketImageReq
+import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -141,4 +142,13 @@ interface UserImageReleaseResource {
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取镜像支持的机器类型列表")
+    @GET
+    @Path("/image/agentType/list")
+    fun getImageAgentTypes(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<ImageAgentTypeInfo>>
 }

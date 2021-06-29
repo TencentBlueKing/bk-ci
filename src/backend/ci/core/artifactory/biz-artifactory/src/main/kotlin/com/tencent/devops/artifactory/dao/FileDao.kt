@@ -145,8 +145,8 @@ class FileDao {
             propsCount
         ).from(a).where(setFileByPropsCondition(a, projectId, fileTypeList)).asTable("t")
         val baseStep =
-            dslContext.selectFrom(t).where(t.field("propsCount", Int::class.java).eq(props.keys.size))
-                .orderBy(t.field("createTime").desc())
+            dslContext.selectFrom(t).where(t.field("propsCount", Int::class.java)!!.eq(props.keys.size))
+                .orderBy(t.field("createTime")!!.desc())
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
@@ -203,7 +203,7 @@ class FileDao {
             a.UPDATE_TIME.`as`("updateTime"),
             propsCount
         ).from(a).where(setFileByPropsCondition(a, projectId, fileTypeList)).asTable("t")
-        return dslContext.selectCount().from(t).where(t.field("propsCount", Int::class.java).eq(props.keys.size))
-            .fetchOne(0, Long::class.java)
+        return dslContext.selectCount().from(t).where(t.field("propsCount", Int::class.java)!!.eq(props.keys.size))
+            .fetchOne(0, Long::class.java)!!
     }
 }

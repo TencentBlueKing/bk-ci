@@ -3,7 +3,7 @@
         v-model="isShowCheckDialog"
         ext-cls="check-atom-form"
         :close-icon="false"
-        :width="600"
+        :width="650"
         :position="{ top: '100' }"
         :auto-close="false"
         @confirm="handleAtomCheck"
@@ -41,7 +41,7 @@
                                 v-validate.initial="`required|unique:${data.params.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
                                 name="key"
                                 :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
-                                :value="param.key" />
+                                :value="param.chineseName ? param.chineseName : param.key" />
                         </form-field>
                         <span :class="{ 'default-required': true ,'is-required': param.required }" />
                         <div :class="{ 'bk-form-item': true, 'required-error-item': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }">
@@ -330,11 +330,11 @@
             display: flex;
             margin-bottom: 10px;
            .form-field {
-               width: 47%;
+               width: 286px;
                margin-right: 10px;
            }
             > .bk-form-item {
-                width: 47%;
+                width: 286px;
                 height: 32px;
                 margin-top: 0px !important;
             }

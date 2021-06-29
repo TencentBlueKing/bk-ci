@@ -17,6 +17,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 活跃任务统计
@@ -76,5 +77,15 @@ public class ActiveTaskStatisticsVO {
     @ApiModelProperty("是否活跃")
     private String isActive;
 
+    @ApiModelProperty("最近分析状态")
+    private String analyzeDate;
 
+    @ApiModelProperty("分析次数")
+    private int analyzeCount;
+
+    @ApiModelProperty("成功分析次数")
+    private Integer succAnalyzeCount;
+
+    @ApiModelProperty("代码仓库地址")
+    private String repoUrl;
 }

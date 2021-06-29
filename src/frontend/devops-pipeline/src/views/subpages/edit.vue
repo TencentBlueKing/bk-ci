@@ -75,6 +75,9 @@
             ...mapState([
                 'fetchError'
             ]),
+            ...mapState('atom', [
+                'editfromImport'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -129,8 +132,11 @@
             }
         },
         mounted () {
-            this.init()
-            this.requestQualityAtom()
+            if (!this.editfromImport) {
+                this.init()
+                this.requestQualityAtom()
+            }
+            this.setEditFrom(false)
             this.addLeaveListenr()
         },
         beforeDestroy () {
@@ -139,6 +145,7 @@
             this.removeLeaveListenr()
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
+            this.setEditFrom(false)
             this.errors.clear()
         },
         beforeRouteUpdate (to, from, next) {
@@ -157,15 +164,15 @@
                 'togglePropertyPanel',
                 'setPipeline',
                 'setPipelineEditing',
-                'setAuthEditing',
-                'setSaveStatus'
+                'setSaveStatus',
+                'setEditFrom'
             ]),
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
                 'updatePipelineSetting',
                 'resetPipelineSetting'
             ]),
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestQualityAtom',
                 'requestInterceptAtom'
             ]),
@@ -212,20 +219,20 @@
                 return this.confirmMsg
             },
             requestQualityAtom () {
-                this.$store.dispatch('soda/requestQualityAtom', {
+                this.$store.dispatch('common/requestQualityAtom', {
                     projectId: this.projectId
                 })
             },
             requestInterceptAtom () {
                 if (this.projectId && this.pipelineId) {
-                    this.$store.dispatch('soda/requestInterceptAtom', {
+                    this.$store.dispatch('common/requestInterceptAtom', {
                         projectId: this.projectId,
                         pipelineId: this.pipelineId
                     })
                 }
             },
             requestMatchTemplateRules (templateId) {
-                this.$store.dispatch('soda/requestMatchTemplateRuleList', {
+                this.$store.dispatch('common/requestMatchTemplateRuleList', {
                     projectId: this.projectId,
                     templateId
                 })
@@ -256,7 +263,7 @@
             flex-direction: column;
             width: 100%;
             overflow: hidden;
-            .bk-tab-section {
+            .bk-tab-content {
                 overflow: auto;
             }
         }

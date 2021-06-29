@@ -69,7 +69,7 @@ class QualityRuleDao {
                     ruleRequest.gatewayId
                 )
                 .returning(ID)
-                .fetchOne()
+                .fetchOne()!!
         }
         with(TQualityRuleMap.T_QUALITY_RULE_MAP) {
             dslContext.insertInto(
@@ -156,7 +156,7 @@ class QualityRuleDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

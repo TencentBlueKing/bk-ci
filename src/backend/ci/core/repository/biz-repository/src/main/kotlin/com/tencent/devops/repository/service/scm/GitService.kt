@@ -33,11 +33,13 @@ import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
@@ -86,6 +88,7 @@ import java.time.LocalDateTime
 import java.util.Base64
 import java.util.concurrent.Executors
 import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -96,6 +99,7 @@ class GitService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitService::class.java)
+        private const val MAX_FILE_SIZE = 1 * 1024 * 1024
     }
 
     @Value("\${scm.git.public.account}")
@@ -413,8 +417,13 @@ class GitService @Autowired constructor(
                     .build()
             }
             OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
-                if (!it.isSuccessful) throw RuntimeException("fail to get git file content with: $url($data)")
+                val data = it.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "fail to get git file content with: $url($data)"
+                    )
+                }
                 return data
             }
         } finally {
@@ -442,7 +451,7 @@ class GitService @Autowired constructor(
                 "$apiUrl/projects/$encodeProjectName/repository/files/$encodeFilePath?ref=$encodeRef"
             logger.info(projectFileUrl)
             OkhttpUtils.doGet(projectFileUrl, headers).use { response ->
-                val body = response.body()!!.string()
+                val body = response.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
                 logger.info("get gitlab content response body: $body")
                 val fileInfo = objectMapper.readValue(body, GitlabFileInfo::class.java)
                 return String(Base64.getDecoder().decode(fileInfo.content))
@@ -957,7 +966,10 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException("get merge info error for $repoName, $mrId(${it.code()}): ${it.message()}")
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "get merge info error for $repoName, $mrId(${it.code()}): ${it.message()}"
+                )
             }
             val data = it.body()!!.string()
             logger.info("get mr info response body: $data")
@@ -984,7 +996,10 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException("get merge reviewers info error for $id, $mrId(${it.code()}): ${it.message()}")
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "get merge reviewers info error for $id, $mrId(${it.code()}): ${it.message()}"
+                )
             }
             val data = it.body()!!.string()
             return JsonUtil.to(data, GitMrReviewInfo::class.java)
@@ -1015,8 +1030,9 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException(
-                    "get merge changes request info error for $id, $mrId(${it.code()}): ${it.message()}"
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "get merge changes request info error for $id, $mrId(${it.code()}): ${it.message()}"
                 )
             }
             val data = it.body()!!.string()
@@ -1069,7 +1085,10 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException("get repo members for $userId, $repoName fail(${it.code()}): ${it.message()}")
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "get repo members for $userId, $repoName fail(${it.code()}): ${it.message()}"
+                )
             }
             val data = it.body()!!.string()
             return JsonUtil.to(data)
@@ -1088,8 +1107,9 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException(
-                    "get repo all members for $userId, $repoName fail(${it.code()}): ${it.message()}"
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "get repo all members for $userId, $repoName fail(${it.code()}): ${it.message()}"
                 )
             }
             val data = it.body()!!.string()

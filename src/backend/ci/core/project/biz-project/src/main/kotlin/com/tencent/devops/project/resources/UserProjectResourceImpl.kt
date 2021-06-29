@@ -49,8 +49,8 @@ class UserProjectResourceImpl @Autowired constructor(
     private val projectService: ProjectService
 ) : UserProjectResource {
 
-    override fun list(userId: String, accessToken: String?): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId, accessToken))
+    override fun list(userId: String, accessToken: String?, enabled: Boolean?): Result<List<ProjectVO>> {
+        return Result(projectService.list(userId, accessToken, enabled))
     }
 
     override fun get(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {

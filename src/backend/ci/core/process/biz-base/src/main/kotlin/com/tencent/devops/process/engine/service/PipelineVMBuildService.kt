@@ -179,7 +179,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         containerId = it.id!!,
                         containerHashId = it.containerId ?: "",
                         variablesWithType = variablesWithType,
-                        timeoutMills = timeoutMills!!
+                        timeoutMills = timeoutMills!!,
+                        containerType = it.getClassType()
                     )
                 }
                 vmId++
@@ -453,7 +454,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             }
             else -> {
                 // 构造扩展变量
-                val extMap = buildExtService.buildExt(task)
+                val extMap = buildExtService.buildExt(task, allVariable)
                 val buildVariable = mutableMapOf(
                     PIPELINE_VMSEQ_ID to vmSeqId,
                     PIPELINE_ELEMENT_ID to task.taskId

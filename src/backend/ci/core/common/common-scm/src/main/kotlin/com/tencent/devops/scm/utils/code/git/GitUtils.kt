@@ -33,6 +33,7 @@ import java.net.URL
 import java.net.URLDecoder
 import java.net.URLEncoder
 
+@Suppress("MagicNumber")
 object GitUtils {
     // 工蜂pre-push虚拟分支
     private const val PRE_PUSH_BRANCH_NAME_PREFIX = "refs/for/"
@@ -66,11 +67,19 @@ object GitUtils {
      */
     fun getGitApiUrl(apiUrl: String, repoUrl: String): String {
         val urlDomainAndRepoName = getDomainAndRepoName(repoUrl)
-        val parseApiUri = partApiUrl(apiUrl) ?: return "http://${urlDomainAndRepoName.first}/$apiUrl"
-        return if (urlDomainAndRepoName.second != parseApiUri.second) { // 如果域名不一样，则以仓库域名为准
-            "${parseApiUri.first}${urlDomainAndRepoName.first}/${parseApiUri.third}"
-        } else {
-            apiUrl
+        val parseApiUri = partApiUrl(apiUrl)
+        // #2894 先使用配置协议，配置协议为空则使用仓库协议
+        val protocol = parseApiUri?.first ?: partApiUrl(repoUrl)?.first ?: "http://"
+        return when {
+            parseApiUri == null -> {
+                "$protocol${urlDomainAndRepoName.first}/$apiUrl"
+            }
+            urlDomainAndRepoName.second != parseApiUri.second -> { // 如果域名不一样，则以仓库域名为准
+                "$protocol${urlDomainAndRepoName.first}/${parseApiUri.third}"
+            }
+            else -> {
+                apiUrl
+            }
         }
     }
 

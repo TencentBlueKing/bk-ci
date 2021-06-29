@@ -115,7 +115,7 @@ class MarketAtomEnvInfoDao {
                     atomStatusList = atomStatusList
                 ))
         }.asTable("t")
-        return dslContext.selectFrom(t).orderBy(t.field("createTime").desc()).limit(1).fetchOne()
+        return dslContext.selectFrom(t).orderBy(t.field("createTime")!!.desc()).limit(1).fetchOne()
     }
 
     private fun getAtomEnvInfoBaseStep(

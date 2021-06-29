@@ -31,6 +31,7 @@ import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
@@ -64,6 +65,9 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
         path = "/tmp/codecc",
         languages = listOf(ProjectLanguage.JAVA)
     )
+    private val container = TriggerContainer(
+        id = "1"
+    )
 
     @Test
     fun elementClass() {
@@ -94,7 +98,8 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
             pipelineName = pipelineName,
             userId = userId,
             channelCode = ChannelCode.BS,
-            create = true
+            create = true,
+            container = container
         )
     }
 
@@ -115,7 +120,8 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
             pipelineName = pipelineName,
             userId = userId,
             channelCode = ChannelCode.BS,
-            create = false
+            create = false,
+            container = container
         )
     }
 
@@ -146,7 +152,8 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
             pipelineName = pipelineName,
             userId = userId,
             channelCode = ChannelCode.BS,
-            create = false
+            create = false,
+            container = container
         )
     }
 
@@ -184,7 +191,8 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
             pipelineName = pipelineName,
             userId = userId,
             channelCode = ChannelCode.BS,
-            create = true
+            create = true,
+            container = container
         )
         val map = coverityResult.data as Map<String, Any>
         assertEquals(map["taskId"], element.codeCCTaskId)

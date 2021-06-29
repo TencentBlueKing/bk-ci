@@ -60,7 +60,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildBuildResource {
 
-    @Deprecated("replace by EngineBuildResource")
+    @Deprecated("replace by BuildJobResource")
     @ApiOperation("构建机器启动成功")
     @PUT
     @Path("/started")
@@ -76,7 +76,7 @@ interface BuildBuildResource {
         vmName: String
     ): Result<BuildVariables>
 
-    @Deprecated("replace by EngineBuildResource")
+    @Deprecated("replace by BuildJobResource")
     @ApiOperation("构建机请求任务")
     @GET
     @Path("/claim")
@@ -92,7 +92,7 @@ interface BuildBuildResource {
         vmName: String
     ): Result<BuildTask>
 
-    @Deprecated("replace by EngineBuildResource")
+    @Deprecated("replace by BuildJobResource")
     @ApiOperation("构建机完成任务")
     @POST
     @Path("/complete")
@@ -110,7 +110,7 @@ interface BuildBuildResource {
         result: BuildTaskResult
     ): Result<Boolean>
 
-    @Deprecated("replace by EngineBuildResource")
+    @Deprecated("replace by BuildJobResource")
     @ApiOperation("End the seq build")
     @POST
     @Path("/end")
@@ -126,7 +126,7 @@ interface BuildBuildResource {
         vmName: String
     ): Result<Boolean>
 
-    @Deprecated("replace by EngineBuildResource")
+    @Deprecated("replace by BuildJobResource")
     @ApiOperation("timeout & end the seq build")
     @POST
     @Path("/timeout")
@@ -145,7 +145,7 @@ interface BuildBuildResource {
         vmSeqId: String
     ): Result<Boolean>
 
-    @Deprecated("replace by EngineBuildResource")
+    @Deprecated("replace by BuildJobResource")
     @ApiOperation("Heartbeat")
     @POST
     @Path("/heartbeat")

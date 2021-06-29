@@ -11,24 +11,26 @@
                         {{ $t('enableStage') }}
                     </bk-checkbox>
                 </form-field>
-                <form-field>
-                    <bk-checkbox :disabled="disabled" v-model="stageFastKill">
-                        {{ $t('stageFastKill') }}
-                    </bk-checkbox>
-                    <i v-bk-tooltips="$t('stageFastKillDesc')" class="bk-icon icon-info-circle" />
-                </form-field>
-                <bk-form-item :label="$t('stageOptionLabel')">
-                    <bk-select :disabled="disabled" v-model="stageCondition" searchable>
-                        <bk-option v-for="option in conditionConf"
-                            :key="option.id"
-                            :id="option.id"
-                            :name="option.name">
-                        </bk-option>
-                    </bk-select>
-                </bk-form-item>
-                <bk-form-item v-if="showVariable">
-                    <key-value-normal :disabled="disabled" :value="variables" :allow-null="false" name="customVariables" :handle-change="handleUpdateStageControl"></key-value-normal>
-                </bk-form-item>
+                <section v-if="!isFinally">
+                    <form-field>
+                        <bk-checkbox :disabled="disabled" v-model="stageFastKill">
+                            {{ $t('stageFastKill') }}
+                        </bk-checkbox>
+                        <i v-bk-tooltips="$t('stageFastKillDesc')" class="bk-icon icon-info-circle" />
+                    </form-field>
+                    <bk-form-item :label="$t('stageOptionLabel')">
+                        <bk-select :disabled="disabled" v-model="stageCondition" searchable>
+                            <bk-option v-for="option in conditionConf"
+                                :key="option.id"
+                                :id="option.id"
+                                :name="option.name">
+                            </bk-option>
+                        </bk-select>
+                    </bk-form-item>
+                    <bk-form-item v-if="showVariable">
+                        <key-value-normal :disabled="disabled" :value="variables" :allow-null="false" name="customVariables" :handle-change="handleUpdateStageControl"></key-value-normal>
+                    </bk-form-item>
+                </section>
             </bk-form>
         </div>
     </accordion>
@@ -53,6 +55,10 @@
                 default: () => ({})
             },
             disabled: {
+                type: Boolean,
+                default: false
+            },
+            isFinally: {
                 type: Boolean,
                 default: false
             },

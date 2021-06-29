@@ -132,7 +132,8 @@ class PipelineSettingDao {
                 MAX_QUEUE_SIZE,
                 IS_TEMPLATE,
                 MAX_PIPELINE_RES_NUM,
-                MAX_CON_RUNNING_QUEUE_SIZE
+                MAX_CON_RUNNING_QUEUE_SIZE,
+                BUILD_NUM_RULE
             )
                 .values(
                     setting.projectId,
@@ -160,7 +161,8 @@ class PipelineSettingDao {
                     setting.maxQueueSize,
                     isTemplate,
                     setting.maxPipelineResNum,
-                    setting.maxConRunningQueueSize
+                    setting.maxConRunningQueueSize,
+                    setting.buildNumRule
                 ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -186,6 +188,7 @@ class PipelineSettingDao {
                 .set(IS_TEMPLATE, isTemplate)
                 .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
+                .set(BUILD_NUM_RULE, setting.buildNumRule)
                 .execute()
         }
     }
@@ -218,7 +221,7 @@ class PipelineSettingDao {
         dslContext: DSLContext,
         projectId: String,
         name: String,
-        pipelineId: String?,
+        pipelineId: String? = null,
         isTemplate: Boolean = false
     ): Result<TPipelineSettingRecord> {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
@@ -227,8 +230,8 @@ class PipelineSettingDao {
                     PROJECT_ID.eq(projectId),
                     NAME.eq(name),
                     IS_TEMPLATE.eq(isTemplate)
-                ) // 只比较非模板的设置
-            if (!pipelineId.isNullOrBlank()) conditions.add(PIPELINE_ID.ne(pipelineId))
+                )
+            if (!pipelineId.isNullOrBlank()) conditions.add(PIPELINE_ID.eq(pipelineId))
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetch()

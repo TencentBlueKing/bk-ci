@@ -33,6 +33,7 @@ import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.request.OfflineMarketImageReq
+import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import com.tencent.devops.store.service.image.ImageReleaseService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -85,5 +86,9 @@ class UserImageReleaseResourceImpl @Autowired constructor(
 
     override fun passTest(userId: String, imageId: String): Result<Boolean> {
         return imageReleaseService.passTest(userId, imageId)
+    }
+
+    override fun getImageAgentTypes(userId: String): Result<List<ImageAgentTypeInfo>> {
+        return Result(imageReleaseService.getImageAgentTypes(userId))
     }
 }

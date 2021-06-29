@@ -77,7 +77,7 @@
                     </div>
                     <div class="right-temp-info">
                         <div class="temp-info-detail">
-                            <template v-if="!isActiveTempEmpty">
+                            <template v-show="!isActiveTempEmpty">
                                 <div class="pipeline-input">
                                     <input type="text" ref="pipelineName" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')" maxlength="40" name="newPipelineName" v-model.trim="newPipelineName" v-validate.initial="&quot;required&quot;" />
                                     <span class="border-effect" v-show="!errors.has(&quot;newPipelineName&quot;)"></span>
@@ -123,7 +123,7 @@
                                     <a class="view-pipeline disabled" v-if="!showPreview && (activeTemp.isInstall || isActiveTempEmpty)">{{ $t('newlist.tempDetail') }}</a>
                                 </div></template>
 
-                            <section v-else class="choose-tips">
+                            <section v-show="isActiveTempEmpty" class="choose-tips">
                                 <logo size="20" name="finger-left" style="fill:#3c96ff" />
                                 <span>{{ $t('newlist.tempDetail') }}</span>
                             </section>
@@ -188,7 +188,7 @@
         },
 
         computed: {
-            ...mapState('soda', [
+            ...mapState('common', [
                 'pipelineTemplate',
                 'templateCategory'
             ]),
@@ -277,20 +277,20 @@
                     this.requestPipelineTemplate({
                         projectId: this.projectId
                     })
-
                     this.computPopupHeight()
                     window.addEventListener('resize', this.computPopupHeight)
-                    this.$nextTick(() => {
+                    this.timer = setTimeout(() => {
                         if (this.$refs.pipelineName) this.$refs.pipelineName.focus()
-                    })
+                    }, 0)
                 } else {
+                    clearTimeout(this.timer)
                     window.removeEventListener('resize', this.computPopupHeight)
                 }
             }
         },
 
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestCategory',
                 'requestPipelineTemplate',
                 'requestStoreTemplate'

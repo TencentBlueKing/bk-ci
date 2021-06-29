@@ -12,7 +12,7 @@ import com.tencent.bk.codecc.defect.model.incremental.ToolBuildStackEntity;
 import com.tencent.bk.codecc.defect.service.UploadRepositoriesService;
 import com.tencent.devops.common.api.CodeRepoVO;
 import com.tencent.bk.codecc.defect.vo.coderepository.UploadRepositoriesVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -48,7 +48,7 @@ public class UploadRepositoriesServiceImpl implements UploadRepositoriesService
      * @return
      */
     @Override
-    public CodeCCResult uploadRepositories(UploadRepositoriesVO uploadRepositoriesVO)
+    public Result uploadRepositories(UploadRepositoriesVO uploadRepositoriesVO)
     {
         log.info("upload repo info, task id: {}, tool name: {}", uploadRepositoriesVO.getTaskId(), uploadRepositoriesVO.getToolName());
         long taskId = uploadRepositoriesVO.getTaskId();
@@ -77,7 +77,7 @@ public class UploadRepositoriesServiceImpl implements UploadRepositoriesService
         CodeRepoInfoEntity codeRepoInfo = codeRepoRepository.findByTaskIdAndBuildId(taskId, buildId);
         if (codeRepoInfo != null)
         {
-            return new CodeCCResult(CommonMessageCode.SUCCESS, "repo info of this build id is already exist.");
+            return new Result(0, CommonMessageCode.SUCCESS, "repo info of this build id is already exist.");
         }
 
         // 更新仓库列表和构建ID
@@ -97,6 +97,6 @@ public class UploadRepositoriesServiceImpl implements UploadRepositoriesService
         codeRepoInfo.setCreatedDate(currentTime);
         codeRepoRepository.save(codeRepoInfo);
 
-        return new CodeCCResult(CommonMessageCode.SUCCESS, "upload repo info success.");
+        return new Result(0, CommonMessageCode.SUCCESS, "upload repo info success.");
     }
 }

@@ -1,13 +1,15 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
-    name: bk-ci
+    name: bk-ci${service-suffix}
     desc: DevOps BK-CI Service
     version: 0.0.1
     packageName: com.tencent.devops
   cloud:
     consul:
       discovery:
-        service-name: bk-ci  # single service 合并后的单体服务
+        service-name: bk-ci${service-suffix}  # single service 合并后的单体服务
 file:
   allowUploadFileTypes: jpg,png,gif,swf,txt,doc,docx,xls,xlsx,ppt,pptx,pdf,svg,mp4,wmv,rm,rmvb,3gp,mov,m4v,avi,dat,mkv,flv,vob
   maxUploadFileSize: 52428800

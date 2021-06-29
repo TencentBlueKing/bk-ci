@@ -58,7 +58,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwCallBackResourceV3 {
 
-    @ApiOperation("创建callback回调")
+    @ApiOperation("创建callback回调 #4319 支持Stage事件")
     @POST
     @Path("/")
     fun create(

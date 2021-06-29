@@ -46,6 +46,8 @@ public class LintBatchAssignDefectBizServiceImpl extends AbstractLintBatchDefect
         String newAuthorStr = List2StrUtil.toString(newAuthor, ComConstants.SEMICOLON);
 
         defectDao.batchUpdateDefectAuthor(batchDefectProcessReqVO.getTaskId(), defectList, newAuthorStr);
+
+        refreshOverviewData(batchDefectProcessReqVO.getTaskId());
     }
 
 }

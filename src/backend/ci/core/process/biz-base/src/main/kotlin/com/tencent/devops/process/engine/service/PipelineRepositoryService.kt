@@ -28,8 +28,6 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -45,17 +43,8 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -272,7 +261,8 @@ class PipelineRepositoryService constructor(
                 pipelineName = model.name,
                 userId = userId,
                 channelCode = channelCode,
-                create = create
+                create = create,
+                container = c
             )
 
             modelTasks.add(
@@ -292,128 +282,6 @@ class PipelineRepositoryService constructor(
                     additionalOptions = e.additionalOptions
                 )
             )
-        }
-
-        addWebhook(
-            container = c,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            userId = userId,
-            pipelineName = model.name
-        )
-    }
-
-    private fun addWebhook(
-        container: TriggerContainer,
-        projectId: String,
-        pipelineId: String,
-        userId: String,
-        pipelineName: String
-    ) {
-        val gitRepoEventTypeMap = mutableMapOf<String/* repo */, MutableMap<String/* eventType */, Element>>()
-        val svnRepoEventTypeMap = mutableMapOf<String/* repo */, Element>()
-        container.elements.forEach { e ->
-            // svn去重处理
-            if (e is CodeSVNWebHookTriggerElement) {
-                val repositoryConfig = RepositoryConfig(
-                    repositoryHashId = e.repositoryHashId,
-                    repositoryName = e.repositoryName,
-                    repositoryType = e.repositoryType ?: RepositoryType.ID
-                )
-                svnRepoEventTypeMap[repositoryConfig.getRepositoryId()] = e
-                return@forEach
-            }
-
-            // git去重处理
-            // git同个代码库、同个事件只需发一次
-            val pair = when (e) {
-                is CodeGitWebHookTriggerElement -> {
-                    // CodeEventType.MERGE_REQUEST_ACCEPT 和 CodeEventType.MERGE_REQUEST等价处理
-                    val eventType = if (e.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
-                        CodeEventType.MERGE_REQUEST
-                    } else e.eventType
-                    Pair(RepositoryConfig(
-                        repositoryHashId = e.repositoryHashId,
-                        repositoryName = e.repositoryName,
-                        repositoryType = e.repositoryType ?: RepositoryType.ID
-                    ), eventType)
-                }
-                is CodeGitlabWebHookTriggerElement -> {
-                    Pair(RepositoryConfig(
-                        repositoryHashId = e.repositoryHashId,
-                        repositoryName = e.repositoryName,
-                        repositoryType = e.repositoryType ?: RepositoryType.ID
-                    ), CodeEventType.PUSH)
-                }
-                is CodeGithubWebHookTriggerElement -> {
-                    Pair(RepositoryConfig(
-                        repositoryHashId = e.repositoryHashId,
-                        repositoryName = e.repositoryName,
-                        repositoryType = e.repositoryType ?: RepositoryType.ID
-                    ), e.eventType)
-                }
-                is CodeTGitWebHookTriggerElement -> {
-                    // CodeEventType.MERGE_REQUEST_ACCEPT 和 CodeEventType.MERGE_REQUEST等价处理
-                    val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
-                        CodeEventType.MERGE_REQUEST
-                    } else e.data.input.eventType
-                    Pair(RepositoryConfig(
-                        repositoryHashId = e.data.input.repositoryHashId,
-                        repositoryName = e.data.input.repositoryName,
-                        repositoryType = e.data.input.repositoryType ?: RepositoryType.ID
-                    ), eventType)
-                }
-                is CodeGitGenericWebHookTriggerElement -> {
-                    val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT.name) {
-                        CodeEventType.MERGE_REQUEST
-                    } else CodeEventType.valueOf(e.data.input.eventType)
-                    Pair(RepositoryConfigUtils.buildConfig(e), eventType)
-                }
-                else -> return@forEach
-            }
-            val repositoryConfig = pair.first
-            val eventType = pair.second ?: CodeEventType.PUSH
-
-            val repoMap = gitRepoEventTypeMap[repositoryConfig.getRepositoryId()] ?: mutableMapOf()
-            repoMap[eventType.name] = e
-            gitRepoEventTypeMap[repositoryConfig.getRepositoryId()] = repoMap
-        }
-
-        // 统一发事件
-        val variables = container.params.map { it.id to it.defaultValue.toString() }.toMap()
-        svnRepoEventTypeMap.values.forEach { e ->
-            logger.info("[$pipelineId]-initTriggerContainer,element is WebHook, add WebHook by mq")
-            pipelineEventDispatcher.dispatch(
-                PipelineCreateEvent(
-                    source = "createWebhook",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildNo = null,
-                    pipelineName = pipelineName,
-                    element = e,
-                    version = null,
-                    variables = variables
-                )
-            )
-        }
-        gitRepoEventTypeMap.values.forEach { map ->
-            map.values.forEach { e ->
-                logger.info("[$pipelineId]-initTriggerContainer,element is WebHook, add WebHook by mq")
-                pipelineEventDispatcher.dispatch(
-                    PipelineCreateEvent(
-                        source = "createWebhook",
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = userId,
-                        buildNo = null,
-                        pipelineName = pipelineName,
-                        element = e,
-                        version = null,
-                        variables = variables
-                    )
-                )
-            }
         }
     }
 
@@ -455,7 +323,11 @@ class PipelineRepositoryService constructor(
             }
 
             modelCheckPlugin.checkJob(
-                projectId = projectId, pipelineId = pipelineId, jobContainer = c, userId = userId
+                projectId = projectId,
+                pipelineId = pipelineId,
+                jobContainer = c,
+                userId = userId,
+                finallyStage = stage.finally
             )
 
             var taskSeq = 0
@@ -478,8 +350,14 @@ class PipelineRepositoryService constructor(
 
                 // 补偿动作--未来拆分出来，针对复杂的东西异步处理
                 ElementBizRegistrar.getPlugin(e)?.afterCreate(
-                    element = e, projectId = projectId, pipelineId = pipelineId,
-                    pipelineName = model.name, userId = userId, channelCode = channelCode, create = create
+                    element = e,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineName = model.name,
+                    userId = userId,
+                    channelCode = channelCode,
+                    create = create,
+                    container = c
                 )
 
                 modelTasks.add(
@@ -526,12 +404,14 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 version = 1,
                 pipelineName = model.name,
+                pipelineDesc = model.desc ?: model.name,
                 userId = userId,
                 channelCode = channelCode,
                 manualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 taskCount = taskCount
             )
+            model.latestVersion = 1
             pipelineResDao.create(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
@@ -565,10 +445,10 @@ class PipelineRepositoryService constructor(
                             ""
                         }
 
-                        // 渠道为工蜂或者开源扫描只需为流水线模型保留一个版本
-                        val filterList = listOf(ChannelCode.GIT, ChannelCode.GONGFENGSCAN)
-                        val maxPipelineResNum = if (channelCode in filterList) {
-                            1
+                        // 特定渠道保留特定版本
+                        val filterList = versionConfigure.specChannels.split(",")
+                        val maxPipelineResNum = if (channelCode.name in filterList) {
+                            versionConfigure.specChannelMaxKeepNum
                         } else {
                             versionConfigure.maxKeepNum
                         }
@@ -647,8 +527,14 @@ class PipelineRepositoryService constructor(
                 manualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
-                taskCount = taskCount
+                taskCount = taskCount,
+                latestVersion = model.latestVersion
             )
+            if (version == 0) {
+                // 传过来的latestVersion已经不是最新
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)
+            }
+            model.latestVersion = version
             pipelineResDao.create(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
@@ -663,6 +549,28 @@ class PipelineRepositoryService constructor(
                 version = version,
                 model = model
             )
+            if (version > 1 && pipelineResVersionDao.getVersionModelString(
+                    dslContext = transactionContext,
+                    pipelineId = pipelineId,
+                    version = version - 1
+                ) == null
+            ) {
+                // 当ResVersion表中缺失上一个有效版本时需从Res表迁移数据（版本间流水线模型对比有用）
+                val lastVersionModelStr = pipelineResDao.getVersionModelString(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    version = version - 1
+                )
+                if (!lastVersionModelStr.isNullOrEmpty()) {
+                    pipelineResVersionDao.create(
+                        dslContext = transactionContext,
+                        pipelineId = pipelineId,
+                        creator = userId,
+                        version = version - 1,
+                        modelString = lastVersionModelStr
+                    )
+                }
+            }
             pipelineModelTaskDao.deletePipelineTasks(
                 dslContext = transactionContext,
                 projectId = projectId,
@@ -714,7 +622,9 @@ class PipelineRepositoryService constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                channelCode = channelCode),
+                channelCode = channelCode,
+                delete = delete
+            ),
             templateId = templateId
         )
     }
@@ -783,6 +693,7 @@ class PipelineRepositoryService constructor(
                 pipelineSettingVersionDao.deleteAllVersion(transactionContext, pipelineId)
                 pipelineResDao.deleteAllVersion(transactionContext, pipelineId)
                 pipelineSettingDao.delete(transactionContext, pipelineId)
+                templatePipelineDao.delete(transactionContext, pipelineId)
             } else {
                 // 删除前改名，防止名称占用
                 val deleteTime = LocalDateTime.now().toString("yyyyMMddHHmm")
@@ -806,8 +717,8 @@ class PipelineRepositoryService constructor(
                     name = deleteName,
                     desc = "DELETE BY $userId in $deleteTime"
                 )
-                // 删除关联之模板
-                templatePipelineDao.delete(dslContext = transactionContext, pipelineId = pipelineId)
+                // #4201 标志关联模板为删除
+                templatePipelineDao.softDelete(dslContext = transactionContext, pipelineId = pipelineId)
             }
 
             pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
@@ -977,7 +888,8 @@ class PipelineRepositoryService constructor(
                 waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
                 maxQueueSize = t.maxQueueSize,
                 maxPipelineResNum = t.maxPipelineResNum,
-                maxConRunningQueueSize = t.maxConRunningQueueSize
+                maxConRunningQueueSize = t.maxConRunningQueueSize,
+                buildNumRule = t.buildNumRule
             )
         } else null
     }
@@ -1088,6 +1000,10 @@ class PipelineRepositoryService constructor(
                 userId = userId,
                 channelCode = channelCode
             )
+
+            // #4012 还原与模板的绑定关系
+            templatePipelineDao.restore(dslContext = transactionContext, pipelineId = pipelineId)
+
             // 只初始化相关信息
             val tasks = initModel(
                 model = existModel,

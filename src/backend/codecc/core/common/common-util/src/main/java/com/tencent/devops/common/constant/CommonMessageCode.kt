@@ -137,4 +137,8 @@ object CommonMessageCode {
      */
     const val CODE_NORMAL_CONTENT_ERROR = "2300019"
 
+    /**
+     * 通过json文件传入的参数非法
+     */
+    const val JSON_PARAM_IS_INVALID = "2300020"
 }

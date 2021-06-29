@@ -29,7 +29,9 @@ package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.SvnWebHookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -49,12 +51,15 @@ import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_INCLUDE_USERS
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_RELATIVE_PATH
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_REVERSION
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_USERNAME
+import com.tencent.devops.scm.pojo.MATCH_BRANCH
+import com.tencent.devops.scm.pojo.MATCH_PATHS
+import java.lang.IllegalArgumentException
 
 @Suppress("ALL")
 class GitGenericWebHookElementStartParam(
     private val projectId: String,
     private val repo: Repository,
-    private val params: ScmWebhookMatcher.WebHookParams,
+    private val params: WebHookParams,
     private val matcher: ScmWebhookMatcher,
     private val matchResult: ScmWebhookMatcher.MatchResult
 ) : ScmWebhookStartParams<CodeGitGenericWebHookTriggerElement> {
@@ -70,7 +75,7 @@ class GitGenericWebHookElementStartParam(
             ScmType.CODE_SVN.name ->
                 svnStartParam(element = element, startParams = startParams)
             else ->
-                throw RuntimeException("Unknown scm type")
+                throw IllegalArgumentException("Unknown scm type")
         }
         return startParams
     }
@@ -103,11 +108,7 @@ class GitGenericWebHookElementStartParam(
             startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = excludeBranchName ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = excludeUsers ?: ""
         }
-        val githubWebhookStartParams = GithubWebHookStartParam(
-            params = params,
-            matcher = matcher as GithubWebHookMatcher
-        )
-        githubWebhookStartParams.getEventTypeStartParams(startParams)
+        startParams.putAll(matcher.retrieveParams())
     }
 
     private fun gitStartParam(
@@ -123,17 +124,15 @@ class GitGenericWebHookElementStartParam(
             startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS] = excludePaths ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = excludeUsers?.joinToString(",") ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] =
-                matchResult.extra[GitWebHookMatcher.MATCH_BRANCH] ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[GitWebHookMatcher.MATCH_PATHS] ?: ""
+                matchResult.extra[MATCH_BRANCH] ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
         }
-        val gitWebHookStartParam = GitWebHookStartParam(
-            projectId = projectId,
-            repo = repo,
-            params = params,
-            matcher = matcher as GitWebHookMatcher,
-            matchResult = matchResult
+        startParams.putAll(
+            matcher.retrieveParams(
+                projectId = projectId,
+                repository = repo
+            )
         )
-        gitWebHookStartParam.getEventTypeStartParams(startParams)
     }
 
     private fun gitlabStartParam(

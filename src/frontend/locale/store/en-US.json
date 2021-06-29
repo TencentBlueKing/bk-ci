@@ -573,5 +573,16 @@
     "使用场景": "Scenes to be used",
     "请输入使用场景": "Please enter the usage scenario",
     "普通": "Ordinary",
-    "敏感": "Sensitive"
+    "敏感": "Sensitive",
+    "请确认": "Please Confirm",
+    "已确认兼容新增参数，继续": "Confirmed compatibility with newly added parameters, continue",
+    "请选择起止时间": "Please select the start and end time",
+    "请输入版本": "Please enter the version",
+    "导出": "Export",
+    "流水线链接": "Pipeline link",
+    "最近修改人": "Recently edited by",
+    "最近修改时间": "Last modified time",
+    "最近执行人": "Recent executor",
+    "最近执行时间": "Last execution time",
+    "搜索": "Search"
 }

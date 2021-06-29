@@ -199,7 +199,7 @@ class CertDao {
                             .from(this)
                             .where(PROJECT_ID.eq(projectId))
                             .and(CERT_ID.`in`(certIds))
-                            .fetchOne(0, Long::class.java)
+                            .fetchOne(0, Long::class.java)!!
                 }
                 else -> {
                     dslContext.selectCount()
@@ -207,7 +207,7 @@ class CertDao {
                             .where(PROJECT_ID.eq(projectId))
                             .and(CERT_ID.`in`(certIds))
                             .and(CERT_TYPE.eq(certType))
-                            .fetchOne(0, Long::class.java)
+                            .fetchOne(0, Long::class.java)!!
                 }
             }
         }
@@ -224,14 +224,14 @@ class CertDao {
                     dslContext.selectCount()
                             .from(this)
                             .where(PROJECT_ID.eq(projectId))
-                            .fetchOne(0, Long::class.java)
+                            .fetchOne(0, Long::class.java)!!
                 }
                 else -> {
                     dslContext.selectCount()
                             .from(this)
                             .where(PROJECT_ID.eq(projectId))
                             .and(CERT_TYPE.eq(certType))
-                            .fetchOne(0, Long::class.java)
+                            .fetchOne(0, Long::class.java)!!
                 }
             }
         }
@@ -336,7 +336,7 @@ class CertDao {
                     .from(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(CERT_ID.like("%$certId%"))
-                    .fetchOne(0, Long::class.java)
+                    .fetchOne(0, Long::class.java)!!
         }
     }
 }
