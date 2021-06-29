@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
@@ -94,20 +95,24 @@ data class StartBuildContext(
             stage.finally -> {
                 false // finally stage 不会跳过
             }
-            stage.id!! == retryStartTaskId -> { // 失败重试的Stage，如果不是使用跳过所有失败插件功能，则不会跳过
-                skipFailedTask
+            stage.id!! == retryStartTaskId -> { // 失败重试的Stage，不会跳过
+                false
             }
             retryStartTaskId.isNullOrBlank() -> { // rebuild or start 不会跳过
                 false
             }
-            else -> { // 当前插件不是要失败重试的插件，会跳过, 而如果是指定重试的插件，则要判断是不是要失败跳过，如果是则跳过
-                isSkipTask(taskId)
+            else -> { // 当前插件不是要失败重试或要跳过的插件，会跳过
+                retryStartTaskId != taskId
             }
         }
     }
 
-    fun isSkipTask(taskId: String?): Boolean {
-        return skipFailedTask && retryStartTaskId == taskId
+    fun inSkipStage(stage: Stage, atom: Element): Boolean {
+        return if (skipFailedTask && retryStartTaskId == atom.id) {
+            true
+        } else { // 如果是全部跳过Stage下所有失败插件的，则这个插件必须是处于失败的状态
+            skipFailedTask && (stage.id == retryStartTaskId && BuildStatus.parse(atom.status).isFailure())
+        }
     }
 
     /**
@@ -126,7 +131,7 @@ data class StartBuildContext(
     }
 
     fun needRerun(stage: Stage): Boolean {
-        return stage.finally || stage.id!! == retryStartTaskId
+        return stage.finally || retryStartTaskId == null || stage.id!! == retryStartTaskId
     }
 
     companion object {

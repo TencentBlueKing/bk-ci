@@ -63,4 +63,12 @@ data class CodeGitRepository(
             else -> "git@"
         }
     }
+
+    override fun isLegal(): Boolean {
+        if (authType == RepoAuthType.HTTP) {
+            return url.startsWith("http://") ||
+                url.startsWith("https://")
+        }
+        return url.startsWith(getStartPrefix())
+    }
 }
