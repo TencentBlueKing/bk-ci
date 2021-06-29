@@ -30,11 +30,13 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.dao.AuthGroupDao
 import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
+import org.jooq.DSLContext
 import org.jvnet.hk2.annotations.Service
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -43,8 +45,17 @@ class BkIamPermissionRoleExtService @Autowired constructor(
     override val iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService,
     private val iamConfiguration: IamConfiguration,
-    private val groupService: AuthGroupService
-) : IamPermissionRoleExtService(iamManagerService, permissionGradeService, iamConfiguration, groupService) {
+    private val groupService: AuthGroupService,
+    private val authGroupDao: AuthGroupDao,
+    private val dslContext: DSLContext
+) : IamPermissionRoleExtService(
+    iamManagerService,
+    permissionGradeService,
+    iamConfiguration,
+    groupService,
+    authGroupDao,
+    dslContext
+) {
     override fun groupCreateExt(roleId: Int, userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO) {
         super.groupCreateExt(roleId, userId, projectId, projectCode, groupInfo)
     }
