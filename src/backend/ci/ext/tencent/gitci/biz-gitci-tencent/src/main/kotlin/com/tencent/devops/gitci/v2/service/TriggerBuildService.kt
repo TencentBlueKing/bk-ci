@@ -86,14 +86,18 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.redis.RedisOperation
@@ -916,18 +920,23 @@ class TriggerBuildService @Autowired constructor(
 
         val gitProjectName = when (originEvent) {
             is GitPushEvent -> {
+                startParams[PIPELINE_GIT_REPO_URL] = originEvent.repository.git_http_url
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CI_BRANCH] = getBranchName(originEvent.ref)
                 startParams[PIPELINE_GIT_EVENT] = GitPushEvent.classType
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitTagPushEvent -> {
+                startParams[PIPELINE_GIT_REPO_URL] = originEvent.repository.git_http_url
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CI_BRANCH] = getBranchName(originEvent.ref)
                 startParams[PIPELINE_GIT_EVENT] = GitTagPushEvent.classType
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitMergeRequestEvent -> {
+                startParams[PIPELINE_GIT_BASE_REPO_URL] = originEvent.object_attributes.source.http_url
+                startParams[PIPELINE_GIT_HEAD_REPO_URL] = originEvent.object_attributes.target.http_url
+                startParams[PIPELINE_GIT_MR_URL] = originEvent.object_attributes.url
                 startParams[PIPELINE_GIT_EVENT] = GitMergeRequestEvent.classType
                 startParams[PIPELINE_GIT_HEAD_REF] = originEvent.object_attributes.target_branch
                 startParams[PIPELINE_GIT_BASE_REF] = originEvent.object_attributes.source_branch
