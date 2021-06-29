@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.service.iam.impl
 
+import com.tencent.devops.auth.entity.DefaultGroupType
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.service.AuthGroupService
@@ -20,12 +21,15 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
     ): Int {
         var groupType= ""
         var groupName = ""
-        if (!BkAuthGroup.contains(groupInfo.code)) {
+        var displayName = ""
+        if (!DefaultGroupType.contains(groupInfo.code)) {
             groupType = CUSTOM_GROUP.toString()
             groupName = groupInfo.name ?: ""
+            displayName = groupInfo.displayName ?: groupInfo.name
         } else {
             groupType = groupInfo.type
             groupName = groupInfo.name
+            displayName = DefaultGroupType.get(groupInfo.code).displayName
         }
         val roleId = groupService.createGroup(
             userId = userId,
@@ -34,7 +38,7 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
                 groupCode = groupInfo.code,
                 groupType = groupType,
                 groupName = groupName,
-                displayName = groupName,
+                displayName = displayName,
                 relationId = null
             )
         )

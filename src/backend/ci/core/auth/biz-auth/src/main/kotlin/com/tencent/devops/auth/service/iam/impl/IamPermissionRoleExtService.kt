@@ -37,6 +37,8 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.AuthGroupDao
+import com.tencent.devops.auth.entity.DefaultGroupType
 import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
@@ -46,6 +48,8 @@ import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -55,7 +59,9 @@ open class IamPermissionRoleExtService @Autowired constructor(
     open val iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService,
     private val iamConfiguration: IamConfiguration,
-    private val groupService: AuthGroupService
+    private val groupService: AuthGroupService,
+    private val groupDao: AuthGroupDao,
+    private val dslContext: DSLContext
 ) : AbsPermissionRoleServiceImpl(groupService) {
 
     @Value("\${project.role.default:#{null}}")
@@ -77,7 +83,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val defaultGroup = groupInfo.defaultGroup!!
 
         // 默认分组名称规则: projectName-groupName
-        val groupName = IamGroupUtils.buildIamGroup(groupInfo.projectName, groupInfo.name)
+        val groupName = IamGroupUtils.buildIamGroup(groupInfo.projectName, groupInfo.displayName ?: groupInfo.name)
 
         val groupDescription = if (groupInfo.description.isNullOrEmpty()) {
             IamGroupUtils.buildDefaultDescription(groupInfo.projectName, groupInfo.name, userId)
@@ -134,18 +140,26 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
         val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId)
-        val groupInfo = mutableListOf<GroupInfoVo>()
+        val iamIds = groupInfos.results.map { it.id }
+        val localGroupInfo = groupDao.getGroupByRelationIds(dslContext, iamIds)
+        val localGroupMap = mutableMapOf<String, TAuthGroupInfoRecord>()
+        localGroupInfo.forEach {
+            localGroupMap[it!!.id.toString()] = it
+        }
+        val resultList = mutableListOf<GroupInfoVo>()
         groupInfos.results.forEach {
-            groupInfo.add(
+            val groupInfo = localGroupMap[it.id.toString()]
+            resultList.add(
                 GroupInfoVo(
                     id = it.id,
-                    name = IamGroupUtils.renameSystemLable(it.name),
-                    defaultRole = IamGroupUtils.defaultRoleCheck(it.name),
+                    name = groupInfo?.groupName ?: "",
+                    displayName = groupInfo?.displayName ?: "",
+                    defaultRole = DefaultGroupType.contains(groupInfo?.groupType ?: ""),
                     userCount = 0
                 )
             )
         }
-        return groupInfo
+        return resultList
     }
 
     override fun getDefaultRole(): List<DefaultGroup> {
