@@ -121,7 +121,7 @@ interface UserBuildResource {
         buildNo: Int? = null
     ): Result<BuildId>
 
-    @ApiOperation("重试流水线-包括重试和手动跳过")
+    @ApiOperation("重试流水线-重试或者跳过失败插件")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/retry")
     @Path("/{projectId}/{pipelineId}/{buildId}/retry")

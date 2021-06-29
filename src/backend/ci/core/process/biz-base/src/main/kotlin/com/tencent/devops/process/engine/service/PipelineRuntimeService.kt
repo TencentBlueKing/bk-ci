@@ -937,7 +937,7 @@ class PipelineRuntimeService @Autowired constructor(
                             // 如果插件任务之前已经是完成状态，则跳过当前插件
                             try {
                                 if (target == null || BuildStatus.values()[target.status].isFinish()) {
-                                    if (target == null || !context.skipFailedTask) {
+                                    if (target == null || !context.isSkipTask(atomElement.id)) {
                                         return@nextElement
                                     } else if (BuildStatus.values()[target.status].isFailure()) {
                                         retryInitialStatus = BuildStatus.SKIP // #4245 将失败手动跳过的插件置为跳过

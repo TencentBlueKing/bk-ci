@@ -108,7 +108,7 @@ interface ApigwBuildResourceV3 {
         buildId: String
     ): Result<Boolean>
 
-    @ApiOperation("重试构建-重试失败插件或者跳过失败插件")
+    @ApiOperation("重试构建-重试或者跳过失败插件")
     @POST
     @Path("/{buildId}/retry")
     fun retry(
