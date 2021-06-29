@@ -144,7 +144,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val localGroupInfo = groupDao.getGroupByRelationIds(dslContext, iamIds)
         val localGroupMap = mutableMapOf<String, TAuthGroupInfoRecord>()
         localGroupInfo.forEach {
-            localGroupMap[it!!.id.toString()] = it
+            localGroupMap[it!!.relationId] = it
         }
         val resultList = mutableListOf<GroupInfoVo>()
         groupInfos.results.forEach {
