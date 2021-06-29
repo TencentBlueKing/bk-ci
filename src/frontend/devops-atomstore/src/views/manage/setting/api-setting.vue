@@ -17,7 +17,13 @@
             >
                 <bk-table-column label="SDK API" prop="apiName"></bk-table-column>
                 <bk-table-column :label="$t('store.权限等级')" prop="apiLevel" :formatter="levelFormatter"></bk-table-column>
-                <bk-table-column :label="$t('store.状态')" prop="apiStatus" :formatter="statusFormatter"></bk-table-column>
+                <bk-table-column :label="$t('store.状态')" prop="apiStatus">
+                    <template slot-scope="props">
+                        <span v-bk-tooltips="{ content: props.row.approveMsg, disabled: props.row.apiStatus !== 'REFUSE', width: 500 }" :class="props.row.apiStatus">
+                            {{props.row.apiStatus | statusFilter}}
+                        </span>
+                    </template>
+                </bk-table-column>
                 <bk-table-column :label="$t('store.操作')" width="180" class-name="handler-btn">
                     <template slot-scope="props">
                         <bk-button text @click="handleApply(props.row)" v-if="['REFUSE'].includes(props.row.apiStatus)">{{ $t('store.申请') }}</bk-button>
@@ -31,9 +37,9 @@
                     <bk-form-item label="API" :required="true" :rules="[requireRule('API')]" property="apiNameList" error-display-type="normal">
                         <bk-select v-model="apiObj.apiNameList" searchable multiple :loading="isLoadingUnApprovalApiList">
                             <bk-option v-for="api in unApprovalApiList"
-                                :key="api"
-                                :id="api"
-                                :name="api">
+                                :key="api.apiName"
+                                :id="api.apiName"
+                                :name="api.aliasName">
                             </bk-option>
                         </bk-select>
                     </bk-form-item>
@@ -55,6 +61,19 @@
     import { mapGetters } from 'vuex'
 
     export default {
+        filters: {
+            statusFilter (val) {
+                const local = window.devops || {}
+                const statusMap = {
+                    'WAIT': local.$t('store.待审批'),
+                    'PASS': local.$t('store.通过'),
+                    'REFUSE': local.$t('store.拒绝'),
+                    'CANCEL': local.$t('store.取消')
+                }
+                return statusMap[val]
+            }
+        },
+
         data () {
             return {
                 apiList: [],
@@ -67,7 +86,8 @@
                 apiName: '',
                 apiObj: {
                     apiNameList: [],
-                    applyDesc: ''
+                    applyDesc: '',
+                    language: ''
                 },
                 pagination: {
                     current: 1,
@@ -114,7 +134,8 @@
                 this.showAdd = false
                 this.apiObj = {
                     apiNameList: [],
-                    applyDesc: ''
+                    applyDesc: '',
+                    language: ''
                 }
             },
 
@@ -137,6 +158,7 @@
             handleApply (row) {
                 this.apiObj.apiNameList = [row.apiName]
                 this.apiObj.applyDesc = ''
+                this.apiObj.language = this.detail.language
                 this.showAddApi()
             },
 
@@ -154,7 +176,7 @@
             showAddApi () {
                 this.showAdd = true
                 this.isLoadingUnApprovalApiList = true
-                api.requestUnApprovalApiList('ATOM', this.detail.atomCode).then((res) => {
+                api.requestUnApprovalApiList('ATOM', this.detail.atomCode, { language: this.detail.language }).then((res) => {
                     this.unApprovalApiList = res || []
                 }).catch((err) => {
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
@@ -182,16 +204,6 @@
                     'SENSITIVE': this.$t('store.敏感')
                 }
                 return levelMap[cellValue]
-            },
-            
-            statusFormatter (row, column, cellValue, index) {
-                const statusMap = {
-                    'WAIT': this.$t('store.待审批'),
-                    'PASS': this.$t('store.通过'),
-                    'REFUSE': this.$t('store.拒绝'),
-                    'CANCEL': this.$t('store.取消')
-                }
-                return statusMap[cellValue]
             }
         }
     }
@@ -213,6 +225,10 @@
         }
         .add-api {
             padding: 32px;
+        }
+        .REFUSE {
+            border-bottom: 1px dashed #63656e;
+            display: inline-block;
         }
     }
 </style>
