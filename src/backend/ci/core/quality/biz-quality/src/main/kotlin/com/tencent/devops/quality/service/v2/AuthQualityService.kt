@@ -36,7 +36,7 @@ import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.quality.dao.GroupDao
+import com.tencent.devops.quality.dao.QualityNotifyGroupDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -46,7 +46,7 @@ import org.springframework.stereotype.Service
 @Service
 class AuthQualityService @Autowired constructor(
     val qualityRuleDao: QualityRuleDao,
-    val qualityGroupDao: GroupDao,
+    val qualityGroupDao: QualityNotifyGroupDao,
     val dslContext: DSLContext,
     val authTokenApi: AuthTokenApi
 ) {
