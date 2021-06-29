@@ -87,7 +87,7 @@ class TxPermissionRoleServiceImpl @Autowired constructor(
             defaultGroups.add(
                 DefaultGroup(
                     code = it.value,
-                    name = it.name,
+                    name = it.displayName,
                     displayName = it.displayName
                 )
             )
