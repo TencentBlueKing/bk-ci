@@ -33,7 +33,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.ci.image.Pool
+import com.tencent.devops.common.ci.v2.Credentials
 import com.tencent.devops.common.ci.v2.ExportPreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
@@ -44,6 +47,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
@@ -52,14 +56,18 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElemen
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
+import com.tencent.devops.common.pipeline.type.idc.IDCDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.common.ci.v2.Step as V2Step
 import org.slf4j.LoggerFactory
@@ -76,7 +84,8 @@ import javax.ws.rs.core.StreamingOutput
 class TXPipelineExportService @Autowired constructor(
     private val stageTagService: StageTagService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val storeImageHelper: StoreImageHelper
 ) {
 
     companion object {
@@ -99,7 +108,12 @@ class TXPipelineExportService @Autowired constructor(
             Response.Status.BAD_REQUEST,
             "流水线已不存在！"
         )
-        val yamlSb = getYamlStringBuilder(projectId, pipelineId, model, isGitCI)
+        val yamlSb = getYamlStringBuilder(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = model,
+            isGitCI = isGitCI
+        )
 
         val stageTagsMap = stageTagService.getAllStageTag().data?.map {
             it.id to it.stageTagName
@@ -111,11 +125,24 @@ class TXPipelineExportService @Autowired constructor(
             label = if (model.labels.isNullOrEmpty()) null else model.labels,
             triggerOn = null,
             variables = getVariableFromModel(model),
-            stages = getV2StageFromModel(model, yamlSb, stageTagsMap),
+            stages = getV2StageFromModel(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                model = model,
+                comment = yamlSb,
+                stageTagsMap = stageTagsMap
+            ),
             extends = null,
             resources = null,
             notices = null,
-            finally = getV2FinalFromStage(model.stages.last(), yamlSb)
+            finally = getV2FinalFromStage(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                stage = model.stages.last(),
+                comment = yamlSb
+            )
         )
         val modelYaml = toYamlStr(yamlObj)
         yamlSb.append(modelYaml)
@@ -123,6 +150,9 @@ class TXPipelineExportService @Autowired constructor(
     }
 
     private fun getV2StageFromModel(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
         model: Model,
         comment: StringBuilder,
         stageTagsMap: Map<String, String>
@@ -132,7 +162,13 @@ class TXPipelineExportService @Autowired constructor(
             if (stage.finally) {
                 return@forEach
             }
-            val jobs = getV2JobFromStage(stage, comment)
+            val jobs = getV2JobFromStage(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                stage = stage,
+                comment = comment
+            )
             val tags = mutableListOf<String>()
             stage.tag?.forEach {
                 val tagName = stageTagsMap[it]
@@ -157,16 +193,28 @@ class TXPipelineExportService @Autowired constructor(
     }
 
     private fun getV2FinalFromStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
         stage: com.tencent.devops.common.pipeline.container.Stage,
         comment: StringBuilder
     ): Map<String, PreJob>? {
         if (stage.finally) {
-            return getV2JobFromStage(stage, comment)
+            return getV2JobFromStage(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                stage = stage,
+                comment = comment
+            )
         }
         return null
     }
 
     private fun getV2JobFromStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
         stage: com.tencent.devops.common.pipeline.container.Stage,
         comment: StringBuilder
     ): Map<String, PreJob>? {
@@ -213,20 +261,36 @@ class TXPipelineExportService @Autowired constructor(
                             )
                         }
                         is DockerDispatchType -> {
+                            val (containerImage, credentials) = getImageNameAndCredentials(
+                                userId = userId,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                dispatchType = dispatchType
+                            )
                             RunsOn(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
                                 container = com.tencent.devops.common.ci.v2.Container(
-                                    image = "###请直接填入镜像(${dispatchType.imageName})的URL地址，若存在鉴权请增加 credentials 字段###",
-                                    credentials = null
+                                    image = containerImage,
+                                    credentials = credentials
                                 ),
                                 agentSelector = null
                             )
                         }
                         is PublicDevCloudDispathcType -> {
+                            val (containerImage, credentials) = getImageNameAndCredentials(
+                                userId = userId,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                dispatchType = dispatchType
+                            )
                             RunsOn(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
+                                container = com.tencent.devops.common.ci.v2.Container(
+                                    image = containerImage,
+                                    credentials = credentials
+                                ),
                                 agentSelector = null
                             )
                         }
@@ -458,6 +522,64 @@ class TXPipelineExportService @Autowired constructor(
             } else {
                 ESXiDispatchType()
             }
+        }
+    }
+
+    private fun getImageNameAndCredentials(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        dispatchType: StoreDispatchType
+    ): Pair<String, Credentials?> {
+        try {
+            when (dispatchType.imageType) {
+                ImageType.BKSTORE -> {
+                    val imageRepoInfo = storeImageHelper.getImageRepoInfo(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = "",
+                        imageCode = dispatchType.imageCode,
+                        imageVersion = dispatchType.imageVersion,
+                        defaultPrefix = null
+                    )
+                    val completeImageName = if (ImageType.BKDEVOPS == imageRepoInfo.sourceType) {
+                        // 蓝盾项目源镜像
+                        imageRepoInfo.repoName
+                    } else {
+                        // 第三方源镜像
+                        // dockerhub镜像名称不带斜杠前缀
+                        if (imageRepoInfo.repoUrl.isBlank()) {
+                            imageRepoInfo.repoName
+                        } else {
+                            "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
+                        }
+                    } + ":" + imageRepoInfo.repoTag
+                    return Pair(completeImageName, Credentials(
+                        "### 重新配置凭据(${imageRepoInfo.ticketId})后填入 ###",
+                        "### 重新配置凭据(${imageRepoInfo.ticketId})后填入 ###"
+                    ))
+                }
+                ImageType.BKDEVOPS -> {
+                    // 针对非商店的旧数据处理
+                    return if (dispatchType.value != DockerVersion.TLINUX1_2.value && dispatchType.value != DockerVersion.TLINUX2_2.value) {
+                        dispatchType.dockerBuildVersion = "bkdevops/" + dispatchType.value
+                        Pair("bkdevops/" + dispatchType.value, null)
+                    } else {
+                        Pair("### 该镜像暂不支持自动导出，请参考 https://iwiki.woa.com/x/2ebDKw 手动配置 ###", null)
+                    }
+                }
+                else -> {
+                    return if (dispatchType.credentialId.isNullOrBlank()) {
+                        Pair(dispatchType.value, null)
+                    } else Pair(dispatchType.value, Credentials(
+                        "### 重新配置凭据(${dispatchType.credentialId})后填入 ###",
+                        "### 重新配置凭据(${dispatchType.credentialId})后填入 ###"
+                    ))
+                }
+            }
+        } catch (e: Exception) {
+            return Pair("###请直接填入镜像(TLinux2.2公共镜像)的URL地址，若存在鉴权请增加 credentials 字段###", null)
         }
     }
 }
