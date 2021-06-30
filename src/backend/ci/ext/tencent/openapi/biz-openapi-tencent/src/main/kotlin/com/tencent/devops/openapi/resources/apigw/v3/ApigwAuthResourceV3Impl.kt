@@ -4,6 +4,7 @@ import com.tencent.devops.auth.api.ServiceGroupResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.code.ExtAuthConstants
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -27,12 +28,15 @@ class ApigwAuthResourceV3Impl @Autowired constructor(
         groupInfos.forEach {
             var groupType = ""
             var groupName = ""
+            var displayName = ""
             if (!BkAuthGroup.contains(it.groupCode)) {
                 groupType = ExtAuthConstants.CUSTOM_GROUP
-                groupName = it.displayName ?: ""
+                groupName = it.groupName ?: ""
+                displayName = it.displayName ?: ""
             } else {
                 groupType = it.groupType
-                groupName = it.groupName
+                groupName = DefaultGroupType.get(it.groupType).displayName
+                displayName = DefaultGroupType.get(it.groupType).displayName
             }
             ciGroupInfos.add(
                 GroupDTO(
@@ -40,7 +44,7 @@ class ApigwAuthResourceV3Impl @Autowired constructor(
                     groupCode = it.groupCode,
                     groupType = groupType,
                     relationId = it.relationId,
-                    displayName = it.displayName
+                    displayName = displayName
                 )
             )
         }
