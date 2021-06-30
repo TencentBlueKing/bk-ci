@@ -52,7 +52,6 @@ import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import java.lang.RuntimeException
 
 open class IamPermissionRoleExtService @Autowired constructor(
@@ -64,9 +63,6 @@ open class IamPermissionRoleExtService @Autowired constructor(
     private val dslContext: DSLContext
 ) : AbsPermissionRoleServiceImpl(groupService) {
 
-    @Value("\${project.role.default:#{null}}")
-    val defaultRole: String = ""
-
     override fun groupCreateExt(
         roleId: Int,
         userId: String,
@@ -77,7 +73,8 @@ open class IamPermissionRoleExtService @Autowired constructor(
         // 校验操作人是否有项目分级管理员权限
         permissionGradeService.checkGradeManagerUser(userId, projectId)
 
-        // 校验用户组名称
+        // 校验用户组code, 默认分组已固定
+        checkRoleCode(groupInfo.code, groupInfo.defaultGroup!!)
         checkRoleName(groupInfo.name, groupInfo.defaultGroup!!)
 
         val defaultGroup = groupInfo.defaultGroup!!
@@ -168,17 +165,33 @@ open class IamPermissionRoleExtService @Autowired constructor(
         return emptyList()
     }
 
-    private fun checkRoleName(name: String, defaultGroup: Boolean) {
+    private fun checkRoleCode(code: String, defaultGroup: Boolean) {
         // 校验用户组名称
         if (defaultGroup) {
             // 若为默认分组,需校验提供用户组是否在默认分组内。
-            if (!defaultRole.contains(name)) {
+            if (!DefaultGroupType.contains(code)) {
                 // 不在默认分组内则直接报错
                 throw RuntimeException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.DEFAULT_GROUP_ERROR))
             }
         } else {
             // 非默认分组,不能使用默认分组组名
-            if (defaultRole.contains(name)) {
+            if (DefaultGroupType.contains(code)) {
+                throw RuntimeException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.UN_DEFAULT_GROUP_ERROR))
+            }
+        }
+    }
+
+    private fun checkRoleName(name: String, defaultGroup: Boolean) {
+        // 校验用户组名称
+        if (defaultGroup) {
+            // 若为默认分组,需校验提供用户组是否在默认分组内。
+            if (!DefaultGroupType.containsDisplayName(name)) {
+                // 不在默认分组内则直接报错
+                throw RuntimeException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.DEFAULT_GROUP_ERROR))
+            }
+        } else {
+            // 非默认分组,不能使用默认分组组名
+            if (DefaultGroupType.containsDisplayName(name)) {
                 throw RuntimeException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.UN_DEFAULT_GROUP_ERROR))
             }
         }

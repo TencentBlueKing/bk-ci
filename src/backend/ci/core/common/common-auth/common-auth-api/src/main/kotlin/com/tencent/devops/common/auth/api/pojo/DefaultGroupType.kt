@@ -54,6 +54,13 @@ enum class DefaultGroupType(val value: String, val displayName: String) {
             return false
         }
 
+        fun containsDisplayName(displayName: String): Boolean {
+            values().forEach {
+                if (displayName == it.displayName) return true
+            }
+            return false
+        }
+
         fun getAll(): List<DefaultGroupType> {
             val allGroup = mutableListOf<DefaultGroupType>()
             allGroup.add(DEVELOPER)
