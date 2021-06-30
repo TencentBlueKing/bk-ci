@@ -5,7 +5,6 @@ import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
-import com.tencent.devops.common.auth.code.ExtAuthConstants
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwAuthResourceV3
@@ -26,17 +25,17 @@ class ApigwAuthResourceV3Impl @Autowired constructor(
         logger.info("batchCreateGroup $userId $projectCode $groupInfos")
         val ciGroupInfos = mutableListOf<GroupDTO>()
         groupInfos.forEach {
-            var groupType = ""
+            var groupType = it.groupType
             var groupName = ""
             var displayName = ""
             if (!BkAuthGroup.contains(it.groupCode)) {
-                groupType = ExtAuthConstants.CUSTOM_GROUP
+                groupType = true
                 groupName = it.groupName ?: ""
                 displayName = it.displayName ?: ""
             } else {
-                groupType = it.groupType
-                groupName = DefaultGroupType.get(it.groupType).displayName
-                displayName = DefaultGroupType.get(it.groupType).displayName
+                groupType = true
+                groupName = DefaultGroupType.get(it.groupCode).displayName
+                displayName = DefaultGroupType.get(it.groupCode).displayName
             }
             ciGroupInfos.add(
                 GroupDTO(
