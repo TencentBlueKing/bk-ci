@@ -60,7 +60,8 @@ class GitCIBkRepoDownloadService @Autowired constructor(
         argPath: String,
         channelCode: ChannelCode?
     ): Url {
-        logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath")
+        logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+            "argPath: $argPath")
         pipelineService.validatePermission(userId, projectId)
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val repo = RepoUtils.getRepoByType(artifactoryType)
