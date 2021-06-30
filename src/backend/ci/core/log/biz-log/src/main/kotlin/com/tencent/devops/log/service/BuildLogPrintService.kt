@@ -31,10 +31,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.log.pojo.ILogEvent
 import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.log.configuration.LogServiceConfig
+import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.jmx.LogPrintBean
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -50,6 +52,7 @@ class BuildLogPrintService @Autowired constructor(
     @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME)
     private val rabbitTemplate: RabbitTemplate,
     private val logPrintBean: LogPrintBean,
+    private val storageProperties: StorageProperties,
     private val logServiceConfig: LogServiceConfig
 ) {
 
@@ -63,8 +66,6 @@ class BuildLogPrintService @Autowired constructor(
 
     fun dispatchEvent(event: ILogEvent) {
         try {
-            // 如果配置了长度限制才做截断处理
-            if (event is LogEvent && logServiceConfig.lineMaxLength != null) fixEvent(event)
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
                 // 事件中的变量指定
@@ -82,6 +83,22 @@ class BuildLogPrintService @Autowired constructor(
     }
 
     fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {
+        if (!isEnabled(storageProperties.enable)) {
+            val warnings = "Service refuses to write the log, the log file of the task will be archived."
+            if (event is LogEvent && event.logs.isNotEmpty()) {
+                dispatchEvent(event.copy(
+                    logs = listOf(event.logs.first().copy(
+                        message = Ansi().fgYellow().a(warnings).reset().toString(),
+                        logType = LogType.WARN
+                    ))
+                ))
+            }
+            return Result(
+                status = 503,
+                message = LogErrorCodeEnum.PRINT_IS_DISABLED.formatErrorMessage,
+                data = false
+            )
+        }
         return try {
             logExecutorService.execute {
                 dispatchEvent(event)
@@ -105,17 +122,16 @@ class BuildLogPrintService @Autowired constructor(
         logPrintBean.savePrintQueueSize(logExecutorService.queue.size)
     }
 
-    private fun fixEvent(logEvent: LogEvent) {
-        // 字符数超过32766时analyzer索引分析将失效，同时为保护系统稳定性，若配置值为空或负数则限制为32KB
-        val maxLength = if (logServiceConfig.lineMaxLength == null || logServiceConfig.lineMaxLength!! <= 0) {
-            32766
+    private fun isEnabled(value: String?): Boolean {
+        // 假设没有配置默认为开启日志保存
+        return if (!value.isNullOrBlank()) {
+            value!!.toBoolean()
         } else {
-            logServiceConfig.lineMaxLength!!
-        }
-        logEvent.logs.forEach {
-            it.message = CommonUtils.interceptStringInLength(it.message, maxLength) ?: ""
+            true
         }
     }
 
-    private val logger = LoggerFactory.getLogger(BuildLogPrintService::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildLogPrintService::class.java)
+    }
 }

@@ -88,6 +88,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         var atomResponse: AtomResponse
         try {
             atomResponse = startUpDocker(task, param)
+            buildLogPrinter.stopLog(
+                buildId = task.buildId,
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
         } catch (e: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
