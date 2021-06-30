@@ -44,6 +44,7 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -101,6 +102,9 @@ class TxProjectServiceImpl @Autowired constructor(
 
     @Value("\${iam.v0.url:#{null}}")
     private var v0IamUrl: String = ""
+
+    @Value("\${v3.tag:#{null}}")
+    private var v3Tag: String = ""
 
     override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val projectVO = getInfoByEnglishName(englishName)
@@ -199,10 +203,9 @@ class TxProjectServiceImpl @Autowired constructor(
 //        val projectEnglishNames = projectPermissionService.getUserProjects(userId!!)
         val iamV0List = getV0UserProject(userId, accessToken)
         logger.info("$userId V0 project: $iamV0List")
-        val iamV3List = client.get(ServiceProjectAuthResource::class).getUserProjects(
-            userId = userId!!,
-            token = tokenService.getSystemToken(null)!!
-        ).data
+
+        // 请求V3的项目,流量必须指向到v3,需指定项目头
+        val iamV3List = getV3UserProject(userId!!)
         logger.info("$userId V3 project: $iamV3List")
         val projectList = mutableSetOf<String>()
         projectList.addAll(iamV0List)
@@ -301,6 +304,21 @@ class TxProjectServiceImpl @Autowired constructor(
         return result.data!!.map {
             it.project_code
         }
+    }
+
+    private fun getV3UserProject(userId: String) : List<String>? {
+        if (v3Tag.isNullOrEmpty()) {
+            return emptyList()
+        }
+        logger.info("getV3userProject tag: $v3Tag")
+        ConsulContent.setConsulContent(v3Tag)
+        // 请求V3的项目,流量必须指向到v3,需指定项目头
+        val iamV3List = client.get(ServiceProjectAuthResource::class).getUserProjects(
+            userId = userId,
+            token = tokenService.getSystemToken(null)!!
+        ).data
+        ConsulContent.removeConsulContent()
+        return iamV3List
     }
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
