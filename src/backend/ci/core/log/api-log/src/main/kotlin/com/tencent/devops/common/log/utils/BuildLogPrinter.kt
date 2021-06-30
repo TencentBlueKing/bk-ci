@@ -27,15 +27,15 @@
 
 package com.tencent.devops.common.log.utils
 
-import com.tencent.devops.common.log.Ansi
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.log.api.print.ServiceLogPrintResource
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
+import org.slf4j.LoggerFactory
 
-@Suppress("ALL")
 class BuildLogPrinter(
-    private val logMQEventDispatcher: LogMQEventDispatcher
+    private val client: Client
 ) {
 
     fun addLine(
@@ -46,19 +46,32 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null
     ) {
-        logMQEventDispatcher.dispatch(genLogEvent(
-            buildId = buildId,
-            message = message,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            logType = LogType.LOG,
-            executeCount = executeCount
-        ))
+        try {
+            genLogPrintPrintResource().addLogLine(
+                buildId = buildId,
+                logMessage = genLogMessage(
+                    message = message,
+                    tag = tag,
+                    subTag = subTag,
+                    jobId = jobId,
+                    logType = LogType.LOG,
+                    executeCount = executeCount
+                )
+            )
+        } catch (e: Exception) {
+            logger.error("[$buildId]|addLine error|message=$message", e)
+        }
     }
 
     fun addLines(buildId: String, logMessages: List<LogMessage>) {
-        logMQEventDispatcher.dispatch(LogEvent(buildId, logMessages))
+        try {
+            genLogPrintPrintResource().addLogMultiLine(
+                buildId = buildId,
+                logMessages = logMessages
+            )
+        } catch (e: Exception) {
+            logger.error("[$buildId]|addLines error|logMessages=$logMessages", e)
+        }
     }
 
     fun addFoldStartLine(
@@ -68,17 +81,14 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String? = null,
         executeCount: Int
-    ) {
-        logMQEventDispatcher.dispatch(genLogEvent(
-            buildId = buildId,
-            message = "##[group]$groupName",
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            logType = LogType.LOG,
-            executeCount = executeCount
-        ))
-    }
+    ) = addLine(
+        buildId = buildId,
+        message = "##[group]$groupName",
+        tag = tag,
+        subTag = subTag,
+        jobId = jobId,
+        executeCount = executeCount
+    )
 
     fun addFoldEndLine(
         buildId: String,
@@ -87,17 +97,14 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String? = null,
         executeCount: Int
-    ) {
-        logMQEventDispatcher.dispatch(genLogEvent(
-            buildId = buildId,
-            message = "##[endgroup]$groupName",
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            logType = LogType.LOG,
-            executeCount = executeCount
-        ))
-    }
+    ) = addLine(
+        buildId = buildId,
+        message = "##[endgroup]$groupName",
+        tag = tag,
+        subTag = subTag,
+        jobId = jobId,
+        executeCount = executeCount
+    )
 
     fun addErrorLine(
         buildId: String,
@@ -107,15 +114,17 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null
     ) {
-        logMQEventDispatcher.dispatch(genLogEvent(
+        genLogPrintPrintResource().addLogLine(
             buildId = buildId,
-            message = message,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            logType = LogType.ERROR,
-            executeCount = executeCount
-        ))
+            logMessage = genLogMessage(
+                message = message,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                logType = LogType.ERROR,
+                executeCount = executeCount
+            )
+        )
     }
 
     fun addDebugLine(
@@ -126,15 +135,17 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null
     ) {
-        logMQEventDispatcher.dispatch(genLogEvent(
+        genLogPrintPrintResource().addLogLine(
             buildId = buildId,
-            message = message,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            logType = LogType.DEBUG,
-            executeCount = executeCount
-        ))
+            logMessage = genLogMessage(
+                message = message,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                logType = LogType.DEBUG,
+                executeCount = executeCount
+            )
+        )
     }
 
     fun addYellowLine(
@@ -177,14 +188,18 @@ class BuildLogPrinter(
         jobId: String? = null,
         executeCount: Int?
     ) {
-        logMQEventDispatcher.dispatch(LogStatusEvent(
-            buildId = buildId,
-            finished = finished,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId ?: "",
-            executeCount = executeCount
-        ))
+        try {
+            genLogPrintPrintResource().updateLogStatus(
+                buildId = buildId,
+                finished = finished,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId ?: "",
+                executeCount = executeCount
+            )
+        } catch (e: Exception) {
+            logger.error("[$buildId]|updateLogStatus error|finished=$finished", e)
+        }
     }
 
     fun stopLog(
@@ -204,24 +219,28 @@ class BuildLogPrinter(
         )
     }
 
-    private fun genLogEvent(
-        buildId: String,
+    private fun genLogMessage(
         message: String,
         tag: String,
         subTag: String? = null,
         jobId: String? = null,
         logType: LogType,
         executeCount: Int
-    ): LogEvent {
-        val logs = listOf(LogMessage(
-            message = message,
-            timestamp = System.currentTimeMillis(),
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId ?: "",
-            logType = logType,
-            executeCount = executeCount
-        ))
-        return LogEvent(buildId, logs)
+    ) = LogMessage(
+        message = message,
+        timestamp = System.currentTimeMillis(),
+        tag = tag,
+        subTag = subTag,
+        jobId = jobId ?: "",
+        logType = logType,
+        executeCount = executeCount
+    )
+
+    private fun genLogPrintPrintResource(): ServiceLogPrintResource {
+        return client.get(ServiceLogPrintResource::class)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildLogPrinter::class.java)
     }
 }
