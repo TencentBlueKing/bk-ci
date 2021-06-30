@@ -114,7 +114,7 @@ open class ScriptTask : ITask() {
             // 成功失败都写入环境变量
             addEnv(ScriptEnvUtils.getEnv(buildId, workspace))
             addEnv(ScriptEnvUtils.getContext(buildId, workspace))
-            addEnv(mapOf("steps.${buildTask.elementId}.os" to AgentEnv.getOS().name))
+            addEnv(mapOf("jobs.${buildVariables.containerId}.os" to AgentEnv.getOS().name))
             ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
 
             // 设置质量红线指标信息
