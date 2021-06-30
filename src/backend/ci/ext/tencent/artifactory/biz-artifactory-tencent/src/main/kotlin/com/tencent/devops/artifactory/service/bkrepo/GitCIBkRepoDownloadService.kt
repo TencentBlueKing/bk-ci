@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
-open class GitCIBkRepoDownloadService @Autowired constructor(
+class GitCIBkRepoDownloadService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val bkRepoService: BkRepoService,
     private val client: Client,
