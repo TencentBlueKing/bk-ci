@@ -1134,7 +1134,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             }
             builder.removeSuffix("|")
         } catch (e: Exception) {
-            println("load atom input[$paramKey] with error: ${e.message}")
+            logger.error("load atom input[$paramKey] with error: ${e.message}")
         }
     }
 }
