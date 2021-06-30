@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
+@Suppress("LongParameterList")
 @Service
 class IptRepoService @Autowired constructor(
     private val client: Client,
@@ -54,22 +55,23 @@ class IptRepoService @Autowired constructor(
     fun getCommitBuildArtifactorytInfo(
         projectId: String,
         pipelineId: String,
+        buildId: String,
         userId: String,
         commitId: String,
         filePath: String?
     ): IptBuildArtifactoryInfo {
-        logger.info("get commit build artifactory info: $projectId, $pipelineId, $userId, $commitId")
         checkPermission(projectId, pipelineId, userId)
 
-        val buildId = getBuildByCommitId(projectId, pipelineId, commitId)
+        val buildId2 = getBuildByCommitId(projectId, pipelineId, commitId)
             ?: throw NotFoundException("can not find build for commit")
 
         val searchFiles = if (filePath != null) listOf(filePath) else null
-        val searchProperty = SearchProps(searchFiles, mapOf("buildId" to buildId, "pipelineId" to pipelineId))
+        val searchProperty = SearchProps(searchFiles, mapOf("buildId" to buildId2, "pipelineId" to pipelineId))
         val fileList = client.get(ServiceIptResource::class)
             .searchFileAndProperty(userId, projectId, searchProperty).data?.records ?: listOf()
 
-        return IptBuildArtifactoryInfo(buildId, fileList)
+        logger.info("getCommitBuildArtifactorytInfo: $projectId|$pipelineId|$buildId|$buildId2|$userId|$commitId")
+        return IptBuildArtifactoryInfo(buildId2, fileList)
     }
 
     private fun getBuildByCommitId(projectId: String, pipelineId: String, commitId: String): String? {
