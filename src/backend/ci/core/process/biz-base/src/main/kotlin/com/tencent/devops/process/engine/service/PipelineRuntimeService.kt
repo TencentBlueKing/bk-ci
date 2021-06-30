@@ -749,7 +749,7 @@ class PipelineRuntimeService @Autowired constructor(
         // 2019-12-16 产品 rerun 需求
         val pipelineId = pipelineInfo.pipelineId
         val buildId = params[PIPELINE_RETRY_BUILD_ID]?.toString() ?: buildIdGenerator.getNextId()
-
+        val projectName = projectCacheService.getProjectName(pipelineInfo.projectId) ?: ""
         val context = StartBuildContext.init(params)
 
         val updateExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
@@ -1100,7 +1100,6 @@ class PipelineRuntimeService @Autowired constructor(
         } else null
         try {
             lock?.lock()
-            val projectName = projectCacheService.getProjectName(pipelineInfo.projectId) ?: ""
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 // 保存参数 过滤掉不需要保存持久化的临时参数
