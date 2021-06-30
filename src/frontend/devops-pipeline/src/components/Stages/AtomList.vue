@@ -414,10 +414,10 @@
                         skip
                     })
                     if (res.id) {
-                        message = this.$t('subpage.retrySuc')
+                        message = this.$t(`subpage.${skip ? 'skipSuc' : 'retrySuc'}`)
                         theme = 'success'
                     } else {
-                        message = this.$t('subpage.retryFail')
+                        message = this.$t(`subpage.${skip ? 'skipFail' : 'retryFail'}`)
                         theme = 'error'
                     }
                 } catch (err) {

@@ -419,6 +419,8 @@
         "nameNullTips": " Name of pipeline must be filled",
         "retrySuc": "Retry successfully",
         "retryFail": "Retry failed",
+        "skipSuc": "Skip successfully",
+        "skipFail": "Skip failed",
         "rebuildSuc": "Rebuild successfully",
         "rebuildFail": "Rebuild failed",
         "stopSuc": "cancel successfully",
