@@ -186,7 +186,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     private fun addDevelopPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
-//        actions.add(PROJECT)
+        actions.add(PROJECT)
         actions.add(PIPELINEACTION)
         actions.add(CREDENTIALACTION)
         actions.add(CERTACTION)
@@ -200,7 +200,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     private fun addTestPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
-//        actions.add(PROJECT)
+        actions.add(PROJECT)
         actions.add(PIPELINEACTION)
         actions.add(CREDENTIALACTION)
         actions.add(REPERTORYACTION)
