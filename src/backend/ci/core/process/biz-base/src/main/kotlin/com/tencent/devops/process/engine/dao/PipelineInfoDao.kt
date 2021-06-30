@@ -557,6 +557,15 @@ class PipelineInfoDao {
         }
     }
 
+    fun getPieplineByAutoId(
+        dslContext: DSLContext,
+        ids: List<Int>
+    ): Result<TPipelineInfoRecord> {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectFrom(this).where(ID.`in`(ids)).fetch()
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineInfoDao::class.java)
     }
