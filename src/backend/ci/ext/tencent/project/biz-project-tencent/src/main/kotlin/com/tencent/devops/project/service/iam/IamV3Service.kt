@@ -46,6 +46,7 @@ import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
@@ -149,8 +150,8 @@ class IamV3Service @Autowired constructor(
 
     private fun createRole(userId: String, iamProjectId: Int, projectCode: String): Int {
         val defaultGroup = ManagerRoleGroup(
-            IamGroupUtils.buildIamGroup(projectCode, BkAuthGroup.MANAGER.value),
-            IamGroupUtils.buildDefaultDescription(projectCode, BkAuthGroup.MANAGER.name, userId),
+            IamGroupUtils.buildIamGroup(projectCode, DefaultGroupType.MANAGER.displayName),
+            IamGroupUtils.buildDefaultDescription(projectCode, DefaultGroupType.MANAGER.displayName, userId),
             true
         )
         val defaultGroups = mutableListOf<ManagerRoleGroup>()
@@ -170,11 +171,11 @@ class IamV3Service @Autowired constructor(
             userId = userId,
             projectCode = projectCode,
             groupInfo = GroupDTO(
-                groupCode = TxAuthGroup.MANAGER.value,
-                groupName = TxAuthGroup.MANAGER.value,
-                displayName = TxAuthGroup.MANAGER.displayName,
+                groupCode = DefaultGroupType.MANAGER.value,
+                groupName = DefaultGroupType.MANAGER.displayName,
+                displayName = DefaultGroupType.MANAGER.displayName,
                 relationId = roleId.toString(),
-                groupType = TxAuthGroup.MANAGER.value
+                groupType = DefaultGroupType.MANAGER.value
             )
         )
         return roleId
