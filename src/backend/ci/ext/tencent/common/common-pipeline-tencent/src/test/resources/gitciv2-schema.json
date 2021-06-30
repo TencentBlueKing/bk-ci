@@ -263,6 +263,9 @@
                 "type": "object"
               }
             ]
+          },
+          "parameters": {
+            "type": "object"
           }
         }
       }
@@ -507,104 +510,126 @@
     "jobs": {
       "type": "object",
       "additionalProperties":{
-        "type":"object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "runs-on": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "self-hosted": {
-                    "type": "boolean"
-                  },
-                  "pool-name": {
-                    "type": "string"
-                  },
-                  "container": {
+        "anyOf": [
+          {
+            "type":"object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "runs-on": {
+                "anyOf": [
+                  {
                     "type": "object",
                     "properties": {
-                      "image": {
+                      "self-hosted": {
+                        "type": "boolean"
+                      },
+                      "pool-name": {
                         "type": "string"
                       },
-                      "credentials": {
+                      "container": {
                         "type": "object",
                         "properties": {
-                          "username": {
+                          "image": {
                             "type": "string"
                           },
-                          "password": {
-                            "type": "string"
+                          "credentials": {
+                            "type": "object",
+                            "properties": {
+                              "username": {
+                                "type": "string"
+                              },
+                              "password": {
+                                "type": "string"
+                              }
+                            }
                           }
                         }
+                      },
+                      "agent-selector": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum":[
+                            "windows",
+                            "linux",
+                            "macos"
+                          ]
+                        }
                       }
-                    }
+                    },
+                    "additionalProperties": false
                   },
-                  "agent-selector": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum":[
-                        "windows",
-                        "linux",
-                        "macos"
-                      ]
-                    }
+                  {
+                    "type": "string"
                   }
-                },
-                "additionalProperties": false
+                ]
               },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "services": {
-            "type": "object"
-          },
-          "if": {
-            "type": "string"
-          },
-          "steps": {"$ref": "#/definitions/steps" },
-          "timeout-minutes": {
-            "type": "integer"
-          },
-          "env": {
-            "anyOf": [
-              {
+              "services": {
                 "type": "object"
               },
-              {
-                "type": "null"
+              "if": {
+                "type": "string"
+              },
+              "steps": {"$ref": "#/definitions/steps" },
+              "timeout-minutes": {
+                "type": "integer"
+              },
+              "env": {
+                "anyOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "continue-on-error": {
+                "type": "boolean"
+              },
+              "strategy": {
+                "type": "object"
+              },
+              "depend-on": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "template": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object"
+                  }
+                ]
+              },
+              "parameters": {
+                "type": "object"
               }
-            ]
+            },
+            "additionalProperties": false
           },
-          "continue-on-error": {
-            "type": "boolean"
-          },
-          "strategy": {
-            "type": "object"
-          },
-          "depend-on": {
+          {
             "type": "array",
             "items": {
-              "type": "string"
-            }
-          },
-          "template": {
-            "anyOf": [
-              {
-                "type": "string"
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "parameters": {
+                  "type": "object"
+                }
               },
-              {
-                "type": "object"
-              }
-            ]
+              "additionalProperties": false
+            }
           }
-        },
-        "additionalProperties": false
+        ]
       }
     },
     "steps": {

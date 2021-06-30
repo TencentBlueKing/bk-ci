@@ -1,18 +1,15 @@
-
 version: v2.0
 
 on:
   push: [ master ]
 
-stages:
-  - name: stage-1
-    jobs:
-      job_1:
-        name: job2
-        runs-on: docker
-        steps:
-          - template: steps.yml
-      template:
-        - name: jobs.yml
-
-  - template: stages.yml
+jobs:
+  job_1:
+    name: job2
+    runs-on: docker
+    steps:
+      - template: steps.yml
+  template:
+    - name: jobs.yml
+      parameters:
+        username: lilei
