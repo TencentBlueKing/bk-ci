@@ -113,7 +113,7 @@ class AuthGroupService @Autowired constructor(
         val groupEntity = groupDao.getGroupByRelationId(dslContext, groupId)
             ?: throw ParamBlankException("group $groupId not exist")
 
-        if (DefaultGroupType.contains(groupEntity.groupType)) {
+        if (DefaultGroupType.contains(groupEntity.groupCode)) {
             throw ParamBlankException(AuthMessageCode.DEFAULT_GROUP_UPDATE_NAME_ERROR)
         }
 

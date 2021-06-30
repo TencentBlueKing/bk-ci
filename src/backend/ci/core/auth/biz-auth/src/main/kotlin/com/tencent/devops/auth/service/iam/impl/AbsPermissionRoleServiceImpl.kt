@@ -18,15 +18,15 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
         projectCode: String,
         groupInfo: ProjectRoleDTO
     ): Int {
-        var groupType= ""
+        var groupType = groupInfo.defaultGroup
         var groupName = ""
         var displayName = ""
         if (!DefaultGroupType.contains(groupInfo.code)) {
-            groupType = CUSTOM_GROUP.toString()
+            groupType = false
             groupName = groupInfo.name ?: ""
             displayName = groupInfo.displayName ?: groupInfo.name
         } else {
-            groupType = groupInfo.type
+            groupType = true
             groupName = groupInfo.name
             displayName = DefaultGroupType.get(groupInfo.code).displayName
         }
@@ -98,6 +98,5 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(AbsPermissionRoleServiceImpl::class.java)
-        const val CUSTOM_GROUP = 99
     }
 }

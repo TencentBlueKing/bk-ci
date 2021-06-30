@@ -43,8 +43,6 @@ data class ProjectRoleDTO(
     val displayName: String?,
     @ApiModelProperty("用户组描述")
     val description: String?,
-    @ApiModelProperty("用户组类型,默认分组对应BkAuthGroup 枚举, 自定义分组可以为“”")
-    val type: String,
     @ApiModelProperty("是否为默认分组")
     val defaultGroup: Boolean? = true,
     @ApiModelProperty("项目名称")
