@@ -60,12 +60,12 @@ class BkIamPermissionRoleExtService @Autowired constructor(
         super.groupCreateExt(roleId, userId, projectId, projectCode, groupInfo)
     }
 
-    override fun renameRoleExt(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO) {
-        super.renameRoleExt(userId, projectId, roleId, groupInfo)
+    override fun renameRoleExt(userId: String, projectId: Int, realtionRoleId: Int, groupInfo: ProjectRoleDTO) {
+        super.renameRoleExt(userId, projectId, realtionRoleId, groupInfo)
     }
 
-    override fun deleteRoleExt(userId: String, projectId: Int, roleId: Int) {
-        super.deleteRoleExt(userId, projectId, roleId)
+    override fun deleteRoleExt(userId: String, projectId: Int, realtionRoleId: Int) {
+        super.deleteRoleExt(userId, projectId, realtionRoleId)
     }
 
     override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {

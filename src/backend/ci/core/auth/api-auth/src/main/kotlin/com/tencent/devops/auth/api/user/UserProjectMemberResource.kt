@@ -84,6 +84,9 @@ interface UserProjectMemberResource {
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
+        @ApiParam(name = "用户", required = true)
+        @QueryParam("userId")
+        userId: String?,
         @ApiParam(name = "页数", required = true)
         @QueryParam("path")
         page: Int,
@@ -98,7 +101,13 @@ interface UserProjectMemberResource {
     fun getProjectAllMember(
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int
+        projectId: Int,
+        @ApiParam(name = "页数", required = true)
+        @QueryParam("path")
+        page: Int,
+        @ApiParam(name = "页面大小", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
     ): Result<ProjectMembersVO?>
 
     @DELETE

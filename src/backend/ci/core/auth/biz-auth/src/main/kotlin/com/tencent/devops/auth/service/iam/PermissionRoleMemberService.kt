@@ -54,7 +54,7 @@ interface PermissionRoleMemberService {
 
     fun getRoleMember(projectId: Int, roleId: Int, page: Int, pageSize: Int): ManagerGroupMemberVo
 
-    fun getProjectAllMember(projectId: Int): ProjectMembersVO?
+    fun getProjectAllMember(projectId: Int, page: Int, pageSize: Int): ProjectMembersVO?
 
     fun getUserGroups(projectId: Int, userId: String): List<ManagerRoleGroupInfo>?
 }

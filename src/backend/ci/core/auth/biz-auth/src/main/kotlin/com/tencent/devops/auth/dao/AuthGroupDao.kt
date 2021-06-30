@@ -32,7 +32,6 @@ import com.tencent.devops.model.auth.tables.TAuthGroupInfo
 import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -168,21 +167,27 @@ class AuthGroupDao {
         }
     }
 
-    fun updateRelationId(dslContext: DSLContext, id: Int, relationId: String): Int {
+    fun updateRelationId(dslContext: DSLContext, roleId: Int, relationId: String): Int {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
-            return dslContext.update(this).set(RELATION_ID, relationId).where(ID.eq(id)).execute()
+            return dslContext.update(this).set(RELATION_ID, relationId).where(ID.eq(roleId)).execute()
         }
     }
 
-    fun softDelete(dslContext: DSLContext, id: Int) {
+    fun getRelationId(dslContext: DSLContext, roleId: Int): TAuthGroupInfoRecord? {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
-            dslContext.update(this).set(IS_DELETE, true).where(ID.eq(id)).execute()
+            return dslContext.selectFrom(this).where(ID.eq(roleId)).fetchAny()
         }
     }
 
-    fun deleteRole(dslContext: DSLContext, id: Int) {
+    fun softDelete(dslContext: DSLContext, roleId: Int) {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
-            dslContext.delete(this).where(ID.eq(id)).execute()
+            dslContext.update(this).set(IS_DELETE, true).where(ID.eq(roleId)).execute()
+        }
+    }
+
+    fun deleteRole(dslContext: DSLContext, roleId: Int) {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            dslContext.delete(this).where(ID.eq(roleId)).execute()
         }
     }
 

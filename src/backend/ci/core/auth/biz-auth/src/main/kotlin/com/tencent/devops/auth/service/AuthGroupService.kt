@@ -138,6 +138,11 @@ class AuthGroupService @Autowired constructor(
         return groupDao.updateRelationId(dslContext, id, relationId)
     }
 
+    fun getRelationId(roleId: Int): String? {
+        val groupInfo = groupDao.getRelationId(dslContext, roleId) ?: return null
+        return groupInfo.relationId!!
+    }
+
     fun deleteGroup(id: Int, softDelete: Boolean? = true) {
         if (softDelete!!) {
             groupDao.softDelete(dslContext, id)

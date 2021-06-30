@@ -58,19 +58,29 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
         return roleId
     }
 
-    override fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO) {
+    override fun renamePermissionRole(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        groupInfo: ProjectRoleDTO
+    ) {
         groupService.updateGroupName(userId, roleId, groupInfo)
+        val iamId = groupService.getRelationId(roleId) ?: return
+        // 若没有关联id, 无需修改关联系统信息
         renameRoleExt(
             userId = userId,
             projectId = projectId,
-            roleId = roleId,
+            roleId = iamId!!.toInt(),
             groupInfo = groupInfo
         )
     }
 
     override fun deletePermissionRole(userId: String, projectId: Int, roleId: Int) {
-        // 优先删除扩展系统内的数据,最后再删本地数据
-        deleteRoleExt(userId, projectId, roleId)
+        val iamId = groupService.getRelationId(roleId)
+        if (iamId != null) {
+            // 优先删除扩展系统内的数据,最后再删本地数据
+            deleteRoleExt(userId, projectId, iamId.toInt())
+        }
         groupService.deleteGroup(roleId)
     }
 
