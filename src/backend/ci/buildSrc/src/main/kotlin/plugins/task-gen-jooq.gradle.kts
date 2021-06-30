@@ -30,10 +30,12 @@ plugins {
     id("nu.studer.jooq")
 }
 
-val jooqGenerator by project.configurations
+val jooqGenerator by configurations
+val api by configurations
 
 dependencies {
     jooqGenerator("mysql:mysql-connector-java:8.0.22")
+    api("org.jooq:jooq")
 }
 
 val moduleNames = when (val moduleName = name.split("-")[1]) {

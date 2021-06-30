@@ -31,6 +31,7 @@ import org.springframework.data.redis.core.Cursor
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.ScanOptions
+import java.lang.NullPointerException
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
@@ -84,7 +85,7 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
     }
 
     fun isMember(key: String, item: String): Boolean {
-        return redisTemplate.opsForSet().isMember(key, item)
+        return redisTemplate.opsForSet().isMember(key, item) ?: false
     }
 
     fun getSetMembers(key: String): Set<String>? {
@@ -150,11 +151,11 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
     }
 
     fun zremove(key: String, values: String): Long {
-        return redisTemplate.opsForZSet().remove(key, values)
+        return redisTemplate.opsForZSet().remove(key, values) ?: 0
     }
 
     fun zsize(key: String, min: Double, max: Double): Long {
-        return redisTemplate.opsForZSet().count(key, min, max)
+        return redisTemplate.opsForZSet().count(key, min, max) ?: 0
     }
 
     fun zremoveRangeByScore(key: String, min: Double, max: Double): Long? {
@@ -170,7 +171,7 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
     }
 
     fun <T> execute(action: RedisCallback<T>): T {
-        return redisTemplate.execute(action)
+        return redisTemplate.execute(action) ?: throw NullPointerException()
     }
 
     fun getRedisName(): String? {

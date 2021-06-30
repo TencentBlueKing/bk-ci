@@ -33,6 +33,7 @@ version = ""
 
 plugins {
     kotlin("jvm")
+    id("org.springframework.boot")
 }
 
 tasks {
@@ -61,18 +62,6 @@ tasks {
         }
         dependsOn("build")
     }
-
-    register<Copy>("copyToRelease") {
-        from("build/libs") {
-            include("**/*.jar")
-        }
-        into("${rootDir}/release")
-        outputs.upToDateWhen { false }
-        dependsOn("bootJar")
-        dependsOn("test")
-    }
-
-    getByName("build").dependsOn("copyToRelease")
 }
 
 configurations.forEach {

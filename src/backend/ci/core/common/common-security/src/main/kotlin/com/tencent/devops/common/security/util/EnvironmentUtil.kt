@@ -40,7 +40,7 @@ class EnvironmentUtil : ApplicationContextAware {
      * 实现ApplicationContextAware接口的回调方法，设置上下文环境
      */
     @Throws(BeansException::class)
-    override fun setApplicationContext(applicationContext: ApplicationContext?) {
+    override fun setApplicationContext(applicationContext: ApplicationContext) {
         EnvironmentUtil.applicationContext = applicationContext
     }
 

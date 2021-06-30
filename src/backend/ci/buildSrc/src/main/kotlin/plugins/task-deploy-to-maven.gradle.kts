@@ -29,6 +29,8 @@ import java.net.URI
 plugins {
     `maven-publish`
     signing
+    maven
+    java
 }
 
 val sourceJar = tasks.register<Jar>("sourceJar") {
@@ -214,12 +216,6 @@ tasks.getByName("signMavenJavaPublication") {
     onlyIf {
         project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
     }
-}
-
-val api by project.configurations
-dependencies {
-    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    api("org.jetbrains.kotlin:kotlin-reflect")
 }
 
 tasks.getByName<Upload>("uploadArchives") {
