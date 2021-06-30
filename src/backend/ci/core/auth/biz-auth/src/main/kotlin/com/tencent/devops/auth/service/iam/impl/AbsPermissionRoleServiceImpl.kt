@@ -1,12 +1,11 @@
 package com.tencent.devops.auth.service.iam.impl
 
-import com.tencent.devops.auth.entity.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 

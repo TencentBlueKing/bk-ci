@@ -26,7 +26,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.entity
+package com.tencent.devops.common.auth.api.pojo
 
 /**
  * 项目角色组
