@@ -67,7 +67,7 @@ class ScriptYmlUtilsTest {
 
     @Test
     fun variableTest() {
-        val classPathResource = ClassPathResource("template.yml")
+        val classPathResource = ClassPathResource("Sample1.yml")
         val inputStream: InputStream = classPathResource.inputStream
         val isReader = InputStreamReader(inputStream)
 
