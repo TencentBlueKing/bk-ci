@@ -849,7 +849,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             listOf(atomCode)
         }
 
-        val buf = StringBuffer()
+        val buf = StringBuilder()
         atomCodeList.filterNotNull().forEach {
             val atom = marketAtomDao.getLatestAtomByCode(dslContext, it) ?: return@forEach
             val feature = marketAtomFeatureDao.getAtomFeature(dslContext, it) ?: return@forEach
@@ -877,7 +877,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             listOf(atomCode)
         }
 
-        val buf = StringBuffer()
+        val buf = StringBuilder()
         atomCodeList.filterNotNull().forEach {
             val atom = marketAtomDao.getLatestAtomByCode(dslContext, it) ?: return@forEach
             val feature = marketAtomFeatureDao.getAtomFeature(dslContext, it) ?: return@forEach
@@ -895,7 +895,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Suppress("UNCHECKED_CAST")
     private fun generateYaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
-        val sb = StringBuffer()
+        val sb = StringBuilder()
             if (defaultShowFlag != null && defaultShowFlag) {
                 sb.append("h2. ${atom.name}\r\n")
                     .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
@@ -988,7 +988,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Suppress("UNCHECKED_CAST")
     private fun generateV2Yaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
-        val sb = StringBuffer()
+        val sb = StringBuilder()
         if (defaultShowFlag != null && defaultShowFlag) {
             sb.append("h2. ${atom.name}\r\n")
                 .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
@@ -1118,7 +1118,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     ): Result<Boolean>
 
     private fun addParamComment(
-        builder: StringBuffer,
+        builder: StringBuilder,
         description: String,
         paramKey: String,
         required: Boolean,
