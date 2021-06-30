@@ -42,8 +42,9 @@ import org.springframework.beans.factory.annotation.Autowired
 class TxPermissionRoleMemberImpl @Autowired constructor(
     override val iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService,
-    private val client: Client
-) : AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService) {
+    private val client: Client,
+    val groupService: AuthGroupService
+) : AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService, groupService) {
     override fun createRoleMember(
         userId: String,
         projectId: Int,
@@ -54,7 +55,14 @@ class TxPermissionRoleMemberImpl @Autowired constructor(
         super.createRoleMember(userId, projectId, roleId, members, managerGroup)
     }
 
-    override fun deleteRoleMember(userId: String, projectId: Int, roleId: Int, id: String, type: ManagerScopesEnum, managerGroup: Boolean) {
+    override fun deleteRoleMember(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        id: String,
+        type: ManagerScopesEnum,
+        managerGroup: Boolean
+    ) {
         super.deleteRoleMember(userId, projectId, roleId, id, type, managerGroup)
     }
 
