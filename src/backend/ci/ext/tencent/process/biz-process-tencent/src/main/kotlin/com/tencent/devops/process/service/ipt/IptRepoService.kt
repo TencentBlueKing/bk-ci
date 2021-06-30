@@ -79,7 +79,7 @@ class IptRepoService @Autowired constructor(
     private fun getBuildByCommitId(projectId: String, pipelineId: String, commitId: String): String? {
         val commitData = client.get(ServiceGitCommitResource::class).queryCommitInfo(pipelineId, commitId).data
         return if (commitData != null) {
-            commitData.commit
+            commitData.buildId
         } else {
             logger.warn("BKSystemErrorMonitor|queryCommitInfo|NOT_FOUND|pipeline=$pipelineId|commit=$commitId")
             val headCommits = pipelineBuildVarDao.getVarsByProjectAndPipeline(
