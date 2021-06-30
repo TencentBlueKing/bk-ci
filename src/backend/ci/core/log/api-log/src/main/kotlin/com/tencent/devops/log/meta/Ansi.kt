@@ -25,11 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log
+package com.tencent.devops.log.meta
 
-import com.tencent.devops.common.log.meta.AnsiAttribute
-import com.tencent.devops.common.log.meta.AnsiColor
-import com.tencent.devops.common.log.meta.AnsiErase
 import java.util.ArrayList
 import java.util.concurrent.Callable
 
@@ -44,7 +41,7 @@ open class Ansi(private var builder: StringBuilder) {
             if (detector == null) {
                 throw IllegalArgumentException("detector is null")
             }
-            this.detector = detector
+            Companion.detector = detector
         }
 
         fun isDetected(): Boolean {

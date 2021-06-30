@@ -29,8 +29,8 @@ package com.tencent.devops.process.engine.control
 
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -38,13 +38,12 @@ import com.tencent.devops.process.engine.utils.TestTool
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 class DependOnControlTest {
 
     private val pipelineRuntimeService: PipelineRuntimeService = mock()
-    private val rabbit: RabbitTemplate = mock()
-    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(LogMQEventDispatcher(rabbit))
+    private val client: Client = mock()
+    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(client)
     private val dependOnControl = DependOnControl(
         pipelineRuntimeService = pipelineRuntimeService,
         buildLogPrinter = buildLogPrinter

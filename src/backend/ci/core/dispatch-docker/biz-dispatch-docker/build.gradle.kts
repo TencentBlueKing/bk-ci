@@ -33,9 +33,8 @@ dependencies {
     api(project(":core:common:common-web"))
     api(project(":core:common:common-client"))
     api(project(":core:common:common-redis"))
-    api(project(":core:common:common-log"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-auth:common-auth-api"))
-
     api(project(":core:dispatch:model-dispatch"))
+    api(project(":core:log:api-log"))
 }

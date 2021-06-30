@@ -25,7 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-web"))
+package com.tencent.devops.log.configuration
+
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+
+/**
+ * log模块启动参数配置
+ */
+@Component
+class LogServiceConfig {
+
+    /**
+     * 单行日志的上限截断
+     */
+    @Value("\${log.limit.lineMaxLength:#{null}}")
+    val lineMaxLength: Int? = null
+
+    /**
+     * 日志打印异步线程池大小
+     */
+    @Value("\${log.limit.corePoolSize:#{null}}")
+    val corePoolSize: Int? = null
+
+    /**
+     * 日志打印异步线程池上限
+     */
+    @Value("\${log.limit.maxPoolSize:#{null}}")
+    val maxPoolSize: Int? = null
+
+    /**
+     * 日志打印异步队列大小
+     */
+    @Value("\${log.limit.taskQueueSize:#{null}}")
+    val taskQueueSize: Int? = null
 }
