@@ -553,7 +553,7 @@ open class MarketAtomTask : ITask() {
                 }
 
                 env["steps.${buildTask.elementId ?: ""}.outputs.$key"] = env[key] ?: ""
-                env["steps.${buildTask.elementId ?: ""}.os"] = AgentEnv.getOS().name
+                env["jobs.${buildVariables.containerId}.os"] = AgentEnv.getOS().name
 
                 TaskUtil.removeTaskId()
                 if (outputTemplate.containsKey(varKey)) {

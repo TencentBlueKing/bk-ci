@@ -175,7 +175,7 @@ class PipelineContextService@Autowired constructor(
         buildVar.filterKeys { it.startsWith("steps.${e.id ?: ""}.outputs.") }.forEach { (t, u) ->
             outputMap["jobs.${c.jobId ?: c.id ?: ""}.$t"] = u
         }
-        buildVar.filterKeys { it.startsWith("steps.${e.id ?: ""}.os") }.forEach { (t, u) ->
+        buildVar.filterKeys { it.startsWith("jobs.${c.id ?: ""}.os") }.forEach { (t, u) ->
             outputMap["jobs.${c.jobId ?: c.id ?: ""}.os"] = u
         }
         return outputMap
