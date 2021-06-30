@@ -934,6 +934,7 @@ class TriggerBuildService @Autowired constructor(
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitMergeRequestEvent -> {
+                startParams[PIPELINE_GIT_REPO_URL] = gitBasicSetting.gitHttpUrl
                 startParams[PIPELINE_GIT_BASE_REPO_URL] = originEvent.object_attributes.source.http_url
                 startParams[PIPELINE_GIT_HEAD_REPO_URL] = originEvent.object_attributes.target.http_url
                 startParams[PIPELINE_GIT_MR_URL] = originEvent.object_attributes.url
@@ -949,6 +950,7 @@ class TriggerBuildService @Autowired constructor(
             }
             else -> {
                 startParams[PIPELINE_GIT_EVENT] = OBJECT_KIND_MANUAL
+                startParams[PIPELINE_GIT_REPO_URL] = gitBasicSetting.gitHttpUrl
                 GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
             }
         }
