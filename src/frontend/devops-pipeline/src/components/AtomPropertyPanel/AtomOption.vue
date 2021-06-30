@@ -4,10 +4,10 @@
             <span>{{ $t('editPage.atomOption') }}</span>
             <i class="devops-icon icon-angle-down" style="display:block"></i>
         </header>
-        <div slot="content" class="bk-form bk-form-vertical">
+        <div slot="content" class="bk-form bk-form-vertical atom-control-option">
             <template v-for="(obj, key) in optionModel">
-                <form-field :key="key" v-if="(!isHidden(obj, element) && container['@type'] !== 'trigger') || key === 'enable'" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                    <component :disabled="disabled" :is="obj.component" :container="container" :element="element" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateElementOption" :value="atomOption[key]" :key="atomOption[key]" v-bind="obj"></component>
+                <form-field :key="key" v-if="(!isHidden(obj, element) && container['@type'] !== 'trigger') || key === 'enable'" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)" :class="obj.extCls">
+                    <component :disabled="disabled" :is="obj.component" :container="container" :element="element" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateElementOption" :value="atomOption[key]" :key="atomOption[key]" v-bind="getBindObj(obj)"></component>
                 </form-field>
             </template>
         </div>
@@ -79,6 +79,10 @@
             ...mapActions('atom', [
                 'setPipelineEditing'
             ]),
+            getBindObj (obj) {
+                const { isHidden, extCls, ...rest } = obj
+                return rest
+            },
             handleUpdateElementOption (name, value) {
                 if (this.element.additionalOptions && this.element.additionalOptions[name] === undefined) {
                     Vue.set(this.element.additionalOptions, name, value)
@@ -112,3 +116,24 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .atom-control-option {
+        position: relative;
+        .atom-checkbox-list-item {
+            display: block;
+            margin: 12px 0;
+        }
+        .manual-skip-options,
+        .retry-count-input {
+            position: absolute;
+            margin-top: 0 !important;
+            left: 180px;
+            top:77px;
+            &.retry-count-input {
+                top: 118px;
+                width: 154px;
+            }
+        }
+    }
+</style>

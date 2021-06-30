@@ -59,7 +59,7 @@ const optionConfigMixin = {
                 },
                 manualSkip: {
                     component: 'enum-input',
-                    label: this.$t('storeMap.skipType'),
+                    // label: this.$t('storeMap.skipType'),
                     default: false,
                     list: [{
                         value: false,
@@ -68,6 +68,7 @@ const optionConfigMixin = {
                         value: true,
                         label: '手动跳过'
                     }],
+                    extCls: 'manual-skip-options',
                     isHidden: (element) => {
                         return !(element.additionalOptions && ((element.additionalOptions.failControl || []).includes('continueWhenFailed')))
                     }
@@ -79,9 +80,10 @@ const optionConfigMixin = {
                 retryCount: {
                     rule: { 'numeric': true, 'max_value': 5, 'min_value': 1 },
                     component: 'vuex-input',
-                    label: this.$t('storeMap.retryCount'),
+                    // label: this.$t('storeMap.retryCount'),
                     placeholder: this.$t('storeMap.retryCountPlaceholder'),
                     default: '1',
+                    extCls: 'retry-count-input',
                     isHidden: (element) => {
                         return !(element.additionalOptions && ((element.additionalOptions.failControl || []).includes('retryWhenFailed')))
                     }
