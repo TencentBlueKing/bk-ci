@@ -99,7 +99,11 @@ class UserProjectMemberResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getUserAllGroup(userId: String, projectId: Int): Result<List<ManagerRoleGroupInfo>?> {
-        return Result(permissionRoleMemberService.getUserGroups(projectId, userId))
+    override fun getUserAllGroup(
+        userId: String,
+        projectId: Int,
+        searchUserId: String
+    ): Result<List<ManagerRoleGroupInfo>?> {
+        return Result(permissionRoleMemberService.getUserGroups(projectId, searchUserId))
     }
 }

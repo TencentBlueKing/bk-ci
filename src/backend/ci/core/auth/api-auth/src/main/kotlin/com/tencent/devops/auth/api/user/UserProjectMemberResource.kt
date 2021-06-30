@@ -143,6 +143,8 @@ interface UserProjectMemberResource {
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int
+        projectId: Int,
+        @ApiParam(name = "待搜用户", required = true)
+        searchUserId: String
     ): Result<List<ManagerRoleGroupInfo>?>
 }
