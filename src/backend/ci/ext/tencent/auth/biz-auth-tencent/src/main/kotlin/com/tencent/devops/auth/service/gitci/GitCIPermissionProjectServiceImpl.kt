@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class GitCIPermissionProjectServiceImpl @Autowired constructor(
     val client: Client,
     val projectInfoService: GitCiProjectInfoService
-): PermissionProjectService {
+) : PermissionProjectService {
 
     // GitCI权限场景不会出现次调用, 故做默认实现
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
