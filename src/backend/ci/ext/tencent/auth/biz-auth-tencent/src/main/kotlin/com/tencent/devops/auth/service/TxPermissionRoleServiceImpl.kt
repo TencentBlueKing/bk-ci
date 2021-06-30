@@ -31,12 +31,12 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.dao.AuthGroupDao
-import com.tencent.devops.auth.entity.DefaultGroupType
 import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import org.springframework.beans.factory.annotation.Autowired
