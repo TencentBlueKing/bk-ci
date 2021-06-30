@@ -70,7 +70,8 @@ class IptRepoService @Autowired constructor(
         val fileList = client.get(ServiceIptResource::class)
             .searchFileAndProperty(userId, projectId, searchProperty).data?.records ?: listOf()
 
-        logger.info("getCommitBuildArtifactorytInfo: $projectId|$pipelineId|$buildId|$buildId2|$userId|$commitId")
+        logger.info("getCommitBuildArtifactorytInfo: $projectId|$pipelineId|$buildId|" +
+            "beq=${buildId == buildId2}|$userId|$commitId")
         return IptBuildArtifactoryInfo(buildId2, fileList)
     }
 
