@@ -161,6 +161,7 @@ class LogServiceESImpl constructor(
                 subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount,
+                logStorageMode = logStorageMode,
                 finish = finished
             )
         }

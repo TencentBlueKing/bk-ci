@@ -25,9 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.env
+package com.tencent.devops.artifactory.resources
 
-enum class LogMode {
-    UPLOAD,
-    LOCAL
+import com.tencent.devops.artifactory.api.user.UserLogFileResource
+import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+
+@RestResource
+class UserLogFileResourceImpl : UserLogFileResource {
+    override fun getPluginLogUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: String
+    ): Result<Url> {
+        TODO("not implemented")
+    }
 }

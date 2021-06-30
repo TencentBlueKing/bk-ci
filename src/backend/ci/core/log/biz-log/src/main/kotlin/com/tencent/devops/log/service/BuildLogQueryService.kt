@@ -30,15 +30,16 @@ package com.tencent.devops.log.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
-@Suppress("ALL")
 class BuildLogQueryService @Autowired constructor(
-    private val logService: LogService
+    private val logService: LogService,
+    private val logStatusService: LogStatusService
 ) {
 
     fun getInitLogs(
@@ -166,6 +167,22 @@ class BuildLogQueryService @Autowired constructor(
                 subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
+            )
+        )
+    }
+
+    fun getLogMode(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        tag: String,
+        executeCount: Int?
+    ): Result<QueryLogStatus> {
+        return Result(
+            logStatusService.getStorageMode(
+                buildId = buildId,
+                tag = tag,
+                executeCount = executeCount ?: 1
             )
         )
     }

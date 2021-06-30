@@ -180,7 +180,24 @@ class BuildLogPrinter(
         executeCount = executeCount
     )
 
-    fun updateLogStatus(
+    fun stopLog(
+        buildId: String,
+        tag: String,
+        jobId: String?,
+        executeCount: Int? = null,
+        subTag: String? = null
+    ) {
+        updateLogStatus(
+            buildId = buildId,
+            finished = true,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+    }
+
+    private fun updateLogStatus(
         buildId: String,
         finished: Boolean,
         tag: String,
@@ -200,23 +217,6 @@ class BuildLogPrinter(
         } catch (e: Exception) {
             logger.error("[$buildId]|updateLogStatus error|finished=$finished", e)
         }
-    }
-
-    fun stopLog(
-        buildId: String,
-        tag: String,
-        jobId: String?,
-        executeCount: Int? = null,
-        subTag: String? = null
-    ) {
-        updateLogStatus(
-            buildId = buildId,
-            finished = true,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
     }
 
     private fun genLogMessage(

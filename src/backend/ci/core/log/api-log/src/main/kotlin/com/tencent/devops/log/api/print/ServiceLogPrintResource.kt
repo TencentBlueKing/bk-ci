@@ -29,6 +29,7 @@ package com.tencent.devops.log.api.print
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -116,6 +117,9 @@ interface ServiceLogPrintResource {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("插件的存储模式", required = false)
+        @QueryParam("logStorageMode")
+        logStorageMode: LogStorageMode? = LogStorageMode.UPLOAD
     ): Result<Boolean>
 }
