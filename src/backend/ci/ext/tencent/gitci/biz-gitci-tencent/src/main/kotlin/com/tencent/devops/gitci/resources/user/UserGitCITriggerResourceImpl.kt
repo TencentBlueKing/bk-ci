@@ -41,7 +41,6 @@ import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.pojo.V2TriggerBuildReq
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.service.GitCITriggerService
-import com.tencent.devops.gitci.service.trigger.RequestTrigger
 import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.common.CommonConst
