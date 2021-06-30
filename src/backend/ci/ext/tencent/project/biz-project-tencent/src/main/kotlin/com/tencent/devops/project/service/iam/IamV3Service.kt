@@ -175,7 +175,7 @@ class IamV3Service @Autowired constructor(
                 groupName = DefaultGroupType.MANAGER.displayName,
                 displayName = DefaultGroupType.MANAGER.displayName,
                 relationId = roleId.toString(),
-                groupType = DefaultGroupType.MANAGER.value
+                groupType = true
             )
         )
         return roleId
