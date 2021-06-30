@@ -54,6 +54,6 @@ class JsonParseExceptionMapper : ExceptionMapper<JsonParseException> {
             "JSON参数错误/Bad Parameters in json"
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(status.statusCode, message)).build()
+            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
     }
 }

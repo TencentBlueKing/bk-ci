@@ -52,6 +52,6 @@ enum class ProjectLanguage(val value: String) {
     companion object {
         fun fromValue(value: String) =
                 ProjectLanguage.values().associateBy(ProjectLanguage::value)[value]
-                        ?: throw RuntimeException("The project language($value) is not exist")
+                        ?: throw IllegalArgumentException("The project language($value) is not exist")
     }
 }

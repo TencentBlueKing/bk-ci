@@ -30,7 +30,7 @@ package com.tencent.devops.common.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ClientException
-import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import feign.Response
 import feign.codec.ErrorDecoder
@@ -54,10 +54,10 @@ class ClientErrorDecoder @Autowired constructor(val objectMapper: ObjectMapper) 
         } catch (ignore: IOException) {
             return ClientException("内部服务返回结果无法解析")
         }
-        return ErrorCodeException(
-            statusCode = response.status(),
-            errorCode = result.status.toString(),
-            defaultMessage = result.message
+        return RemoteServiceException(
+            httpStatus = response.status(),
+            errorCode = result.status,
+            errorMessage = result.message ?: ""
         )
     }
 }

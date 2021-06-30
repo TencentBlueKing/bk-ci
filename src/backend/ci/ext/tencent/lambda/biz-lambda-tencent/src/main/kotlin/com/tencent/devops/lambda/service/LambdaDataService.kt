@@ -470,7 +470,8 @@ class LambdaDataService @Autowired constructor(
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorInfoList = null
+                errorInfoList = null,
+                executeTime = t.executeTime ?: 0
             )
         }
     }

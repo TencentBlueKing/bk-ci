@@ -28,9 +28,9 @@
 package com.tencent.devops.process.service.code
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,7 +49,11 @@ class TencentGitWebhookUnlockDispatcherImpl @Autowired constructor(
     override fun dispatchUnlockHookLockEvent(matcher: ScmWebhookMatcher) {
         val manualUnlock = (matcher.getEnv()[BK_REPO_GIT_MANUAL_UNLOCK] as Boolean?) ?: false
         val canDispatch = canDispatch(matcher)
-        logger.info("dispatch unlock hooklock event, repoName:${matcher.getRepoName()}, mrId:${matcher.getMergeRequestId()}, manualUnlock:$manualUnlock, canDispatch:$canDispatch")
+        logger.info(
+            "dispatch unlock hooklock event, " +
+                "repoName:${matcher.getRepoName()}, mrId:${matcher.getMergeRequestId()}, " +
+                "manualUnlock:$manualUnlock, canDispatch:$canDispatch"
+        )
         if (matcher.getMergeRequestId() != null && manualUnlock && canDispatch) {
             pipelineEventDispatcher.dispatch(
                 GitWebhookUnlockEvent(

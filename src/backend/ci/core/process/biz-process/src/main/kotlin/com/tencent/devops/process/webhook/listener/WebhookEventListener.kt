@@ -30,6 +30,7 @@ package com.tencent.devops.process.webhook.listener
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogContext
 import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogService
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
@@ -42,6 +43,7 @@ import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Component
 
@@ -53,7 +55,15 @@ class WebhookEventListener constructor(
 ) {
 
     fun handleCommitEvent(event: ICodeWebhookEvent) {
-        logger.info("Receive WebhookEvent from MQ [${event.commitEventType}|${event.requestContent}]")
+        val traceId = MDC.get(TraceTag.BIZID)
+        if (traceId.isNullOrEmpty()) {
+            if (!event.traceId.isNullOrEmpty()) {
+                MDC.put(TraceTag.BIZID, event.traceId)
+            } else {
+                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            }
+        }
+        logger.info("Receive WebhookEvent from MQ [${event.commitEventType}|${event.requestContent}]|[${event.event}]")
         var result = false
         try {
             PipelineWebhookBuildLogContext.initTriggerLog(
@@ -62,17 +72,23 @@ class WebhookEventListener constructor(
             )
             when (event.commitEventType) {
                 CommitEventType.SVN -> pipelineBuildService.externalCodeSvnBuild(event.requestContent)
-                CommitEventType.GIT -> pipelineBuildService.externalCodeGitBuild(
-                    codeRepositoryType = CodeGitWebHookTriggerElement.classType,
-                    e = event.requestContent
-                )
+                CommitEventType.GIT -> {
+                    pipelineBuildService.externalCodeGitBuild(
+                        codeRepositoryType = CodeGitWebHookTriggerElement.classType,
+                        event = event.event,
+                        body = event.requestContent
+                    )
+                }
                 CommitEventType.GITLAB -> pipelineBuildService.externalGitlabBuild(
                     e = event.requestContent
                 )
-                CommitEventType.TGIT -> pipelineBuildService.externalCodeGitBuild(
-                    codeRepositoryType = CodeTGitWebHookTriggerElement.classType,
-                    e = event.requestContent
-                )
+                CommitEventType.TGIT -> {
+                    pipelineBuildService.externalCodeGitBuild(
+                        codeRepositoryType = CodeTGitWebHookTriggerElement.classType,
+                        event = event.event,
+                        body = event.requestContent
+                    )
+                }
             }
             result = true
         } catch (ignore: Throwable) {
@@ -83,6 +99,7 @@ class WebhookEventListener constructor(
             }
             saveWebhookTriggerLog(event.commitEventType.name)
             PipelineWebhookBuildLogContext.remove()
+            MDC.remove(TraceTag.BIZID)
         }
     }
 
@@ -94,25 +111,35 @@ class WebhookEventListener constructor(
                     rabbitTemplate,
                     when (event.commitEventType) {
                         CommitEventType.SVN -> SvnWebhookEvent(
-                            requestContent,
+                            requestContent = requestContent,
                             retryTime = retryTime - 1,
                             delayMills = DELAY_MILLS
                         )
-                        CommitEventType.GIT -> GitWebhookEvent(
-                            requestContent,
-                            retryTime = retryTime - 1,
-                            delayMills = DELAY_MILLS
-                        )
+                        CommitEventType.GIT -> {
+                            event as GitWebhookEvent
+                            GitWebhookEvent(
+                                requestContent = requestContent,
+                                retryTime = retryTime - 1,
+                                delayMills = DELAY_MILLS,
+                                event = event.event,
+                                secret = event.secret
+                            )
+                        }
                         CommitEventType.GITLAB -> GitlabWebhookEvent(
-                            requestContent,
+                            requestContent = requestContent,
                             retryTime = retryTime - 1,
                             delayMills = DELAY_MILLS
                         )
-                        CommitEventType.TGIT -> TGitWebhookEvent(
-                            requestContent,
-                            retryTime = retryTime - 1,
-                            delayMills = DELAY_MILLS
-                        )
+                        CommitEventType.TGIT -> {
+                            event as TGitWebhookEvent
+                            TGitWebhookEvent(
+                                requestContent = requestContent,
+                                retryTime = retryTime - 1,
+                                delayMills = DELAY_MILLS,
+                                event = event.event,
+                                secret = event.secret
+                            )
+                        }
                     }
 
                 )
@@ -121,6 +148,14 @@ class WebhookEventListener constructor(
     }
 
     fun handleGithubCommitEvent(event: GithubWebhookEvent) {
+        val traceId = MDC.get(TraceTag.BIZID)
+        if (traceId.isNullOrEmpty()) {
+            if (!event.traceId.isNullOrEmpty()) {
+                MDC.put(TraceTag.BIZID, event.traceId)
+            } else {
+                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            }
+        }
         logger.info("Receive Github from MQ [GITHUB|${event.githubWebhook.event}]")
         val thisGithubWebhook = event.githubWebhook
         var result = false
@@ -151,6 +186,7 @@ class WebhookEventListener constructor(
             }
             saveWebhookTriggerLog(CodeType.GITHUB.name)
             PipelineWebhookBuildLogContext.remove()
+            MDC.remove(TraceTag.BIZID)
         }
     }
 

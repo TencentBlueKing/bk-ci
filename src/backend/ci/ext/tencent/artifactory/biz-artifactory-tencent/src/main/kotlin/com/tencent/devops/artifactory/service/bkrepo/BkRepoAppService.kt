@@ -84,7 +84,7 @@ class BkRepoAppService @Autowired constructor(
                     normalizedPath
                 )
                 if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
+                    throw CustomException(Response.Status.BAD_REQUEST, "元数据(pipelineId)不存在，请通过共享下载文件")
                 }
                 val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
                 pipelineService.validatePermission(
@@ -141,7 +141,7 @@ class BkRepoAppService @Autowired constructor(
                     normalizedPath
                 )
                 if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
+                    throw CustomException(Response.Status.BAD_REQUEST, "元数据(pipelineId)不存在，请通过共享下载文件")
                 }
                 val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
                 pipelineService.validatePermission(

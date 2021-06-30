@@ -36,6 +36,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -50,7 +51,8 @@ class MQPipelineUpdateListener @Autowired constructor(
     private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     private val callBackControl: CallBackControl,
     private val agentPipelineRefService: AgentPipelineRefService,
-    pipelineEventDispatcher: PipelineEventDispatcher
+    pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineWebhookService: PipelineWebhookService
 ) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineUpdateEvent) {
@@ -70,7 +72,14 @@ class MQPipelineUpdateListener @Autowired constructor(
             }
             watcher.stop()
             watcher.start("updateAtomPipelineNum")
-            pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version ?: 1)
+            pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version)
+            watcher.stop()
+            watcher.start("addWebhook")
+            pipelineWebhookService.addWebhook(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                version = event.version
+            )
             watcher.stop()
         } finally {
             watcher.stop()
