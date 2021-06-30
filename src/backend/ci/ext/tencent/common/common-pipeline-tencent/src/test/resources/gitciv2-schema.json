@@ -253,340 +253,22 @@
           "fast-kill": {
             "type": "boolean"
           },
-          "jobs": {
-            "type": "object",
-            "additionalProperties":{
-              "type":"object",
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "runs-on": {
-                  "anyOf": [
-                    {
-                      "type": "object",
-                      "properties": {
-                        "self-hosted": {
-                          "type": "boolean"
-                        },
-                        "pool-name": {
-                          "type": "string"
-                        },
-                        "container": {
-                          "type": "object",
-                          "properties": {
-                            "image": {
-                              "type": "string"
-                            },
-                            "credentials": {
-                              "type": "object",
-                              "properties": {
-                                "username": {
-                                  "type": "string"
-                                },
-                                "password": {
-                                  "type": "string"
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "agent-selector": {
-                          "type": "array",
-                          "items": {
-                            "type": "string",
-                            "enum":[
-                              "windows",
-                              "linux",
-                              "macos"
-                            ]
-                          }
-                        }
-                      },
-                      "additionalProperties": false
-                    },
-                    {
-                      "type": "string"
-                    }
-                  ]
-                },
-                "services": {
-                  "type": "object"
-                },
-                "if": {
-                  "type": "string"
-                },
-                "steps": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "name": {
-                        "type": "string"
-                      },
-                      "id": {
-                        "type": "string"
-                      },
-                      "if": {
-                        "type": "string"
-                      },
-                      "uses": {
-                        "type": "string"
-                      },
-                      "with": {
-                        "type": "object"
-                      },
-                      "timeout-minutes": {
-                        "type": "integer"
-                      },
-                      "continue-on-error": {
-                        "type": "boolean"
-                      },
-                      "retry-times": {
-                        "type": "integer"
-                      },
-                      "env": {
-                        "oneOf": [
-                          {
-                            "type": "object"
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      },
-                      "run": {
-                        "type": "string"
-                      },
-                      "checkout": {
-                        "type": "string"
-                      }
-                    },
-                    "additionalProperties": false
-                  }
-                },
-                "timeout-minutes": {
-                  "type": "integer"
-                },
-                "env": {
-                  "anyOf": [
-                    {
-                      "type": "object"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "continue-on-error": {
-                  "type": "boolean"
-                },
-                "strategy": {
-                  "type": "object"
-                },
-                "depend-on": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
+          "jobs": { "$ref": "#/definitions/jobs" },
+          "template": {
+            "anyOf": [
+              {
+                "type": "string"
               },
-              "additionalProperties": false
-            }
+              {
+                "type": "object"
+              }
+            ]
           }
         }
       }
     },
-    "jobs": {
-      "type": "object",
-      "additionalProperties":{
-        "type":"object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "runs-on": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "self-hosted": {
-                    "type": "boolean"
-                  },
-                  "pool-name": {
-                    "type": "string"
-                  },
-                  "container": {
-                    "type": "object",
-                    "properties": {
-                      "image": {
-                        "type": "string"
-                      },
-                      "credentials": {
-                        "type": "object",
-                        "properties": {
-                          "username": {
-                            "type": "string"
-                          },
-                          "password": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "agent-selector": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum":[
-                        "windows",
-                        "linux",
-                        "macos"
-                      ]
-                    }
-                  }
-                },
-                "additionalProperties": false
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "services": {
-            "type": "object"
-          },
-          "if": {
-            "type": "string"
-          },
-          "steps": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "id": {
-                  "type": "string"
-                },
-                "if": {
-                  "type": "string"
-                },
-                "uses": {
-                  "type": "string"
-                },
-                "with": {
-                  "type": "object"
-                },
-                "timeout-minutes": {
-                  "type": "integer"
-                },
-                "continue-on-error": {
-                  "type": "boolean"
-                },
-                "retry-times": {
-                  "type": "integer"
-                },
-                "env": {
-                  "oneOf": [
-                    {
-                      "type": "object"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "run": {
-                  "type": "string"
-                },
-                "checkout": {
-                  "type": "string"
-                }
-              },
-              "additionalProperties": false
-            }
-          },
-          "timeout-minutes": {
-            "type": "integer"
-          },
-          "env": {
-            "anyOf": [
-              {
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "continue-on-error": {
-            "type": "boolean"
-          },
-          "strategy": {
-            "type": "object"
-          },
-          "depend-on": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "additionalProperties": false
-      }
-    },
-    "steps": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "if": {
-            "type": "string"
-          },
-          "uses": {
-            "type": "string"
-          },
-          "with": {
-            "type": "object"
-          },
-          "timeout-minutes": {
-            "type": "integer"
-          },
-          "continue-on-error": {
-            "type": "boolean"
-          },
-          "retry-times": {
-            "type": "integer"
-          },
-          "env": {
-            "oneOf": [
-              {
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "run": {
-            "type": "string"
-          },
-          "checkout": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      }
-    },
+    "jobs": { "$ref": "#/definitions/jobs" },
+    "steps": {"$ref": "#/definitions/steps" },
     "extends": {
       "type": "object",
       "properties": {
@@ -811,8 +493,181 @@
         },
         {
           "type": "object"
+        },
+        {
+          "type": "null"
         }
       ]
+    },
+    "parameters": {
+      "type": "object"
+    }
+  },
+  "definitions": {
+    "jobs": {
+      "type": "object",
+      "additionalProperties":{
+        "type":"object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "runs-on": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "self-hosted": {
+                    "type": "boolean"
+                  },
+                  "pool-name": {
+                    "type": "string"
+                  },
+                  "container": {
+                    "type": "object",
+                    "properties": {
+                      "image": {
+                        "type": "string"
+                      },
+                      "credentials": {
+                        "type": "object",
+                        "properties": {
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "agent-selector": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum":[
+                        "windows",
+                        "linux",
+                        "macos"
+                      ]
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "services": {
+            "type": "object"
+          },
+          "if": {
+            "type": "string"
+          },
+          "steps": {"$ref": "#/definitions/steps" },
+          "timeout-minutes": {
+            "type": "integer"
+          },
+          "env": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "continue-on-error": {
+            "type": "boolean"
+          },
+          "strategy": {
+            "type": "object"
+          },
+          "depend-on": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "if": {
+            "type": "string"
+          },
+          "uses": {
+            "type": "string"
+          },
+          "with": {
+            "type": "object"
+          },
+          "timeout-minutes": {
+            "type": "integer"
+          },
+          "continue-on-error": {
+            "type": "boolean"
+          },
+          "retry-times": {
+            "type": "integer"
+          },
+          "env": {
+            "oneOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "run": {
+            "type": "string"
+          },
+          "checkout": {
+            "type": "string"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              }
+            ]
+          },
+          "parameters": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
     }
   }
 }

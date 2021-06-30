@@ -67,7 +67,7 @@ class ScriptYmlUtilsTest {
 
     @Test
     fun variableTest() {
-        val classPathResource = ClassPathResource("Sample1.yml")
+        val classPathResource = ClassPathResource("template.yml")
         val inputStream: InputStream = classPathResource.inputStream
         val isReader = InputStreamReader(inputStream)
 
@@ -99,7 +99,6 @@ class ScriptYmlUtilsTest {
             throw CustomException(Response.Status.BAD_REQUEST, "${e.cause}")
         }
 
-        println(yamlJsonStr)
         val schema = getFileStr("gitciv2-schema.json")
         println(ScriptYmlUtils.validate(schema, yamlJsonStr))
     }
