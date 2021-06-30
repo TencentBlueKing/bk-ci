@@ -29,7 +29,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthGroupDao
-import com.tencent.devops.auth.entity.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.auth.entity.GroupCreateInfo
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
-import org.glassfish.jersey.server.ParamException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
