@@ -74,29 +74,36 @@ object WorkRunner {
 
             LoggerService.start()
 
-            Runner.run(object : WorkspaceInterface {
-                val workspace = buildInfo.workspace
-                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
-                    val replaceWorkspace = if (workspace.isNotBlank()) {
-                        ReplacementUtils.replace(workspace, object : ReplacementUtils.KeyReplacement {
-                            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                                return if (doubleCurlyBraces) {
-                                    variables[key] ?: "\${{$key}}"
-                                } else {
-                                    variables[key] ?: "\${$key}"
+            Runner.run(
+                object : WorkspaceInterface {
+                    val workspace = buildInfo.workspace
+                    override fun getWorkspaceAndLogDir(
+                        variables: Map<String, String>,
+                        pipelineId: String
+                    ): Pair<File, File> {
+                        val replaceWorkspace = if (workspace.isNotBlank()) {
+                            ReplacementUtils.replace(workspace, object : ReplacementUtils.KeyReplacement {
+                                override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+                                    return if (doubleCurlyBraces) {
+                                        variables[key] ?: "\${{$key}}"
+                                    } else {
+                                        variables[key] ?: "\${$key}"
+                                    }
                                 }
-                            }
-                        }, mapOf(WORKSPACE_CONTEXT to workspace))
-                    } else {
-                        workspace
+                            }, mapOf(WORKSPACE_CONTEXT to workspace))
+                        } else {
+                            workspace
+                        }
+                        val workspaceDir = WorkspaceUtils.getPipelineWorkspace(pipelineId, replaceWorkspace)
+                        if (!workspaceDir.exists()) {
+                            workspaceDir.mkdirs()
+                        }
+                        val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
+                        return Pair(workspaceDir, logPathDir)
                     }
-                    val dir = WorkspaceUtils.getPipelineWorkspace(pipelineId, replaceWorkspace)
-                    if (!dir.exists()) {
-                        dir.mkdirs()
-                    }
-                    return dir
-                }
-            }, false)
+                },
+                false
+            )
             exitProcess(0)
         } catch (e: PropertyNotExistException) {
             logger.warn("The property(${e.key}) is not exist")

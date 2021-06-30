@@ -39,7 +39,6 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -181,7 +180,7 @@ class ProjectIamV0Service @Autowired constructor(
             } catch (ope: OperationException) {
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
             } catch (e: Exception) {
-                ProjectLocalService.logger.warn("createUser2Project fail, userId[$it]", e)
+                logger.warn("createUser2Project fail, userId[$it]", e)
                 return false
             }
         }

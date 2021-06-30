@@ -25,30 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.config
+package com.tencent.devops.artifactory.resources.user
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.artifactory.api.user.UserLogFileResource
+import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.artifactory.service.LogFileService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 
-/**
- * 仓库配置
- */
-@Component
-class BkRepoConfig {
+@RestResource
+class UserTxLogFileResourceImpl(
+    private val logFileService: LogFileService
+) : UserLogFileResource {
 
-    // 蓝盾新仓库api接口地址
-    @Value("\${bkrepo.bkrepoApiUrl}")
-    val bkrepoApiUrl: String = ""
-
-    // 蓝盾新仓库执行包仓库名称
-    @Value("\${bkrepo.pkgRepoName}")
-    val bkrepoPkgRepoName: String = ""
-
-    // 蓝盾新仓库docker仓库名称
-    @Value("\${bkrepo.dockerRepoName}")
-    val bkrepoDockerRepoName: String = ""
-
-    // 蓝盾新仓库docker仓库名称
-    @Value("\${bkrepo.logRepoCredentialsKey:}")
-    lateinit var logRepoCredentialsKey: String
+    override fun getPluginLogUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: String
+    ): Result<Url> {
+        return Result(
+            logFileService.getPluginLogUrl(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                elementId,
+                executeCount
+            )
+        )
+    }
 }

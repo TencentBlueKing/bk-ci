@@ -25,30 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.config
+package com.tencent.devops.artifactory.service
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.artifactory.pojo.Url
 
-/**
- * 仓库配置
- */
-@Component
-class BkRepoConfig {
-
-    // 蓝盾新仓库api接口地址
-    @Value("\${bkrepo.bkrepoApiUrl}")
-    val bkrepoApiUrl: String = ""
-
-    // 蓝盾新仓库执行包仓库名称
-    @Value("\${bkrepo.pkgRepoName}")
-    val bkrepoPkgRepoName: String = ""
-
-    // 蓝盾新仓库docker仓库名称
-    @Value("\${bkrepo.dockerRepoName}")
-    val bkrepoDockerRepoName: String = ""
-
-    // 蓝盾新仓库docker仓库名称
-    @Value("\${bkrepo.logRepoCredentialsKey:}")
-    lateinit var logRepoCredentialsKey: String
+interface LogFileService {
+    fun getPluginLogUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: String
+    ): Url
 }

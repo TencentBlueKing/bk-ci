@@ -55,30 +55,41 @@ fun main(args: Array<String>) {
     when (buildType) {
         BuildType.DOCKER.name ->
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
+                override fun getWorkspaceAndLogDir(
+                    variables: Map<String, String>,
+                    pipelineId: String
+                ): Pair<File, File> {
                     val workspace = System.getProperty("devops_workspace")
 
-                    val dir = if (workspace.isNullOrBlank()) {
+                    val workspaceDir = if (workspace.isNullOrBlank()) {
                         File("/data/landun/workspace") // v1 内部版用的/data/landun/workspace 保持一致
                     } else {
                         File(workspace)
                     }
-                    dir.mkdirs()
-                    return dir
+                    workspaceDir.mkdirs()
+                    val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
+                    return Pair(workspaceDir, logPathDir)
                 }
             })
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
-                    val dir = WorkspaceUtils.getPipelineWorkspace(pipelineId = pipelineId, workspace = "")
-                    if (dir.exists()) {
-                        if (!dir.isDirectory) {
-                            throw RuntimeException("Work space directory conflict: ${dir.canonicalPath}")
+                override fun getWorkspaceAndLogDir(
+                    variables: Map<String, String>,
+                    pipelineId: String
+                ): Pair<File, File> {
+                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(
+                        pipelineId = pipelineId,
+                        workspace = ""
+                    )
+                    if (workspaceDir.exists()) {
+                        if (!workspaceDir.isDirectory) {
+                            throw RuntimeException("Work space directory conflict: ${workspaceDir.canonicalPath}")
                         }
                     } else {
-                        dir.mkdirs()
+                        workspaceDir.mkdirs()
                     }
-                    return dir
+                    val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
+                    return Pair(workspaceDir, logPathDir)
                 }
             })
         }
@@ -153,12 +164,17 @@ fun main(args: Array<String>) {
             }
 
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
+                override fun getWorkspaceAndLogDir(
+                    variables: Map<String, String>,
+                    pipelineId: String
+                ): Pair<File, File> {
                     val workspace = AgentEnv.getMacOSWorkspace()
                     System.out.println("MacOS workspace: $workspace")
-                    val dir = File(workspace)
-                    dir.mkdirs()
-                    return dir
+                    val workspaceDir = File(workspace)
+                    workspaceDir.mkdirs()
+                    val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
+                    logPathDir.mkdirs()
+                    return Pair(workspaceDir, logPathDir)
                 }
             })
         }
