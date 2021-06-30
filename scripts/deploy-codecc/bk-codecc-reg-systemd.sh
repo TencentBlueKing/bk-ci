@@ -74,7 +74,6 @@ EOF
 }
 
 gen_systemd_codecc_gateway (){
-  echo "codecc(gateway) is using ci(gateway), create virtual service here."
   systemd_unit_set "$sd_service" <<EOF
 [Unit]
 Description=Blueking CODECC - $proj
@@ -84,11 +83,20 @@ Wants=$sd_wants
 PartOf=$sd_codecc_target
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/bin/env systemctl reload bk-ci-gateway
-ExecStop=/bin/echo "$sd_service is not a real service, you should stop bk-ci-gateway manually."
-ExecReload=/usr/bin/env systemctl reload bk-ci-gateway
+Type=forking
+PIDFile=$BK_CODECC_HOME/$proj/run/nginx.pid
+PassEnvironment=PATH HOSTNAME
+Environment=CI_SYSTEMD=1
+EnvironmentFile=$sysconfig_dir/$svc_name
+WorkingDirectory=$BK_CODECC_HOME/$proj
+ExecStart=/bin/bash $BK_CODECC_HOME/scripts/deploy-codecc/bk-codecc-start.sh $proj
+ExecStartPre=/bin/bash $BK_CODECC_HOME/scripts/deploy-codecc/bk-codecc-start-pre.sh $proj
+ExecReload=/bin/kill -s HUP \$MAINPID
+ExecStop=/bin/kill -s QUIT \$MAINPID
+PrivateTmp=true
+Restart=always
+RestartSec=5
+LimitNOFILE=204800
 
 [Install]
 WantedBy=$sd_codecc_target

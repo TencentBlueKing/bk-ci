@@ -82,13 +82,12 @@ wait_cpu_free (){
 
 # assembly是除了dockerhost及agentless外的微服务组合.
 prestart_codecc_assembly (){
-  tip_dir_exist "../agent-package/" || return 3
+  true
 }
 
 # 校验网关关键配置.
 prestart_codecc_gateway (){
-  #echo "codecc-gateway will start bk-ci-gateway."
-  true  # nothing to check...
+  /usr/local/openresty/nginx/sbin/nginx -p "$PWD" -t
 }
 
 # 启动批次. 共分7批, 剩余的随机分批.

@@ -14,10 +14,9 @@ show_codecc_installconfig_example (){
   echo " 参考示例：（请修改IP1等为合适的IP）"
   # 列出全部微服务, 大概5个1行.
   cat <<EOF
-# 需要将codecc(gateway)部署到ci(gateway)
-IP1 ci(gateway),codecc(gateway)
 # 服务端(网关+微服务), 单节点要求最低配置4核8G. 后期可升级节点硬件配置或分散微服务到不同节点.
-IP2 $($cmd_collect_codecc_ms_name | awk -v RS="( |\n)+" '{name="codecc("$1")"; if(++n%5==1){ printf "\nIP1 "; comma=""}; printf comma name; comma=","}')
+# 需要将codecc(gateway)和ci(gateway)分开, 二者均为独占80端口.
+IP1 codecc(gateway)$($cmd_collect_codecc_ms_name | awk -v RS="( |\n)+" '{name="codecc("$1")"; if(++n%5==1){ printf "\nIP1 "; comma=""}; printf comma name; comma=","}')
 EOF
 }
 set -a
@@ -127,7 +126,9 @@ install_config_exist "${BK_CODECC_GATEWAY_IP:-}" \
   "codecc(gateway)" \
   "必须配置CODECC网关."
 
-# codecc(gateway)应和ci(gateway)在相同主机.
-install_config_affinity "${BK_CI_GATEWAY_IP:-},${BK_CODECC_GATEWAY_IP:-}" "ci(gateway),codecc(gateway)"
+# codecc(gateway)应和ci(gateway)在不同主机.
+install_config_conflict "${BK_CI_GATEWAY_IP:-},${BK_CODECC_GATEWAY_IP:-}" \
+  "ci(gateway) 和 codecc(gateway)" "需要独占80端口" \
+  "将codecc(gateway)移到其他节点"
 
 echo "检查 install.config 通过."

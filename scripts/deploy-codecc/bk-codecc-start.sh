@@ -54,7 +54,7 @@ tip_dir_exist (){
 
 # 启动网关.
 start_codecc__openresty (){
-  echo "bk-codecc-gateway is not a real service, you should run: systemctl start bk-ci-gateway"
+  $OPENRESTY_CMD -p "$PWD" -g "user $MS_USER;"
 }
 
 check_port_listen (){
@@ -153,14 +153,14 @@ emulate_systemd_prerequisites (){
   if [ -n "${BK_CODECC_HOME:-}" ]; then
     echo "BK_CODECC_HOME comes from env: $BK_CODECC_HOME."
   else
-    export BK_CODECC_HOME=${script_path%/*/*}
+    export BK_CODECC_HOME=${script_path%/*/*/*}
     echo "guess BK_CODECC_HOME=$BK_CODECC_HOME."
   fi
   cd "$BK_CODECC_HOME/$MS_NAME" || return 16
   load_systemd_env || return $?
   check_empty_var MS_USER || return 15  # env文件里必须定义MS_USER
   # gateway使用root启动nginx, 其worker为普通用户.
-  if [ "$USER" != "${MS_USER:-no-user}" ] && [ "$MS_NAME" != "gateway" ]; then
+  if [ "${USER:-}" != "${MS_USER:-no-user}" ] && [ "$MS_NAME" != "gateway" ]; then
     echo "please run this script using user: ${MS_USER:-}. example command:"
     echo "sudo -u $MS_USER $0 $MS_NAME ..."
     return 5

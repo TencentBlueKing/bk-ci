@@ -109,7 +109,8 @@ install_codecc__ms_common (){
 # 仅需复制frontend目录.
 install_codecc_gateway (){
   local proj=$1
-  # install_openresty || return $?
+  install_openresty || return $?
+  rsync -ra "$BK_CODECC_SRC_DIR/gateway" "$BK_CODECC_HOME"  # gateway无需--del
   rsync -ra --del "$BK_CODECC_SRC_DIR/frontend" "$BK_CODECC_HOME"  # frontend不必verbose.
   if [ -d "$BK_CODECC_SRC_DIR/docs" ]; then
     rsync -ra --del "$BK_CODECC_SRC_DIR/docs" "$BK_CODECC_HOME" || return $?  # 可选docs

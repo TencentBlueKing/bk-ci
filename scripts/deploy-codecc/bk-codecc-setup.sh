@@ -167,6 +167,12 @@ setup_codecc__ms_start_env (){
   env_line_set "$start_env" "API_PORT" "${!port_key:-}"
   #env_line_set "$start_env" ""
 }
+setup_codecc__gw_start_env (){
+  #check_empty_var BK_CI_HOME || return 15
+  local start_env="$MS_DIR/start.env"
+  env_line_set "$start_env" "MS_USER" "$MS_USER"
+  chown "$MS_USER:$MS_USER" "$start_env" || return 5
+}
 
 # assembly.
 setup_codecc_assembly (){
@@ -177,13 +183,38 @@ setup_codecc_assembly (){
 # CodeCC网关即为CI网关, 这里创建符号链接指向ci网关.
 setup_codecc_gateway (){
   check_empty_var BK_CI_HOME BK_CODECC_DATA_DIR BK_CODECC_HOME BK_CODECC_LOGS_DIR || return 15
-  # 判断ci(gateway)路径, 创建符号链接.
-  local ci_gateway_dir="$BK_CI_HOME/gateway" codecc_gateway_dir="$BK_CODECC_HOME/gateway"
-  if [ -d "$ci_gateway_dir" ]; then
-    update_link_to_target "$codecc_gateway_dir" "$ci_gateway_dir"
+  setup_codecc__gw_start_env || return $?
+  # 判断nginx.conf路径
+  local gateway_dir="$BK_CODECC_HOME/gateway" nginx_conf='' nginx_conf_dir=''
+  if [ -f "$gateway_dir/core/nginx.conf" ]; then
+    nginx_conf="$gateway_dir/core/nginx.conf"
+    nginx_conf_dir="$gateway_dir/core"
   else
-    echo >&2 "ERROR: cant find ci-gateway dir."
+    echo >&2 "ERROR: unsupported ci-gateway dir."
     return 4
+  fi
+  # 更新conf目录的指向.
+  update_link_to_target "$gateway_dir/conf" "$nginx_conf_dir" || return 3
+  # 创建并更新logs目录.
+  mkdir -p "$BK_CODECC_LOGS_DIR/nginx" || return 2
+  chown -R "$MS_USER:$MS_USER" "$BK_CODECC_LOGS_DIR/nginx" || return 5
+  update_link_to_target "$gateway_dir/logs" "$BK_CODECC_LOGS_DIR/nginx" || return 3
+  update_link_to_target "$gateway_dir/run" "$BK_CODECC_LOGS_DIR/nginx" || return 3
+  # 在数据目录创建运行时的存储目录, 并更新链接.
+  local gateway_data_dir="$BK_CODECC_DATA_DIR/gateway" temp_dir=
+  mkdir -p "$gateway_data_dir" || return 1
+  for temp_dir in client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp files; do
+    mkdir -p "$gateway_data_dir/$temp_dir" || return 2
+    chown "$MS_USER:$MS_USER" "$gateway_data_dir/$temp_dir" || return 5
+    update_link_to_target "$gateway_dir/$temp_dir" "$gateway_data_dir/$temp_dir" || return 3
+  done
+  # 在全部 codecc-gateway 节点上注册主入口域名: bk-codecc.service.consul, 用于在集群内提供web服务.
+  if [ -x $CTRL_DIR/bin/reg_consul_svc ]; then
+    check_empty_var LAN_IP || return 15
+    $CTRL_DIR/bin/reg_consul_svc -n bk-codecc -p ${BK_CODECC_HTTP_PORT:-80} -a "$LAN_IP" -D > /etc/consul.d/service/bk-ci.json 2>/dev/null || return 11
+    consul reload
+  else
+    echo "$CTRL_DIR/bin/reg_consul_svc is not executable, skip register domain: bk-ci.service.consul."
   fi
   # 渲染gateway配置及frontend页面.
   render_codecc "$MS_NAME" || return $?
