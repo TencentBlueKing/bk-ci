@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
+import com.tencent.devops.repository.api.ServiceGitCommitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,16 +77,22 @@ class IptRepoService @Autowired constructor(
     }
 
     private fun getBuildByCommitId(projectId: String, pipelineId: String, commitId: String): String? {
-        val headCommits = pipelineBuildVarDao.getVarsByProjectAndPipeline(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            key = "DEVOPS_GIT_REPO_HEAD_COMMIT_ID",
-            value = commitId,
-            offset = 0,
-            limit = 1
-        )
-        return headCommits.firstOrNull()?.buildId
+        val commitData = client.get(ServiceGitCommitResource::class).queryCommitInfo(pipelineId, commitId).data
+        return if (commitData != null) {
+            commitData.commit
+        } else {
+            logger.warn("BKSystemErrorMonitor|queryCommitInfo|NOT_FOUND|pipeline=$pipelineId|commit=$commitId")
+            val headCommits = pipelineBuildVarDao.getVarsByProjectAndPipeline(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                key = "DEVOPS_GIT_REPO_HEAD_COMMIT_ID",
+                value = commitId,
+                offset = 0,
+                limit = 1
+            )
+            headCommits.firstOrNull()?.buildId
+        }
     }
 
     private fun checkPermission(projectId: String, pipelineId: String, userId: String) {

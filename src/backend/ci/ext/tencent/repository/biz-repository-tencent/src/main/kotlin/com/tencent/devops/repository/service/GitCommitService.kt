@@ -25,20 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository
+package com.tencent.devops.repository.service
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.client.Client
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.repository.dao.ExtGitCommitDao
+import com.tencent.devops.repository.pojo.commit.CommitData
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class RepositoryConfiguration {
-    @Bean
-    fun managerService(client: Client) = ManagerService(client)
+@Service
+class GitCommitService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val extGitCommitDao: ExtGitCommitDao
+) {
+
+    fun getCommit(pipelineId: String, commitId: String): CommitData? {
+        val record = extGitCommitDao.getBuildCommit(dslContext, pipelineId, commitId = commitId) ?: return null
+        return CommitData(
+            type = record.type,
+            pipelineId = record.pipelineId,
+            buildId = record.buildId,
+            comment = record.comment,
+            committer = record.committer,
+            commit = record.commit,
+            commitTime = record.commitTime.timestampmilli(),
+            repoId = record.repoId.toString(),
+            repoName = record.repoName,
+            elementId = record.elementId
+        )
+    }
 }
