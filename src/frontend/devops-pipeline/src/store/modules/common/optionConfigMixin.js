@@ -210,7 +210,7 @@ const optionConfigMixin = {
             atomValues.failControl = [
                 ...(atomValues['continueWhenFailed'] ? ['continueWhenFailed'] : []),
                 ...(atomValues['retryWhenFailed'] ? ['retryWhenFailed'] : []),
-                ...(atomValues['retryWhenFailed'] && atomValues['manualRetry'] ? ['MANUAL_RETRY'] : [])
+                ...(atomValues['manualRetry'] ? ['MANUAL_RETRY'] : [])
             ]
 
             console.log(atomValues)
