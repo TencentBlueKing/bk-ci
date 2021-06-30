@@ -1487,8 +1487,11 @@ class PipelineRuntimeService @Autowired constructor(
         container.systemElapsed = null
         container.executeCount = target.executeCount
         if (atomElement != null) { // 将原子状态重置
-            if (initialStatus == null) {
+            if (initialStatus == null) { // 未指定状态的，将重新运行
                 atomElement.status = null
+            } else { // 指定了状态了，表示不会再运行，需要将重试与跳过关闭，因为已经跳过
+                atomElement.additionalOptions =
+                    atomElement.additionalOptions?.copy(manualSkip = false, manualRetry = false)
             }
             atomElement.executeCount = target.executeCount
             atomElement.elapsed = null
