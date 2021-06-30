@@ -49,7 +49,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
                 throw OauthForbiddenException("oauth is empty")
             }
         }
-        logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode gitProjectId: $gitProjectId")
+        logger.info("GitCI validate user:$userId projectId: $projectCode gitProjectId: $gitProjectId")
 
         // 判断是否为开源项目
         if (projectInfoService.checkProjectPublic(gitProjectId)) {
@@ -82,7 +82,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
-        return validateUserResourcePermission(userId, action, projectCode, resourceCode)
+        return validateUserResourcePermission(userId, action, projectCode, resourceType)
     }
 
     // GitCI权限场景不会出现次调用, 故做默认实现
