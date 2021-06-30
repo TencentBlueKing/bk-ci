@@ -15,4 +15,8 @@ class OpGitCIBasicSettingResourceImpl @Autowired constructor(
     override fun save(userId: String, gitCIBasicSetting: GitCIBasicSetting): Result<Boolean> {
         return Result(gitCIBasicSettingService.saveGitCIConf(userId, gitCIBasicSetting))
     }
+
+    override fun fixProjectInfo(): Result<Int> {
+        return Result(gitCIBasicSettingService.fixProjectInfo())
+    }
 }

@@ -32,6 +32,7 @@ import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.gitci.v2.exception.GitCINoEnableException
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -56,9 +57,22 @@ class GitCIBasicSettingService @Autowired constructor(
         enableCi: Boolean? = null,
         enableUserId: String? = null
     ): Boolean {
-        if (gitCIBasicSettingDao.getSetting(dslContext, gitProjectId) == null) {
+        val setting = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
+        if (setting == null) {
             logger.info("git repo not exists.")
             return false
+        }
+        if (!enableUserId.isNullOrBlank()) {
+            val projectResult =
+                client.get(ServiceTxUserResource::class).get(enableUserId)
+            if (projectResult.isNotOk()) {
+                logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
+            } else {
+                val userInfo = projectResult.data!!
+                setting.creatorBgName = userInfo.bgName
+                setting.creatorDeptName = userInfo.deptName
+                setting.creatorCenterName = userInfo.centerName
+            }
         }
         gitCIBasicSettingDao.updateProjectSetting(
             dslContext = dslContext,
@@ -67,7 +81,10 @@ class GitCIBasicSettingService @Autowired constructor(
             buildPushedPullRequest = buildPushedPullRequest,
             enableMrBlock = enableMrBlock,
             enableCi = enableCi,
-            enableUserId = enableUserId
+            enableUserId = enableUserId,
+            creatorBgName = setting.creatorBgName,
+            creatorDeptName = setting.creatorDeptName,
+            creatorCenterName = setting.creatorCenterName
         )
         return true
     }
@@ -104,25 +121,72 @@ class GitCIBasicSettingService @Autowired constructor(
                 enableMrBlock = true,
                 projectCode = projectId,
                 createTime = null,
-                updateTime = null
+                updateTime = null,
+                creatorCenterName = null,
+                creatorDeptName = null,
+                creatorBgName = null
             )
         )
     }
 
-    fun saveGitCIConf(userId: String, gitCIBasicSetting: GitCIBasicSetting): Boolean {
-        logger.info("save git ci conf, repositoryConf: $gitCIBasicSetting")
-        val gitRepoConf = gitCIBasicSettingDao.getSetting(dslContext, gitCIBasicSetting.gitProjectId)
-        val projectCode = if (gitRepoConf?.projectCode == null) {
+    fun saveGitCIConf(userId: String, setting: GitCIBasicSetting): Boolean {
+        logger.info("save git ci conf, repositoryConf: $setting")
+        val gitRepoConf = gitCIBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
+        if (gitRepoConf?.projectCode == null) {
             val projectResult =
-                client.get(ServiceTxProjectResource::class).createGitCIProject(gitCIBasicSetting.gitProjectId, userId)
+                client.get(ServiceTxProjectResource::class).createGitCIProject(setting.gitProjectId, userId)
             if (projectResult.isNotOk()) {
                 throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")
             }
-            projectResult.data!!.projectCode
+            val projectInfo = projectResult.data!!
+            setting.creatorBgName = projectInfo.bgName
+            setting.creatorDeptName = projectInfo.deptName
+            setting.creatorCenterName = projectInfo.centerName
+            gitCIBasicSettingDao.saveSetting(dslContext, setting, projectInfo.projectCode)
         } else {
-            gitRepoConf.projectCode
+            val projectResult =
+                client.get(ServiceTxUserResource::class).get(gitRepoConf.enableUserId)
+            if (projectResult.isNotOk()) {
+                logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
+                return false
+            }
+            val userInfo = projectResult.data!!
+            setting.creatorBgName = userInfo.bgName
+            setting.creatorDeptName = userInfo.deptName
+            setting.creatorCenterName = userInfo.centerName
+            gitCIBasicSettingDao.saveSetting(dslContext, setting, gitRepoConf.projectCode!!)
         }
-        gitCIBasicSettingDao.saveSetting(dslContext, gitCIBasicSetting, projectCode!!)
         return true
+    }
+
+    fun fixProjectInfo(): Int {
+        val limitCount = 5
+        var count = 0
+        var startId = 0L
+        var currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, limitCount)
+        while (currProjects.isNotEmpty()) {
+            currProjects.forEach {
+                val projectResult =
+                    client.get(ServiceTxUserResource::class).get(it.enableUserId)
+                if (projectResult.isNotOk()) {
+                    logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
+                    return@forEach
+                }
+                val userInfo = projectResult.data!!
+                count += gitCIBasicSettingDao.fixProjectInfo(
+                    dslContext = dslContext,
+                    gitProjectId = it.id,
+                    creatorBgName = userInfo.bgName,
+                    creatorDeptName = userInfo.deptName,
+                    creatorCenterName = userInfo.centerName
+                )
+                startId = it.id
+            }
+            logger.info("fixProjectInfo project ${currProjects.map { it.id }.toList()}, fixed count: $count")
+            Thread.sleep(100)
+            currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, limitCount)
+        }
+        logger.info("fixProjectInfo finished count: $count")
+        return count
     }
 }

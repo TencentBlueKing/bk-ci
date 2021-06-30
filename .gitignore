@@ -32,3 +32,5 @@ out
 .temp
 .history
 /src/backend/ci/core/sign/biz-sign/test.ipa
+.codecc
+build.yml

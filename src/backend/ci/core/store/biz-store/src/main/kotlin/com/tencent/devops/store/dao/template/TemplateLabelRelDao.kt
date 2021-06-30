@@ -29,6 +29,7 @@ package com.tencent.devops.store.dao.template
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TLabel
+import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.model.store.tables.TTemplateLabelRel
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
@@ -66,6 +67,16 @@ class TemplateLabelRelDao {
         with(TTemplateLabelRel.T_TEMPLATE_LABEL_REL) {
             dslContext.deleteFrom(this)
                 .where(TEMPLATE_ID.eq(templateId))
+                .execute()
+        }
+    }
+
+    fun deleteByTemplateCode(dslContext: DSLContext, templateCode: String) {
+        val tt = TTemplate.T_TEMPLATE
+        val templateIds = dslContext.select(tt.ID).from(tt).where(tt.TEMPLATE_CODE.eq(templateCode)).fetch()
+        with(TTemplateLabelRel.T_TEMPLATE_LABEL_REL) {
+            dslContext.deleteFrom(this)
+                .where(TEMPLATE_ID.`in`(templateIds))
                 .execute()
         }
     }

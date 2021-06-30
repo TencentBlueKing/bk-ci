@@ -28,11 +28,12 @@
 package com.tencent.devops.process.pojo.code
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 
 interface ScmWebhookElementParams<in T : WebHookTriggerElement> {
 
     fun getWebhookElementParams(
         element: T,
         variables: Map<String, String>
-    ): ScmWebhookMatcher.WebHookParams?
+    ): WebHookParams?
 }

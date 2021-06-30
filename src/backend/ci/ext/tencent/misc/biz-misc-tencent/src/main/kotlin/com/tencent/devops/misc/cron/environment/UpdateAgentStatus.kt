@@ -28,6 +28,7 @@
 package com.tencent.devops.misc.cron.environment
 
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.DEFAULT_SYTEM_USER
 import com.tencent.devops.misc.dao.environment.EnvironmentNodeDao
@@ -38,6 +39,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("ALL", "UNUSED")
 class UpdateAgentStatus @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: EnvironmentNodeDao,
@@ -47,43 +49,36 @@ class UpdateAgentStatus @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(UpdateAgentStatus::class.java)
         private const val LOCK_KEY = "env_cron_updateAgentStatus"
-        private const val LOCK_VALUE = "env_cron_updateAgentStatus"
+        private const val EXPIRED_IN_SECOND = 600L
     }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 15000)
     fun runUpdateAgentStatus() {
         logger.info("runUpdateAgentStatus")
-        val lockValue = redisOperation.get(LOCK_KEY)
-        if (lockValue != null) {
-            logger.info("get lock failed, skip")
-            return
-        } else {
-            redisOperation.set(
-                LOCK_KEY,
-                LOCK_VALUE, 30)
-        }
-
+        val lock = RedisLock(redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = EXPIRED_IN_SECOND)
         try {
-            updateAgentStatus()
-        } catch (t: Throwable) {
-            logger.warn("update agent status failed", t)
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return
+            }
+
+            val allServerNodes = nodeDao.listAllServerNodes(dslContext)
+            if (allServerNodes.isEmpty()) {
+                return
+            }
+
+            val allIps = allServerNodes.map { it.nodeIp }.toSet()
+            val agentStatusMap = esbAgentClient.getAgentStatus(DEFAULT_SYTEM_USER, allIps)
+
+            allServerNodes.forEach {
+                it.agentStatus = agentStatusMap[it.nodeIp] ?: false
+            }
+
+            nodeDao.batchUpdateNode(dslContext, allServerNodes)
+        } catch (ignore: Throwable) {
+            logger.warn("update agent status failed", ignore)
+        } finally {
+            lock.unlock()
         }
-    }
-
-    private fun updateAgentStatus() {
-        val allServerNodes = nodeDao.listAllServerNodes(dslContext)
-
-        if (allServerNodes.isEmpty()) {
-            return
-        }
-
-        val allIps = allServerNodes.map { it.nodeIp }.toSet()
-        val agentStatusMap = esbAgentClient.getAgentStatus(DEFAULT_SYTEM_USER, allIps)
-
-        allServerNodes.forEach {
-            it.agentStatus = agentStatusMap[it.nodeIp] ?: false
-        }
-
-        nodeDao.batchUpdateNode(dslContext, allServerNodes)
     }
 }

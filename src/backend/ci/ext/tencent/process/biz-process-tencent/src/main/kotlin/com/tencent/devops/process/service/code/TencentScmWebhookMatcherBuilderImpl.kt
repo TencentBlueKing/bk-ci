@@ -27,15 +27,14 @@
 
 package com.tencent.devops.process.service.code
 
-import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
-import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
+import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.common.webhook.service.code.matcher.GithubWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.GitlabWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.SvnWebHookMatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
-import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
-import com.tencent.devops.process.pojo.code.git.GitEvent
-import com.tencent.devops.process.pojo.code.github.GithubEvent
-import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -51,9 +50,8 @@ class TencentScmWebhookMatcherBuilderImpl : ScmWebhookMatcherBuilder {
         TencentGitWebHookMatcher(gitEvent = event, gitIncludeHost = gitIncludeHost)
 
     override fun createSvnWebHookMatcher(
-        event: SvnCommitEvent,
-        pipelineWebhookService: PipelineWebhookService
-    ): ScmWebhookMatcher = SvnWebHookMatcher(event, pipelineWebhookService)
+        event: SvnCommitEvent
+    ): ScmWebhookMatcher = SvnWebHookMatcher(event)
 
     override fun createGitlabWebHookMatcher(event: GitEvent): ScmWebhookMatcher = GitlabWebHookMatcher(event)
 

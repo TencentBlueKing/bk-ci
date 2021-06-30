@@ -540,14 +540,28 @@ open class MarketAtomTask : ITask() {
                         "label": "",  # 报告别名，用于产出物报告界面标识当前报告
                         "path": "",   # 报告目录所在路径，相对于工作空间
                         "target": "", # 报告入口文件
+                        "enableEmail": true, # 是否开启发送邮件
+                        "emailReceivers": [], # 邮件接收人
+                        "emailTitle": "" # 邮件标题
                     }
                 }
                  */
                 TaskUtil.setTaskId(buildTask.taskId ?: "")
                 when (type) {
                     STRING -> env[key] = output[VALUE] as String
-                    REPORT -> env[key] = archiveReport(buildTask, output, buildVariables, bkWorkspace)
-                    ARTIFACT -> env[key] = archiveArtifact(output, bkWorkspace, buildVariables)
+                    REPORT -> env[key] = archiveReport(
+                        buildTask = buildTask,
+                        varKey = varKey,
+                        output = output,
+                        buildVariables = buildVariables,
+                        atomWorkspace = bkWorkspace
+                    )
+                    ARTIFACT -> env[key] = archiveArtifact(
+                        varKey = varKey,
+                        output = output,
+                        atomWorkspace = bkWorkspace,
+                        buildVariables = buildVariables
+                    )
                 }
 
                 env["steps.${buildTask.elementId ?: ""}.outputs.$key"] = env[key] ?: ""
@@ -617,6 +631,7 @@ open class MarketAtomTask : ITask() {
      */
     @Suppress("UNCHECKED_CAST")
     private fun archiveArtifact(
+        varKey: String,
         output: Map<String, Any>,
         atomWorkspace: File,
         buildVariables: BuildVariables
@@ -631,7 +646,7 @@ open class MarketAtomTask : ITask() {
                     ArchiveUtils.archivePipelineFiles(artifact, atomWorkspace, buildVariables)
                 } else if (artifactoryType == ArtifactoryType.CUSTOM_DIR.name) {
                     output[PATH] ?: throw TaskExecuteException(
-                        errorMsg = "artifact $PATH cannot be empty",
+                        errorMsg = "$varKey.$PATH cannot be empty",
                         errorType = ErrorType.USER,
                         errorCode = ErrorCode.USER_INPUT_INVAILD
                     )
@@ -651,10 +666,16 @@ open class MarketAtomTask : ITask() {
      */
     private fun archiveReport(
         buildTask: BuildTask,
+        varKey: String,
         output: Map<String, Any>,
         buildVariables: BuildVariables,
         atomWorkspace: File
     ): String {
+        output[LABEL] ?: throw TaskExecuteException(
+            errorMsg = "$varKey.$LABEL cannot be empty",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_INPUT_INVAILD
+        )
         val params = mutableMapOf<String, String>()
         if (buildTask.params != null) {
             params.putAll(buildTask.params!!)
@@ -664,12 +685,12 @@ open class MarketAtomTask : ITask() {
         params[REPORT_TYPE] = reportType.toString()
         if (reportType == ReportTypeEnum.INTERNAL.name) {
             output[PATH] ?: throw TaskExecuteException(
-                errorMsg = "report $PATH cannot be empty",
+                errorMsg = "$varKey.$PATH cannot be empty",
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD
             )
             output[KEY_TARGET] ?: throw TaskExecuteException(
-                errorMsg = "report $KEY_TARGET cannot be empty",
+                errorMsg = "$varKey.$KEY_TARGET cannot be empty",
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD
             )
@@ -679,7 +700,7 @@ open class MarketAtomTask : ITask() {
             resultData = target
         } else {
             output[URL] ?: throw TaskExecuteException(
-                errorMsg = "report $URL cannot be empty",
+                errorMsg = "$varKey.$URL cannot be empty",
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD
             )
@@ -688,6 +709,13 @@ open class MarketAtomTask : ITask() {
             resultData = url
         }
         params["reportName"] = output[LABEL] as String
+        val emailReceivers = output["emailReceivers"] as? String
+        val emailTitle = output["emailTitle"] as? String
+        if (emailReceivers != null && emailTitle != null) {
+            params["enableEmail"] = output["enableEmail"].toString()
+            params["emailReceivers"] = JsonUtil.toJson(emailReceivers)
+            params["emailTitle"] = emailTitle
+        }
         val reportArchTask = BuildTask(
             buildId = buildTask.buildId,
             vmSeqId = buildTask.vmSeqId,

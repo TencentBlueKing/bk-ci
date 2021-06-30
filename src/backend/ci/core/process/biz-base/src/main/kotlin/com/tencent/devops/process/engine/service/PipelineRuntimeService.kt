@@ -602,13 +602,7 @@ class PipelineRuntimeService @Autowired constructor(
                 },
                 remark = remark,
                 totalTime = totalTime,
-                executeTime = if (executeTime == null || executeTime == 0L) {
-                    if (buildStatus[status].isFinish()) {
-                        totalTime
-                    } else 0L
-                } else {
-                    executeTime
-                },
+                executeTime = executeTime ?: 0L,
                 buildParameters = if (buildParameters != null) {
                     JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>
                 } else {
@@ -1815,7 +1809,7 @@ class PipelineRuntimeService @Autowired constructor(
         val stageTotalTime = mutableMapOf<String, MutableMap<String, Long>>()
         executeTask.forEach { task ->
             val jobTime = stageTotalTime.computeIfAbsent(task.stageId) { mutableMapOf(task.containerId to 0L) }
-            jobTime[task.containerId] = jobTime[task.containerId] ?: 0L + task.totalTime
+            jobTime[task.containerId] = (jobTime[task.containerId] ?: 0L) + (task.totalTime ?: 0L)
         }
         stageTotalTime.forEach { job ->
             var maxJobTime = 0L
