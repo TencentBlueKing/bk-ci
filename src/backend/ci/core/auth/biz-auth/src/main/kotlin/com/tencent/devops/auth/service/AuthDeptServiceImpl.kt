@@ -113,9 +113,9 @@ class AuthDeptServiceImpl @Autowired constructor(
         userId: String,
         type: ManagerScopesEnum
     ): List<UserAndDeptInfoVo?> {
-        if (name.length < 2) {
-            throw ParamBlankException(KEYWORD_TOO_SHORT)
-        }
+//        if (name.length < 2) {
+//            throw ParamBlankException(KEYWORD_TOO_SHORT)
+//        }
         val deptSearch = SearchUserAndDeptEntity(
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
