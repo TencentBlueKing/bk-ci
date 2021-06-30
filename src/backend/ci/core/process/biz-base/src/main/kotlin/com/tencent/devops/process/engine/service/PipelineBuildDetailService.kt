@@ -52,8 +52,10 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount")
 @Service
@@ -73,8 +75,18 @@ class PipelineBuildDetailService @Autowired constructor(
     redisOperation
 ) {
 
+    @Value("\${pipeline.build.retry.limit_days:21}")
+    private var retryLimitDays: Int = 0
+
     companion object {
         val logger = LoggerFactory.getLogger(PipelineBuildDetailService::class.java)!!
+    }
+
+    private fun checkPassDays(startTime: Long?): Boolean {
+        if (retryLimitDays < 0 || startTime == null) {
+            return true
+        }
+        return (System.currentTimeMillis() - startTime) < TimeUnit.DAYS.toMillis(retryLimitDays.toLong())
     }
 
     /**
@@ -96,7 +108,9 @@ class PipelineBuildDetailService @Autowired constructor(
 
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         if (refreshStatus) {
-            if (buildInfo.status.isFailure() || buildInfo.status.isCancel()) { // 已经失败或者取消(终态)
+            // #4245 仅当在有限时间内并已经失败或者取消(终态)的构建上可尝试重试或跳过
+            if (checkPassDays(buildInfo.startTime) &&
+                (buildInfo.status.isFailure() || buildInfo.status.isCancel())) {
                 ModelUtils.refreshCanRetry(model)
             }
         }

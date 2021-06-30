@@ -1487,7 +1487,9 @@ class PipelineRuntimeService @Autowired constructor(
         container.systemElapsed = null
         container.executeCount = target.executeCount
         if (atomElement != null) { // 将原子状态重置
-            atomElement.status = initialStatus?.name // BuildStatus.QUEUE.name
+            if (initialStatus == null) {
+                atomElement.status = null
+            }
             atomElement.executeCount = target.executeCount
             atomElement.elapsed = null
             atomElement.startEpoch = null
