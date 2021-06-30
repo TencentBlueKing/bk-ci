@@ -243,8 +243,8 @@ object LoggerService {
                     "the log file of the task will be archived.")
                 elementId2LogProperty[elementId]?.logStorageMode = LogStorageMode.LOCAL
             }
-        } catch (e: InterruptedException) {
-            logger.error("写入 $logType 日志行失败：", e)
+        } catch (ignored: InterruptedException) {
+            logger.error("写入 $logType 日志行失败：", ignored)
         }
     }
 
@@ -311,8 +311,8 @@ object LoggerService {
             // 同步所有存储状态到
             logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), executeCount)
             logger.info("Finished update mode to log service.")
-        } catch (t: Throwable) {
-            logger.warn("Fail to archive log files", t)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to archive log files", ignored)
         }
     }
 
@@ -339,8 +339,8 @@ object LoggerService {
                     logger.error("Fail to send the multi logs：${result.message}")
                 }
             }
-        } catch (e: Exception) {
-            logger.warn("Fail to send the logs(${logMessages.size})", e)
+        } catch (ignored: Exception) {
+            logger.warn("Fail to send the logs(${logMessages.size})", ignored)
         }
     }
 
@@ -362,8 +362,8 @@ object LoggerService {
             }
             val dateTime = sdf.format(Date(logMessage.timestamp))
             logProperty.logFile.appendText("$dateTime : ${logMessage.message}\n")
-        } catch (e: Exception) {
-            logger.warn("Fail to save the logs($logMessage)", e)
+        } catch (ignored: Exception) {
+            logger.warn("Fail to save the logs($logMessage)", ignored)
         }
     }
 
@@ -386,8 +386,8 @@ object LoggerService {
             if (result.isNotOk()) {
                 logger.error("Fail to send the log status ：${result.message}")
             }
-        } catch (e: Exception) {
-            logger.warn("Fail to finish the logs", e)
+        } catch (ignored: Exception) {
+            logger.warn("Fail to finish the logs", ignored)
         }
     }
 

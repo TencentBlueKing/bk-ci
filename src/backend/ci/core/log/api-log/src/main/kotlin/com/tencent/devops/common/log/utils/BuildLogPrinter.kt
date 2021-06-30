@@ -206,7 +206,6 @@ class BuildLogPrinter(
         executeCount: Int?
     ) {
         try {
-            // TODO 增加日志存储模式
             genLogPrintPrintResource().updateLogStatus(
                 buildId = buildId,
                 finished = finished,
