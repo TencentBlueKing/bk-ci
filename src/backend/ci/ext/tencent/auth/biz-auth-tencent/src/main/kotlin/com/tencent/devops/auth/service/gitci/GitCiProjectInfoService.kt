@@ -3,6 +3,7 @@ package com.tencent.devops.auth.service.gitci
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
@@ -25,13 +26,13 @@ class GitCiProjectInfoService @Autowired constructor(
         } else {
             val gitProjectInfo = client.getScm(ServiceGitCiResource::class).getGitCodeProjectInfo(projectCode).data
             if (gitProjectInfo != null) {
-                GitCIPermissionServiceImpl.logger.info("project $projectCode visibilityLevel: ${gitProjectInfo?.visibilityLevel}")
+                logger.info("project $projectCode visibilityLevel: ${gitProjectInfo?.visibilityLevel}")
                 if (gitProjectInfo.visibilityLevel != null && gitProjectInfo.visibilityLevel!! > 0) {
                     projectPublicCache.put(projectCode, gitProjectInfo.visibilityLevel.toString())
                     return true
                 }
             } else {
-                GitCIPermissionServiceImpl.logger.warn("project $projectCode get projectInfo is empty")
+                logger.warn("project $projectCode get projectInfo is empty")
             }
         }
         return false
@@ -47,5 +48,9 @@ class GitCiProjectInfoService @Autowired constructor(
             }
             gitUserId
         }
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(GitCiProjectInfoService::class.java)
     }
 }
