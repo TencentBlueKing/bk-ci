@@ -115,7 +115,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         groupService.bindRelationId(roleId, iamRoleId.toString())
     }
 
-    override fun renameRoleExt(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO) {
+    override fun renameRoleExt(userId: String, projectId: Int, realtionRoleId: Int, groupInfo: ProjectRoleDTO) {
         permissionGradeService.checkGradeManagerUser(userId, projectId)
         // 校验用户组名称
         checkRoleName(groupInfo.name, false)
@@ -125,14 +125,14 @@ open class IamPermissionRoleExtService @Autowired constructor(
             groupInfo.description,
             groupInfo.defaultGroup
         )
-        iamManagerService.updateRoleGroup(roleId, newGroupInfo)
+        iamManagerService.updateRoleGroup(realtionRoleId, newGroupInfo)
     }
 
-    override fun deleteRoleExt(userId: String, projectId: Int, roleId: Int) {
+    override fun deleteRoleExt(userId: String, projectId: Int, realtionRoleId: Int) {
         permissionGradeService.checkGradeManagerUser(userId, projectId)
 
         // iam侧会统一把用户组内用剔除后,再删除用户组
-        iamManagerService.deleteRoleGroup(roleId)
+        iamManagerService.deleteRoleGroup(realtionRoleId)
     }
 
     override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
@@ -149,7 +149,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
             logger.info("role ${it.id} local data: $groupInfo")
             resultList.add(
                 GroupInfoVo(
-                    id = it.id,
+                    id = groupInfo?.id!!,
                     name = groupInfo?.groupName ?: "",
                     displayName = groupInfo?.displayName ?: "",
                     code = groupInfo?.groupCode ?: "",

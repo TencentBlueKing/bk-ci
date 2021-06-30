@@ -37,20 +37,24 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleMemberDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.constant.AuthMessageCode.CAN_NOT_FIND_RELATION
 import com.tencent.devops.auth.pojo.MemberInfo
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
+import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.lang.reflect.Member
 import java.util.concurrent.TimeUnit
 
 abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
     open val iamManagerService: ManagerService,
-    private val permissionGradeService: PermissionGradeService
+    private val permissionGradeService: PermissionGradeService,
+    private val groupService: AuthGroupService
 ) : PermissionRoleMemberService {
 
     private val projectMemberCache = CacheBuilder.newBuilder()
@@ -65,6 +69,12 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         members: List<RoleMemberDTO>,
         managerGroup: Boolean
     ) {
+        val iamId = groupService.getRelationId(roleId)
+        if (iamId == null) {
+            logger.warn("$roleId can not find relationId")
+            throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
+        }
+
         permissionGradeService.checkGradeManagerUser(projectId = projectId, userId = userId)
         val roleMembers = mutableListOf<ManagerMember>()
         val userIds = mutableListOf<String>()
@@ -77,7 +87,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         }
         val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
         val managerMemberGroupDTO = ManagerMemberGroupDTO.builder().expiredAt(expiredTime).members(roleMembers).build()
-        iamManagerService.createRoleGroupMember(roleId, managerMemberGroupDTO)
+        iamManagerService.createRoleGroupMember(iamId!!.toInt(), managerMemberGroupDTO)
 
         // 添加用户到管理员需要同步添加用户到分级管理员
         if (managerGroup) {
@@ -96,24 +106,39 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         type: ManagerScopesEnum,
         managerGroup: Boolean
     ) {
+        val iamId = groupService.getRelationId(roleId)
+        if (iamId == null) {
+            logger.warn("$roleId can not find relationId")
+            throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
+        }
         permissionGradeService.checkGradeManagerUser(userId, projectId)
 
-        iamManagerService.deleteRoleGroupMember(roleId, ManagerScopesEnum.getType(type), id)
+        iamManagerService.deleteRoleGroupMember(iamId.toInt(), ManagerScopesEnum.getType(type), id)
         // 如果是删除用户,且用户是管理员需同步删除该用户分分级管理员权限
         if (managerGroup && type == ManagerScopesEnum.USER) {
             iamManagerService.deleteGradeManagerRoleMember(id, projectId)
         }
     }
 
-    override fun getRoleMember(projectId: Int, roleId: Int, page: Int, pageSiz: Int): ManagerGroupMemberVo {
+    override fun getRoleMember(
+        projectId: Int,
+        roleId: Int,
+        page: Int,
+        pageSiz: Int
+    ): ManagerGroupMemberVo {
+        val iamId = groupService.getRelationId(roleId)
+        if (iamId == null) {
+            logger.warn("$roleId can not find relationId")
+            throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
+        }
         val pageInfoDTO = PageInfoDTO()
         val pageInfo = PageUtil.convertPageSizeToSQLLimit(page, pageSiz)
         pageInfoDTO.limit = pageInfo.limit.toLong()
         pageInfoDTO.offset = pageInfo.offset.toLong()
-        return iamManagerService.getRoleGroupMember(roleId, pageInfoDTO)
+        return iamManagerService.getRoleGroupMember(iamId.toInt(), pageInfoDTO)
     }
 
-    override fun getProjectAllMember(projectId: Int): ProjectMembersVO? {
+    override fun getProjectAllMember(projectId: Int, page: Int, pageSiz: Int): ProjectMembersVO? {
         if (projectMemberCache.getIfPresent(projectId.toString()) != null) {
             logger.info("getProjectAllMember $projectId get by cache")
             return projectMemberCache.getIfPresent(projectId.toString())!!
@@ -123,14 +148,14 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         if (groupInfos == null || groupInfos.count == 0) {
             return null
         }
-        val pageInfo = PageInfoDTO()
-        pageInfo.limit = 0
-        // 单个用户组最多有1000个用户
-        pageInfo.offset = 1500
+        val pageInfoDTO = PageInfoDTO()
+        val pageInfo = PageUtil.convertPageSizeToSQLLimit(page, pageSiz)
+        pageInfoDTO.limit = pageInfo.limit.toLong()
+        pageInfoDTO.offset = pageInfo.offset.toLong()
 
         val members = mutableSetOf<MemberInfo>()
         groupInfos.results.forEach { group ->
-            val membersInfos = iamManagerService.getRoleGroupMember(group.id, pageInfo).results
+            val membersInfos = iamManagerService.getRoleGroupMember(group.id, pageInfoDTO).results
             membersInfos.forEach { member ->
                 members.add(MemberInfo(
                     id = member.id.toInt(),
