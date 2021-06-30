@@ -873,10 +873,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     ): String {
         val atom = marketAtomDao.getLatestAtomByCode(dslContext, atomCode) ?: return ""
         val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode) ?: return ""
-        if (null == feature.recommendFlag || feature.recommendFlag) {
-            return generateV2Yaml(atom, defaultShowFlag)
+        return if (null == feature.recommendFlag || feature.recommendFlag) {
+            generateV2Yaml(atom, defaultShowFlag)
         } else {
-            return ""
+            ""
         }
     }
 
