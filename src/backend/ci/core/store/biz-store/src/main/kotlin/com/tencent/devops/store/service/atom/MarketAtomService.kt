@@ -153,7 +153,7 @@ interface MarketAtomService {
      * 生成插件yml 2.0文件
      */
     fun generateCiV2Yaml(
-        atomCode: String?,
+        atomCode: String,
         os: String? = null,
         classType: String? = null,
         defaultShowFlag: Boolean? = true

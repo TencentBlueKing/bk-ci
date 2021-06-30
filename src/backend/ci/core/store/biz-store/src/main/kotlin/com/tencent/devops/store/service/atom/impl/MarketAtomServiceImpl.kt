@@ -866,31 +866,18 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     }
 
     override fun generateCiV2Yaml(
-        atomCode: String?,
+        atomCode: String,
         os: String?,
         classType: String?,
         defaultShowFlag: Boolean?
     ): String {
-        val atomCodeList = if (atomCode.isNullOrBlank()) {
-            marketAtomDao.getSupportGitCiAtom(dslContext, os, classType).map { it.value1() }
+        val atom = marketAtomDao.getLatestAtomByCode(dslContext, atomCode) ?: return ""
+        val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode) ?: return ""
+        if (null == feature.recommendFlag || feature.recommendFlag) {
+            return generateV2Yaml(atom, defaultShowFlag)
         } else {
-            listOf(atomCode)
+            return ""
         }
-
-        val buf = StringBuilder()
-        atomCodeList.filterNotNull().forEach {
-            val atom = marketAtomDao.getLatestAtomByCode(dslContext, it) ?: return@forEach
-            val feature = marketAtomFeatureDao.getAtomFeature(dslContext, it) ?: return@forEach
-            if (null == feature.recommendFlag || feature.recommendFlag) {
-                buf.append(generateV2Yaml(atom, defaultShowFlag))
-                buf.append("\r\n")
-                buf.append("\r\n")
-            } else {
-                return@forEach
-            }
-        }
-
-        return buf.toString()
     }
 
     @Suppress("UNCHECKED_CAST")
