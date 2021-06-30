@@ -1478,6 +1478,13 @@ class PipelineRuntimeService @Autowired constructor(
         target.endTime = null
         target.executeCount = retryCount + 1 // 执行次数增1
         target.status = initialStatus?.ordinal ?: BuildStatus.QUEUE.ordinal // 如未指定状态，则默认进入排队状态
+        if (target.status != BuildStatus.SKIP.ordinal) { // 排队要准备执行，要清除掉上次失败状态
+            target.errorMsg = null
+            target.errorCode = null
+            target.errorType = null
+        } else { // 跳过的需要保留下跳过的信息
+            target.errorMsg = "被手动跳过 Manually skipped"
+        }
         stage.status = null
         stage.startEpoch = null
         stage.elapsed = null
