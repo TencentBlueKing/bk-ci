@@ -60,6 +60,7 @@ import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
+import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_ENV
@@ -182,7 +183,8 @@ open class MarketAtomTask : ITask() {
                         contextMap = contextMap(buildTask).plus(
                             mapOf(
                                 WORKSPACE_CONTEXT to workspace.absolutePath,
-                                CI_TOKEN_CONTEXT to (buildVariables.variables[CI_TOKEN_CONTEXT] ?: "")
+                                CI_TOKEN_CONTEXT to (buildVariables.variables[CI_TOKEN_CONTEXT] ?: ""),
+                                JOB_OS_CONTEXT to AgentEnv.getOS().name
                             )
                         )
                     )
@@ -565,6 +567,7 @@ open class MarketAtomTask : ITask() {
                 }
 
                 env["steps.${buildTask.elementId ?: ""}.outputs.$key"] = env[key] ?: ""
+                env["jobs.${buildVariables.containerId}.os"] = AgentEnv.getOS().name
 
                 TaskUtil.removeTaskId()
                 if (outputTemplate.containsKey(varKey)) {

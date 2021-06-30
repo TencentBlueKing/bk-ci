@@ -32,8 +32,10 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
+import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.HttpRetryUtils
 import org.slf4j.LoggerFactory
@@ -66,7 +68,10 @@ object EngineService {
                 vmName = ret.vmName,
                 projectId = ret.projectId,
                 pipelineId = ret.pipelineId,
-                variables = ret.variables.plus(mapOf(CI_TOKEN_CONTEXT to ciToken)),
+                variables = ret.variables.plus(mapOf(
+                    CI_TOKEN_CONTEXT to ciToken,
+                    JOB_OS_CONTEXT to AgentEnv.getOS().name
+                )),
                 buildEnvs = ret.buildEnvs,
                 containerId = ret.containerId,
                 containerHashId = ret.containerHashId,
