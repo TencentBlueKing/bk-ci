@@ -124,16 +124,19 @@
             display: block;
             margin: 12px 0;
         }
-        .manual-skip-options,
-        .retry-count-input {
-            position: absolute;
-            margin-top: 0 !important;
-            left: 180px;
-            top:77px;
+        .form-field.bk-form-item {
+            &.manual-skip-options,
             &.retry-count-input {
-                top: 118px;
-                width: 154px;
+                position: absolute;
+                margin-top: 0;
+                left: 180px;
+                top:77px;
+                &.retry-count-input {
+                    top: 118px;
+                    width: 154px;
+                }
             }
+
         }
     }
 </style>
