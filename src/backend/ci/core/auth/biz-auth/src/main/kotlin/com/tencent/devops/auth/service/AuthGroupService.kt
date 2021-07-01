@@ -110,7 +110,7 @@ class AuthGroupService @Autowired constructor(
     }
 
     fun updateGroupName(userId: String, groupId: Int, groupInfo: ProjectRoleDTO): Int {
-        val groupEntity = groupDao.getGroupByRelationId(dslContext, groupId)
+        val groupEntity = groupDao.getGroupById(dslContext, groupId)
             ?: throw ParamBlankException("group $groupId not exist")
 
         if (DefaultGroupType.contains(groupEntity.groupCode)) {
