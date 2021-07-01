@@ -179,8 +179,10 @@ class V2WebHookMatcher @Autowired constructor(
             }
         }
 
-        if (targetBranchMatch && isMrIncludePathMatch(triggerOn.mr!!.paths, event) &&
-                isUserMatch(triggerOn.mr!!.users, event)) {
+        if (targetBranchMatch &&
+            isMrIncludePathMatch(triggerOn.mr!!.paths, event) &&
+            isUserMatch(triggerOn.mr!!.users, event) &&
+            isMrActionMatch(triggerOn.mr!!.action, event)) {
             return true
         }
 
@@ -403,6 +405,21 @@ class V2WebHookMatcher @Autowired constructor(
         }
 
         return true
+    }
+
+    private fun isMrActionMatch(actionList: List<String>?, event: GitEvent): Boolean {
+        if (actionList == null || actionList.isEmpty()) {
+            return true
+        }
+
+        val mrAction = (event as GitMergeRequestEvent).object_attributes.extension_action
+        actionList.forEach {
+            if (it == mrAction) {
+                return true
+            }
+        }
+
+        return false
     }
 
     private fun matchUrl(url: String, event: GitEvent): Boolean {
