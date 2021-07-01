@@ -525,7 +525,7 @@ class TriggerBuildService @Autowired constructor(
         }
 
         if (job.runsOn.agentSelector.isNullOrEmpty()) {
-            return VMBaseOS.LINUX
+            return VMBaseOS.ALL
         }
         return when (job.runsOn.agentSelector!![0]) {
             "linux" -> VMBaseOS.LINUX
