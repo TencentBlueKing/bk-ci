@@ -48,6 +48,7 @@ import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
+import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
@@ -416,13 +417,24 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         )
         // 重置前置暂停插件暂停状态位
         pipelineTaskPauseService.pauseTaskFinishExecute(buildId, result.taskId)
-        pipelineRuntimeService.completeClaimBuildTask(
+        val task = pipelineRuntimeService.completeClaimBuildTask(
             completeTask = CompleteTask(
                 buildId = buildId, taskId = result.taskId,
                 userId = buildInfo.startUser, buildStatus = buildStatus,
                 errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
             )
         )
+
+        // 打印出失败继续的日志
+        if (buildStatus.isFailure() && ControlUtils.continueWhenFailure(task?.additionalOptions)) {
+            buildLogPrinter.addRedLine(
+                buildId = task!!.buildId,
+                message = "Plugin[${task.taskName}]: 失败自动跳过/continue when error",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
+        }
 
         pipelineEventDispatcher.dispatch(
             PipelineBuildStatusBroadCastEvent(

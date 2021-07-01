@@ -139,7 +139,7 @@ class StartActionTaskContainerCmd(
                     containerContext = containerContext,
                     needTerminate = needTerminate
                 )
-            } else if (t.status == BuildStatus.SKIP) {
+            } else if (t.status == BuildStatus.SKIP && t.endTime == null) { // 手动跳过功能，暂时没有好的解决办法，可改进
                 buildLogPrinter.addRedLine(
                     buildId = t.buildId,
                     message = "Plugin[${t.taskName}]: ${t.errorMsg ?: "unknown"}",
@@ -147,6 +147,7 @@ class StartActionTaskContainerCmd(
                     jobId = t.containerHashId,
                     executeCount = t.executeCount ?: 1
                 )
+                pipelineRuntimeService.updateTaskStatus(t, containerContext.event.userId, t.status)
             }
 
             if (toDoTask != null || breakFlag) {
