@@ -18,7 +18,7 @@
     "3、插件发开者有义务按照": "3、Developer is obliged to upgrade and maintain the plug-in in accordance with the",
     "《插件开发规范》": "《Plugin Development Specification》",
     "对插件进行升级维护，保证插件功能正常。": "to ensure that the plug-in is available.",
-    "4、插件需提供详细的使用指引和执行日志、清晰明确的错误码信息和相关的修复指引（见": "When developiPlug-in shall provide detailed guidelines and logs, clear error code and related repair guidelines (see",
+    "4、插件需提供详细的使用指引和执行日志、清晰明确的错误码信息和相关的修复指引（见": "4、When developiPlug-in shall provide detailed guidelines and logs, clear error code and related repair guidelines (see",
     "《插件错误码规范》": "《Plugin Error Code Specification》",
     "），协助使用者快速定位和解决问题。": ") to help users quickly locate and solve problems.",
     "我已阅读并承诺遵守以上约定": "I have read and promise to abide by the above agreement",
