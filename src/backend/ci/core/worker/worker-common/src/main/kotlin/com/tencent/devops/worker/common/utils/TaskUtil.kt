@@ -28,7 +28,7 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.BuildTask
 
@@ -41,7 +41,7 @@ object TaskUtil {
         if (params != null && null != params["additionalOptions"]) {
             val additionalOptionsStr = params["additionalOptions"]
             val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
-            return additionalOptions?.continueWhenFailed ?: false
+            return (additionalOptions?.continueWhenFailed ?: false) && additionalOptions?.manualSkip != true
         }
 
         return false
@@ -70,6 +70,6 @@ object TaskUtil {
     }
 
     fun isVmBuildEnv(containerType: String? = null): Boolean {
-        return containerType != NormalContainer.classType
+        return containerType == VMBuildContainer.classType
     }
 }

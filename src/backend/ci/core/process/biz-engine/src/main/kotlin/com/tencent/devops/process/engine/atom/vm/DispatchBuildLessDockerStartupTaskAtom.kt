@@ -51,8 +51,8 @@ import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
@@ -65,12 +65,13 @@ import org.springframework.stereotype.Component
  * 无构建环境docker启动
  * @version 1.0
  */
+@Suppress("UNUSED", "LongParameterList")
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<NormalContainer> {
@@ -87,7 +88,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
     ): AtomResponse {
         var atomResponse: AtomResponse
         try {
-            atomResponse = startUpDocker(task, param)
+            atomResponse = startUpDocker(task)
             buildLogPrinter.stopLog(
                 buildId = task.buildId,
                 tag = task.taskId,
@@ -128,7 +129,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         return atomResponse
     }
 
-    fun startUpDocker(task: PipelineBuildTask, param: NormalContainer): AtomResponse {
+    fun startUpDocker(task: PipelineBuildTask): AtomResponse {
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val buildId = task.buildId
@@ -147,7 +148,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             taskId = taskId
         ))
 
-        val container = pipelineBuildDetailService.getBuildModel(buildId)?.getContainer(vmSeqId)
+        val container = containerBuildDetailService.getBuildModel(buildId)?.getContainer(vmSeqId)
         Preconditions.checkNotNull(container, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
@@ -157,7 +158,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             taskId = taskId
         ))
 
-        pipelineBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
+        containerBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
 
         dispatch(container = container!!, task = task, pipelineInfo = pipelineInfo!!)
 
