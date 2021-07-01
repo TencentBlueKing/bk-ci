@@ -50,6 +50,7 @@ import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -370,7 +371,7 @@ class TXPipelineExportService @Autowired constructor(
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
                             env = null,
-                            run = step.script,
+                            run = formatScriptOutput(step.script),
                             checkout = null
                         )
                     )
@@ -393,7 +394,7 @@ class TXPipelineExportService @Autowired constructor(
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
                             env = null,
-                            run = step.script,
+                            run = formatScriptOutput(step.script),
                             checkout = null
                         )
                     )
@@ -425,11 +426,44 @@ class TXPipelineExportService @Autowired constructor(
                         )
                     )
                 }
+                ManualReviewUserTaskElement.classType -> {
+                    val step = element as ManualReviewUserTaskElement
+                    stepList.add(
+                        V2Step(
+                            name = null,
+                            id = null,
+                            ifFiled = null,
+                            uses = "### [${step.name}] 人工审核插件请改用Stage审核 ###",
+                            with = null,
+                            timeoutMinutes = null,
+                            continueOnError = null,
+                            retryTimes = null,
+                            env = null,
+                            run = null,
+                            checkout = null
+                        )
+                    )
+                }
                 else -> {
                     logger.info("Not support plugin:${element.getClassType()}, skip...")
                     comment.append(
-                        "# 注意：不再支持插件【${element.name}(${element.getClassType()})】的导出！" +
-                            "请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n"
+                        "# 注意：不支持插件【${element.name}(${element.getClassType()})】的导出，" +
+                            "请在 http://devops.oa.com/console/store/market/home 查找推荐的替换插件！\n"
+                    )
+                    stepList.add(
+                        V2Step(
+                            name = null,
+                            id = null,
+                            ifFiled = null,
+                            uses = "### [${element.name}] 内置老插件不支持导出，请使用市场插件 ###",
+                            with = null,
+                            timeoutMinutes = null,
+                            continueOnError = null,
+                            retryTimes = null,
+                            env = null,
+                            run = null,
+                            checkout = null
+                        )
                     )
                 }
             }
@@ -578,5 +612,21 @@ class TXPipelineExportService @Autowired constructor(
         } catch (e: Exception) {
             return Pair("###请直接填入镜像(TLinux2.2公共镜像)的URL地址，若存在鉴权请增加 credentials 字段###", null)
         }
+    }
+
+    fun formatScriptOutput(script: String): String {
+        val regex = Regex("setEnv\\s+(.*[\\s]+.*)[\\s\\n]")
+        val foundMatches = regex.findAll(script)
+        var formatScript: String = script
+        foundMatches.forEach { result ->
+            val keyValueStr = if (result.groupValues.size >= 2) result.groupValues[1] else return@forEach
+            val keyAndValue = keyValueStr.split(Regex("\\s+"))
+            if (keyAndValue.size < 2) return@forEach
+            val key = keyAndValue[0].removeSurrounding("\"")
+            val value = keyAndValue[1].removeSurrounding("\"")
+            formatScript =
+                formatScript.replace(result.value, "echo \"::set-output name=$key::$value\"\n")
+        }
+        return formatScript
     }
 }

@@ -558,7 +558,7 @@ class TriggerBuildService @Autowired constructor(
             val containerPool = Pool(
                 container = job.runsOn.container?.image,
                 credential = Credential(
-                    user = job.runsOn.container?.credentials?.username,
+                    user = job.runsOn.container?.credentials?.username ?: "",
                     password = job.runsOn.container?.credentials?.password ?: ""
                 ),
                 macOS = null,
