@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2128
-# 安装ci指定模块.
+# 安装codecc指定模块.
 
 set -eu
 trap "on_ERR;" ERR
@@ -19,8 +19,8 @@ if [ $# -lt 1 ]; then
   exit 1
 fi
 MS_USER=${MS_USER:-blueking}  # 暂不建议修改为其他用户, 此功能未测试.
-BK_PKG_SRC_PATH=${BK_CI_SRC_DIR:-/data/src}
-BK_CI_SRC_DIR="${BK_CI_SRC_DIR:-$BK_PKG_SRC_PATH/ci}"  # ci安装源
+BK_PKG_SRC_PATH=${BK_CODECC_SRC_DIR:-/data/src}
+BK_CODECC_SRC_DIR="${BK_CODECC_SRC_DIR:-$BK_PKG_SRC_PATH/codecc}"  # codecc安装源
 
 # 批量检查变量名为空的情况.
 check_empty_var (){
@@ -65,108 +65,80 @@ install_java() {
     os_pkg_install java-1.8.0-openjdk   # 如无则默认使用openjdk.
   fi
 }
-install_docker() {
-  echo "install docker"
-  os_pkg_install docker-ce
-}
+# 暂时保留此函数.
 install_openresty() {
   echo "install openresty"
   os_pkg_install openresty
 }
 
-# CI安装逻辑.
-install_ci__common (){
-  #check_empty_var BK_CI_HOME BK_CI_LOGS_DIR BK_CI_DATA_DIR || return 15
+# CODECC安装逻辑.
+install_codecc__common (){
+  #check_empty_var BK_CODECC_HOME BK_CODECC_LOGS_DIR BK_CODECC_DATA_DIR || return 15
   # 安装用户和配置目录
   id -u "$MS_USER" &>/dev/null || \
     useradd -m -c "BlueKing CE User" --shell /bin/bash "$MS_USER"
 
   os_pkg_install jq
   local d
-  for d in /etc/blueking/env "$BK_CI_HOME" "$BK_CI_LOGS_DIR" "${BK_CI_DATA_DIR%/?*}"; do
+  for d in /etc/blueking/env "$BK_CODECC_HOME" "$BK_CODECC_LOGS_DIR" "${BK_CODECC_DATA_DIR%/?*}"; do
     command install -o "$MS_USER" -g "$MS_USER" -m 755 -d "$d"
   done
-  for d in "$BK_CI_DATA_DIR"; do
+  for d in "$BK_CODECC_DATA_DIR"; do
     command install -o "$MS_USER" -g "$MS_USER" -m 750 -d "$d"
   done
 }
 
-install_ci__ms_common (){
+install_codecc__ms_common (){
   local proj=$1
-  #check_empty_var BK_CI_SRC_DIR BK_CI_HOME BK_CI_LOGS_DIR BK_CI_DATA_DIR || return 15
-  echo >&2 "check installer src: $BK_CI_SRC_DIR/$MS_NAME"
-  tip_dir_exist "$BK_CI_SRC_DIR/$MS_NAME" || return 16
+  #check_empty_var BK_CODECC_SRC_DIR BK_CODECC_HOME BK_CODECC_LOGS_DIR BK_CODECC_DATA_DIR || return 15
+  echo >&2 "check installer src: $BK_CODECC_SRC_DIR/$MS_NAME"
+  tip_dir_exist "$BK_CODECC_SRC_DIR/$MS_NAME" || return 16
   # 检查安装java
   install_java || return $?
   # 增量复制.
-  rsync -ra "$BK_CI_SRC_DIR/$MS_NAME/" "$BK_CI_HOME/$MS_NAME"
+  rsync -ra "$BK_CODECC_SRC_DIR/$MS_NAME/" "$BK_CODECC_HOME/$MS_NAME"
   for f in agent-package jars-public jars-private scripts VERSION; do
-    [ -e "$BK_CI_SRC_DIR/$f" ] || continue
-    echo "install $BK_CI_SRC_DIR/$f to $BK_CI_HOME."
-    rsync -ra "$BK_CI_SRC_DIR/${f%/}" "$BK_CI_HOME"
+    [ -e "$BK_CODECC_SRC_DIR/$f" ] || continue
+    echo "install $BK_CODECC_SRC_DIR/$f to $BK_CODECC_HOME."
+    rsync -ra "$BK_CODECC_SRC_DIR/${f%/}" "$BK_CODECC_HOME"
   done
   # 保持微服务部分子目录的强一致性.
-  rsync -ra --del "$BK_CI_SRC_DIR/$MS_NAME/lib" "$BK_CI_SRC_DIR/$MS_NAME/com" "$BK_CI_HOME/$MS_NAME"
+  rsync -ra --del "$BK_CODECC_SRC_DIR/$MS_NAME/lib" "$BK_CODECC_SRC_DIR/$MS_NAME/com" "$BK_CODECC_HOME/$MS_NAME"
 }
 
-install_ci_dockerhost (){
-  local proj=$1
-  os_pkg_install sysstat || return $?
-  install_docker || return $?
-  install_ci__ms_common "$proj" || return $?
-  # 安装libsigar.
-  local sigar_dir="$BK_CI_HOME/$proj/sigar"
-  if [ -d "$sigar_dir" ]; then
-    echo "sigar_dir is $sigar_dir."
-  elif [ -f "$BK_CI_HOME/$proj/boot-$proj.jar" ]; then  # 如果是fatjar, 则提取sigar目录
-    ( cd "$BK_CI_HOME/$proj/" &&
-      unzip "boot-$proj.jar" "BOOT-INF/classes/sigar/" &&
-      mv BOOT-INF/classes/sigar/ . &&
-      rmdir -p BOOT-INF/classes/
-    ) || return 27
-  fi
-}
-
-# TODO 优化agentless安装, 如果存在agentless目录则复制, 否则从dockerhost目录提取.
-install_ci_agentless (){
-  local proj=$1
-  install_ci_dockerhost "$proj"
-}
-
-# 复制gateway及frontend目录
-install_ci_gateway (){
+# 仅需复制frontend目录.
+install_codecc_gateway (){
   local proj=$1
   install_openresty || return $?
-  rsync -ra "$BK_CI_SRC_DIR/gateway" "$BK_CI_HOME"  # 不能del, 会删除codecc注入的配置文件.
-  rsync -ra --del "$BK_CI_SRC_DIR/frontend" "$BK_CI_HOME"  # frontend不必verbose.
-  rsync -ra "$BK_CI_SRC_DIR/agent-package" "$BK_CI_HOME"  # #3707 网关提供jars下载.
-  if [ -d "$BK_CI_SRC_DIR/docs" ]; then
-    rsync -ra --del "$BK_CI_SRC_DIR/docs" "$BK_CI_HOME" || return $?  # 可选docs
+  rsync -ra "$BK_CODECC_SRC_DIR/gateway" "$BK_CODECC_HOME"  # gateway无需--del
+  rsync -ra --del "$BK_CODECC_SRC_DIR/frontend" "$BK_CODECC_HOME"  # frontend不必verbose.
+  if [ -d "$BK_CODECC_SRC_DIR/docs" ]; then
+    rsync -ra --del "$BK_CODECC_SRC_DIR/docs" "$BK_CODECC_HOME" || return $?  # 可选docs
   fi
 }
 
 MS_NAME=$1
 shift
 # 检查环境变量.
-check_empty_var BK_CI_SRC_DIR BK_CI_HOME BK_CI_LOGS_DIR BK_CI_DATA_DIR
+check_empty_var BK_CODECC_SRC_DIR BK_CODECC_HOME BK_CODECC_LOGS_DIR BK_CODECC_DATA_DIR
 # 本脚本设计为快速滚动更新. 故不会主动新增部署, 仅处理已有的proj.
 # 判断服务是否启用.
 is_sd_service_enabled (){
-  systemctl is-enabled "bk-ci-$1" &>/dev/null
+  systemctl is-enabled "bk-codecc-$1" &>/dev/null
 }
 # 判断是否启用了服务, 如果未启用, 则提示显示启用的方法.
 if ! is_sd_service_enabled "$MS_NAME"; then
-  echo "NOTE: service $MS_NAME not enabled in this node. run bk-ci-reg-systemd.sh to enable it."
+  echo "NOTE: service $MS_NAME not enabled in this node. run bk-codecc-reg-systemd.sh to enable it."
   exit 0
 fi
-install_ci__common
+install_codecc__common
 MS_NAME_WORD=${MS_NAME//-/_}
-install_func=install_ci_$MS_NAME_WORD
+install_func=install_codecc_$MS_NAME_WORD
 if declare -f "$install_func" >/dev/null; then
   echo "INFO: installer is $install_func."
   $install_func "$MS_NAME" "$@"
 else
-  echo "INFO: using default installer for ci micro-service."
-  install_ci__ms_common "$MS_NAME" "$@"
+  echo "INFO: using default installer for codecc micro-service."
+  install_codecc__ms_common "$MS_NAME" "$@"
 fi
 
