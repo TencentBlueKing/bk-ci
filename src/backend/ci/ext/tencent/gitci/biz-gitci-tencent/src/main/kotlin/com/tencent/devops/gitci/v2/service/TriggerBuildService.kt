@@ -367,7 +367,7 @@ class TriggerBuildService @Autowired constructor(
                 .getGroups(event.userId, gitBasicSetting.projectCode!!)
                 .data
 
-            yaml.label.forEach {
+            yaml.label?.forEach {
                 // 要设置的标签组不存在，新建标签组和标签（同名）
                 if (!checkPipelineLabel(it, pipelineGroups)) {
                     client.get(UserPipelineGroupResource::class).addGroup(
@@ -546,7 +546,7 @@ class TriggerBuildService @Autowired constructor(
         }
 
         // 第三方构建机
-        if (job.runsOn.selfHosted) {
+        if (job.runsOn.selfHosted == true) {
             return ThirdPartyAgentEnvDispatchType(
                 envName = job.runsOn.poolName,
                 workspace = "",
@@ -557,10 +557,10 @@ class TriggerBuildService @Autowired constructor(
         // 公共docker构建机
         if (job.runsOn.poolName == "docker") {
             val containerPool = Pool(
-                container = job.runsOn.container.image,
+                container = job.runsOn.container?.image,
                 credential = Credential(
-                    user = job.runsOn.container.credentials?.username ?: "",
-                    password = job.runsOn.container.credentials?.password ?: ""
+                    user = job.runsOn.container?.credentials?.username ?: "",
+                    password = job.runsOn.container?.credentials?.password ?: ""
                 ),
                 macOS = null,
                 third = null,
