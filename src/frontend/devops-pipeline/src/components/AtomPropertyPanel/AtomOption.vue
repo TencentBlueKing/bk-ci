@@ -7,7 +7,7 @@
         <div slot="content" class="bk-form bk-form-vertical atom-control-option">
             <template v-for="(obj, key) in optionModel">
                 <form-field :key="key" v-if="(!isHidden(obj, element) && container['@type'] !== 'trigger') || key === 'enable'" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)" :class="obj.extCls">
-                    <component :disabled="disabled" :is="obj.component" :container="container" :element="element" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateElementOption" :value="atomOption[key]" :key="atomOption[key]" v-bind="getBindObj(obj)"></component>
+                    <component :disabled="disabled" :is="obj.component" :container="container" :element="element" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateElementOption" :value="atomOption[key]" v-bind="getBindObj(obj)"></component>
                 </form-field>
             </template>
         </div>
