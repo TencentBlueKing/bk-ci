@@ -448,7 +448,7 @@ class TXPipelineExportService @Autowired constructor(
                     logger.info("Not support plugin:${element.getClassType()}, skip...")
                     comment.append(
                         "# 注意：不支持插件【${element.name}(${element.getClassType()})】的导出，" +
-                            "请在 http://devops.oa.com/console/store/market/home 查找推荐的替换插件！\n"
+                            "请在蓝盾研发商店查找推荐的替换插件！\n"
                     )
                     stepList.add(
                         V2Step(
