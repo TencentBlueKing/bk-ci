@@ -66,10 +66,6 @@ class TxPermissionRoleMemberImpl @Autowired constructor(
         super.deleteRoleMember(userId, projectId, roleId, id, type, managerGroup)
     }
 
-    override fun getRoleMember(projectId: Int, roleId: Int, page: Int, pageSiz: Int): ManagerGroupMemberVo {
-        return super.getRoleMember(projectId, roleId, page, pageSiz)
-    }
-
     override fun checkUser(userId: String) {
         return
     }
