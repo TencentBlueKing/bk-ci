@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel
-data class RoleMemberDTO (
+data class RoleMemberDTO(
     @ApiModelProperty("组员类型 user:单用户, dept:组织")
     val type: ManagerScopesEnum,
     @ApiModelProperty("用户Id或组织Id")

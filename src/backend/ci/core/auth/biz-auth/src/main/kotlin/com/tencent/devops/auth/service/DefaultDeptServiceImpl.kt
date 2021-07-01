@@ -30,10 +30,8 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import org.springframework.beans.factory.annotation.Autowired
 
-class DefaultDeptServiceImpl @Autowired constructor(
-) : DeptService {
+class DefaultDeptServiceImpl : DeptService {
 
     override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo? {
         return null

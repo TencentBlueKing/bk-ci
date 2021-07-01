@@ -4,9 +4,9 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("用户组列表返回")
-data class GroupInfoVo (
+data class GroupInfoVo(
     @ApiModelProperty("用户组ID")
-    val id : Int,
+    val id: Int,
     @ApiModelProperty("用户组名称")
     val name: String,
     @ApiModelProperty("用户组别名")

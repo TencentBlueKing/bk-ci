@@ -32,14 +32,13 @@ import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.redis.RedisOperation
 import org.junit.Test
 
-class AuthDeptServiceImplTest{
+class AuthDeptServiceImplTest {
 
     private val redisOperation: RedisOperation = RedisOperation(mock())
 
     private val objectMapper: ObjectMapper = mock()
 
     private val authDeptServiceImpl = AuthDeptServiceImpl(redisOperation, objectMapper)
-
 
     @Test
     fun test() {
