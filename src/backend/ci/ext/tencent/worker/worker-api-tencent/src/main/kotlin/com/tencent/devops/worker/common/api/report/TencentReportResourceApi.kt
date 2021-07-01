@@ -92,7 +92,7 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             destFullPath = "/$pipelineId/$buildId/$elementId/${relativePath.removePrefix("/")}",
             token = token,
             buildVariables = buildVariables,
-            parseAppData = false
+            parseAppMetadata = false
         )
     }
 
@@ -106,7 +106,7 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = buildPut(
             path = url,
             requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), file),
-            headers = bkrepoResourceApi.getUploadHeader(file, buildVariables, parseAppData = false),
+            headers = bkrepoResourceApi.getUploadHeader(file, buildVariables, parseAppMetadata = false),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
         val responseContent = request(request, "上传自定义报告失败")

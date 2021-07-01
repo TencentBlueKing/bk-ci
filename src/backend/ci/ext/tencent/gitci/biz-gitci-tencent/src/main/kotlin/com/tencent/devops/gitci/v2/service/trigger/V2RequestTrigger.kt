@@ -27,11 +27,14 @@
 
 package com.tencent.devops.gitci.v2.service.trigger
 
+import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
@@ -41,6 +44,7 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.v2.YamlObjects
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.service.trigger.RequestTriggerInterface
+import com.tencent.devops.gitci.v2.common.CommonConst
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
@@ -55,6 +59,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import javax.ws.rs.core.Response
 
 @Component
 class V2RequestTrigger @Autowired constructor(
@@ -65,7 +70,8 @@ class V2RequestTrigger @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val gitCIEventSaveService: GitCIEventSaveService,
     private val yamlTemplateService: YamlTemplateService,
-    private val v2WebHookMatcher: V2WebHookMatcher
+    private val v2WebHookMatcher: V2WebHookMatcher,
+    private val redisOperation: RedisOperation
 ) : RequestTriggerInterface<YamlObjects> {
 
     companion object {
@@ -221,6 +227,48 @@ class V2RequestTrigger @Autowired constructor(
         )
     }
 
+    override fun checkYamlSchema(userId: String, yaml: String): Result<String> {
+        return try {
+            checkYamlSchema(yaml)
+
+            Result("OK")
+        } catch (e: Exception) {
+            logger.error("Check yaml schema failed.", e)
+            Result(1, "Invalid yaml: ${e.message}")
+        }
+    }
+
+    private fun checkYamlSchema(yaml: String): PreTemplateScriptBuildYaml {
+        val formatYamlStr = ScriptYmlUtils.formatYaml(yaml)
+        val yamlJsonStr = ScriptYmlUtils.convertYamlToJson(formatYamlStr)
+
+        val gitciYamlSchema = redisOperation.get(CommonConst.REDIS_GITCI_YAML_SCHEMA)
+            ?: throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "Check Schema is null.")
+
+        val (schemaPassed, errorMessage) = ScriptYmlUtils.validate(
+            schema = gitciYamlSchema,
+            yamlJson = yamlJsonStr
+        )
+
+        // 先做总体的schema校验
+        if (!schemaPassed) {
+            logger.error("Check yaml schema failed. $errorMessage")
+            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, errorMessage)
+        }
+
+        return try {
+            val preTemplateYamlObject =
+                YamlUtil.getObjectMapper().readValue(formatYamlStr, PreTemplateScriptBuildYaml::class.java)
+            // 检查Yaml语法的格式问题
+            ScriptYmlUtils.checkYaml(preTemplateYamlObject, yaml)
+
+            preTemplateYamlObject
+        } catch (e: Exception) {
+            logger.error("Check yaml schema failed.", e)
+            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, e.message ?: "Check yaml schema failed.")
+        }
+    }
+
     private fun formatAndCheckYaml(
         originYaml: String,
         gitRequestEvent: GitRequestEvent,
@@ -230,13 +278,7 @@ class V2RequestTrigger @Autowired constructor(
         isMr: Boolean
     ): PreTemplateScriptBuildYaml? {
         return try {
-            // 格式化yaml，替换部分内容
-            val yaml = ScriptYmlUtils.formatYaml(originYaml)
-            val preTemplateYamlObject =
-                YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
-            // 检查Yaml语法的格式问题
-            ScriptYmlUtils.checkYaml(preTemplateYamlObject, yaml)
-            preTemplateYamlObject
+            checkYamlSchema(originYaml)
         } catch (e: Exception) {
             logger.error("git ci yaml is invalid", e)
             gitCIEventSaveService.saveBuildNotBuildEvent(

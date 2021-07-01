@@ -226,19 +226,19 @@ class DockerHostClient @Autowired constructor(
         LOG.info("[${event.buildId}]|BUILD_LESS| agentId: $agentId")
         val dispatchType = event.dispatchType as DockerDispatchType
         val dockerImage = when (dispatchType.dockerBuildVersion) {
-            DockerVersion.TLINUX1_2.value -> {
-                defaultImageConfig.getBuildLessTLinux1_2CompleteUri()
+            DockerVersion.CUSTOMIZE.value -> {
+                defaultImageConfig.getAgentLessCompleteUri()
             }
             DockerVersion.TLINUX2_2.value -> {
-                defaultImageConfig.getBuildLessTLinux2_2CompleteUri()
+                defaultImageConfig.getAgentLessCompleteUri()
             }
             else -> {
-                defaultImageConfig.getBuildLessCompleteUriByImageName(dispatchType.dockerBuildVersion)
+                defaultImageConfig.getAgentLessCompleteUriByImageName(dispatchType.dockerBuildVersion)
             }
         }
         LOG.info("[${event.buildId}]|BUILD_LESS| Docker images is: $dockerImage")
 
-        var userName: String? = null
+/*        var userName: String? = null
         var password: String? = null
         if (dispatchType.imageType == ImageType.THIRD) {
             if (!dispatchType.credentialId.isNullOrBlank()) {
@@ -251,7 +251,7 @@ class DockerHostClient @Autowired constructor(
                 userName = ticketsMap["v1"] as String
                 password = ticketsMap["v2"] as String
             }
-        }
+        }*/
 
         val requestBody = DockerHostBuildInfo(
             projectId = event.projectId,
@@ -265,9 +265,9 @@ class DockerHostClient @Autowired constructor(
             containerId = "",
             wsInHost = true,
             poolNo = 0,
-            registryUser = userName ?: "",
-            registryPwd = password ?: "",
-            imageType = dispatchType.imageType?.type,
+            registryUser = defaultImageConfig.agentLessRegistryUserName ?: "",
+            registryPwd = defaultImageConfig.agentLessRegistryPassword ?: "",
+            imageType = ImageType.THIRD.type,
             imagePublicFlag = dispatchType.imagePublicFlag,
             imageRDType = if (dispatchType.imageRDType == null) {
                 null
