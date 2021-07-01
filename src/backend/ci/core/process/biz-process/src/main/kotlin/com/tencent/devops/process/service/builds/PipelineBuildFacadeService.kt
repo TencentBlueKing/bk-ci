@@ -261,7 +261,7 @@ class PipelineBuildFacadeService(
 
         val currentBuildNo = triggerContainer.buildNo
         if (currentBuildNo != null) {
-            currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId)
+            currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(pipelineId = pipelineId)
                 ?: currentBuildNo.buildNo
         }
 

@@ -682,7 +682,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val buildNo = triggerContainer.buildNo
             if (buildNo != null) {
-                buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
+                buildNo.buildNo = pipelineRepositoryService.getBuildNo(pipelineId = pipelineId)
                     ?: buildNo.buildNo
             }
             // 兼容性处理
@@ -699,7 +699,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
 
-            val defaultTagIds = listOf(stageTagService.getDefaultStageTag().data?.id)
+            val defaultTagIds by lazy { listOf(stageTagService.getDefaultStageTag().data?.id) } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagIds

@@ -756,7 +756,7 @@ class PipelineRuntimeService @Autowired constructor(
         val context = StartBuildContext.init(params)
 
         val updateExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
-        val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
+        val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
         val lastTimeBuildTaskRecords = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
         val lastTimeBuildContainerRecords = pipelineBuildContainerDao.listByBuildId(dslContext, buildId)
         val lastTimeBuildStageRecords = pipelineBuildStageDao.listByBuildId(dslContext, buildId)
