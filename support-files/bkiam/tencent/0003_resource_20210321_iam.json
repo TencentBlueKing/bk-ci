@@ -9,7 +9,7 @@
         "name_en": "bkci",
         "clients": "bkci,bk_ci",
         "provider_config": {
-          "host": "http://dev.devops.oa.com/ms/auth",
+          "host": "http://devops.oa.com/ms/auth",
           "auth": "basic",
           "healthz": "/api/v1/healthz"
         }
