@@ -146,7 +146,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         taskId: String?,
-        failedContainer: Boolean?
+        failedContainer: Boolean?,
+        skipFailedTask: Boolean?
     ): Result<BuildId> {
         logger.info("$pipelineId|retry|user($userId)")
         return client.get(ServiceBuildResource::class).retry(
@@ -156,6 +157,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             buildId = buildId,
             taskId = taskId,
             failedContainer = failedContainer,
+            skipFailedTask = skipFailedTask,
             channelCode = ChannelCode.BS
         )
     }

@@ -52,6 +52,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TIME_TRIGGER_KIND
+import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
@@ -80,8 +81,8 @@ class PipelineContextService@Autowired constructor(
                 }
             }
             buildCiContext(varMap, modelDetail, buildVar)
-        } catch (e: Throwable) {
-            logger.error("Build context failed,", e)
+        } catch (ignore: Throwable) {
+            logger.warn("BKSystemErrorMonitor|buildContextFailed|", ignore)
         }
 
         return varMap
@@ -245,7 +246,7 @@ class PipelineContextService@Autowired constructor(
 
     private fun getStepStatus(e: Element): String {
         return if (e.status == BuildStatus.FAILED.name) {
-            if (e.additionalOptions?.continueWhenFailed == true) {
+            if (ControlUtils.continueWhenFailure(e.additionalOptions)) {
                 BuildStatus.SUCCEED.name
             } else {
                 BuildStatus.FAILED.name

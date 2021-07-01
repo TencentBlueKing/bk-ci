@@ -37,7 +37,6 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
-import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
@@ -45,9 +44,10 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.AppModelDetail
 import com.tencent.devops.process.service.app.AppBuildService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
-@Suppress("ALL")
+@Suppress("ALL", "UNUSED")
 @RestResource
 class AppPipelineBuildResourceImpl @Autowired constructor(
     private val appBuildService: AppBuildService,
@@ -72,14 +72,13 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         pipelineBuildQualityService.buildManualQualityGateReview(
-            userId,
-            projectId,
-            pipelineId,
-            buildId,
-            elementId,
-            action,
-            ChannelCode.BS,
-            ChannelCode.isNeedAuth(ChannelCode.BS)
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            elementId = elementId,
+            action = action,
+            channelCode = ChannelCode.BS // fix me: 没鉴权？
         )
         return Result(true)
     }
@@ -100,14 +99,14 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         pipelineBuildFacadeService.buildManualReview(
-            userId,
-            projectId,
-            pipelineId,
-            buildId,
-            elementId,
-            params,
-            ChannelCode.BS,
-            ChannelCode.isNeedAuth(ChannelCode.BS)
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            elementId = elementId,
+            params = params,
+            channelCode = ChannelCode.BS,
+            checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS) // fix me: 没鉴权？
         )
         return Result(true)
     }
@@ -212,7 +211,15 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid elementId")
         }
 
-        return Result(pipelineBuildFacadeService.goToReview(userId, projectId, pipelineId, buildId, elementId))
+        return Result(
+            pipelineBuildFacadeService.goToReview(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                elementId = elementId
+            )
+        )
     }
 
     override fun manualStartupInfo(
@@ -221,7 +228,14 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         pipelineId: String
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
-        return Result(pipelineBuildFacadeService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS))
+        return Result(
+            pipelineBuildFacadeService.buildManualStartupInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = ChannelCode.BS
+            )
+        )
     }
 
     override fun manualStartup(
@@ -234,12 +248,12 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         return Result(
             BuildId(
                 pipelineBuildFacadeService.buildManualStartup(
-                    userId,
-                    StartType.MANUAL,
-                    projectId,
-                    pipelineId,
-                    values,
-                    ChannelCode.BS
+                    userId = userId,
+                    startType = StartType.MANUAL,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = ChannelCode.BS
                 )
             )
         )
@@ -255,7 +269,13 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        pipelineBuildFacadeService.buildManualShutdown(userId, projectId, pipelineId, buildId, ChannelCode.BS)
+        pipelineBuildFacadeService.buildManualShutdown(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = ChannelCode.BS
+        )
         return Result(true)
     }
 
@@ -265,7 +285,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         taskId: String?,
-        failedContainer: Boolean?
+        failedContainer: Boolean?,
+        skipFailedTask: Boolean?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -277,7 +298,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             taskId = taskId,
-            failedContainer = failedContainer
+            failedContainer = failedContainer,
+            skipFailedTask = skipFailedTask
         )))
     }
 
