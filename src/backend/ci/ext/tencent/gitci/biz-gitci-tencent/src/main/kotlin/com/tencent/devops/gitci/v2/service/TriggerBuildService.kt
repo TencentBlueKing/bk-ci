@@ -747,6 +747,11 @@ class TriggerBuildService @Autowired constructor(
             }
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
+            if (step.with == null || (step.with != null && !step.with!!.containsKey("authType"))) {
+                inputMap["accessToken"] =
+                    oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
+                inputMap["authType"] = "ACCESS_TOKEN"
+            }
         }
 
         // 拼装插件固定参数

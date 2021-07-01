@@ -30,6 +30,7 @@ package com.tencent.devops.common.ci.v2.utils
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.github.fge.jackson.JsonLoader
@@ -607,28 +608,11 @@ object ScriptYmlUtils {
         )
     }
 
-/*    fun validateYaml(yamlStr: String): Pair<Boolean, String> {
-        val yamlJsonStr = try {
-            convertYamlToJson(yamlStr)
-        } catch (e: Throwable) {
-            logger.error("", e)
-            throw CustomException(Response.Status.BAD_REQUEST, "${e.cause}")
-        }
-
-        try {
-            val schema = getCIBuildYamlSchema()
-            return validate(schema, yamlJsonStr)
-        } catch (e: Throwable) {
-            logger.error("", e)
-            throw CustomException(Response.Status.BAD_REQUEST, "${e.message}")
-        }
-    }*/
-
-    fun validate(schema: String, json: String): Pair<Boolean, String> {
+    fun validate(schema: String, yamlJson: String): Pair<Boolean, String> {
         val schemaNode =
             jsonNodeFromString(schema)
         val jsonNode =
-            jsonNodeFromString(json)
+            jsonNodeFromString(yamlJson)
         val report = JsonSchemaFactory.byDefault().validator.validate(schemaNode, jsonNode)
         val itr = report.iterator()
         val sb = java.lang.StringBuilder()
@@ -639,6 +623,26 @@ object ScriptYmlUtils {
             }
         }
         return Pair(report.isSuccess, sb.toString())
+    }
+
+    fun getPreScriptBuildYamlSchema(): String {
+        val mapper = ObjectMapper()
+        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
+        val schema = mapper.generateJsonSchema(PreScriptBuildYaml::class.java)
+        /*schema.schemaNode.with("properties").with("steps").put("item", CiYamlUtils.getAbstractTaskSchema())
+        schema.schemaNode.with("properties").with("services").put("item", CiYamlUtils.getAbstractServiceSchema())
+        schema.schemaNode.with("properties")
+            .with("stages")
+            .with("items")
+            .with("properties")
+            .with("stage")
+            .with("items")
+            .with("properties")
+            .with("job")
+            .with("properties")
+            .with("steps")
+            .put("item", CiYamlUtils.getAbstractTaskSchema())*/
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema)
     }
 
     fun jsonNodeFromString(json: String): JsonNode = JsonLoader.fromString(json)

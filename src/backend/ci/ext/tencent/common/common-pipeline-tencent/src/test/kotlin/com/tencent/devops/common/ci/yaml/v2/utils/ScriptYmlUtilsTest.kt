@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.ci.yaml.v2.utils
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -36,6 +37,7 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.regex.Pattern
+import javax.ws.rs.core.Response
 
 class ScriptYmlUtilsTest {
 
@@ -87,6 +89,39 @@ class ScriptYmlUtilsTest {
             println(formatVariablesValue(u.value!!, settingMap))
         }
         println(obj.variables)
+    }
+
+    @Test
+    fun validateYamlTest() {
+        val yamlJsonStr = try {
+            ScriptYmlUtils.convertYamlToJson(ScriptYmlUtils.formatYaml(getFileStr("Sample1.yml")))
+        } catch (e: Throwable) {
+            throw CustomException(Response.Status.BAD_REQUEST, "${e.cause}")
+        }
+
+        val schema = getFileStr("gitciv2-schema.json")
+        println(ScriptYmlUtils.validate(schema, yamlJsonStr))
+    }
+
+    private fun getFileStr(fileName: String): String {
+        val classPathResource = ClassPathResource(fileName)
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+/*            if (str != null && str!!.startsWith("on:")) {
+                sb.append(str!!.replace("on", "trigger-on")).append("\n")
+            } else {
+                sb.append(str).append("\n")
+            }*/
+
+            sb.append(str).append("\n")
+        }
+
+        return sb.toString()
     }
 
     private fun formatVariablesValue(value: String, settingMap: Map<String, String>): String {
