@@ -63,9 +63,8 @@ class UserProjectMemberResourceImpl @Autowired constructor(
     override fun getRoleMember(
         projectId: Int,
         roleId: Int,
-        userId: String?,
-        page: Int,
-        pageSize: Int
+        page: Int?,
+        pageSize: Int?
     ): Result<ManagerGroupMemberVo> {
         return Result(
             permissionRoleMemberService.getRoleMember(
@@ -76,7 +75,7 @@ class UserProjectMemberResourceImpl @Autowired constructor(
             ))
     }
 
-    override fun getProjectAllMember(projectId: Int, page: Int, pageSize: Int): Result<ProjectMembersVO?> {
+    override fun getProjectAllMember(projectId: Int, page: Int?, pageSize: Int?): Result<ProjectMembersVO?> {
         return Result(permissionRoleMemberService.getProjectAllMember(projectId, page, pageSize))
     }
 

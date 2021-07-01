@@ -123,8 +123,8 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
     override fun getRoleMember(
         projectId: Int,
         roleId: Int,
-        page: Int,
-        pageSiz: Int
+        page: Int?,
+        pageSiz: Int?
     ): ManagerGroupMemberVo {
         val iamId = groupService.getRelationId(roleId)
         if (iamId == null) {
@@ -132,13 +132,13 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
             throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
         }
         val pageInfoDTO = PageInfoDTO()
-        val pageInfo = PageUtil.convertPageSizeToSQLLimit(page, pageSiz)
+        val pageInfo = PageUtil.convertPageSizeToSQLLimit(page, pageSiz ?: 1000)
         pageInfoDTO.limit = pageInfo.limit.toLong()
         pageInfoDTO.offset = pageInfo.offset.toLong()
         return iamManagerService.getRoleGroupMember(iamId.toInt(), pageInfoDTO)
     }
 
-    override fun getProjectAllMember(projectId: Int, page: Int, pageSiz: Int): ProjectMembersVO? {
+    override fun getProjectAllMember(projectId: Int, page: Int?, pageSiz: Int?): ProjectMembersVO? {
         if (projectMemberCache.getIfPresent(projectId.toString()) != null) {
             logger.info("getProjectAllMember $projectId get by cache")
             return projectMemberCache.getIfPresent(projectId.toString())!!
@@ -149,7 +149,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
             return null
         }
         val pageInfoDTO = PageInfoDTO()
-        val pageInfo = PageUtil.convertPageSizeToSQLLimit(page, pageSiz)
+        val pageInfo = PageUtil.convertPageSizeToSQLLimit(page ?: 0, pageSiz ?: 2000)
         pageInfoDTO.limit = pageInfo.limit.toLong()
         pageInfoDTO.offset = pageInfo.offset.toLong()
 
