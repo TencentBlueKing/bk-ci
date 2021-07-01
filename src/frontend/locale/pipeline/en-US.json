@@ -427,6 +427,7 @@
         "loadPipelineVersionSuccess": "load version {version} successed，please confirm pipeline content"
     },
     "history": {
+        "uploadLog": "The log is uploading, please try again later",
         "logEmpty": "Log is empty",
         "logClear": "Log is cleared",
         "logClose": "Log is closed",

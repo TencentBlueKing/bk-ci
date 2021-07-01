@@ -429,6 +429,7 @@
         "loadPipelineVersionSuccess": "加载版本 {version} 成功，请确认版本内容"
     },
     "history": {
+        "uploadLog": "日志正在上传中，请稍后再试",
         "logEmpty": "日志为空",
         "logClear": "日志被清除",
         "logClose": "日志被关闭",
