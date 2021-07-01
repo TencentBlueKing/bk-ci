@@ -157,7 +157,11 @@ class ExperienceService @Autowired constructor(
 
         val experienceList = experienceDao.list(dslContext, projectId, searchTime, online)
         val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
-        val experiencePermissionListMap = experiencePermissionService.filterExperience(userId, projectId, setOf(AuthPermission.EDIT))
+        val experiencePermissionListMap = experiencePermissionService.filterExperience(
+            user = userId,
+            projectId = projectId,
+            authPermissions = setOf(AuthPermission.EDIT)
+        )
 
         return experienceList.map {
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)

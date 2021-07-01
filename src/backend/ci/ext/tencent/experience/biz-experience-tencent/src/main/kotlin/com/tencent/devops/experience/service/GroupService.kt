@@ -185,7 +185,12 @@ class GroupService @Autowired constructor(
             experienceGroupOuterDao.create(dslContext, groupId, it)
         }
 
-        experiencePermissionService.createGroupResource(userId = userId, projectId = projectId, groupId = groupId, groupName = group.name)
+        experiencePermissionService.createGroupResource(
+            userId = userId,
+            projectId = projectId,
+            groupId = groupId,
+            groupName = group.name
+        )
     }
 
     fun get(userId: String, projectId: String, groupHashId: String): Group {
