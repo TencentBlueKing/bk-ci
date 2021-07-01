@@ -767,7 +767,7 @@ class ExperienceService @Autowired constructor(
             )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION,
+                errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION,
                 defaultMessage = message,
                 params = arrayOf(permissionMsg)
             )
