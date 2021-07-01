@@ -114,7 +114,11 @@ class TxV3AuthProjectApi @Autowired constructor(
         ).data ?: false
     }
 
-    override fun getProjectRoles(serviceCode: AuthServiceCode, projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
+    override fun getProjectRoles(
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        projectId: String
+    ): List<BKAuthProjectRolesResources> {
         return client.get(ServiceProjectAuthResource::class).getProjectRoles(
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectCode,
@@ -122,7 +126,10 @@ class TxV3AuthProjectApi @Autowired constructor(
         ).data ?: emptyList()
     }
 
-    override fun getProjectInfo(serviceCode: AuthServiceCode, projectCode: String): BkAuthProjectInfoResources? {
+    override fun getProjectInfo(
+        serviceCode: AuthServiceCode,
+        projectCode: String
+    ): BkAuthProjectInfoResources? {
         return null
     }
 }

@@ -266,7 +266,11 @@ class GroupService @Autowired constructor(
             experienceGroupOuterDao.create(dslContext, groupId, it)
         }
 
-        experiencePermissionService.modifyGroupResource(projectId = projectId, groupId = groupId, groupName = group.name)
+        experiencePermissionService.modifyGroupResource(
+            projectId = projectId,
+            groupId = groupId,
+            groupName = group.name
+        )
     }
 
     fun delete(userId: String, projectId: String, groupHashId: String) {

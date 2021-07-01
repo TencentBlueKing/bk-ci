@@ -52,7 +52,12 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         }
     }
 
-    override fun createTaskResource(user: String, projectId: String, experienceId: Long, experienceName: String) {
+    override fun createTaskResource(
+        user: String,
+        projectId: String,
+        experienceId: Long,
+        experienceName: String
+    ) {
         bsAuthResourceApi.createResource(
             user = user,
             serviceCode = experienceServiceCode,
@@ -83,7 +88,13 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         return map
     }
 
-    override fun validateGroupPermission(userId: String, projectId: String, groupId: Long, authPermission: AuthPermission, message: String) {
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        groupId: Long,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (!bsAuthPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = experienceServiceCode,
@@ -136,7 +147,11 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+    override fun filterGroup(
+        user: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
         val permissionResourceMap = bsAuthPermissionApi.getUserResourcesByPermissions(
             user = user,
             serviceCode = experienceServiceCode,

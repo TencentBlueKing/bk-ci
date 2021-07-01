@@ -81,7 +81,13 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
         return resultMap
     }
 
-    override fun validateGroupPermission(userId: String, projectId: String, groupId: Long, authPermission: AuthPermission, message: String) {
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        groupId: Long,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -115,7 +121,11 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
         return
     }
 
-    override fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+    override fun filterGroup(
+        user: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
         val actions = TActionUtils.buildActionList(authPermissions, AuthResourceType.EXPERIENCE_GROUP)
         val instanceMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenService.getSystemToken(null)!!,

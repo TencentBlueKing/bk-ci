@@ -56,11 +56,22 @@ class BkIamPermissionRoleExtService @Autowired constructor(
     authGroupDao,
     dslContext
 ) {
-    override fun groupCreateExt(roleId: Int, userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO) {
+    override fun groupCreateExt(
+        roleId: Int,
+        userId: String,
+        projectId: Int,
+        projectCode: String,
+        groupInfo: ProjectRoleDTO
+    ) {
         super.groupCreateExt(roleId, userId, projectId, projectCode, groupInfo)
     }
 
-    override fun renameRoleExt(userId: String, projectId: Int, realtionRoleId: Int, groupInfo: ProjectRoleDTO) {
+    override fun renameRoleExt(
+        userId: String,
+        projectId: Int,
+        realtionRoleId: Int,
+        groupInfo: ProjectRoleDTO
+    ) {
         super.renameRoleExt(userId, projectId, realtionRoleId, groupInfo)
     }
 

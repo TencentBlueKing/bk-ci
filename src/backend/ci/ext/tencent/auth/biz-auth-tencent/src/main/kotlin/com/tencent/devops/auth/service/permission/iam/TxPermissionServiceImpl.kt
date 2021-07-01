@@ -47,7 +47,12 @@ class TxPermissionServiceImpl @Autowired constructor(
         return super.validateUserActionPermission(userId, action)
     }
 
-    override fun validateUserResourcePermission(userId: String, action: String, projectCode: String, resourceType: String?): Boolean {
+    override fun validateUserResourcePermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String?
+    ): Boolean {
         if (reviewManagerCheck(
                 userId = userId,
                 projectCode = projectCode,

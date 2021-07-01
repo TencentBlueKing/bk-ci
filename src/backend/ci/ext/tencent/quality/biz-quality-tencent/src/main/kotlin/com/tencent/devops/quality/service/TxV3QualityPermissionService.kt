@@ -92,7 +92,11 @@ class TxV3QualityPermissionService @Autowired constructor(
         return resultMap
     }
 
-    override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+    override fun validateRulePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -102,7 +106,12 @@ class TxV3QualityPermissionService @Autowired constructor(
         ).data ?: false
     }
 
-    override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+    override fun validateRulePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (!validateRulePermission(userId, projectId, authPermission)) {
             throw PermissionForbiddenException(message)
         }

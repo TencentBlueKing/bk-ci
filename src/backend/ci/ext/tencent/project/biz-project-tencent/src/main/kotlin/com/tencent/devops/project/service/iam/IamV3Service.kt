@@ -122,7 +122,11 @@ class IamV3Service @Autowired constructor(
 
             // 修改V3项目对应的projectId
             if (relationIam && !event.iamProjectId.isNullOrEmpty()) {
-                projectDao.updateRelationByCode(dslContext, resourceRegisterInfo.resourceCode, event.iamProjectId.toString())
+                projectDao.updateRelationByCode(
+                    dslContext,
+                    resourceRegisterInfo.resourceCode,
+                    event.iamProjectId.toString()
+                )
             }
         } finally {
             watcher.stop()

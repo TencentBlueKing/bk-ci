@@ -81,7 +81,11 @@ class AuthPipelineService @Autowired constructor(
 //        val pipelineInfos =
 //            client.get(ServiceAuthPipelineResource::class)
 //                .pipelineList(projectId, offset, limit).data
-        val pipelineInfos = pipelineListFacadeService.getPipelinePage(projectId = projectId, limit = limit, offset = offset)
+        val pipelineInfos = pipelineListFacadeService.getPipelinePage(
+            projectId = projectId,
+            limit = limit,
+            offset = offset
+        )
         val result = ListInstanceInfo()
         if (pipelineInfos?.records == null) {
             logger.info("$projectId 项目下无流水线")

@@ -154,7 +154,16 @@ class TxV3AuthPermissionApi @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun addResourcePermissionForUsers(userId: String, projectCode: String, serviceCode: AuthServiceCode, permission: AuthPermission, resourceType: AuthResourceType, resourceCode: String, userIdList: List<String>, supplier: (() -> List<String>)?): Boolean {
+    override fun addResourcePermissionForUsers(
+        userId: String,
+        projectCode: String,
+        serviceCode: AuthServiceCode,
+        permission: AuthPermission,
+        resourceType: AuthResourceType,
+        resourceCode: String,
+        userIdList: List<String>,
+        supplier: (() -> List<String>)?
+    ): Boolean {
         TODO("Not yet implemented")
     }
 
