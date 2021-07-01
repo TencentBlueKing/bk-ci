@@ -25,50 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci
+package com.tencent.devops.common.ci.v2
 
-import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
-import org.junit.Test
-import org.springframework.core.io.ClassPathResource
-import java.io.BufferedReader
-import java.io.InputStream
-import java.io.InputStreamReader
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 
-internal class CiYamlUtilsTest {
-
-    @Test
-    fun versionExist() {
-        val classPathResource = ClassPathResource("test.yml")
-        val inputStream: InputStream = classPathResource.inputStream
-        val isReader = InputStreamReader(inputStream)
-
-        val reader = BufferedReader(isReader)
-        val sb = StringBuffer()
-        var str: String?
-        while (reader.readLine().also { str = it } != null) {
-            sb.append(str).append("\n")
-        }
-
-        println(sb.toString())
-
-        // println(CiYamlUtils.parseVersion(sb.toString()))
-    }
-
-    @Test
-    fun toYamlString() {
-        val yamlObj = ScriptBuildYaml(
-            version = "v2.0",
-            name = "myName",
-            label = null,
-            triggerOn = null,
-            variables = null,
-            stages = listOf(),
-            extends = null,
-            resource = null,
-            notices = null,
-            finally = listOf()
-        )
-        println(YamlUtil.toYaml(yamlObj))
-    }
-}
+/**
+ * model
+ *
+ * WARN: 该类需要与 PreScriptBuildYaml.kt 保持同步修改
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ExportPreScriptBuildYaml(
+    var version: String?,
+    var name: String?,
+    var label: List<String>? = null,
+    var triggerOn: PreTriggerOn?,
+    var variables: Map<String, String>? = null,
+    var stages: List<PreStage>? = null,
+    var jobs: Map<String, PreJob>? = null,
+    var steps: List<Step>? = null,
+    var extends: Extends? = null,
+    var resources: Resources?,
+    var notices: List<Notices>?,
+    var finally: Map<String, PreJob>? = null
+)
