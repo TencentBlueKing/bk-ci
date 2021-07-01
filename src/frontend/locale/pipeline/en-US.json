@@ -687,7 +687,7 @@
         "paramValueTips": "Please enter param values",
         "selectParamValueTips": "Please select param values",
         "selectOptions": "Drop-down options",
-        "optionsDesc": "Separate options with line breaks and there should not be an English comma contained in the options. Only one option will be shown if there are serval same options at the same time, format \"{id}={name} | {id} \"",
+        "optionsDesc": "Separate options with line breaks <br>There should not be an English comma contained in the options <br>Only one option will be shown if there are serval same options at the same time <br> Similar to the HTML SELECT tag,format \"{value}={name} | {value} \"",
         "chineseName": "ChineseName",
         "chineseNameTips": "Please enter Chinese name",
         "optionTips": " Please break your lines if there are serval things to be recorded",
