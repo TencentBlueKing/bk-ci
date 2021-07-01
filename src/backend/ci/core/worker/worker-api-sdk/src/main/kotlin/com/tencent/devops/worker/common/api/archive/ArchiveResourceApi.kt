@@ -129,6 +129,10 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
+    override fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables) {
+        logger.warn("uploadLog not implemented")
+    }
+
     override fun downloadCustomizeFile(
         userId: String,
         projectId: String,
