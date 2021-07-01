@@ -37,17 +37,22 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TIME_TRIGGER_KIND
+import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
@@ -76,8 +81,8 @@ class PipelineContextService@Autowired constructor(
                 }
             }
             buildCiContext(varMap, modelDetail, buildVar)
-        } catch (e: Throwable) {
-            logger.error("Build context failed,", e)
+        } catch (ignore: Throwable) {
+            logger.warn("BKSystemErrorMonitor|buildContextFailed|", ignore)
         }
 
         return varMap
@@ -121,6 +126,18 @@ class PipelineContextService@Autowired constructor(
         } else if (!buildVar[PIPELINE_GIT_EVENT].isNullOrBlank()) {
             varMap["ci.event"] = buildVar[PIPELINE_GIT_EVENT]!!
         }
+        if (!buildVar[PIPELINE_GIT_REPO_URL].isNullOrBlank()) {
+            varMap["ci.repo_url"] = buildVar[PIPELINE_GIT_REPO_URL]!!
+        }
+        if (!buildVar[PIPELINE_GIT_BASE_REPO_URL].isNullOrBlank()) {
+            varMap["ci.base_repo_url"] = buildVar[PIPELINE_GIT_BASE_REPO_URL]!!
+        }
+        if (!buildVar[PIPELINE_GIT_HEAD_REPO_URL].isNullOrBlank()) {
+            varMap["ci.head_repo_url"] = buildVar[PIPELINE_GIT_HEAD_REPO_URL]!!
+        }
+        if (!buildVar[PIPELINE_GIT_MR_URL].isNullOrBlank()) {
+            varMap["ci.mr_url"] = buildVar[PIPELINE_GIT_MR_URL]!!
+        }
     }
 
     private fun buildStepContext(
@@ -153,7 +170,6 @@ class PipelineContextService@Autowired constructor(
             varMap["job.name"] = c.name
             varMap["job.status"] = getJobStatus(c)
             varMap["job.outcome"] = c.status ?: ""
-            varMap["job.os"] = getOs(c)
             varMap["job.container.network"] = getNetWork(c)
             varMap["job.stage_id"] = stage.id ?: ""
             varMap["job.stage_name"] = stage.name ?: ""
@@ -164,7 +180,6 @@ class PipelineContextService@Autowired constructor(
         varMap["jobs.${c.jobId ?: c.id ?: ""}.name"] = c.name
         varMap["jobs.${c.jobId ?: c.id ?: ""}.status"] = getJobStatus(c)
         varMap["jobs.${c.jobId ?: c.id ?: ""}.outcome"] = c.status ?: ""
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.os"] = getOs(c)
         varMap["jobs.${c.jobId ?: c.id ?: ""}.container.network"] = getNetWork(c)
         varMap["jobs.${c.jobId ?: c.id ?: ""}.stage_id"] = stage.id ?: ""
         varMap["jobs.${c.jobId ?: c.id ?: ""}.stage_name"] = stage.name ?: ""
@@ -174,6 +189,9 @@ class PipelineContextService@Autowired constructor(
         val outputMap = mutableMapOf<String, String>()
         buildVar.filterKeys { it.startsWith("steps.${e.id ?: ""}.outputs.") }.forEach { (t, u) ->
             outputMap["jobs.${c.jobId ?: c.id ?: ""}.$t"] = u
+        }
+        buildVar.filterKeys { it.startsWith("jobs.${c.id ?: ""}.os") }.forEach { (t, u) ->
+            outputMap["jobs.${c.jobId ?: c.id ?: ""}.os"] = u
         }
         return outputMap
     }
@@ -228,7 +246,7 @@ class PipelineContextService@Autowired constructor(
 
     private fun getStepStatus(e: Element): String {
         return if (e.status == BuildStatus.FAILED.name) {
-            if (e.additionalOptions?.continueWhenFailed == true) {
+            if (ControlUtils.continueWhenFailure(e.additionalOptions)) {
                 BuildStatus.SUCCEED.name
             } else {
                 BuildStatus.FAILED.name

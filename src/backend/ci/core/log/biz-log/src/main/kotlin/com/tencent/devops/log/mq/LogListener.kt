@@ -31,7 +31,7 @@ import com.tencent.devops.common.log.pojo.LogBatchEvent
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.log.service.LogService
-import com.tencent.devops.common.log.utils.LogMQEventDispatcher
+import com.tencent.devops.log.service.BuildLogPrintService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component
 @Component
 class LogListener @Autowired constructor(
     private val logService: LogService,
-    private val logMQEventDispatcher: LogMQEventDispatcher
+    private val buildLogPrintService: BuildLogPrintService
 ) {
 
     fun logEvent(event: LogEvent) {
@@ -53,7 +53,7 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    logMQEventDispatcher.dispatch(LogEvent(
+                    buildLogPrintService.dispatchEvent(LogEvent(
                         buildId = buildId,
                         logs = logs,
                         retryTime = retryTime - 1,
@@ -75,7 +75,7 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    logMQEventDispatcher.dispatch(LogBatchEvent(
+                    buildLogPrintService.dispatchEvent(LogBatchEvent(
                         buildId = buildId,
                         logs = logs,
                         retryTime = retryTime - 1,
@@ -97,18 +97,17 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    logMQEventDispatcher.dispatch(
-                        LogStatusEvent(
-                            buildId = buildId,
-                            finished = finished,
-                            tag = tag,
-                            subTag = subTag,
-                            jobId = jobId,
-                            executeCount = executeCount,
-                            retryTime = retryTime - 1,
-                            delayMills = getNextDelayMills(retryTime)
-                        )
-                    )
+                    buildLogPrintService.dispatchEvent(LogStatusEvent(
+                        buildId = buildId,
+                        finished = finished,
+                        tag = tag,
+                        subTag = subTag,
+                        jobId = jobId,
+                        logStorageMode = logStorageMode,
+                        executeCount = executeCount,
+                        retryTime = retryTime - 1,
+                        delayMills = getNextDelayMills(retryTime)
+                    ))
                 }
             }
         }

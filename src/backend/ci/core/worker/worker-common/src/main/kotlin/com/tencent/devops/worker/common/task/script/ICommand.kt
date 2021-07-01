@@ -30,7 +30,9 @@ package com.tencent.devops.worker.common.task.script
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
+import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -69,7 +71,8 @@ interface ICommand {
             }
         }, mapOf(
             WORKSPACE_CONTEXT to dir.absolutePath,
-            CI_TOKEN_CONTEXT to (data[CI_TOKEN_CONTEXT] ?: "")
+            CI_TOKEN_CONTEXT to (data[CI_TOKEN_CONTEXT] ?: ""),
+            JOB_OS_CONTEXT to AgentEnv.getOS().name
         ))
     }
 
