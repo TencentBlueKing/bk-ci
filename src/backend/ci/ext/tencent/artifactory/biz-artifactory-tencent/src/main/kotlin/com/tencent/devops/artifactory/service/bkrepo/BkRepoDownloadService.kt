@@ -55,13 +55,11 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 
-@Service
-class BkRepoDownloadService @Autowired constructor(
+open class BkRepoDownloadService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val bkRepoService: BkRepoService,
     private val client: Client,
