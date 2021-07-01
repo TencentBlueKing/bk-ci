@@ -94,7 +94,7 @@ class ScriptYmlUtilsTest {
     @Test
     fun validateYamlTest() {
         val yamlJsonStr = try {
-            ScriptYmlUtils.convertYamlToJson(ScriptYmlUtils.formatYaml(getFileStr("template.yml")))
+            ScriptYmlUtils.convertYamlToJson(ScriptYmlUtils.formatYaml(getFileStr("test.yml")))
         } catch (e: Throwable) {
             throw CustomException(Response.Status.BAD_REQUEST, "${e.cause}")
         }

@@ -1,83 +1,12 @@
 version: v2.0
 
 on:
-  push:
-    branches:
-      - master
-      - release/*
-    path:
-      - src/*
-  tag:
-    tags:
-      - release_*
-    from-branches:
-      - master
-  mr:
-    target-branches:
-      - master
-    path:
-      - src/*/*
+  push: [ master ]
 
 variables:
-  DEPLOY_TYPE:
-    value: dev
-  APPROVE:
-    value: this_${{ approve22 }}
-  GIT_USERNAME:
-    value: user1
-    readonly: true
+  template:
+    - name: vars.yml
 
-stages:
-  - name: "stage1"
-    jobs:
-      job_id_1:
-        name: my_job_1
-        steps:
-          - run: |
-              echo "stage1, job_id_1"
-              echo "hello world1111" >> test.txt
-              ls -l
-          - uses: SawyerJavaTest@1.*
-            with:
-              desc: 10000
-        timeout-minutes: 480
-        env:
-        continue-on-error: true
-
-      job_id_2:
-        name: my_job_1
-        steps:
-          - run: |
-              echo "stage1, job_id_2"
-          - uses: SawyerJavaTest@1.*
-            with:
-              desc: 10000
-        depend-on:
-          - job_id_1
-      job_id_3:
-        name: my_job_3
-        steps:
-          - run: |
-              echo "stage1, job_id_3"
-      job_id_4:
-        name: my_job_4
-        steps:
-          - run: |
-              echo "stage1, job_id_4"
-        depend-on:
-          - job_id_2
-          - job_id_3
-      job_id_5:
-        name: my_job_5
-        runs-on:
-         - agentless
-        container:
-          image: mirrors.tencent.com/ci/tlinux_ci:0.5.0.4
-        steps:
-          - name: agentless-task1
-            uses: UploadArtifactory@1.*
-            with:
-              path: test.txt
-            timeout-minutes: 480
-            continue-on-error: false
-            retry-times: 0
+steps:
+  - run: |
+      echo "APPROVE is ${{ variables.APPROVE }}"

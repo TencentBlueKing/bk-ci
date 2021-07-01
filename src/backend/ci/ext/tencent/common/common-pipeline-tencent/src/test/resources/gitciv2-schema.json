@@ -202,6 +202,30 @@
                 "type": "string"
               },
               {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "parameters": {
+                      "type": "object"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              {
                 "type": "object",
                 "properties": {
                   "value": {
@@ -213,12 +237,6 @@
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "array",
-          "items": {
-            "type": "object"
           }
         }
       ]
