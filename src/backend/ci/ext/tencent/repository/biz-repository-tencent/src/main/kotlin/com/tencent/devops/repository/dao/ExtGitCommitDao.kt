@@ -25,20 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository
+package com.tencent.devops.repository.dao
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.client.Client
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.model.repository.tables.TRepositoryCommit
+import com.tencent.devops.model.repository.tables.records.TRepositoryCommitRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class RepositoryConfiguration {
-    @Bean
-    fun managerService(client: Client) = ManagerService(client)
+@Suppress("ALL")
+@Repository
+class ExtGitCommitDao {
+
+    fun getBuildCommit(dslContext: DSLContext, pipelineId: String, commitId: String): TRepositoryCommitRecord? {
+        with(TRepositoryCommit.T_REPOSITORY_COMMIT) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(COMMIT.eq(commitId))
+                .fetchAny()
+        }
+    }
 }

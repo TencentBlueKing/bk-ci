@@ -25,20 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository
+package com.tencent.devops.repository.resources
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.client.Client
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.ServiceGitCommitResource
+import com.tencent.devops.repository.pojo.commit.CommitData
+import com.tencent.devops.repository.service.GitCommitService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class RepositoryConfiguration {
-    @Bean
-    fun managerService(client: Client) = ManagerService(client)
+@RestResource
+class ServiceGitCommitResourceImpl @Autowired constructor(
+    private val gitCommitService: GitCommitService
+) : ServiceGitCommitResource {
+
+    override fun queryCommitInfo(projectCode: String, commit: String): Result<CommitData?> {
+        return Result(gitCommitService.getCommit(pipelineId = projectCode, commitId = commit))
+    }
 }
