@@ -26,8 +26,24 @@ BEGIN
             ALTER TABLE T_AUTH_IAM_CALLBACK MODIFY COLUMN GATEWAY VARCHAR(255) NOT NULL;
         END IF;
     END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_AUTH_IAM_CALLBACK'
+                AND COLUMN_NAME = 'PATH') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_AUTH_IAM_CALLBACK'
+                        AND COLUMN_NAME = 'PATH'
+                        AND COLUMN_TYPE = 'varchar(1024)') THEN
+            ALTER TABLE T_AUTH_IAM_CALLBACK MODIFY COLUMN PATH VARCHAR(1024) NOT NULL;
+        END IF;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
 COMMIT;
-CALL ci_store_schema_update();
+CALL ci_auth_schema_update();
