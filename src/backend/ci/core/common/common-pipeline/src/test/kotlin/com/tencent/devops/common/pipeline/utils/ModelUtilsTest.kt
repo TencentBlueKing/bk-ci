@@ -157,9 +157,9 @@ class ModelUtilsTest {
         val elements = mutableListOf(retryElement)
         containers.add(VMBuildContainer(baseOS = VMBaseOS.MACOS, elements = elements, status = failStatus))
 
-        // 默认不允许重试、跳过
+        // 没有指定manualRetry, 默认允许手动重试（为了兼容旧数据使用习惯））、没有指定manualSkip则默认不允许跳过
         retryElement.additionalOptions = elementAdditionalOptions()
-        loopCheckElement(stage = stages[1], e = retryElement, model = model, canRetry = false, canSkip = false)
+        loopCheckElement(stage = stages[1], e = retryElement, model = model, canRetry = true, canSkip = false)
 
         // 指定要手动重试
         retryElement.additionalOptions = elementAdditionalOptions(manualRetry = true)
@@ -226,7 +226,7 @@ class ModelUtilsTest {
             continueWhenFailed = true,
             manualSkip = true,
             runCondition = RunCondition.PRE_TASK_FAILED_ONLY
-        )
+        ) // 没有指定manualRetry, 默认允许手动重试（为了兼容旧数据使用习惯）
         elements.add(e1)
         elements.add(e2)
 
@@ -236,7 +236,7 @@ class ModelUtilsTest {
         ModelUtils.refreshCanRetry(model)
         assertEquals(false, e1.canRetry ?: false) // e1是 失败自动跳过, 永远不会出现 重试或跳过
         assertEquals(false, e1.canSkip ?: false) // e1是 失败自动跳过, 永远不会出现 重试或跳过
-        assertEquals(false, e2.canRetry ?: false)
+        assertEquals(true, e2.canRetry) // 没有指定manualRetry, 默认允许手动重试（为了兼容旧数据使用习惯）
         assertEquals(true, e2.canSkip)
 
         resetElement(e1, failStatus)
@@ -277,7 +277,7 @@ class ModelUtilsTest {
         ModelUtils.refreshCanRetry(model)
         assertEquals(false, e1.canRetry ?: false)
         assertEquals(false, e1.canSkip ?: false)
-        assertEquals(false, e2.canRetry ?: false)
+        assertEquals(true, e2.canRetry) // 没有指定manualRetry, 默认允许手动重试（为了兼容旧数据使用习惯）
         assertEquals(true, e2.canSkip)
 
         //
@@ -341,7 +341,7 @@ class ModelUtilsTest {
         runCondition: RunCondition = RunCondition.PRE_TASK_SUCCESS,
         continueWhenFailed: Boolean = false,
         manualSkip: Boolean? = null,
-        manualRetry: Boolean? = null,
+        manualRetry: Boolean = true,
         retryWhenFailed: Boolean = false
     ): ElementAdditionalOptions {
 

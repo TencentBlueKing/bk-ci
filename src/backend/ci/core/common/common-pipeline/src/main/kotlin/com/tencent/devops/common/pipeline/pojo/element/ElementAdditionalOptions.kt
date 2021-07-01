@@ -35,7 +35,7 @@ data class ElementAdditionalOptions(
     val manualSkip: Boolean? = null, // (continueWhenFailed = true && manualSkip = true) 出现跳过按钮（手动继续）
     val retryWhenFailed: Boolean = false,
     val retryCount: Int = 0,
-    val manualRetry: Boolean? = null, // 自动重试一直失败后，界面出现重试按钮
+    val manualRetry: Boolean = true, // 自动重试一直失败后，界面出现重试按钮, 默认允许手动重试（为了兼容旧数据使用习惯）
     val timeout: Long? = 100, // 超时分钟
     val runCondition: RunCondition?,
     var pauseBeforeExec: Boolean? = false, // 是否配置前置暂停
