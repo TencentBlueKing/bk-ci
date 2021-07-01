@@ -43,7 +43,7 @@ object IamGroupUtils {
             "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
     }
 
-    fun buildManagerDescription(projectName: String, userId: String) : String {
+    fun buildManagerDescription(projectName: String, userId: String): String {
         return "$projectName 分级管理员, 由$userId 创建于" +
             "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
     }

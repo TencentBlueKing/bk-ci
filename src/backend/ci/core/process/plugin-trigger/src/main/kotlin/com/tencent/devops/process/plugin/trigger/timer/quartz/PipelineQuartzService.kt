@@ -58,7 +58,6 @@ class PipelineQuartzService @Autowired constructor(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
-
     @Value("\${timer.execute:#{null}}")
     private val timeExecute: String? = null
 

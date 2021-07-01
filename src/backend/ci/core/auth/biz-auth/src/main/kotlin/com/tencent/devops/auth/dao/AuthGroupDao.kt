@@ -190,5 +190,4 @@ class AuthGroupDao {
             dslContext.delete(this).where(ID.eq(roleId)).execute()
         }
     }
-
 }
