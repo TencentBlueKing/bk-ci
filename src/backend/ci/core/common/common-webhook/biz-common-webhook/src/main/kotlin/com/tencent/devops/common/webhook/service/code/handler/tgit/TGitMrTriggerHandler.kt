@@ -37,6 +37,7 @@ import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathPrefixFilter
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
@@ -173,30 +174,36 @@ class TGitMrTriggerHandler(
                 pipelineId = pipelineId,
                 triggerOnMessage = event.object_attributes.last_commit.message
             )
-            // 只有开启路径匹配时才查询mr change file list
-            val mrChangeInfo = if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
-                null
-            } else {
-                val mrId = if (repository is CodeGitlabRepository) {
-                    event.object_attributes.iid
-                } else {
-                    event.object_attributes.id
+
+            // 懒加载请求修改的路径,只有前面所有匹配通过,再去查询
+            val pathFilter = object : WebhookFilter {
+                override fun doFilter(response: WebhookFilterResponse): Boolean {
+                    // 只有开启路径匹配时才查询mr change file list
+                    val mrChangeInfo = if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
+                        null
+                    } else {
+                        val mrId = if (repository is CodeGitlabRepository) {
+                            event.object_attributes.iid
+                        } else {
+                            event.object_attributes.id
+                        }
+                        gitScmService.getMergeRequestChangeInfo(projectId, mrId, repository)
+                    }
+                    val changeFiles = mrChangeInfo?.files?.map {
+                        if (it.deletedFile) {
+                            it.oldPath
+                        } else {
+                            it.newPath
+                        }
+                    } ?: emptyList()
+                    return PathPrefixFilter(
+                        pipelineId = pipelineId,
+                        triggerOnPath = changeFiles,
+                        includedPaths = convert(includePaths),
+                        excludedPaths = convert(excludePaths)
+                    ).doFilter(response)
                 }
-                gitScmService.getMergeRequestChangeInfo(projectId, mrId, repository)
             }
-            val changeFiles = mrChangeInfo?.files?.map {
-                if (it.deletedFile) {
-                    it.oldPath
-                } else {
-                    it.newPath
-                }
-            } ?: emptyList()
-            val pathFilter = PathPrefixFilter(
-                pipelineId = pipelineId,
-                triggerOnPath = changeFiles,
-                includedPaths = convert(includePaths),
-                excludedPaths = convert(excludePaths)
-            )
             return listOf(sourceBranchFilter, skipCiFilter, pathFilter)
         }
     }
