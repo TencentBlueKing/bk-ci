@@ -5,7 +5,6 @@ dependencies {
     compile project(":core:common:common-util")
     compile project(":core:common:common-db")
     compile project(":core:common:common-auth-api")
-    compile project(":core:common:common-auth-gongfeng")
     compile project(":core:common:common-redis")
     compile project(":core:task:model-task")
     compile project(":core:task:api-task")

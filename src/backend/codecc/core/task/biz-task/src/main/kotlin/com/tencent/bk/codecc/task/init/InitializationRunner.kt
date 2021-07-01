@@ -39,7 +39,6 @@ import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.RedisKeyConstants
 import com.tencent.devops.common.constant.RedisKeyConstants.STANDARD_LANG
 import com.tencent.devops.common.service.ToolMetaCacheService
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.util.ThreadPoolUtil
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
@@ -69,8 +68,6 @@ class InitializationRunner @Autowired constructor(
     }
 
     override fun run(vararg arg: String?) {
-        val redisTemplate: RedisTemplate<String, String> =
-            SpringContextUtil.getBean(RedisTemplate::class.java, "redisTemplate") as RedisTemplate<String, String>
         val currentVal = redisTemplate.opsForValue().get(RedisKeyConstants.CODECC_TASK_ID)
         if (null == currentVal || currentVal.toLong() < ComConstants.COMMON_NUM_10000L) {
             logger.info("start to initialize redis key!")
@@ -256,8 +253,6 @@ class InitializationRunner @Autowired constructor(
     }
 
     private fun setToolOrder() {
-        val redisTemplate: RedisTemplate<String, String> =
-            SpringContextUtil.getBean(RedisTemplate::class.java, "redisTemplate") as RedisTemplate<String, String>
         val toolOrder = commonDao.toolOrder
         val langOrder = commonDao.langOrder
         redisTemplate.opsForValue().set(RedisKeyConstants.KEY_TOOL_ORDER, toolOrder)
