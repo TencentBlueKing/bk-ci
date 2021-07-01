@@ -240,7 +240,7 @@ span.skip-name {
         &.REVIEW_ABORT,
         &.TRY_FINALLY,
         &.QUEUE_CACHE,
-        &.UNEXEC
+        &.UNEXEC,
         &.SKIP {
             background-color: $cancelColor;
         }

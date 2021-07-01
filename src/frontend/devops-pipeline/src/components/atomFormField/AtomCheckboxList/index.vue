@@ -1,6 +1,6 @@
 <template>
     <bk-checkbox-group :value="value" @change="handleSwitch">
-        <bk-checkbox v-for="item in list" :key="item.value" :value="item.id" :disabled="item.disabled" class="atom-checkbox-list-item">
+        <bk-checkbox v-for="item in list" :key="item.id" :value="item.id" :disabled="item.disabled" class="atom-checkbox-list-item">
             <span v-if="item.desc" v-bk-tooltips="{ content: item.desc, width: 300 }" :class="{ 'disabled-color': item.disabled }">{{ item.name }}</span>
             <span v-else :class="{ 'disabled-color': item.disabled }">{{ item.name }}</span>
         </bk-checkbox>
@@ -25,6 +25,7 @@
         methods: {
             handleSwitch (value) {
                 const { name, handleChange } = this
+                console.log(value)
                 this.$emit('input', value)
                 handleChange(name, value)
             }
