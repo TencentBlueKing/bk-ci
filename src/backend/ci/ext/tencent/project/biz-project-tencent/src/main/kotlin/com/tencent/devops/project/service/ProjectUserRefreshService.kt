@@ -205,7 +205,6 @@ class ProjectUserRefreshService @Autowired constructor(
         }
         logger.info("fixGitCIProjectInfo finished count: $count")
         return count
-
     }
 
     companion object {
