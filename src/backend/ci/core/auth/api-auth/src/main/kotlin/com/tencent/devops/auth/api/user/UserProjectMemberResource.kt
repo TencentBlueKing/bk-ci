@@ -84,15 +84,12 @@ interface UserProjectMemberResource {
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
-        @ApiParam(name = "用户", required = true)
-        @QueryParam("userId")
-        userId: String?,
         @ApiParam(name = "页数", required = true)
         @QueryParam("path")
-        page: Int,
+        page: Int?,
         @ApiParam(name = "页面大小", required = true)
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int?
     ): Result<ManagerGroupMemberVo>
 
     @GET
@@ -104,10 +101,10 @@ interface UserProjectMemberResource {
         projectId: Int,
         @ApiParam(name = "页数", required = true)
         @QueryParam("path")
-        page: Int,
+        page: Int?,
         @ApiParam(name = "页面大小", required = true)
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int?
     ): Result<ProjectMembersVO?>
 
     @DELETE
