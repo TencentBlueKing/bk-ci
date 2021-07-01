@@ -188,10 +188,10 @@ object AuthorizationUtils {
     }
 
     private const val projectAction = "project_view,project_edit,project_delete,all_action," +
-        "project_manage,pipeline_create,pipeline_list,project_views_manager," +
-        "repertory_create,repertory_list,credential_create,credential_list," +
-        "environment_create,environment_list,env_node_create,env_node_list," +
-        "cert_create,cert_list,rule_create,quality_group_create"
+        "project_manage,pipeline_create,project_views_manager," +
+        "repertory_create,credential_create," +
+        "environment_create,env_node_create," +
+        "cert_create,rule_create,quality_group_create"
     private const val pipelineAction = "pipeline_view,pipeline_edit,pipeline_download," +
         "pipeline_delete,pipeline_share,pipeline_execute"
     private const val repertoryAction = "repertory_view,repertory_edit,repertory_delete,repertory_use"

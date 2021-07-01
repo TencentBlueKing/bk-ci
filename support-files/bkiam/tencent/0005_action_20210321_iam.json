@@ -325,28 +325,6 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "pipeline_list",
-        "name": "流水线列表",
-        "name_en": "Pipeline List",
-        "type": "list",
-        "related_resource_types": [
-          {
-            "system_id": "bk_ci",
-            "id": "project",
-            "related_instance_selections": [
-              {
-                "system_id": "bk_ci",
-                "id": "project_instance"
-              }
-            ]
-          }
-        ],
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
         "id": "repertory_view",
         "name": "查看代码库",
         "name_en": "Repository View",
@@ -359,28 +337,6 @@
               {
                 "system_id": "bk_ci",
                 "id": "repertory_instance"
-              }
-            ]
-          }
-        ],
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
-        "id": "repertory_list",
-        "name": "代码库列表",
-        "name_en": "Repository List",
-        "type": "list",
-        "related_resource_types": [
-          {
-            "system_id": "bk_ci",
-            "id": "project",
-            "related_instance_selections": [
-              {
-                "system_id": "bk_ci",
-                "id": "project_instance"
               }
             ]
           }
@@ -520,31 +476,6 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "credential_list",
-        "name": "凭据列表",
-        "name_en": "Credential LIST",
-        "type": "list",
-        "related_resource_types": [
-          {
-            "system_id": "bk_ci",
-            "id": "project",
-            "related_instance_selections": [
-              {
-                "system_id": "bk_ci",
-                "id": "project_instance"
-              }
-            ]
-          }
-        ],
-        "related_actions": [
-          "project_view"
-        ],
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
         "id": "credential_edit",
         "name": "编辑凭据",
         "name_en": "Credential Edit",
@@ -660,31 +591,6 @@
               {
                 "system_id": "bk_ci",
                 "id": "environment_instance"
-              }
-            ]
-          }
-        ],
-        "related_actions": [
-          "project_view"
-        ],
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
-        "id": "environment_list",
-        "name": "环境列表",
-        "name_en": "Environment LIST",
-        "type": "list",
-        "related_resource_types": [
-          {
-            "system_id": "bk_ci",
-            "id": "project",
-            "related_instance_selections": [
-              {
-                "system_id": "bk_ci",
-                "id": "project_instance"
               }
             ]
           }
@@ -827,31 +733,6 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "env_node_list",
-        "name": "节点列表",
-        "name_en": "Node LIST",
-        "type": "list",
-        "related_resource_types": [
-          {
-            "system_id": "bk_ci",
-            "id": "project",
-            "related_instance_selections": [
-              {
-                "system_id": "bk_ci",
-                "id": "project_instance"
-              }
-            ]
-          }
-        ],
-        "related_actions": [
-          "project_view"
-        ],
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
         "id": "env_node_edit",
         "name": "编辑节点",
         "name_en": "Node Edit",
@@ -968,31 +849,6 @@
               {
                 "system_id": "bk_ci",
                 "id": "cert_instance"
-              }
-            ]
-          }
-        ],
-        "related_actions": [
-          "project_view"
-        ],
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
-        "id": "cert_list",
-        "name": "证书列表",
-        "name_en": "CERT LIST",
-        "type": "list",
-        "related_resource_types": [
-          {
-            "system_id": "bk_ci",
-            "id": "project",
-            "related_instance_selections": [
-              {
-                "system_id": "bk_ci",
-                "id": "project_instance"
               }
             ]
           }

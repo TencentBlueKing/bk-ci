@@ -59,30 +59,6 @@
               {
                 "id": "quality_group_create",
                 "required": false
-              },
-              {
-                "id": "pipeline_list",
-                "required": false
-              },
-              {
-                "id": "repertory_list",
-                "required": false
-              },
-              {
-                "id": "credential_list",
-                "required": false
-              },
-              {
-                "id": "environment_list",
-                "required": false
-              },
-              {
-                "id": "env_node_list",
-                "required": false
-              },
-              {
-                "id": "cert_list",
-                "required": false
               }
             ],
             "sub_resource_types": [
