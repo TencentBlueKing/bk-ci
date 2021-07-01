@@ -152,19 +152,16 @@ class PipelineTaskService @Autowired constructor(
             }
         }
 
-        val records = if (pipelineTasks == null) {
-            listOf<PipelineProjectRel>()
-        } else {
-            pipelineTasks.map {
-                val pipelineId = it[KEY_PIPELINE_ID] as String
-                PipelineProjectRel(
-                    pipelineId = pipelineId,
-                    pipelineName = pipelineNameMap?.get(pipelineId) ?: "",
-                    projectCode = it[KEY_PROJECT_ID] as String,
-                    atomVersion = pipelineAtomVersionInfo[pipelineId]?.joinToString(",") ?: ""
-                )
-            }
+        val records = pipelineTasks?.map {
+            val pipelineId = it[KEY_PIPELINE_ID] as String
+            PipelineProjectRel(
+                pipelineId = pipelineId,
+                pipelineName = pipelineNameMap?.get(pipelineId) ?: "",
+                projectCode = it[KEY_PROJECT_ID] as String,
+                atomVersion = pipelineAtomVersionInfo[pipelineId]?.joinToString(",") ?: ""
+            )
         }
+            ?: listOf<PipelineProjectRel>()
 
         return Page(pageNotNull, pageSizeNotNull, count, records)
     }
@@ -192,7 +189,7 @@ class PipelineTaskService @Autowired constructor(
             )
             buildLogPrinter.addYellowLine(
                 buildId = buildId,
-                message = "插件${taskRecord.taskName}执行失败, 5s后开始执行第${nextCount}次重试",
+                message = "[${taskRecord.taskName}] failed, and retry $nextCount",
                 tag = taskRecord.taskId,
                 jobId = taskRecord.containerId,
                 executeCount = 1

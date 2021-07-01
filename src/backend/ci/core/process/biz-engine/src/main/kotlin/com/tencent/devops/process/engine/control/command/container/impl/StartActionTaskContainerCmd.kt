@@ -139,6 +139,14 @@ class StartActionTaskContainerCmd(
                     containerContext = containerContext,
                     needTerminate = needTerminate
                 )
+            } else if (t.status == BuildStatus.SKIP) {
+                buildLogPrinter.addRedLine(
+                    buildId = t.buildId,
+                    message = "Plugin[${t.taskName}]: ${t.errorMsg ?: "unknown"}",
+                    tag = t.taskId,
+                    jobId = t.containerHashId,
+                    executeCount = t.executeCount ?: 1
+                )
             }
 
             if (toDoTask != null || breakFlag) {

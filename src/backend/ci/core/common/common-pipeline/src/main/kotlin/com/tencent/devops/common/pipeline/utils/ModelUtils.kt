@@ -131,7 +131,7 @@ object ModelUtils {
             return
         }
 
-        if (additionalOptions.manualRetry == true) {
+        if (additionalOptions.manualRetry == null || additionalOptions.manualRetry == true) {
             element.canRetry = true
         }
 

@@ -752,7 +752,7 @@ class PipelineRuntimeService @Autowired constructor(
         // 2019-12-16 产品 rerun 需求
         val pipelineId = pipelineInfo.pipelineId
         val buildId = params[PIPELINE_RETRY_BUILD_ID]?.toString() ?: buildIdGenerator.getNextId()
-
+        val projectName = projectCacheService.getProjectName(pipelineInfo.projectId) ?: ""
         val context = StartBuildContext.init(params)
 
         val updateExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
@@ -774,12 +774,10 @@ class PipelineRuntimeService @Autowired constructor(
         var buildNoType: BuildNoType? = null
         // --- 第1层循环：Stage遍历处理 ---
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
-//            val stageId = stage.id!!
-            var needUpdateStage = false
+            var needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
             // #2318 如果是stage重试不是当前stage，并且当前stage已经是完成状态，则直接跳过
             if (context.needSkipWhenStageFailRetry(stage)) {
-//            if (isStageRetry && !retryStage && BuildStatus.parse(stage.status).isFinish()) {
                 logger.info("[$buildId|RETRY|#${stage.id!!}|${stage.status}|NOT_RETRY_STAGE")
                 context.containerSeq += stage.containers.size // Job跳过计数也需要增加
                 return@nextStage
@@ -1103,7 +1101,6 @@ class PipelineRuntimeService @Autowired constructor(
         } else null
         try {
             lock?.lock()
-            val projectName = projectCacheService.getProjectName(pipelineInfo.projectId) ?: ""
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 // 保存参数 过滤掉不需要保存持久化的临时参数
@@ -1482,6 +1479,13 @@ class PipelineRuntimeService @Autowired constructor(
         target.endTime = null
         target.executeCount = retryCount + 1 // 执行次数增1
         target.status = initialStatus?.ordinal ?: BuildStatus.QUEUE.ordinal // 如未指定状态，则默认进入排队状态
+        if (target.status != BuildStatus.SKIP.ordinal) { // 排队要准备执行，要清除掉上次失败状态
+            target.errorMsg = null
+            target.errorCode = null
+            target.errorType = null
+        } else { // 跳过的需要保留下跳过的信息
+            target.errorMsg = "被手动跳过 Manually skipped"
+        }
         stage.status = null
         stage.startEpoch = null
         stage.elapsed = null
@@ -1491,7 +1495,12 @@ class PipelineRuntimeService @Autowired constructor(
         container.systemElapsed = null
         container.executeCount = target.executeCount
         if (atomElement != null) { // 将原子状态重置
-            atomElement.status = initialStatus?.name // BuildStatus.QUEUE.name
+            if (initialStatus == null) { // 未指定状态的，将重新运行
+                atomElement.status = null
+            } else { // 指定了状态了，表示不会再运行，需要将重试与跳过关闭，因为已经跳过
+                atomElement.additionalOptions =
+                    atomElement.additionalOptions?.copy(manualSkip = false, manualRetry = false)
+            }
             atomElement.executeCount = target.executeCount
             atomElement.elapsed = null
             atomElement.startEpoch = null
