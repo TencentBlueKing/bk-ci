@@ -137,7 +137,7 @@ install_ci_agentless (){
 install_ci_gateway (){
   local proj=$1
   install_openresty || return $?
-  rsync -ra --del "$BK_CI_SRC_DIR/gateway" "$BK_CI_HOME"
+  rsync -ra "$BK_CI_SRC_DIR/gateway" "$BK_CI_HOME"  # 不能del, 会删除codecc注入的配置文件.
   rsync -ra --del "$BK_CI_SRC_DIR/frontend" "$BK_CI_HOME"  # frontend不必verbose.
   rsync -ra "$BK_CI_SRC_DIR/agent-package" "$BK_CI_HOME"  # #3707 网关提供jars下载.
   if [ -d "$BK_CI_SRC_DIR/docs" ]; then

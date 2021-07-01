@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -81,14 +80,13 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
 
-@Suppress("ALL")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "LongMethod", "ReturnCount")
 @Service
 class PipelineRepositoryService constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
     private val pipelineIdGenerator: PipelineIdGenerator,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
-    private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineResDao: PipelineResDao,
@@ -638,32 +636,21 @@ class PipelineRepositoryService constructor(
     }
 
     fun getModel(pipelineId: String, version: Int? = null): Model? {
+        var modelString: String?
         if (version == null) { // 取最新版，直接从旧版本表读
-            val modelString = pipelineResDao.getVersionModelString(dslContext, pipelineId, version) ?: return null
-            return try {
-                objectMapper.readValue(modelString, Model::class.java)
-            } catch (ignored: Exception) {
-                logger.error("get process($pipelineId) model fail", ignored)
-                null
-            }
+            modelString = pipelineResDao.getVersionModelString(dslContext, pipelineId, version) ?: return null
         } else {
-            var modelString = pipelineResVersionDao.getVersionModelString(dslContext, pipelineId, version)
-            if (!modelString.isNullOrBlank()) {
-                return try {
-                    objectMapper.readValue(modelString, Model::class.java)
-                } catch (e: Exception) {
-                    logger.error("get process($pipelineId) model fail", e)
-                    null
-                }
-            } else { // 兼容处理：取不到再从旧的版本表取
+            modelString = pipelineResVersionDao.getVersionModelString(dslContext, pipelineId, version)
+            if (modelString.isNullOrBlank()) {
+                // 兼容处理：取不到再从旧的版本表取
                 modelString = pipelineResDao.getVersionModelString(dslContext, pipelineId, version) ?: return null
-                return try {
-                    objectMapper.readValue(modelString, Model::class.java)
-                } catch (ignored: Exception) {
-                    logger.error("get process($pipelineId) model fail", ignored)
-                    null
-                }
             }
+        }
+        return try {
+            JsonUtil.to(modelString, Model::class.java)
+        } catch (ignored: Exception) {
+            logger.error("get process($pipelineId) model fail", ignored)
+            null
         }
     }
 
@@ -847,10 +834,11 @@ class PipelineRepositoryService constructor(
         }
     }
 
-    fun getBuildNo(projectId: String, pipelineId: String): Int? {
+    fun getBuildNo(pipelineId: String): Int? {
         return pipelineBuildSummaryDao.get(dslContext, pipelineId)?.buildNo
     }
 
+    @Suppress("ComplexMethod", "MagicNumber")
     fun getSetting(pipelineId: String): PipelineSetting? {
         val t = pipelineSettingDao.getSetting(dslContext, pipelineId)
         return if (t != null) {
@@ -956,6 +944,7 @@ class PipelineRepositoryService constructor(
         return list
     }
 
+    @Suppress("ThrowsCount")
     fun restorePipeline(
         projectId: String,
         pipelineId: String,

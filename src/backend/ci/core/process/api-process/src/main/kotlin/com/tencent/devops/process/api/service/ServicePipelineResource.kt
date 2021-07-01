@@ -208,7 +208,7 @@ interface ServicePipelineResource {
     ): Result<List<PipelineWithModel>>
 
     @ApiOperation("保存流水线设置")
-    @POST
+    @PUT
     @Path("/{projectId}/{pipelineId}/saveSetting")
     fun saveSetting(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

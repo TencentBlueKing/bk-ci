@@ -40,8 +40,8 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.service.BuildVariableService
@@ -55,7 +55,7 @@ import org.springframework.stereotype.Service
 class TaskAtomService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineBuildDetailService: TaskBuildDetailService,
     private val buildVariableService: BuildVariableService,
     private val jmxElements: JmxElements,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -164,7 +164,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = atomResponse.errorCode,
                 errorMsg = atomResponse.errorMsg
             )
-            pipelineBuildDetailService.pipelineTaskEnd(
+            pipelineBuildDetailService.taskEnd(
                 buildId = task.buildId,
                 taskId = task.taskId,
                 buildStatus = atomResponse.buildStatus,
