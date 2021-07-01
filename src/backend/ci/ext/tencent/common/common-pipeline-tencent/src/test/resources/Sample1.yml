@@ -3,10 +3,6 @@ version: v2.0
 name: pipelineName
 
 on:
-  push: [master, gray ]
-#  push:
-#    - master
-#    - release/*
 #  push:
 #    branches:
 #      - master

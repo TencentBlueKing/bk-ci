@@ -1,12 +1,7 @@
-version: v2.0
-
 on:
   push: [ master ]
 
-variables:
-  template:
-    - name: vars.yml
-
 steps:
+  - checkout: self
   - run: |
-      echo "APPROVE is ${{ variables.APPROVE }}"
+      python test.py
