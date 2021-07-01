@@ -682,7 +682,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val buildNo = triggerContainer.buildNo
             if (buildNo != null) {
-                buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
+                buildNo.buildNo = pipelineRepositoryService.getBuildNo(pipelineId = pipelineId)
                     ?: buildNo.buildNo
             }
             // 兼容性处理
