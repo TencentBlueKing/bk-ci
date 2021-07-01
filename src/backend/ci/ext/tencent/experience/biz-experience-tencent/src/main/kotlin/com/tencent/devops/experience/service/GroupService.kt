@@ -62,8 +62,8 @@ class GroupService @Autowired constructor(
     private val experienceServiceCode: ExperienceAuthServiceCode,
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val experienceGroupOuterDao: ExperienceGroupOuterDao,
-    private val experienceBaseService: ExperienceBaseService
-    private val experiencePermissionService: ExperiencePermissionService,
+    private val experienceBaseService: ExperienceBaseService,
+    private val experiencePermissionService: ExperiencePermissionService
 ) {
 
     private val resourceType = AuthResourceType.EXPERIENCE_GROUP

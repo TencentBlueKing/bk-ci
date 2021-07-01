@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component
 class TxV3AuthProjectApi @Autowired constructor(
     val client: Client,
     val tokenService: ClientTokenService
-): AuthProjectApi {
+) : AuthProjectApi {
     override fun getProjectUsers(
         serviceCode: AuthServiceCode,
         projectCode: String,

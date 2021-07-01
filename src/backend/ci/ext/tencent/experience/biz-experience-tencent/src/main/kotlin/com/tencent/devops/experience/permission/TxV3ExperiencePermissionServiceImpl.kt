@@ -21,7 +21,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
     val groupDao: GroupDao,
     val tokenService: ClientTokenService,
     val authResourceApiStr: AuthResourceApiStr
-): ExperiencePermissionService {
+) : ExperiencePermissionService {
 
     override fun validateTaskPermission(
         user: String,

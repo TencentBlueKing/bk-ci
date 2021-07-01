@@ -40,5 +40,5 @@ data class TxIamV3CreateEvent(
     override var retryCount: Int = 0,
     override var delayMills: Int = 0,
     val resourceRegisterInfo: ResourceRegisterInfo,
-    var iamProjectId : String?
+    var iamProjectId: String?
 ) : ProjectBroadCastEvent(userId, projectId, retryCount, delayMills)

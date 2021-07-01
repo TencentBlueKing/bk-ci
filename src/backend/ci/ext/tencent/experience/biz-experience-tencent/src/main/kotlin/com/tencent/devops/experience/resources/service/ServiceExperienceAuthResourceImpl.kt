@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceExperienceAuthResourceImpl @Autowired constructor(
     val authExperienceService: AuthExperienceService
-): ServiceExperienceAuthResource {
+) : ServiceExperienceAuthResource {
 
     override fun experienceTaskInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method

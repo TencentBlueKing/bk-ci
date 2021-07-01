@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service
 @Service
 class TxPermissionGradeServiceImpl @Autowired constructor(
     override val iamManagerService: ManagerService
-): AbsPermissionGradeServiceImpl(iamManagerService) {
+) : AbsPermissionGradeServiceImpl(iamManagerService) {
     override fun checkGradeManagerUser(userId: String, projectId: Int) {
         super.checkGradeManagerUser(userId, projectId)
     }

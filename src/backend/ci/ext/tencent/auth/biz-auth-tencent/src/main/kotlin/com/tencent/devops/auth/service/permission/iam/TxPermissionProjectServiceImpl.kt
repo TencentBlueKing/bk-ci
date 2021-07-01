@@ -183,7 +183,6 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         var roleId = 0
         projectRoles.forEach {
             // TODO: 通过roleType匹配对应的roleId
-
         }
         val managerRole = role == BkAuthGroup.MANAGER.value
         val members = mutableListOf<RoleMemberDTO>()

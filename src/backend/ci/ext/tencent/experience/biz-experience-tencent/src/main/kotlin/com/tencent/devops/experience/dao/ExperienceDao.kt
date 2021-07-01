@@ -465,7 +465,7 @@ class ExperienceDao {
     fun countByProject(
         dslContext: DSLContext,
         projectId: String
-    ) : Long {
+    ): Long {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.selectCount()
                 .from(this)
@@ -473,5 +473,4 @@ class ExperienceDao {
                 .fetchOne(0, Long::class.java)!!
         }
     }
-
 }

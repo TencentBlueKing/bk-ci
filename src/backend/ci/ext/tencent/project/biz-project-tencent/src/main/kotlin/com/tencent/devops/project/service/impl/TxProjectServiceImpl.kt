@@ -287,7 +287,7 @@ class TxProjectServiceImpl @Autowired constructor(
         )
     }
 
-    private fun getV0UserProject(userId: String?, accessToken: String?): List<String>{
+    private fun getV0UserProject(userId: String?, accessToken: String?): List<String> {
         val url = "$v0IamUrl/projects?access_token=$accessToken"
         logger.info("Start to get auth projects - ($url)")
         val request = Request.Builder().url(url).get().build()
@@ -306,7 +306,7 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    private fun getV3UserProject(userId: String) : List<String>? {
+    private fun getV3UserProject(userId: String): List<String>? {
         if (v3Tag.isNullOrEmpty()) {
             return emptyList()
         }

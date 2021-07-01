@@ -60,7 +60,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val tokenService: ClientTokenService
 ) : ProjectPermissionService {
-    
+
     @Value("\${iam.v0.url:#{null}}")
     private val v0IamUrl: String = ""
 

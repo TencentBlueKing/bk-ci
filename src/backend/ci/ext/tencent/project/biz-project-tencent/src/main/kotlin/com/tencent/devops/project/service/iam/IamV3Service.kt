@@ -45,7 +45,6 @@ import com.tencent.devops.auth.api.ServiceGroupResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.utils.IamGroupUtils
@@ -130,7 +129,6 @@ class IamV3Service @Autowired constructor(
             LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 5000)
         }
     }
-
 
     private fun createIamProject(userId: String, resourceRegisterInfo: ResourceRegisterInfo): String {
         val subjectScopes = ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), "*")

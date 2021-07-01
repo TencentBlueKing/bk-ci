@@ -49,7 +49,7 @@ class TxPermissionRoleServiceImpl @Autowired constructor(
     private val groupService: AuthGroupService,
     private val authGroupDao: AuthGroupDao,
     private val dslContext: DSLContext
-): IamPermissionRoleExtService(
+) : IamPermissionRoleExtService(
     iamManagerService,
     permissionGradeService,
     iamConfiguration,

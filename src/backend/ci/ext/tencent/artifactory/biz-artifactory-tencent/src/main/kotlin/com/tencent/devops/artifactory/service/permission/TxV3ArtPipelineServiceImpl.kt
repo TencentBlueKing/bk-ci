@@ -51,7 +51,7 @@ class TxV3ArtPipelineServiceImpl @Autowired constructor(
                     authResourceType = AuthResourceType.PIPELINE_DEFAULT),
                 projectCode = projectId,
                 resourceCode = getPipelineId(pipelineId!!, projectId),
-                resourceType =  AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 relationResourceType = null
             ).data ?: false
         }
@@ -76,7 +76,6 @@ class TxV3ArtPipelineServiceImpl @Autowired constructor(
             emptyList()
         }
     }
-
 
     private fun getPipelineId(pipelineId: String, projectCode: String): String {
         val pipelineIdInfo = client.get(ServicePipelineResource::class)

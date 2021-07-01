@@ -19,7 +19,7 @@ class TxV3QualityPermissionService @Autowired constructor(
     val groupDao: QualityRuleDao,
     val tokenService: ClientTokenService,
     val authResourceApiStr: AuthResourceApiStr
-): QualityPermissionService {
+) : QualityPermissionService {
     override fun validateGroupPermission(
         userId: String,
         projectId: String,

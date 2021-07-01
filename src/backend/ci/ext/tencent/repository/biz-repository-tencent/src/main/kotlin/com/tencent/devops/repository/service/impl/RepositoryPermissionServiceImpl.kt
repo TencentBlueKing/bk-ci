@@ -38,8 +38,6 @@ import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Service
 
 class RepositoryPermissionServiceImpl @Autowired constructor(
     private val authResourceApi: AuthResourceApi,

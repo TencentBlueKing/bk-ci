@@ -25,7 +25,7 @@ object TActionUtils {
         }
     }
 
-    fun buildActionList(authPermissions : Set<AuthPermission>, authResourceType: AuthResourceType) : List<String> {
+    fun buildActionList(authPermissions: Set<AuthPermission>, authResourceType: AuthResourceType): List<String> {
         val actions = mutableListOf<String>()
         authPermissions.forEach {
             actions.add(buildAction(it, authResourceType))

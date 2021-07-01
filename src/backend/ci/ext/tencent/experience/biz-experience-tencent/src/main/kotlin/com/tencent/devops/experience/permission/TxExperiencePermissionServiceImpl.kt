@@ -18,7 +18,7 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
     private val bsAuthPermissionApi: BSAuthPermissionApi,
     private val bsAuthResourceApi: BSAuthResourceApi,
     private val experienceServiceCode: BSExperienceAuthServiceCode
-): ExperiencePermissionService {
+) : ExperiencePermissionService {
 
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val groupResourceType = AuthResourceType.EXPERIENCE_GROUP
