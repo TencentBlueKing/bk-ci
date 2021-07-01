@@ -224,7 +224,11 @@ class TXPipelineExportService @Autowired constructor(
                     val timeoutMinutes = job.jobControlOption?.timeout ?: 480
                     jobs[job.jobId ?: "job_${job.id}"] = PreJob(
                         name = job.name,
-                        runsOn = RunsOn(poolName = JobRunsOnType.AGENT_LESS.type),
+                        runsOn = RunsOn(
+                            selfHosted = null,
+                            poolName = JobRunsOnType.AGENT_LESS.type,
+                            container = null
+                        ),
                         container = null,
                         services = null,
                         ifField = if (job.jobControlOption?.runCondition ==
