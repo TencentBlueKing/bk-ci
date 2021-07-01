@@ -18,19 +18,48 @@ class BkPermissionService @Autowired constructor(
         return super.validateUserActionPermission(userId, action)
     }
 
-    override fun validateUserResourcePermission(userId: String, action: String, projectCode: String, resourceType: String?): Boolean {
+    override fun validateUserResourcePermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String?
+    ): Boolean {
         return super.validateUserResourcePermission(userId, action, projectCode, resourceType)
     }
 
-    override fun validateUserResourcePermissionByRelation(userId: String, action: String, projectCode: String, resourceCode: String, resourceType: String, relationResourceType: String?): Boolean {
-        return super.validateUserResourcePermissionByRelation(userId, action, projectCode, resourceCode, resourceType, relationResourceType)
+    override fun validateUserResourcePermissionByRelation(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String,
+        relationResourceType: String?
+    ): Boolean {
+        return super.validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = action,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            resourceType = resourceType,
+            relationResourceType = relationResourceType
+        )
     }
 
-    override fun getUserResourceByAction(userId: String, action: String, projectCode: String, resourceType: String): List<String> {
+    override fun getUserResourceByAction(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String
+    ): List<String> {
         return super.getUserResourceByAction(userId, action, projectCode, resourceType)
     }
 
-    override fun getUserResourcesByActions(userId: String, actions: List<String>, projectCode: String, resourceType: String): Map<AuthPermission, List<String>> {
+    override fun getUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String
+    ): Map<AuthPermission, List<String>> {
         return super.getUserResourcesByActions(userId, actions, projectCode, resourceType)
     }
 }

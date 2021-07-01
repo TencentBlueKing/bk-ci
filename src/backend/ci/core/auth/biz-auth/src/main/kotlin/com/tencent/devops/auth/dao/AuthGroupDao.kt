@@ -113,7 +113,8 @@ class AuthGroupDao {
 
     fun getGroupByName(dslContext: DSLContext, projectCode: String, groupName: String): TAuthGroupInfoRecord? {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
-            return dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode).and(GROUP_NAME.eq(groupName))).fetchAny()
+            return dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode)
+                .and(GROUP_NAME.eq(groupName))).fetchAny()
         }
     }
 
