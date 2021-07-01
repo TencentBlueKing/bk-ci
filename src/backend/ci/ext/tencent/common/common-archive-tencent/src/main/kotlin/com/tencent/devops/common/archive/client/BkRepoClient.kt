@@ -38,6 +38,7 @@ import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.bkrepo.generic.pojo.FileInfo
+import com.tencent.bkrepo.generic.pojo.TemporaryAccessToken
 import com.tencent.bkrepo.generic.pojo.TemporaryAccessUrl
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
@@ -46,6 +47,7 @@ import com.tencent.bkrepo.repository.pojo.node.user.UserNodeCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
 import com.tencent.bkrepo.repository.pojo.project.UserProjectCreateRequest
+import com.tencent.bkrepo.repository.pojo.repo.RepoCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
@@ -55,6 +57,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.archive.constant.REPO_CUSTOM
+import com.tencent.devops.common.archive.constant.REPO_LOG
 import com.tencent.devops.common.archive.constant.REPO_PIPELINE
 import com.tencent.devops.common.archive.constant.REPO_REPORT
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
@@ -85,17 +88,22 @@ class BkRepoClient constructor(
     private val commonConfig: CommonConfig,
     private val bkRepoConfig: BkRepoConfig
 ) {
-
     private fun getGatewaytUrl(): String {
         return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
     }
 
     fun createBkRepoResource(userId: String, projectId: String): Boolean {
+        val logRepoCredentialsKey = if (bkRepoConfig.logRepoCredentialsKey.isNullOrBlank()) {
+            null
+        } else {
+            bkRepoConfig.logRepoCredentialsKey
+        }
         return try {
             createProject(userId, projectId)
             createGenericRepo(userId, projectId, REPO_PIPELINE)
             createGenericRepo(userId, projectId, REPO_CUSTOM)
             createGenericRepo(userId, projectId, REPO_REPORT)
+            createGenericRepo(userId, projectId, REPO_LOG, logRepoCredentialsKey)
             true
         } catch (e: Exception) {
             logger.error("create repo resource error", e)
@@ -127,21 +135,28 @@ class BkRepoClient constructor(
             if (response.code() == 400 && responseData.code == 25102) {
                 logger.warn("project[$projectId] already exists")
             } else if (!response.isSuccessful) {
-                logger.error("http request failed, response.code: ${response.code()}, responseContent: $responseContent")
+                logger.error("http request failed, response.code: ${response.code()}, " +
+                    "responseContent: $responseContent")
                 throw RuntimeException("http request failed")
             }
         }
     }
 
-    fun createGenericRepo(userId: String, projectId: String, repoName: String) {
+    private fun createGenericRepo(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        storageCredentialsKey: String? = null
+    ) {
         logger.info("createRepo, userId: $userId, projectId: $projectId, repoName: $repoName")
-        val requestData = mapOf(
-            "category" to RepositoryCategory.LOCAL,
-            "name" to repoName,
-            "projectId" to projectId,
-            "type" to RepositoryType.GENERIC,
-            "public" to false,
-            "description" to "storage for devops ci $repoName"
+        val requestData = RepoCreateRequest(
+            category = RepositoryCategory.LOCAL,
+            name = repoName,
+            projectId = projectId,
+            type = RepositoryType.GENERIC,
+            public = false,
+            description = "storage for devops ci $repoName",
+            storageCredentialsKey = storageCredentialsKey
         )
         val request = Request.Builder()
             .url("${getGatewaytUrl()}/bkrepo/api/service/repository/api/repo")
@@ -160,7 +175,8 @@ class BkRepoClient constructor(
             if (response.code() == 400 && responseData.code == 251004) {
                 logger.warn("repo $projectId|$repoName already exists")
             } else if (!response.isSuccessful) {
-                logger.error("http request failed, response.code: ${response.code()}, responseContent: $responseContent")
+                logger.error("http request failed, response.code: ${response.code()}," +
+                    " responseContent: $responseContent")
                 throw RuntimeException("http request failed")
             }
         }
@@ -196,7 +212,8 @@ class BkRepoClient constructor(
     }
 
     fun setMetadata(userId: String, projectId: String, repoName: String, path: String, metadata: Map<String, String>) {
-        logger.info("setMetadata, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, metadata: $metadata")
+        logger.info("setMetadata, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path," +
+            " metadata: $metadata")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/metadata/$projectId/$repoName/$path"
         val requestData = UserMetadataSaveRequest(
             metadata = metadata
@@ -214,7 +231,8 @@ class BkRepoClient constructor(
             ).build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                logger.error("set file metadata failed, repoName: $repoName, path: $path, responseContent: ${response.body()!!.string()}")
+                logger.error("set file metadata failed, repoName: $repoName, path: $path," +
+                    " responseContent: ${response.body()!!.string()}")
                 throw RuntimeException("set file metadata failed")
             }
         }
@@ -257,8 +275,10 @@ class BkRepoClient constructor(
         includeFolders: Boolean = false,
         deep: Boolean = false
     ): List<FileInfo> {
-        logger.info("listFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, includeFolders: $includeFolders, deep: $deep")
-        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/$repoName/$path?deep=$deep&includeFolder=$includeFolders"
+        logger.info("listFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path," +
+            " includeFolders: $includeFolders, deep: $deep")
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/$repoName/$path" +
+            "?deep=$deep&includeFolder=$includeFolders"
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
@@ -295,7 +315,8 @@ class BkRepoClient constructor(
         gatewayUrl: String? = null,
         fileSizeLimitInMB: Int = 0
     ) {
-        logger.info("uploadFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, fileSizeLimitInMB: $fileSizeLimitInMB")
+        logger.info("uploadFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path," +
+            " fileSizeLimitInMB: $fileSizeLimitInMB")
         if (PathUtil.isFolder(path)) {
             throw ErrorCodeException(errorCode = INVALID_CUSTOM_ARTIFACTORY_PATH)
         }
@@ -316,7 +337,10 @@ class BkRepoClient constructor(
                     bytesCopied += bytes
                     if (bytesCopied > limit) {
                         sink!!.closeQuietly()
-                        throw ErrorCodeException(errorCode = FILE_SIZE_EXCEEDS_LIMIT, params = arrayOf("${fileSizeLimitInMB}MB"))
+                        throw ErrorCodeException(
+                            errorCode = FILE_SIZE_EXCEEDS_LIMIT,
+                            params = arrayOf("${fileSizeLimitInMB}MB")
+                        )
                     }
                     bytes = inputStream.read(buffer)
                 }
@@ -342,14 +366,16 @@ class BkRepoClient constructor(
             .put(requestBody).build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                logger.error("upload file  failed, repoName: $repoName, path: $path, responseContent: ${response.body()!!.string()}")
+                logger.error("upload file  failed, repoName: $repoName, path: $path," +
+                    " responseContent: ${response.body()!!.string()}")
                 throw RuntimeException("upload file failed")
             }
         }
     }
 
     fun uploadLocalFile(userId: String, projectId: String, repoName: String, path: String, file: File) {
-        logger.info("uploadLocalFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, localFile: ${file.canonicalPath}")
+        logger.info("uploadLocalFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path," +
+            " localFile: ${file.canonicalPath}")
         uploadLocalFile(
             userId = userId,
             projectId = projectId,
@@ -373,7 +399,8 @@ class BkRepoClient constructor(
         properties: Map<String, String>? = null,
         gatewayUrl: String? = null
     ) {
-        logger.info("uploadLocalFile, projectId: $projectId, repoName: $repoName, path: $path, localFile: ${file.canonicalPath}")
+        logger.info("uploadLocalFile, projectId: $projectId, repoName: $repoName, path: $path," +
+            " localFile: ${file.canonicalPath}")
         logger.info("uploadLocalFile, userName: $userName, password: $password")
         val gateway = gatewayUrl ?: getGatewaytUrl()
         val repoUrlPrefix = if (gatewayFlag) "$gateway/bkrepo/api/service/generic" else bkrepoApiUrl
@@ -430,7 +457,8 @@ class BkRepoClient constructor(
 
     fun move(userId: String, projectId: String, repoName: String, fromPath: String, toPath: String) {
         // todo 校验path参数
-        logger.info("move, userId: $userId, projectId: $projectId, repoName: $repoName, fromPath: $fromPath, toPath: $toPath")
+        logger.info("move, userId: $userId, projectId: $projectId, repoName: $repoName, fromPath: $fromPath," +
+            " toPath: $toPath")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/move"
         val requestData = UserNodeMoveRequest(
             srcProjectId = projectId,
@@ -471,7 +499,8 @@ class BkRepoClient constructor(
         toPath: String
     ) {
         // todo 校验path参数
-        logger.info("copy, userId: $userId, fromProject: $fromProject, fromRepo: $fromRepo, fromPath: $fromPath, toProject: $toProject, toRepo: $toRepo, toPath: $toPath")
+        logger.info("copy, userId: $userId, fromProject: $fromProject, fromRepo: $fromRepo, fromPath: $fromPath," +
+            " toProject: $toProject, toRepo: $toRepo, toPath: $toPath")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/copy"
         val requestData = UserNodeCopyRequest(
             srcProjectId = fromProject,
@@ -504,7 +533,8 @@ class BkRepoClient constructor(
 
     fun rename(userId: String, projectId: String, repoName: String, fromPath: String, toPath: String) {
         // todo 校验path参数
-        logger.info("rename, userId: $userId, projectId: $projectId, repoName: $repoName, fromPath: $fromPath, toPath: $toPath")
+        logger.info("rename, userId: $userId, projectId: $projectId, repoName: $repoName, fromPath: $fromPath," +
+            " toPath: $toPath")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/rename"
         val requestData = UserNodeRenameRequest(projectId, repoName, fromPath, toPath)
         val request = Request.Builder()
@@ -607,7 +637,8 @@ class BkRepoClient constructor(
         buildId: String,
         isCustom: Boolean
     ): List<BkRepoFile> {
-        logger.info("matchBkRepoFile, userId: $userId, srcPath: $srcPath, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, isCustom: $isCustom")
+        logger.info("matchBkRepoFile, userId: $userId, srcPath: $srcPath, projectId: $projectId," +
+            " pipelineId: $pipelineId, buildId: $buildId, isCustom: $isCustom")
         var repoName: String
         var filePath: String
         var fileName: String
@@ -678,7 +709,8 @@ class BkRepoClient constructor(
         path: String,
         regex: String
     ): List<FileInfo> {
-        logger.info("listFileByRegex, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, regex: $regex")
+        logger.info("listFileByRegex, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path," +
+            " regex: $regex")
         val matcher = FileSystems.getDefault().getPathMatcher("glob:$regex")
         return listFile(userId, projectId, repoName, path, includeFolders = false, deep = true).filter {
             matcher.matches(Paths.get(it.fullPath.removePrefix("$path")))
@@ -693,7 +725,8 @@ class BkRepoClient constructor(
         repoName: String,
         pathPattern: String
     ): List<FileInfo> {
-        logger.info("listFileByPattern, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, repoName: $repoName, pathPattern: $pathPattern")
+        logger.info("listFileByPattern, userId: $userId, projectId: $projectId, pipelineId: $pipelineId," +
+            " buildId: $buildId, repoName: $repoName, pathPattern: $pathPattern")
         return if (pathPattern.endsWith("/")) {
             val path = if (repoName == "pipeline") {
                 "$pipelineId/$buildId/${pathPattern.removeSuffix("/")}"
@@ -733,8 +766,8 @@ class BkRepoClient constructor(
         pathPattern: String,
         destPath: String
     ): List<File> {
-        logger.info("downloadFileByPattern, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, " +
-            "buildId: $buildId, repoName: $repoName, pathPattern: $pathPattern, destPath: $destPath")
+        logger.info("downloadFileByPattern, userId: $userId, projectId: $projectId, pipelineId: $pipelineId," +
+            " buildId: $buildId, repoName: $repoName, pathPattern: $pathPattern, destPath: $destPath")
         val fileList = listFileByPattern(
             userId,
             projectId,
@@ -793,7 +826,8 @@ class BkRepoClient constructor(
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 if (notFound(response.code())) {
-                    logger.warn("create share uri failed, requestBody: $requestBody, responseContent: $responseContent")
+                    logger.warn("create share uri failed, requestBody: $requestBody," +
+                        " responseContent: $responseContent")
                     throw NotFoundException("$fullPath not found")
                 }
                 logger.error("create share uri failed, requestBody: $requestBody, responseContent: $responseContent")
@@ -809,6 +843,49 @@ class BkRepoClient constructor(
         }
     }
 
+    fun createTemporaryToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        timeoutInSeconds: Long,
+        type: TokenType
+    ): String {
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/temporary/token/create"
+        val requestData = TemporaryTokenCreateRequest(
+            projectId = projectId,
+            repoName = repoName,
+            fullPathSet = setOf(fullPath),
+            expireSeconds = timeoutInSeconds,
+            type = type
+        )
+        val requestBody = objectMapper.writeValueAsString(requestData)
+        val request = Request.Builder().url(url)
+            .header(BK_REPO_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    requestBody
+                )
+            ).build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("create temporary token failed, requestBody: $requestBody, responseContent: " +
+                    "$responseContent")
+                throw RuntimeException("create temporary token failed")
+            }
+
+            val responseData = objectMapper.readValue<Response<List<TemporaryAccessToken>>>(responseContent)
+            if (responseData.isNotOk()) {
+                throw RuntimeException("create share uri failed: ${responseData.message}")
+            }
+
+            return responseData.data!!.first().token
+        }
+    }
+
     fun createTemporaryAccessUrls(
         userId: String,
         projectId: String,
@@ -820,7 +897,8 @@ class BkRepoClient constructor(
         timeoutInSeconds: Long
     ): List<String> {
         logger.info("createTemporaryAccessUrl, userId: $userId, projectId: $projectId, repoName: $repoName, " +
-            "fullPathSet: $fullPathSet, downloadUsersSet: $downloadUsersSet, downloadIps: $downloadIpsSet, timeoutInSeconds: $timeoutInSeconds")
+            "fullPathSet: $fullPathSet, downloadUsersSet: $downloadUsersSet, downloadIps: $downloadIpsSet," +
+            " timeoutInSeconds: $timeoutInSeconds")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/temporary/url/create"
         val requestData = TemporaryTokenCreateRequest(
             projectId = projectId,
@@ -872,17 +950,21 @@ class BkRepoClient constructor(
         page: Int,
         pageSize: Int
     ): List<QueryNodeInfo> {
-        logger.info("queryByRepoAndMetadata, userId: $userId, projectId: $projectId, repoNames: $repoNames, fileNames: $fileNames, metadata: $metadata, page: $page, pageSize: $pageSize")
-
+        logger.info("queryByRepoAndMetadata, userId: $userId, projectId: $projectId, repoNames: $repoNames," +
+            " fileNames: $fileNames, metadata: $metadata, page: $page, pageSize: $pageSize")
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
         var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
         if (fileNames.isNotEmpty()) {
-            val fileNameRule = Rule.NestedRule(fileNames.map { Rule.QueryRule("name", it, OperationType.MATCH) }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            val fileNameRule = Rule.NestedRule(fileNames.map {
+                Rule.QueryRule("name", it, OperationType.MATCH)
+            }.toMutableList(), Rule.NestedRule.RelationType.OR)
             ruleList.add(fileNameRule)
         }
         if (metadata.isNotEmpty()) {
-            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList())
+            val metadataRule = Rule.NestedRule(metadata.map {
+                Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ)
+            }.toMutableList())
             ruleList.add(metadataRule)
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
@@ -900,21 +982,28 @@ class BkRepoClient constructor(
         page: Int,
         pageSize: Int
     ): List<QueryNodeInfo> {
-        logger.info("queryByPathEqOrNameMatchOrMetadataEqAnd, userId: $userId, projectId: $projectId, repoNames: $repoNames, filePaths: $filePaths, fileNames: $fileNames, metadata: $metadata, page: $page, pageSize: $pageSize")
-
+        logger.info("queryByPathEqOrNameMatchOrMetadataEqAnd, userId: $userId, projectId: $projectId," +
+            " repoNames: $repoNames, filePaths: $filePaths, fileNames: $fileNames, metadata: $metadata," +
+            " page: $page, pageSize: $pageSize")
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
         var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
         if (filePaths.isNotEmpty()) {
-            val filePathRule = Rule.NestedRule(filePaths.map { Rule.QueryRule("path", it, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            val filePathRule = Rule.NestedRule(filePaths.map {
+                Rule.QueryRule("path", it, OperationType.EQ)
+            }.toMutableList(), Rule.NestedRule.RelationType.OR)
             ruleList.add(filePathRule)
         }
         if (fileNames.isNotEmpty()) {
-            val fileNameRule = Rule.NestedRule(fileNames.map { Rule.QueryRule("name", it, OperationType.MATCH) }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            val fileNameRule = Rule.NestedRule(fileNames.map {
+                Rule.QueryRule("name", it, OperationType.MATCH)
+            }.toMutableList(), Rule.NestedRule.RelationType.OR)
             ruleList.add(fileNameRule)
         }
         if (metadata.isNotEmpty()) {
-            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.AND)
+            val metadataRule = Rule.NestedRule(metadata.map {
+                Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ)
+            }.toMutableList(), Rule.NestedRule.RelationType.AND)
             ruleList.add(metadataRule)
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
@@ -937,8 +1026,9 @@ class BkRepoClient constructor(
         page: Int,
         pageSize: Int
     ): List<QueryNodeInfo> {
-        logger.info("queryByPathNamePairOrMetadataEqAnd, userId: $userId, projectId: $projectId, repoNames: $repoNames, pathNamePairs: $pathNamePairs, metadata: $metadata, page: $page, pageSize: $pageSize")
-
+        logger.info("queryByPathNamePairOrMetadataEqAnd, userId: $userId, projectId: $projectId," +
+            " repoNames: $repoNames, pathNamePairs: $pathNamePairs, metadata: $metadata," +
+            " page: $page, pageSize: $pageSize")
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
         var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
@@ -954,7 +1044,9 @@ class BkRepoClient constructor(
         }
 
         if (metadata.isNotEmpty()) {
-            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.AND)
+            val metadataRule = Rule.NestedRule(metadata.map {
+                Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ)
+            }.toMutableList(), Rule.NestedRule.RelationType.AND)
             ruleList.add(metadataRule)
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
@@ -969,17 +1061,21 @@ class BkRepoClient constructor(
         fullPathPatterns: List<String>,
         metadata: Map<String, String>
     ): List<QueryNodeInfo> {
-        logger.info("queryByPattern, userId: $userId, projectId: $projectId, repoNames: $repoNames, fullPathPatterns: $fullPathPatterns, metadata: $metadata")
-
+        logger.info("queryByPattern, userId: $userId, projectId: $projectId, repoNames: $repoNames," +
+            " fullPathPatterns: $fullPathPatterns, metadata: $metadata")
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
         var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
         if (fullPathPatterns.isNotEmpty()) {
-            val fullPathRule = Rule.NestedRule(fullPathPatterns.map { Rule.QueryRule("fullPath", it, OperationType.MATCH) }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            val fullPathRule = Rule.NestedRule(fullPathPatterns.map {
+                Rule.QueryRule("fullPath", it, OperationType.MATCH)
+            }.toMutableList(), Rule.NestedRule.RelationType.OR)
             ruleList.add(fullPathRule)
         }
         if (metadata.isNotEmpty()) {
-            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList())
+            val metadataRule = Rule.NestedRule(metadata.map {
+                Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ)
+            }.toMutableList())
             ruleList.add(metadataRule)
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
@@ -996,7 +1092,8 @@ class BkRepoClient constructor(
         page: Int = 1,
         pageSize: Int = 10000
     ): List<QueryNodeInfo> {
-        logger.info("listFileByQuery, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, includeFolders: $includeFolders")
+        logger.info("listFileByQuery, userId: $userId, projectId: $projectId, repoName: $repoName," +
+            " path: $path, includeFolders: $includeFolders")
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val repoRule = Rule.QueryRule("repoName", repoName, OperationType.EQ)
         val pathRule = Rule.QueryRule("path", "${path.removeSuffix("/")}/", OperationType.EQ)

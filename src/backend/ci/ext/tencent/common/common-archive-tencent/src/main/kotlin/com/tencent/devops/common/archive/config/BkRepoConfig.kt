@@ -47,4 +47,8 @@ class BkRepoConfig {
     // 蓝盾新仓库docker仓库名称
     @Value("\${bkrepo.dockerRepoName}")
     val bkrepoDockerRepoName: String = ""
+
+    // 蓝盾新仓库docker仓库名称
+    @Value("\${bkrepo.logRepoCredentialsKey:}")
+    lateinit var logRepoCredentialsKey: String
 }

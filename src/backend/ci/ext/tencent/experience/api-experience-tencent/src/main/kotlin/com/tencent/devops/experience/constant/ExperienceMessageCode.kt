@@ -56,6 +56,7 @@ object ExperienceMessageCode {
     const val OUTER_LOGIN_ERROR = "2106009" // 外部用户登录错误
     const val OUTER_ACCESS_FAILED = "2106010" // 外部用户访问失败
     const val EXPERIENCE_NEED_PERMISSION = "2106011" // 需要用户权限
+    const val EXPERIENCE_NO_AVAILABLE = "2106012" // 该版本不可用，可能已被下架、已过期或被新版本覆盖，请刷新页面重试
 
     const val USER_NEED_EXP_X_PERMISSION = "2101009" // 体验: 用户没有体验的{0}权限
     const val USER_NEED_EXP_GROUP_X_PERMISSION = "2101010" // 体验：用户没有体验组的{0}权限

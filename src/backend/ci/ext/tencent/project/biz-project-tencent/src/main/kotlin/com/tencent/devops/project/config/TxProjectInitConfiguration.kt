@@ -28,7 +28,6 @@
 package com.tencent.devops.project.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
@@ -38,6 +37,7 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.iam.GitCIProjectPermissionService
 import com.tencent.devops.project.service.impl.V0ProjectPermissionServiceImpl
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -75,4 +75,8 @@ class TxProjectInitConfiguration {
         managerService = managerService,
         authPermissionApi = authPermissionApi
     )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    fun gitCiProjectPermission() = GitCIProjectPermissionService()
 }

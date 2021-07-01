@@ -158,10 +158,11 @@ class TriggerBuildService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val oauthService: OauthService,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val websocketService: GitCIV2WebsocketService
 ) : V2BaseBuildService<ScriptBuildYaml>(
     client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService
+    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService, websocketService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -171,7 +172,7 @@ class TriggerBuildService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TriggerBuildService::class.java)
-
+        private const val ymlVersion = "v2.0"
         const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
         const val VARIABLE_PREFIX = "variables."
     }
@@ -524,7 +525,7 @@ class TriggerBuildService @Autowired constructor(
         }
 
         if (job.runsOn.agentSelector.isNullOrEmpty()) {
-            return VMBaseOS.LINUX
+            return VMBaseOS.ALL
         }
         return when (job.runsOn.agentSelector!![0]) {
             "linux" -> VMBaseOS.LINUX
@@ -746,6 +747,11 @@ class TriggerBuildService @Autowired constructor(
             }
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
+            if (step.with == null || (step.with != null && !step.with!!.containsKey("authType"))) {
+                inputMap["accessToken"] =
+                    oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
+                inputMap["authType"] = "ACCESS_TOKEN"
+            }
         }
 
         // 拼装插件固定参数

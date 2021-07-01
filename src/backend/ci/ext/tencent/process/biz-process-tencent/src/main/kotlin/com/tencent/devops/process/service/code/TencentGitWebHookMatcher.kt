@@ -27,34 +27,26 @@
 
 package com.tencent.devops.process.service.code
 
-import com.tencent.devops.process.engine.service.code.GitWebHookMatcher
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
-import com.tencent.devops.process.pojo.code.git.GitEvent
-import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.process.pojo.code.git.GitPushEvent
-import com.tencent.devops.process.pojo.code.git.GitTagPushEvent
-import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.utils.code.git.GitUtils
-import org.slf4j.LoggerFactory
 
 class TencentGitWebHookMatcher(
-    private val gitEvent: GitEvent,
+    gitEvent: GitEvent,
     private val gitIncludeHost: String?
 ) : GitWebHookMatcher(gitEvent) {
 
-    private val pipelineWebHookParams = mutableMapOf<String, ScmWebhookMatcher.WebHookParams>()
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(TencentGitWebHookMatcher::class.java)
-    }
+    private val pipelineWebHookParams = mutableMapOf<String, WebHookParams>()
 
     override fun isMatch(
         projectId: String,
         pipelineId: String,
         repository: Repository,
-        webHookParams: ScmWebhookMatcher.WebHookParams
+        webHookParams: WebHookParams
     ): ScmWebhookMatcher.MatchResult {
+        webHookParams.includeHost = gitIncludeHost
         val matchResult = super.isMatch(projectId, pipelineId, repository, webHookParams)
         if (matchResult.isMatch) {
             pipelineWebHookParams[pipelineId] = webHookParams
@@ -62,69 +54,7 @@ class TencentGitWebHookMatcher(
         return matchResult
     }
 
-    override fun matchUrl(repository: Repository): Boolean {
-        if (repository is CodeGitRepository && isCodeGitHook()) {
-            logger.info("git match url by projectName, url:${repository.url}")
-            return matchProjectName(repository.url)
-        }
-        return super.matchUrl(repository)
-    }
-
-    override fun getWebHookParamsMap(): Map<String, ScmWebhookMatcher.WebHookParams> {
+    override fun getWebHookParamsMap(): Map<String, WebHookParams> {
         return pipelineWebHookParams
-    }
-
-    /**
-     * 判断是否是工蜂触发过来的事件,工蜂触发过来的事件通过对比项目名
-     */
-    private fun isCodeGitHook(): Boolean {
-        if (gitIncludeHost.isNullOrBlank()) {
-            return false
-        }
-        val includeHosts = gitIncludeHost!!.split(",")
-        val hookUrl = when (gitEvent) {
-            is GitPushEvent ->
-                gitEvent.repository.git_http_url
-            is GitTagPushEvent ->
-                gitEvent.repository.git_http_url
-            is GitMergeRequestEvent ->
-                gitEvent.object_attributes.target.http_url
-            else ->
-                return false
-        }
-        val hookUrlHost = GitUtils.getDomainAndRepoName(hookUrl).first
-        return includeHosts.contains(hookUrlHost)
-    }
-
-    private fun matchProjectName(url: String): Boolean {
-        return when (gitEvent) {
-            is GitPushEvent -> {
-                val repoProjectName = GitUtils.getProjectName(url)
-                val eventHttpProjectName =
-                    GitUtils.getProjectName(gitEvent.repository.git_http_url)
-                val eventSshProjectName =
-                    GitUtils.getProjectName(gitEvent.repository.git_ssh_url)
-                repoProjectName == eventSshProjectName || repoProjectName == eventHttpProjectName
-            }
-            is GitTagPushEvent -> {
-                val repoProjectName = GitUtils.getProjectName(url)
-                val eventHttpProjectName =
-                    GitUtils.getProjectName(gitEvent.repository.git_http_url)
-                val eventSshProjectName =
-                    GitUtils.getProjectName(gitEvent.repository.git_ssh_url)
-                repoProjectName == eventSshProjectName || repoProjectName == eventHttpProjectName
-            }
-            is GitMergeRequestEvent -> {
-                val repoProjectName = GitUtils.getProjectName(url)
-                val eventHttpProjectName =
-                    GitUtils.getProjectName(gitEvent.object_attributes.target.http_url)
-                val eventSshProjectName =
-                    GitUtils.getProjectName(gitEvent.object_attributes.target.ssh_url)
-                repoProjectName == eventSshProjectName || repoProjectName == eventHttpProjectName
-            }
-            else -> {
-                false
-            }
-        }
     }
 }

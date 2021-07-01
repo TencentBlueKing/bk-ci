@@ -42,6 +42,9 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.GitCiPipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
+import com.tencent.devops.process.ws.GitCIDetailPageBuild
+import com.tencent.devops.process.ws.GitCIHistoryPageBuild
+import com.tencent.devops.process.ws.GitCIStatusPageBuild
 import com.tencent.devops.process.permission.V3PipelinePermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -95,10 +98,22 @@ class TxPipelineEngineConfiguration {
     ) = GitCiPipelinePermissionServiceImpl(client, pipelineIndoDao, dslContext, checkTokenService)
 
     @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun detailPage() = GitCIDetailPageBuild()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun historyPage() = GitCIHistoryPageBuild()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun statusPage() = GitCIStatusPageBuild()
+
+    @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
     fun txV3PipelinePermissionService(
-        txV3AuthPermission: TxV3AuthPermissionApi,
-        txV3AuthProjectApi: TxV3AuthProjectApi,
+        txV3AuthPermission: AuthPermissionApi,
+        txV3AuthProjectApi: AuthProjectApi,
         bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
         dslContext: DSLContext,
         pipelineInfoDao: PipelineInfoDao,
