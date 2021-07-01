@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserDeptResourceImpl @Autowired constructor(
     val deptService: DeptService
-): UserDeptResource {
+) : UserDeptResource {
     override fun getDeptByLevel(userId: String, accessToken: String?, level: Int): Result<DeptInfoVo?> {
         return Result(deptService.getDeptByLevel(level, accessToken, userId))
     }

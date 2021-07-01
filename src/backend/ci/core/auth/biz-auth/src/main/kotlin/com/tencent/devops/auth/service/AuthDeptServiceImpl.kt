@@ -201,7 +201,7 @@ class AuthDeptServiceImpl @Autowired constructor(
         }
     }
 
-    private fun getAndRefreshDeptUser(deptId: Int, accessToken: String?) : List<String> {
+    private fun getAndRefreshDeptUser(deptId: Int, accessToken: String?): List<String> {
         // TODO: 获取accessToken
         val accessToken = accessToken
         val search = SearchDeptUserEntity(
@@ -293,7 +293,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             )
         }
         val responseData = JsonUtil.toJson(responseDTO.data)
-        val dataMap =  JsonUtil.fromJson(responseData, Map::class.java)
+        val dataMap = JsonUtil.fromJson(responseData, Map::class.java)
         val userInfoList = JsonUtil.fromJson(JsonUtil.toJson(dataMap[HTTP_RESULT]), List::class.java)
         val users = mutableListOf<String>()
         userInfoList.forEach {

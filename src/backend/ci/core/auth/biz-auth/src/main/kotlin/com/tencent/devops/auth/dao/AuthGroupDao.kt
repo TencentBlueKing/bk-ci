@@ -74,7 +74,7 @@ class AuthGroupDao {
         }
     }
 
-    fun getGroupByProject(dslContext: DSLContext, projectCode: String) : Result<TAuthGroupInfoRecord> {
+    fun getGroupByProject(dslContext: DSLContext, projectCode: String): Result<TAuthGroupInfoRecord> {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode).and(IS_DELETE.eq(false))).fetch()

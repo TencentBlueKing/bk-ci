@@ -75,7 +75,7 @@ class AuthPipelineService @Autowired constructor(
         logger.info("entityInfo $entityInfo, count ${pipelineInfos?.count}")
         return result.buildSearchInstanceResult(entityInfo, pipelineInfos.count)
     }
-    
+
     fun getPipeline(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
         authTokenApi.checkToken(token)
 //        val pipelineInfos =
@@ -97,7 +97,7 @@ class AuthPipelineService @Autowired constructor(
         logger.info("entityInfo $entityInfo, count ${pipelineInfos?.count}")
         return result.buildListInstanceResult(entityInfo, pipelineInfos.count)
     }
-    
+
     fun getPipelineInfo(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
         authTokenApi.checkToken(token)
 //        val pipelineInfos =
@@ -105,7 +105,7 @@ class AuthPipelineService @Autowired constructor(
 //                .pipelineInfos(ids!!.toSet() as Set<String>).data
         val pipelineInfos = pipelineListFacadeService.getPipelineByIds(pipelineIds = ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
-        
+
         if (pipelineInfos == null || pipelineInfos.isEmpty()) {
             logger.info("$ids 未匹配到启用流水线")
             return result.buildFetchInstanceFailResult()
@@ -120,7 +120,7 @@ class AuthPipelineService @Autowired constructor(
         logger.info("entityInfo $entityInfo, count ${pipelineInfos.size.toLong()}")
         return result.buildFetchInstanceResult(entityInfo)
     }
-    
+
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }

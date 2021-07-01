@@ -104,7 +104,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         logger.info("[IAM] getUserProjects actionPolicyDTOs $actionPolicyDTOs")
         val projectCodes = mutableSetOf<String>()
         actionPolicyDTOs.forEach {
-           projectCodes.addAll(AuthUtils.getProjects(it.condition))
+            projectCodes.addAll(AuthUtils.getProjects(it.condition))
         }
         return projectCodes.toList()
     }

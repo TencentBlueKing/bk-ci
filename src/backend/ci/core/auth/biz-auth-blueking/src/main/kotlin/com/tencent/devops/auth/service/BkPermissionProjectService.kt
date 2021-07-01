@@ -6,9 +6,7 @@ import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionProjectService
-import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
