@@ -42,8 +42,8 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskService
@@ -55,7 +55,7 @@ import org.springframework.stereotype.Service
 @Service
 class StartActionTaskContainerCmd(
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val taskBuildDetailService: TaskBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineTaskService: PipelineTaskService,
@@ -104,6 +104,7 @@ class StartActionTaskContainerCmd(
      * 如遇到[BuildStatus.isReadyToRun]待执行任务，则检查是否可以执行，
      *  包括「是否条件跳过」「当前是否构建机启动失败」「Post Action检查」等等，通过方能成为待执行的任务
      */
+    @Suppress("ComplexMethod", "NestedBlockDepth")
     private fun findTask(containerContext: ContainerContext): PipelineBuildTask? {
         var toDoTask: PipelineBuildTask? = null
         var continueWhenFailure = false // 失败继续
@@ -138,6 +139,15 @@ class StartActionTaskContainerCmd(
                     containerContext = containerContext,
                     needTerminate = needTerminate
                 )
+            } else if (t.status == BuildStatus.SKIP && t.endTime == null) { // 手动跳过功能，暂时没有好的解决办法，可改进
+                buildLogPrinter.addRedLine(
+                    buildId = t.buildId,
+                    message = "Plugin[${t.taskName}]: ${t.errorMsg ?: "unknown"}",
+                    tag = t.taskId,
+                    jobId = t.containerHashId,
+                    executeCount = t.executeCount ?: 1
+                )
+                pipelineRuntimeService.updateTaskStatus(t, containerContext.event.userId, t.status)
             }
 
             if (toDoTask != null || breakFlag) {
@@ -234,7 +244,7 @@ class StartActionTaskContainerCmd(
                 pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 // 只更新SKIP编排模型
                 if (taskStatus == BuildStatus.SKIP) {
-                    pipelineBuildDetailService.taskEnd(buildId, taskId = taskId, buildStatus = taskStatus)
+                    taskBuildDetailService.taskEnd(buildId, taskId = taskId, buildStatus = taskStatus)
                 }
                 // 打印构建日志
                 buildLogPrinter.addYellowLine(executeCount = containerContext.executeCount, tag = taskId,
@@ -326,7 +336,7 @@ class StartActionTaskContainerCmd(
             // 更新排队中的post任务的构建状态
             pipelineRuntimeService.updateTaskStatus(currentTask, currentTask.starter, buildStatus = buildStatus)
             if (buildStatus == BuildStatus.SKIP) { // 更新跳过状态
-                pipelineBuildDetailService.taskSkip(buildId = currentTask.buildId, taskId = currentTask.taskId)
+                taskBuildDetailService.taskSkip(buildId = currentTask.buildId, taskId = currentTask.taskId)
             }
             buildLogPrinter.addYellowLine(
                 buildId = currentTask.buildId,

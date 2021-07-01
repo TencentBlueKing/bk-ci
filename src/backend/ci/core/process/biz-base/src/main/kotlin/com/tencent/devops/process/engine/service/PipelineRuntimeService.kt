@@ -160,7 +160,6 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
-import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -568,7 +567,7 @@ class PipelineRuntimeService @Autowired constructor(
             val totalTime = if (startTime == null || endTime == null) {
                 0
             } else {
-                TimeUnit.MILLISECONDS.toSeconds(Duration.between(startTime, endTime).toMillis())
+                Duration.between(startTime, endTime).toMillis()
             }
             BuildHistory(
                 id = buildId,
@@ -750,11 +749,11 @@ class PipelineRuntimeService @Autowired constructor(
         // 2019-12-16 产品 rerun 需求
         val pipelineId = pipelineInfo.pipelineId
         val buildId = params[PIPELINE_RETRY_BUILD_ID]?.toString() ?: buildIdGenerator.getNextId()
-
+        val projectName = projectCacheService.getProjectName(pipelineInfo.projectId) ?: ""
         val context = StartBuildContext.init(params)
 
         val updateExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
-        val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
+        val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
         val lastTimeBuildTaskRecords = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
         val lastTimeBuildContainerRecords = pipelineBuildContainerDao.listByBuildId(dslContext, buildId)
         val lastTimeBuildStageRecords = pipelineBuildStageDao.listByBuildId(dslContext, buildId)
@@ -772,12 +771,10 @@ class PipelineRuntimeService @Autowired constructor(
         var buildNoType: BuildNoType? = null
         // --- 第1层循环：Stage遍历处理 ---
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
-//            val stageId = stage.id!!
-            var needUpdateStage = false
+            var needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
             // #2318 如果是stage重试不是当前stage，并且当前stage已经是完成状态，则直接跳过
             if (context.needSkipWhenStageFailRetry(stage)) {
-//            if (isStageRetry && !retryStage && BuildStatus.parse(stage.status).isFinish()) {
                 logger.info("[$buildId|RETRY|#${stage.id!!}|${stage.status}|NOT_RETRY_STAGE")
                 context.containerSeq += stage.containers.size // Job跳过计数也需要增加
                 return@nextStage
@@ -883,8 +880,9 @@ class PipelineRuntimeService @Autowired constructor(
                         }
                     }
 
-                    val status = atomElement.initStatus(params = params, rerun = context.needRerun(stage))
+                    atomElement.disableBySkipVar(variables = params) // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
 
+                    val status = atomElement.initStatus(rerun = context.needRerun(stage))
                     if (status.isFinish()) {
                         logger.info("[$buildId|${atomElement.id}] status=$status")
                         atomElement.status = status.name
@@ -922,9 +920,8 @@ class PipelineRuntimeService @Autowired constructor(
                         )
                         needUpdateContainer = true
                     } else {
-                        // 如果是失败的插件重试，并且当前插件不是要重试的插件，则检查其之前的状态，如果已经执行过，则跳过
+                        // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过
                         if (context.needSkipTaskWhenRetry(stage, atomElement.id)) {
-//                        if (!retryStage && !retryStartTaskId.isNullOrBlank() && retryStartTaskId != atomElement.id) {
                             val target = findTaskRecord(
                                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                                 container = container,
@@ -949,7 +946,8 @@ class PipelineRuntimeService @Autowired constructor(
                             container = container,
                             retryStartTaskId = atomElement.id!!,
                             retryCount = context.retryCount,
-                            atomElement = atomElement
+                            atomElement = atomElement, // #4245 将失败跳过的插件置为跳过
+                            initialStatus = if (context.inSkipStage(stage, atomElement)) BuildStatus.SKIP else null
                         )
 
                         if (taskRecord != null) {
@@ -1100,19 +1098,15 @@ class PipelineRuntimeService @Autowired constructor(
         } else null
         try {
             lock?.lock()
-            val projectName = projectCacheService.getProjectName(pipelineInfo.projectId) ?: ""
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                // 保存参数
-                val buildVariables = startParamsWithType.toMutableList()
-                val varMap = mapOf(
-                    PIPELINE_BUILD_ID to buildId,
-                    PROJECT_NAME to pipelineInfo.projectId,
-                    PROJECT_NAME_CHINESE to projectName
-                )
-                buildVariables.addAll(
-                    varMap.map { BuildParameters(it.key, it.value, BuildFormPropertyType.STRING) }
-                )
+                // 保存参数 过滤掉不需要保存持久化的临时参数
+                val buildVariables = startParamsWithType
+                    .filter { it.valueType != BuildFormPropertyType.TEMPORARY }.toMutableList()
+                buildVariables.add(BuildParameters(PIPELINE_BUILD_ID, buildId, BuildFormPropertyType.STRING))
+                buildVariables.add(BuildParameters(PROJECT_NAME, pipelineInfo.projectId, BuildFormPropertyType.STRING))
+                buildVariables.add(BuildParameters(PROJECT_NAME_CHINESE, projectName, BuildFormPropertyType.STRING))
+
                 buildVariableService.batchSetVariable(
                     dslContext = transactionContext,
                     projectId = pipelineInfo.projectId,
@@ -1440,6 +1434,7 @@ class PipelineRuntimeService @Autowired constructor(
      * @param container 当前任务所在构建容器
      * @param retryStartTaskId 要重试的任务i
      * @param atomElement 需要重置状态的任务原子Element，可以为空。
+     * @param initialStatus 插件在重试时的初始状态，默认是QUEUE，也可以指定
      */
     private fun retryDetailModelStatus(
         lastTimeBuildTaskRecords: Collection<TPipelineBuildTaskRecord>,
@@ -1447,7 +1442,8 @@ class PipelineRuntimeService @Autowired constructor(
         container: Container,
         retryStartTaskId: String,
         retryCount: Int,
-        atomElement: Element? = null
+        atomElement: Element? = null,
+        initialStatus: BuildStatus? = null
     ): TPipelineBuildTaskRecord? {
         val target: TPipelineBuildTaskRecord? = findTaskRecord(
             lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
@@ -1461,7 +1457,8 @@ class PipelineRuntimeService @Autowired constructor(
                 retryCount = retryCount,
                 stage = stage,
                 container = container,
-                atomElement = atomElement
+                atomElement = atomElement,
+                initialStatus = initialStatus
             )
         }
         return target
@@ -1472,12 +1469,20 @@ class PipelineRuntimeService @Autowired constructor(
         retryCount: Int,
         stage: Stage,
         container: Container,
-        atomElement: Element?
+        atomElement: Element?,
+        initialStatus: BuildStatus? = null
     ) {
         target.startTime = null
         target.endTime = null
         target.executeCount = retryCount + 1 // 执行次数增1
-        target.status = BuildStatus.QUEUE.ordinal // 进入排队状态
+        target.status = initialStatus?.ordinal ?: BuildStatus.QUEUE.ordinal // 如未指定状态，则默认进入排队状态
+        if (target.status != BuildStatus.SKIP.ordinal) { // 排队要准备执行，要清除掉上次失败状态
+            target.errorMsg = null
+            target.errorCode = null
+            target.errorType = null
+        } else { // 跳过的需要保留下跳过的信息
+            target.errorMsg = "被手动跳过 Manually skipped"
+        }
         stage.status = null
         stage.startEpoch = null
         stage.elapsed = null
@@ -1487,7 +1492,12 @@ class PipelineRuntimeService @Autowired constructor(
         container.systemElapsed = null
         container.executeCount = target.executeCount
         if (atomElement != null) { // 将原子状态重置
-            atomElement.status = null // BuildStatus.QUEUE.name
+            if (initialStatus == null) { // 未指定状态的，将重新运行
+                atomElement.status = null
+            } else { // 指定了状态了，表示不会再运行，需要将重试与跳过关闭，因为已经跳过
+                atomElement.additionalOptions =
+                    atomElement.additionalOptions?.copy(manualSkip = false, manualRetry = false)
+            }
             atomElement.executeCount = target.executeCount
             atomElement.elapsed = null
             atomElement.startEpoch = null
@@ -1603,7 +1613,7 @@ class PipelineRuntimeService @Autowired constructor(
      * 完成认领构建的任务[completeTask]
      * [endBuild]表示最后一步，当前容器要结束
      */
-    fun completeClaimBuildTask(completeTask: CompleteTask, endBuild: Boolean = false) {
+    fun completeClaimBuildTask(completeTask: CompleteTask, endBuild: Boolean = false): PipelineBuildTask? {
         val buildTask = getBuildTask(buildId = completeTask.buildId, taskId = completeTask.taskId)
         if (buildTask != null) {
             updateTaskStatus(
@@ -1629,6 +1639,7 @@ class PipelineRuntimeService @Autowired constructor(
                 )
             )
         }
+        return buildTask
     }
 
     fun updateBuildNo(pipelineId: String, buildNo: Int) {

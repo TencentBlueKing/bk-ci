@@ -195,7 +195,6 @@ class TaskControl @Autowired constructor(
      * 1. 需要失败重试，将[buildTask]的构建状态设置为RETRY
      */
     private fun PipelineBuildAtomTaskEvent.finishTask(buildTask: PipelineBuildTask, buildStatus: BuildStatus) {
-        var delayMillsNext = 0 // #4209  上一次loopDispatch设置的延时需要清除
         if (buildStatus.isFailure() && !FastKillUtils.isTerminateCode(errorCode)) { // 失败的任务 并且不是需要终止的错误码
             // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
             if (pipelineTaskService.isRetryWhenFail(taskId, buildId)) {
@@ -203,7 +202,6 @@ class TaskControl @Autowired constructor(
                 pipelineRuntimeService.updateTaskStatus(
                     task = buildTask, userId = buildTask.starter, buildStatus = BuildStatus.RETRY
                 )
-                delayMillsNext = DEFAULT_DELAY
             } else {
                 // 如果配置了失败继续，则继续下去的行为是在ContainerControl处理，而非在Task
                 pipelineTaskService.createFailTaskVar(
@@ -246,7 +244,6 @@ class TaskControl @Autowired constructor(
                 containerId = containerId,
                 containerType = containerType,
                 actionType = actionType,
-                delayMills = delayMillsNext,
                 errorCode = errorCode,
                 errorTypeName = errorTypeName,
                 reason = reason
