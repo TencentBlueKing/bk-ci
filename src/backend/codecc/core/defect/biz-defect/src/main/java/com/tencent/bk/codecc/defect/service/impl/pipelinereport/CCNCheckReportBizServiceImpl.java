@@ -58,7 +58,7 @@ public class CCNCheckReportBizServiceImpl implements ICheckReportBizService
     @Autowired
     private CCNStatisticRepository ccnStatisticRepository;
 
-    @Value("${bkci.private.url:#{null}}")
+    @Value("${bkci.public.url:#{null}}")
     private String devopsHost;
 
     @Autowired
