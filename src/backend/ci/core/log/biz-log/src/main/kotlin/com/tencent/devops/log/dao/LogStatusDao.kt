@@ -27,14 +27,15 @@
 
 package com.tencent.devops.log.dao
 
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.model.log.tables.TLogStatus
 import com.tencent.devops.model.log.tables.records.TLogStatusRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.UpdateConditionStep
 import org.springframework.stereotype.Repository
 
 @Repository
-@Suppress("ALL")
 class LogStatusDao {
 
     fun finish(
@@ -44,6 +45,7 @@ class LogStatusDao {
         subTags: String?,
         jobId: String?,
         executeCount: Int?,
+        logStorageMode: LogStorageMode,
         finish: Boolean
     ) {
         with(TLogStatus.T_LOG_STATUS) {
@@ -54,15 +56,42 @@ class LogStatusDao {
                 SUB_TAG,
                 JOB_ID,
                 EXECUTE_COUNT,
-                FINISHED
+                FINISHED,
+                MODE
             ).values(
                 buildId,
                 tag ?: "",
                 subTags ?: "",
                 jobId,
                 executeCount ?: 1,
-                finish
-            ).onDuplicateKeyUpdate().set(FINISHED, finish).execute()
+                finish,
+                logStorageMode.name
+            ).onDuplicateKeyUpdate()
+                .set(FINISHED, finish)
+                .set(MODE, logStorageMode.name)
+                .execute()
+        }
+    }
+
+    fun updateStorageMode(
+        dslContext: DSLContext,
+        buildId: String,
+        executeCount: Int,
+        modeList: Map<String, LogStorageMode>
+    ) {
+        with(TLogStatus.T_LOG_STATUS) {
+            val records =
+                mutableListOf<UpdateConditionStep<TLogStatusRecord>>()
+            modeList.forEach { (tag, mode) ->
+                records.add(
+                    dslContext.update(this)
+                        .set(MODE, mode.name)
+                        .where(BUILD_ID.eq(buildId))
+                        .and(TAG.eq(tag))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                )
+            }
+            dslContext.batch(records).execute()
         }
     }
 
@@ -93,6 +122,21 @@ class LogStatusDao {
                 .and(SUB_TAG.eq(subTags ?: ""))
                 .and(EXECUTE_COUNT.eq(executeCount ?: 1))
                 .fetchOne()?.finished ?: false
+        }
+    }
+
+    fun getStorageMode(
+        dslContext: DSLContext,
+        buildId: String,
+        tag: String,
+        executeCount: Int?
+    ): TLogStatusRecord? {
+        with(TLogStatus.T_LOG_STATUS) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(TAG.eq(tag))
+                .and(EXECUTE_COUNT.eq(executeCount ?: 1))
+                .fetchAny()
         }
     }
 

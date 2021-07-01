@@ -116,7 +116,7 @@ render_ci (){
     return 5
   fi
   if [ -x "$BKCE_RENDER_CMD" ]; then
-    BK_ENV_FILE="$CTRL_DIR/load_env.sh" $BKCE_RENDER_CMD -m ci -p "$BK_HOME" "${files[@]}"
+    BK_ENV_FILE="$CTRL_DIR/bin/04-final/ci.env" $BKCE_RENDER_CMD -m ci -p "$BK_HOME" "${files[@]}"
   elif [ -x "$CI_RENDER_CMD" ]; then
     $CI_RENDER_CMD -m ci "${files[@]}"
   else
