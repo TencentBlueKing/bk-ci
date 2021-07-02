@@ -1,5 +1,5 @@
 <template>
-    <bk-checkbox-group :value="value" @change="handleSwitch">
+    <bk-checkbox-group :key="value" :value="value" @change="handleSwitch">
         <bk-checkbox v-for="item in list" :key="item.id" :value="item.id" :disabled="item.disabled" class="atom-checkbox-list-item">
             <span v-if="item.desc" v-bk-tooltips="{ content: item.desc, width: 300 }" :class="{ 'disabled-color': item.disabled }">{{ item.name }}</span>
             <span v-else :class="{ 'disabled-color': item.disabled }">{{ item.name }}</span>
@@ -15,17 +15,16 @@
         props: {
             list: {
                 type: Array,
-                default: []
+                default: () => []
             },
             value: {
                 type: Array,
-                default: []
+                default: () => []
             }
         },
         methods: {
             handleSwitch (value) {
                 const { name, handleChange } = this
-                console.log(value)
                 this.$emit('input', value)
                 handleChange(name, value)
             }
