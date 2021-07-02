@@ -403,8 +403,35 @@ class TXPipelineExportService @Autowired constructor(
                         )
                     )
                 }
-                MarketBuildAtomElement.classType, MarketBuildLessAtomElement.classType -> {
+                MarketBuildAtomElement.classType -> {
                     val step = element as MarketBuildAtomElement
+                    val input = element.data["input"]
+                    val inputMap = if (input != null && !(input as MutableMap<String, Any>).isNullOrEmpty()) {
+                        input
+                    } else null
+                    stepList.add(
+                        V2Step(
+                            name = step.name,
+                            id = null,
+                            ifFiled = if (step.additionalOptions?.runCondition ==
+                                RunCondition.CUSTOM_CONDITION_MATCH) {
+                                step.additionalOptions?.customCondition
+                            } else {
+                                null
+                            },
+                            uses = "${step.getAtomCode()}@${step.version}",
+                            with = inputMap,
+                            timeoutMinutes = timeoutMinutes,
+                            continueOnError = continueOnError,
+                            retryTimes = retryTimes,
+                            env = null,
+                            run = null,
+                            checkout = null
+                        )
+                    )
+                }
+                MarketBuildLessAtomElement.classType -> {
+                    val step = element as MarketBuildLessAtomElement
                     val input = element.data["input"]
                     val inputMap = if (input != null && !(input as MutableMap<String, Any>).isNullOrEmpty()) {
                         input
