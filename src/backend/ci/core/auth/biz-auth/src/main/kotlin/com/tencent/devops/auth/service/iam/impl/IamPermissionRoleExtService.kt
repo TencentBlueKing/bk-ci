@@ -150,7 +150,6 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val resultList = mutableListOf<GroupInfoVo>()
         groupInfos.results.forEach {
             val groupInfo = localGroupMap[it.id.toString()]
-            logger.info("role ${it.id} local data: $groupInfo")
             resultList.add(
                 GroupInfoVo(
                     id = groupInfo?.id!!,
