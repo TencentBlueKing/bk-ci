@@ -95,13 +95,13 @@
         }
         /deep/ .bk-tab-header {
             background-color: #fff;
-            height: 64px;
-            line-height: 64px;
-            background-image: linear-gradient(transparent 63px,#dcdee5 0);
+            height: 64px !important;
+            line-height: 64px !important;
+            background-image: linear-gradient(transparent 63px,#dcdee5 0) !important;
             .bk-tab-label-wrapper .bk-tab-label-list {
-                height: 64px;
+                height: 64px !important;
                 .bk-tab-label-item {
-                    line-height: 64px;
+                    line-height: 64px !important;
                     color: #666;
                     &::after {
                         height: 3px;
@@ -115,8 +115,8 @@
                 }
             }
             .bk-tab-header-setting {
-                height: 64px;
-                line-height: 64px;
+                height: 64px !important;
+                line-height: 64px !important;
             }
         }
         /deep/ .bk-tab-section {
