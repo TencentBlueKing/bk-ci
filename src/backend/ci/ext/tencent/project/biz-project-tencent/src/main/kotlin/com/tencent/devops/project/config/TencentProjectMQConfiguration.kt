@@ -51,7 +51,7 @@ class TencentProjectMQConfiguration {
         @Autowired projectPaasCCService: ProjectPaasCCService,
         @Autowired bsAuthTokenApi: BSAuthTokenApi,
         @Autowired bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
-        @Autowired(required = false) iamV3Service: IamV3Service
+        @Autowired(required = false) iamV3Service: IamV3Service?
     ): ProjectEventListener = TencentProjectEventListener(
         projectPaasCCService = projectPaasCCService,
         bsAuthTokenApi = bsAuthTokenApi,
