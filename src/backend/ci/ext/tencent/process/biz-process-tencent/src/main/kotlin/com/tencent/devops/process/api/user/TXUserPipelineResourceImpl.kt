@@ -37,6 +37,7 @@ import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.DockerBuildService
 import com.tencent.devops.process.service.PipelineSubscriptionService
+import com.tencent.devops.process.service.TXPipelineExportService
 import com.tencent.devops.process.service.TXPipelineService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
@@ -49,7 +50,8 @@ import javax.ws.rs.core.Response
 class TXUserPipelineResourceImpl @Autowired constructor(
     private val pipelineSubscriptionService: PipelineSubscriptionService,
     private val dockerBuildService: DockerBuildService,
-    private val pipelineService: TXPipelineService
+    private val pipelineService: TXPipelineService,
+    private val pipelineExportService: TXPipelineExportService
 ) : TXUserPipelineResource {
 
     override fun enableDockerBuild(userId: String, projectId: String): Result<Boolean> {
@@ -75,7 +77,7 @@ class TXUserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineSubscriptionService.deleteSubscriptions(userId, pipelineId))
     }
 
-    override fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
+    override fun exportPipelinePreCI(userId: String, projectId: String, pipelineId: String): Response {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
         return pipelineService.exportYaml(userId, projectId, pipelineId)
@@ -84,7 +86,7 @@ class TXUserPipelineResourceImpl @Autowired constructor(
     override fun exportPipelineGitCI(userId: String, projectId: String, pipelineId: String): Response {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
-        return pipelineService.exportYaml(userId, projectId, pipelineId, true)
+        return pipelineExportService.exportV2Yaml(userId, projectId, pipelineId, true)
     }
 
     private fun checkParam(userId: String, projectId: String) {
