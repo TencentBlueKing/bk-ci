@@ -12,9 +12,7 @@ import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
 class TxV3AuthResourceApiStr @Autowired constructor(
     val iamEsbService: IamEsbService,
     val iamConfiguration: IamConfiguration,

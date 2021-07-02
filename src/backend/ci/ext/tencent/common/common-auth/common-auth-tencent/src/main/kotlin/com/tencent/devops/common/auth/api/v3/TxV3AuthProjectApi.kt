@@ -37,9 +37,7 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
 class TxV3AuthProjectApi @Autowired constructor(
     val client: Client,
     val tokenService: ClientTokenService
