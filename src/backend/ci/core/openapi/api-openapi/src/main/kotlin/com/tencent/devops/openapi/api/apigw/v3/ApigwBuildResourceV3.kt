@@ -108,7 +108,7 @@ interface ApigwBuildResourceV3 {
         buildId: String
     ): Result<Boolean>
 
-    @ApiOperation("重试构建")
+    @ApiOperation("重试构建-重试或者跳过失败插件")
     @POST
     @Path("/{buildId}/retry")
     fun retry(
@@ -130,12 +130,15 @@ interface ApigwBuildResourceV3 {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("要重试的原子任务ID", required = false)
+        @ApiParam("要重试或跳过的插件ID，或者StageId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
         @ApiParam("仅重试所有失败Job", required = false)
         @QueryParam("failedContainer")
-        failedContainer: Boolean? = false
+        failedContainer: Boolean? = false,
+        @ApiParam("跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
+        @QueryParam("skip")
+        skipFailedTask: Boolean? = false
     ): Result<BuildId>
 
     @ApiOperation("查看构建状态信息,#4295增加stageStatus等")

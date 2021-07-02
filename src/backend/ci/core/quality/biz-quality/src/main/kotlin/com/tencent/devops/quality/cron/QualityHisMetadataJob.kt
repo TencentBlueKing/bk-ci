@@ -38,6 +38,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
+@Suppress("ALL")
 @Component
 class QualityHisMetadataJob @Autowired constructor(
     private val qualityHisMetadataDao: QualityHisMetadataDao,

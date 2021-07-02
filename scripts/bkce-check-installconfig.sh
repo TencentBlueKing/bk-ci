@@ -58,7 +58,7 @@ install_config_conflict (){
 install_config_affinity (){
   local lonely_ip=$(echo "$1" | tr ',' '\n' | sort | uniq -u)
   if [ -n "$lonely_ip" ]; then
-    echo "install.config中$2模块需要部署到相同的主机, 但是如下IP中仅配置了其中一项: ${conflict_ip//$'\n'/,}."
+    echo "install.config中$2模块需要部署到相同的主机, 但是如下IP中仅配置了其中一项: ${lonely_ip//$'\n'/,}."
     return 1
   fi
 }
