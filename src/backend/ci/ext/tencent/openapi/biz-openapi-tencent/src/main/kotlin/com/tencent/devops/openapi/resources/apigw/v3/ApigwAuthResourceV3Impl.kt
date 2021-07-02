@@ -25,13 +25,13 @@ class ApigwAuthResourceV3Impl @Autowired constructor(
         logger.info("batchCreateGroup $userId $projectCode $groupInfos")
         val ciGroupInfos = mutableListOf<GroupDTO>()
         groupInfos.forEach {
-            var groupType = ""
+            var groupType = it.groupType
             var groupName = ""
             if (!BkAuthGroup.contains(it.groupCode)) {
-                groupType = ExtAuthConstants.CUSTOM_GROUP
+                groupType = false
                 groupName = it.displayName ?: ""
             } else {
-                groupType = it.groupType
+                groupType = true
                 groupName = it.groupName
             }
             ciGroupInfos.add(
