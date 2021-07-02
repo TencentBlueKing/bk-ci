@@ -46,6 +46,7 @@ import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
@@ -56,7 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
 
-@Suppress("ALL")
+@Suppress("ALL", "UNUSED")
 @Service
 class SimpleProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
@@ -138,7 +139,10 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo {
+    override fun organizationMarkUp(
+        projectCreateInfo: ProjectCreateInfo,
+        userDeptDetail: UserDeptDetail
+    ): ProjectCreateInfo {
         return projectCreateInfo
     }
 
@@ -162,7 +166,11 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
+        return true
+    }
+
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(SimpleProjectServiceImpl::class.java)
     }
 }

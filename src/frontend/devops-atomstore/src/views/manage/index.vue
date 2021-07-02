@@ -35,7 +35,7 @@
                 routekey: {},
                 panelMap: {
                     atom: [
-                        { label: this.$t('store.概览'), name: 'overView' },
+                        { label: this.$t('store.概览'), name: 'overView', children: [{ name: 'statisticData' }, { name: 'statisticPipeline' }], showChildTab: false },
                         { label: this.$t('store.发布管理'), name: 'release', children: [{ label: this.$t('store.版本管理'), name: 'version' }], showChildTab: true },
                         { label: this.$t('store.协作审批'), name: 'approval' },
                         { label: this.$t('store.基本信息'), name: 'detail', children: [{ name: 'show' }, { name: 'edit' }], showChildTab: false },
@@ -43,7 +43,8 @@
                           name: 'setting',
                           children: [
                               { label: this.$t('store.成员管理'), name: 'member' },
-                              { label: this.$t('store.私有配置'), name: 'private' }
+                              { label: this.$t('store.私有配置'), name: 'private' },
+                              { label: this.$t('store.apiSettingManage'), name: 'api' }
                           ],
                           showChildTab: true }
                     ],

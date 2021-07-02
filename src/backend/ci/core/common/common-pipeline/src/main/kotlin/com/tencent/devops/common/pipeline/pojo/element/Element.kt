@@ -87,7 +87,8 @@ abstract class Element(
     open var id: String? = null,
     open var status: String? = null,
     open var executeCount: Int = 1,
-    open var canRetry: Boolean? = false,
+    open var canRetry: Boolean? = null,
+    open var canSkip: Boolean? = null,
     open var elapsed: Long? = null,
     open var startEpoch: Long? = null,
     open var version: String = "1.*",
@@ -124,17 +125,27 @@ abstract class Element(
     open fun findFirstTaskIdByStartType(startType: StartType): String = ""
 
     /**
-     * 根据参数变量[params]初始化出插件是否跳过
+     * 除非是本身的[isElementEnable]设置为未启用插件会返回SKIP，或者是设置了失败手动跳过
+     * [rerun]允许对状态进行重置为QUEUE
      */
-    fun initStatus(params: Map<String, Any>): BuildStatus {
-        return if (params[SkipElementUtils.getSkipElementVariableName(id!!)] == "true") { // 参数中指明要求跳过
+    fun initStatus(rerun: Boolean = false): BuildStatus {
+        return if (!isElementEnable()) { // 插件未启用
             BuildStatus.SKIP // 跳过
-        } else if (!isElementEnable()) { // 插件未启用
-            BuildStatus.SKIP // 跳过
+        } else if (rerun) { // 除以上指定跳过或不启用的以外，在final Stage 下的插件都需要重置状态
+            BuildStatus.QUEUE
         } else if (status == BuildStatus.SKIP.name) { // 原本状态为SKIP，一般为 Rebuild/Fail Retry 的上一次执行标志下来
             BuildStatus.SKIP // 跳过
         } else {
             BuildStatus.QUEUE // 默认为排队状态
+        }
+    }
+
+    fun disableBySkipVar(variables: Map<String, Any>) {
+        if (variables[SkipElementUtils.getSkipElementVariableName(id!!)] == "true") { // 参数中指明要求跳过
+            if (additionalOptions == null) {
+                additionalOptions = ElementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS)
+            }
+            additionalOptions!!.enable = false
         }
     }
 }

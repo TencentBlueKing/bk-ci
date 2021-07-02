@@ -31,7 +31,7 @@ import com.tencent.bk.codecc.task.model.ToolConfigInfoEntity;
 import com.tencent.bk.codecc.task.vo.*;
 import com.tencent.bk.codecc.task.vo.checkerset.ToolCheckerSetVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 
 import java.util.List;
 
@@ -52,7 +52,7 @@ public interface ToolService
      * @param userName
      * @return
      */
-    CodeCCResult<Boolean> registerTools(BatchRegisterVO batchRegisterVO, TaskInfoEntity taskInfoEntity, String userName);
+    Result<Boolean> registerTools(BatchRegisterVO batchRegisterVO, TaskInfoEntity taskInfoEntity, String userName);
 
     /**
      * 注册工具
@@ -191,7 +191,7 @@ public interface ToolService
      * @param batchRegisterVO
      * @return
      */
-    CodeCCResult<Boolean> updateTools(Long taskId, String user, BatchRegisterVO batchRegisterVO);
+    Result<Boolean> updateTools(Long taskId, String user, BatchRegisterVO batchRegisterVO);
 
     /**
      * 批量查询工具配置信息
@@ -206,4 +206,12 @@ public interface ToolService
      * @return boolean
      */
     Boolean batchUpdateToolFollowStatus(Integer pageSize);
+
+    /**
+     * 仅用于初始化查询工具数量
+     *
+     * @param day 天数
+     * @return
+     */
+    Boolean initToolCountScript(Integer day);
 }

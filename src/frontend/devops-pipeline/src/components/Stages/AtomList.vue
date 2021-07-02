@@ -43,7 +43,7 @@
                         </span>
                     </template>
                     <a href="javascript: void(0);" class="atom-single-retry" v-else-if="atom.status !== 'SKIP' && atom.canRetry" @click.stop="singleRetry(atom.id)">{{ $t('retry') }}</a>
-                    <bk-popover placement="top" v-else-if="atom.status !== 'SKIP'" :disabled="!atom.elapsed">
+                    <bk-popover placement="top" v-else-if="atom.status !== 'SKIP' && !atom.canSkip" :disabled="!atom.elapsed">
                         <span :class="atom.status === 'SUCCEED' ? 'atom-success-timer' : (atom.status === 'REVIEW_ABORT' ? 'atom-warning-timer' : 'atom-fail-timer')">
                             <span v-if="atom.elapsed && atom.elapsed >= 36e5">&gt;</span>{{ atom.elapsed ? atom.elapsed > 36e5 ? '1h' : localTime(atom.elapsed) : '' }}
                         </span>
@@ -51,6 +51,7 @@
                             <p>{{ atom.elapsed ? localTime(atom.elapsed) : '' }}</p>
                         </template>
                     </bk-popover>
+                    <a href="javascript: void(0);" class="atom-single-skip" v-if="atom.status !== 'SKIP' && atom.canSkip" @click.stop="singleRetry(atom.id, true)">{{ $t('details.statusMap.SKIP') }}</a>
                     <span class="devops-icon copy" v-if="editable && stageIndex !== 0 && !atom.isError" :title="$t('editPage.copyAtom')" @click.stop="copyAtom(index)">
                         <Logo name="copy" size="18"></Logo>
                     </span>
@@ -127,14 +128,15 @@
             }
         },
         computed: {
-            ...mapState('soda', [
+            ...mapState('common', [
                 'ruleList',
                 'templateRuleList'
             ]),
             ...mapState('atom', [
                 'execDetail',
                 'atomMap',
-                'pipeline'
+                'pipeline',
+                'pipelineLimit'
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
@@ -156,8 +158,9 @@
             atomList: {
                 get () {
                     const atoms = this.getElements(this.container)
+
                     atoms.forEach(atom => {
-                        if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
+                        if (Array.isArray(this.curMatchRules) && this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
                                 || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
@@ -193,7 +196,7 @@
             }
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'reviewExcuteAtom',
                 'requestAuditUserList'
             ]),
@@ -324,6 +327,13 @@
             editAtom (atomIndex, isAdd) {
                 const { stageIndex, containerIndex, container, addAtom, deleteAtom } = this
                 const editAction = isAdd ? addAtom : deleteAtom
+                if (isAdd && this.container.elements.length >= this.pipelineLimit.atomLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.atomLimit') + this.pipelineLimit.atomLimit
+                    })
+                    return
+                }
                 editAction({
                     container,
                     atomIndex,
@@ -332,6 +342,13 @@
                 })
             },
             copyAtom (atomIndex) {
+                if (this.container.elements.length >= this.pipelineLimit.atomLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.atomLimit') + this.pipelineLimit.atomLimit
+                    })
+                    return
+                }
                 try {
                     const { id, ...element } = this.container.elements[atomIndex]
                     this.container.elements.splice(atomIndex + 1, 0, JSON.parse(JSON.stringify({
@@ -377,15 +394,15 @@
                     }
                 }
             },
-            singleRetry (taskId) {
+            singleRetry (taskId, skip) {
                 if (typeof taskId === 'string') {
-                    this.retryPipeline(taskId)
+                    this.retryPipeline(taskId, skip)
                 }
             },
             /**
              * 重试流水线
              */
-            async retryPipeline (taskId) {
+            async retryPipeline (taskId, skip = false) {
                 let message, theme
                 try {
                     // 请求执行构建
@@ -393,13 +410,14 @@
                         projectId: this.routerParams.projectId,
                         pipelineId: this.routerParams.pipelineId,
                         buildId: this.routerParams.buildNo,
-                        taskId: taskId
+                        taskId: taskId,
+                        skip
                     })
                     if (res.id) {
-                        message = this.$t('subpage.retrySuc')
+                        message = this.$t(`subpage.${skip ? 'skipSuc' : 'retrySuc'}`)
                         theme = 'success'
                     } else {
-                        message = this.$t('subpage.retryFail')
+                        message = this.$t(`subpage.${skip ? 'skipFail' : 'retryFail'}`)
                         theme = 'error'
                     }
                 } catch (err) {
@@ -419,6 +437,7 @@
                     })
                 }
             },
+
             useSkipStyle (atom) {
                 return (atom && (atom.status === 'SKIP' || (atom.additionalOptions && atom.additionalOptions.enable === false))) || this.containerDisabled
             }
@@ -594,7 +613,8 @@
                 margin: 0 8px 0 2px;
                 color: $warningColor;
             }
-            .atom-single-retry {
+            .atom-single-retry,
+            .atom-single-skip {
                 margin: 0 8px 0 2px;
                 color: $primaryColor;
             }

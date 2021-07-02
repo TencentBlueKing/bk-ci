@@ -68,7 +68,7 @@ class QualityRuleTemplateDao {
     fun count(dslContext: DSLContext): Long {
         with(TQualityRuleTemplate.T_QUALITY_RULE_TEMPLATE) {
             return dslContext.selectCount().from(this)
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -95,7 +95,7 @@ class QualityRuleTemplateDao {
                 now,
                 templateUpdate.enable
             ).returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }

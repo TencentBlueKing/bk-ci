@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildNoType
 
 /**
  *
@@ -48,5 +49,6 @@ data class PipelineBuildStartEvent(
     val taskId: String,
     val status: BuildStatus? = null,
     override var actionType: ActionType,
-    override var delayMills: Int = 0
+    override var delayMills: Int = 0,
+    val buildNoType: BuildNoType? = null
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

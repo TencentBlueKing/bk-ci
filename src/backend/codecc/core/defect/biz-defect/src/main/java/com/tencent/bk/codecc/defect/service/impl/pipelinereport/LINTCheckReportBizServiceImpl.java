@@ -65,7 +65,7 @@ public class LINTCheckReportBizServiceImpl implements ICheckReportBizService
     @Autowired
     private LintStatisticRepository lintStatisticRepository;
 
-    @Value("${devopsGateway.idchost:#{null}}")
+    @Value("${bkci.public.url:#{null}}")
     private String devopsHost;
 
     @Autowired
@@ -90,7 +90,7 @@ public class LINTCheckReportBizServiceImpl implements ICheckReportBizService
         filedMap.put("severity", true);
         filedMap.put("line_update_time", true);
         filedMap.put("create_time", true);
-        List<LintDefectV2Entity> defectEntityList = lintDefectV2Dao.findDefectByCondition(taskId, defectQueryReqVO, null, null, 0L, filedMap);
+        List<LintDefectV2Entity> defectEntityList = lintDefectV2Dao.findDefectByCondition(taskId, defectQueryReqVO, null, null, 0L, filedMap, null);
         int seriousCount = 0;
         int normalCount = 0;
         int promptCount = 0;

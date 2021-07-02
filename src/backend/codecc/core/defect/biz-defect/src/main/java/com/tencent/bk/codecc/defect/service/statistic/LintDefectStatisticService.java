@@ -16,21 +16,21 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CheckerRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.LintStatisticRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.TaskLogRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildInfoRepository;
-import com.tencent.bk.codecc.defect.model.CheckerDetailEntity;
-import com.tencent.bk.codecc.defect.model.CheckerStatisticEntity;
-import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
-import com.tencent.bk.codecc.defect.model.LintStatisticEntity;
-import com.tencent.bk.codecc.defect.model.NotRepairedAuthorEntity;
+import com.tencent.bk.codecc.defect.model.*;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildInfoEntity;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildStackEntity;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
-import com.tencent.bk.codecc.defect.utils.CommonKafkaClient;
+import com.tencent.bk.codecc.task.api.ServiceGrayToolProjectResource;
+import com.tencent.bk.codecc.task.vo.GrayTaskStatVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -42,6 +42,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_CLOSE_DEFECT_STATISTIC_LINT;
+import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_CLOSE_DEFECT_STATISTIC_LINT_OPENSOURCE;
+import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_CLOSE_DEFECT_STATISTIC_LINT;
+import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_CLOSE_DEFECT_STATISTIC_LINT_OPENSOURCE;
 
 /**
  * Lint告警统计
@@ -60,9 +65,9 @@ public class LintDefectStatisticService
     @Autowired
     private LintStatisticRepository lintStatisticRepository;
     @Autowired
-    private CommonKafkaClient commonKafkaClient;
-    @Autowired
     private CheckerRepository checkerRepository;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     /**
      * 统计本次扫描的告警，需要统计的信息：
@@ -92,12 +97,13 @@ public class LintDefectStatisticService
         int totalPrompt = 0;
         Set<String> filePathSet = new HashSet<>();
         Map<String, NotRepairedAuthorEntity> authorDefectMap = Maps.newHashMap();
+        Map<String, NotRepairedAuthorEntity> existAuthorMap = Maps.newHashMap();
         if (CollectionUtils.isNotEmpty(allDefectEntityList))
         {
             totalDefectCount = Long.valueOf(allDefectEntityList.size());
 
             // 查询新老告警判定时间
-            long newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, toolName, taskVO);
+            long newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, taskVO);
             for (LintDefectV2Entity defect : allDefectEntityList)
             {
                 if (defect.getStatus() != ComConstants.DefectStatus.NEW.value())
@@ -159,18 +165,34 @@ public class LintDefectStatisticService
                 }
                 else
                 {
+                    NotRepairedAuthorEntity existAuthorEntity = existAuthorMap.get(defect.getAuthor());
+                    if (StringUtils.isNotEmpty(defect.getAuthor()) && existAuthorEntity == null) {
+                        existAuthorEntity = new NotRepairedAuthorEntity();
+                        existAuthorEntity.setName(defect.getAuthor());
+                        existAuthorMap.put(defect.getAuthor(), existAuthorEntity);
+                    }
+
                     historyDefectCount++;
-                    if (ComConstants.SERIOUS == defect.getSeverity())
-                    {
+                    if (ComConstants.SERIOUS == defect.getSeverity()) {
                         totalSerious++;
-                    }
-                    else if (ComConstants.NORMAL == defect.getSeverity())
-                    {
+                        if (existAuthorEntity != null) {
+                            existAuthorEntity.setSeriousCount(existAuthorEntity.getSeriousCount() + 1);
+                        }
+                    } else if (ComConstants.NORMAL == defect.getSeverity()) {
                         totalNormal++;
-                    }
-                    else if (ComConstants.PROMPT_IN_DB == defect.getSeverity() || ComConstants.PROMPT == defect.getSeverity())
-                    {
+                        if (existAuthorEntity != null) {
+                            existAuthorEntity.setNormalCount(existAuthorEntity.getNormalCount() + 1);
+                        }
+                    } else if (ComConstants.PROMPT_IN_DB == defect.getSeverity()
+                            || ComConstants.PROMPT == defect.getSeverity()) {
                         totalPrompt++;
+                        if (existAuthorEntity != null) {
+                            existAuthorEntity.setPromptCount(existAuthorEntity.getPromptCount() + 1);
+                        }
+                    }
+
+                    if (existAuthorEntity != null) {
+                        existAuthorEntity.setTotalCount(historyDefectCount);
                     }
                 }
                 defectCount ++;
@@ -226,28 +248,35 @@ public class LintDefectStatisticService
         lintStatisticEntity.setTotalSerious(totalSerious);
         lintStatisticEntity.setTotalDefectCount(totalDefectCount);
         lintStatisticEntity.setAuthorStatistic(authorDefects);
-        lintStatisticEntity.setCheckerStatistic(getCheckerStatistic(allDefectEntityList));
+        lintStatisticEntity.setCheckerStatistic(getCheckerStatistic(toolName, allDefectEntityList));
+        lintStatisticEntity.setExistAuthorStatistic(Lists.newArrayList(existAuthorMap.values()));
 
         long currentTime = System.currentTimeMillis();
         lintStatisticEntity.setTime(currentTime);
-        lintStatisticRepository.save(lintStatisticEntity);
+        lintStatisticEntity = lintStatisticRepository.save(lintStatisticEntity);
 
-        //将数据加入数据平台
-        commonKafkaClient.pushLintStatisticToKafka(lintStatisticEntity);
+        // 异步统计非new状态的告警数
+        if (ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equalsIgnoreCase(taskVO.getCreateFrom())) {
+            rabbitTemplate.convertAndSend(EXCHANGE_CLOSE_DEFECT_STATISTIC_LINT_OPENSOURCE,
+                    ROUTE_CLOSE_DEFECT_STATISTIC_LINT_OPENSOURCE, lintStatisticEntity);
+        } else {
+            rabbitTemplate.convertAndSend(EXCHANGE_CLOSE_DEFECT_STATISTIC_LINT,
+                    ROUTE_CLOSE_DEFECT_STATISTIC_LINT, lintStatisticEntity);
+        }
     }
 
-    private List<CheckerStatisticEntity> getCheckerStatistic(List<LintDefectV2Entity> allDefectEntityList)
-    {
+    private List<CheckerStatisticEntity> getCheckerStatistic(String toolName,
+                                                             List<LintDefectV2Entity> allDefectEntityList) {
         // get checker map
         Set<String> checkerIds = allDefectEntityList.stream()
             .map(LintDefectV2Entity::getChecker).collect(Collectors.toSet());
         Map<String, CheckerDetailEntity> checkerDetailMap = new HashMap<>();
-        checkerRepository.findByCheckerKeyIn(checkerIds).forEach(it -> checkerDetailMap.put(it.getCheckerKey(), it));
+        checkerRepository.findByToolNameAndCheckerKeyIn(toolName, checkerIds)
+            .forEach(it -> checkerDetailMap.put(it.getCheckerKey(), it));
 
         // get lint checker statistic data
         Map<String, CheckerStatisticEntity> checkerStatisticEntityMap = new HashMap<>();
-        for (LintDefectV2Entity entity: allDefectEntityList)
-        {
+        for (LintDefectV2Entity entity: allDefectEntityList) {
             CheckerStatisticEntity item = checkerStatisticEntityMap.get(entity.getChecker());
             if (item == null)
             {
@@ -255,10 +284,12 @@ public class LintDefectStatisticService
                 item.setName(entity.getChecker());
 
                 CheckerDetailEntity checker = checkerDetailMap.get(entity.getChecker());
-                if (checker != null)
-                {
+                if (checker != null) {
                     item.setId(checker.getEntityId());
                     item.setName(checker.getCheckerName());
+                    item.setSeverity(checker.getSeverity());
+                } else {
+                    log.warn("not found checker for tool: {}, {}", toolName, entity.getChecker());
                 }
             }
             item.setDefectCount(item.getDefectCount() + 1);

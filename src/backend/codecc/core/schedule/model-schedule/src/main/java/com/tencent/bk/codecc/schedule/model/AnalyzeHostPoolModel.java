@@ -69,15 +69,18 @@ public class AnalyzeHostPoolModel
 
         private String buildId;
 
+        private String projectId;
+
         public AnalyzeJob()
         {
         }
 
-        public AnalyzeJob(String streamName, String toolName, String buildId)
+        public AnalyzeJob(String streamName, String toolName, String buildId, String projectId)
         {
             this.streamName = streamName;
             this.toolName = toolName;
             this.buildId = buildId;
+            this.projectId = projectId;
         }
     }
 }

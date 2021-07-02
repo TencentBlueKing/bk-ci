@@ -39,7 +39,7 @@ func createResponseEx(code int, message string, data interface{}, extra map[stri
 
 	resp := APIResponse{result, code, message, data}
 	if err = codec.EncJSON(resp, &r); err != nil {
-		return
+		return r, err
 	}
 
 	return addExtraField(r, extra)
@@ -52,7 +52,7 @@ func addExtraField(s []byte, extra map[string]interface{}) (r []byte, err error)
 
 	var jsn map[string]interface{}
 	if err = codec.DecJSON(s, &jsn); err != nil {
-		return
+		return r, err
 	}
 	for k, v := range extra {
 		if _, ok := jsn[k]; !ok {
@@ -60,5 +60,5 @@ func addExtraField(s []byte, extra map[string]interface{}) (r []byte, err error)
 		}
 	}
 	err = codec.EncJSON(jsn, &r)
-	return
+	return r, err
 }

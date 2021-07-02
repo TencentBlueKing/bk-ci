@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Lint每次分析的统计信息持久化
@@ -69,4 +70,14 @@ public interface LintStatisticRepository extends MongoRepository<LintStatisticEn
      * @return
      */
     LintStatisticEntity findByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
+
+    /**
+     * 通过任务id和工具名查询每次分析的统计信息
+     *
+     * @param taskId
+     * @param toolNameSet
+     * @return
+     */
+    List<LintStatisticEntity> findByTaskIdAndToolNameIn(long taskId, List<String> toolNameSet);
+
 }

@@ -107,13 +107,23 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        taskId: String?
+        taskId: String?,
+        failedContainer: Boolean?,
+        skipFailedTask: Boolean?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(BuildId(pipelineBuildFacadeService.retry(userId, projectId, pipelineId, buildId, taskId)))
+        return Result(BuildId(pipelineBuildFacadeService.retry(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            failedContainer = failedContainer,
+            skipFailedTask = skipFailedTask
+        )))
     }
 
     override fun manualShutdown(

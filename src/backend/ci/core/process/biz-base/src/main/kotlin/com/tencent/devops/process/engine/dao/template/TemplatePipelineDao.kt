@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.dao.template
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.model.process.Tables
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
@@ -39,6 +40,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -130,6 +132,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.`in`(pipelineIds))
                 .and(INSTANCE_TYPE.eq(instanceType))
+                .and(DELETED.eq(false)) // #4012 模板实例列表需要隐藏回收站的流水线
                 .fetch()
         }
     }
@@ -137,13 +140,42 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
     fun listPipeline(
         dslContext: DSLContext,
         instanceType: String,
-        templateIds: Collection<String>
+        templateIds: Collection<String>,
+        deleteFlag: Boolean? = null
     ): Result<TTemplatePipelineRecord> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            val conditions = getQueryTemplatePipelineCondition(templateIds, instanceType, deleteFlag)
             return dslContext.selectFrom(this)
-                .where(TEMPLATE_ID.`in`(templateIds))
-                .and(INSTANCE_TYPE.eq(instanceType))
+                .where(conditions)
                 .fetch()
+        }
+    }
+
+    private fun TTemplatePipeline.getQueryTemplatePipelineCondition(
+        templateIds: Collection<String>,
+        instanceType: String,
+        deleteFlag: Boolean?
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(TEMPLATE_ID.`in`(templateIds))
+        conditions.add(INSTANCE_TYPE.eq(instanceType))
+        if (deleteFlag != null) {
+            conditions.add(DELETED.eq(deleteFlag))
+        }
+        return conditions
+    }
+
+    fun countByTemplates(
+        dslContext: DSLContext,
+        instanceType: String,
+        templateIds: Collection<String>,
+        deleteFlag: Boolean? = null
+    ): Int {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            val conditions = getQueryTemplatePipelineCondition(templateIds, instanceType, deleteFlag)
+            return dslContext.select(DSL.count(PIPELINE_ID)).from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -172,6 +204,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
                     .where(TEMPLATE_ID.eq(templateId))
                     .and(PIPELINE_ID.`in`(nameLikedPipelineIds))
                     .and(INSTANCE_TYPE.eq(instanceType))
+                    .and(DELETED.eq(false)) // #4012 模板实例列表需要隐藏 回收站的流水线
                 val allCount = baseStep.count()
                 val records = if (null != page && null != pageSize) {
                     baseStep.limit((page - 1) * pageSize, pageSize).fetch()
@@ -186,6 +219,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
             val baseStep = dslContext.selectFrom(this)
                 .where(TEMPLATE_ID.eq(templateId))
                 .and(INSTANCE_TYPE.eq(instanceType))
+                .and(DELETED.eq(false)) // #4012 模板实例列表需要隐藏 回收站的流水线
             val allCount = baseStep.count()
             val records = if (null != page && null != pageSize) {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()
@@ -196,13 +230,13 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         }
     }
 
-    fun listPipeline(
+    fun countByVersionFeat(
         dslContext: DSLContext,
         templateId: String,
         instanceType: String,
         version: Long? = null,
         versionName: String? = null
-    ): Result<TTemplatePipelineRecord> {
+    ): Int {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(TEMPLATE_ID.eq(templateId))
@@ -213,16 +247,56 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
             if (null != versionName) {
                 conditions.add(VERSION_NAME.eq(versionName))
             }
-            return dslContext.selectFrom(this)
+            conditions.add(DELETED.eq(false)) // #4012 模板实例列表需要隐藏 回收站的流水线
+            return dslContext.selectCount().from(this)
                 .where(conditions)
-                .fetch()
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
-    fun delete(
-        dslContext: DSLContext,
-        pipelineId: String
-    ) {
+    fun restore(dslContext: DSLContext, pipelineId: String) {
+        return with(Tables.T_TEMPLATE_PIPELINE) {
+            dslContext.update(this).set(DELETED, false)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(DELETED.eq(true))
+                .execute()
+        }
+    }
+
+    fun softDelete(dslContext: DSLContext, pipelineId: String) {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            dslContext.update(this)
+                .set(DELETED, true)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
+    fun deleteByTemplateId(dslContext: DSLContext, templateId: String) {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            dslContext.deleteFrom(this)
+                .where(TEMPLATE_ID.eq(templateId))
+                .execute()
+        }
+    }
+
+    fun deleteByVersion(dslContext: DSLContext, templateId: String, version: Long) {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            dslContext.deleteFrom(this)
+                .where(TEMPLATE_ID.eq(templateId).and(VERSION.eq(version)))
+                .execute()
+        }
+    }
+
+    fun deleteByVersionName(dslContext: DSLContext, templateId: String, versionName: String) {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            dslContext.deleteFrom(this)
+                .where(TEMPLATE_ID.eq(templateId).and(VERSION_NAME.eq(versionName)))
+                .execute()
+        }
+    }
+
+    fun delete(dslContext: DSLContext, pipelineId: String) {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
@@ -274,7 +348,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         return dslContext.selectCount().from(t1).join(t2).on(t1.PIPELINE_ID.eq(t2.PIPELINE_ID))
             .where(t2.DELETE.eq(false))
             .and(t2.PROJECT_ID.`in`(projectIds))
-            .fetchOne()
+            .fetchOne()!!
     }
 
     fun countTemplateInstanced(
@@ -288,7 +362,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
             t1.TEMPLATE_ID.countDistinct()
         ).from(t1).join(t2).on(t1.PIPELINE_ID.eq(t2.PIPELINE_ID))
             .where(t2.PROJECT_ID.`in`(projectIds))
-            .fetchOne()
+            .fetchOne()!!
     }
 
     /**
@@ -300,7 +374,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
     ): Record1<Int> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             return dslContext.select(TEMPLATE_ID.countDistinct()).from(this)
-                .where(TEMPLATE_ID.`in`(srcTemplateIds)).fetchOne()
+                .where(TEMPLATE_ID.`in`(srcTemplateIds)).fetchOne()!!
         }
     }
 }

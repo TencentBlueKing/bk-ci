@@ -28,7 +28,8 @@ package com.tencent.bk.codecc.task.api;
 
 import com.tencent.bk.codecc.task.vo.MetadataVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.constant.ComConstants;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -37,6 +38,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
+
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 元数据的接口类
@@ -53,7 +56,7 @@ public interface BuildMetaRestResource
     @ApiOperation("查询工具列表")
     @Path("/toolList")
     @GET
-    CodeCCResult<List<ToolMetaBaseVO>> toolList(
+    Result<List<ToolMetaBaseVO>> toolList(
             @ApiParam(value = "是否查询详细信息")
             @QueryParam("isDetail")
                     Boolean isDetail);
@@ -61,9 +64,38 @@ public interface BuildMetaRestResource
     @ApiOperation("查询元数据")
     @Path("/metadatas")
     @GET
-    CodeCCResult<Map<String, List<MetadataVO>>> metadatas(
+    Result<Map<String, List<MetadataVO>>> metadatas(
             @ApiParam(value = "元数据类型", required = true)
             @QueryParam("metadataType")
                     String metadataType);
 
+    @ApiOperation("更新工具状态元数据")
+    @Path("/tools/{toolName}/integratedStatus/update")
+    @PUT
+    Result<String> updateToolIntegratedToStatus(
+        @ApiParam(value = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            String userName,
+        @ApiParam(value = "工具名称")
+        @PathParam("toolName")
+            String toolName,
+        @ApiParam(value = "状态")
+        @QueryParam("status")
+            ComConstants.ToolIntegratedStatus status
+        );
+
+    @ApiOperation("回滚工具状态元数据")
+    @Path("/tools/{toolName}/integratedStatus/revert")
+    @PUT
+    Result<String> revertToolIntegratedStatus(
+        @ApiParam(value = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            String userName,
+        @ApiParam(value = "工具名称")
+        @PathParam("toolName")
+            String toolName,
+        @ApiParam(value = "状态")
+        @QueryParam("status")
+            ComConstants.ToolIntegratedStatus status
+    );
 }

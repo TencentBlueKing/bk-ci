@@ -36,6 +36,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("ALL", "UNUSED")
 class AgentUpgrdeJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val updateService: AgentUpgradeService
@@ -48,16 +49,15 @@ class AgentUpgrdeJob @Autowired constructor(
     @Scheduled(initialDelay = 10000, fixedDelay = 15000)
     fun updateCanUpgradeAgentList() {
         logger.info("updateCanUpgradeAgentList")
-        val lock = RedisLock(redisOperation,
-            LOCK_KEY, 60)
+        val lock = RedisLock(redisOperation = redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = 600)
         try {
             if (!lock.tryLock()) {
                 logger.info("get lock failed, skip")
                 return
             }
             updateService.updateCanUpgradeAgentList()
-        } catch (t: Throwable) {
-            logger.warn("update can upgrade agent list failed", t)
+        } catch (ignore: Throwable) {
+            logger.warn("update can upgrade agent list failed", ignore)
         } finally {
             lock.unlock()
         }

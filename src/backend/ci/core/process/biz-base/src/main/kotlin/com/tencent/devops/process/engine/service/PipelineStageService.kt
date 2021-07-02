@@ -37,9 +37,9 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -57,7 +57,7 @@ class PipelineStageService @Autowired constructor(
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildStageDao: PipelineBuildStageDao,
-    private val pipelineBuildDetailService: PipelineBuildDetailService
+    private val stageBuildDetailService: StageBuildDetailService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineStageService::class.java)
@@ -106,7 +106,7 @@ class PipelineStageService @Autowired constructor(
 
     fun skipStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
-            val allStageStatus = pipelineBuildDetailService.stageSkip(buildId = buildId, stageId = stageId)
+            val allStageStatus = stageBuildDetailService.stageSkip(buildId = buildId, stageId = stageId)
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 pipelineBuildStageDao.updateStatus(
@@ -130,8 +130,7 @@ class PipelineStageService @Autowired constructor(
 
     fun pauseStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
-            val allStageStatus = pipelineBuildDetailService.stagePause(
-                pipelineId = pipelineId,
+            val allStageStatus = stageBuildDetailService.stagePause(
                 buildId = buildId,
                 stageId = stageId,
                 controlOption = controlOption!!
@@ -164,8 +163,7 @@ class PipelineStageService @Autowired constructor(
     fun startStage(userId: String, buildStage: PipelineBuildStage) {
         buildStage.controlOption!!.stageControlOption.triggered = true
         with(buildStage) {
-            val allStageStatus = pipelineBuildDetailService.stageStart(
-                pipelineId = pipelineId,
+            val allStageStatus = stageBuildDetailService.stageStart(
                 buildId = buildId,
                 stageId = stageId,
                 controlOption = buildStage.controlOption!!
@@ -208,29 +206,58 @@ class PipelineStageService @Autowired constructor(
 
     fun cancelStage(userId: String, buildStage: PipelineBuildStage) {
 
-        with(buildStage) {
-            pipelineBuildDetailService.stageCancel(buildId = buildId, stageId = stageId)
+        stageBuildDetailService.stageCancel(buildId = buildStage.buildId, stageId = buildStage.stageId)
 
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                pipelineBuildStageDao.updateStatus(
-                    dslContext = context, buildId = buildId, stageId = stageId, buildStatus = BuildStatus.REVIEW_ABORT
-                )
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            pipelineBuildStageDao.updateStatus(
+                dslContext = context,
+                buildId = buildStage.buildId,
+                stageId = buildStage.stageId,
+                buildStatus = BuildStatus.STAGE_SUCCESS
+            )
 
-                pipelineBuildDao.updateStageCancelStatus(dslContext = context, buildId = buildId)
-            }
+            pipelineBuildDao.updateStatus(
+                dslContext = context, buildId = buildStage.buildId,
+                oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
+            )
 
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildFinishEvent(
-                    source = BS_STAGE_CANCELED_END_SOURCE,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildId = buildId,
-                    status = BuildStatus.STAGE_SUCCESS
-                )
-            // #3400 FinishEvent会刷新HISTORY列表的Stage状态
+            // #4255 stage审核超时恢复运行状态需要将运行状态+1，即使直接结束也会在finish阶段减回来
+            pipelineBuildSummaryDao.updateRunningCount(
+                dslContext = context,
+                pipelineId = buildStage.pipelineId,
+                buildId = buildStage.buildId,
+                runningIncrement = 1
             )
         }
+        // #3138 Stage Cancel 需要走finally Stage流程
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildStageEvent(
+                source = BS_STAGE_CANCELED_END_SOURCE,
+                projectId = buildStage.projectId,
+                pipelineId = buildStage.pipelineId,
+                userId = userId,
+                buildId = buildStage.buildId,
+                stageId = buildStage.stageId,
+                actionType = ActionType.END
+            )
+            // #3400 FinishEvent会刷新HISTORY列表的Stage状态
+        )
+    }
+
+    fun getLastStage(buildId: String): PipelineBuildStage? {
+        val result = pipelineBuildStageDao.getMaxStage(dslContext, buildId)
+        if (result != null) {
+            return pipelineBuildStageDao.convert(result)
+        }
+        return null
+    }
+
+    fun getPendingStage(buildId: String): PipelineBuildStage? {
+        var pendingStage = pipelineBuildStageDao.getByStatus(dslContext, buildId, BuildStatus.RUNNING)
+        if (pendingStage == null) {
+            pendingStage = pipelineBuildStageDao.getByStatus(dslContext, buildId, BuildStatus.QUEUE)
+        }
+        return pendingStage
     }
 }

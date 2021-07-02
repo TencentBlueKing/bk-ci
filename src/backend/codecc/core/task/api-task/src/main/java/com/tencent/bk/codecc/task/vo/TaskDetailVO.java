@@ -28,16 +28,16 @@ package com.tencent.bk.codecc.task.vo;
 
 import com.tencent.bk.codecc.task.vo.checkerset.ToolCheckerSetVO;
 import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.ComConstants.CheckerSetType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.apache.commons.collections.CollectionUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.apache.commons.collections.CollectionUtils;
 
 /**
  * 任务详细信息
@@ -131,6 +131,9 @@ public class TaskDetailVO extends TaskBaseVO
     @ApiModelProperty(value = "code.yml自定义过滤路径")
     private List<String> thirdPartyFilterPath;
 
+    @ApiModelProperty(value = "路径白名单")
+    private List<String> whitePaths;
+
     @ApiModelProperty(value = "持续集成传递代码语言信息")
     private String devopsCodeLang;
 
@@ -142,6 +145,18 @@ public class TaskDetailVO extends TaskBaseVO
 
     @ApiModelProperty("最近的commitId")
     private String gongfengCommitId;
+
+    @ApiModelProperty("插件唯一标识")
+    private String atomCode;
+
+    /**
+     * V5 版本新增字段
+     */
+    @ApiModelProperty("任务类型：流水线、服务创建、开源扫描、API触发")
+    private String taskType;
+
+    @ApiModelProperty("任务创建来源：当类型为 API触发 时这里代表创建来源的 appCode")
+    private String createSource;
 
     /**
      * 持续集成传递工具信息
@@ -192,6 +207,12 @@ public class TaskDetailVO extends TaskBaseVO
     @ApiModelProperty("是否回写工蜂")
     private Boolean mrCommentEnable;
 
+    @ApiModelProperty("启用开源扫描规则集选择的语言")
+    private List<String> languages;
+
+    @ApiModelProperty("启用哪种规则集配置")
+    private CheckerSetType checkerSetType;
+
     /**
      * 是否是老插件切换为新插件，不对外接口暴露，仅用于内部逻辑参数传递
      */
@@ -207,29 +228,8 @@ public class TaskDetailVO extends TaskBaseVO
      */
     private ComConstants.OpenSourceCheckerSetType openSourceCheckerSetType;
 
-    public List<String> getAllFilterPaths()
-    {
-        List<String> filterPath = new ArrayList<>();
-        if(CollectionUtils.isNotEmpty(getFilterPath()))
-        {
-            filterPath.addAll(getFilterPath());
-        }
-        if(CollectionUtils.isNotEmpty(getDefaultFilterPath()))
-        {
-            filterPath.addAll(getDefaultFilterPath());
-        }
-        if(CollectionUtils.isNotEmpty(getTestSourceFilterPath()))
-        {
-            filterPath.addAll(getTestSourceFilterPath());
-        }
-        if(CollectionUtils.isNotEmpty(getAutoGenFilterPath()))
-        {
-            filterPath.addAll(getAutoGenFilterPath());
-        }
-        if(CollectionUtils.isNotEmpty(getThirdPartyFilterPath()))
-        {
-            filterPath.addAll(getThirdPartyFilterPath());
-        }
-        return filterPath;
-    }
+    /**
+     * 是否扫描测试代码，true-扫描，false-不扫描，默认不扫描
+     */
+    private Boolean scanTestSource = false;
 }

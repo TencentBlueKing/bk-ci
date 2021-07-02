@@ -29,7 +29,6 @@ package com.tencent.bk.codecc.defect.resources;
 import com.tencent.bk.codecc.defect.api.BuildDefectRestResource;
 import com.tencent.bk.codecc.defect.service.UploadRepositoriesService;
 import com.tencent.bk.codecc.defect.vo.coderepository.UploadRepositoriesVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +48,7 @@ public class BuildDefectRestResourceImpl implements BuildDefectRestResource
     private UploadRepositoriesService uploadRepositoriesService;
 
     @Override
-    public CodeCCResult uploadRepositories(UploadRepositoriesVO uploadRepositoriesVO)
+    public Result uploadRepositories(UploadRepositoriesVO uploadRepositoriesVO)
     {
         log.info("upload code repositories, task id: {}, tool name: {} build id: {}", uploadRepositoriesVO.getTaskId(), uploadRepositoriesVO.getToolName(),
                 uploadRepositoriesVO.getBuildId());

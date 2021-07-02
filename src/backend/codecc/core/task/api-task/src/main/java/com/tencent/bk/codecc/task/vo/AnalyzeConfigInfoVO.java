@@ -30,10 +30,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tencent.devops.common.api.CodeRepoVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-
 import java.util.List;
 import java.util.Map;
+import lombok.Data;
 
 /**
  * 告警配置详情视图
@@ -134,6 +133,9 @@ public class AnalyzeConfigInfoVO
     @ApiModelProperty(value = "任务管理员")
     private List<String> admins;
 
+    @ApiModelProperty(value = "上一次执行时间")
+    private Long lastExecuteTime;
+
     /**
      * 工具的个性化参数，专门用来给查询规则列表使用的，不在对外接口暴露
      */
@@ -142,6 +144,9 @@ public class AnalyzeConfigInfoVO
     @ApiModelProperty(value = "代码库信息")
     @JsonProperty("repo_url_map")
     private Map<String, String> repoUrlMap;
+
+    @ApiModelProperty(value = "是否只扫路径白名单，true:只扫路径白名单，false:全都扫")
+    private Boolean onlyScanWhitePath;
 
     // ==============================用于调用getBuildInfo时传递参数，无其他作用 begin===================================
     private String buildId;
@@ -155,8 +160,6 @@ public class AnalyzeConfigInfoVO
      * 扫描白名单列表
      */
     private List<String> repoWhiteList;
-
-    private boolean pipelineTask;
 
     private String atomCode;
 

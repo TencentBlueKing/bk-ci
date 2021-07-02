@@ -118,7 +118,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         return exportModelToFile(modelAndSetting, settingInfo.pipelineName)
     }
 
-    fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String? {
+    fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String {
         val permissionCheck = pipelinePermissionService.checkPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -607,24 +607,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         name: String,
         channelCode: ChannelCode
     ) {
-        val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在"
-            )
-
-        if (pipeline.channelCode != channelCode) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                defaultMessage = "指定要复制的流水线渠道来源${pipeline.channelCode}不符合$channelCode",
-                params = arrayOf(pipeline.channelCode.name)
-            )
-        }
-
-        val setting = pipelineRepositoryService.getSetting(pipelineId)?.copy(pipelineName = name)
-            ?: PipelineSetting(projectId = projectId, pipelineId = pipelineId, pipelineName = name)
+        val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId, channelCode)
+        setting.pipelineName = name
         pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting, checkPermission = true)
     }
 
@@ -647,6 +631,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             checkPermission = checkPermission,
             checkTemplate = checkTemplate
         )
+        setting.pipelineId = pipelineResult.pipelineId // fix 用户端可能不传入pipelineId的问题，或者传错的问题
         pipelineSettingFacadeService.saveSetting(userId, setting, false, pipelineResult.version)
         return pipelineResult
     }
@@ -697,7 +682,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val buildNo = triggerContainer.buildNo
             if (buildNo != null) {
-                buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
+                buildNo.buildNo = pipelineRepositoryService.getBuildNo(pipelineId = pipelineId)
                     ?: buildNo.buildNo
             }
             // 兼容性处理
@@ -714,17 +699,18 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
 
-            val defaultTagIds = listOf(stageTagService.getDefaultStageTag().data?.id)
+            val defaultTagIds by lazy { listOf(stageTagService.getDefaultStageTag().data?.id) } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagIds
             }
 
             // 部分老的模板实例没有templateId，需要手动加上
-            if (model.instanceFromTemplate == true && model.templateId.isNullOrBlank()) {
+            if (model.instanceFromTemplate == true) {
                 model.templateId = templateService.getTemplateIdByPipeline(pipelineId)
             }
-
+            // 将当前最新版本号传给前端
+            model.latestVersion = pipelineInfo.version
             return model
         } catch (e: Exception) {
             logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", e)

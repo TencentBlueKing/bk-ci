@@ -20,8 +20,12 @@ import com.tencent.bk.codecc.apiquery.vo.TaskInfoExtVO;
 import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO;
 import com.tencent.bk.codecc.apiquery.vo.ToolConfigPlatformVO;
 import com.tencent.bk.codecc.apiquery.vo.op.ActiveTaskStatisticsVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.bk.codecc.apiquery.vo.op.TaskAndToolStatChartVO;
+import com.tencent.bk.codecc.apiquery.vo.op.TaskCodeLineStatVO;
+import com.tencent.bk.codecc.apiquery.vo.report.UserLogInfoChartVO;
+import com.tencent.devops.common.api.UserLogInfoStatVO;
 import com.tencent.devops.common.api.pojo.Page;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -44,32 +48,80 @@ public class OpTaskRestResourceImpl implements OpTaskRestResource {
 
 
     @Override
-    public CodeCCResult<Page<ToolConfigPlatformVO>> getPlatformInfo(Long taskId, String toolName, String platformIp,
-                                                                    Integer pageNum, Integer pageSize, String sortType) {
-        return new CodeCCResult<>(toolService.getPlatformInfoList(taskId, toolName, platformIp, pageNum, pageSize, sortType));
+    public Result<Page<ToolConfigPlatformVO>> getPlatformInfo(Long taskId, String toolName, String platformIp,
+            Integer pageNum, Integer pageSize, String sortType) {
+        return new Result<>(toolService.getPlatformInfoList(taskId, toolName, platformIp, pageNum, pageSize, sortType));
     }
 
     @Override
-    public CodeCCResult<ToolConfigPlatformVO> getPlatformDetail(Long taskId, String toolName) {
-        return new CodeCCResult<>(toolService.getTaskPlatformDetail(taskId, toolName));
+    public Result<ToolConfigPlatformVO> getPlatformDetail(Long taskId, String toolName) {
+        return new Result<>(toolService.getTaskPlatformDetail(taskId, toolName));
     }
 
     @Override
-    public CodeCCResult<Page<TaskInfoExtVO>> getOverAllTaskList(TaskToolInfoReqVO reqVO, Integer pageNum, Integer pageSize,
-                                                                String sortField, String sortType) {
-        return new CodeCCResult<>(taskService.getOverAllTaskList(reqVO, pageNum, pageSize, sortField, sortType));
+    public Result<Page<TaskInfoExtVO>> getOverAllTaskList(TaskToolInfoReqVO reqVO, Integer pageNum, Integer pageSize,
+            String sortField, String sortType) {
+        return new Result<>(taskService.getOverAllTaskList(reqVO, pageNum, pageSize, sortField, sortType));
     }
 
     @Override
-    public CodeCCResult<List<DeptInfoVO>> getDeptList(String parentId) {
-        return new CodeCCResult<>(taskService.getChildDeptList(parentId));
+    public Result<List<DeptInfoVO>> getDeptList(String parentId) {
+        return new Result<>(taskService.getChildDeptList(parentId));
     }
 
     @Override
-    public CodeCCResult<Page<ActiveTaskStatisticsVO>> queryActiveTaskListByLog(String userName,
-                                                                               TaskToolInfoReqVO taskToolInfoReqVO, Integer pageNum, Integer pageSize, String sortField, String sortType) {
-        return new CodeCCResult<>(taskService.getActiveTaskList(taskToolInfoReqVO, pageNum, pageSize, sortField, sortType));
+    public Result<Page<ActiveTaskStatisticsVO>> queryActiveTaskListByLog(String userName,
+            TaskToolInfoReqVO taskToolInfoReqVO, Integer pageNum, Integer pageSize, String sortField, String sortType) {
+        return new Result<>(taskService.getActiveTaskList(taskToolInfoReqVO, pageNum, pageSize, sortField, sortType));
     }
 
+    @Override
+    public Result<Page<UserLogInfoStatVO>> findDailyUserLogInfoList(String startTime, String endTime, Integer pageNum,
+            Integer pageSize, String sortField, String sortType) {
+        return new Result<>(
+                taskService.findDailyUserLogInfoList(startTime, endTime, pageNum, pageSize, sortField, sortType));
+    }
+
+    @Override
+    public Result<Page<UserLogInfoStatVO>> findAllUserLogInfoStatList(Integer pageNum, Integer pageSize,
+            String sortField, String sortType) {
+        return new Result<>(taskService.findAllUserLogInfoStatList(pageNum, pageSize, sortField, sortType));
+    }
+
+    @Override
+    public Result<List<UserLogInfoChartVO>> dailyUserLogInfoData(String startTime, String endTime) {
+        return new Result<>(taskService.dailyUserLogInfoData(startTime, endTime));
+    }
+
+    @Override
+    public Result<List<UserLogInfoChartVO>> sumUserLogInfoStatData(String startTime, String endTime) {
+        return new Result<>(taskService.sumUserLogInfoStatData(startTime, endTime));
+    }
+
+    @Override
+    public Result<List<UserLogInfoChartVO>> weekUserLogInfoData(String startTime, String endTime) {
+        return new Result<>(taskService.weekUserLogInfoData(startTime, endTime));
+    }
+
+    @Override
+    public Result<List<String>> getWeekTime() {
+        return new Result<>(taskService.getWeekTime());
+    }
+
+    @Override
+    public Result<List<TaskAndToolStatChartVO>> taskAndActiveTaskData(TaskToolInfoReqVO reqVO) {
+        return new Result<>(taskService.taskAndActiveTaskData(reqVO));
+    }
+
+    @Override
+    public Result<List<TaskAndToolStatChartVO>> taskAnalyzeCountData(TaskToolInfoReqVO reqVO) {
+        return new Result<>(taskService.taskAnalyzeCountData(reqVO));
+    }
+
+    @Override
+    public Result<Page<TaskCodeLineStatVO>> queryCodeLineStatPage(TaskToolInfoReqVO reqVO, Integer pageNum,
+            Integer pageSize, String sortField, String sortType) {
+        return new Result<>(taskService.queryTaskCodeLineStat(reqVO, pageNum, pageSize, sortField, sortType));
+    }
 
 }

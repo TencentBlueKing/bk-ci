@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
-import com.tencent.devops.log.service.LogServiceDispatcher
+import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -41,25 +41,23 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class ServiceLogResourceImpl @Autowired constructor(
-    private val logDispatcher: LogServiceDispatcher
+    private val buildLogQueryService: BuildLogQueryService
 ) : ServiceLogResource {
 
     override fun getInitLogs(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getInitLogs(
+        return buildLogQueryService.getInitLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            isAnalysis = isAnalysis,
-            queryKeywords = queryKeywords,
+            debug = debug,
             tag = tag,
             jobId = jobId,
             executeCount = executeCount
@@ -70,6 +68,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
+        debug: Boolean?,
         num: Int?,
         fromStart: Boolean?,
         start: Long,
@@ -78,10 +77,11 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getMoreLogs(
+        return buildLogQueryService.getMoreLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
+            debug = debug,
             num = num,
             fromStart = fromStart,
             start = start,
@@ -97,19 +97,17 @@ class ServiceLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         start: Long,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getAfterLogs(
+        return buildLogQueryService.getAfterLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             start = start,
-            isAnalysis = isAnalysis,
-            queryKeywords = queryKeywords,
+            debug = debug,
             tag = tag,
             jobId = jobId,
             executeCount = executeCount
@@ -124,7 +122,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Response {
-        return logDispatcher.downloadLogs(
+        return buildLogQueryService.downloadLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,

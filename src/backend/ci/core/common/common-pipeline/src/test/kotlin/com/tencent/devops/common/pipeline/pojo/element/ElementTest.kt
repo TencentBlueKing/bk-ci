@@ -50,27 +50,48 @@ class ElementTest {
         val element = ManualTriggerElement(id = "1")
         element.status = BuildStatus.QUEUE.name
         val skipElementVariableName = SkipElementUtils.getSkipElementVariableName(element.id!!)
-        var takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "true"))
+        var rerun = true
+        element.disableBySkipVar(mapOf(skipElementVariableName to "true"))
+        var takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.SKIP.name, takeStatus.name)
 
         element.status = BuildStatus.SUCCEED.name
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"))
+        rerun = true
+        element.additionalOptions?.enable = true
+        element.disableBySkipVar(mapOf(skipElementVariableName to "false"))
+        takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.QUEUE.name, takeStatus.name)
 
         element.status = BuildStatus.FAILED.name
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"))
+        rerun = false
+        element.additionalOptions?.enable = true
+        element.disableBySkipVar(mapOf(skipElementVariableName to "false"))
+        takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.QUEUE.name, takeStatus.name)
 
         element.status = BuildStatus.QUEUE.name
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"))
+        rerun = false
+        element.additionalOptions?.enable = true
+        element.disableBySkipVar(mapOf(skipElementVariableName to "false"))
+        takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.QUEUE.name, takeStatus.name)
 
         element.status = BuildStatus.SKIP.name
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"))
+        rerun = false
+        element.additionalOptions?.enable = true
+        element.disableBySkipVar(mapOf(skipElementVariableName to "false"))
+        takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.SKIP.name, takeStatus.name)
 
+        element.status = BuildStatus.SKIP.name
+        rerun = true
+        element.additionalOptions?.enable = true
+        element.disableBySkipVar(mapOf(skipElementVariableName to "false"))
+        takeStatus = element.initStatus(rerun = rerun)
+        assertEquals(BuildStatus.QUEUE.name, takeStatus.name)
+
         element.additionalOptions = elementAdditionalOptions(enable = false)
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"))
+        takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.SKIP.name, takeStatus.name)
     }
 
@@ -171,5 +192,12 @@ class ElementTest {
             pauseBeforeExec = false,
             subscriptionPauseUser = ""
         )
+    }
+
+    @Test
+    fun genTaskParams() {
+        val element = ManualTriggerElement(id = "1")
+        element.cleanUp()
+        assertEquals("1", element.genTaskParams()["id"])
     }
 }

@@ -38,6 +38,9 @@ import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
@@ -90,7 +93,9 @@ class ScmService @Autowired constructor(
         passPhrase: String?,
         token: String?,
         region: CodeSvnRegion?,
-        userName: String?
+        userName: String?,
+        search: String?,
+        full: Boolean
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list branches")
         val startEpoch = System.currentTimeMillis()
@@ -106,7 +111,7 @@ class ScmService @Autowired constructor(
                 region = region,
                 userName = userName
             )
-                .getBranches()
+                .getBranches(search = search, full = full)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
         }
@@ -149,7 +154,9 @@ class ScmService @Autowired constructor(
         url: String,
         type: ScmType,
         token: String,
-        userName: String
+        userName: String,
+        search: String?,
+        full: Boolean
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list tags")
         val startEpoch = System.currentTimeMillis()
@@ -164,7 +171,7 @@ class ScmService @Autowired constructor(
                 token = token,
                 region = null,
                 userName = userName
-            ).getTags()
+            ).getTags(search = search, full = full)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list tags")
         }
@@ -270,8 +277,7 @@ class ScmService @Autowired constructor(
                         gitConfig.tGitHookUrl
                     }
                     else -> {
-                        logger.warn("Unknown repository type ($type) when add webhook")
-                        throw RuntimeException("Unknown repository type ($type) when add webhook")
+                        throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
                     }
                 }
             }
@@ -338,8 +344,7 @@ class ScmService @Autowired constructor(
         userName: String
     ) {
         if (type != ScmType.CODE_SVN) {
-            logger.warn("repository type ($type) can not lock")
-            throw RuntimeException("repository type ($type) can not lock")
+            throw IllegalArgumentException("repository type ($type) can not lock")
         }
         val repName = SvnUtils.getSvnRepName(url)
         val subPath = SvnUtils.getSvnSubPath(url)
@@ -367,8 +372,7 @@ class ScmService @Autowired constructor(
         userName: String
     ) {
         if (type != ScmType.CODE_SVN) {
-            logger.warn("repository type ($type) can not unlock")
-            throw RuntimeException("repository type ($type) can not unlock")
+            throw IllegalArgumentException("repository type ($type) can not unlock")
         }
         val repName = SvnUtils.getSvnRepName(url)
         val subPath = SvnUtils.getSvnSubPath(url)
@@ -465,6 +469,69 @@ class ScmService @Autowired constructor(
             userName = userName
         )
             .getCommitDiff(sha)
+    }
+
+    override fun getMergeRequestChangeInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrChangeInfo? {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        )
+            .getMergeRequestChangeInfo(mrId = mrId)
+    }
+
+    override fun getMrInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrInfo? {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        )
+            .getMrInfo(mrId = mrId)
+    }
+
+    override fun getMrReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrReviewInfo? {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        )
+            .getMrReviewInfo(mrId = mrId)
     }
 
     companion object {

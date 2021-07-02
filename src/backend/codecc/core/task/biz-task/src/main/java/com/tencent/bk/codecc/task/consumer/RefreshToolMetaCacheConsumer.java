@@ -26,21 +26,16 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Slf4j
-public class RefreshToolMetaCacheConsumer
-{
+public class RefreshToolMetaCacheConsumer {
     @Autowired
     private ToolMetaCacheServiceImpl toolMetaCacheService;
 
-    public void refreshToolMetaCache(String toolName)
-    {
+    public void refreshToolMetaCache(String toolName) {
         log.info("begin refreshToolMetaCache: {}", toolName);
 
-        try
-        {
+        try {
             toolMetaCacheService.cacheToolBaseMeta(toolName);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             log.error("refreshToolMetaCache fail.", e);
         }
         log.info("end refreshToolMetaCache: {}", toolName);

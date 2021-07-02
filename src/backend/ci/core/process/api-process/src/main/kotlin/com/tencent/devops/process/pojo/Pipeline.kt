@@ -82,8 +82,12 @@ data class Pipeline(
     val latestBuildUserId: String = "",
     @ApiModelProperty("是否从模板中实例化出来的", required = false)
     var instanceFromTemplate: Boolean? = null,
+    @ApiModelProperty("模板ID", required = false)
+    var templateId: String? = null,
     @ApiModelProperty("流水线创建人", required = false)
     val creator: String,
     @ApiModelProperty("流水线分组和标签", required = false)
-    var groupLabel: List<PipelineGroupLabels>? = null
+    var groupLabel: List<PipelineGroupLabels>? = null,
+    @ApiModelProperty("最后自定义构建版本号", required = false)
+    val latestBuildNumAlias: String? = null
 )

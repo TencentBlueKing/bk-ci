@@ -1,9 +1,8 @@
 dependencies {
-    compile project(":ext:tencent:task:biz-task-cov")
-    compile project(":ext:tencent:task:biz-task-kw")
-    compile project(":ext:tencent:task:biz-task-pinpoint")
-    compile project(":ext:tencent:task:biz-task-opensource")
-    compile "org.springframework.kafka:spring-kafka:1.3.10.RELEASE"
+    compile project(":core:common:common-auth-v3")
+    compile project(":core:common:common-auth-mock")
+    compile project(":core:task:biz-task-migration")
+    compile project(":core:task:biz-task-opensource")
 }
 
 version = null

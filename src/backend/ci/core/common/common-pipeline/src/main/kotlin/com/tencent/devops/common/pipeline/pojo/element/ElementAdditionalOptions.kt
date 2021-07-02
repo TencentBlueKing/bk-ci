@@ -30,10 +30,12 @@ package com.tencent.devops.common.pipeline.pojo.element
 import com.tencent.devops.common.pipeline.NameAndValue
 
 data class ElementAdditionalOptions(
-    val enable: Boolean = true,
-    var continueWhenFailed: Boolean = false,
+    var enable: Boolean = true,
+    var continueWhenFailed: Boolean = false, // 失败时继续  continueWhenFailed = true &&  manualSkip != true（自动继续）
+    val manualSkip: Boolean? = null, // (continueWhenFailed = true && manualSkip = true) 出现跳过按钮（手动继续）
     val retryWhenFailed: Boolean = false,
     val retryCount: Int = 0,
+    val manualRetry: Boolean = true, // 自动重试一直失败后，界面出现重试按钮, 默认允许手动重试（为了兼容旧数据使用习惯）
     val timeout: Long? = 100, // 超时分钟
     val runCondition: RunCondition?,
     var pauseBeforeExec: Boolean? = false, // 是否配置前置暂停
@@ -42,7 +44,10 @@ data class ElementAdditionalOptions(
     val otherTask: String? = null,
     val customVariables: List<NameAndValue>? = null,
     val customCondition: String? = "",
-    val elementPostInfo: ElementPostInfo? = null
+    val elementPostInfo: ElementPostInfo? = null,
+
+    val enableCustomEnv: Boolean? = false, // 是否设置自定义环境变量
+    val customEnv: List<NameAndValue>? = null
 )
 
 enum class RunCondition {

@@ -27,13 +27,16 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.expression.EvalExpress
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.slf4j.LoggerFactory
@@ -51,12 +54,9 @@ object ControlUtils {
         return additionalOptions.enable
     }
 
-    // 是否失败时继续
+    // 插件是否失败时自动跳过/继续
     fun continueWhenFailure(additionalOptions: ElementAdditionalOptions?): Boolean {
-        if (additionalOptions == null) {
-            return false
-        }
-        return additionalOptions.continueWhenFailed
+        return (additionalOptions?.continueWhenFailed ?: false) && additionalOptions?.manualSkip != true // 手动跳过不算
     }
 
     // 是否失败时自动重试
@@ -147,7 +147,8 @@ object ControlUtils {
         additionalOptions: ElementAdditionalOptions?,
         containerFinalStatus: BuildStatus,
         variables: Map<String, String>,
-        hasFailedTaskInSuccessContainer: Boolean
+        hasFailedTaskInSuccessContainer: Boolean,
+        buildLogPrinter: BuildLogPrinter? = null
     ): Boolean {
         var skip = false
         if (!isEnable(additionalOptions)) {
@@ -167,7 +168,22 @@ object ControlUtils {
             containerFinalStatus.isFailure() -> skip = true
         }
 
-        return skip || checkCustomVariableSkip(buildId, additionalOptions, variables)
+        return skip || checkCustomVariableSkip(buildId, additionalOptions, variables) ||
+            checkCustomConditionSkip(buildId, additionalOptions, variables, buildLogPrinter)
+    }
+
+    private fun checkCustomConditionSkip(
+        buildId: String,
+        additionalOptions: ElementAdditionalOptions?,
+        variables: Map<String, String>,
+        buildLogPrinter: BuildLogPrinter? = null
+    ): Boolean {
+        if (additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH &&
+            !additionalOptions.customCondition.isNullOrBlank()) {
+            return !evalExpression(additionalOptions.customCondition, buildId, variables, buildLogPrinter)
+        }
+
+        return false
     }
 
     // Job是否跳过判断
@@ -175,11 +191,16 @@ object ControlUtils {
         conditions: List<NameAndValue>,
         variables: Map<String, String>,
         buildId: String,
-        runCondition: JobRunCondition
+        runCondition: JobRunCondition,
+        customCondition: String? = null,
+        buildLogPrinter: BuildLogPrinter? = null
     ): Boolean {
         var skip = when (runCondition) {
             JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             JobRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
+            JobRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
+                return !evalExpression(customCondition, buildId, variables, buildLogPrinter)
+            }
             else -> return false // 其它类型直接返回不跳过
         }
         for (names in conditions) {
@@ -201,11 +222,16 @@ object ControlUtils {
         conditions: List<NameAndValue>,
         variables: Map<String, Any>,
         buildId: String,
-        runCondition: StageRunCondition
+        runCondition: StageRunCondition,
+        customCondition: String? = null,
+        buildLogPrinter: BuildLogPrinter? = null
     ): Boolean {
         var skip = when (runCondition) {
             StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             StageRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
+            StageRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
+                return !evalExpression(customCondition, buildId, variables, buildLogPrinter)
+            }
             else -> return false // 其它类型直接返回不跳过
         }
         for (names in conditions) {
@@ -220,4 +246,44 @@ object ControlUtils {
         }
         return skip
     }
+
+    private fun evalExpression(
+        customCondition: String?,
+        buildId: String,
+        variables: Map<String, Any>,
+        buildLogPrinter: BuildLogPrinter? = null
+    ): Boolean {
+        return if (!customCondition.isNullOrBlank()) {
+            try {
+                val expressionResult = EvalExpress.eval(buildId, customCondition, variables)
+                logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
+                    "|result=$expressionResult")
+                val logMessage = "Custom condition($customCondition) result is $expressionResult. " +
+                    if (!expressionResult) {
+                        " will be skipped! "
+                    } else {
+                        ""
+                    }
+                buildLogPrinter?.addLine(buildId, logMessage, "", "", 1)
+                expressionResult
+            } catch (ignore: Exception) {
+                // 异常，则任务表达式为false
+                logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
+                    "|result=exception: ${ignore.message}", ignore)
+                val logMessage =
+                    "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
+                buildLogPrinter?.addRedLine(buildId, logMessage, "", "", 1)
+                return false
+            }
+        } else {
+            // 空表达式也认为是false
+            logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression is empty!")
+            val logMessage = "Custom condition is empty, will be skipped!"
+            buildLogPrinter?.addRedLine(buildId, logMessage, "", "", 1)
+            false
+        }
+    }
+
+    fun checkContainerFailure(c: PipelineBuildContainer) =
+        c.status.isFailure() && c.controlOption?.jobControlOption?.continueWhenFailed != true
 }

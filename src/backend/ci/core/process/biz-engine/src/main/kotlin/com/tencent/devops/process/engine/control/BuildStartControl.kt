@@ -28,8 +28,6 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.api.pojo.ErrorInfo
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -41,6 +39,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
+import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
@@ -49,27 +48,25 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
+import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
-import com.tencent.devops.process.engine.interceptor.RunLockInterceptor
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
-import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
+import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
-import com.tencent.devops.process.utils.PROJECT_NAME
-import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -79,16 +76,14 @@ import java.time.LocalDateTime
  * 构建控制器
  * @version 1.0
  */
-@Suppress("ALL")
 @Service
 class BuildStartControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val runLockInterceptor: RunLockInterceptor,
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val projectCacheService: ProjectCacheService,
     private val buildDetailService: PipelineBuildDetailService,
     private val buildStartupParamService: BuildStartupParamService,
     private val buildVariableService: BuildVariableService,
@@ -99,6 +94,7 @@ class BuildStartControl @Autowired constructor(
     companion object {
         private val LOG = LoggerFactory.getLogger(BuildStartControl::class.java)!!
         private const val TAG = "startVM-0"
+        private const val JOB_ID = "0"
         private const val DEFAULT_DELAY = 1000
     }
 
@@ -133,11 +129,11 @@ class BuildStartControl @Autowired constructor(
     fun PipelineBuildStartEvent.execute(watcher: Watcher) {
         val executeCount = buildVariableService.getBuildExecuteCount(buildId = buildId)
         buildLogPrinter.addLine(buildId = buildId, message = "Enter BuildStartControl",
-            tag = TAG, jobId = "0", executeCount = executeCount
+            tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
 
         watcher.start("pickUpReadyBuild")
-        val buildInfo = pickUpReadyBuild() ?: run {
+        val buildInfo = pickUpReadyBuild(executeCount = executeCount) ?: run {
             return
         }
         watcher.stop()
@@ -147,22 +143,25 @@ class BuildStartControl @Autowired constructor(
         watcher.stop()
 
         buildLogPrinter.addLine(buildId = buildId, message = "BuildStartControl End",
-            tag = TAG, jobId = "0", executeCount = executeCount
+            tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
 
-        buildLogPrinter.stopLog(buildId = buildId, tag = TAG, jobId = "0", executeCount = executeCount)
+        buildLogPrinter.stopLog(buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount)
     }
 
-    private fun PipelineBuildStartEvent.pickUpReadyBuild(): BuildInfo? {
+    private fun PipelineBuildStartEvent.pickUpReadyBuild(executeCount: Int): BuildInfo? {
 
         val buildIdLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
         return try {
             buildIdLock.lock()
             val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             if (buildInfo == null || buildInfo.status.isFinish()) {
+                buildLogPrinter.addLine(message = "Stop #${buildInfo?.buildNum} ${buildInfo?.status}",
+                    buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+                )
                 LOG.info("ENGINE|$buildId][$source|BUILD_START_DONE|status=${buildInfo?.status}")
                 null
-            } else if (tryToStartRunBuild(buildInfo)) {
+            } else if (tryToStartRunBuild(buildInfo, executeCount = executeCount)) {
                 buildInfo
             } else {
                 null
@@ -172,31 +171,48 @@ class BuildStartControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildStartEvent.tryToStartRunBuild(buildInfo: BuildInfo): Boolean {
+    private fun PipelineBuildStartEvent.tryToStartRunBuild(buildInfo: BuildInfo, executeCount: Int): Boolean {
         LOG.info("ENGINE|$buildId|$source|BUILD_START|${buildInfo.status}")
         var canStart = true
         // 已经是启动状态的，直接返回
         if (!buildInfo.status.isReadyToRun()) {
+            buildLogPrinter.addLine(message = "Illegal build #${buildInfo.buildNum} [${buildInfo.status}]",
+                buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+            )
             return canStart
         }
-        val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
-        if (buildSummaryRecord!!.runningCount > 0) {
-            val setting = pipelineRepositoryService.getSetting(pipelineId)
-            val response = runLockInterceptor.checkRunLock(setting!!.runLockType, pipelineId)
-            if (response.isNotOk()) { // 拦截后退出队列
-                exitQueue(buildInfo, response)
-                LOG.warn("ENGINE|$buildId|$source|BUILD_EXIT_QUEUE||${buildInfo.status}|response=$response")
-                canStart = false
-            } else if (response.data != BuildStatus.RUNNING) {
-                if (buildInfo.status == BuildStatus.QUEUE_CACHE) { // 需要重新入队等待
-                    pipelineRuntimeService.updateBuildInfoStatus2Queue(buildId, buildInfo.status)
+
+        val runLockType = pipelineRepositoryService.getSetting(pipelineId)?.runLockType
+        // #4074 LOCK 不会进入到这里，在启动API已经拦截
+        if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
+            // #4074 锁定当前构建是队列中第一个排队待执行的
+            if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
+                canStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
+            }
+            if (canStart) {
+                val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
+                if (buildSummaryRecord!!.runningCount > 0) {
+                    // 需要重新入队等待
+                    pipelineRuntimeService.updateBuildInfoStatus2Queue(buildId, BuildStatus.QUEUE_CACHE)
+
+                    buildLogPrinter.addLine(message = "Mode: $runLockType, queue: ${buildSummaryRecord.runningCount}",
+                        buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+                    )
+                    canStart = false
                 }
-                LOG.info("ENGINE|$buildId|$source|BUILD_IN_QUEUE||${buildInfo.status}|response=$response")
-                canStart = false
+            } else {
+                buildLogPrinter.addLine(message = "Waiting build #${buildInfo.buildNum - 1}",
+                    buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+                )
             }
         }
 
         if (canStart) {
+            buildLogPrinter.addLine(
+                message = "Build #${buildInfo.buildNum} preparing",
+                buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+            )
+            handleBuildNo()
             pipelineRuntimeService.startLatestRunningBuild(
                 latestRunningBuild = LatestRunningBuild(
                     projectId = projectId,
@@ -215,29 +231,27 @@ class BuildStartControl @Autowired constructor(
         return canStart
     }
 
-    private fun PipelineBuildStartEvent.exitQueue(buildInfo: BuildInfo, response: Response<BuildStatus>) {
-        pipelineRuntimeService.finishLatestRunningBuild(
-            latestRunningBuild = LatestRunningBuild(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                userId = buildInfo.startUser,
-                status = BuildStatus.CANCELED,
-                taskCount = buildInfo.taskCount,
-                buildNum = buildInfo.buildNum
-            ),
-            currentBuildStatus = buildInfo.status,
-            errorInfoList = listOf(
-                ErrorInfo(
-                    taskId = taskId,
-                    taskName = "[平台]构建拦截",
-                    atomCode = "BK_CI_BUILD_INTERCEPTOR",
-                    errorType = ErrorType.USER.num,
-                    errorMsg = response.message ?: "构建被拦截",
-                    errorCode = response.status
-                )
-            )
-        )
+    private fun PipelineBuildStartEvent.handleBuildNo() {
+        if (buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
+            // 防止"每次构建成功+1"读取到相同buildNo的情况正式启动前为var表设置最新的buildNo
+            val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
+            try {
+                buildNoLock.lock()
+                val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId = pipelineId)
+                val buildNo = buildSummary?.buildNo
+                if (buildNo != null) {
+                    buildVariableService.setVariable(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        varName = BUILD_NO,
+                        varValue = buildNo
+                    )
+                }
+            } finally {
+                buildNoLock.unlock()
+            }
+        }
     }
 
     private fun PipelineBuildStartEvent.broadcastStartEvent(buildInfo: BuildInfo) {
@@ -303,6 +317,7 @@ class BuildStartControl @Autowired constructor(
         buildDetailService.updateModel(buildId = buildInfo.buildId, model = model)
     }
 
+    @Suppress("ALL")
     private fun supplementModel(
         projectId: String,
         pipelineId: String,
@@ -430,9 +445,8 @@ class BuildStartControl @Autowired constructor(
         }
 
         // 单步重试不做操作，手动重试需还原各节点状态，启动需获取revision信息
-        buildLogPrinter.addLine(buildId = buildId,
-            message = "Async fetch latest commit/revision, please wait...",
-            tag = TAG, jobId = "0", executeCount = executeCount
+        buildLogPrinter.addLine(message = "Async fetch latest commit/revision, please wait...",
+            buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
         val startParams: Map<String, String> by lazy { buildVariableService.getAllVariable(buildId) }
         if (actionType == ActionType.START) {
@@ -440,27 +454,24 @@ class BuildStartControl @Autowired constructor(
                 fullModel = model, startParams = startParams as MutableMap<String, String>
             )
         }
-        buildLogPrinter.addLine(buildId = buildId,
-            message = "Async fetch latest commit/revision is finish.",
-            tag = TAG, jobId = "0", executeCount = executeCount
-        )
 
         if (buildInfo.status.isReadyToRun()) {
+            buildLogPrinter.addLine(message = "Updating model & start parameters & variables",
+                buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+            )
             updateModel(model = model, buildInfo = buildInfo, taskId = taskId)
             // 写入启动参数
             buildStartupParamService.writeStartParam(
                 allVariable = startParams, projectId = projectId,
                 pipelineId = pipelineId, buildId = buildId, model = model
             )
-
-            val projectName = projectCacheService.getProjectName(projectId) ?: ""
-            val map = mapOf(
-                PIPELINE_BUILD_ID to buildId,
-                PROJECT_NAME to projectId,
-                PROJECT_NAME_CHINESE to projectName,
-                PIPELINE_TIME_START to System.currentTimeMillis().toString()
+            buildVariableService.setVariable(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                varName = PIPELINE_TIME_START,
+                varValue = System.currentTimeMillis().toString()
             )
-            buildVariableService.batchUpdateVariable(projectId, pipelineId, buildId, map)
         }
 
         if (model.stages.size == 1) { // 空节点

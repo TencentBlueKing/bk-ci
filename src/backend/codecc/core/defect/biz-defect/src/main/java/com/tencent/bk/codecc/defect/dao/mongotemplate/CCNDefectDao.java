@@ -62,15 +62,25 @@ public class CCNDefectDao
     @Autowired
     private MongoTemplate mongoTemplate;
 
+    public List<CCNDefectEntity> findByTaskIdAndStatus(long taskId, int status) {
+        return findByTaskIdAndAuthorAndStatusAndRelPaths(taskId, null, status, null);
+    }
+
+    public List<CCNDefectEntity> findByTaskIdAndAuthorAndRelPaths(long taskId, String author, Set<String> fileList)
+    {
+        return findByTaskIdAndAuthorAndStatusAndRelPaths(taskId, author, null, fileList);
+    }
+
     /**
      * 根据任务ID，作者和路径列表查询
      *
      * @param taskId
      * @param author
+     * @param status
      * @param fileList
      * @return
      */
-    public List<CCNDefectEntity> findByTaskIdAndAuthorAndRelPaths(long taskId, String author, Set<String> fileList)
+    public List<CCNDefectEntity> findByTaskIdAndAuthorAndStatusAndRelPaths(long taskId, String author, Integer status, Set<String> fileList)
     {
         Query query = new Query();
         query.addCriteria(Criteria.where("task_id").is(taskId));
@@ -91,6 +101,11 @@ public class CCNDefectDao
             );
             orCriteriaList.add(new Criteria().orOperator(criteriaList.toArray(new Criteria[0])));
             query.addCriteria(new Criteria().andOperator(orCriteriaList.toArray(new Criteria[0])));
+        }
+
+        // 状态过滤
+        if (status != null) {
+            query.addCriteria(Criteria.where("status").is(status));
         }
 
         //查询总的数量，并且过滤计数

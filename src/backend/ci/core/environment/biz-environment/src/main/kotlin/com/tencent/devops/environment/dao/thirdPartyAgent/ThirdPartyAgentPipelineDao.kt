@@ -67,7 +67,7 @@ class ThirdPartyAgentPipelineDao {
                     pipeline,
                     status.status
                 )
-                .returning().fetchOne().id
+                .returning().fetchOne()!!.id
         }
     }
 

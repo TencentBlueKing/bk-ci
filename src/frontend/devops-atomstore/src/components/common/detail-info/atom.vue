@@ -14,7 +14,7 @@
                         <span class="approve-msg">{{approveMsg}}</span>
                     </h5>
                 </template>
-                <h5 :title="$t('store.点击查看YAML片段')" v-if="detail.yamlFlag && detail.recommendFlag" @click="$emit('update:currentTab', 'YAML')">
+                <h5 :title="$t('store.点击查看YAML片段')" v-if="detail.yamlFlag && detail.recommendFlag" @click="$emit('update:currentTab', 'YAMLV2')">
                     <icon class="detail-img" name="yaml" size="16" />
                     <span class="approve-msg">{{ $t('store.YAML可用') }}</span>
                 </h5>
@@ -46,7 +46,7 @@
                 <span> {{ $t('store.分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('store.热度：') }} </span><span>{{detail.downloads || 0}}</span>
+                <span> {{ $t('store.热度：') }} </span><span>{{detail.recentExecuteNum || 0}}</span>
             </h5>
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>

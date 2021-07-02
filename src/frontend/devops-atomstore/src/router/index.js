@@ -34,11 +34,14 @@ const manage = () => import(/* webpackChunkName: 'manage' */ '@/views/manage/ind
 const detail = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/index.vue') // 研发商店管理页面
 const show = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/show.vue') // 研发商店管理页面
 const edit = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/edit.vue') // 研发商店管理页面
-const overView = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view.vue') // 研发商店管理页面
+const overView = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view/index.vue') // 研发商店管理页面
+const statisticData = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view/statistic-data.vue') // 研发商店管理页面
+const statisticPipeline = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view/statistic-pipeline.vue') // 研发商店管理页面
 const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/manage/approval.vue') // 研发商店管理页面
 const setting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/index.vue') // 研发商店管理页面
 const memberSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/member-setting.vue') // 研发商店管理页面
 const privateSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/private-setting.vue') // 研发商店管理页面
+const apiSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/api-setting.vue') // 研发商店管理页面
 const releaseManage = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/index.vue') // 研发商店管理页面
 const version = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/version.vue') // 研发商店管理页面
 
@@ -169,13 +172,30 @@ const routes = [
                                 path: 'private',
                                 name: 'private',
                                 component: privateSetting
+                            },
+                            {
+                                path: 'api',
+                                name: 'api',
+                                component: apiSetting
                             }
                         ]
                     },
                     {
                         path: 'overview',
                         name: 'overView',
-                        component: overView
+                        component: overView,
+                        children: [
+                            {
+                                path: 'statisticData',
+                                name: 'statisticData',
+                                component: statisticData
+                            },
+                            {
+                                path: 'statisticPipeline',
+                                name: 'statisticPipeline',
+                                component: statisticPipeline
+                            }
+                        ]
                     },
                     {
                         path: 'approval',

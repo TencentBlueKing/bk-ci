@@ -40,6 +40,7 @@ data class BuildInfo(
     val trigger: String,
     val status: BuildStatus,
     val queueTime: Long,
+    val executeTime: Long,
     val startUser: String,
     val startTime: Long?,
     val endTime: Long?,
@@ -48,7 +49,8 @@ data class BuildInfo(
     val parentBuildId: String?,
     val parentTaskId: String?,
     val channelCode: ChannelCode,
-    var errorInfoList: List<ErrorInfo>?
+    var errorInfoList: List<ErrorInfo>?,
+    val retryFlag: Boolean? = null
 ) {
 
     fun isFinish() = when {

@@ -27,7 +27,9 @@
 package com.tencent.bk.codecc.task.vo.path;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.jboss.logging.Field;
 
 import java.util.List;
 
@@ -35,6 +37,11 @@ import java.util.List;
 @ApiModel("code.yml过滤路径类")
 public class CodeYmlFilterPathVO
 {
+    /*
+     * 是否扫描测试代码，true-扫描，false-不扫描，默认不扫描
+     */
+    private Boolean scanTestSource;
+
     private List<String> testSourceFilterPath;
 
     private List<String> autoGenFilterPath;

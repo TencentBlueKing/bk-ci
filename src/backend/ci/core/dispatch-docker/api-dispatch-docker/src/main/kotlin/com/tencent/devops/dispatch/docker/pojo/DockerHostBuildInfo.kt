@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.docker.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.type.BuildType
 
 data class DockerHostBuildInfo(
     val projectId: String,
@@ -47,5 +48,7 @@ data class DockerHostBuildInfo(
     val imageType: String?,
     val imagePublicFlag: Boolean?,
     val imageRDType: String?,
-    val containerHashId: String?
+    val containerHashId: String?,
+    val customBuildEnv: Map<String, String>? = null,
+    val buildType: BuildType = BuildType.DOCKER
 )

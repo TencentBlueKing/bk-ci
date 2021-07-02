@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -584,7 +584,7 @@ class RepositoryService @Autowired constructor(
                     repositoryGithubDao.create(dslContext, repositoryId, repository.projectName, userId)
                     repositoryId
                 }
-                else -> throw RuntimeException("Unknown repository type")
+                else -> throw IllegalArgumentException("Unknown repository type")
             }
             repositoryId
         }
@@ -695,7 +695,7 @@ class RepositoryService @Autowired constructor(
                     repoHashId = hashId
                 )
             }
-            else -> throw RuntimeException("Unknown repository type")
+            else -> throw IllegalArgumentException("Unknown repository type")
         }
     }
 
@@ -953,7 +953,7 @@ class RepositoryService @Autowired constructor(
                     RepoAuthType.OAUTH.name to it.userId
                 ScmType.CODE_SVN.name -> {
                     val svnRepo = svnRepoRecords[it.repositoryId]
-                    (svnRepo?.svnType ?: RepoAuthType.SSH.name) to svnRepo?.credentialId
+                    (svnRepo?.svnType?.toUpperCase() ?: RepoAuthType.SSH.name) to svnRepo?.credentialId
                 }
                 ScmType.CODE_GITLAB.name -> {
                     RepoAuthType.HTTP.name to gitlabAuthMap?.get(it.repositoryId)?.credentialId
@@ -962,7 +962,7 @@ class RepositoryService @Autowired constructor(
                     val gitRepo = gitAuthMap?.get(it.repositoryId)
                     val gitAuthType = gitRepo?.authType ?: RepoAuthType.SSH.name
                     val gitAuthIdentity = if (gitAuthType == RepoAuthType.OAUTH.name) {
-                        it.userId
+                        gitRepo?.userName
                     } else {
                         gitRepo?.credentialId
                     }
@@ -1068,29 +1068,29 @@ class RepositoryService @Autowired constructor(
     ): SQLPage<RepositoryInfo> {
 
         val count = repositoryDao.countByProject(
-                dslContext = dslContext,
-                projectIds = arrayListOf(projectId),
-                repositoryType = null,
-                aliasName = aliasName,
-                repositoryIds = null
+            dslContext = dslContext,
+            projectIds = arrayListOf(projectId),
+            repositoryType = null,
+            aliasName = aliasName,
+            repositoryIds = null
         )
         val repositoryRecordList =
-                repositoryDao.listByProject(
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        aliasName = aliasName,
-                        repositoryType = null,
-                        repositoryIds = null,
-                        offset = offset,
-                        limit = limit
-                )
+            repositoryDao.listByProject(
+                dslContext = dslContext,
+                projectId = projectId,
+                aliasName = aliasName,
+                repositoryType = null,
+                repositoryIds = null,
+                offset = offset,
+                limit = limit
+            )
         val repositoryList = repositoryRecordList.map {
             RepositoryInfo(
-                    repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
-                    aliasName = it.aliasName,
-                    url = it.url,
-                    type = ScmType.valueOf(it.type),
-                    updatedTime = it.updatedTime.timestamp()
+                repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
+                aliasName = it.aliasName,
+                url = it.url,
+                type = ScmType.valueOf(it.type),
+                updatedTime = it.updatedTime.timestamp()
             )
         }
         return SQLPage(count, repositoryList)
@@ -1210,20 +1210,20 @@ class RepositoryService @Autowired constructor(
     fun getInfoByHashIds(hashIds: List<String>): List<RepositoryInfo> {
         val repositoryIds = hashIds.map { HashUtil.decodeOtherIdToLong(it) }
         val repositoryInfos = repositoryDao.getRepoByIds(
-                dslContext = dslContext,
-                repositoryIds = repositoryIds,
-                checkDelete = true
+            dslContext = dslContext,
+            repositoryIds = repositoryIds,
+            checkDelete = true
         )
         val result = mutableListOf<RepositoryInfo>()
         repositoryInfos?.map {
             result.add(
-                    RepositoryInfo(
-                            repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
-                            aliasName = it.aliasName,
-                            url = it.url,
-                            type = ScmType.valueOf(it.type),
-                            updatedTime = it.updatedTime.timestampmilli()
-                    )
+                RepositoryInfo(
+                    repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
+                    aliasName = it.aliasName,
+                    url = it.url,
+                    type = ScmType.valueOf(it.type),
+                    updatedTime = it.updatedTime.timestampmilli()
+                )
             )
         }
         return result
@@ -1264,7 +1264,7 @@ class RepositoryService @Autowired constructor(
         val result = client.get(ServiceCredentialResource::class)
             .get(projectId, repo.credentialId, encoder.encodeToString(pair.publicKey))
         if (result.isNotOk() || result.data == null) {
-            throw ClientException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GET_TICKET_FAIL))
+            throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
         }
 
         val credential = result.data!!
@@ -1311,11 +1311,7 @@ class RepositoryService @Autowired constructor(
                         }
                         val passPhrase = if (list.size > 2) {
                             val p = list[2]
-                            if (p.isEmpty()) {
-                                null
-                            } else {
-                                p
-                            }
+                            p.ifEmpty { null }
                         } else {
                             null
                         }
@@ -1362,11 +1358,9 @@ class RepositoryService @Autowired constructor(
                         )
                     }
                     else -> {
-                        throw RuntimeException(
-                            MessageCodeUtil.generateResponseDataObject<String>(
-                                RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION,
-                                arrayOf(repo.authType!!.name)
-                            ).message
+                        throw ErrorCodeException(
+                            errorCode = RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION,
+                            params = arrayOf(repo.authType!!.name)
                         )
                     }
                 }
@@ -1386,10 +1380,8 @@ class RepositoryService @Autowired constructor(
                         }
                         val passPhrase = if (list.size > 2) {
                             val p = list[2]
-                            if (p.isEmpty()) {
+                            p.ifEmpty {
                                 null
-                            } else {
-                                p
                             }
                         } else {
                             null
@@ -1464,11 +1456,9 @@ class RepositoryService @Autowired constructor(
                         )
                     }
                     else -> {
-                        throw RuntimeException(
-                            MessageCodeUtil.generateResponseDataObject<String>(
-                                RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION,
-                                arrayOf(repo.authType!!.name)
-                            ).message
+                        throw ErrorCodeException(
+                            errorCode = RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION,
+                            params = arrayOf(repo.authType!!.name)
                         )
                     }
                 }
@@ -1486,7 +1476,7 @@ class RepositoryService @Autowired constructor(
                 )
             }
             else -> {
-                throw RuntimeException("Unknown repo($repo)")
+                throw IllegalArgumentException("Unknown repo($repo)")
             }
         }
 

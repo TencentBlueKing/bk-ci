@@ -33,7 +33,6 @@ import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -44,17 +43,12 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
     private val storeStatisticDailyDao: StoreStatisticDailyDao
 ) : StoreDailyStatisticService {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(StoreDailyStatisticServiceImpl::class.java)
-    }
-
     override fun getDailyStatisticListByCode(
         storeCode: String,
         storeType: Byte,
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): List<StoreDailyStatistic>? {
-        logger.info("getDailyStatisticListByCode $storeCode,$storeType,$startTime,$endTime")
         val dailyStatisticRecordList = storeStatisticDailyDao.getDailyStatisticListByCode(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -71,7 +65,8 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
             val dailySuccessRate =
                 if (totalNum > 0) String.format("%.2f", dailySuccessNum.toDouble() * 100 / totalNum)
                     .toDouble() else null
-            val dailyFailRate = if (dailySuccessRate != null) 100 - dailySuccessRate else null
+            val dailyFailRate =
+                if (dailySuccessRate != null) String.format("%.2f", 100 - dailySuccessRate).toDouble() else null
             storeDailyStatisticList.add(
                 StoreDailyStatistic(
                     totalDownloads = dailyStatisticRecord.totalDownloads,
