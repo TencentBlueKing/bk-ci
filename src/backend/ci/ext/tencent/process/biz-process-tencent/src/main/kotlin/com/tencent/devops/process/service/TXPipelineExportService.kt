@@ -117,31 +117,47 @@ class TXPipelineExportService @Autowired constructor(
             it.id to it.stageTagName
         }?.toMap() ?: emptyMap()
 
-        val yamlObj = ExportPreScriptBuildYaml(
-            version = "v2.0",
-            name = model.name,
-            label = if (model.labels.isNullOrEmpty()) null else model.labels,
-            triggerOn = null,
-            variables = getVariableFromModel(model),
-            stages = getV2StageFromModel(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                model = model,
-                comment = yamlSb,
-                stageTagsMap = stageTagsMap
-            ),
-            extends = null,
-            resources = null,
-            notices = null,
-            finally = getV2FinalFromStage(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                stage = model.stages.last(),
-                comment = yamlSb
+        val yamlObj = try {
+            ExportPreScriptBuildYaml(
+                version = "v2.0",
+                name = model.name,
+                label = if (model.labels.isNullOrEmpty()) null else model.labels,
+                triggerOn = null,
+                variables = getVariableFromModel(model),
+                stages = getV2StageFromModel(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    model = model,
+                    comment = yamlSb,
+                    stageTagsMap = stageTagsMap
+                ),
+                extends = null,
+                resources = null,
+                notices = null,
+                finally = getV2FinalFromStage(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    stage = model.stages.last(),
+                    comment = yamlSb
+                )
             )
-        )
+        } catch (t: Throwable) {
+            logger.error("Export v2 yaml with error, return blank yml", t)
+            ExportPreScriptBuildYaml(
+                version = "v2.0",
+                name = model.name,
+                label = if (model.labels.isNullOrEmpty()) null else model.labels,
+                triggerOn = null,
+                variables = null,
+                stages = null,
+                extends = null,
+                resources = null,
+                notices = null,
+                finally = null
+            )
+        }
         val modelYaml = toYamlStr(yamlObj)
         yamlSb.append(modelYaml)
         return exportToFile(yamlSb.toString(), model.name)
