@@ -30,9 +30,11 @@ package com.tencent.devops.common.ci.yaml.v2.utils
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
+import com.tencent.devops.common.ci.v2.YmlVersion
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource
+import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -63,6 +65,26 @@ class ScriptYmlUtilsTest {
         val normalize = ScriptYmlUtils.normalizeGitCiYaml(obj, ".ci.yml")
 
         println("1111")
+    }
+
+    @Test
+    fun isV2Version() {
+        val classPathResource = ClassPathResource("Sample1.yml")
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+            sb.append(str).append("\n")
+        }
+
+        println(sb.toString())
+        val yaml = Yaml()
+        val obj = YamlUtil.toYaml(yaml.load(sb.toString()) as Any)
+        val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
+        println(version != null && version.version == "v2.0")
     }
 
     @Test
