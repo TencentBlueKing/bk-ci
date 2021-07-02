@@ -36,7 +36,7 @@ dependencies {
     api(project(":core:common:common-web"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-db"))
-    api(project(":core:common:common-log"))
+    api(project(":core:log:api-log"))
     api(("org.apache.commons:commons-compress:1.16.1"))
     api(group = "com.github.docker-java", name = "docker-java", version = "3.1.1")
     api(group = "org.glassfish.jersey.core", name = "jersey-client", version = "2.25.1")

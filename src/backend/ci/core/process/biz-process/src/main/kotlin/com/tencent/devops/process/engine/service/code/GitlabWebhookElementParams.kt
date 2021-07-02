@@ -31,16 +31,16 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 
 class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTriggerElement> {
 
     override fun getWebhookElementParams(
         element: CodeGitlabWebHookTriggerElement,
         variables: Map<String, String>
-    ): ScmWebhookMatcher.WebHookParams? {
-        val params = ScmWebhookMatcher.WebHookParams(
+    ): WebHookParams? {
+        val params = WebHookParams(
             repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
                 repositoryConfig = RepositoryConfigUtils.buildConfig(element),
                 variables = variables

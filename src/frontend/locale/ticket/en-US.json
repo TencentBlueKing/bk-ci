@@ -60,7 +60,7 @@
         "secretKeyRequired": "SecretKey cannot be empty",
         "appIdPlaceholder": "Please enter appId",
         "appIdRequired": "AppId cannot be empty",
-        "sshKeyPlaceholder": "Please enter the corresponding private key for SSH Key, starting with -----BEGIN RSA PRIVATE KEY----- and ending with -----END RSA PRIVATE KEY-----",
+        "sshKeyPlaceholder": "Please enter the corresponding private key for SSH Key, starting with -----BEGIN (RSA|OPENSSH) PRIVATE KEY----- and ending with -----END (RSA|OPENSSH) PRIVATE KEY-----",
         "keyPassword": "PrivateKey",
         "keyPasswordPlaceholder": "Please enter private key password",
         "tokenPlaceholder": "Please enter token",

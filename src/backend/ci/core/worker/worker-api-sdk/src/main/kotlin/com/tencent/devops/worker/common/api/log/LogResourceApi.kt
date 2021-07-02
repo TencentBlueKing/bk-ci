@@ -29,10 +29,10 @@ package com.tencent.devops.worker.common.api.log
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import com.tencent.devops.worker.common.env.AgentEnv
-import com.tencent.devops.worker.common.env.LogMode
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import java.lang.StringBuilder
@@ -40,38 +40,59 @@ import java.lang.StringBuilder
 class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
 
     override fun addLogMultiLine(logMessages: List<LogMessage>): Result<Boolean> {
-        return if (LogMode.LOCAL == AgentEnv.getLogMode()) {
-            logMessages.forEach {
-                logger.info(it.message)
-            }
-            Result(true)
-        } else {
-            val path = "/log/api/build/logs/multi"
-            val requestBody = RequestBody.create(
-                MediaType.parse("application/json; charset=utf-8"),
-                objectMapper.writeValueAsString(logMessages)
-            )
-            val request = buildPost(path, requestBody)
-            val responseContent = request(
-                request = request,
-                errorMessage = "上报日志失败",
-                connectTimeoutInSec = 5L,
-                readTimeoutInSec = 30L,
-                writeTimeoutInSec = 30L
-            )
-            objectMapper.readValue(responseContent)
-        }
+        val path = "/log/api/build/logs/multi"
+        val requestBody = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(logMessages)
+        )
+        val request = buildPost(path, requestBody)
+        val responseContent = request(
+            request = request,
+            errorMessage = "上报日志失败",
+            connectTimeoutInSec = 5L,
+            readTimeoutInSec = 10L,
+            writeTimeoutInSec = 10L
+        )
+        return objectMapper.readValue(responseContent)
     }
 
-    override fun finishLog(tag: String?, jobId: String?, executeCount: Int?, subTag: String?): Result<Boolean> {
+    override fun finishLog(
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        subTag: String?,
+        logMode: LogStorageMode?
+    ): Result<Boolean> {
         val path = StringBuilder("/log/api/build/logs/status?finished=true")
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
         if (!subTag.isNullOrBlank()) path.append("&subTag=$subTag")
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
         if (executeCount != null) path.append("&executeCount=$executeCount")
+        if (logMode != null) path.append("&logMode=${logMode.name}")
         val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), "")
         val request = buildPut(path.toString(), requestBody)
         val responseContent = request(request, "上报结束状态失败")
+        return objectMapper.readValue(responseContent)
+    }
+
+    override fun updateStorageMode(
+        propertyList: List<TaskBuildLogProperty>,
+        executeCount: Int
+    ): Result<Boolean> {
+        val path = StringBuilder("/log/api/build/logs/mode")
+        path.append("?executeCount=$executeCount")
+        val requestBody = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(propertyList)
+        )
+        val request = buildPost(path.toString(), requestBody)
+        val responseContent = request(
+            request = request,
+            errorMessage = "上报日志存储状态失败",
+            connectTimeoutInSec = 5L,
+            readTimeoutInSec = 10L,
+            writeTimeoutInSec = 10L
+        )
         return objectMapper.readValue(responseContent)
     }
 }

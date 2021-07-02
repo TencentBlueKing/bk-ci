@@ -418,7 +418,7 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
-    override fun buildGet(buildId: String, credentialId: String, publicKey: String): CredentialInfo {
+    override fun buildGet(buildId: String, credentialId: String, publicKey: String): CredentialInfo? {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
@@ -451,8 +451,8 @@ class CredentialServiceImpl @Autowired constructor(
         return ret
     }
 
-    override fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo {
-        val credentialRecord = credentialDao.get(dslContext, projectId, credentialId)
+    override fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo? {
+        val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId) ?: return null
 
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)

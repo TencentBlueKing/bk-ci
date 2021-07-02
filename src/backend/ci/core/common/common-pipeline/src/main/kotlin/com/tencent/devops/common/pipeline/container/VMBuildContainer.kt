@@ -77,8 +77,8 @@ data class VMBuildContainer(
     val dispatchType: DispatchType? = null,
     @ApiModelProperty("是否显示构建资源信息", required = false)
     var showBuildResource: Boolean? = false,
-    @ApiModelProperty("是否可重试", required = false, hidden = true)
-    override var canRetry: Boolean? = false,
+    @ApiModelProperty("是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储", required = false, hidden = true)
+    override var canRetry: Boolean? = null,
     @ApiModelProperty("是否访问外网", required = false, hidden = true)
     var enableExternal: Boolean? = false,
     override var containerId: String? = null,

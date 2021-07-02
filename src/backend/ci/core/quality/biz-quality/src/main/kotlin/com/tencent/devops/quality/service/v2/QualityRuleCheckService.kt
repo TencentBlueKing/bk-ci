@@ -57,7 +57,7 @@ import com.tencent.devops.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.pojo.RuleCheckSingleResult
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
-import com.tencent.devops.quality.service.GroupService
+import com.tencent.devops.quality.service.QualityNotifyGroupService
 import com.tencent.devops.quality.util.ThresholdOperationUtil
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
@@ -74,7 +74,7 @@ import java.util.concurrent.Executors
 class QualityRuleCheckService @Autowired constructor(
     private val ruleService: QualityRuleService,
     private val qualityHisMetadataService: QualityHisMetadataService,
-    private val groupService: GroupService,
+    private val qualityNotifyGroupService: QualityNotifyGroupService,
     private val countService: QualityCountService,
     private val historyService: QualityHistoryService,
     private val controlPointService: QualityControlPointService,
@@ -578,7 +578,7 @@ class QualityRuleCheckService @Autowired constructor(
 
         // 获取通知用户集合
         val notifyUserSet = mutableSetOf<String>()
-        val groupUsers = groupService.serviceGetUsers(endNotifyGroupList.map { it.toLong() })
+        val groupUsers = qualityNotifyGroupService.serviceGetUsers(endNotifyGroupList.map { it.toLong() })
         notifyUserSet.addAll(groupUsers.innerUsers)
         notifyUserSet.addAll(endNotifyUserList)
 
