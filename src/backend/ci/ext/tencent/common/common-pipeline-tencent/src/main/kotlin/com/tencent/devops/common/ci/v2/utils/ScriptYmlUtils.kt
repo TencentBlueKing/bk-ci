@@ -211,7 +211,7 @@ object ScriptYmlUtils {
         var line: String? = br.readLine()
         while (line != null) {
             line = line.trimEnd()
-            if (line == "$userTrigger:") {
+            if (line.startsWith("$userTrigger:")) {
                 sb.append("$formatTrigger:").append("\n")
             } else {
                 sb.append(line).append("\n")

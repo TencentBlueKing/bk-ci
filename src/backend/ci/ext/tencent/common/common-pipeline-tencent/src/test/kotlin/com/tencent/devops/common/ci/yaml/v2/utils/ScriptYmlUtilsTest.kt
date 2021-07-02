@@ -56,16 +56,12 @@ class ScriptYmlUtilsTest {
         while (reader.readLine().also { str = it } != null) {
             sb.append(str).append("\n")
         }
-
-        // println(sb.toString())
+        val formatStr = ScriptYmlUtils.formatYaml(sb.toString())
         val obj = YamlUtil.getObjectMapper().readValue(
-            ScriptYmlUtils.formatYaml(sb.toString()),
+            formatStr,
             PreScriptBuildYaml::class.java
         )
-
         val normalize = ScriptYmlUtils.normalizeGitCiYaml(obj, ".ci.yml")
-
-        println("1111")
     }
 
     @Test
