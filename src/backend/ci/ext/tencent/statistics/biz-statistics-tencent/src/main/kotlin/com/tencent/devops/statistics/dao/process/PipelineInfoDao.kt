@@ -411,20 +411,21 @@ class PipelineInfoDao {
         return if (t != null) {
             with(t) {
                 PipelineInfo(
-                    projectId,
-                    pipelineId,
-                    templateId,
-                    pipelineName,
-                    pipelineDesc,
-                    version,
-                    createTime.timestampmilli(),
-                    updateTime.timestampmilli(),
-                    creator,
-                    lastModifyUser,
-                    ChannelCode.valueOf(channel),
-                    manualStartup == 1,
-                    elementSkip == 1,
-                    taskCount
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    templateId = templateId,
+                    pipelineName = pipelineName,
+                    pipelineDesc = pipelineDesc,
+                    version = version,
+                    createTime = createTime.timestampmilli(),
+                    updateTime = updateTime.timestampmilli(),
+                    creator = creator,
+                    lastModifyUser = lastModifyUser,
+                    channelCode = ChannelCode.valueOf(channel),
+                    canManualStartup = manualStartup == 1,
+                    canElementSkip = elementSkip == 1,
+                    taskCount = taskCount,
+                    id = id
                 )
             }
         } else {
