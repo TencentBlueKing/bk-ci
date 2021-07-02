@@ -30,12 +30,10 @@ package com.tencent.devops.common.ci.yaml.v2.utils
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
-import com.tencent.devops.common.ci.v2.YmlVersion
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import org.junit.Assert
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource
-import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
