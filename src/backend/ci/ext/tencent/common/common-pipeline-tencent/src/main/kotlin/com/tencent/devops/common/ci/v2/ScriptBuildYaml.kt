@@ -40,7 +40,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 data class ScriptBuildYaml(
     val version: String?,
     val name: String?,
-    val label: List<String> = emptyList(),
+    val label: List<String>?,
     val triggerOn: TriggerOn?,
     val variables: Map<String, Variable>?,
     val stages: List<Stage>,

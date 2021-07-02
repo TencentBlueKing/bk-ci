@@ -1,6 +1,5 @@
 package com.tencent.devops.auth.service.gitci
 
-import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.OauthForbiddenException
@@ -12,21 +11,12 @@ import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.TimeUnit
 
 class GitCIPermissionServiceImpl @Autowired constructor(
     val client: Client,
-    val managerService: ManagerService
+    val managerService: ManagerService,
+    val projectInfoService: GitCiProjectInfoService
 ) : PermissionService {
-    private val gitCIUserCache = CacheBuilder.newBuilder()
-        .maximumSize(2000)
-        .expireAfterWrite(24, TimeUnit.HOURS)
-        .build<String/*userId*/, String>()
-
-    private val projectPublicCache = CacheBuilder.newBuilder()
-        .maximumSize(2000)
-        .expireAfterWrite(1, TimeUnit.HOURS)
-        .build<String/*project*/, String?>()
 
     // GitCI权限场景不会出现次调用, 故做默认实现
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
@@ -59,10 +49,10 @@ class GitCIPermissionServiceImpl @Autowired constructor(
                 throw OauthForbiddenException("oauth is empty")
             }
         }
-        logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode gitProjectId: $gitProjectId")
+        logger.info("GitCI validate user:$userId projectId: $projectCode gitProjectId: $gitProjectId")
 
         // 判断是否为开源项目
-        if (checkProjectPublic(gitProjectId)) {
+        if (projectInfoService.checkProjectPublic(gitProjectId)) {
             // 若为pipeline 且action为list 校验成功
             if (checkExtAction(action, resourceType)) {
                 logger.info("$projectCode is public, views action can check success")
@@ -70,7 +60,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             }
         }
 
-        val gitUserId = getGitUserByRtx(userId, gitProjectId)
+        val gitUserId = projectInfoService.getGitUserByRtx(userId, gitProjectId)
         if (gitUserId.isNullOrEmpty()) {
             logger.warn("$userId is not gitCI user")
             return false
@@ -92,7 +82,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
-        return validateUserResourcePermission(userId, action, projectCode, resourceCode)
+        return validateUserResourcePermission(userId, action, projectCode, resourceType)
     }
 
     // GitCI权限场景不会出现次调用, 故做默认实现
@@ -113,36 +103,6 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         resourceType: String
     ): Map<AuthPermission, List<String>> {
         return emptyMap()
-    }
-
-    private fun getGitUserByRtx(rtxUserId: String, projectCode: String): String? {
-        return if (!gitCIUserCache.getIfPresent(rtxUserId).isNullOrEmpty()) {
-            gitCIUserCache.getIfPresent(rtxUserId)!!
-        } else {
-            val gitUserId = client.getScm(ServiceGitCiResource::class).getGitUserId(rtxUserId, projectCode).data
-            if (gitUserId != null) {
-                gitCIUserCache.put(rtxUserId, gitUserId)
-            }
-            gitUserId
-        }
-    }
-
-    private fun checkProjectPublic(projectCode: String): Boolean {
-        if (!projectPublicCache.getIfPresent(projectCode).isNullOrEmpty()) {
-            return true
-        } else {
-            val gitProjectInfo = client.getScm(ServiceGitCiResource::class).getGitCodeProjectInfo(projectCode).data
-            if (gitProjectInfo != null) {
-                logger.info("project $projectCode visibilityLevel: ${gitProjectInfo?.visibilityLevel}")
-                if (gitProjectInfo.visibilityLevel != null && gitProjectInfo.visibilityLevel!! > 0) {
-                    projectPublicCache.put(projectCode, gitProjectInfo.visibilityLevel.toString())
-                    return true
-                }
-            } else {
-                logger.warn("project $projectCode get projectInfo is empty")
-            }
-        }
-        return false
     }
 
     private fun checkListOrViewAction(action: String): Boolean {

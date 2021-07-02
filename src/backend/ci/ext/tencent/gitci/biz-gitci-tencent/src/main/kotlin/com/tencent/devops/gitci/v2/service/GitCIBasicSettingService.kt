@@ -166,21 +166,23 @@ class GitCIBasicSettingService @Autowired constructor(
         var currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, limitCount)
         while (currProjects.isNotEmpty()) {
             currProjects.forEach {
-                val projectResult =
-                    client.get(ServiceTxUserResource::class).get(it.enableUserId)
-                if (projectResult.isNotOk()) {
-                    logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
+                try {
+                    val projectResult =
+                        client.get(ServiceTxUserResource::class).get(it.enableUserId)
+                    val userInfo = projectResult.data!!
+                    count += gitCIBasicSettingDao.fixProjectInfo(
+                        dslContext = dslContext,
+                        gitProjectId = it.id,
+                        creatorBgName = userInfo.bgName,
+                        creatorDeptName = userInfo.deptName,
+                        creatorCenterName = userInfo.centerName
+                    )
+                } catch (t: Throwable) {
+                    logger.error("Update git ci project in devops failed, msg: ${t.message}")
                     return@forEach
+                } finally {
+                    startId = it.id
                 }
-                val userInfo = projectResult.data!!
-                count += gitCIBasicSettingDao.fixProjectInfo(
-                    dslContext = dslContext,
-                    gitProjectId = it.id,
-                    creatorBgName = userInfo.bgName,
-                    creatorDeptName = userInfo.deptName,
-                    creatorCenterName = userInfo.centerName
-                )
-                startId = it.id
             }
             logger.info("fixProjectInfo project ${currProjects.map { it.id }.toList()}, fixed count: $count")
             Thread.sleep(100)
