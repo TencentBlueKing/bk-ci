@@ -112,6 +112,8 @@ class GitCIV2PipelineService @Autowired constructor(
                     creator = it.creator,
                     latestBuildInfo = latestBuilds[it.latestBuildId]
                 )
+            }.sortedBy {
+                it.latestBuildInfo?.buildHistory?.startTime
             }
         )
     }
