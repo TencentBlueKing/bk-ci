@@ -4,5 +4,5 @@ import com.tencent.devops.auth.pojo.MemberInfo
 
 data class ProjectMembersVO(
     val count: Int,
-    val userIds: Set<MemberInfo>
+    val results: Set<MemberInfo>
 )

@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.service.iam.impl
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
@@ -44,6 +45,7 @@ import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -136,7 +138,10 @@ open class IamPermissionRoleExtService @Autowired constructor(
     }
 
     override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
-        val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId)
+        val pageInfoDTO = PageInfoDTO()
+        pageInfoDTO.limit = 0
+        pageInfoDTO.offset = 1000
+        val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId, pageInfoDTO)
         val iamIds = groupInfos.results.map { it.id }
         val localGroupInfo = groupDao.getGroupByRelationIds(dslContext, iamIds)
         val localGroupMap = mutableMapOf<String, TAuthGroupInfoRecord>()

@@ -143,15 +143,16 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
             logger.info("getProjectAllMember $projectId get by cache")
             return projectMemberCache.getIfPresent(projectId.toString())!!
         }
-        // 获取项目下的用户组
-        val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId)
-        if (groupInfos == null || groupInfos.count == 0) {
-            return null
-        }
+
         val pageInfoDTO = PageInfoDTO()
         val pageInfo = PageUtil.convertPageSizeToSQLLimit(page ?: 0, pageSiz ?: 2000)
         pageInfoDTO.limit = pageInfo.limit.toLong()
         pageInfoDTO.offset = pageInfo.offset.toLong()
+        // 获取项目下的用户组
+        val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId, pageInfoDTO)
+        if (groupInfos == null || groupInfos.count == 0) {
+            return null
+        }
 
         val members = mutableSetOf<MemberInfo>()
         groupInfos.results.forEach { group ->
@@ -167,7 +168,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         val count = members.size
         val result = ProjectMembersVO(
             count = count,
-            userIds = members
+            results = members
         )
         projectMemberCache.put(projectId.toString(), result)
         return result
