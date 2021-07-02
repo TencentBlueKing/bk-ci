@@ -88,7 +88,8 @@
                     Vue.set(this.element.additionalOptions, name, value)
                 }
 
-                const currentfailControl = name === 'failControl' ? value : this.atomOption['failControl']
+                const currentfailControl = [...new Set(name === 'failControl' ? value : this.atomOption['failControl'])] // 去重
+
                 const includeManualRetry = currentfailControl.includes('MANUAL_RETRY')
                 const continueable = currentfailControl.includes('continueWhenFailed')
                 const isAutoSkip = continueable && (this.atomOption['manualSkip'] === false || (name === 'manualSkip' && value === false))
@@ -98,7 +99,6 @@
 
                 console.log(currentfailControl, isAutoSkip, this.atomOption['failControl'], value)
                 const failControl = isAutoSkip ? currentfailControl.filter(item => item !== 'MANUAL_RETRY') : [...currentfailControl]
-                console.log(failControl)
                 this.setPipelineEditing(true)
 
                 this.handleUpdateElement('additionalOptions', {
