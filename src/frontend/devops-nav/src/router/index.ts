@@ -14,6 +14,8 @@ const IFrame = () => import('../views/IFrame.vue')
 
 const ProjectManage = () => import('../views/ProjectManage.vue')
 
+const ProjectSetting = () => import('../views/ProjectSetting.vue')
+
 const Maintaining = () => import('../views/503.vue')
 
 Vue.use(Router)
@@ -54,6 +56,14 @@ const routes = [
                 component: ProjectManage,
                 meta: {
                     showProjectList: false,
+                    showNav: true
+                }
+            },
+            {
+                path: 'ps/:projectId/:iamId/:type',
+                name: 'ps',
+                component: ProjectSetting,
+                meta: {
                     showNav: true
                 }
             },

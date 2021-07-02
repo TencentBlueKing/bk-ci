@@ -22,6 +22,7 @@
                     @toggle="handleDropdownVisible"
                     :enable-virtual-scroll="selectProjectList && selectProjectList.length > 3000"
                     :list="selectProjectList"
+                    :virtual-scroll-render="renderProjectItem"
                     id-key="projectCode"
                     display-key="projectName"
                 >
@@ -31,6 +32,10 @@
                         :id="item.projectCode"
                         :name="item.projectName"
                     >
+                        <span class="bkdevops-project-item">
+                            <span>{{item.projectName}}</span>
+                            <bk-icon class="project-icon" type="edit2" @click.stop="handleEditProject(item)" v-if="item.relationId" />
+                        </span>
                     </bk-option>
                     <template slot="extension">
                         <div
@@ -118,6 +123,7 @@
 
         @Action toggleProjectDialog
         @Action togglePopupShow
+        @Action resetNewProject
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
@@ -165,18 +171,22 @@
             })
 
             eventBus.$on('hide-project-menu', () => {
-                if (this.isDropdownMenuVisible) {
-                    const ele = this.$refs.projectDropdown && this.$refs.projectDropdown.$el
-                    if (ele) {
-                        const triggerEle = ele.querySelector('.bk-select-name')
-                        triggerEle && triggerEle.click()
-                    }
-                }
+                this.hideDropdownMenuVisable()
             })
 
             eventBus.$on('show-project-dialog', (project: Project) => {
                 this.popProjectDialog(project)
             })
+        }
+
+        hideDropdownMenuVisable () {
+            if (this.isDropdownMenuVisible) {
+                const ele = this.$refs.projectDropdown && this.$refs.projectDropdown.$el
+                if (ele) {
+                    const triggerEle = ele.querySelector('.bk-select-name')
+                    triggerEle && triggerEle.click()
+                }
+            }
         }
 
         handleDropdownVisible (isShow: boolean): void {
@@ -259,6 +269,49 @@
 
         closeTooltip (): void {
             this.isShowTooltip = false
+        }
+
+        renderProjectItem (item, h) {
+            return h('div', {
+                    class: {
+                        'bk-option-content': true,
+                        'bkdevops-project-item-content': true
+                    }
+                }, [
+                    h('span', {
+                        class: {
+                            'bkdevops-project-item': true
+                        }
+                    }, [
+                        h('span', item.projectName),
+                        item.relationId
+                        ? h('bk-icon', {
+                                props: {
+                                    type: 'edit2'
+                                },
+                                class: {
+                                    'project-icon': true
+                                },
+                                on: {
+                                    click: () => this.handleEditProject(item)
+                                }
+                            })
+                        : ''
+                    ])
+                ]
+            )
+        }
+
+        handleEditProject (item) {
+            this.hideDropdownMenuVisable()
+            this.$router.push({
+                name: 'ps',
+                params: {
+                    projectId: item.projectCode,
+                    iamId: item.relationId,
+                    type: 'basic'
+                }
+            })
         }
     }
 </script>
@@ -391,5 +444,18 @@
         &:first-child {
             border-top: 0
         }
+    }
+    .bkdevops-project-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .project-icon {
+            font-size: 18px !important;
+            cursor: pointer;
+        }
+    }
+    .bkdevops-project-item-content:hover {
+        color: #3a84ff;
+        background-color: #eaf3ff;
     }
 </style>

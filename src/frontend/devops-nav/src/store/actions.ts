@@ -129,6 +129,45 @@ const actions: ActionTree<RootState, any> = {
     },
     hasCreateProjectPermission () {
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/hasCreatePermission`)
+    },
+    getProjectDefaultRole () {
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/project/roles/default/role`)
+    },
+    getProjectRoles (_, projectId) {
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/project/roles/projectIds/${projectId}`)
+    },
+    getProjectRoleUsers (_, { projectId, roleId }) {
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/project/members/projectIds/${projectId}/roleIds/${roleId}`)
+    },
+    addMemberGroup (_, { projectId, projectCode, body }) {
+        return Request.post(`${AUTH_API_URL_PREFIX}/user/project/roles/projectIds/${projectId}?projectCode=${projectCode}`, body)
+    },
+    deleteMemberGroup (_, { projectId, roleId }) {
+        return Request.delete(`${AUTH_API_URL_PREFIX}/user/project/roles/projectIds/${projectId}/roles/${roleId}`)
+    },
+    editMemberGroup (_, { projectId, roleId, body }) {
+        return Request.put(`${AUTH_API_URL_PREFIX}/user/project/roles/projectIds/${projectId}/roleIds/${roleId}`, body)
+    },
+    deleteGroupMember (_, { projectId, roleId, id, type, isAdmin }) {
+        return Request.delete(`${AUTH_API_URL_PREFIX}/user/project/members/projectIds/${projectId}/roleIds/${roleId}?boolean=${isAdmin}&id=${id}&type=${type}`)
+    },
+    getDeptsByLevel (_, level) {
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/dept/levels/${level}`)
+    },
+    getDeptByParentId (_, parentId) {
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/dept/parents/${parentId}`)
+    },
+    getDeptByName (_, name) {
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/dept/names/${name}?type=DEPARTMENT`)
+    },
+    addRoleMembers (_, { projectId, roleId, isAdmin, body }) {
+        return Request.post(`${AUTH_API_URL_PREFIX}/user/project/members/projectIds/${projectId}/roleIds/${roleId}?boolean=${isAdmin}`, body)
+    },
+    getAllMember (_, { projectId }) {
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/project/members/projectIds/${projectId}/members/all`)
+    },
+    hasProjectPermission (_, projectId) {
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/project/roles/projects/${projectId}/manager/hasPermission`)
     }
 }
 
