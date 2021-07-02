@@ -29,7 +29,7 @@ class ApigwAuthResourceV3Impl @Autowired constructor(
             var groupName = ""
             var displayName = ""
             if (!BkAuthGroup.contains(it.groupCode)) {
-                groupType = true
+                groupType = false
                 groupName = it.groupName ?: ""
                 displayName = it.displayName ?: ""
             } else {
