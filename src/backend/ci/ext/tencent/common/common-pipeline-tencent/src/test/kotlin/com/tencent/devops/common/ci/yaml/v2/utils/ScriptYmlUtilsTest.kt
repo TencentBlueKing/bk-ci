@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.YmlVersion
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import org.junit.Assert
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource
 import org.yaml.snakeyaml.Yaml
@@ -79,12 +80,7 @@ class ScriptYmlUtilsTest {
         while (reader.readLine().also { str = it } != null) {
             sb.append(str).append("\n")
         }
-
-        println(sb.toString())
-        val yaml = Yaml()
-        val obj = YamlUtil.toYaml(yaml.load(sb.toString()) as Any)
-        val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
-        println(version != null && version.version == "v2.0")
+        Assert.assertEquals(ScriptYmlUtils.isV2Version(sb.toString()), true)
     }
 
     @Test
