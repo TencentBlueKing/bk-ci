@@ -115,7 +115,7 @@ interface UserProjectRoleResource {
     ): Result<Boolean>
 
     @GET
-    @Path("/projects/{projectId}/manager/hasPermssion")
+    @Path("/projects/{projectId}/manager/hasPermission")
     @ApiOperation("是否有项目管理操作的权限")
     fun hashPermission(
         @ApiParam(name = "用户名", required = true)
