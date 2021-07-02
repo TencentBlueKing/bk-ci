@@ -138,8 +138,8 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
         val pageInfoDTO = PageInfoDTO()
-        pageInfoDTO.limit = 0
-        pageInfoDTO.offset = 1000
+        pageInfoDTO.limit = 1000
+        pageInfoDTO.offset = 0
         val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId, pageInfoDTO)
         val iamIds = groupInfos.results.map { it.id }
         val localGroupInfo = groupDao.getGroupByRelationIds(dslContext, iamIds)
