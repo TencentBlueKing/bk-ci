@@ -264,7 +264,7 @@ class PipelineBuildStageDao {
         with(T_PIPELINE_BUILD_STAGE) {
             val data = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId)).and(STATUS.eq(status.ordinal))
-                .orderBy(SEQ.desc()).limit(1).fetchAny()
+                .orderBy(SEQ.asc()).limit(1).fetchAny()
             return convert(data)
         }
     }
