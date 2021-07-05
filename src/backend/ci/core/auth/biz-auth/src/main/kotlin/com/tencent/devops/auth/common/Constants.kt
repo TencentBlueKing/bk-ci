@@ -35,6 +35,8 @@ object Constants {
     const val PARENT = "parent"
     const val NAME = "name"
     const val USERNAME = "username"
+    const val ALL_ACTION = "all_action"
+    const val PROJECT_VIEW = "project_view"
 
     const val HTTP_RESULT = "results"
 }

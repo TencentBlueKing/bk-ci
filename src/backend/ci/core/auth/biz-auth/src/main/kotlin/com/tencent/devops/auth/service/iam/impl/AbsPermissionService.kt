@@ -1,6 +1,5 @@
 package com.tencent.devops.auth.service.iam.impl
 
-import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ExpressionOperationEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
@@ -8,6 +7,7 @@ import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -19,13 +19,9 @@ import java.util.concurrent.TimeUnit
 open class AbsPermissionService @Autowired constructor(
     private val authHelper: AuthHelper,
     private val policyService: PolicyService,
-    private val iamConfiguration: IamConfiguration
+    private val iamConfiguration: IamConfiguration,
+    private val iamCacheService: IamCacheService
 ) : PermissionService {
-
-    private val projectManager = CacheBuilder.newBuilder()
-        .maximumSize(5000)
-        .expireAfterWrite(10, TimeUnit.MINUTES)
-        .build<String, List<String>>()
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         logger.info("[iam V3] validateUserActionPermission $userId $action")
@@ -59,7 +55,7 @@ open class AbsPermissionService @Autowired constructor(
         logger.info("[iam V3]validateUserResourcePermissionByRelation: $userId $action $projectCode " +
             "$resourceCode $resourceType $relationResourceType")
 
-        if (checkProjectManager(userId, projectCode)) {
+        if (iamCacheService.checkProjectManager(userId, projectCode)) {
             return true
         }
 
@@ -97,13 +93,15 @@ open class AbsPermissionService @Autowired constructor(
         try {
             logger.info("[iam V3] getUserResourceByPermission $userId $action $projectCode $resourceType")
             // 管理员直接返回“*”
-            if (checkProjectManager(userId, projectCode)) {
+            if (iamCacheService.checkProjectManager(userId, projectCode)) {
                 return arrayListOf("*")
             }
-            val actionDto = ActionDTO()
-            actionDto.id = action
-            val expression = (policyService.getPolicyByAction(userId, actionDto, null) ?: return emptyList())
-            logger.info("[iam V3] getUserResourceByPermission action: $actionDto, expression:$expression")
+            val expression = iamCacheService.getUserExpression(userId, action)
+            logger.info("[iam V3] getUserResourceByPermission action: $action, expression:$expression")
+
+            if (expression == null) {
+                return emptyList()
+            }
 
             if (expression.operator == null && expression.content == null) {
                 return emptyList()
@@ -149,24 +147,6 @@ open class AbsPermissionService @Autowired constructor(
             result[AuthPermission.get(authPermission)] = actionResourceList
         }
         return result
-    }
-
-    // 通过all_action 判断是否为项目管理员, 优先查缓存, 缓存时效10分钟
-    private fun checkProjectManager(userId: String, projectCode: String): Boolean {
-        if (projectManager.getIfPresent(userId) != null) {
-            if (projectManager.getIfPresent(userId)!!.contains(projectCode)) {
-                return true
-            }
-        }
-
-        val managerAction = "all_action"
-        val managerActionDto = ActionDTO()
-        managerActionDto.id = managerAction
-        val actionPolicyDTO = policyService.getPolicyByAction(userId, managerActionDto, null) ?: return false
-        logger.info("[IAM] getUserProjects actionPolicyDTO $actionPolicyDTO")
-        val projectCodes = AuthUtils.getProjects(actionPolicyDTO)
-        projectManager.put(userId, projectCodes)
-        return projectCodes.contains(projectCode)
     }
 
     companion object {

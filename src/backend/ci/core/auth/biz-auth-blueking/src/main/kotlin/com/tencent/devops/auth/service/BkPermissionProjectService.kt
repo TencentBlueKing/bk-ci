@@ -3,6 +3,7 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionProjectService
@@ -20,7 +21,8 @@ class BkPermissionProjectService @Autowired constructor(
     override val client: Client,
     override val iamConfiguration: IamConfiguration,
     override val deptService: DeptService,
-    override val groupService: AuthGroupService
+    override val groupService: AuthGroupService,
+    override val iamCacheService: IamCacheService
 ) : AbsPermissionProjectService(
     permissionRoleService = permissionRoleService,
     permissionRoleMemberService = permissionRoleMemberService,
@@ -29,7 +31,8 @@ class BkPermissionProjectService @Autowired constructor(
     client = client,
     iamConfiguration = iamConfiguration,
     deptService = deptService,
-    groupService = groupService
+    groupService = groupService,
+    iamCacheService = iamCacheService
 ) {
     override fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String> {
         return emptyList()
