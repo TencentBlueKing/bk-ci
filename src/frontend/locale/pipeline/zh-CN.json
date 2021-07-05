@@ -625,7 +625,7 @@
         "insert": "插入",
         "append": "添加",
         "insertStage": "添加新stage",
-        "insertFinallyStage": "添加finally stage",
+        "insertFinallyStage": "添加final stage",
         "prepareEnv": "准备构建环境中",
         "copyJob": "复制job",
         "copyJobFail": "复制job失败",
