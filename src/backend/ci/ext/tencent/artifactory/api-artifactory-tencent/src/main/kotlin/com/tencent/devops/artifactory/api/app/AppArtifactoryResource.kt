@@ -37,6 +37,7 @@ import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_APP_VERSION
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -57,6 +58,7 @@ import javax.ws.rs.core.MediaType
 @Path("/app/artifactories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@SuppressWarnings("LongParameterList", "TooManyFunctions")
 interface AppArtifactoryResource {
     @ApiOperation("获取目录列表")
     @Path("/{projectId}/{artifactoryType}/list")
@@ -112,7 +114,10 @@ interface AppArtifactoryResource {
         buildId: String,
         @ApiParam("版本号", required = true)
         @HeaderParam(AUTH_HEADER_APP_VERSION)
-        appVersion: String?
+        appVersion: String?,
+        @ApiParam("平台", required = true)
+        @HeaderParam(AUTH_HEADER_PLATFORM)
+        platform: Int?
     ): Result<List<AppFileInfo>>
 
     @ApiOperation("根据元数据获取文件")
