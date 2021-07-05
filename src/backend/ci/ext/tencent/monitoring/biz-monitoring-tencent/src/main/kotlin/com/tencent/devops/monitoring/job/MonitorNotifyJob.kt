@@ -478,30 +478,6 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
-    private fun putDispatchStatusRowList(
-        queryResult: QueryResult,
-        rowList: MutableList<Triple<String, Double, String>>,
-        startTime: Long,
-        endTime: Long
-    ) {
-        queryResult.results.forEach { result ->
-            result.series?.forEach { serie ->
-                val countAny = serie.values[0][1]
-                val successAny = serie.values[0][2]
-                val count = if (countAny is Number) countAny.toInt() else 1
-                val success = if (successAny is Number) successAny.toInt() else 0
-                val name = serie.tags["buildType"] ?: "Unknown"
-                rowList.add(
-                    Triple(
-                        name,
-                        success * 100.0 / count,
-                        getDetailUrl(startTime, endTime, Module.DISPATCH, name)
-                    )
-                )
-            }
-        }
-    }
-
     @SuppressWarnings("NestedBlockDepth", "SwallowedException")
     private fun getInfluxValue(sql: String, defaultValue: Int): Int {
         val queryResult = influxdbClient.select(sql)
