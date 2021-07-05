@@ -31,6 +31,7 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.TActionUtils
@@ -40,8 +41,9 @@ class TxPermissionServiceImpl @Autowired constructor(
     val authHelper: AuthHelper,
     val policyService: PolicyService,
     val iamConfiguration: IamConfiguration,
-    val managerService: ManagerService
-) : AbsPermissionService(authHelper, policyService, iamConfiguration) {
+    val managerService: ManagerService,
+    val iamCacheService: IamCacheService
+) : AbsPermissionService(authHelper, policyService, iamConfiguration, iamCacheService) {
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return super.validateUserActionPermission(userId, action)
