@@ -35,7 +35,7 @@
         "successfullyDeletedCredential": "You've successfully deleted this credential",
         "successfullysavedential": "You've successfully saved this credential",
         "validateId": "It is composed of English letters, numbers or underscores (_), no more than 40 words",
-        "validateName": "Composed of Chinese characters, English letters, numbers, hyphens (-), underscores (_) or English periods, no more than 30 characters, only for display",
+        "validateName": "Composed of Chinese characters, English letters, numbers, hyphens (-), underscores (_) or English periods, no more than 64 characters, only for display",
         "nameLenLimit": "No more than 30 characters.",
         "remarkLenLimit": "Credential description cannot exceed 50 characters",
         "credentialRemark": "Please enter credential description here",
