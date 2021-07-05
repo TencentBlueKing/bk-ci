@@ -106,7 +106,12 @@ class GitCIPermissionServiceImpl @Autowired constructor(
     }
 
     private fun checkListOrViewAction(action: String): Boolean {
-        if (action.contains(AuthPermission.LIST.value) || action.contains(AuthPermission.VIEW.value)) {
+        val passAction = mutableListOf<String>()
+        passAction.add(AuthPermission.LIST.value)
+        passAction.add(AuthPermission.VIEW.value)
+        passAction.add(AuthPermission.DOWNLOAD.value)
+        passAction.add(AuthPermission.USE.value)
+        if (passAction.contains(action)) {
             return true
         }
         return false
