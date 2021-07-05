@@ -427,16 +427,34 @@ class MonitorNotifyJob @Autowired constructor(
 
     fun dispatchStatus(startTime: Long, endTime: Long): EmailModuleData {
         try {
-            val sql =
-                "SELECT sum(devcloud_total_count),sum(devcloud_success_count) FROM DispatchStatus_success_rat_count " +
-                        "WHERE time>${startTime}000000 AND time<${endTime}000000 GROUP BY buildType"
-            val queryResult = influxdbClient.select(sql)
+            val totalTemplateSql = "SELECT count(errorCode) FROM DispatchStatus WHERE buildType='%s' " +
+                    "AND time>${startTime}000000 AND time<${endTime}000000"
+            val successTemplateSql = "SELECT count(errorCode) FROM DispatchStatus WHERE buildType='%s' " +
+                    "AND errorCode != '0' AND errorType!='USER' " +
+                    "AND time>${startTime}000000 AND time<${endTime}000000"
 
             val rowList = mutableListOf<Triple<String, Double, String>>()
-            if (null != queryResult && !queryResult.hasError()) {
-                putDispatchStatusRowList(queryResult, rowList, startTime, endTime)
-            } else {
-                logger.error("dispatchStatus , get map error , errorMsg:${queryResult?.error}")
+            val buildTypes = listOf(
+                ".macos",
+                "third",
+                ".devcloud.public",
+                ".codecc.scan",
+                ".docker.vm",
+                ".pcg.sumeru",
+                ".gitci.public"
+            )
+
+            for (buildType in buildTypes) {
+                val successCount = getInfluxValue(String.format(successTemplateSql, buildType), 1)
+                val totalCount = getInfluxValue(String.format(totalTemplateSql, buildType), 1)
+
+                rowList.add(
+                    Triple(
+                        buildType,
+                        successCount * 100.0 / totalCount,
+                        getDetailUrl(startTime, endTime, Module.DISPATCH, buildType)
+                    )
+                )
             }
 
             oteamStatus(
