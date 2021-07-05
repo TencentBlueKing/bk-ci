@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.api.build
+package com.tencent.devops.gitci.api
 
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -42,7 +42,7 @@ import javax.ws.rs.core.MediaType
 @Path("/build/ci")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface CIBuildResource {
+interface BuildCIBuildResource {
 
     @ApiOperation("获取URL链接")
     @GET
