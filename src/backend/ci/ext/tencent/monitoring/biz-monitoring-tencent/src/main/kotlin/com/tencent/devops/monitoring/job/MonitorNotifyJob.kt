@@ -218,7 +218,7 @@ class MonitorNotifyJob @Autowired constructor(
         val sourceBuilder = SearchSourceBuilder()
         val queryStringQuery = QueryBuilders.queryStringQuery(
             """
-              status:200 AND host:"devnet-backend.devops.oa.com" 
+              status:200 AND host:"devnet-backend.devops.oa.com" AND log:"2Fstart"
             """.trimIndent()
         )
         sourceBuilder.query(QueryBuilders.boolQuery().filter(queryStringQuery))
@@ -341,7 +341,7 @@ class MonitorNotifyJob @Autowired constructor(
         startTime: Long
     ) {
         if (null == oteamUrl) {
-            logger.warn("null oteamUrl , can not oteam status")
+            logger.warn("null oteamUrl , can not oteam status , targetId: $targetId , data: $data")
             return
         }
         try {
@@ -427,16 +427,34 @@ class MonitorNotifyJob @Autowired constructor(
 
     fun dispatchStatus(startTime: Long, endTime: Long): EmailModuleData {
         try {
-            val sql =
-                "SELECT sum(devcloud_total_count),sum(devcloud_success_count) FROM DispatchStatus_success_rat_count " +
-                        "WHERE time>${startTime}000000 AND time<${endTime}000000 GROUP BY buildType"
-            val queryResult = influxdbClient.select(sql)
+            val totalTemplateSql = "SELECT count(errorCode) FROM DispatchStatus WHERE buildType='%s' " +
+                    "AND time>${startTime}000000 AND time<${endTime}000000"
+            val failedTemplateSql = "SELECT count(errorCode) FROM DispatchStatus WHERE buildType='%s' " +
+                    "AND errorCode != '0' AND errorType!='USER' " +
+                    "AND time>${startTime}000000 AND time<${endTime}000000"
 
             val rowList = mutableListOf<Triple<String, Double, String>>()
-            if (null != queryResult && !queryResult.hasError()) {
-                putDispatchStatusRowList(queryResult, rowList, startTime, endTime)
-            } else {
-                logger.error("dispatchStatus , get map error , errorMsg:${queryResult?.error}")
+            val buildTypes = listOf(
+                ".macos",
+                "third",
+                ".devcloud.public",
+                ".codecc.scan",
+                ".docker.vm",
+                ".pcg.sumeru",
+                ".gitci.public"
+            )
+
+            for (buildType in buildTypes) {
+                val failedCount = getInfluxValue(String.format(failedTemplateSql, buildType), 0)
+                val totalCount = getInfluxValue(String.format(totalTemplateSql, buildType), 1)
+
+                rowList.add(
+                    Triple(
+                        buildType,
+                        (totalCount - failedCount) * 100.0 / totalCount,
+                        getDetailUrl(startTime, endTime, Module.DISPATCH, buildType)
+                    )
+                )
             }
 
             oteamStatus(
@@ -457,30 +475,6 @@ class MonitorNotifyJob @Autowired constructor(
                 emptyList(),
                 getObservableUrl(startTime, endTime, Module.DISPATCH)
             )
-        }
-    }
-
-    private fun putDispatchStatusRowList(
-        queryResult: QueryResult,
-        rowList: MutableList<Triple<String, Double, String>>,
-        startTime: Long,
-        endTime: Long
-    ) {
-        queryResult.results.forEach { result ->
-            result.series?.forEach { serie ->
-                val countAny = serie.values[0][1]
-                val successAny = serie.values[0][2]
-                val count = if (countAny is Number) countAny.toInt() else 1
-                val success = if (successAny is Number) successAny.toInt() else 0
-                val name = serie.tags["buildType"] ?: "Unknown"
-                rowList.add(
-                    Triple(
-                        name,
-                        success * 100.0 / count,
-                        getDetailUrl(startTime, endTime, Module.DISPATCH, name)
-                    )
-                )
-            }
         }
     }
 

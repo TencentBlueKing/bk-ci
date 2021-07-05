@@ -184,7 +184,7 @@ class ProjectUserRefreshService @Autowired constructor(
                     val userInfo = tofService.getUserDeptDetail(it.creator)
                     count += projectFreshDao.fixProjectInfo(
                         dslContext = dslContext,
-                        gitProjectId = it.id,
+                        id = it.id,
                         creatorBgId = userInfo.bgId.toLong(),
                         creatorBgName = userInfo.bgName,
                         creatorDeptId = userInfo.deptId.toLong(),

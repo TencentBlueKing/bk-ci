@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import org.junit.Assert
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader
@@ -53,16 +54,27 @@ class ScriptYmlUtilsTest {
         while (reader.readLine().also { str = it } != null) {
             sb.append(str).append("\n")
         }
-
-        // println(sb.toString())
+        val formatStr = ScriptYmlUtils.formatYaml(sb.toString())
         val obj = YamlUtil.getObjectMapper().readValue(
-            ScriptYmlUtils.formatYaml(sb.toString()),
+            formatStr,
             PreScriptBuildYaml::class.java
         )
-
         val normalize = ScriptYmlUtils.normalizeGitCiYaml(obj, ".ci.yml")
+    }
 
-        println("1111")
+    @Test
+    fun isV2Version() {
+        val classPathResource = ClassPathResource("Sample1.yml")
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+            sb.append(str).append("\n")
+        }
+        Assert.assertEquals(ScriptYmlUtils.isV2Version(sb.toString()), true)
     }
 
     @Test
