@@ -120,10 +120,10 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 it.modifiedTime = it.modifiedTime * 1000
             }
 
-            //可安装类型制定
+            // 可安装类型制定
             val topType = if (platform == PlatformEnum.ANDROID.id) ".apk" else ".ipa"
 
-            //按字母排序
+            // 按字母排序
             val comparator = Comparator<AppFileInfo> { a1, a2 -> a1.name.compareTo(a2.name) }
             val topSet = sortedSetOf(comparator)
             val otherSet = sortedSetOf(comparator)
