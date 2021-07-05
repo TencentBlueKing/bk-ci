@@ -92,7 +92,7 @@ class GitCIPipelineService @Autowired constructor(
             buildIds = pipelines.map { it.latestBuildId }
         )
         return Page(
-            count = pipelines.size.toLong(),
+            count = count.toLong(),
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             totalPages = count,
