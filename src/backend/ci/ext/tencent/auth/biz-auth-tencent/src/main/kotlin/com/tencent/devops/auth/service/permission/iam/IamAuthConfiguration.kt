@@ -32,7 +32,8 @@ class IamAuthConfiguration {
         client: Client,
         iamConfiguration: IamConfiguration,
         deptService: DeptService,
-        groupService: AuthGroupService
+        groupService: AuthGroupService,
+        iamCacheService: IamCacheService
     ) = TxPermissionProjectServiceImpl(
         permissionRoleService = permissionRoleService,
         permissionRoleMemberService = permissionRoleMemberService,
@@ -41,7 +42,8 @@ class IamAuthConfiguration {
         client = client,
         iamConfiguration = iamConfiguration,
         deptService = deptService,
-        groupService = groupService
+        groupService = groupService,
+        iamCacheService = iamCacheService
     )
 
     @Bean
