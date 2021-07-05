@@ -429,7 +429,7 @@ class MonitorNotifyJob @Autowired constructor(
         try {
             val totalTemplateSql = "SELECT count(errorCode) FROM DispatchStatus WHERE buildType='%s' " +
                     "AND time>${startTime}000000 AND time<${endTime}000000"
-            val successTemplateSql = "SELECT count(errorCode) FROM DispatchStatus WHERE buildType='%s' " +
+            val failedTemplateSql = "SELECT count(errorCode) FROM DispatchStatus WHERE buildType='%s' " +
                     "AND errorCode != '0' AND errorType!='USER' " +
                     "AND time>${startTime}000000 AND time<${endTime}000000"
 
@@ -445,13 +445,13 @@ class MonitorNotifyJob @Autowired constructor(
             )
 
             for (buildType in buildTypes) {
-                val successCount = getInfluxValue(String.format(successTemplateSql, buildType), 1)
+                val failedCount = getInfluxValue(String.format(failedTemplateSql, buildType), 0)
                 val totalCount = getInfluxValue(String.format(totalTemplateSql, buildType), 1)
 
                 rowList.add(
                     Triple(
                         buildType,
-                        successCount * 100.0 / totalCount,
+                        (totalCount - failedCount) * 100.0 / totalCount,
                         getDetailUrl(startTime, endTime, Module.DISPATCH, buildType)
                     )
                 )
