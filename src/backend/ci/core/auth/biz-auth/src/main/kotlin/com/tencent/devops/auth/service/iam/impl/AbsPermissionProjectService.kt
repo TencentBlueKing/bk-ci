@@ -7,9 +7,12 @@ import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.auth.common.Constants.ALL_ACTION
+import com.tencent.devops.auth.common.Constants.PROJECT_VIEW
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
@@ -33,7 +36,8 @@ abstract class AbsPermissionProjectService @Autowired constructor(
     open val client: Client,
     open val iamConfiguration: IamConfiguration,
     open val deptService: DeptService,
-    open val groupService: AuthGroupService
+    open val groupService: AuthGroupService,
+    open val iamCacheService: IamCacheService
 ) : PermissionProjectService {
 
     private val projectIdCache = CacheBuilder.newBuilder()
@@ -91,8 +95,8 @@ abstract class AbsPermissionProjectService @Autowired constructor(
     }
 
     override fun getUserProjects(userId: String): List<String> {
-        val viewAction = "project_view"
-        val managerAction = "all_action"
+        val viewAction = PROJECT_VIEW
+        val managerAction = ALL_ACTION
         val actionDTOs = mutableListOf<ActionDTO>()
         val viewActionDto = ActionDTO()
         viewActionDto.id = viewAction
@@ -116,10 +120,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
      */
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
 
-        val managerActionType = "all_action"
-        val instance = buildInstance(projectCode, AuthResourceType.PROJECT.value)
-        logger.info("[IAM] v3 isProjectUser actionType[$managerActionType] instance[$instance]")
-        val managerPermission = authHelper.isAllowed(userId, managerActionType, instance)
+        val managerPermission = iamCacheService.checkProjectManager(userId, projectCode)
         // 若为校验管理员权限,直接返回是否有all_action接口
         if (group != null && group == BkAuthGroup.MANAGER) {
             return managerPermission
@@ -128,9 +129,8 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         if (managerPermission) {
             return managerPermission
         }
-        // 无管理员权限判断是否有项目查看权限来判断是否为项目人员
-        val viewActionType = "project_view"
-        return authHelper.isAllowed(userId, viewActionType, instance)
+        // 校验是否有project_view权限
+        return iamCacheService.checkProjectView(userId, projectCode)
     }
 
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
