@@ -623,7 +623,7 @@
         "insert": "Insert",
         "append": "Append",
         "insertStage": "Add stage",
-        "insertFinallyStage": "Add finally stage",
+        "insertFinallyStage": "Add final stage",
         "prepareEnv": " Preparing build resource",
         "copyJob": "Duplicate job",
         "copyJobFail": "Duplicate job failed",
