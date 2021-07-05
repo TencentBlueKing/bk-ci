@@ -124,7 +124,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             val topType = if (platform == PlatformEnum.ANDROID.id) ".apk" else ".ipa"
 
             // 按字母排序
-            val comparator = Comparator<AppFileInfo> { a1, a2 -> a1.name.compareTo(a2.name) }
+            val comparator = Comparator<AppFileInfo> { a1, a2 -> StringUtils.compareIgnoreCase(a1.name, a2.name) }
             val topSet = sortedSetOf(comparator)
             val otherSet = sortedSetOf(comparator)
 
