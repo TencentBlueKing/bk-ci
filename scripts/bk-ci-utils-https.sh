@@ -1,8 +1,11 @@
 #!/bin/bash
 # bk-ci 启用或禁用https.
 set -eu
-
-#trap 'echo "出错了.";' ERR
+trap "on_ERR;" ERR
+on_ERR (){
+  local fn=$0 ret=$? lineno=${BASH_LINENO:-$LINENO}
+  echo >&2 "ERROR $fn exit with $ret at line $lineno: $(sed -n ${lineno}p $0)."
+}
 
 ci_env_default="bin/default/ci.env"
 ci_env_03="bin/03-userdef/ci.env"
@@ -99,12 +102,14 @@ if [ "$target_schema" = https ]; then
   tip_file_exist "$bk_cert_source"
   tip_file_exist "$bk_certkey_source"
   # 基于 BK_CI_FQDN 生成证书主体检查模式. 允许通配符.
+  echo "检查证书域名"
   patt_cert_subject="$(sed -r \
     -e 's/^([^.]+)(.*)/(Subject: .*CN=|DNS:)([*]|\1)\2/' \
     -e 's/[.]/[.]/g' <<< "$BK_CI_FQDN")"
   # 需要精确匹配: -w.
   openssl x509 -text -noout -in "$bk_cert_source" | grep -wE "$patt_cert_subject" || {
-    echo "证书可能有误, 证书文件 $bk_cert_source 中未能匹配到 '$patt_cert_subject' ."
+    echo "证书可能有误, 证书文件 $bk_cert_source 中未能匹配到 '$patt_cert_subject'. 证书支持包含的名称如下:"
+    openssl x509 -text -noout -in "$bk_cert_source" | grep -E "^ *(Subject|DNS):"
     exit 1
   }
   echo "同步并安装证书"
@@ -119,16 +124,21 @@ fi
 echo "修改 ci-gateway 模板"
 nginx_ci_conf="$BK_CI_SRC_DIR/support-files/templates/gateway#core#devops.server.conf"
 tip_file_exist "$nginx_ci_conf"
+patt_ssl_config_commented='/^ *# *### ssl config begin ###/,/^ *# *### ssl config end ###/'
+patt_ssl_config_nocomment='/^ *### ssl config begin ###/,/^ *### ssl config end ###/'
 if [ "$target_schema" = https ]; then
-  sed -i '/^#  ### ssl config begin ###/,/^#  ### ssl config end ###/s/^#//' "$nginx_ci_conf"
+  sed -i "${patt_ssl_config_commented:-^#####}s/^#//" "$nginx_ci_conf"  # 移除注释
   nginx_ci_ssl="$BK_CI_SRC_DIR/support-files/templates/gateway#core#devops.ssl"
   sed -e "s@^ssl_certificate .*@ssl_certificate $ci_gateway_cert;@" \
       -e "s@^ssl_certificate_key .*@ssl_certificate_key $ci_gateway_certkey;@" \
       support-files/templates/nginx/bk.ssl > "$nginx_ci_ssl"
+  echo "检查修改结果."
+  sed -n "${patt_ssl_config_nocomment:-^#####}p" "$nginx_ci_conf" | grep "^ *listen .* ssl;"
 else
-  sed -i '/^  ### ssl config begin ###/,/^  ### ssl config end ###/s/^/#/' "$nginx_ci_conf"
+  sed -i "${patt_ssl_config_nocomment:-^#####}s/^/#/" "$nginx_ci_conf"
+  echo "检查修改结果."
+  sed -n "${patt_ssl_config_commented:-^#####}p" "$nginx_ci_conf" | grep "^ *# *listen .* ssl;"
 fi
-sed -n '/### ssl config begin ###/,/### ssl config end ###/p' "$nginx_ci_conf"
 
 echo "重新配置 ci-gateway"
 ./bkcli sync common
