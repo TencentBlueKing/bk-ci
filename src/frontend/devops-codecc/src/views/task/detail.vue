@@ -72,10 +72,10 @@
                                     </a>
                                 </dd>
                             </div> -->
-                            <div class="item">
+                            <!-- <div class="item">
                                 <dt>{{$t('管理员')}}</dt>
                                 <dd :title="roleList">{{ roleList }}</dd>
-                            </div>
+                            </div> -->
                             <div class="item">
                                 <dt>{{$t('创建时间')}}</dt>
                                 <dd>{{ formatDate(taskDetail.createdDate) }}</dd>
@@ -108,12 +108,6 @@
             :title="$t('重新分析')">
             {{this.$t('任务正在分析中，是否中断并重新分析？')}}
         </bk-dialog>
-        <new-analyse
-            @changeItem="changeItem"
-            @newAnalyse="newAnalyse"
-            :never-show="neverShow"
-            :visible.sync="dialogAnalyseVisible">
-        </new-analyse>
     </div>
 </template>
 
@@ -123,14 +117,12 @@
     import toolStatusCard from '@/components/tool-status-card'
     import Record from '@/components/operate-record/index'
     import taskWebsocket from '@/common/taskWebSocket'
-    import newAnalyse from '@/components/new-analyse'
     import axios from 'axios'
 
     export default {
         components: {
             toolStatusCard,
-            Record,
-            newAnalyse
+            Record
         },
         data () {
             return {
@@ -259,9 +251,10 @@
                             this.dialogAnalyseVisible = !this.neverShow
                         }
                     }
-                    if (this.detail.createFrom !== 'gongfeng_scan') {
-                        this.getUserList()
-                    }
+                    // 去掉管理员列表
+                    // if (this.detail.createFrom !== 'gongfeng_scan') {
+                    //     this.getUserList()
+                    // }
                 }
             },
             getUserList () {
