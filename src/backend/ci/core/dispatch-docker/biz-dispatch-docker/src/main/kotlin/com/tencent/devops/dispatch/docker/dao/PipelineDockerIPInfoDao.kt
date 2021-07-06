@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.docker.dao
 
-import com.tencent.devops.dispatch.docker.pojo.DockerHostStatus
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerIpInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
