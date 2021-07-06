@@ -29,6 +29,7 @@ package com.tencent.devops.common.api.util
 
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -51,8 +52,6 @@ fun LocalDateTime.timestampmilli(): Long {
 
 @Suppress("ALL")
 object DateTimeUtil {
-
-    private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
 
     private val logger = LoggerFactory.getLogger(DateTimeUtil::class.java)
 
@@ -142,7 +141,7 @@ object DateTimeUtil {
     fun zoneDateToTimestamp(timeStr: String?): Long {
         try {
             if (timeStr.isNullOrBlank()) return 0L
-            return formatter.parse(timeStr).time
+            return Instant.parse(timeStr).toEpochMilli()
         } catch (e: Exception) {
             logger.error("fail to parse time string: $timeStr", e)
         }
