@@ -102,7 +102,8 @@
                 if (this.container.jobControlOption && this.container.jobControlOption.enable === false) {
                     return 'DISABLED'
                 }
-                return this.cotnainer.status || ''
+                
+                return this.container && this.container.status ? this.container.status : ''
             },
             showCheckedToatal () {
                 const { isTriggerContainer, container, $route } = this
