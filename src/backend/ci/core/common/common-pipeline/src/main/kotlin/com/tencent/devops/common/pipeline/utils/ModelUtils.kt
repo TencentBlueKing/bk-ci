@@ -98,6 +98,15 @@ object ModelUtils {
         return false
     }
 
+    fun stageNeedPause(triggerContainer: TriggerContainer): Boolean {
+        triggerContainer.elements.forEach {
+            if (it is RemoteTriggerElement && it.isElementEnable()) {
+                return true
+            }
+        }
+        return false
+    }
+
     fun refreshCanRetry(model: Model) {
         model.stages.forEach { s ->
             val stageStatus = BuildStatus.parse(s.status)

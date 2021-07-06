@@ -38,6 +38,7 @@ import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -64,7 +65,8 @@ class CheckPauseReviewStageCmd(
     override fun execute(commandContext: StageContext) {
         val stage = commandContext.stage
         val event = commandContext.event
-        // 若stage状态为暂停，且来源不是BS_MANUAL_START_STAGE，碰到状态为暂停就停止运行
+
+        // #115 若stage状态为暂停，且来源不是BS_MANUAL_START_STAGE，碰到状态为暂停就停止运行
         if (commandContext.buildStatus.isPause() && event.source != BS_MANUAL_START_STAGE) {
 
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_STOP_BY_PAUSE|${event.stageId}")
@@ -74,12 +76,7 @@ class CheckPauseReviewStageCmd(
 
             val stageControlOption = stage.controlOption?.stageControlOption
 
-            // 只有在非手动触发该Stage的首次运行做审核暂停
-            val needPause = event.source != BS_MANUAL_START_STAGE &&
-                stageControlOption?.manualTrigger == true &&
-                stageControlOption.triggered == false
-
-            if (needPause) {
+            if (needPause(event, stageControlOption)) {
                 // #3742 进入暂停状态则刷新完状态后直接返回，等待手动触发
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_PAUSE|${event.stageId}")
                 pauseStageNotify(commandContext)
@@ -98,18 +95,26 @@ class CheckPauseReviewStageCmd(
     }
 
     private fun saveStageReviewParams(stage: PipelineBuildStage, stageControlOption: StageControlOption?) {
-        // 该Stage进入运行状态，若存在审核变量设置则写入环境
         if (stageControlOption?.reviewParams?.isNotEmpty() == true) {
             buildVariableService.batchUpdateVariable(
                 projectId = stage.projectId,
                 pipelineId = stage.pipelineId,
                 buildId = stage.buildId,
                 variables = stageControlOption.reviewParams!!
-                    .filter { !it.key.isNullOrBlank() }
-                    .map { it.key!! to it.value.toString() }
+                    .filter { it.key.isNotBlank() }
+                    .map { it.key to it.value.toString() }
                     .toMap()
             )
         }
+    }
+
+    private fun needPause(event: PipelineBuildStageEvent, option: StageControlOption?): Boolean {
+        // #115 只有在非手动触发该Stage的首次运行做审核暂停
+        if (event.source == BS_MANUAL_START_STAGE || option?.manualTrigger != true ||
+            option.triggered == true) {
+            return false
+        }
+        return option.getGroupToReview() != null
     }
 
     /**
@@ -117,23 +122,30 @@ class CheckPauseReviewStageCmd(
      */
     private fun pauseStageNotify(commandContext: StageContext) {
         val stage = commandContext.stage
-        val triggerUsers = stage.controlOption?.stageControlOption?.triggerUsers?.joinToString(",") ?: ""
-        val realUsers = EnvUtils.parseEnv(triggerUsers, commandContext.variables).split(",").toList()
-        stage.controlOption!!.stageControlOption.triggerUsers = realUsers // 替换真正收件人
+        val option = stage.controlOption!!.stageControlOption
+        val group = option.getGroupToReview()
+        val notifyUsers = mutableListOf<String>()
 
-        // 发送通知
+        if (group?.reviewed == false) {
+            val reviewers = group.reviewers.joinToString(",")
+            val realReviewers = EnvUtils.parseEnv(reviewers, commandContext.variables)
+                .split(",").toList()
+            group.reviewers = realReviewers
+            notifyUsers.addAll(realReviewers)
+        }
+
         val pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId
         val buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1"
-        var reviewDesc = stage.controlOption!!.stageControlOption.reviewDesc
+        var reviewDesc = option.reviewDesc
         reviewDesc = EnvUtils.parseEnv(reviewDesc, commandContext.variables)
-        stage.controlOption!!.stageControlOption.reviewDesc = reviewDesc // 替换变量 #3395
+        option.reviewDesc = reviewDesc // 替换变量 #3395
 
         pipelineEventDispatcher.dispatch(
             PipelineBuildNotifyEvent(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE.name,
                 source = commandContext.latestSummary, projectId = stage.projectId, pipelineId = stage.pipelineId,
                 userId = commandContext.event.userId, buildId = stage.buildId,
-                receivers = stage.controlOption!!.stageControlOption.triggerUsers!!,
+                receivers = notifyUsers,
                 titleParams = mutableMapOf(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,

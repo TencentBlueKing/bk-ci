@@ -771,20 +771,22 @@ class PipelineBuildFacadeService(
                 defaultMessage = "构建Stage${stageId}不存在",
                 params = arrayOf(stageId)
             )
-        if (buildStage.controlOption?.stageControlOption?.triggerUsers?.contains(userId) != true) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                defaultMessage = "用户($userId)不在Stage($stageId)可执行名单",
-                params = arrayOf(buildId)
-            )
-        }
+
         if (buildStage.status.name != BuildStatus.PAUSE.name) throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
             defaultMessage = "Stage($stageId)未处于暂停状态",
-            params = arrayOf(buildId)
+            params = arrayOf(stageId)
         )
+
+        if (buildStage.controlOption?.stageControlOption?.reviewerContains(userId) != true) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                defaultMessage = "用户($userId)不在Stage($stageId)当前审核组可执行名单",
+                params = arrayOf(stageId)
+            )
+        }
 
         val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
         try {

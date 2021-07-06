@@ -124,7 +124,7 @@ class StageBuildDetailService(
                     update = true
                     stage.status = BuildStatus.PAUSE.name
                     stage.reviewStatus = BuildStatus.REVIEWING.name
-                    stage.stageControlOption!!.triggerUsers = controlOption.stageControlOption.triggerUsers
+                    stage.stageControlOption!!.reviewGroups = controlOption.stageControlOption.reviewGroups
                     stage.startEpoch = System.currentTimeMillis()
                     allStageStatus = fetchHistoryStageStatus(model)
                     return Traverse.BREAK
@@ -175,7 +175,7 @@ class StageBuildDetailService(
                     update = true
                     stage.status = BuildStatus.QUEUE.name
                     stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
-                    stage.stageControlOption?.triggered = controlOption.stageControlOption.triggered
+                    stage.stageControlOption?.reviewGroups = controlOption.stageControlOption.reviewGroups
                     stage.stageControlOption?.reviewParams = controlOption.stageControlOption.reviewParams
                     allStageStatus = fetchHistoryStageStatus(model)
                     return Traverse.BREAK

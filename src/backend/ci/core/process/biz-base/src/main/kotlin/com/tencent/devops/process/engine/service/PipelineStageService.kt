@@ -161,7 +161,7 @@ class PipelineStageService @Autowired constructor(
     }
 
     fun startStage(userId: String, buildStage: PipelineBuildStage) {
-        buildStage.controlOption!!.stageControlOption.triggered = true
+        buildStage.controlOption!!.stageControlOption.reviewCurrentGroup(userId)
         with(buildStage) {
             val allStageStatus = stageBuildDetailService.stageStart(
                 buildId = buildId,
