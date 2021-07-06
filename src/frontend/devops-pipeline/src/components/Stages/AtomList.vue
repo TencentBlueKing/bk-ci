@@ -446,7 +446,6 @@
                 if (atom && atom.additionalOptions && atom.additionalOptions.enable === false) {
                     return 'DISABLED'
                 }
-                console.log(atom)
                 return atom && atom.status ? atom.status : ''
             }
         }
