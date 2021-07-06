@@ -69,6 +69,7 @@ target_schema="$1"
 
 ci_schema_vars="BK_HTTP_SCHEMA BK_CI_PUBLIC_URL BK_CI_PAAS_LOGIN_URL"
 
+source "$CTRL_DIR/load_env.sh"
 echo "配置 ci-gateway 为 $target_schema."
 tip_file_exist "$ci_env_default"
 tip_file_exist "$ci_env_03"
@@ -76,10 +77,14 @@ if grep -q ^BK_CI_PAAS_DIALOG_LOGIN_URL "$ci_env_default"; then
   ci_schema_vars="$ci_schema_vars BK_CI_PAAS_DIALOG_LOGIN_URL"
 fi
 echo "修改env03文件: $ci_env_03"
+if grep -q "[$]BK_PAAS_PUBLIC_URL" "$ci_env_03"; then
+  echo "检查到 \$BK_PAAS_PUBLIC_URL 变量引用, 自动替换."
+  sed -ri "s@[$]BK_PAAS_PUBLIC_URL@$BK_PAAS_PUBLIC_URL@" "$ci_env_03"  # 替换默认设置的变量引用.
+fi
 patt_ci_schema_vars="^(${ci_schema_vars// /|})="
 grep -E "$patt_ci_schema_vars" "$ci_env_03"
 if [ "$target_schema" = https ]; then
-  echo "启用https后, 原 HTTP 入口依旧存在, 无需回退. "
+  echo "启用https后, 原 HTTP 入口依旧存在, 一般无需回退."
   sed -ri "/$patt_ci_schema_vars/{s@\<http\>@https@;s@:80/@:443/@;}" "$ci_env_03"
 else
   echo "禁用https后, 如果因浏览器缓存HTTP重定向到https入口, 请清空浏览器站点数据."
