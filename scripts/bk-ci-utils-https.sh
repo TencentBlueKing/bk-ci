@@ -130,15 +130,13 @@ else
 fi
 sed -n '/### ssl config begin ###/,/### ssl config end ###/p' "$nginx_ci_conf"
 
-echo "安装 ci-gateway"
+echo "重新配置 ci-gateway"
 ./bkcli sync common
 ./bkcli sync ci
-pcmd -m ci_gateway 'cd $CTRL_DIR; export LAN_IP ${!BK_CI_*}; ./bin/install_ci.sh -e ./bin/04-final/ci.env -p "$BK_HOME" -m gateway 2>&1;'
+pcmd -m ci_gateway 'source ${CTRL_DIR:-/data/install}/load_env.sh; export LAN_IP ${!BK_CI_*}; ${BK_PKG_SRC_PATH:-/data/src}/ci/scripts/bk-ci-setup.sh gateway'
 
-echo "检查配置文件"
-pcmd -m ci_gateway 'cd /usr/local/openresty/nginx; ./sbin/nginx -t;'
 echo "reload 或 启动服务"
-pcmd -m ci_gateway 'cd /usr/local/openresty/nginx; ./sbin/nginx -s reload || ./sbin/nginx;'
+pcmd -m ci_gateway 'systemctl reload bk-ci-gateway || systemctl start bk-ci-gateway'
 
 if [ "$target_schema" = https ]; then
   echo "测试全部 ci_gateway 节点是否能访问本机的 https 服务."
