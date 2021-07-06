@@ -802,56 +802,27 @@
                 }
                 &.CANCELED, &.REVIEWING {
                     border-color: $warningColor;
-                    // &:before {
-                    //     background: $warningColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $warningColor;
-                    //     background: white;
-                    // }
+                    
                     .atom-icon {
                         color: $warningColor;
                     }
                 }
                 &.FAILED, &.QUALITY_CHECK_FAIL, &.HEARTBEAT_TIMEOUT, &.QUEUE_TIMEOUT, .EXEC_TIMEOUT {
                     border-color: $dangerColor;
-                    // &:before {
-                    //     background: $dangerColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $dangerColor;
-                    //     background: white;
-                    // }
                     .atom-icon {
                         color: $dangerColor;
                     }
                 }
                 &.SUCCEED, &.REVIEW_PROCESSED {
                     border-color: $successColor;
-                    // &:before {
-                    //     background: $successColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $successColor;
-                    //     background: white;
-                    // }
+                    
                     .atom-icon {
                         color: $successColor;
                     }
                 }
                 &.PAUSE {
                     border-color: $pauseColor;
-                    // &:before {
-                    //     background: $successColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $successColor;
-                    //     background: white;
-                    // }
+                    
                     .atom-icon {
                         color: $pauseColor;
                     }
