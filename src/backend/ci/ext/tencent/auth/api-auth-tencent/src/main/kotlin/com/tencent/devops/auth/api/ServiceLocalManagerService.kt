@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 interface ServiceLocalManagerService {
     @GET
     @Path("/projects/{projectCode}/")
-    @ApiOperation("校验用户是否有action的权限")
+    @ApiOperation("校验用户是否有超级管理员权限")
     fun validateUserActionPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
