@@ -47,7 +47,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
         vmName: String,
         credentialId: String,
         publicKey: String
-    ): Result<CredentialInfo> {
+    ): Result<CredentialInfo?> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }

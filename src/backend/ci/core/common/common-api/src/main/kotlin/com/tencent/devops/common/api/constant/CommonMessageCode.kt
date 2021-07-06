@@ -69,4 +69,6 @@ object CommonMessageCode {
     const val ERROR_HTTP_RESPONSE_BODY_TOO_LARGE = "2100019" // http请求返回体太大
     const val PERMISSION_DENIED_FOR_APP = "2100020" // APP的无权限{0}
     const val ERROR_SENSITIVE_API_NO_AUTH = "2100021" // 无敏感API访问权限
+    const val PARAMETER_LENGTH_TOO_LONG = "2100022" // 参数长度不能超过{0}个字符
+    const val PARAMETER_LENGTH_TOO_SHORT = "2100023" // 参数长度不能小于{0}个字符
 }

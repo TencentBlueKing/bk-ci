@@ -72,6 +72,7 @@ import java.text.MessageFormat
 import java.time.LocalDateTime
 import javax.servlet.http.HttpServletResponse
 
+@Suppress("ALL")
 @Service
 @RefreshScope
 class PipelineAtomService @Autowired constructor(

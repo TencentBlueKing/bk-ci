@@ -51,36 +51,47 @@ class ElementTest {
         element.status = BuildStatus.QUEUE.name
         val skipElementVariableName = SkipElementUtils.getSkipElementVariableName(element.id!!)
         var rerun = true
-        var takeStatus = element.initStatus(mapOf(skipElementVariableName to "true"), rerun = rerun)
+        element.disableBySkipVar(mapOf(skipElementVariableName to "true"))
+        var takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.SKIP.name, takeStatus.name)
 
         element.status = BuildStatus.SUCCEED.name
         rerun = true
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), rerun = rerun)
+        element.additionalOptions?.enable = true
+        element.disableBySkipVar(mapOf(skipElementVariableName to "false"))
+        takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.QUEUE.name, takeStatus.name)
 
         element.status = BuildStatus.FAILED.name
         rerun = false
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), rerun = rerun)
+        element.additionalOptions?.enable = true
+        element.disableBySkipVar(mapOf(skipElementVariableName to "false"))
+        takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.QUEUE.name, takeStatus.name)
 
         element.status = BuildStatus.QUEUE.name
         rerun = false
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), rerun = rerun)
+        element.additionalOptions?.enable = true
+        element.disableBySkipVar(mapOf(skipElementVariableName to "false"))
+        takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.QUEUE.name, takeStatus.name)
 
         element.status = BuildStatus.SKIP.name
         rerun = false
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), rerun = rerun)
+        element.additionalOptions?.enable = true
+        element.disableBySkipVar(mapOf(skipElementVariableName to "false"))
+        takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.SKIP.name, takeStatus.name)
 
         element.status = BuildStatus.SKIP.name
         rerun = true
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), rerun = rerun)
+        element.additionalOptions?.enable = true
+        element.disableBySkipVar(mapOf(skipElementVariableName to "false"))
+        takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.QUEUE.name, takeStatus.name)
 
         element.additionalOptions = elementAdditionalOptions(enable = false)
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), rerun = rerun)
+        takeStatus = element.initStatus(rerun = rerun)
         assertEquals(BuildStatus.SKIP.name, takeStatus.name)
     }
 

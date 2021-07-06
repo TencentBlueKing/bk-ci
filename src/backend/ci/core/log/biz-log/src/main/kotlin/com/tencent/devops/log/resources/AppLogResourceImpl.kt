@@ -39,7 +39,7 @@ import com.tencent.devops.log.api.AppLogResource
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
-import com.tencent.devops.log.service.LogServiceDispatcher
+import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -49,7 +49,7 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class AppLogResourceImpl @Autowired constructor(
-    private val logDispatcher: LogServiceDispatcher,
+    private val buildLogQuery: BuildLogQueryService,
     private val authPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : AppLogResource {
@@ -72,7 +72,7 @@ class AppLogResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<PageQueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getInitLogsPage(
+        return buildLogQuery.getInitLogsPage(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -103,7 +103,7 @@ class AppLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getMoreLogs(
+        return buildLogQuery.getMoreLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -132,7 +132,7 @@ class AppLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getAfterLogs(
+        return buildLogQuery.getAfterLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -159,7 +159,7 @@ class AppLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getBeforeLogs(
+        return buildLogQuery.getBeforeLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -184,7 +184,7 @@ class AppLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Response {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.downloadLogs(
+        return buildLogQuery.downloadLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -209,7 +209,7 @@ class AppLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<EndPageQueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getEndLogsPage(
+        return buildLogQuery.getEndLogsPage(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -236,7 +236,7 @@ class AppLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getBottomLogs(
+        return buildLogQuery.getBottomLogs(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,

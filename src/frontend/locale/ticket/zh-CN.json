@@ -60,7 +60,7 @@
         "secretKeyRequired": "secretKey不能为空",
         "appIdPlaceholder": "请输入appId",
         "appIdRequired": "appId不能为空",
-        "sshKeyPlaceholder": "请输入SSH Key对应的私钥，以-----BEGIN RSA PRIVATE KEY-----开头，-----END RSA PRIVATE KEY-----结束",
+        "sshKeyPlaceholder": "请输入SSH Key对应的私钥，以-----BEGIN (RSA|OPENSSH) PRIVATE KEY-----开头，-----END (RSA|OPENSSH) PRIVATE KEY-----结束",
         "keyPassword": "私钥密码",
         "keyPasswordPlaceholder": "请输入私钥密码",
         "tokenPlaceholder": "请输入token",

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -38,6 +37,7 @@ import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.slf4j.LoggerFactory
 import java.util.Base64
+import javax.ws.rs.NotFoundException
 
 /**
  * This util is to get the credential from core
@@ -69,7 +69,7 @@ object CredentialUtils {
 
             if (result.isNotOk() || result.data == null) {
                 logger.error("Fail to get the credential($credentialId) because of ${result.message}")
-                throw ClientException(result.message!!)
+                throw NotFoundException(result.message!!)
             }
 
             val credential = result.data!!
