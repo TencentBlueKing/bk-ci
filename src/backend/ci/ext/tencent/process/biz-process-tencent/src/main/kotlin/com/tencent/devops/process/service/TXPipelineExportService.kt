@@ -246,7 +246,7 @@ class TXPipelineExportService @Autowired constructor(
             } else if (!it.id.isNullOrBlank()) {
                 "job_${it.id!!}"
             } else {
-                it.containerId ?: "unknown_job"
+                "unknown_job"
             }
             when (it.getClassType()) {
                 NormalContainer.classType -> {
