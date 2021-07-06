@@ -27,26 +27,26 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.exception.InvalidParamException
 
-@ApiModel("DockerIpUpdateVO")
-data class DockerIpUpdateVO(
-    @ApiModelProperty("主键ID")
-    val id: Long,
-    @ApiModelProperty("构建机IP")
-    val dockerIp: String,
-    @ApiModelProperty("构建机PORT")
-    val dockerHostPort: Int,
-    @ApiModelProperty("构建机是否可用")
-    val enable: Boolean,
-    @ApiModelProperty("是否为灰度节点")
-    val grayEnv: Boolean,
-    @ApiModelProperty("是否为专用机独占")
-    val specialOn: Boolean,
-    @ApiModelProperty("构建集群", required = false)
-    val clusterType: DockerHostClusterType = DockerHostClusterType.COMMON,
-    @ApiModelProperty("构建节点状态", required = false)
-    val status: Int = DockerHostStatus.ERROR.status
-)
+enum class DockerHostStatus(val status: Int) {
+    ACTIVE(0),  // 正常存活状态
+    ERROR(1),   // 异常状态
+    OFFLINE(2); // 下线状态
+
+    override fun toString() = status.toString()
+
+    companion object {
+        fun fromStatus(status: Int): DockerHostStatus {
+            values().forEach {
+                if (status == it.status) {
+                    return it
+                }
+            }
+            throw InvalidParamException("Unknown dockerhost status($status)")
+        }
+
+        fun isActive(status: DockerHostStatus) =
+            status == ACTIVE
+    }
+}

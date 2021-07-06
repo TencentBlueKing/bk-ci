@@ -60,5 +60,7 @@ data class DockerIpInfoVO(
     @ApiModelProperty("创建时间", required = false)
     val createTime: String?,
     @ApiModelProperty("构建集群", required = false)
-    val clusterType: DockerHostClusterType? = DockerHostClusterType.COMMON
+    val clusterType: DockerHostClusterType? = DockerHostClusterType.COMMON,
+    @ApiModelProperty("构建机状态", required = false)
+    val status: Int? = DockerHostStatus.ERROR.status
 )
