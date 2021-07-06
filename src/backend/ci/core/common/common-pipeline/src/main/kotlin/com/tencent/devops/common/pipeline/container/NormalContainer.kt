@@ -54,8 +54,8 @@ data class NormalContainer(
     @ApiModelProperty("触发条件", required = false)
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see JobControlOption.customVariables"))
     val conditions: List<NameAndValue>? = null,
-    @ApiModelProperty("是否可重试", required = false, hidden = true)
-    override var canRetry: Boolean? = false,
+    @ApiModelProperty("是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储", required = false, hidden = true)
+    override var canRetry: Boolean? = null,
     override var containerId: String? = null,
     @ApiModelProperty("无构建环境-等待运行环境启动的排队最长时间(分钟)", required = false)
     @Deprecated(message = "do not use")

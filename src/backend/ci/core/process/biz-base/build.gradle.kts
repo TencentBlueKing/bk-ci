@@ -41,5 +41,6 @@ dependencies {
     api(project(":core:process:model-process"))
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")
+    implementation("com.github.ben-manes.caffeine:caffeine")
     testImplementation(project(":core:common:common-test"))
 }

@@ -27,11 +27,16 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.pojo.PipelinePauseValue
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -48,5 +53,47 @@ class PipelineTaskPauseService @Autowired constructor(
 
     fun savePauseValue(pipelinePauseValue: PipelinePauseValue) {
         pipelinePauseValueDao.save(dslContext, pipelinePauseValue)
+    }
+
+    fun getPauseTask(buildId: String, taskId: String): PipelinePauseValue? {
+        return pipelinePauseValueDao.convert(pipelinePauseValueDao.get(dslContext, buildId, taskId))
+    }
+
+    @Suppress("NestedBlockDepth")
+    fun resetElementWhenPauseRetry(buildId: String, model: Model) {
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                val newElements = ArrayList<Element>(container.elements.size)
+                container.elements.forEach nextElement@{ element ->
+                    if (element.id == null) {
+                        return@nextElement
+                    }
+                    // 重置插件状态开发
+                    val pauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, element.id!!))
+                    if (pauseFlag != null) { // 若插件已经暂停过,重试构建需复位对应构建暂停状态位
+                        logger.info("Refresh pauseFlag| $buildId|${element.id}")
+                        pauseTaskFinishExecute(buildId, element.id!!)
+                    }
+
+                    if (ControlUtils.pauseFlag(element.additionalOptions)) {
+                        val defaultElement = getPauseTask(buildId, element.id!!)
+                        if (defaultElement != null) {
+                            logger.info("Refresh element| $buildId|${element.id}")
+                            // 恢复detail表model内的对应element为默认值
+                            newElements.add(JsonUtil.to(defaultElement.defaultValue, Element::class.java))
+                        } else {
+                            newElements.add(element)
+                        }
+                    } else {
+                        newElements.add(element)
+                    }
+                }
+                container.elements = newElements
+            }
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTaskPauseService::class.java)!!
     }
 }

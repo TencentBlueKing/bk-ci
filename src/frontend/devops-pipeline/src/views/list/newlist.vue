@@ -49,7 +49,7 @@
         </infinite-scroll>
 
         <pipeline-template-popup :toggle-popup="toggleTemplatePopup" :is-show="templatePopupShow"></pipeline-template-popup>
-        <import-pipeline-popup :toggle-import-pipeline-popup="toggleImportPipelinePopup" :is-show="importPipelinePopupShow"></import-pipeline-popup>
+        <import-pipeline-popup :is-show.sync="importPipelinePopupShow"></import-pipeline-popup>
 
         <pipeline-filter v-if="slideShow" :is-show="slideShow" @showSlide="showSlide" :is-disabled="isDisabled" :selected-filter="currentFilter" @filter="filterCommit" class="pipeline-filter"></pipeline-filter>
 
@@ -505,6 +505,7 @@
                                 continuePipeline: true
                             },
                             pipelineId: item.pipelineId,
+                            templateId: item.templateId,
                             buildId: item.latestBuildId || 0,
                             extMenu: [],
                             isInstanceTemplate: item.instanceFromTemplate
@@ -736,6 +737,14 @@
                             ]
                         }
 
+                        if (this.pipelineFeConfMap[pipelineId] && !this.pipelineFeConfMap[pipelineId].extMenu.length && this.pipelineFeConfMap[pipelineId].isInstanceTemplate) {
+                            feConfig.extMenu.splice((feConfig.extMenu.length - 1), 0, {
+                                text: this.$t('newlist.jumpToTemp'),
+                                handler: this.jumpToTemplate,
+                                isJumpToTem: true
+                            })
+                        }
+
                         this.pipelineFeConfMap[pipelineId] = {
                             ...(this.pipelineFeConfMap[pipelineId] || {}),
                             ...feConfig
@@ -916,6 +925,19 @@
                 this.saveAsTemp.templateName = `${feConfig.pipelineName}_template`
                 this.saveAsTemp.isShow = true
                 this.saveAsTemp.pipelineId = pipelineId
+            },
+
+            /**
+             * 跳转到模板
+             * @param templateId 模板id
+             */
+            jumpToTemplate (templateId) {
+                this.$router.push({
+                    name: 'templateEdit',
+                    params: {
+                        'templateId': templateId
+                    }
+                })
             },
 
             async saveAsConfirmHandler () {

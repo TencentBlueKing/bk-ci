@@ -37,10 +37,11 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.service.BuildVariableService
@@ -54,7 +55,7 @@ import org.springframework.stereotype.Service
 class TaskAtomService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineBuildDetailService: TaskBuildDetailService,
     private val buildVariableService: BuildVariableService,
     private val jmxElements: JmxElements,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -70,6 +71,9 @@ class TaskAtomService @Autowired(required = false) constructor(
         jmxElements.execute(task.taskType)
         var atomResponse = AtomResponse(BuildStatus.FAILED)
         try {
+            if (!VmOperateTaskGenerator.isVmAtom(task)) {
+                dispatchBroadCastEvent(task, ActionType.START)
+            }
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(
                 task = task,
@@ -110,6 +114,20 @@ class TaskAtomService @Autowired(required = false) constructor(
         return atomResponse
     }
 
+    private fun dispatchBroadCastEvent(task: PipelineBuildTask, actionType: ActionType) {
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildStatusBroadCastEvent(
+                source = "task-${task.taskId}",
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                userId = task.starter,
+                taskId = task.taskId,
+                buildId = task.buildId,
+                actionType = actionType
+            )
+        )
+    }
+
     /**
      * 插件启动之后的处理，根据插件返回的结果[atomResponse]判断是否要结束任务[task]
      */
@@ -146,7 +164,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = atomResponse.errorCode,
                 errorMsg = atomResponse.errorMsg
             )
-            pipelineBuildDetailService.pipelineTaskEnd(
+            pipelineBuildDetailService.taskEnd(
                 buildId = task.buildId,
                 taskId = task.taskId,
                 buildStatus = atomResponse.buildStatus,
@@ -169,17 +187,11 @@ class TaskAtomService @Autowired(required = false) constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to post the task($task): ${ignored.message}")
         }
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildStatusBroadCastEvent(
-                source = "task-end-${task.taskId}",
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                userId = task.starter,
-                taskId = task.taskId,
-                buildId = task.buildId,
-                actionType = ActionType.END
-            )
-        )
+
+        if (!VmOperateTaskGenerator.isVmAtom(task)) {
+            dispatchBroadCastEvent(task, ActionType.END)
+        }
+
         buildLogPrinter.stopLog(
             buildId = task.buildId,
             tag = task.taskId,

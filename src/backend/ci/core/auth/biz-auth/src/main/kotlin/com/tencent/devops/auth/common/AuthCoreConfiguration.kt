@@ -28,9 +28,11 @@
 package com.tencent.devops.auth.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.auth.filter.TokenCheckFilter
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
 import com.tencent.devops.auth.utils.HostUtils
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -121,4 +123,7 @@ class AuthCoreConfiguration {
         container.setMessageListener(adapter)
         return container
     }
+
+    @Bean
+    fun tokenFilter(clientTokenService: ClientTokenService) = TokenCheckFilter(clientTokenService)
 }

@@ -82,16 +82,25 @@ class PipelinePauseValueDao {
         }
     }
 
-    fun get(
-        dslContext: DSLContext,
-        buildId: String,
-        taskId: String
-    ): TPipelinePauseValueRecord? {
+    fun get(dslContext: DSLContext, buildId: String, taskId: String): TPipelinePauseValueRecord? {
         return with(Tables.T_PIPELINE_PAUSE_VALUE) {
             val query = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TASK_ID.eq(taskId))
-            query.fetchOne() ?: null
+            query.fetchAny()
+        }
+    }
+
+    fun convert(t: TPipelinePauseValueRecord?): PipelinePauseValue? {
+        return if (t != null) {
+            PipelinePauseValue(
+                buildId = t.buildId,
+                taskId = t.taskId,
+                defaultValue = t.defaultValue,
+                newValue = t.newValue
+            )
+        } else {
+            null
         }
     }
 }

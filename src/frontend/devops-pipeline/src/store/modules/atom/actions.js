@@ -71,7 +71,8 @@ import {
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_REVIEW_DIALOG,
     TOGGLE_STAGE_REVIEW_PANEL,
-    SET_IMPORTED_JSON
+    SET_IMPORTED_JSON,
+    SET_EDIT_FROM
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import { hashID, randomString } from '@/utils/util'
@@ -217,6 +218,7 @@ export default {
         }
     },
     setPipeline: actionCreator(SET_PIPELINE),
+    setEditFrom: actionCreator(SET_EDIT_FROM),
     setPipelineEditing: actionCreator(SET_PIPELINE_EDITING),
     fetchContainers: async ({ commit }, { projectCode }) => {
         try {
@@ -474,6 +476,17 @@ export default {
                 subTag,
                 debug
             }
+        })
+    },
+
+    getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
+        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, executeCount } })
+    },
+
+    getDownloadLogFromArtifactory ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
+        return request.get(`${API_URL_PREFIX}/artifactory/api/user/artifactories/log/plugin/${projectId}/${pipelineId}/${buildId}/${tag}/${executeCount}`).then((res) => {
+            const data = res.data || {}
+            return data.url || ''
         })
     },
 
