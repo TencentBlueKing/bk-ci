@@ -161,8 +161,8 @@ open class BaseBuildDetailService constructor(
                 }
 
                 containerId++
-                container.elements.forEach { e ->
-                    if (Traverse.BREAK == modelInterface.onFindElement(e, container)) {
+                container.elements.forEachIndexed { index, e ->
+                    if (Traverse.BREAK == modelInterface.onFindElement(index, e, container)) {
                         return
                     }
                 }
@@ -191,7 +191,7 @@ open class BaseBuildDetailService constructor(
 
         fun onFindContainer(id: Int, container: Container, stage: Stage) = Traverse.CONTINUE
 
-        fun onFindElement(e: Element, c: Container) = Traverse.CONTINUE
+        fun onFindElement(index: Int, e: Element, c: Container) = Traverse.CONTINUE
 
         fun needUpdate(): Boolean
     }
