@@ -1,8 +1,7 @@
 plugins {
     kotlin("jvm")
+    detektCheck
 }
-
-apply("$rootDir/detekt.gradle.kts")
 
 allprojects {
     // 包路径
