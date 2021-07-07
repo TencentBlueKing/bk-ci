@@ -32,6 +32,4 @@ dependencies {
     api(project(":core:environment:biz-environment-sample"))
 }
 
-plugins {
-   `task-spring-boot-package`
-}
+

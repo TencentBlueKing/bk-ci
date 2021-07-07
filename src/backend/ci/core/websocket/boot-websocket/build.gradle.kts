@@ -30,6 +30,4 @@ dependencies {
     api(project(":core:websocket:biz-websocket-blueking"))
 }
 
-plugins {
-   `task-spring-boot-package`
-}
+

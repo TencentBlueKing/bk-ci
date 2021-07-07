@@ -33,6 +33,4 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson")
 }
-plugins {
-   `task-spring-boot-package`
-}
+

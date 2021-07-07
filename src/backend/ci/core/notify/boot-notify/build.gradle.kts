@@ -30,6 +30,4 @@ dependencies {
     api(project(":core:notify:biz-notify-blueking")) // 对接蓝鲸实现
 }
 
-plugins {
-   `task-spring-boot-package`
-}
+

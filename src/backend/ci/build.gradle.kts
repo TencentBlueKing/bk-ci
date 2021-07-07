@@ -4,10 +4,9 @@ plugins {
 
 apply("$rootDir/detekt.gradle.kts")
 
-allprojects {
+subprojects {
     apply(plugin = "com.tencent.devops.boot")
     apply(plugin = "maven")
-    apply(plugin = "io.spring.dependency-management")
 
     /************ https://github.com/bkdevops-projects/devops-framework/issues/73 ********/
     apply(plugin = "java")
