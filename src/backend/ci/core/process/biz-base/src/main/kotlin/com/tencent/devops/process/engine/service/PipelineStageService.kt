@@ -217,15 +217,12 @@ class PipelineStageService @Autowired constructor(
 
     fun cancelStage(
         userId: String,
-        buildStage: PipelineBuildStage,
-        reviewRequest: StageReviewRequest?
+        buildStage: PipelineBuildStage
     ) {
 
         buildStage.controlOption!!.stageControlOption.reviewCurrentGroup(
             userId = userId,
-            action = ManualReviewAction.ABORT,
-            params = reviewRequest?.reviewParams,
-            suggest = reviewRequest?.suggest
+            action = ManualReviewAction.ABORT
         )
         stageBuildDetailService.stageCancel(
             buildId = buildStage.buildId,

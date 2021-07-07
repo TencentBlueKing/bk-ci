@@ -83,8 +83,8 @@ data class StageControlOption(
     fun reviewCurrentGroup(
         userId: String,
         action: ManualReviewAction,
-        params: List<ManualReviewParam>?,
-        suggest: String?
+        params: List<ManualReviewParam>? = null,
+        suggest: String? = null
     ) {
         refreshReviewOption()
         reviewGroups?.forEach { group ->
