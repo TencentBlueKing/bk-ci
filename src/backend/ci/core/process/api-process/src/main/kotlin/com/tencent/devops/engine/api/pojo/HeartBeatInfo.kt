@@ -25,30 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.engine
+package com.tencent.devops.measure.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.engine.api.pojo.HeartBeatInfo
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildTaskResult
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.StartType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface EngineBuildSDKApi : WorkerRestApiSDK {
-
-    fun getRequestUrl(path: String, retryCount: Int = 0): String
-
-    fun setStarted(retryCount: Int): Result<BuildVariables>
-
-    fun claimTask(retryCount: Int): Result<BuildTask>
-
-    fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean>
-
-    fun endTask(retryCount: Int): Result<Boolean>
-
-    fun heartbeat(): Result<HeartBeatInfo>
-
-    fun timeout(): Result<Boolean>
-
-    fun getCiToken(): String
-}
+@ApiModel("流水线构建度量数据")
+data class PipelineBuildData(
+    @ApiModelProperty("流水线对应的项目id")
+    val projectId: String,
+    @ApiModelProperty("流水线的id")
+    val pipelineId: String,
+    @ApiModelProperty("模板的id")
+    val templateId: String,
+    @ApiModelProperty("流水线的这次构建的id")
+    val buildId: String,
+    @ApiModelProperty("流水线的启动时间")
+    val beginTime: Long,
+    @ApiModelProperty("流水线的结束时间")
+    val endTime: Long,
+    @ApiModelProperty("流水线的启动方式")
+    val startType: StartType,
+    @ApiModelProperty("流水线的启动用户")
+    val buildUser: String,
+    @ApiModelProperty("流水线的是否并行")
+    val isParallel: Boolean,
+    @ApiModelProperty("流水线的构建结果")
+    val buildResult: BuildStatus,
+    @ApiModelProperty("流水线Element结构")
+    val pipeline: String,
+    @ApiModelProperty("构建版本号")
+    val buildNum: Int,
+    @ApiModelProperty("元数据")
+    val metaInfo: Map<String, Any>,
+    @ApiModelProperty("流水线错误信息集合", required = false)
+    var errorInfoList: String? = null
+)

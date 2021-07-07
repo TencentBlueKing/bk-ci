@@ -91,23 +91,23 @@ class BuildCancelControl @Autowired constructor(
     }
 
     private fun execute(event: PipelineBuildCancelEvent): Boolean {
-
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId = event.buildId)
+        val buildId = event.buildId
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId = buildId)
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || buildInfo.status.isFinish()) {
-            LOG.info("[$${event.buildId}|${event.source}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
+            LOG.info("[$${buildId}|${event.source}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
             return false
         }
 
-        val model = pipelineBuildDetailService.getBuildModel(buildId = event.buildId)
+        val model = pipelineBuildDetailService.getBuildModel(buildId = buildId)
         return if (model != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
-
+            redisOperation.set("${BuildStatus.CANCELED.name}_$buildId", "true", 2)
             cancelAllPendingTask(event = event, model = model)
             // 修改detail model
             pipelineBuildDetailService.buildCancel(buildId = event.buildId, buildStatus = event.status)
 
-            val pendingStage = pipelineStageService.getPendingStage(event.buildId)
+            val pendingStage = pipelineStageService.getPendingStage(buildId)
             if (pendingStage != null) {
                 pendingStage.dispatchEvent(event)
             } else {
@@ -117,7 +117,7 @@ class BuildCancelControl @Autowired constructor(
             measureService?.postCancelData(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
-                buildId = event.buildId,
+                buildId = buildId,
                 userId = event.userId
             )
             true

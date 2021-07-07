@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.process.ProcessTree
 import org.slf4j.LoggerFactory
@@ -78,7 +79,12 @@ object KillBuildProcessTree {
         }
     }
 
-    fun killProcessTree(projectId: String, buildId: String, vmSeqId: String): List<Int> {
+    fun killProcessTree(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        taskIds: Set<String>? = null
+    ): List<Int> {
         val currentProcessId = if (AgentEnv.getOS() == OSType.WINDOWS) {
             getCurrentPID()
         } else {
@@ -112,10 +118,14 @@ object KillBuildProcessTree {
                 val envProjectId = envVars["PROJECT_ID"]
                 val envBuildId = envVars["BUILD_ID"]
                 val envVmSeqId = envVars["VM_SEQ_ID"]
-                if (projectId.equals(envProjectId, ignoreCase = true) &&
+                var flag = projectId.equals(envProjectId, ignoreCase = true) &&
                     buildId.equals(envBuildId, ignoreCase = true) &&
                     vmSeqId.equals(envVmSeqId, ignoreCase = true)
-                ) {
+                if (!taskIds.isNullOrEmpty()) {
+                    val envTaskId = envVars[PIPELINE_ELEMENT_ID]
+                    flag = flag && taskIds.contains(envTaskId)
+                }
+                if (flag) {
                     osProcess.killRecursively()
                     osProcess.kill()
                     killedProcessIds.add(osProcess.pid)

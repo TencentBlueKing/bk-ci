@@ -32,13 +32,14 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
+import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 
 object Heartbeat {
-    private const val EXIT_AFTER_FAILURE = 12 // Worker will exist after 12 fail heart
+    private const val EXIT_AFTER_FAILURE = 12 // Worker will exit after 12 fail heart
     private val logger = LoggerFactory.getLogger(Heartbeat::class.java)
     private val executor = Executors.newScheduledThreadPool(2)
     private var running = false
@@ -54,7 +55,13 @@ object Heartbeat {
             if (running) {
                 try {
                     logger.info("Start to do the heartbeat")
-                    EngineService.heartbeat()
+                    val heartBeatInfo = EngineService.heartbeat()
+                    KillBuildProcessTree.killProcessTree(
+                        projectId = heartBeatInfo.projectId,
+                        buildId = heartBeatInfo.buildId,
+                        vmSeqId = heartBeatInfo.vmSeqId,
+                        taskIds = heartBeatInfo.cancelTaskIds
+                    )
                     failCnt = 0
                 } catch (e: Exception) {
                     logger.warn("Fail to do the heartbeat", e)
@@ -68,7 +75,7 @@ object Heartbeat {
                     }
                 }
             }
-        }, 10, 10, TimeUnit.SECONDS)
+        }, 10, 2, TimeUnit.SECONDS)
 
         /*
             #2043 由worker-agent.jar 运行时进行自监控，当达到Job超时时，自行上报错误信息并结束构建
