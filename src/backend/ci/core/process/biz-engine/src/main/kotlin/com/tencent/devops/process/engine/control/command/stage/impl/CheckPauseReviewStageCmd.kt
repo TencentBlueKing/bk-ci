@@ -114,7 +114,7 @@ class CheckPauseReviewStageCmd(
         if (event.source == BS_MANUAL_START_STAGE || option?.manualTrigger != true) {
             return false
         }
-        return option.getGroupToReview() != null
+        return option.groupToReview() != null
     }
 
     /**
@@ -123,10 +123,10 @@ class CheckPauseReviewStageCmd(
     private fun pauseStageNotify(commandContext: StageContext) {
         val stage = commandContext.stage
         val option = stage.controlOption!!.stageControlOption
-        val group = option.getGroupToReview() ?: return
+        val group = option.groupToReview() ?: return
         val notifyUsers = mutableListOf<String>()
 
-        if (group.result == null || group.result == ManualReviewAction.REVIEWING.name) {
+        if (group.status == null || group.status == ManualReviewAction.REVIEWING.name) {
             val reviewers = group.reviewers.joinToString(",")
             val realReviewers = EnvUtils.parseEnv(reviewers, commandContext.variables)
                 .split(",").toList()

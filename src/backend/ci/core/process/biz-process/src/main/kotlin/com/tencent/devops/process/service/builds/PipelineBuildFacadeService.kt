@@ -807,8 +807,7 @@ class PipelineBuildFacadeService(
             if (isCancel) {
                 pipelineStageService.cancelStage(
                     userId = userId,
-                    buildStage = buildStage,
-                    reviewRequest = reviewRequest
+                    buildStage = buildStage
                 )
             } else {
                 buildStage.controlOption!!.stageControlOption.reviewParams = reviewRequest?.reviewParams

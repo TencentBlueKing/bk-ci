@@ -39,7 +39,7 @@ data class StageReviewGroup(
     @ApiModelProperty("审核人员", required = true)
     var reviewers: List<String> = listOf(),
     @ApiModelProperty("审核结果（枚举）", required = false)
-    var result: String? = ManualReviewAction.REVIEWING.name,
+    var status: String? = ManualReviewAction.REVIEWING.name,
     @ApiModelProperty("审核操作人", required = false)
     var operator: String? = null,
     @ApiModelProperty("审核建议", required = false)

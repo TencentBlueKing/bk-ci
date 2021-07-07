@@ -54,10 +54,10 @@ data class StageControlOption(
     /**
      * 获取当前等待中的审核组
      */
-    fun getGroupToReview(): StageReviewGroup? {
+    fun groupToReview(): StageReviewGroup? {
         refreshReviewOption()
         reviewGroups?.forEach { group ->
-            if (group.result == null || group.result == ManualReviewAction.REVIEWING.name) {
+            if (group.status == null || group.status == ManualReviewAction.REVIEWING.name) {
                 return group
             }
         }
@@ -70,7 +70,7 @@ data class StageControlOption(
     fun reviewerContains(userId: String): Boolean {
         refreshReviewOption()
         reviewGroups?.forEach { group ->
-            if (group.result == null || group.result == ManualReviewAction.REVIEWING.name) {
+            if (group.status == null || group.status == ManualReviewAction.REVIEWING.name) {
                 return group.reviewers.contains(userId)
             }
         }
@@ -88,8 +88,8 @@ data class StageControlOption(
     ) {
         refreshReviewOption()
         reviewGroups?.forEach { group ->
-            if (group.result == null || group.result == ManualReviewAction.REVIEWING.name) {
-                group.result = action.name
+            if (group.status == null || group.status == ManualReviewAction.REVIEWING.name) {
+                group.status = action.name
                 group.operator = userId
                 group.params = params?.toMutableList()
                 group.suggest = suggest
@@ -105,11 +105,11 @@ data class StageControlOption(
         if (triggerUsers?.isNotEmpty() == true) {
             val group = if (triggered == true) StageReviewGroup(
                 reviewers = triggerUsers!!,
-                result = ManualReviewAction.PROCESS.name,
+                status = ManualReviewAction.PROCESS.name,
                 params = reviewParams?.toMutableList()
             ) else StageReviewGroup(
                 reviewers = triggerUsers!!,
-                result = null
+                status = null
             )
 
             newReviewGroups.add(group)
