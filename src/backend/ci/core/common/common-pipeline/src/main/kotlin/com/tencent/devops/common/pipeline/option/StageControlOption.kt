@@ -79,6 +79,7 @@ data class StageControlOption(
     fun reviewCurrentGroup(
         userId: String,
         action: ManualReviewAction,
+        params: List<ManualReviewParam>?,
         suggest: String?
     ) {
         refreshReviewOption()
@@ -86,6 +87,7 @@ data class StageControlOption(
             if (group.result == null) {
                 group.result = action.name
                 group.operator = userId
+                group.params = params?.toMutableList()
                 group.suggest = suggest
             }
         }

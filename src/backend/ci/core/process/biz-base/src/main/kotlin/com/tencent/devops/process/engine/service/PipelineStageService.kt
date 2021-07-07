@@ -170,6 +170,7 @@ class PipelineStageService @Autowired constructor(
         buildStage.controlOption!!.stageControlOption.reviewCurrentGroup(
             userId = userId,
             action = ManualReviewAction.PROCESS,
+            params = reviewRequest?.reviewParams,
             suggest = reviewRequest?.suggest
         )
         with(buildStage) {
@@ -223,9 +224,14 @@ class PipelineStageService @Autowired constructor(
         buildStage.controlOption!!.stageControlOption.reviewCurrentGroup(
             userId = userId,
             action = ManualReviewAction.ABORT,
+            params = reviewRequest?.reviewParams,
             suggest = reviewRequest?.suggest
         )
-        stageBuildDetailService.stageCancel(buildId = buildStage.buildId, stageId = buildStage.stageId)
+        stageBuildDetailService.stageCancel(
+            buildId = buildStage.buildId,
+            stageId = buildStage.stageId,
+            controlOption = buildStage.controlOption!!
+        )
 
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
