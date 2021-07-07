@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线暂停操作实体类")
-data class BuildTaskPauseInfo (
+data class BuildTaskPauseInfo(
     @ApiModelProperty("任务ID")
     val taskId: String,
     @ApiModelProperty("element信息,若插件内有变量变更需给出变更后的element")

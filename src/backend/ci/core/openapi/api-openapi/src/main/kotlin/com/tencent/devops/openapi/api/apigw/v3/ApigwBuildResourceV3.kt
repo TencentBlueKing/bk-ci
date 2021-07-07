@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
@@ -298,7 +297,6 @@ interface ApigwBuildResourceV3 {
         @ApiParam("变量名列表", required = true)
         variableNames: List<String>
     ): Result<Map<String, String>>
-
 
     @ApiOperation("操作暂停插件")
     @POST
