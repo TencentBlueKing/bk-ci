@@ -1,5 +1,6 @@
 plugins {
     id("com.tencent.devops.boot")
+    detektCheck
 }
 
 apply("$rootDir/detekt.gradle.kts")
