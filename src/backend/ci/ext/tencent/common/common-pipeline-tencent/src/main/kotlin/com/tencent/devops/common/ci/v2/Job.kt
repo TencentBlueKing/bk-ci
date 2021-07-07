@@ -86,7 +86,7 @@ data class RunsOn(
     @JsonProperty("pool-name")
     val poolName: String = JobRunsOnType.DOCKER.type,
     val container: Container? = Container(
-        image = "http://mirrors.tencent.com/ci/tlinux3_ci:1.2.3",
+        image = "http://mirrors.tencent.com/ci/tlinux3_ci:1.2.2",
         credentials = null
     ),
     @JsonProperty("agent-selector")
