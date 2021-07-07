@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -47,10 +48,12 @@ import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -58,7 +61,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val engineVMBuildService: EngineVMBuildService,
-    private val vmBuildService: PipelineVMBuildService
+    private val vmBuildService: PipelineVMBuildService,
+    private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
 ) : ServiceBuildResource {
 
     override fun setVMStatus(
@@ -508,6 +512,30 @@ class ServiceBuildResourceImpl @Autowired constructor(
             reviewRequest = reviewRequest
         )
         return Result(true)
+    }
+
+    override fun executionPauseAtom(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskPauseExecute: BuildTaskPauseInfo
+    ): Result<Boolean> {
+        checkParam(projectId, pipelineId)
+        checkUserId(userId)
+        return Result(
+            pipelinePauseBuildFacadeService.executePauseAtom(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                isContinue = taskPauseExecute.isContinue,
+                taskId = taskPauseExecute.taskId,
+                element = taskPauseExecute.element,
+                stageId = taskPauseExecute.stageId,
+                containerId = taskPauseExecute.containerId
+            )
+        )
     }
 
     private fun checkParam(projectId: String, pipelineId: String) {
