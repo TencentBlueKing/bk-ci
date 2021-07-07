@@ -27,7 +27,6 @@
 
 dependencies {
     api(project(":core:dispatch-docker:api-dispatch-docker"))
-    // api(project(":core:dispatch:biz-dispatch"))
     api(project(":core:common:common-dispatch-sdk"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))

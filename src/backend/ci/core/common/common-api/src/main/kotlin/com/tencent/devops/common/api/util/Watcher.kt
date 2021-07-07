@@ -46,7 +46,7 @@ class Watcher(id: String = "") : StopWatch(id) {
         super.start()
     }
 
-    override fun start(taskName: String?) {
+    override fun start(taskName: String) {
         if (isRunning) {
             stop()
         }

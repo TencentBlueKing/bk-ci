@@ -46,7 +46,7 @@ class SignExecutorConfig {
         executor.maxPoolSize = 15
         executor.setQueueCapacity(25)
         executor.keepAliveSeconds = 200
-        executor.threadNamePrefix = "asyncSign-"
+        executor.setThreadNamePrefix("asyncSign-")
         executor.setRejectedExecutionHandler(CallerRunsPolicy())
         // 等待所有任务都完成再继续销毁其他的Bean
         executor.setWaitForTasksToCompleteOnShutdown(true)

@@ -92,13 +92,13 @@ class WebSocketConfig @Autowired constructor(
         registration.taskExecutor().corePoolSize(defaultCorePoolSize).maxPoolSize(defaultCorePoolSize * 2)
     }
 
-    override fun configureWebSocketTransport(registration: WebSocketTransportRegistration?) {
-        registration?.addDecoratorFactory(wsHandlerDecoratorFactory())
+    override fun configureWebSocketTransport(registration: WebSocketTransportRegistration) {
+        registration.addDecoratorFactory(wsHandlerDecoratorFactory())
         super.configureWebSocketTransport(registration)
     }
 
     @Bean
-    fun wsHandlerDecoratorFactory(): SessionWebSocketHandlerDecoratorFactory? {
+    fun wsHandlerDecoratorFactory(): SessionWebSocketHandlerDecoratorFactory {
         return SessionWebSocketHandlerDecoratorFactory(websocketService, redisOperation)
     }
 }

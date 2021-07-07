@@ -31,7 +31,6 @@ import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.slf4j.LoggerFactory
 import org.springframework.jmx.export.MBeanExporter
-import java.util.HashMap
 import javax.management.ObjectName
 
 object JmxExceptions {
@@ -62,7 +61,8 @@ object JmxExceptions {
                     }
                     val name = "com.tencent.devops.$serviceName:type=exceptions,name=$className"
                     logger.info("Register exception $className mbean")
-                    SpringContextUtil.getBean(MBeanExporter::class.java).registerManagedResource(bean, ObjectName(name))
+                    SpringContextUtil.getBean(MBeanExporter::class.java)
+                        .registerManagedResource(bean!!, ObjectName(name))
                     exceptions.put(className, bean!!)
                 }
             }

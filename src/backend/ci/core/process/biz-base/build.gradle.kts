@@ -39,7 +39,6 @@ dependencies {
     api(project(":core:plugin:codecc-plugin:common-codecc")) // MarketBuildUtils依赖了CodeCC，考虑移除
     api(project(":core:notify:api-notify")) // 消息通知API，考虑移除
     api(project(":core:process:model-process"))
-
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")
     implementation("com.github.ben-manes.caffeine:caffeine")

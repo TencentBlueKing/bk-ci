@@ -37,4 +37,5 @@ dependencies {
     api("com.github.ulisesbocchio:jasypt-spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-amqp")
     api("org.springframework.cloud:spring-cloud-starter-config")
+    api("org.aspectj:aspectjweaver")
 }

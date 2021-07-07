@@ -65,7 +65,7 @@ class JmxElements @Autowired constructor(private val mbeanExporter: MBeanExporte
                     bean = ElementBean(elementType)
                     val name = "com.tencent.devops.process:type=elements,name=$elementType"
                     logger.info("Register $elementType mbean")
-                    mbeanExporter.registerManagedResource(bean, ObjectName(name))
+                    mbeanExporter.registerManagedResource(bean!!, ObjectName(name))
                     types[elementType] = bean!!
                 }
             }

@@ -38,7 +38,7 @@ class SessionWebSocketHandlerDecoratorFactory @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : WebSocketHandlerDecoratorFactory {
 
-    override fun decorate(handler: WebSocketHandler?): WebSocketHandler {
+    override fun decorate(handler: WebSocketHandler): WebSocketHandler {
         return SessionHandler(handler, websocketService, redisOperation)
     }
 }

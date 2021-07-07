@@ -27,14 +27,7 @@
 
 dependencies {
     api(project(":core:repository:biz-repository-sample"))
-    // 无对接权限中心，根据common.yml配置文件项auth.idProvider=samle启用，会忽略下面蓝鲸权限中心实现
     api(project(":core:common:common-auth:common-auth-mock"))
-    // 对接蓝鲸的权限中心实现, 根据common.yml配置项auth.idProvider=bk_login值来决定加载
     api(project(":core:common:common-auth:common-auth-blueking"))
     api(project(":core:common:common-auth:common-auth-v3"))
-}
-
-
-plugins {
-    `task-spring-boot-package`
 }

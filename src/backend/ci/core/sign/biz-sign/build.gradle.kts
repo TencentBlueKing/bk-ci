@@ -37,6 +37,5 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-api"))
     api("mysql:mysql-connector-java")
     api("org.json:json")
-    api("com.googlecode.plist:dd-plist:1.23")
-//    api(project(":core:sign:model-sign"))
+    api("com.googlecode.plist:dd-plist")
 }

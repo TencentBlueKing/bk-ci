@@ -57,7 +57,7 @@ import com.tencent.devops.scm.utils.code.github.GithubUtils
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.scm.CommitSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
-import org.apache.commons.lang.exception.ExceptionUtils
+import org.apache.commons.lang3.exception.ExceptionUtils
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.ListBranchCommand

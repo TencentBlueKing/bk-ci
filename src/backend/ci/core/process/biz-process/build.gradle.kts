@@ -48,13 +48,13 @@ dependencies {
     api(project(":core:notify:api-notify"))
     api(project(":core:process:biz-base"))
     api(project(":core:log:api-log"))
+    api(project(":core:common:common-webhook:biz-common-webhook"))
 
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api(group = "javax.websocket", name = "javax.websocket-api", version = "1.1")
+    api("javax.websocket:javax.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
     testImplementation(project(":core:common:common-test"))
-    api(project(":core:common:common-webhook:biz-common-webhook"))
 }

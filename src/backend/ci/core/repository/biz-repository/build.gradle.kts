@@ -36,5 +36,5 @@ dependencies {
     api(project(":core:repository:api-repository"))
     api(project(":core:repository:model-repository"))
     api(project(":core:common:common-db"))
-    api("org.eclipse.jgit:org.eclipse.jgit:5.0.2.201807311906-r")
+    api("org.eclipse.jgit:org.eclipse.jgit")
 }
