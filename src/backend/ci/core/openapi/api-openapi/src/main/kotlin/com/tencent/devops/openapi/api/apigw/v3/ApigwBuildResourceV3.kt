@@ -302,7 +302,7 @@ interface ApigwBuildResourceV3 {
 
     @ApiOperation("操作暂停插件")
     @POST
-    @Path("/builds/{buildId}/execute/pause")
+    @Path("/{buildId}/execute/pause")
     fun executionPauseAtom(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
