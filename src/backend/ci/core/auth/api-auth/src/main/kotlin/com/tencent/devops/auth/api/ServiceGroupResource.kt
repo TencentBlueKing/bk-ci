@@ -59,5 +59,19 @@ interface ServiceGroupResource {
         projectCode: String,
         @ApiParam("用户组信息", required = true)
         groupInfo: GroupDTO
-    ): Result<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/projectCodes/{projectCode}/batchCreate")
+    @ApiOperation("项目下添加指定组")
+    fun batchCreateGroup(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "项目标识", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("用户组信息", required = true)
+        groupInfos: List<GroupDTO>
+    ): Result<Boolean>
 }

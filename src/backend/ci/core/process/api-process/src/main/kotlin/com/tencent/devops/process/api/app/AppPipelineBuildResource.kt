@@ -114,7 +114,7 @@ interface AppPipelineBuildResource {
         buildId: String
     ): Result<Boolean>
 
-    @ApiOperation("重试流水线")
+    @ApiOperation("重试流水线-重试或者跳过失败插件")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/retry")
     @Path("/{projectId}/{pipelineId}/{buildId}/retry")
@@ -136,7 +136,10 @@ interface AppPipelineBuildResource {
         taskId: String? = null,
         @ApiParam("仅重试所有失败Job", required = false)
         @QueryParam("failedContainer")
-        failedContainer: Boolean? = false
+        failedContainer: Boolean? = false,
+        @ApiParam("跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
+        @QueryParam("skip")
+        skipFailedTask: Boolean? = false
     ): Result<BuildId>
 
     @ApiOperation("获取构建详情")

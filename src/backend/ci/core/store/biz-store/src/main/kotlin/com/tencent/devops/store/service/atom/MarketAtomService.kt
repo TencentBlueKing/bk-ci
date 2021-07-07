@@ -150,6 +150,16 @@ interface MarketAtomService {
     ): String
 
     /**
+     * 生成插件yml 2.0文件
+     */
+    fun generateCiV2Yaml(
+        atomCode: String,
+        os: String? = null,
+        classType: String? = null,
+        defaultShowFlag: Boolean? = true
+    ): String
+
+    /**
      * 查找带post属性的插件
      */
     fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp>

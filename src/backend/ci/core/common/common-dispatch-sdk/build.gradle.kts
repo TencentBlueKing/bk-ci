@@ -27,7 +27,6 @@
 dependencies {
     api(project(":core:common:common-event"))
     api(project(":core:common:common-client"))
-    api(project(":core:common:common-log"))
     api(project(":core:process:api-process"))
     api(project(":core:monitoring:api-monitoring"))
     api(project(":core:log:api-log"))

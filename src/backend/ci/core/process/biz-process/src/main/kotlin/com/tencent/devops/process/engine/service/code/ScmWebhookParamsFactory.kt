@@ -35,7 +35,12 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.GithubWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.GitlabWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.SvnWebHookMatcher
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_REPO_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
@@ -63,7 +68,7 @@ object ScmWebhookParamsFactory {
     fun getWebhookElementParams(
         element: Element,
         variables: Map<String, String>
-    ): ScmWebhookMatcher.WebHookParams? {
+    ): WebHookParams? {
         return when (element) {
             is CodeSVNWebHookTriggerElement ->
                 SvnWebhookElementParams().getWebhookElementParams(
@@ -108,7 +113,7 @@ object ScmWebhookParamsFactory {
         repo: Repository,
         matcher: ScmWebhookMatcher,
         variables: Map<String, String>,
-        params: ScmWebhookMatcher.WebHookParams,
+        params: WebHookParams,
         matchResult: ScmWebhookMatcher.MatchResult
     ): Map<String, Any> {
         val startParams = getCommonStartParams(matcher, element, params, variables, repo)
@@ -120,7 +125,7 @@ object ScmWebhookParamsFactory {
     private fun getElementStartParams(
         element: Element,
         matcher: ScmWebhookMatcher,
-        params: ScmWebhookMatcher.WebHookParams,
+        params: WebHookParams,
         projectId: String,
         repo: Repository,
         matchResult: ScmWebhookMatcher.MatchResult
@@ -148,7 +153,7 @@ object ScmWebhookParamsFactory {
                     projectId = projectId,
                     repo = repo,
                     params = params,
-                    matcher = matcher as GitWebHookMatcher,
+                    matcher = matcher as GitlabWebHookMatcher,
                     matchResult = matchResult
                 ).getStartParams(element)
             is CodeTGitWebHookTriggerElement ->
@@ -177,7 +182,7 @@ object ScmWebhookParamsFactory {
     private fun getCommonStartParams(
         matcher: ScmWebhookMatcher,
         element: Element,
-        params: ScmWebhookMatcher.WebHookParams,
+        params: WebHookParams,
         variables: Map<String, String>,
         repo: Repository
     ): MutableMap<String, Any> {

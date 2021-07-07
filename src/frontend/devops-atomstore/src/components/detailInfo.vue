@@ -40,7 +40,7 @@
             <bk-col :span="12" class="g-progress-item">
                 <span class="g-progress-label">{{ $t('store.适用机器') }} :</span>
                 <section class="g-progress-content label-list">
-                    <span class="label-card" v-for="(agent, index) in detail.agentTypeScope" :key="index">{{ agent | agentFilter }}</span>
+                    <span class="label-card" v-for="(agent, index) in filterAgents" :key="index">{{ agent }}</span>
                 </section>
             </bk-col>
         </bk-row>
@@ -123,24 +123,9 @@
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     export default {
         filters: {
-            agentFilter (value) {
-                const local = window.devops || {}
-                let res = ''
-                switch (value) {
-                    case 'DOCKER':
-                        res = local.$t('store.Devnet 物理机')
-                        break
-                    case 'IDC':
-                        res = 'IDC CVM'
-                        break
-                    case 'PUBLIC_DEVCLOUD':
-                        res = 'DevCloud'
-                        break
-                }
-                return res
-            },
             releaseFilter (value) {
                 const local = window.devops || {}
                 let res = ''
@@ -172,14 +157,35 @@
         data () {
             return {
                 isOverflow: false,
-                isDropdownShow: false
+                isDropdownShow: false,
+                agentTypes: []
             }
         },
-
+        computed: {
+            filterAgents () {
+                const AgentNames = []
+                this.detail.agentTypeScope.forEach(item => {
+                    this.agentTypes.forEach(agent => {
+                        if (item === agent.code) {
+                            AgentNames.push(agent.name)
+                        }
+                    })
+                })
+                return AgentNames
+            }
+        },
         mounted () {
             setTimeout(() => {
                 this.isOverflow = this.$refs.edit.scrollHeight > 180
             }, 1000)
+            this.fetchAgentTypes().then(res => {
+                this.agentTypes = res
+            })
+        },
+        methods: {
+            ...mapActions('store', [
+                'fetchAgentTypes'
+            ])
         }
     }
 </script>

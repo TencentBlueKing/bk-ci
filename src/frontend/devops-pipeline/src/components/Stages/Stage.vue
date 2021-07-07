@@ -52,7 +52,7 @@
                                 {{ $t('editPage.insertStage') }}
                             </span>
                         </div>
-                        <div :class="{ 'disabled-item': hasFinallyStage, 'click-item': true }" @click.stop="appendStage(true)">
+                        <div :class="{ 'disabled-item': hasFinallyStage || stageLength === 1, 'click-item': true }" @click.stop="appendStage(true)">
                             <span>
                                 {{ $t('editPage.insertFinallyStage') }}
                             </span>
@@ -66,7 +66,7 @@
                     </div>
                 </template>
             </span>
-            <span v-bk-clickoutside="toggleLastMenu" v-if="isLastStage && !isFinallyStage && editable" @click="toggleLastMenu(!lastAddMenuShow)" class="append-stage pointer">
+            <span v-bk-clickoutside="toggleLastMenu" v-if="isLastStage && !isFinallyStage && editable" @click.stop="toggleLastMenu(!lastAddMenuShow)" class="append-stage pointer">
                 <i class="add-plus-icon" />
                 <template v-if="lastAddMenuShow">
                     <span class="insert-stage direction">
@@ -75,7 +75,7 @@
                                 {{ $t('editPage.insertStage') }}
                             </span>
                         </div>
-                        <div :class="{ 'click-item': true, 'disabled-item': hasFinallyStage }" @click.stop="appendStage(true)">
+                        <div :class="{ 'click-item': true, 'disabled-item': hasFinallyStage || stageLength === 1 }" @click.stop="appendStage(true)">
                             <span>
                                 {{ $t('editPage.insertFinallyStage') }}
                             </span>
@@ -406,8 +406,8 @@
             },
 
             appendStage (isFinally = false, fromLast = false) {
-                const { stageIndex, setInertStageIndex, setInsertStageIsFinally, hasFinallyStage, showStageSelectPopup } = this
-                if (isFinally && hasFinallyStage) return
+                const { stageIndex, stageLength, setInertStageIndex, setInsertStageIsFinally, hasFinallyStage, showStageSelectPopup } = this
+                if (isFinally && (hasFinallyStage || stageLength === 1)) return
                 setInertStageIndex({
                     insertStageIndex: isFinally ? this.stageLength : (fromLast ? stageIndex + 1 : stageIndex)
                 })
@@ -416,6 +416,7 @@
                 })
                 showStageSelectPopup(false)
                 this.toggleAddMenu(false)
+                this.toggleLastMenu(false)
             },
             showStageSelectPopup (isParallel) {
                 let limitMsg = ''

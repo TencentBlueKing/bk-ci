@@ -72,13 +72,14 @@ class JooqConfiguration {
             val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
             val packageName = declaringClass.getPackage().name
             val matchResult = regex.find(packageName)
-                ?: throw NoSuchBeanDefinitionException("no jooq configuration")
-            val configuration = configurationMap["${matchResult.groupValues[1]}JooqConfiguration"]
-                ?: throw NoSuchBeanDefinitionException("no ${matchResult.groupValues[1]}JooqConfiguration")
-            LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
-            return DSL.using(configuration)
+            if (matchResult != null) {
+                val configuration = configurationMap["${matchResult.groupValues[1]}JooqConfiguration"]
+                    ?: throw NoSuchBeanDefinitionException("no ${matchResult.groupValues[1]}JooqConfiguration")
+                LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
+                return DSL.using(configuration)
+            }
         }
-        throw NoSuchBeanDefinitionException("no jooq configuration")
+        return DSL.using(configurationMap["defaultJooqConfiguration"]!!)
     }
 
     @Bean
