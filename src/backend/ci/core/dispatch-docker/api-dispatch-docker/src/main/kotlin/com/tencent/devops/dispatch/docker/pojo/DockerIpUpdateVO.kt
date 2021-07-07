@@ -46,7 +46,5 @@ data class DockerIpUpdateVO(
     @ApiModelProperty("是否为专用机独占")
     val specialOn: Boolean,
     @ApiModelProperty("构建集群", required = false)
-    val clusterType: DockerHostClusterType = DockerHostClusterType.COMMON,
-    @ApiModelProperty("构建节点状态", required = false)
-    val status: Int = DockerHostStatus.ERROR.status
+    val clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
 )

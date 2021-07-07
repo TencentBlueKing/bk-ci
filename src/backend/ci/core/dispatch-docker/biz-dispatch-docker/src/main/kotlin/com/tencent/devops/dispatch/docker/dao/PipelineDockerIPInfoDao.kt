@@ -55,8 +55,7 @@ class PipelineDockerIPInfoDao {
         enable: Boolean,
         grayEnv: Boolean,
         specialOn: Boolean,
-        clusterName: String,
-        status: Int
+        clusterName: String
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             val preRecord = dslContext.selectFrom(this)
@@ -74,7 +73,6 @@ class PipelineDockerIPInfoDao {
                     .set(GRAY_ENV, grayEnv)
                     .set(SPECIAL_ON, specialOn)
                     .set(CLUSTER_NAME, clusterName)
-                    .set(STATUS, status)
                     .set(GMT_MODIFIED, LocalDateTime.now())
                     .where(DOCKER_IP.eq(dockerIp))
                     .execute()
@@ -93,7 +91,6 @@ class PipelineDockerIPInfoDao {
                     GRAY_ENV,
                     SPECIAL_ON,
                     CLUSTER_NAME,
-                    STATUS,
                     GMT_CREATE,
                     GMT_MODIFIED
                 ).values(
@@ -109,7 +106,6 @@ class PipelineDockerIPInfoDao {
                     grayEnv,
                     specialOn,
                     clusterName,
-                    status,
                     LocalDateTime.now(),
                     LocalDateTime.now()
                 ).execute()
@@ -124,8 +120,7 @@ class PipelineDockerIPInfoDao {
         enable: Boolean,
         grayEnv: Boolean,
         specialOn: Boolean,
-        clusterName: String,
-        status: Int
+        clusterName: String
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
@@ -134,7 +129,6 @@ class PipelineDockerIPInfoDao {
                 .set(GRAY_ENV, grayEnv)
                 .set(SPECIAL_ON, specialOn)
                 .set(CLUSTER_NAME, clusterName)
-                .set(STATUS, status)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(DOCKER_IP.eq(dockerIp))
                 .execute()
@@ -150,21 +144,19 @@ class PipelineDockerIPInfoDao {
         memLoad: Int,
         diskLoad: Int,
         diskIOLoad: Int,
-        enable: Boolean,
-        status: Int
+        enable: Boolean
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
+                .set(DOCKER_HOST_PORT, dockerHostPort)
                 .set(USED_NUM, used)
                 .set(CPU_LOAD, cpuLoad)
                 .set(MEM_LOAD, memLoad)
                 .set(DISK_LOAD, diskLoad)
                 .set(DISK_IO_LOAD, diskIOLoad)
                 .set(ENABLE, enable)
-                .set(STATUS, status)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(DOCKER_IP.eq(dockerIp))
-                .and(DOCKER_HOST_PORT.eq(dockerHostPort))
                 .execute()
         }
     }
@@ -231,7 +223,6 @@ class PipelineDockerIPInfoDao {
             val conditions =
                 mutableListOf<Condition>(
                     ENABLE.eq(true),
-                    // STATUS.eq(DockerHostStatus.ACTIVE.status),
                     GRAY_ENV.eq(grayEnv),
                     CLUSTER_NAME.eq(clusterName.name)
                 )
