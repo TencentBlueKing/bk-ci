@@ -57,7 +57,9 @@ data class StageControlOption(
     fun getGroupToReview(): StageReviewGroup? {
         refreshReviewOption()
         reviewGroups?.forEach { group ->
-            if (group.result == null) return group
+            if (group.result == null || group.result == ManualReviewAction.REVIEWING.name) {
+                return group
+            }
         }
         return null
     }
@@ -68,7 +70,9 @@ data class StageControlOption(
     fun reviewerContains(userId: String): Boolean {
         refreshReviewOption()
         reviewGroups?.forEach { group ->
-            if (group.result == null) return group.reviewers.contains(userId)
+            if (group.result == null || group.result == ManualReviewAction.REVIEWING.name) {
+                return group.reviewers.contains(userId)
+            }
         }
         return false
     }
@@ -84,7 +88,7 @@ data class StageControlOption(
     ) {
         refreshReviewOption()
         reviewGroups?.forEach { group ->
-            if (group.result == null) {
+            if (group.result == null || group.result == ManualReviewAction.REVIEWING.name) {
                 group.result = action.name
                 group.operator = userId
                 group.params = params?.toMutableList()

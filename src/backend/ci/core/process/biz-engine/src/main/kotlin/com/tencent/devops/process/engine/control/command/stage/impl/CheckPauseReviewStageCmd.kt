@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -125,7 +126,7 @@ class CheckPauseReviewStageCmd(
         val group = option.getGroupToReview() ?: return
         val notifyUsers = mutableListOf<String>()
 
-        if (group.result == null) {
+        if (group.result == null || group.result == ManualReviewAction.REVIEWING.name) {
             val reviewers = group.reviewers.joinToString(",")
             val realReviewers = EnvUtils.parseEnv(reviewers, commandContext.variables)
                 .split(",").toList()
