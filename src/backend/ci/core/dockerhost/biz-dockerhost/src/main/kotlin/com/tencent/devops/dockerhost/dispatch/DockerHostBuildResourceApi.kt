@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.dispatch.docker.pojo.DockerHostStatus
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.utils.CommonUtils
@@ -91,6 +92,7 @@ class DockerHostBuildResourceApi constructor(
             enable = true,
             grayEnv = null,
             specialOn = null,
+            status = DockerHostStatus.ACTIVE.status,
             createTime = null
         )
 
