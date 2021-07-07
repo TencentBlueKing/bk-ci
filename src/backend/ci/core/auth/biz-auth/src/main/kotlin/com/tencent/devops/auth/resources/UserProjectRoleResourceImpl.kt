@@ -34,6 +34,7 @@ import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -84,7 +85,11 @@ class UserProjectRoleResourceImpl @Autowired constructor(
     }
 
     override fun hashPermission(userId: String, projectId: Int): Result<Boolean> {
-        permissionGradeService.checkGradeManagerUser(userId, projectId)
+        try {
+            permissionGradeService.checkGradeManagerUser(userId, projectId)
+        } catch (e: PermissionForbiddenException) {
+            return Result(false)
+        }
         return Result(true)
     }
 
