@@ -31,7 +31,6 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoadConfig
-import com.tencent.devops.dispatch.docker.pojo.DockerHostStatus
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.DockerIpListPage
 import com.tencent.devops.dispatch.docker.pojo.DockerIpUpdateVO
@@ -84,7 +83,6 @@ class DispatchDockerService @Autowired constructor(
                     grayEnv = it.grayEnv,
                     specialOn = it.specialOn,
                     clusterType = DockerHostClusterType.valueOf(it.clusterName),
-                    status = it.status,
                     createTime = it.gmtCreate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 ))
             }
@@ -120,8 +118,7 @@ class DispatchDockerService @Autowired constructor(
                     enable = it.enable,
                     grayEnv = it.grayEnv ?: false,
                     specialOn = it.specialOn ?: false,
-                    clusterName = it.clusterType?.name ?: DockerHostClusterType.COMMON.name,
-                    status = it.status ?: DockerHostStatus.ERROR.status
+                    clusterName = it.clusterType?.name ?: DockerHostClusterType.COMMON.name
                 )
             }
 
@@ -142,8 +139,7 @@ class DispatchDockerService @Autowired constructor(
                 enable = dockerIpUpdateVO.enable,
                 grayEnv = dockerIpUpdateVO.grayEnv,
                 specialOn = dockerIpUpdateVO.specialOn,
-                clusterName = dockerIpUpdateVO.clusterType.name,
-                status = dockerIpUpdateVO.status
+                clusterName = dockerIpUpdateVO.clusterType.name
             )
             return true
         } catch (e: Exception) {
@@ -184,8 +180,7 @@ class DispatchDockerService @Autowired constructor(
                 memLoad = dockerIpInfoVO.averageMemLoad,
                 diskLoad = dockerIpInfoVO.averageDiskLoad,
                 diskIOLoad = dockerIpInfoVO.averageDiskIOLoad,
-                enable = dockerIpInfoVO.enable,
-                status = dockerIpInfoVO.status ?: DockerHostStatus.ERROR.status
+                enable = dockerIpInfoVO.enable
             )
             return true
         } catch (e: Exception) {
