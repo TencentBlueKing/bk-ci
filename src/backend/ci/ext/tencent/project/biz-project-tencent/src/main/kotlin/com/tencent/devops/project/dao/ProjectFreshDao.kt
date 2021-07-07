@@ -49,7 +49,7 @@ class ProjectFreshDao {
 
     fun fixProjectInfo(
         dslContext: DSLContext,
-        gitProjectId: Long,
+        id: Long,
         creatorBgName: String,
         creatorBgId: Long,
         creatorDeptName: String,
@@ -65,10 +65,10 @@ class ProjectFreshDao {
                 .set(BG_NAME, creatorBgName)
                 .set(DEPT_NAME, creatorDeptName)
                 .set(CENTER_NAME, creatorCenterName)
-                .set(BG_ID, creatorDeptId)
+                .set(BG_ID, creatorBgId)
                 .set(DEPT_ID, creatorDeptId)
                 .set(CENTER_ID, creatorCenterId)
-                .where(ID.eq(gitProjectId))
+                .where(ID.eq(id))
                 .execute()
         }
     }

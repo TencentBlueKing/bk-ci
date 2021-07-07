@@ -311,7 +311,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                 val totalTime = if (record.startTime == null || record.endTime == null) {
                     0
                 } else {
-                    Duration.between(record.startTime, record.endTime).toMillis() / 1000
+                    Duration.between(record.startTime, record.endTime).toMillis()
                 }
                 dslContext.update(this)
                     .set(TOTAL_TIME, totalTime)
