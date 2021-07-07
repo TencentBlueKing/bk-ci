@@ -205,7 +205,7 @@ object LoggerService {
                 realMessage = list.last()
             }
             if (realMessage.startsWith(LOG_SUBTAG_FINISH_FLAG)) {
-            finishLog(elementId, jobId, executeCount, subTag)
+                finishLog(elementId, jobId, executeCount, subTag)
                 realMessage = realMessage.removePrefix(LOG_SUBTAG_FINISH_FLAG)
             }
             realMessage = prefix + realMessage
