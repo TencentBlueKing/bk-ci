@@ -35,8 +35,6 @@ dependencies {
     api(project(":core:dockerhost:api-dockerhost"))
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-pipeline"))
-    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    api("org.jetbrains.kotlin:kotlin-reflect")
     api("org.apache.commons:commons-exec")
     api("org.apache.commons:commons-compress")
     api("com.github.oshi:oshi-core")

@@ -35,5 +35,4 @@ dependencies {
     api("javax.websocket:javax.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 }

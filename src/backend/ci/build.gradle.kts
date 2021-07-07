@@ -1,108 +1,35 @@
 plugins {
-    id("com.tencent.devops.boot") apply false
+    id("com.tencent.devops.boot")
 }
 
 apply("$rootDir/detekt.gradle.kts")
 
-subprojects {
+allprojects {
     apply(plugin = "com.tencent.devops.boot")
     apply(plugin = "maven")
-
-    /************ https://github.com/bkdevops-projects/devops-framework/issues/73 ********/
-    apply(plugin = "java")
-    apply(plugin = "kotlin")
-    apply(plugin = "org.jetbrains.kotlin.plugin.spring")
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = JavaVersion.VERSION_1_8.toString()
-            javaParameters = true
-        }
-    }
-
-    tasks.withType<JavaCompile> {
-        options.encoding = "UTF-8"
-        options.compilerArgs.add("-parameters")
-        sourceCompatibility = JavaVersion.VERSION_1_8.toString()
-        targetCompatibility = JavaVersion.VERSION_1_8.toString()
-    }
-
-    tasks.getByName("jar") {
-        onlyIf {
-            project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
-        }
-    }
-
-    tasks.getByName("uploadArchives") {
-        onlyIf {
-            project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
-        }
-    }
-
-    tasks.getByName("install") {
-        onlyIf {
-            project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty() &&
-                    !name.startsWith("model-") &&
-                    !name.startsWith("boot-") &&
-                    !name.startsWith("biz-")
-        }
-    }
-
-    configurations.forEach {
-        it.exclude("org.springframework.boot", "spring-boot-starter-logging")
-        it.exclude("org.springframework.boot", "spring-boot-starter-tomcat")
-        it.exclude("org.apache.tomcat", "tomcat-jdbc")
-        it.exclude("org.slf4j", "log4j-over-slf4j")
-        it.exclude("org.slf4j", "slf4j-log4j12")
-        it.exclude("org.slf4j", "slf4j-nop")
-    }
-
-    dependencies {
-        "testImplementation"("junit:junit")
-    }
-    /*****************************************************************************************/
 
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
-    version = System.getProperty("ci_version") ?: "1.6.0"
-    version = if (System.getProperty("snapshot") == "true") {
-        version as String + "-SNAPSHOT"
+    version = (System.getProperty("ci_version") ?: "1.6.0") + if (System.getProperty("snapshot") == "true") {
+        "-SNAPSHOT"
     } else {
-        version as String + "-RELEASE"
+        "-RELEASE"
     }
-
     // 仓库
-    val mavenRepoUrl = System.getProperty("mavenRepoUrl")
-        ?: System.getenv("mavenRepoUrl")
-        ?: extra["MAVEN_REPO_URL"] as String
-
     repositories {
         mavenLocal()
-        maven(url = mavenRepoUrl)
-        maven(url = "https://repo.spring.io/libs-milestone")
+        maven(
+            url = System.getProperty("mavenRepoUrl")
+                ?: System.getenv("mavenRepoUrl")
+                ?: extra["MAVEN_REPO_URL"]?.toString()
+                ?: "https://repo.spring.io/libs-milestone"
+        )
         mavenCentral()
         jcenter()
     }
 
-    // 创建目录
-    task("createCodeDirs") {
-        listOf(
-            "src/main/java",
-            "src/main/kotlin",
-            "src/main/resources",
-            "src/test/java",
-            "src/test/kotlin",
-            "src/test/resources"
-        ).forEach {
-            val f = File(it)
-            if (!f.exists()) {
-                f.mkdirs()
-            }
-        }
-    }
-
-
-    configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
+    dependencyManagement {
         dependencies {
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
             dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")

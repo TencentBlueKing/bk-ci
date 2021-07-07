@@ -35,5 +35,5 @@ dependencies {
     api("org.jolokia:jolokia-core")
     api("javax.servlet:javax.servlet-api")
     api("org.springframework:spring-web")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    api("org.apache.commons:commons-lang3")
 }

@@ -36,7 +36,7 @@ import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEv
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.timer.SchedulerManager
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang.time.DateFormatUtils
+import org.apache.commons.lang3.time.DateFormatUtils
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.slf4j.LoggerFactory
