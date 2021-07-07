@@ -3,8 +3,6 @@ plugins {
     detektCheck
 }
 
-apply("$rootDir/detekt.gradle.kts")
-
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
     apply(plugin = "maven")
