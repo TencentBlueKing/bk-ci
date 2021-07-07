@@ -34,5 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("人工审核-自定义参数")
 data class StageReviewRequest(
     @ApiModelProperty("reviewParams", required = true)
-    val reviewParams: List<ManualReviewParam>
+    val reviewParams: List<ManualReviewParam>,
+    @ApiModelProperty("审核建议", required = false)
+    var suggest: String? = ""
 )

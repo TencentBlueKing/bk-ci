@@ -805,10 +805,18 @@ class PipelineBuildFacadeService(
                 )
             }
             if (isCancel) {
-                pipelineStageService.cancelStage(userId = userId, buildStage = buildStage)
+                pipelineStageService.cancelStage(
+                    userId = userId,
+                    buildStage = buildStage,
+                    reviewRequest = reviewRequest
+                )
             } else {
                 buildStage.controlOption!!.stageControlOption.reviewParams = reviewRequest?.reviewParams
-                pipelineStageService.startStage(userId = userId, buildStage = buildStage)
+                pipelineStageService.startStage(
+                    userId = userId,
+                    buildStage = buildStage,
+                    reviewRequest = reviewRequest
+                )
             }
         } finally {
             runLock.unlock()

@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.option
 
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
@@ -56,7 +57,7 @@ data class StageControlOption(
     fun getGroupToReview(): StageReviewGroup? {
         refreshReviewOption()
         reviewGroups?.forEach { group ->
-            if (group.reviewed != true) return group
+            if (group.result == null) return group
         }
         return null
     }
@@ -67,7 +68,7 @@ data class StageControlOption(
     fun reviewerContains(userId: String): Boolean {
         refreshReviewOption()
         reviewGroups?.forEach { group ->
-            if (group.reviewed != true) return group.reviewers.contains(userId)
+            if (group.result == null) return group.reviewers.contains(userId)
         }
         return false
     }
@@ -75,12 +76,17 @@ data class StageControlOption(
     /**
      * 审核通过当前等待中的审核组
      */
-    fun reviewCurrentGroup(userId: String) {
+    fun reviewCurrentGroup(
+        userId: String,
+        action: ManualReviewAction,
+        suggest: String?
+    ) {
         refreshReviewOption()
         reviewGroups?.forEach { group ->
-            if (group.reviewed != true) {
-                group.reviewed = true
+            if (group.result == null) {
+                group.result = action.name
                 group.operator = userId
+                group.suggest = suggest
             }
         }
     }
@@ -91,10 +97,16 @@ data class StageControlOption(
     fun refreshReviewOption() {
         val newReviewGroups = mutableListOf<StageReviewGroup>()
         if (triggerUsers?.isNotEmpty() == true) {
-            newReviewGroups.add(StageReviewGroup(
+            val group = if (triggered == true) StageReviewGroup(
                 reviewers = triggerUsers!!,
-                reviewed = triggered
-            ))
+                result = ManualReviewAction.PROCESS.name,
+                params = reviewParams?.toMutableList()
+            ) else StageReviewGroup(
+                reviewers = triggerUsers!!,
+                result = null
+            )
+
+            newReviewGroups.add(group)
             triggerUsers = null
             triggered = null
         }

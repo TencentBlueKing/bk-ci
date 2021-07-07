@@ -110,8 +110,7 @@ class CheckPauseReviewStageCmd(
 
     private fun needPause(event: PipelineBuildStageEvent, option: StageControlOption?): Boolean {
         // #115 只有在非手动触发该Stage的首次运行做审核暂停
-        if (event.source == BS_MANUAL_START_STAGE || option?.manualTrigger != true ||
-            option.triggered == true) {
+        if (event.source == BS_MANUAL_START_STAGE || option?.manualTrigger != true) {
             return false
         }
         return option.getGroupToReview() != null
@@ -123,10 +122,10 @@ class CheckPauseReviewStageCmd(
     private fun pauseStageNotify(commandContext: StageContext) {
         val stage = commandContext.stage
         val option = stage.controlOption!!.stageControlOption
-        val group = option.getGroupToReview()
+        val group = option.getGroupToReview() ?: return
         val notifyUsers = mutableListOf<String>()
 
-        if (group?.reviewed == false) {
+        if (group.result == null) {
             val reviewers = group.reviewers.joinToString(",")
             val realReviewers = EnvUtils.parseEnv(reviewers, commandContext.variables)
                 .split(",").toList()

@@ -29,5 +29,16 @@ package com.tencent.devops.common.pipeline.enums
 
 enum class ManualReviewAction {
     PROCESS,
-    ABORT
+    ABORT,
+    REVIEWING;
+
+    companion object {
+        fun parse(name: String?): ManualReviewAction {
+            return try {
+                if (name == null) REVIEWING else valueOf(name)
+            } catch (ignored: Exception) {
+                REVIEWING
+            }
+        }
+    }
 }
