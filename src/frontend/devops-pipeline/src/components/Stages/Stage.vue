@@ -450,9 +450,15 @@
                 }
             },
 
-            toggleLastMenu (isAddMenuShow) {
+            toggleLastMenu (isLastMenuShow) {
                 if (!this.editable) return
-                this.lastAddMenuShow = typeof isAddMenuShow === 'boolean' ? isAddMenuShow : false
+                const { stageIndex, setInertStageIndex } = this
+                this.lastAddMenuShow = typeof isLastMenuShow === 'boolean' ? isLastMenuShow : false
+                if (this.lastAddMenuShow) {
+                    setInertStageIndex({
+                        insertStageIndex: stageIndex
+                    })
+                }
             },
 
             startNextStage () {
