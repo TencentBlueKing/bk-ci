@@ -31,6 +31,4 @@ dependencies {
     implementation("commons-codec:commons-codec")
     implementation("com.google.guava:guava")
     implementation("org.jolokia:jolokia-core")
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
 }

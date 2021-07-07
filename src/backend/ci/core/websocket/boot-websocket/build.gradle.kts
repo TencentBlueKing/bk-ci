@@ -29,5 +29,3 @@ dependencies {
     api(project(":core:websocket:biz-websocket"))
     api(project(":core:websocket:biz-websocket-blueking"))
 }
-
-

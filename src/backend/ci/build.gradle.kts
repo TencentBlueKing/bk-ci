@@ -5,16 +5,12 @@ plugins {
 
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
-    apply(plugin = "maven")
 
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
-    version = (System.getProperty("ci_version") ?: "1.6.0") + if (System.getProperty("snapshot") == "true") {
-        "-SNAPSHOT"
-    } else {
-        "-RELEASE"
-    }
+    version = (System.getProperty("ci_version") ?: "1.6.0") +
+            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
     // 仓库
     repositories {
         mavenLocal()
@@ -28,6 +24,7 @@ allprojects {
         jcenter()
     }
 
+    // 版本管理
     dependencyManagement {
         dependencies {
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
@@ -67,5 +64,14 @@ allprojects {
                 entry("api-repository")
             }
         }
+    }
+
+    // 兼容Junit4
+    dependencies {
+        testImplementation("org.junit.vintage:junit-vintage-engine")
+    }
+    // 兼容 Log4j
+    configurations.forEach {
+        it.exclude("org.springframework.boot", "spring-boot-starter-logging")
     }
 }

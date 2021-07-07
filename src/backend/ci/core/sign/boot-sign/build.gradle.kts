@@ -29,6 +29,3 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-mock"))
     api(project(":core:sign:biz-sign-sample"))
 }
-
-
-
