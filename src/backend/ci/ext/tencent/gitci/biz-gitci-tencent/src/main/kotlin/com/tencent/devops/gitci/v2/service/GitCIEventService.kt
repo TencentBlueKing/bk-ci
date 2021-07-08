@@ -33,8 +33,11 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
+import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
 import com.tencent.devops.gitci.utils.GitCommonUtils
@@ -52,10 +55,13 @@ import org.springframework.stereotype.Service
 class GitCIEventService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
+    private val scmClient: ScmClient,
     private val objectMapper: ObjectMapper,
     private val userMessageDao: GitUserMessageDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
+    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val websocketService: GitCIV2WebsocketService,
     private val gitRequestEventBuildDao: GitRequestEventNotBuildDao
 ) {
 
@@ -63,7 +69,112 @@ class GitCIEventService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitCIEventService::class.java)
     }
 
-    fun saveNotBuildEvent(
+    // 触发检查错误
+    fun saveTriggerNotBuildEvent(
+        gitProjectId: Long,
+        userId: String,
+        eventId: Long,
+        reason: String,
+        reasonDetail: String?
+    ): Long {
+        return saveNotBuildEvent(
+            gitProjectId = gitProjectId,
+            userId = userId,
+            eventId = eventId,
+            reason = reason,
+            reasonDetail = reasonDetail,
+            originYaml = null,
+            parsedYaml = null,
+            normalizedYaml = null,
+            pipelineId = null,
+            filePath = null
+        )
+    }
+
+    // 解析yaml错误
+    fun saveBuildNotBuildEvent(
+        userId: String,
+        eventId: Long,
+        originYaml: String?,
+        parsedYaml: String? = null,
+        normalizedYaml: String?,
+        reason: String,
+        reasonDetail: String,
+        pipelineId: String?,
+        pipelineName: String?,
+        filePath: String,
+        gitProjectId: Long,
+        sendCommitCheck: Boolean,
+        commitCheckBlock: Boolean,
+        version: String? = null
+    ): Long {
+        val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
+            ?: throw RuntimeException("can't find event $eventId")
+        // 人工触发不发送
+        if (event.objectKind != OBJECT_KIND_MANUAL && sendCommitCheck) {
+            val gitBasicSetting = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+                ?: throw RuntimeException("can't find gitBasicSetting $gitProjectId")
+            val realBlock = gitBasicSetting.enableMrBlock && commitCheckBlock
+            scmClient.pushCommitCheckWithBlock(
+                commitId = event.commitId,
+                mergeRequestId = event.mergeRequestId ?: 0L,
+                userId = event.userId,
+                block = realBlock,
+                state = GitCICommitCheckState.FAILURE,
+                context = "${pipelineName ?: ""}($filePath): $reason",
+                gitCIBasicSetting = gitBasicSetting
+            )
+        }
+        return saveNotBuildEvent(
+            userId = userId,
+            eventId = eventId,
+            originYaml = originYaml,
+            parsedYaml = parsedYaml,
+            normalizedYaml = normalizedYaml,
+            reason = reason,
+            reasonDetail = reasonDetail,
+            pipelineId = pipelineId,
+            filePath = filePath,
+            gitProjectId = gitProjectId,
+            gitEvent = event,
+            version = version
+        )
+    }
+
+    // 流水线启动错误
+    fun saveRunNotBuildEvent(
+        userId: String,
+        eventId: Long,
+        originYaml: String?,
+        parsedYaml: String? = null,
+        normalizedYaml: String?,
+        reason: String,
+        reasonDetail: String,
+        pipelineId: String?,
+        pipelineName: String?,
+        filePath: String,
+        gitProjectId: Long,
+        sendCommitCheck: Boolean,
+        commitCheckBlock: Boolean
+    ): Long {
+        return saveBuildNotBuildEvent(
+            userId = userId,
+            eventId = eventId,
+            originYaml = originYaml,
+            parsedYaml = parsedYaml,
+            normalizedYaml = normalizedYaml,
+            reason = reason,
+            reasonDetail = reasonDetail,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName,
+            filePath = filePath,
+            gitProjectId = gitProjectId,
+            sendCommitCheck = sendCommitCheck,
+            commitCheckBlock = commitCheckBlock
+        )
+    }
+
+    private fun saveNotBuildEvent(
         userId: String,
         eventId: Long,
         originYaml: String?,
@@ -73,11 +184,13 @@ class GitCIEventService @Autowired constructor(
         reasonDetail: String?,
         pipelineId: String?,
         filePath: String?,
-        gitProjectId: Long
+        gitProjectId: Long,
+        gitEvent: GitRequestEvent? = null,
+        version: String? = null
     ): Long {
         var messageId = -1L
-        val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
-            ?: throw RuntimeException("can't find event $eventId")
+        val event = gitEvent ?: (gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
+            ?: throw RuntimeException("can't find event $eventId"))
         val messageTitle = when (event.objectKind) {
             OBJECT_KIND_MERGE_REQUEST -> {
                 val branch = GitCommonUtils.checkAndGetForkBranchName(
@@ -116,7 +229,8 @@ class GitCIEventService @Autowired constructor(
                 reasonDetail = reasonDetail,
                 pipelineId = pipelineId,
                 filePath = filePath,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                version = version
             )
             // eventId只用保存一次
             if (!userMessageDao.getMessageExist(context, "git_$gitProjectId", userId, event.id.toString())) {
@@ -128,6 +242,7 @@ class GitCIEventService @Autowired constructor(
                     messageId = event.id.toString(),
                     messageTitle = messageTitle
                 )
+                websocketService.pushNotifyWebsocket(userId, gitProjectId.toString())
             }
         }
         return messageId

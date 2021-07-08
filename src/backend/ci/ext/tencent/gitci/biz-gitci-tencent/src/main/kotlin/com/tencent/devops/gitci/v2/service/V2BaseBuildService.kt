@@ -61,11 +61,14 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
+    private val gitCIEventSaveService: GitCIEventService,
+    private val websocketService: GitCIV2WebsocketService,
     private val gitCIEventService: GitCIEventService,
     private val gitPipelineBranchService: GitPipelineBranchService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(V2BaseBuildService::class.java)
+        private const val ymlVersion = "v2.0"
     }
 
     private val channelCode = ChannelCode.GIT
@@ -93,7 +96,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
             gitPipelineResourceDao.createPipeline(
                 dslContext = dslContext,
                 gitProjectId = gitCIBasicSetting.gitProjectId,
-                pipeline = pipeline
+                pipeline = pipeline,
+                version = ymlVersion
             )
             // 新建流水线时保存流水线-分支记录
             gitPipelineBranchService.save(
@@ -117,7 +121,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
             gitPipelineResourceDao.createPipeline(
                 dslContext = dslContext,
                 gitProjectId = gitCIBasicSetting.gitProjectId,
-                pipeline = pipeline
+                pipeline = pipeline,
+                version = ymlVersion
             )
             // 对于需要删了重建的，删除流水线-分支记录在重建
             gitPipelineBranchService.deleteBranch(pipelineId = oldPipelineId, branch = null)
@@ -133,9 +138,15 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 dslContext = dslContext,
                 gitProjectId = gitCIBasicSetting.gitProjectId,
                 pipelineId = pipeline.pipelineId,
-                displayName = pipeline.displayName
+                displayName = pipeline.displayName,
+                version = ymlVersion
             )
         }
+        websocketService.pushPipelineWebSocket(
+            projectId = "git_${gitCIBasicSetting.gitProjectId}",
+            pipelineId = pipeline.pipelineId,
+            userId = event.userId
+        )
     }
 
     fun startBuild(
@@ -154,7 +165,7 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 startupPipelineBuild(processClient, gitBuildId, model, event, gitCIBasicSetting, pipeline.pipelineId)
             logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
-            gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
+            gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
             // 推送启动构建消息,当人工触发时不推送构建消息
             if (event.objectKind != OBJECT_KIND_MANUAL) {
@@ -179,16 +190,19 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 e
             )
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
-            gitCIEventService.saveNotBuildEvent(
+            gitCIEventSaveService.saveRunNotBuildEvent(
                 userId = event.userId,
                 eventId = event.id!!,
                 pipelineId = pipeline.pipelineId,
+                pipelineName = pipeline.displayName,
                 filePath = pipeline.filePath,
                 originYaml = build?.originYaml,
                 normalizedYaml = build?.normalizedYaml,
                 reason = TriggerReason.PIPELINE_RUN_ERROR.name,
                 reasonDetail = e.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
-                gitProjectId = event.gitProjectId
+                gitProjectId = event.gitProjectId,
+                sendCommitCheck = true,
+                commitCheckBlock = (event.objectKind == OBJECT_KIND_MERGE_REQUEST)
             )
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
         }

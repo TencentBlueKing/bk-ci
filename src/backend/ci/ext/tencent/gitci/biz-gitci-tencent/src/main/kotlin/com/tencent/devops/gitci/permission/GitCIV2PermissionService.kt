@@ -30,8 +30,8 @@ package com.tencent.devops.gitci.permission
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.gitci.v2.exception.GitCINoEnableException
 import org.jooq.DSLContext
@@ -50,7 +50,8 @@ import javax.ws.rs.core.Response
 class GitCIV2PermissionService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao
+    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
+    private val tokenCheckService: ClientTokenService
 ) {
     // 校验只需要工蜂不需要OAuth的
     fun checkGitCIPermission(
@@ -90,10 +91,13 @@ class GitCIV2PermissionService @Autowired constructor(
     }
 
     private fun checkPermission(userId: String, projectId: String, permission: AuthPermission) {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
-        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
+        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId ")
         val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, permission.value, gitProjectId, null
+            userId = userId,
+            token = tokenCheckService.getSystemToken(null) ?: "",
+            action = permission.value,
+            projectCode = projectId,
+            resourceCode = null
         ).data
         // 说明用户没有工蜂权限
         if (result == null || !result) {

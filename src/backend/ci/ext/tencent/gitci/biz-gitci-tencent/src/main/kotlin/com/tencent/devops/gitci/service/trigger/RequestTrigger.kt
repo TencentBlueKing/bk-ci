@@ -28,6 +28,7 @@
 package com.tencent.devops.gitci.service.trigger
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
@@ -35,7 +36,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
-import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.listener.GitCIRequestDispatcher
 import com.tencent.devops.gitci.listener.GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
@@ -63,10 +63,9 @@ class RequestTrigger @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val repositoryConfService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate,
-    private val gitCIEventService: GitCIEventService
+    private val gitCIEventSaveService: GitCIEventService
 ) : RequestTriggerInterface<CIBuildYaml> {
 
     override fun triggerBuild(
@@ -85,7 +84,8 @@ class RequestTrigger @Autowired constructor(
             isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
             filePath = filePath,
-            pipelineId = gitProjectPipeline.pipelineId
+            pipelineId = gitProjectPipeline.pipelineId,
+            pipelineName = gitProjectPipeline.displayName
         ) ?: return false
 
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
@@ -126,16 +126,19 @@ class RequestTrigger @Autowired constructor(
         } else {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                 "eventId: ${gitRequestEvent.id}")
-            gitCIEventService.saveNotBuildEvent(
+            gitCIEventSaveService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
+                pipelineName = gitProjectPipeline.displayName,
                 filePath = gitProjectPipeline.filePath,
                 originYaml = originYaml,
                 normalizedYaml = normalizedYaml,
                 reason = TriggerReason.TRIGGER_NOT_MATCH.name,
                 reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
-                gitProjectId = gitRequestEvent.gitProjectId
+                gitProjectId = gitRequestEvent.gitProjectId,
+                sendCommitCheck = false,
+                commitCheckBlock = false
             )
         }
 
@@ -153,8 +156,9 @@ class RequestTrigger @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
-        filePath: String?,
-        pipelineId: String?
+        filePath: String,
+        pipelineId: String?,
+        pipelineName: String?
     ): CIBuildYaml? {
 
         if (originYaml.isNullOrBlank()) {
@@ -165,21 +169,29 @@ class RequestTrigger @Autowired constructor(
             createCIBuildYaml(originYaml, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
             logger.error("git ci yaml is invalid", e)
-            gitCIEventService.saveNotBuildEvent(
+            gitCIEventSaveService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 filePath = filePath,
                 originYaml = originYaml,
                 normalizedYaml = null,
                 reason = TriggerReason.CI_YAML_INVALID.name,
                 reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message.toString()),
-                gitProjectId = gitRequestEvent.gitProjectId
+                gitProjectId = gitRequestEvent.gitProjectId,
+                // V1不发送通知
+                sendCommitCheck = false,
+                commitCheckBlock = false
             )
             return null
         }
 
         return yamlObject
+    }
+
+    override fun checkYamlSchema(userId: String, yaml: String): Result<String> {
+        return Result("OK")
     }
 
     fun createCIBuildYaml(yamlStr: String, gitProjectId: Long? = null): CIBuildYaml {

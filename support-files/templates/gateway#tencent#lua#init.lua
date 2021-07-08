@@ -37,28 +37,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         suffix = "",
         nodes_url = "/v1/catalog/nodes"
     },
-    ns_gray = {
-        ip = {"__BKCI_CONSUL_GRAY_IP__"},
-        port = __BKCI_CONSUL_DNS_PORT__,
-        http_port = __BKCI_CONSUL_GRAY_PORT__,
-        domain = "__BKCI_CONSUL_DOMAIN__",
-        tag = "__BKCI_CONSUL_TAG__",
-        suffix = "",
-        nodes_url = "/v1/catalog/nodes"
-    },
     ns_devnet = {
         ip = {"127.0.0.1"},
         port = __BKCI_CONSUL_DNS_PORT__,
         http_port = __BKCI_CONSUL_PORT__,
-        domain = "__BKCI_CONSUL_DOMAIN__",
-        tag = "__BKCI_CONSUL_TAG__",
-        suffix = "",
-        nodes_url = "/v1/catalog/nodes"
-    },
-    ns_devnet_gray = {
-        ip = {"__BKCI_CONSUL_DEVNET_GRAY_IP__"},
-        port = __BKCI_CONSUL_DNS_PORT__,
-        http_port = __BKCI_CONSUL_GRAY_PORT__,
         domain = "__BKCI_CONSUL_DOMAIN__",
         tag = "__BKCI_CONSUL_TAG__",
         suffix = "",
@@ -117,7 +99,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     apigwUrl = "__BKCI_APIGW_URL__",
     apigwHost = "__BKCI_APIGW_HOST__",
     jwtPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n__BKCI_RSA_PRIVATE_KEY__\n-----END RSA PRIVATE KEY-----",
-    outerlogin = {host = "__BK_CI_FQDN__", port = 80}
+    bkci = {host = "__BK_CI_FQDN__", port = 80}
 }
 
 require("init_common")

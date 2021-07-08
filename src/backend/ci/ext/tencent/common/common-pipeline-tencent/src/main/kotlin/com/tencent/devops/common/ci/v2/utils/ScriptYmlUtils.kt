@@ -30,6 +30,7 @@ package com.tencent.devops.common.ci.v2.utils
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.github.fge.jackson.JsonLoader
@@ -49,7 +50,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Job
-import com.tencent.devops.common.ci.v2.Notices
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
@@ -211,7 +211,7 @@ object ScriptYmlUtils {
         var line: String? = br.readLine()
         while (line != null) {
             line = line.trimEnd()
-            if (line == "$userTrigger:") {
+            if (line.startsWith("$userTrigger:")) {
                 sb.append("$formatTrigger:").append("\n")
             } else {
                 sb.append(line).append("\n")
@@ -226,7 +226,6 @@ object ScriptYmlUtils {
         checkVariable(preScriptBuildYaml)
         checkStage(preScriptBuildYaml)
         checkExtend(yaml)
-        checkNotice(preScriptBuildYaml.notices)
     }
 
     private fun checkVariable(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
@@ -257,21 +256,11 @@ object ScriptYmlUtils {
             return
         }
         yamlMap.forEach { (t, _) ->
-            if (t != formatTrigger && t != "extends" && t != "version" && t != "resources") {
-                throw CustomException(Response.Status.BAD_REQUEST, "使用 extends 时顶级关键字只能有触发器 on 与 resources")
-            }
-        }
-    }
-
-    private fun checkNotice(notices: List<Notices>?) {
-        val types = setOf("email", "wework-message", "wework-chat")
-        if (notices == null) {
-            return
-        }
-        notices.forEach {
-            if (it.type !in types) {
+            if (t != formatTrigger && t != "extends" && t != "version" &&
+                t != "resources" && t != "name" && t != "on") {
                 throw CustomException(
-                    Response.Status.BAD_REQUEST, "通知类型只能为 email, wework-message, wework-chat 中的一种"
+                    status = Response.Status.BAD_REQUEST,
+                    message = "使用 extends 时顶级关键字只能有触发器 on 与 resources"
                 )
             }
         }
@@ -393,6 +382,20 @@ object ScriptYmlUtils {
         return stepList
     }
 
+    private fun preStage2Stage(preStage: PreStage?): Stage? {
+        if (preStage == null) {
+            return null
+        }
+        return Stage(
+            id = preStage.id ?: randomString(stageNamespace),
+            name = preStage.name,
+            label = formatStageLabel(preStage.label),
+            ifField = preStage.ifField,
+            fastKill = preStage.fastKill ?: false,
+            jobs = preJobs2Jobs(preStage.jobs as Map<String, PreJob>)
+        )
+    }
+
     private fun preStages2Stages(preStageList: List<PreStage>?): List<Stage> {
         if (preStageList == null) {
             return emptyList()
@@ -495,7 +498,7 @@ object ScriptYmlUtils {
             resource = preScriptBuildYaml.resources,
             notices = preScriptBuildYaml.notices,
             stages = stages,
-            finally = preStages2Stages(preScriptBuildYaml.finally),
+            finally = preJobs2Jobs(preScriptBuildYaml.finally),
             label = preScriptBuildYaml.label ?: emptyList()
         )
     }
@@ -609,28 +612,11 @@ object ScriptYmlUtils {
         )
     }
 
-/*    fun validateYaml(yamlStr: String): Pair<Boolean, String> {
-        val yamlJsonStr = try {
-            convertYamlToJson(yamlStr)
-        } catch (e: Throwable) {
-            logger.error("", e)
-            throw CustomException(Response.Status.BAD_REQUEST, "${e.cause}")
-        }
-
-        try {
-            val schema = getCIBuildYamlSchema()
-            return validate(schema, yamlJsonStr)
-        } catch (e: Throwable) {
-            logger.error("", e)
-            throw CustomException(Response.Status.BAD_REQUEST, "${e.message}")
-        }
-    }*/
-
-    fun validate(schema: String, json: String): Pair<Boolean, String> {
+    fun validate(schema: String, yamlJson: String): Pair<Boolean, String> {
         val schemaNode =
             jsonNodeFromString(schema)
         val jsonNode =
-            jsonNodeFromString(json)
+            jsonNodeFromString(yamlJson)
         val report = JsonSchemaFactory.byDefault().validator.validate(schemaNode, jsonNode)
         val itr = report.iterator()
         val sb = java.lang.StringBuilder()
@@ -641,6 +627,26 @@ object ScriptYmlUtils {
             }
         }
         return Pair(report.isSuccess, sb.toString())
+    }
+
+    fun getPreScriptBuildYamlSchema(): String {
+        val mapper = ObjectMapper()
+        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
+        val schema = mapper.generateJsonSchema(PreScriptBuildYaml::class.java)
+        /*schema.schemaNode.with("properties").with("steps").put("item", CiYamlUtils.getAbstractTaskSchema())
+        schema.schemaNode.with("properties").with("services").put("item", CiYamlUtils.getAbstractServiceSchema())
+        schema.schemaNode.with("properties")
+            .with("stages")
+            .with("items")
+            .with("properties")
+            .with("stage")
+            .with("items")
+            .with("properties")
+            .with("job")
+            .with("properties")
+            .with("steps")
+            .put("item", CiYamlUtils.getAbstractTaskSchema())*/
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema)
     }
 
     fun jsonNodeFromString(json: String): JsonNode = JsonLoader.fromString(json)

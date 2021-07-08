@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.api.ipt
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
@@ -42,6 +43,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
+@Suppress("LongParameterList")
 @Api(tags = ["BUILD_IPT_REPO_RESOURCE"], description = "IPT插件构建资源")
 @Path("/build/ipt/repo")
 @Produces(MediaType.APPLICATION_JSON)
@@ -54,6 +56,9 @@ interface BuildIptRepoResource {
     fun getCommitBuildArtifactorytInfo(
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
         @PathParam("pipelineId")
         pipelineId: String,
         @QueryParam("userId")

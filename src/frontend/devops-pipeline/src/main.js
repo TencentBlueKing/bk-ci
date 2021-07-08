@@ -35,7 +35,6 @@ import validDictionary from './utils/validDictionary'
 import PortalVue from 'portal-vue' // eslint-disable-line
 import createLocale from '../../locale'
 import '@icon-cool/bk-icon-devops/src/index'
-import log from '@blueking/log'
 import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
@@ -46,7 +45,6 @@ const { i18n, setLocale } = createLocale(require.context('@locale/pipeline/', fa
 Vue.use(focus)
 Vue.use(bkMagic)
 Vue.use(PortalVue)
-Vue.use(log)
 
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.

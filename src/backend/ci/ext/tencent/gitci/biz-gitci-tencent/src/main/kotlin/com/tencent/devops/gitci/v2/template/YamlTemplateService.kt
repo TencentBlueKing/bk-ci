@@ -51,51 +51,49 @@ class YamlTemplateService @Autowired constructor(
         const val ONLY_SUPPORT_ERROR = "Only supports using the settings context to access credentials"
     }
 
-    // 获取当前库文件，使用超级token直接拉取，token区分fork和非fork
-    fun getTemplate(
-        token: String,
-        fileName: String,
-        gitProjectId: Long,
-        ref: String
-    ): String {
-        return scmService.getYamlFromGit(
-            token = token,
-            gitProjectId = gitProjectId,
-            ref = ref,
-            fileName = templateDirectory + fileName,
-            useAccessToken = true
-        )
-    }
-
     /**
-     * 获取远程库文件，没有凭证使用项目开启人，有凭证，使用用户写的
-     * 如果是fork库，凭证使用目标库的凭证
-     * gitProjectId: fork库为主库ID
+     * 获取代码库文件，
+     * 1、有token直接使用token
+     * 2、没有personalAccessToken使用项目开启人的Oauth，
+     * 3、有personalAccessToken，使用用户写的("settings.xxx"是从凭证系统去拿)
+     * 3、如果是fork库，凭证系统使用目标库的蓝盾项目的凭证系统
+     * 注：gitProjectId: fork库为主库ID
      */
-    fun getResTemplate(
+    fun getTemplate(
+        token: String?,
         gitProjectId: Long,
-        repo: String,
-        ref: String? = "master",
+        targetRepo: String?,
+        ref: String = "master",
         personalAccessToken: String?,
         fileName: String
     ): String {
-        if (personalAccessToken.isNullOrBlank()) {
-            val token = oauthService.getGitCIEnableToken(gitProjectId).accessToken
-            val targetProjectId = scmService.getProjectInfoThrow(
-                token = token,
-                gitProjectId = repo,
-                useAccessToken = true
-            )?.gitProjectId ?: throw RuntimeException(NOT_FIND_REPO.format(repo))
+        if (token != null) {
             return scmService.getYamlFromGit(
                 token = token,
+                gitProjectId = gitProjectId,
+                ref = ref,
+                fileName = templateDirectory + fileName,
+                useAccessToken = true
+            )
+        }
+        if (personalAccessToken.isNullOrBlank()) {
+            val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
+            // TODO: 通过项目路径直接获取文件，去掉获取项目数字ID这一步
+            val targetProjectId = scmService.getProjectInfoThrow(
+                token = oAuthToken,
+                gitProjectId = targetRepo!!,
+                useAccessToken = true
+            )?.gitProjectId ?: throw RuntimeException(NOT_FIND_REPO.format(targetRepo))
+            return scmService.getYamlFromGit(
+                token = oAuthToken,
                 gitProjectId = targetProjectId.toLong(),
-                ref = ref!!,
+                ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
             )
         } else {
             val (isTicket, key) = getKey(personalAccessToken)
-            val token = if (isTicket) {
+            val personToken = if (isTicket) {
                 val ticket = ticketService.getCredential(
                     projectId = "git_$gitProjectId",
                     credentialId = key
@@ -108,14 +106,14 @@ class YamlTemplateService @Autowired constructor(
                 key
             }
             val targetProjectId = scmService.getProjectInfoThrow(
-                token = token,
-                gitProjectId = repo,
+                token = personToken,
+                gitProjectId = targetRepo!!,
                 useAccessToken = false
-            )?.gitProjectId ?: throw RuntimeException(NOT_FIND_REPO.format(repo))
+            )?.gitProjectId ?: throw RuntimeException(NOT_FIND_REPO.format(targetRepo))
             return scmService.getYamlFromGit(
-                token = token,
+                token = personToken,
                 gitProjectId = targetProjectId.toLong(),
-                ref = ref!!,
+                ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = false
             )

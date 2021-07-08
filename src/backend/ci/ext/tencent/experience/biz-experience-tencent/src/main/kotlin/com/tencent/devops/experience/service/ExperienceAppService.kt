@@ -46,7 +46,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
-import com.tencent.devops.experience.dao.ExperienceGroupDao
+import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.AppExperience
@@ -61,10 +61,13 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
+import java.net.URI
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
+import javax.ws.rs.core.Response
 
 @Service
+@SuppressWarnings("LongParameterList", "MagicNumber", "TooGenericExceptionThrown")
 class ExperienceAppService(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
@@ -72,8 +75,8 @@ class ExperienceAppService(
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
     private val experienceDownloadService: ExperienceDownloadService,
-    private val experienceGroupDao: ExperienceGroupDao,
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
+    private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val client: Client
 ) {
 
@@ -97,7 +100,7 @@ class ExperienceAppService(
         )
     }
 
-    @SuppressWarnings("ComplexMethod")
+    @SuppressWarnings("ComplexMethod", "LongMethod")
     fun detail(
         userId: String,
         experienceHashId: String,
@@ -352,5 +355,23 @@ class ExperienceAppService(
         return appExperienceSummaryList.filter { appExperienceSummary ->
             appExperienceSummary.canExperience && !appExperienceSummary.expired
         }
+    }
+
+    fun appStoreRedirect(id: String, userId: String): Response {
+        val publicRecord = experiencePublicDao.getById(dslContext, HashUtil.decodeIdToLong(id))
+            ?: return Response.status(Response.Status.NOT_FOUND).build()
+
+        experienceDownloadDetailDao.create(
+            dslContext = dslContext,
+            userId = userId,
+            recordId = publicRecord.recordId,
+            projectId = publicRecord.projectId,
+            bundleIdentifier = publicRecord.bundleIdentifier,
+            platform = publicRecord.platform
+        )
+
+        return Response
+            .temporaryRedirect(URI.create(publicRecord.externalLink))
+            .build()
     }
 }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.v2.listener
 
+import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
@@ -39,7 +40,7 @@ import org.springframework.stereotype.Service
 @Service
 class V2GitCIRequestTriggerListener @Autowired constructor(
     private val triggerBuildService: TriggerBuildService,
-    private val gitCIEventService: GitCIEventService,
+    private val gitCIEventSaveService: GitCIEventService,
     private val redisOperation: RedisOperation
 ) {
 
@@ -67,17 +68,20 @@ class V2GitCIRequestTriggerListener @Autowired constructor(
         } catch (e: Throwable) {
             logger.error("Fail to start the git ci build(${v2GitCIRequestTriggerEvent.event})", e)
             with(v2GitCIRequestTriggerEvent) {
-                gitCIEventService.saveNotBuildEvent(
+                gitCIEventSaveService.saveRunNotBuildEvent(
                     userId = event.userId,
                     eventId = event.id!!,
                     originYaml = originYaml,
                     parsedYaml = parsedYaml,
                     normalizedYaml = normalizedYaml,
-                    reason = TriggerReason.CI_RUN_FAILED.name,
-                    reasonDetail = TriggerReason.CI_RUN_FAILED.detail.format(e.message),
+                    reason = TriggerReason.PIPELINE_PREPARE_ERROR.name,
+                    reasonDetail = TriggerReason.PIPELINE_PREPARE_ERROR.detail.format(e.message),
                     pipelineId = pipeline.pipelineId,
+                    pipelineName = pipeline.displayName,
                     filePath = pipeline.filePath,
-                    gitProjectId = event.gitProjectId
+                    gitProjectId = event.gitProjectId,
+                    sendCommitCheck = true,
+                    commitCheckBlock = (event.objectKind == OBJECT_KIND_MERGE_REQUEST)
                 )
             }
         } finally {

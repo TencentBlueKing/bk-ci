@@ -40,6 +40,7 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -99,7 +100,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             url,
             RequestBody.create(MediaType.parse("application/octet-stream"), file),
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
-            useFileGateway = true
+            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
         val response = request(request, "上传自定义文件失败")
         try {
@@ -132,7 +133,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                 destFullPath = destFullPath,
                 token = token,
                 buildVariables = buildVariables,
-                parseAppData = true
+                parseAppMetadata = true
             )
         } else {
             uploadBkRepoCustomize(file, destPath, buildVariables)
@@ -155,7 +156,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                 destFullPath,
                 token,
                 buildVariables,
-                parseAppData = true
+                parseAppMetadata = true
             )
         } else {
             uploadBkRepoPipeline(file, buildVariables)
@@ -171,7 +172,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             url,
             RequestBody.create(MediaType.parse("application/octet-stream"), file),
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
-            useFileGateway = true
+            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
         val response = request(request, "上传流水线文件失败")
         try {
@@ -182,17 +183,29 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
+    override fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables) {
+        bkrepoResourceApi.uploadBkRepoFile(
+            file = file,
+            repoName = "log",
+            destFullPath = destFullPath,
+            tokenAuthPath = "/",
+            buildVariables = buildVariables,
+            parseAppMetadata = false
+        )
+    }
+
     private fun downloadBkRepoFile(
         user: String,
         projectId: String,
         repoName: String,
         fullpath: String,
-        destPath: File
+        destPath: File,
+        isVmBuildEnv: Boolean
     ) {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullpath"
         var header = HashMap<String, String>()
         header.set("X-BKREPO-UID", user)
-        val request = buildGet(url, header, true)
+        val request = buildGet(url, header, isVmBuildEnv)
         download(request, destPath)
     }
 
@@ -200,7 +213,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         userId: String,
         projectId: String,
         uri: String,
-        destPath: File
+        destPath: File,
+        isVmBuildEnv: Boolean
     ) {
         if (bkrepoResourceApi.tokenAccess()) {
             val token = bkrepoResourceApi.createBkRepoTemporaryToken(
@@ -209,9 +223,24 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                 path = uri,
                 type = TokenType.DOWNLOAD
             )
-            bkrepoResourceApi.downloadFileByToken(userId, projectId, "custom", uri, token, destPath)
+            bkrepoResourceApi.downloadFileByToken(
+                userId = userId,
+                projectId = projectId,
+                repoName = "custom",
+                fullPath = uri,
+                token = token,
+                destPath = destPath,
+                isVmBuildEnv = isVmBuildEnv
+            )
         } else {
-            downloadBkRepoFile(userId, projectId, "custom", uri, destPath)
+            downloadBkRepoFile(
+                user = userId,
+                projectId = projectId,
+                repoName = "custom",
+                fullpath = uri,
+                destPath = destPath,
+                isVmBuildEnv = isVmBuildEnv
+            )
         }
     }
 
@@ -221,7 +250,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         pipelineId: String,
         buildId: String,
         uri: String,
-        destPath: File
+        destPath: File,
+        isVmBuildEnv: Boolean
     ) {
         if (bkrepoResourceApi.tokenAccess()) {
             val token = bkrepoResourceApi.createBkRepoTemporaryToken(
@@ -230,9 +260,24 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                 path = uri,
                 type = TokenType.DOWNLOAD
             )
-            bkrepoResourceApi.downloadFileByToken(userId, projectId, "pipeline", uri, token, destPath)
+            bkrepoResourceApi.downloadFileByToken(
+                userId = userId,
+                projectId = projectId,
+                repoName = "pipeline",
+                fullPath = uri,
+                token = token,
+                destPath = destPath,
+                isVmBuildEnv = isVmBuildEnv
+            )
         } else {
-            downloadBkRepoFile(userId, projectId, "pipeline", uri, destPath)
+            downloadBkRepoFile(
+                user = userId,
+                projectId = projectId,
+                repoName = "pipeline",
+                fullpath = uri,
+                destPath = destPath,
+                isVmBuildEnv = isVmBuildEnv
+            )
         }
     }
 
@@ -250,7 +295,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         url: String,
         destPath: String,
         file: File,
-        headers: Map<String, String>?
+        headers: Map<String, String>?,
+        isVmBuildEnv: Boolean
     ): Result<Boolean> {
         LoggerService.addNormalLine("upload file url >>> $url")
         val fileBody = RequestBody.create(MultipartFormData, file)
@@ -259,7 +305,12 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .setType(MultipartBody.FORM)
             .addFormDataPart("file", fileName, fileBody)
             .build()
-        val request = buildPost(url, requestBody, headers ?: emptyMap(), useFileGateway = true)
+        val request = buildPost(
+            path = url,
+            requestBody = requestBody,
+            headers = headers ?: emptyMap(),
+            useFileDevnetGateway = isVmBuildEnv
+        )
         val responseContent = request(request, "upload file[$fileName] failed")
         return objectMapper.readValue(responseContent)
     }

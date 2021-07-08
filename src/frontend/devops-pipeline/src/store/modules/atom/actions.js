@@ -71,7 +71,8 @@ import {
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_REVIEW_DIALOG,
     TOGGLE_STAGE_REVIEW_PANEL,
-    SET_IMPORTED_JSON
+    SET_IMPORTED_JSON,
+    SET_EDIT_FROM
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import { hashID, randomString } from '@/utils/util'
@@ -169,15 +170,6 @@ export default {
     setPipelineContainer ({ commit }, { oldContainers, containers }) {
         commit(SET_PIPELINE_CONTAINER, { oldContainers, containers })
     },
-    /**
-     * 根据projectcode获取项目详情
-     */
-    requestProjectDetail: async ({ commit }, { projectId }) => {
-        return request.get(`project/api/user/projects/${projectId}/`).then(response => {
-            // Object.assign(response.data, { ccAppName: response.ccAppName })
-            return response.data
-        })
-    },
     requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
         try {
             const url = version ? `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}?version=${version}` : `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`
@@ -226,6 +218,7 @@ export default {
         }
     },
     setPipeline: actionCreator(SET_PIPELINE),
+    setEditFrom: actionCreator(SET_EDIT_FROM),
     setPipelineEditing: actionCreator(SET_PIPELINE_EDITING),
     fetchContainers: async ({ commit }, { projectCode }) => {
         try {
@@ -437,7 +430,7 @@ export default {
 
     // 获取项目下已安装的插件列表
     getInstallAtomList ({ commit }, projectCode) {
-        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=1000`)
+        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=2000`)
     },
 
     // 获取已安装的插件详情
@@ -483,6 +476,17 @@ export default {
                 subTag,
                 debug
             }
+        })
+    },
+
+    getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
+        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, executeCount } })
+    },
+
+    getDownloadLogFromArtifactory ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
+        return request.get(`${API_URL_PREFIX}/artifactory/api/user/artifactories/log/plugin/${projectId}/${pipelineId}/${buildId}/${tag}/${executeCount}`).then((res) => {
+            const data = res.data || {}
+            return data.url || ''
         })
     },
 

@@ -28,13 +28,21 @@
 package com.tencent.devops.artifactory
 
 import com.tencent.devops.artifactory.service.JFrogArchiveFileServiceImpl
+import com.tencent.devops.artifactory.service.PipelineService
+import com.tencent.devops.artifactory.service.ShortUrlService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
+import com.tencent.devops.artifactory.service.bkrepo.GitCIBkRepoDownloadService
 import com.tencent.devops.artifactory.service.permission.DefaultPipelineService
 import com.tencent.devops.artifactory.service.permission.GitCIPipelineService
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -42,6 +50,47 @@ import org.springframework.context.annotation.Primary
 
 @Configuration
 class TencentServiceConfig {
+
+    /**
+     *  下载链接服务
+     */
+    @Bean
+    @Primary
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun gitciAgentUrlService(
+        pipelineService: PipelineService,
+        bkRepoService: BkRepoService,
+        client: Client,
+        bkRepoClient: BkRepoClient,
+        commonConfig: CommonConfig,
+        shortUrlService: ShortUrlService
+    ) = GitCIBkRepoDownloadService(
+        pipelineService,
+        bkRepoService,
+        client,
+        bkRepoClient,
+        commonConfig,
+        shortUrlService
+    )
+
+    @Bean
+    @Primary
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
+    fun bkRepoDownloadService(
+        pipelineService: PipelineService,
+        bkRepoService: BkRepoService,
+        client: Client,
+        bkRepoClient: BkRepoClient,
+        commonConfig: CommonConfig,
+        shortUrlService: ShortUrlService
+    ) = BkRepoDownloadService(
+        pipelineService,
+        bkRepoService,
+        client,
+        bkRepoClient,
+        commonConfig,
+        shortUrlService
+    )
 
     @Bean
     @Primary
@@ -62,6 +111,7 @@ class TencentServiceConfig {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
     fun gitCIPipelineService(
-        client: Client
-    ) = GitCIPipelineService(client)
+        client: Client,
+        tokenCheckService: ClientTokenService
+    ) = GitCIPipelineService(client, tokenCheckService)
 }

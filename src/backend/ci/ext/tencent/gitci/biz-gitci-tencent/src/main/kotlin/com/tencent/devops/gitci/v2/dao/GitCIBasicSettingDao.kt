@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.v2.dao
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.model.gitci.tables.TGitBasicSetting
+import com.tencent.devops.model.gitci.tables.records.TGitBasicSettingRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -66,7 +67,10 @@ class GitCIBasicSettingDao {
                         UPDATE_TIME,
                         PROJECT_CODE,
                         ENABLE_MR_BLOCK,
-                        ENABLE_USER_ID
+                        ENABLE_USER_ID,
+                        CREATOR_BG_NAME,
+                        CREATOR_DEPT_NAME,
+                        CREATOR_CENTER_NAME
                     )
                         .values(
                             conf.gitProjectId,
@@ -82,7 +86,10 @@ class GitCIBasicSettingDao {
                             LocalDateTime.now(),
                             projectCode,
                             conf.enableMrBlock,
-                            conf.enableUserId
+                            conf.enableUserId,
+                            conf.creatorBgName,
+                            conf.creatorDeptName,
+                            conf.creatorCenterName
                         ).execute()
                 } else {
                     context.update(this)
@@ -93,6 +100,9 @@ class GitCIBasicSettingDao {
                         .set(PROJECT_CODE, projectCode)
                         .set(ENABLE_MR_BLOCK, conf.enableMrBlock)
                         .set(ENABLE_USER_ID, conf.enableUserId)
+                        .set(CREATOR_BG_NAME, conf.creatorBgName)
+                        .set(CREATOR_DEPT_NAME, conf.creatorDeptName)
+                        .set(CREATOR_CENTER_NAME, conf.creatorCenterName)
                         .where(ID.eq(conf.gitProjectId))
                         .execute()
                 }
@@ -131,7 +141,10 @@ class GitCIBasicSettingDao {
         buildPushedPullRequest: Boolean?,
         enableMrBlock: Boolean?,
         enableCi: Boolean?,
-        enableUserId: String?
+        enableUserId: String?,
+        creatorBgName: String?,
+        creatorDeptName: String?,
+        creatorCenterName: String?
     ) {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             val dsl = dslContext.update(this)
@@ -149,6 +162,15 @@ class GitCIBasicSettingDao {
             }
             if (enableUserId != null) {
                 dsl.set(ENABLE_USER_ID, enableUserId)
+            }
+            if (enableUserId != null) {
+                dsl.set(CREATOR_BG_NAME, creatorBgName)
+            }
+            if (enableUserId != null) {
+                dsl.set(CREATOR_DEPT_NAME, creatorDeptName)
+            }
+            if (enableUserId != null) {
+                dsl.set(CREATOR_CENTER_NAME, creatorCenterName)
             }
             dsl.set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(gitProjectId))
@@ -178,9 +200,38 @@ class GitCIBasicSettingDao {
                     updateTime = conf.updateTime.timestampmilli(),
                     projectCode = conf.projectCode,
                     enableMrBlock = conf.enableMrBlock,
-                    enableUserId = conf.enableUserId
+                    enableUserId = conf.enableUserId,
+                    creatorBgName = conf.creatorBgName,
+                    creatorDeptName = conf.creatorDeptName,
+                    creatorCenterName = conf.creatorCenterName
                 )
             }
+        }
+    }
+
+    fun getProjectAfterId(dslContext: DSLContext, startId: Long, limit: Int): List<TGitBasicSettingRecord> {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.selectFrom(this)
+                .where(ID.gt(startId))
+                .limit(limit)
+                .fetch()
+        }
+    }
+
+    fun fixProjectInfo(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        creatorBgName: String,
+        creatorDeptName: String,
+        creatorCenterName: String
+    ): Int {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.update(this)
+                .set(CREATOR_BG_NAME, creatorBgName)
+                .set(CREATOR_DEPT_NAME, creatorDeptName)
+                .set(CREATOR_CENTER_NAME, creatorCenterName)
+                .where(ID.eq(gitProjectId))
+                .execute()
         }
     }
 }

@@ -446,24 +446,12 @@ class ExperienceService @Autowired constructor(
                 logoUrl = logoUrl,
                 scheme = scheme
             )
-        } else {
-            offlinePublicExperience(projectId, platform, appBundleIdentifier)
         }
 
         createTaskResource(userId, projectId, experienceId, "${experience.name}（$appVersion）")
         sendNotification(experienceId)
 
         return experienceId
-    }
-
-    private fun offlinePublicExperience(projectId: String, platform: PlatformEnum, appBundleIdentifier: String) {
-        experiencePublicDao.updateByBundleId(
-            dslContext = dslContext,
-            projectId = projectId,
-            platform = platform.name,
-            bundleIdentifier = appBundleIdentifier,
-            online = false
-        )
     }
 
     private fun onlinePublicExperience(
@@ -779,7 +767,7 @@ class ExperienceService @Autowired constructor(
             )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION,
+                errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION,
                 defaultMessage = message,
                 params = arrayOf(permissionMsg)
             )

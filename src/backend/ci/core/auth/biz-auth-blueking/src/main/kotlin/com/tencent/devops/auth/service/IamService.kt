@@ -44,7 +44,8 @@ import org.springframework.stereotype.Service
 @Service
 class IamService @Autowired constructor(
     val iamEsbService: IamEsbService,
-    val iamConfiguration: IamConfiguration
+    @Autowired(required = false) // v3 才会有
+    val iamConfiguration: IamConfiguration?
 ) {
     fun getPermissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
         logger.info("get permissionUrl permissionUrlDTO: $permissionUrlDTO")
@@ -60,15 +61,15 @@ class IamService @Autowired constructor(
 
             if (instanceList == null || instanceList.isEmpty()) {
                 relatedResourceTypes.add(RelatedResourceTypes(
-                        system = iamConfiguration.systemId,
-                        type = relatedResourceType,
-                        instances = emptyList()
+                    system = iamConfiguration!!.systemId,
+                    type = relatedResourceType,
+                    instances = emptyList()
                 ))
             } else {
                 relatedResourceTypes.add(RelatedResourceTypes(
-                        system = iamConfiguration.systemId,
-                        type = relatedResourceType,
-                        instances = listOf(instanceList))
+                    system = iamConfiguration!!.systemId,
+                    type = relatedResourceType,
+                    instances = listOf(instanceList))
                 )
             }
 
@@ -76,26 +77,26 @@ class IamService @Autowired constructor(
             if (it.resourceId == AuthResourceType.PROJECT && it.actionId == AuthPermission.CREATE) {
                 logger.info("projectCreate ${it.actionId} |${it.instanceId}| ${it.resourceId}")
                 actions.add(
-                        Action(
-                                id = resourceType,
-                                related_resource_types = emptyList()
-                        )
+                    Action(
+                        id = resourceType,
+                        related_resource_types = emptyList()
+                    )
                 )
             } else {
                 actions.add(
-                        Action(
-                                id = resourceType,
-                                related_resource_types = relatedResourceTypes
-                        )
+                    Action(
+                        id = resourceType,
+                        related_resource_types = relatedResourceTypes
+                    )
                 )
             }
         }
         val iamEsbReq = IamPermissionUrlReq(
-                system = iamConfiguration.systemId,
-                actions = actions,
-                bk_app_code = "",
-                bk_app_secret = "",
-                bk_username = "admin"
+            system = iamConfiguration!!.systemId,
+            actions = actions,
+            bk_app_code = "",
+            bk_app_secret = "",
+            bk_username = "admin"
         )
         logger.info("get permissionUrl iamEsbReq: $iamEsbReq")
         return Result(iamEsbService.getPermissionUrl(iamEsbReq))

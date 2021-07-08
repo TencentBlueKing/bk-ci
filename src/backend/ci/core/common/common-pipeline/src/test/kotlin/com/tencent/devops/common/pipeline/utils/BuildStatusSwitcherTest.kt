@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import org.junit.Assert
 import org.junit.Test
 
+@Suppress("ALL")
 class BuildStatusSwitcherTest {
 
     @Test
@@ -46,6 +47,12 @@ class BuildStatusSwitcherTest {
                 status == BuildStatus.STAGE_SUCCESS -> {
                     Assert.assertEquals(
                         BuildStatus.STAGE_SUCCESS,
+                        BuildStatusSwitcher.pipelineStatusMaker.finish(status)
+                    )
+                }
+                status == BuildStatus.TERMINATE -> {
+                    Assert.assertEquals(
+                        BuildStatus.TERMINATE,
                         BuildStatusSwitcher.pipelineStatusMaker.finish(status)
                     )
                 }
@@ -122,8 +129,17 @@ class BuildStatusSwitcherTest {
                         BuildStatusSwitcher.pipelineStatusMaker.forceFinish(status)
                     )
                 }
+                status == BuildStatus.TERMINATE -> {
+                    Assert.assertEquals(
+                        BuildStatus.TERMINATE,
+                        BuildStatusSwitcher.pipelineStatusMaker.forceFinish(status)
+                    )
+                }
                 status.isFailure() -> {
-                    Assert.assertEquals(BuildStatus.FAILED, BuildStatusSwitcher.pipelineStatusMaker.forceFinish(status))
+                    Assert.assertEquals(
+                        BuildStatus.FAILED,
+                        BuildStatusSwitcher.pipelineStatusMaker.forceFinish(status)
+                    )
                 }
                 status.isFinish() -> {
                     Assert.assertTrue(
@@ -179,6 +195,12 @@ class BuildStatusSwitcherTest {
     fun stageFinish() {
         BuildStatus.values().forEach { stageStatus ->
             when {
+                stageStatus == BuildStatus.QUEUE_TIMEOUT -> {
+                    Assert.assertEquals(
+                        BuildStatus.QUEUE_TIMEOUT,
+                        BuildStatusSwitcher.stageStatusMaker.forceFinish(stageStatus)
+                    )
+                }
                 stageStatus.isFinish() -> {
                     Assert.assertTrue(
                         BuildStatusSwitcher.stageStatusMaker.statusSet().contains(
@@ -206,6 +228,12 @@ class BuildStatusSwitcherTest {
 
         BuildStatus.values().forEach { stageStatus ->
             when {
+                stageStatus == BuildStatus.QUEUE_TIMEOUT -> {
+                    Assert.assertEquals(
+                        BuildStatus.QUEUE_TIMEOUT,
+                        BuildStatusSwitcher.stageStatusMaker.forceFinish(stageStatus)
+                    )
+                }
                 stageStatus.isFinish() -> {
                     Assert.assertTrue(
                         BuildStatusSwitcher.stageStatusMaker.statusSet().contains(
@@ -334,6 +362,9 @@ class BuildStatusSwitcherTest {
                 status.isCancel() -> {
                     Assert.assertEquals(status, BuildStatusSwitcher.taskStatusMaker.finish(status))
                 }
+                status == BuildStatus.QUEUE_TIMEOUT -> {
+                    Assert.assertEquals(BuildStatus.QUEUE_TIMEOUT, BuildStatusSwitcher.taskStatusMaker.finish(status))
+                }
                 status.isFailure() -> {
                     Assert.assertEquals(BuildStatus.FAILED, BuildStatusSwitcher.taskStatusMaker.finish(status))
                 }
@@ -415,6 +446,9 @@ class BuildStatusSwitcherTest {
                 }
                 status.isCancel() -> {
                     Assert.assertEquals(status, BuildStatusSwitcher.taskStatusMaker.forceFinish(status))
+                }
+                status == BuildStatus.QUEUE_TIMEOUT -> {
+                    Assert.assertEquals(BuildStatus.QUEUE_TIMEOUT, BuildStatusSwitcher.taskStatusMaker.finish(status))
                 }
                 status.isFailure() -> {
                     Assert.assertEquals(BuildStatus.FAILED, BuildStatusSwitcher.taskStatusMaker.forceFinish(status))

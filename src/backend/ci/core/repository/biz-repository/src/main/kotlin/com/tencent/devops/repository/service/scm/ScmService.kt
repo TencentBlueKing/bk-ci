@@ -277,8 +277,7 @@ class ScmService @Autowired constructor(
                         gitConfig.tGitHookUrl
                     }
                     else -> {
-                        logger.warn("Unknown repository type ($type) when add webhook")
-                        throw RuntimeException("Unknown repository type ($type) when add webhook")
+                        throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
                     }
                 }
             }
@@ -345,8 +344,7 @@ class ScmService @Autowired constructor(
         userName: String
     ) {
         if (type != ScmType.CODE_SVN) {
-            logger.warn("repository type ($type) can not lock")
-            throw RuntimeException("repository type ($type) can not lock")
+            throw IllegalArgumentException("repository type ($type) can not lock")
         }
         val repName = SvnUtils.getSvnRepName(url)
         val subPath = SvnUtils.getSvnSubPath(url)
@@ -374,8 +372,7 @@ class ScmService @Autowired constructor(
         userName: String
     ) {
         if (type != ScmType.CODE_SVN) {
-            logger.warn("repository type ($type) can not unlock")
-            throw RuntimeException("repository type ($type) can not unlock")
+            throw IllegalArgumentException("repository type ($type) can not unlock")
         }
         val repName = SvnUtils.getSvnRepName(url)
         val subPath = SvnUtils.getSvnSubPath(url)

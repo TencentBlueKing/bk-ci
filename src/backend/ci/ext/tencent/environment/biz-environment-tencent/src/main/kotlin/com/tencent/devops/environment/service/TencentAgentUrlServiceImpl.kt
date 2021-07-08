@@ -36,7 +36,7 @@ import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpart
 /**
  * 腾讯内部旧版专用Agent下载链接生成服务
  */
-class TencentAgentUrlServiceImpl constructor(
+open class TencentAgentUrlServiceImpl constructor(
     private val commonConfig: CommonConfig
 ) : AgentUrlService {
 

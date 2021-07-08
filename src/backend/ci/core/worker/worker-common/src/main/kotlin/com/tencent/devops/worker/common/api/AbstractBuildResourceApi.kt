@@ -258,38 +258,38 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
 
     protected val objectMapper = JsonUtil.getObjectMapper()
 
-    fun buildGet(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
-        val url = buildUrl(path, useFileGateway)
+    fun buildGet(path: String, headers: Map<String, String> = emptyMap(), useFileDevnetGateway: Boolean? = null): Request {
+        val url = buildUrl(path, useFileDevnetGateway)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
     }
 
-    fun buildPost(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
+    fun buildPost(path: String, headers: Map<String, String> = emptyMap(), useFileDevnetGateway: Boolean? = null): Request {
         val requestBody = RequestBody.create(JsonMediaType, EMPTY)
-        return buildPost(path, requestBody, headers, useFileGateway)
+        return buildPost(path, requestBody, headers, useFileDevnetGateway)
     }
 
     fun buildPost(
         path: String,
         requestBody: RequestBody,
         headers: Map<String, String> = emptyMap(),
-        useFileGateway: Boolean = false
+        useFileDevnetGateway: Boolean? = null
     ): Request {
-        val url = buildUrl(path, useFileGateway)
+        val url = buildUrl(path, useFileDevnetGateway)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).post(requestBody).build()
     }
 
-    fun buildPut(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
+    fun buildPut(path: String, headers: Map<String, String> = emptyMap(), useFileDevnetGateway: Boolean? = null): Request {
         val requestBody = RequestBody.create(JsonMediaType, EMPTY)
-        return buildPut(path, requestBody, headers, useFileGateway)
+        return buildPut(path, requestBody, headers, useFileDevnetGateway)
     }
 
     fun buildPut(
         path: String,
         requestBody: RequestBody,
         headers: Map<String, String> = emptyMap(),
-        useFileGateway: Boolean = false
+        useFileDevnetGateway: Boolean? = null
     ): Request {
-        val url = buildUrl(path, useFileGateway)
+        val url = buildUrl(path, useFileDevnetGateway)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).put(requestBody).build()
     }
 
@@ -307,11 +307,17 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         return URLEncoder.encode(parameter, "UTF-8")
     }
 
-    private fun buildUrl(path: String, useFileGateway: Boolean = false): String {
+    private fun buildUrl(path: String, useFileDevnetGateway: Boolean? = null): String {
         return if (path.startsWith("http://") || path.startsWith("https://")) {
             path
-        } else if (useFileGateway && !CommonEnv.fileGateway.isNullOrBlank()) {
-            fixUrl(CommonEnv.fileGateway!!, path)
+        } else if (useFileDevnetGateway != null) {
+            if (useFileDevnetGateway) {
+                val fileDevnetGateway = CommonEnv.fileDevnetGateway
+                fixUrl(if (fileDevnetGateway.isNullOrBlank()) gateway else fileDevnetGateway, path)
+            } else {
+                val fileIdcGateway = CommonEnv.fileIdcGateway
+                fixUrl(if (fileIdcGateway.isNullOrBlank()) gateway else fileIdcGateway, path)
+            }
         } else {
             fixUrl(gateway, path)
         }

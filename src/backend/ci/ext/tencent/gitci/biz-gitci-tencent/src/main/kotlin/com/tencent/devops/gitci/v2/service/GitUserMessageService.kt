@@ -47,7 +47,8 @@ import java.time.format.DateTimeFormatter
 class GitUserMessageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitUserMessageDao: GitUserMessageDao,
-    private val gitCIV2RequestService: GitCIV2RequestService
+    private val gitCIV2RequestService: GitCIV2RequestService,
+    private val websocketService: GitCIV2WebsocketService
 ) {
     companion object {
         private val timeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -144,8 +145,10 @@ class GitUserMessageService @Autowired constructor(
 
     fun readMessage(
         userId: String,
-        id: Int
+        id: Int,
+        projectId: String
     ): Boolean {
+        websocketService.pushNotifyWebsocket(userId, projectId)
         return gitUserMessageDao.readMessage(dslContext, id) >= 0
     }
 
@@ -153,6 +156,7 @@ class GitUserMessageService @Autowired constructor(
         projectId: String,
         userId: String
     ): Boolean {
+        websocketService.pushNotifyWebsocket(userId, projectId)
         return gitUserMessageDao.readAllMessage(dslContext = dslContext, projectId = projectId, userId = userId) >= 0
     }
 

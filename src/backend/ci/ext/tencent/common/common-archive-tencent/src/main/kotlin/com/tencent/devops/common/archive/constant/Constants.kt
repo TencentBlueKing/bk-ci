@@ -30,3 +30,4 @@ package com.tencent.devops.common.archive.constant
 const val REPO_PIPELINE = "pipeline"
 const val REPO_CUSTOM = "custom"
 const val REPO_REPORT = "report"
+const val REPO_LOG = "log"

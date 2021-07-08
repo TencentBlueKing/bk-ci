@@ -27,8 +27,11 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.model.project.tables.records.TUserRecord
+import com.tencent.devops.project.dao.ProjectFreshDao
+import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.tof.TOFService
@@ -43,6 +46,8 @@ class ProjectUserRefreshService @Autowired constructor(
     val tofService: TOFService,
     val projectUserService: ProjectUserService,
     val userDao: UserDao,
+    val projectUserDao: ProjectUserDao,
+    val projectFreshDao: ProjectFreshDao,
     val dslContext: DSLContext
 ) {
     private val executorService = Executors.newSingleThreadExecutor()
@@ -139,27 +144,67 @@ class ProjectUserRefreshService @Autowired constructor(
 
     // 同步用户信息
     fun synUserInfo(userInfo: UserDeptDetail, userId: String): UserDeptDetail? {
-        val staffInfo = tofService.getStaffInfo(userId)
-        if (userInfo!!.groupId != staffInfo.GroupId) {
-            logger.info("user info diff, bk:${userInfo.groupId}, tof :${staffInfo.GroupId}")
-            // 组织信息不一致，刷新当前用户数据。 以tof数据为准, 数据源直接获取tof数据
-            val tofDeptInfo = tofService.getDeptFromTof(null, userId, "", false)
-            userDao.update(
-                userId = userId,
-                groupId = tofDeptInfo.groupId.toInt(),
-                groupName = tofDeptInfo.groupName,
-                bgId = tofDeptInfo.bgId.toInt(),
-                bgName = tofDeptInfo.bgName,
-                centerId = tofDeptInfo.centerId.toInt(),
-                centerName = tofDeptInfo.centerName,
-                deptId = tofDeptInfo.deptId.toInt(),
-                deptName = tofDeptInfo.deptName,
-                dslContext = dslContext,
-                name = staffInfo.ChineseName
-            )
-            return tofDeptInfo
+        try {
+            val staffInfo = tofService.getStaffInfo(userId)
+            if (userInfo!!.groupId != staffInfo.GroupId) {
+                logger.info("user info diff, bk:${userInfo.groupId}, tof :${staffInfo.GroupId}")
+                // 组织信息不一致，刷新当前用户数据。 以tof数据为准, 数据源直接获取tof数据
+                val tofDeptInfo = tofService.getDeptFromTof(null, userId, "", false)
+                userDao.update(
+                    userId = userId,
+                    groupId = tofDeptInfo.groupId.toInt(),
+                    groupName = tofDeptInfo.groupName,
+                    bgId = tofDeptInfo.bgId.toInt(),
+                    bgName = tofDeptInfo.bgName,
+                    centerId = tofDeptInfo.centerId.toInt(),
+                    centerName = tofDeptInfo.centerName,
+                    deptId = tofDeptInfo.deptId.toInt(),
+                    deptName = tofDeptInfo.deptName,
+                    dslContext = dslContext,
+                    name = staffInfo.ChineseName
+                )
+                return tofDeptInfo
+            }
+        } catch (e: OperationException) {
+            // 删除已离职用户
+            projectUserDao.delete(dslContext, userId)
         }
+
         return null
+    }
+
+    fun fixGitCIProjectInfo(): Int {
+        val limitCount = 5
+        var count = 0
+        var startId = 0L
+        var currProjects = projectFreshDao.getProjectAfterIdWithoutDept(dslContext, startId, limitCount)
+        while (currProjects.isNotEmpty()) {
+            currProjects.forEach {
+                try {
+                    val userInfo = tofService.getUserDeptDetail(it.creator)
+                    count += projectFreshDao.fixProjectInfo(
+                        dslContext = dslContext,
+                        id = it.id,
+                        creatorBgId = userInfo.bgId.toLong(),
+                        creatorBgName = userInfo.bgName,
+                        creatorDeptId = userInfo.deptId.toLong(),
+                        creatorDeptName = userInfo.deptName,
+                        creatorCenterId = userInfo.centerId.toLong(),
+                        creatorCenterName = userInfo.centerName
+                    )
+                } catch (t: Throwable) {
+                    logger.error("Update git ci project in devops failed, msg: ${t.message}")
+                    return@forEach
+                } finally {
+                    startId = it.id
+                }
+            }
+            logger.info("fixGitCIProjectInfo project ${currProjects.map { it.id }.toList()}, fixed count: $count")
+            Thread.sleep(100)
+            currProjects = projectFreshDao.getProjectAfterIdWithoutDept(dslContext, startId, limitCount)
+        }
+        logger.info("fixGitCIProjectInfo finished count: $count")
+        return count
     }
 
     companion object {

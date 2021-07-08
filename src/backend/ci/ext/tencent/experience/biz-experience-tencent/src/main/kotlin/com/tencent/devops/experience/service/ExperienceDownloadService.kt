@@ -44,6 +44,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDao
+import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.TokenDao
@@ -68,6 +69,7 @@ class ExperienceDownloadService @Autowired constructor(
     private val tokenDao: TokenDao,
     private val experienceDao: ExperienceDao,
     private val experienceDownloadDao: ExperienceDownloadDao,
+    private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
@@ -142,8 +144,8 @@ class ExperienceDownloadService @Autowired constructor(
         if (!canExperience) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "没有权限下载资源",
-                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION
+                defaultMessage = "该版本不可用，可能已被下架、已过期或被新版本覆盖，请刷新页面重试",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
             )
         }
 
@@ -183,8 +185,8 @@ class ExperienceDownloadService @Autowired constructor(
         if (!canExperience) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "没有权限下载资源",
-                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION
+                defaultMessage = "该版本不可用，可能已被下架、已过期或被新版本覆盖，请刷新页面重试",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
             )
         }
 
@@ -234,13 +236,15 @@ class ExperienceDownloadService @Autowired constructor(
 
     fun addDownloadRecord(experienceRecord: TExperienceRecord, userId: String) {
         // 新增下载次数
-        val experienceDownloadRecord = experienceDownloadDao.getOrNull(dslContext, experienceRecord.id, userId)
-        if (experienceDownloadRecord == null) {
-            experienceDownloadDao.create(dslContext, experienceRecord.id, userId)
-        } else {
-            experienceDownloadDao.plusTimes(dslContext, experienceDownloadRecord.id)
-        }
-        experiencePublicDao.addDownloadTimeByRecordId(dslContext, experienceRecord.id)
+        addUserDownloadTime(experienceRecord, userId)
+        experienceDownloadDetailDao.create(
+            dslContext = dslContext,
+            userId = userId,
+            recordId = experienceRecord.id,
+            projectId = experienceRecord.projectId,
+            bundleIdentifier = experienceRecord.bundleIdentifier,
+            platform = experienceRecord.platform
+        )
 
         // 更新最近下载记录
         experienceLastDownloadDao.upset(
@@ -253,7 +257,7 @@ class ExperienceDownloadService @Autowired constructor(
         )
     }
 
-    fun downloadCount(userId: String, projectId: String, experienceHashId: String): ExperienceCount {
+    fun downloadCount(experienceHashId: String): ExperienceCount {
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
 
@@ -358,6 +362,18 @@ class ExperienceDownloadService @Autowired constructor(
                 )
                 Pagination(hasNext, experiences)
             }
+        }
+    }
+
+    private fun addUserDownloadTime(
+        experienceRecord: TExperienceRecord,
+        userId: String
+    ) {
+        val experienceDownloadRecord = experienceDownloadDao.getOrNull(dslContext, experienceRecord.id, userId)
+        if (experienceDownloadRecord == null) {
+            experienceDownloadDao.create(dslContext, experienceRecord.id, userId)
+        } else {
+            experienceDownloadDao.plusTimes(dslContext, experienceDownloadRecord.id)
         }
     }
 

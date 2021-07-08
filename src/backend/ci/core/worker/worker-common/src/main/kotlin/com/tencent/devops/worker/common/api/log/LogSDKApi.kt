@@ -28,11 +28,24 @@
 package com.tencent.devops.worker.common.api.log
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface LogSDKApi : WorkerRestApiSDK {
     fun addLogMultiLine(logMessages: List<LogMessage>): Result<Boolean>
 
-    fun finishLog(tag: String?, jobId: String?, executeCount: Int?, subTag: String?): Result<Boolean>
+    fun finishLog(
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        subTag: String?,
+        logMode: LogStorageMode?
+    ): Result<Boolean>
+
+    fun updateStorageMode(
+        propertyList: List<TaskBuildLogProperty>,
+        executeCount: Int
+    ): Result<Boolean>
 }

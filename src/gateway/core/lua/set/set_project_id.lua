@@ -1,4 +1,4 @@
-local devops_project = ''
+local devops_project = ngx.var.project_id
 
 --- 获取header中的devops_projectid
 if (devops_project == nil or devops_project == "") then

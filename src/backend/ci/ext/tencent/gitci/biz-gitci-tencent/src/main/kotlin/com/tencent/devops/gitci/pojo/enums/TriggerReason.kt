@@ -33,6 +33,7 @@ enum class TriggerReason(val detail: String) {
     BUILD_PUSHED_BRANCHES_DISABLED("This project has not yet opened the push event monitoring configuration"),
     BUILD_MERGE_REQUEST_DISABLED("This project has not yet opened the MR event monitoring configuration"),
     CI_YAML_NOT_FOUND("The YAML file cannot be found in the .ci directory"),
+    CI_YAML_CONTENT_NULL("The YAML file is null"),
     CI_YAML_INVALID("YAML is invalid: %s"),
     CI_YAML_VERSION_BEHIND("The YAML file version of the source branch lags behind the target branch"),
     CI_MERGE_CHECKING("Checking whether there is a conflict in MR, please wait"),
@@ -42,7 +43,8 @@ enum class TriggerReason(val detail: String) {
     PIPELINE_RUN_ERROR("pipeline run with error"),
     PIPELINE_DISABLE("Pipeline is disabled"),
     CI_YAML_TEMPLATE_ERROR("YAML template parse error: %s"),
-    CI_RUN_FAILED("Failed to run: %s");
+    PIPELINE_PREPARE_ERROR("Pipeline prepare error: %s"),
+    UNKNOWN_ERROR("Unknown error, please contact DevOps-helper. %s");
 
     companion object {
 

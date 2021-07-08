@@ -39,6 +39,7 @@ import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -218,6 +219,22 @@ class GitCiService {
             logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             return Result(JsonUtil.to(response, GitCodeProjectInfo::class.java))
+        }
+    }
+
+    fun getMergeRequestChangeInfo(gitProjectId: Long, token: String?, mrId: Long): Result<GitMrChangeInfo?> {
+        logger.info("[gitProjectId=$gitProjectId]|getGitCodeProjectInfo")
+        val url = "$gitCIUrl/api/v3/projects/$gitProjectId/merge_request/$mrId/changes?" +
+                "access_token=$token"
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val response = it.body()!!.string()
+            logger.info("[url=$url]|getMergeRequestChangeInfo with response=$response")
+            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return Result(JsonUtil.to(response, GitMrChangeInfo::class.java))
         }
     }
 }

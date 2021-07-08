@@ -40,7 +40,8 @@ class GitPipelineResourceDao {
     fun createPipeline(
         dslContext: DSLContext,
         gitProjectId: Long,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        version: String? = null
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.insertInto(
@@ -52,6 +53,7 @@ class GitPipelineResourceDao {
                 CREATOR,
                 ENABLED,
                 LATEST_BUILD_ID,
+                VERSION,
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
@@ -62,6 +64,7 @@ class GitPipelineResourceDao {
                 pipeline.creator,
                 pipeline.enabled,
                 null,
+                version,
                 LocalDateTime.now(),
                 LocalDateTime.now()
             ).execute()
@@ -72,11 +75,13 @@ class GitPipelineResourceDao {
         dslContext: DSLContext,
         gitProjectId: Long,
         pipelineId: String,
-        displayName: String
+        displayName: String,
+        version: String? = null
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.update(this)
                 .set(DISPLAY_NAME, displayName)
+                .set(VERSION, version)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
@@ -93,7 +98,8 @@ class GitPipelineResourceDao {
         enabled: Boolean,
         creator: String?,
         latestBuildId: String?,
-        manualTrigger: Boolean? = false
+        manualTrigger: Boolean? = false,
+        version: String? = null
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.insertInto(
@@ -105,6 +111,7 @@ class GitPipelineResourceDao {
                 CREATOR,
                 ENABLED,
                 LATEST_BUILD_ID,
+                VERSION,
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
@@ -115,6 +122,7 @@ class GitPipelineResourceDao {
                 creator,
                 enabled,
                 latestBuildId,
+                version,
                 LocalDateTime.now(),
                 LocalDateTime.now()
             ).execute()
@@ -124,13 +132,15 @@ class GitPipelineResourceDao {
     fun updatePipelineBuildInfo(
         dslContext: DSLContext,
         pipeline: GitProjectPipeline,
-        buildId: String
+        buildId: String,
+        version: String? = null
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.update(this)
                 .set(LATEST_BUILD_ID, buildId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(PIPELINE_ID, pipeline.pipelineId)
+                .set(VERSION, version)
                 .where(GIT_PROJECT_ID.eq(pipeline.gitProjectId))
                 .and(FILE_PATH.eq(pipeline.filePath))
                 .execute()
@@ -252,16 +262,14 @@ class GitPipelineResourceDao {
         }
     }
 
-    fun fixPipelineBuildInfo(
+    fun fixPipelineVersion(
         dslContext: DSLContext,
         pipelineId: String,
-        buildId: String,
-        buildTime: LocalDateTime
+        version: String
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.update(this)
-                .set(LATEST_BUILD_ID, buildId)
-                .set(UPDATE_TIME, buildTime)
+                .set(VERSION, version)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }

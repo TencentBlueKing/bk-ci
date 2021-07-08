@@ -36,7 +36,7 @@ enum class ErrorCodeEnum(
     val formatErrorMessage: String
 ) {
     SYSTEM_ERROR(ErrorType.SYSTEM, 2129001, "gitci系统错误"),
-    NO_IDLE_VM_ERROR(ErrorType.SYSTEM, 2129002, "构建机启动失败，没有空闲的构建机"),
+    NO_REPORT_AUTH(ErrorType.SYSTEM, 2129002, "无权限查看报告"),
     POOL_VM_ERROR(ErrorType.SYSTEM, 2129003, "容器并发池分配异常"),
     NO_SPECIAL_VM_ERROR(
         errorType = ErrorType.SYSTEM,

@@ -36,7 +36,6 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
-import com.tencent.devops.environment.api.tstack.ServiceTstackResource
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.image.api.ServiceDevCloudImageResource
@@ -52,6 +51,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
 
@@ -59,9 +59,6 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
 
     @Autowired
     private lateinit var pcgImageServiceImpl: PCGImageServiceImpl
-
-    @Autowired
-    private lateinit var macosServiceImpl: MacOSServiceImpl
 
     override fun buildTypeEnable(buildType: BuildType, projectCode: String): Boolean {
         return when (buildType) {
@@ -103,7 +100,11 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
         val containerResourceValue: List<String>?
         val resource = when (buildType) {
             BuildType.THIRD_PARTY_DEVCLOUD -> {
-                val agentNodeList = client.get(ServiceNodeResource::class).listNodeByType(userId, projectCode, NodeType.DEVCLOUD.name).data
+                val agentNodeList = client.get(ServiceNodeResource::class).listNodeByType(
+                    userId = userId,
+                    projectId = projectCode,
+                    type = NodeType.DEVCLOUD.name
+                ).data
                 logger.info("the agentNodeList is :$agentNodeList")
                 containerResourceValue = agentNodeList?.filter { it.nodeStatus == NodeStatus.NORMAL.name }?.map {
                     it.displayName!!
@@ -151,15 +152,6 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                         "/${it.ip}（${it.status}）"
                     )
                 }
-            }
-            BuildType.TSTACK -> {
-                val tstackNodeList =
-                    client.get(ServiceTstackResource::class).listAvailableTstackNodes(projectCode).data // Tstack节点
-                logger.info("the tstackNodeList is :$tstackNodeList")
-                containerResourceValue = tstackNodeList?.map {
-                    it.hashId
-                }?.toList()
-                tstackNodeList
             }
             BuildType.ESXi -> {
                 val macPublicBuildResourceName = MessageCodeUtil.getCodeLanMessage("macPublicBuildResourceName")
@@ -219,9 +211,11 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 l
             }
             BuildType.PUBLIC_DEVCLOUD, BuildType.GIT_CI -> {
-                val publicImageList = client.get(ServiceDevCloudImageResource::class).listDevCloudImages(userId, projectCode, true).data // 公共镜像
+                val publicImageList = client.get(ServiceDevCloudImageResource::class)
+                    .listDevCloudImages(userId = userId, projectId = projectCode, public = true).data // 公共镜像
                 logger.info("the publicImageList is :$publicImageList")
-                val projectImageList = client.get(ServiceDevCloudImageResource::class).listDevCloudImages(userId, projectCode, false).data // 项目镜像
+                val projectImageList = client.get(ServiceDevCloudImageResource::class)
+                    .listDevCloudImages(userId = userId, projectId = projectCode, public = false).data // 项目镜像
                 logger.info("the projectImageList is :$projectImageList")
 
                 val dockerList = mutableListOf<ContainerResourceItem>()
