@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service.gitci
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.GitCIUtils
@@ -56,6 +57,10 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String?
     ): Boolean {
+        // 特殊逻辑, 额外校验工蜂ci页面是否展示新增按钮
+        if (action == WEB_CHECK) {
+            return webCheckAction(projectCode, userId)
+        }
         // review管理员校验
         try {
             if (reviewManagerCheck(userId, projectCode, action, resourceType ?: "")) {
@@ -179,7 +184,35 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         }
     }
 
+    /**
+     * 是否公开, 是否有权限 二维组合
+     * 公开+有权限  展示
+     * 非公开+有权限 展示
+     * 公开+无权限 不展示
+     * 非公开+无权限 报权限异常
+     */
+    private fun webCheckAction(projectCode: String, userId: String): Boolean {
+        val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
+
+        val publicCheck = projectInfoService.checkProjectPublic(gitProjectId)
+
+        val gitUserId = projectInfoService.getGitUserByRtx(userId, gitProjectId)
+
+        val permissionCheck = client.getScm(ServiceGitCiResource::class)
+            .checkUserGitAuth(gitUserId!!, gitProjectId).data ?: false
+
+        if (permissionCheck) {
+            return true
+        }
+        if (publicCheck) {
+            return false
+        } else {
+            throw PermissionForbiddenException("")
+        }
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(GitCIPermissionServiceImpl::class.java)
+        val WEB_CHECK = "webcheck"
     }
 }
