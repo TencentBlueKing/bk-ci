@@ -123,6 +123,10 @@ then
   exit 1
 fi
 
+# docker冲突检查. 
+install_config_conflict "${BK_CI_AGENTLESS_IP_COMMA:-},${BK_CI_DOCKERHOST_IP_COMMA:-}" \
+  "ci(agentless)和ci(dockerhost)" "需要独占docker" \
+  "将ci(dockerhost)移到其他节点"
 # ci组件配置.
 install_config_exist "${BK_CI_GATEWAY_IP:-}" \
   "ci(gateway)" \
