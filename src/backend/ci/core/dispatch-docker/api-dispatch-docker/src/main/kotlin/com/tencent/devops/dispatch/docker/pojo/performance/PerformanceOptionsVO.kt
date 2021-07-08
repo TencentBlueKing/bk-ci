@@ -25,37 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo
+package com.tencent.devops.dispatch.docker.pojo.performance
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.pipeline.type.BuildType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class DockerHostBuildInfo(
-    val projectId: String,
-    val agentId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val vmSeqId: Int,
-    val secretKey: String,
-    val status: Int,
-    val imageName: String,
-    val containerId: String,
-    @JsonProperty("wsInHost")
-    val wsInHost: Boolean,
-    val poolNo: Int,
-    val registryUser: String?,
-    val registryPwd: String?,
-    val imageType: String?,
-    val imagePublicFlag: Boolean?,
-    val imageRDType: String?,
-    val containerHashId: String?,
-    val customBuildEnv: Map<String, String>? = null,
-    val buildType: BuildType = BuildType.DOCKER,
-    val dockerContainerLoad: DockerContainerLoad = DockerContainerLoad(
-        memoryLimitBytes = 34359738368L,
-        cpuPeriod = 10000,
-        cpuQuota = 160000,
-        blkioDeviceReadBps = 125829120,
-        blkioDeviceWriteBps = 125829120
-    )
+@ApiModel("devcloud性能基础选项配置")
+data class PerformanceOptionsVO(
+    @ApiModelProperty("CPU")
+    val cpu: Int,
+    @ApiModelProperty("内存")
+    val memory: Int,
+    @ApiModelProperty("磁盘")
+    val disk: Int,
+    @ApiModelProperty("描述")
+    val description: String
 )

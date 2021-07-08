@@ -25,37 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo
+package com.tencent.devops.dispatch.docker.pojo.performance
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.pipeline.type.BuildType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class DockerHostBuildInfo(
-    val projectId: String,
-    val agentId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val vmSeqId: Int,
-    val secretKey: String,
-    val status: Int,
-    val imageName: String,
-    val containerId: String,
-    @JsonProperty("wsInHost")
-    val wsInHost: Boolean,
-    val poolNo: Int,
-    val registryUser: String?,
-    val registryPwd: String?,
-    val imageType: String?,
-    val imagePublicFlag: Boolean?,
-    val imageRDType: String?,
-    val containerHashId: String?,
-    val customBuildEnv: Map<String, String>? = null,
-    val buildType: BuildType = BuildType.DOCKER,
-    val dockerContainerLoad: DockerContainerLoad = DockerContainerLoad(
-        memoryLimitBytes = 34359738368L,
-        cpuPeriod = 10000,
-        cpuQuota = 160000,
-        blkioDeviceReadBps = 125829120,
-        blkioDeviceWriteBps = 125829120
-    )
-)
+@ApiModel("分页数据包装模型")
+data class ListPage<out T>(
+    @ApiModelProperty("总记录行数", required = true)
+    val count: Long,
+    @ApiModelProperty("第几页", required = true)
+    val page: Int,
+    @ApiModelProperty("每页多少条", required = true)
+    val pageSize: Int,
+    @ApiModelProperty("总共多少页", required = true)
+    val totalPages: Int,
+    @ApiModelProperty("数据", required = true)
+    val records: List<T>
+) {
+    constructor(page: Int, pageSize: Int, count: Long, records: List<T>) :
+            this(count, page, pageSize, Math.ceil(count * 1.0 / pageSize).toInt(), records)
+}

@@ -25,37 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo
+package com.tencent.devops.dispatch.docker.pojo.performance
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.pipeline.type.BuildType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class DockerHostBuildInfo(
-    val projectId: String,
-    val agentId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val vmSeqId: Int,
-    val secretKey: String,
-    val status: Int,
-    val imageName: String,
-    val containerId: String,
-    @JsonProperty("wsInHost")
-    val wsInHost: Boolean,
-    val poolNo: Int,
-    val registryUser: String?,
-    val registryPwd: String?,
-    val imageType: String?,
-    val imagePublicFlag: Boolean?,
-    val imageRDType: String?,
-    val containerHashId: String?,
-    val customBuildEnv: Map<String, String>? = null,
-    val buildType: BuildType = BuildType.DOCKER,
-    val dockerContainerLoad: DockerContainerLoad = DockerContainerLoad(
-        memoryLimitBytes = 34359738368L,
-        cpuPeriod = 10000,
-        cpuQuota = 160000,
-        blkioDeviceReadBps = 125829120,
-        blkioDeviceWriteBps = 125829120
-    )
+@ApiModel("devcloud性能用户选项配置")
+data class UserPerformanceOptionsVO(
+    @ApiModelProperty("默认选项")
+    val default: String,
+    @ApiModelProperty("是否展示")
+    val needShow: Boolean,
+    @ApiModelProperty("性能配置")
+    val performanceMaps: List<PerformanceMap>
+)
+
+data class PerformanceMap(
+    val id: String,
+    val performanceConfigVO: PerformanceConfigVO
 )

@@ -166,8 +166,8 @@ class DockerHostConfig {
     @Value("\${dockerCli.memoryLimitBytes:34359738368}")
     var memory: Long = 34359738368L // 1024 * 1024 * 1024 * 32 Memory limit in bytes. 32G
 
-    @Value("\${dockerCli.cpuPeriod:160000}")
-    var cpuPeriod: Int = 160000 // Limit the CPU CFS (Completely Fair Scheduler) period
+    @Value("\${dockerCli.cpuPeriod:10000}")
+    var cpuPeriod: Int = 10000 // Limit the CPU CFS (Completely Fair Scheduler) period
 
     @Value("\${dockerCli.cpuQuota:160000}")
     var cpuQuota: Int = 160000 // Limit the CPU CFS (Completely Fair Scheduler) period
