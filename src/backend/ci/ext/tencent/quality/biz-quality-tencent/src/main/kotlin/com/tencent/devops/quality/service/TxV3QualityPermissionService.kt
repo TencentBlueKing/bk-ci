@@ -8,6 +8,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.quality.dao.QualityNotifyGroupDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +17,7 @@ class TxV3QualityPermissionService @Autowired constructor(
     val client: Client,
     val dslContext: DSLContext,
     val ruleDao: QualityRuleDao,
-    val groupDao: QualityRuleDao,
+    val groupDao: QualityNotifyGroupDao,
     val tokenService: ClientTokenService,
     val authResourceApiStr: AuthResourceApiStr
 ) : QualityPermissionService {
@@ -80,7 +81,8 @@ class TxV3QualityPermissionService @Autowired constructor(
         instancesMap.forEach { (key, value) ->
             val instanceLongIds = mutableListOf<Long>()
             if (value.contains("*")) {
-                groupDao.list(dslContext, projectId)?.map { instanceLongIds.add(it.id) }
+                val count = groupDao.count(dslContext, projectId)
+                groupDao.list(dslContext, projectId, 0, count.toInt())?.map { instanceLongIds.add(it.id) }
             } else {
                 value.forEach {
                     instanceLongIds.add(it.toString().toLong())
