@@ -151,24 +151,25 @@ import javax.ws.rs.core.Response
 class TriggerBuildService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val buildConfig: BuildConfig,
     private val objectMapper: ObjectMapper,
     private val gitCIBasicSettingDao: GitCIBasicSettingDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
-    private val gitCIParameterUtils: GitCIParameterUtils,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val scmClient: ScmClient,
-    private val redisOperation: RedisOperation,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val oauthService: OauthService,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitCIEventSaveService: GitCIEventService,
     private val websocketService: GitCIV2WebsocketService,
     private val gitPipelineBranchService: GitPipelineBranchService
 ) : V2BaseBuildService<ScriptBuildYaml>(
-    client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService,
-    websocketService, gitCIEventSaveService, gitPipelineBranchService
+    client,
+    scmClient,
+    dslContext,
+    gitPipelineResourceDao,
+    gitRequestEventBuildDao,
+    gitCIEventSaveService,
+    websocketService,
+    gitPipelineBranchService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
