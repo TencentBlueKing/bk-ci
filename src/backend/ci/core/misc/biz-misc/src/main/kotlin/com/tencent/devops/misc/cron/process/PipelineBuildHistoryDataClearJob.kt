@@ -52,6 +52,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.ThreadPoolExecutor.AbortPolicy
 import java.util.concurrent.TimeUnit
 
 @Component
@@ -76,19 +77,11 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             "pipeline:build:history:data:clear:project:id"
         private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_KEY =
             "pipeline:build:history:data:clear:project:list"
+        private var executor:ThreadPoolExecutor? = null
     }
 
     @Value("\${process.deletedPipelineStoreDays:30}")
     private val deletedPipelineStoreDays: Long = 30 // 回收站已删除流水线保存天数
-
-    // 创建带有边界队列的线程池，防止内存爆掉
-    private val executor = ThreadPoolExecutor(
-        miscBuildDataClearConfig.maxThreadHandleProjectNum,
-        miscBuildDataClearConfig.maxThreadHandleProjectNum,
-        0L,
-        TimeUnit.MILLISECONDS,
-        LinkedBlockingQueue(10)
-    )
 
     @Scheduled(initialDelay = 10000, fixedDelay = 12000)
     fun pipelineBuildHistoryDataClear() {
@@ -97,8 +90,23 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             return
         }
         logger.info("pipelineBuildHistoryDataClear start")
-        val lock = RedisLock(redisOperation,
-            LOCK_KEY, 3000)
+        if (executor == null) {
+            // 创建带有边界队列的线程池，防止内存爆掉
+            logger.info("pipelineBuildHistoryDataClear create executor")
+            executor = ThreadPoolExecutor(
+                miscBuildDataClearConfig.maxThreadHandleProjectNum,
+                miscBuildDataClearConfig.maxThreadHandleProjectNum,
+                0L,
+                TimeUnit.MILLISECONDS,
+                LinkedBlockingQueue(10),
+                Executors.defaultThreadFactory(),
+                ThreadPoolExecutor.DiscardPolicy()
+            )
+        }
+        val lock = RedisLock(
+            redisOperation,
+            LOCK_KEY, 3000
+        )
         try {
             if (!lock.tryLock()) {
                 logger.info("get lock failed, skip")
@@ -147,7 +155,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         maxThreadProjectPrimaryId: Long
     ): Future<Boolean> {
         val threadName = "Thread-$threadNo"
-        return executor.submit(Callable<Boolean> {
+        return executor!!.submit(Callable<Boolean> {
             var handleProjectPrimaryId =
                 redisOperation.get("$threadName:$PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY")?.toLong()
             if (handleProjectPrimaryId == null) {
