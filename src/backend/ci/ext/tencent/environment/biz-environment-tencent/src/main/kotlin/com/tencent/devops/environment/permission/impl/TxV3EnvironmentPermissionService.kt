@@ -47,7 +47,6 @@ class TxV3EnvironmentPermissionService constructor(
     private val client: Client,
     private val envDao: EnvDao,
     private val nodeDao: NodeDao,
-    private val managerService: ManagerService,
     private val tokenCheckService: ClientTokenService,
     val authResourceApiStr: AuthResourceApiStr
 ) : EnvironmentPermissionService {
@@ -58,15 +57,6 @@ class TxV3EnvironmentPermissionService constructor(
         envId: Long,
         permission: AuthPermission
     ): Boolean {
-        if (managerService.isManagerPermission(
-                userId = userId,
-                projectId = projectId,
-                authPermission = permission,
-                resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
-            )) {
-            return true
-        }
-
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
@@ -79,14 +69,6 @@ class TxV3EnvironmentPermissionService constructor(
     }
 
     override fun checkEnvPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
-        if (managerService.isManagerPermission(
-                userId = userId,
-                projectId = projectId,
-                authPermission = permission,
-                resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
-            )) {
-            return true
-        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
@@ -104,14 +86,6 @@ class TxV3EnvironmentPermissionService constructor(
         nodeId: Long,
         permission: AuthPermission
     ): Boolean {
-        if (managerService.isManagerPermission(
-                userId = userId,
-                projectId = projectId,
-                authPermission = permission,
-                resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
-            )) {
-            return true
-        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
@@ -124,14 +98,6 @@ class TxV3EnvironmentPermissionService constructor(
     }
 
     override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
-        if (managerService.isManagerPermission(
-                userId = userId,
-                projectId = projectId,
-                authPermission = permission,
-                resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
-            )) {
-            return true
-        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
@@ -152,8 +118,11 @@ class TxV3EnvironmentPermissionService constructor(
             projectCode = projectId,
             resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value
         ).data ?: emptyList()
-
-        return getAllEnvInstance(resourceInstances, projectId, userId).map { HashUtil.decodeIdToLong(it) }.toSet()
+        val projectAllId = mutableListOf<String>()
+        envDao.list(dslContext, projectId).map {
+            projectAllId.add(HashUtil.encodeLongId(it.envId))
+        }
+        return getAllEnvInstance(resourceInstances, projectAllId).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
     // 加密
@@ -171,10 +140,18 @@ class TxV3EnvironmentPermissionService constructor(
             action = actions
         ).data ?: emptyMap()
         val instanceMap = mutableMapOf<AuthPermission, List<String>>()
+        val projectAllId = mutableListOf<String>()
+        envDao.list(dslContext, projectId).map {
+            projectAllId.add(HashUtil.encodeLongId(it.envId))
+        }
         instanceResourcesMap.forEach { (key, value) ->
-            val envs = getAllEnvInstance(value, projectId, userId).toList()
+            val envs = getAllEnvInstance(value, projectAllId).toList()
 
             instanceMap[key] = envs.map { it }
+
+            if (key == AuthPermission.VIEW) {
+                instanceMap[AuthPermission.LIST] = envs.map { it }
+            }
         }
         logger.info("listEnvByPermissions v3Impl [$userId] [$projectId] [$instanceMap]")
         return instanceMap
@@ -190,7 +167,12 @@ class TxV3EnvironmentPermissionService constructor(
             resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value
         ).data ?: emptyList()
 
-        return getAllNodeInstance(resourceInstances, projectId, userId).map { HashUtil.decodeIdToLong(it) }.toSet()
+        val instanceIds = mutableListOf<String>()
+        nodeDao.listNodes(dslContext, projectId).map {
+            instanceIds.add(HashUtil.encodeLongId(it.nodeId))
+        }
+
+        return getAllNodeInstance(resourceInstances, instanceIds).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
     // 加密
@@ -208,9 +190,15 @@ class TxV3EnvironmentPermissionService constructor(
             resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
             action = actions
         ).data ?: emptyMap()
+
+        val instanceIds = mutableListOf<String>()
+        nodeDao.listNodes(dslContext, projectId).map {
+            instanceIds.add(HashUtil.encodeLongId(it.nodeId))
+        }
+
         val instanceMap = mutableMapOf<AuthPermission, List<String>>()
         instanceResourcesMap.forEach { (key, value) ->
-            val nodes = getAllNodeInstance(value, projectId, userId).toList().map { it }
+            val nodes = getAllNodeInstance(value, instanceIds).map { it }
             logger.info("listNodeByPermissions v3Impl [$nodes] ")
             instanceMap[key] = nodes
         }
@@ -257,29 +245,24 @@ class TxV3EnvironmentPermissionService constructor(
     }
 
     // 拿到的数据统一为加密后的id
-    private fun getAllNodeInstance(resourceCodeList: List<String>, projectId: String, userId: String): Set<String> {
-        val instanceIds = mutableSetOf<String>()
+    private fun getAllNodeInstance(resourceCodeList: List<String>, projectAllResourceId: List<String>): List<String> {
+        val instanceIds = mutableListOf<String>()
         if (resourceCodeList.contains("*")) {
-            val repositoryInfos = nodeDao.listNodes(dslContext, projectId)
-            repositoryInfos.map {
-                instanceIds.add(HashUtil.encodeLongId(it.nodeId))
-            }
-            return instanceIds
+            return projectAllResourceId
         }
         resourceCodeList.map { instanceIds.add(it) }
         return instanceIds
     }
 
     // 拿到的数据统一为加密后的id
-    private fun getAllEnvInstance(resourceCodeList: List<String>, projectId: String, userId: String): Set<String> {
+    private fun getAllEnvInstance(
+        resourceCodeList: List<String>,
+        projectAllResourceId: List<String>
+    ): Set<String> {
         val instanceIds = mutableSetOf<String>()
 
         if (resourceCodeList.contains("*")) {
-            val repositoryInfos = envDao.list(dslContext, projectId)
-            repositoryInfos.map {
-                instanceIds.add(HashUtil.encodeLongId(it.envId))
-            }
-            return instanceIds
+            return projectAllResourceId.toSet()
         }
         resourceCodeList.map { instanceIds.add(it) }
         return instanceIds

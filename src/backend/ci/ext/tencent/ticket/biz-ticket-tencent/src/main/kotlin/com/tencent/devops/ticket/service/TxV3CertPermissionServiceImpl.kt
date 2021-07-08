@@ -120,11 +120,20 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
             resourceType = AuthResourceType.TICKET_CERT.value,
             projectCode = projectId
         ).data ?: emptyMap()
+
+        val projectAllCertIds: List<String> by lazy { getAllCertByProject(projectId) }
+
         certIamInfo.forEach { key, value ->
-            if (value.contains("*")) {
-                certResultMap[key] = getAllCertByProject(projectId)
-            } else {
-                certResultMap[key] = value
+            val ids =
+                if (value.contains("*")) {
+                    projectAllCertIds
+                } else {
+                    value
+                }
+            certResultMap[key] = ids
+
+            if (key == AuthPermission.VIEW) {
+                certResultMap[AuthPermission.LIST] = ids
             }
         }
         return certResultMap

@@ -133,12 +133,20 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
             resourceType = AuthResourceType.TICKET_CREDENTIAL.value
         ).data ?: emptyMap()
         val credentialMap = mutableMapOf<AuthPermission, List<String>>()
+
+        val projectAllCertIds: List<String> by lazy { getAllCredentialsByProject(projectId) }
+
         credentialAuthResult.forEach { (key, value) ->
-            if (value.contains("*")) {
-                logger.info("filterCredential user[$userId] project[$projectId] auth[$key] list[$value]")
-                credentialMap[key] = getAllCredentialsByProject(projectId)
-            } else {
-                credentialMap[key] = value
+            val ids =
+                if (value.contains("*")) {
+                    logger.info("filterCredential user[$userId] project[$projectId] auth[$key] list[$value]")
+                    projectAllCertIds
+                } else {
+                    value
+                }
+            credentialMap[key] = ids
+            if (key == AuthPermission.VIEW) {
+                credentialMap[AuthPermission.LIST] = ids
             }
         }
         return credentialMap

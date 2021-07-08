@@ -104,7 +104,6 @@ class TencentServiceConfig {
         envDao: EnvDao,
         nodeDao: NodeDao,
         dslContext: DSLContext,
-        managerService: ManagerService,
         tokenCheckService: ClientTokenService,
         authResourceApiStr: AuthResourceApiStr
     ) = TxV3EnvironmentPermissionService(
@@ -112,7 +111,6 @@ class TencentServiceConfig {
         envDao = envDao,
         nodeDao = nodeDao,
         dslContext = dslContext,
-        managerService = managerService,
         tokenCheckService = tokenCheckService,
         authResourceApiStr = authResourceApiStr
     )

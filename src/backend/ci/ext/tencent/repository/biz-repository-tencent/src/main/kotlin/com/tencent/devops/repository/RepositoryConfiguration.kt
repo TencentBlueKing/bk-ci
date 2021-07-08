@@ -88,14 +88,12 @@ class RepositoryConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
     fun txRepositoryPermissionService(
-        managerService: ManagerService,
         repositoryDao: RepositoryDao,
         dslContext: DSLContext,
         client: Client,
         tokenService: ClientTokenService,
         authResourceApiStr: AuthResourceApiStr
     ) = TxV3RepositoryPermissionServiceImpl(
-        managerService = managerService,
         repositoryDao = repositoryDao,
         dslContext = dslContext,
         client = client,
