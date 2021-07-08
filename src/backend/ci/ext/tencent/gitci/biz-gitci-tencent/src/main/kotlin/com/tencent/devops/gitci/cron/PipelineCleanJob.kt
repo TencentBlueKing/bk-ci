@@ -26,7 +26,7 @@ class PipelineCleanJob @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCISettingDao: GitCIBasicSettingDao,
     private val client: Client,
-    private val gitCIEventService: GitCIEventService
+    private val gitCIEventSaveService: GitCIEventService
 ) {
 
     @Value("\${deletePipelines.minusDays:#{null}}")
@@ -84,7 +84,7 @@ class PipelineCleanJob @Autowired constructor(
 
         val pipelineCnt = gitPipelineResourceDao.deleteLastUpdatePipelines(dslContext, ids)
         logger.info("[cleanPipelines][$pipelineCnt] Delete the pipelines")
-        val (buildCnt, notBuildCnt) = gitCIEventService.deletePipelineBuildHistory(pipelineIds)
+        val (buildCnt, notBuildCnt) = gitCIEventSaveService.deletePipelineBuildHistory(pipelineIds)
         logger.info("[cleanPipelines][$buildCnt] Delete the builds [$notBuildCnt] Delete the not builds")
 
         val processClient = client.get(ServicePipelineResource::class)

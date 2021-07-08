@@ -129,7 +129,7 @@ class GitCIBuildService @Autowired constructor(
     private val buildConfig: BuildConfig,
     private val objectMapper: ObjectMapper,
     private val gitCIParameterUtils: GitCIParameterUtils,
-    gitCIEventService: GitCIEventService,
+    private val gitCIEventSaveService: GitCIEventService,
     private val gitPipelineBranchService: GitPipelineBranchService
 ) : BaseBuildService<CIBuildYaml>(
     client,
@@ -138,7 +138,7 @@ class GitCIBuildService @Autowired constructor(
     redisOperation,
     gitPipelineResourceDao,
     gitRequestEventBuildDao,
-    gitCIEventService,
+    gitCIEventSaveService,
     gitPipelineBranchService
 ) {
     companion object {

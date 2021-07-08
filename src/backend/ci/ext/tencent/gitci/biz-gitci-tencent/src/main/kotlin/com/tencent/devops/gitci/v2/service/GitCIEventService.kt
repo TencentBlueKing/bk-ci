@@ -34,6 +34,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.client.ScmClient
+import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitRequestEvent
@@ -62,7 +63,7 @@ class GitCIEventService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitCIBasicSettingService: GitCIBasicSettingService,
     private val websocketService: GitCIV2WebsocketService,
-    private val gitRequestEventBuildDao: GitRequestEventNotBuildDao
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) {
 
     companion object {
@@ -252,7 +253,7 @@ class GitCIEventService @Autowired constructor(
         pipelineIds: Set<String>
     ): Pair<Int, Int> {
         val notBuildcnt = gitRequestEventNotBuildDao.deleteNotBuildByPipelineIds(dslContext, pipelineIds)
-        val buildcnt = gitRequestEventBuildDao.deleteNotBuildByPipelineIds(dslContext, pipelineIds)
+        val buildcnt = gitRequestEventBuildDao.deleteBuildByPipelineIds(dslContext, pipelineIds)
         return Pair(buildcnt, notBuildcnt)
     }
 }
