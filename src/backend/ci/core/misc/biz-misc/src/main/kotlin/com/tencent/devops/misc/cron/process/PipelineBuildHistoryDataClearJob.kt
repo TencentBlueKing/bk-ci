@@ -50,6 +50,9 @@ import java.time.LocalDateTime
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Component
 @Suppress("ALL")
@@ -78,7 +81,14 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
     @Value("\${process.deletedPipelineStoreDays:30}")
     private val deletedPipelineStoreDays: Long = 30 // 回收站已删除流水线保存天数
 
-    private val executor = Executors.newFixedThreadPool(miscBuildDataClearConfig.maxThreadHandleProjectNum)
+    // 创建带有边界队列的线程池，防止内存爆掉
+    private val executor = ThreadPoolExecutor(
+        miscBuildDataClearConfig.maxThreadHandleProjectNum,
+        miscBuildDataClearConfig.maxThreadHandleProjectNum,
+        0L,
+        TimeUnit.MILLISECONDS,
+        LinkedBlockingQueue(10)
+    )
 
     @Scheduled(initialDelay = 10000, fixedDelay = 12000)
     fun pipelineBuildHistoryDataClear() {
@@ -108,7 +118,6 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             }
             // 获取清理项目构建数据的线程数量
             val maxThreadHandleProjectNum = miscBuildDataClearConfig.maxThreadHandleProjectNum
-            val futureList = mutableListOf<Future<Boolean>>()
             val avgProjectNum = maxProjectNum / maxThreadHandleProjectNum
             for (index in 1..maxThreadHandleProjectNum) {
                 // 计算线程能处理的最大项目主键ID
@@ -117,17 +126,12 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 } else {
                     index * avgProjectNum + maxProjectNum % maxThreadHandleProjectNum
                 }
-                futureList.add(
-                    doClearBus(
-                        threadNo = index,
-                        projectIdList = projectIdList,
-                        minThreadProjectPrimaryId = (index - 1) * avgProjectNum,
-                        maxThreadProjectPrimaryId = maxThreadProjectPrimaryId
-                    )
+                doClearBus(
+                    threadNo = index,
+                    projectIdList = projectIdList,
+                    minThreadProjectPrimaryId = (index - 1) * avgProjectNum,
+                    maxThreadProjectPrimaryId = maxThreadProjectPrimaryId
                 )
-            }
-            futureList.forEachIndexed { index, future ->
-                logger.info("future-$index doClearBus result:${future.get()}")
             }
         } catch (t: Throwable) {
             logger.warn("pipelineBuildHistoryDataClear failed", t)
