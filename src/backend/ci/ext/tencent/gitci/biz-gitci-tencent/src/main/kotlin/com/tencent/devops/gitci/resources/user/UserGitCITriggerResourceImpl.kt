@@ -89,7 +89,7 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
     override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
-        if (ymlVersion != null && ymlVersion.version != "v2.0") {
+        if (ymlVersion == null || ymlVersion.version != "v2.0") {
             try {
                 val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
                 logger.debug("yaml str : $yamlStr")
