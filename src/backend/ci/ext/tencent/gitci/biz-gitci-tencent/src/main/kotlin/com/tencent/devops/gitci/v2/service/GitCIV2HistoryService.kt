@@ -139,7 +139,7 @@ class GitCIV2HistoryService @Autowired constructor(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = totalPage.toLong(),
-            records = records
+            records = records.sortedByDescending { it.buildHistory?.startTime }
         )
     }
 
