@@ -322,18 +322,12 @@ class TaskBuildDetailService(
             val parentElement = elements[parentElementJobIndex]
             val taskStatus = BuildStatus.parse(parentElement.status)
             if (!(taskStatus.isFinish() || parentElement.id == endElement.id)) {
-                if (tmpElementIndex == elements.size - 1) {
-                    val startIndex = endElementIndex + 1
-                    val endIndex = elements.size - 1
-                    if (endIndex > startIndex) {
-                        addUpdateTaskStatusInfo(
-                            startIndex = startIndex,
-                            endIndex = endIndex,
-                            elements = elements,
-                            updateTaskStatusInfos = updateTaskStatusInfos
-                        )
-                    }
-                }
+                handleUpdateTaskStatusInfo(
+                    tmpElementIndex = tmpElementIndex,
+                    elements = elements,
+                    endElementIndex = endElementIndex,
+                    updateTaskStatusInfos = updateTaskStatusInfos
+                )
                 return false
             }
             // 把post任务和取消任务之间的任务置为UNEXEC状态
@@ -351,6 +345,26 @@ class TaskBuildDetailService(
             return true
         }
         return false
+    }
+
+    private fun handleUpdateTaskStatusInfo(
+        tmpElementIndex: Int,
+        elements: List<Element>,
+        endElementIndex: Int,
+        updateTaskStatusInfos: MutableList<Map<String, Any>>?
+    ) {
+        if (tmpElementIndex == elements.size - 1) {
+            val startIndex = endElementIndex + 1
+            val endIndex = elements.size - 1
+            if (endIndex > startIndex) {
+                addUpdateTaskStatusInfo(
+                    startIndex = startIndex,
+                    endIndex = endIndex,
+                    elements = elements,
+                    updateTaskStatusInfos = updateTaskStatusInfos
+                )
+            }
+        }
     }
 
     private fun addUpdateTaskStatusInfo(

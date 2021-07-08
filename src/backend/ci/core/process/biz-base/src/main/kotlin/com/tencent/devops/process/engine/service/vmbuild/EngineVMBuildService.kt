@@ -52,6 +52,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.lock.TaskIdLock
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
@@ -420,33 +421,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 LOG.warn("ENGINE|$buildId| save var fail: ${ignored.message}", ignored)
             }
         }
-
         val errorType = ErrorType.getErrorType(result.errorType)
-
-        val buildStatus = if (result.success) {
-            pipelineTaskService.removeRetryCache(buildId, result.taskId)
-            pipelineTaskService.removeFailTaskVar(
-                buildId = buildId, projectId = buildInfo.projectId,
-                pipelineId = buildInfo.pipelineId, taskId = result.taskId
-            ) // 清理插件错误信息（重试插件成功的情况下）
-            BuildStatus.SUCCEED
-        } else {
-            when {
-                pipelineTaskService.isRetryWhenFail(taskId = result.taskId, buildId = buildId) -> {
-                    BuildStatus.RETRY
-                }
-                result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT -> {
-                    BuildStatus.EXEC_TIMEOUT
-                }
-                else -> { // 记录错误插件信息
-                    pipelineTaskService.createFailTaskVar(buildId = buildId, projectId = buildInfo.projectId,
-                        pipelineId = buildInfo.pipelineId, taskId = result.taskId
-                    )
-                    BuildStatus.FAILED
-                }
-            }
-        }
-
+        val buildStatus = getCompleteTaskBuildStatus(result, buildId, buildInfo)
         taskBuildDetailService.taskEnd(
             buildId = buildId, taskId = result.elementId, buildStatus = buildStatus,
             errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
@@ -489,6 +465,38 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 "type=$errorType|code=${result.errorCode}|msg=${result.message}]"
         )
         buildLogPrinter.stopLog(buildId = buildId, tag = result.elementId, jobId = result.containerId ?: "")
+    }
+
+    private fun getCompleteTaskBuildStatus(
+        result: BuildTaskResult,
+        buildId: String,
+        buildInfo: BuildInfo
+    ): BuildStatus {
+        val buildStatus = if (result.success) {
+            pipelineTaskService.removeRetryCache(buildId, result.taskId)
+            pipelineTaskService.removeFailTaskVar(
+                buildId = buildId, projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId, taskId = result.taskId
+            ) // 清理插件错误信息（重试插件成功的情况下）
+            BuildStatus.SUCCEED
+        } else {
+            when {
+                pipelineTaskService.isRetryWhenFail(taskId = result.taskId, buildId = buildId) -> {
+                    BuildStatus.RETRY
+                }
+                result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT -> {
+                    BuildStatus.EXEC_TIMEOUT
+                }
+                else -> { // 记录错误插件信息
+                    pipelineTaskService.createFailTaskVar(
+                        buildId = buildId, projectId = buildInfo.projectId,
+                        pipelineId = buildInfo.pipelineId, taskId = result.taskId
+                    )
+                    BuildStatus.FAILED
+                }
+            }
+        }
+        return buildStatus
     }
 
     /**
