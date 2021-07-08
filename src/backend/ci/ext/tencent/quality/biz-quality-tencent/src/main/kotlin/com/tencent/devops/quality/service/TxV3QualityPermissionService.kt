@@ -80,8 +80,7 @@ class TxV3QualityPermissionService @Autowired constructor(
         instancesMap.forEach { (key, value) ->
             val instanceLongIds = mutableListOf<Long>()
             if (value.contains("*")) {
-                val projectGroupIds = groupDao.list(dslContext, projectId)?.map { it.id }
-                projectGroupIds?.let { instanceLongIds.addAll(it) }
+                groupDao.list(dslContext, projectId)?.map { instanceLongIds.add(it.id) }
             } else {
                 value.forEach {
                     instanceLongIds.add(it.toString().toLong())
@@ -177,8 +176,7 @@ class TxV3QualityPermissionService @Autowired constructor(
         instancesMap.forEach { (key, value) ->
             val instanceLongIds = mutableListOf<Long>()
             if (value.contains("*")) {
-                val projectGroupIds = ruleDao.list(dslContext, projectId)?.map { it.id }
-                projectGroupIds?.let { instanceLongIds.addAll(it) }
+                ruleDao.list(dslContext, projectId)?.map { instanceLongIds.add(it.id) }
             } else {
                 value.forEach {
                     instanceLongIds.add(it.toString().toLong())
