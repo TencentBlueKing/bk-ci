@@ -90,7 +90,6 @@ object Heartbeat {
         running = true
     }
 
-
     private fun handleRemoteServiceException(e: RemoteServiceException) {
 
         if (e.httpStatus != HTTP_500 && e.responseContent.isNullOrBlank()) {
