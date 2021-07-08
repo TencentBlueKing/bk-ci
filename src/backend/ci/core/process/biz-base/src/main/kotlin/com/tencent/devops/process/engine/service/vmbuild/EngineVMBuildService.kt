@@ -472,7 +472,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         buildId: String,
         buildInfo: BuildInfo
     ): BuildStatus {
-        val buildStatus = if (result.success) {
+        return if (result.success) {
             pipelineTaskService.removeRetryCache(buildId, result.taskId)
             pipelineTaskService.removeFailTaskVar(
                 buildId = buildId, projectId = buildInfo.projectId,
@@ -496,7 +496,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 }
             }
         }
-        return buildStatus
     }
 
     /**
