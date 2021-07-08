@@ -499,7 +499,7 @@ class GitRequestEventBuildDao {
                 event = event,
                 commitMsg = commitMsg,
                 buildStatus = buildStatus
-            ).orderBy(EVENT_ID.desc()).limit(limit).offset(offset).fetch()
+            ).orderBy(EVENT_ID.desc(), CREATE_TIME.desc()).limit(limit).offset(offset).fetch()
         }
     }
 

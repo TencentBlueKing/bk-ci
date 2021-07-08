@@ -1,15 +1,14 @@
-version: v2.0
+version: v2.0   # YAML 的版本，v2.0 为此新版语法
+name: 勋章事件-master分支监听  # 流水线名称，必填
 
-name: pipelineName
-
-on:
-#  push:
-#    branches:
-#      - master
-#      - release/*
-#    branches-ignore:
-#      - master
-#      - develop
+on: # on上的注释
+  push:
+    branches:
+      - master
+      - release/*
+    branches-ignore:
+      - master
+      - develop
 #    paths:
 #      - src/*
 #    paths-ignore:
