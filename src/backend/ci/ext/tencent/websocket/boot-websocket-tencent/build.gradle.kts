@@ -30,6 +30,4 @@ dependencies {
     api(project(":ext:tencent:websocket:biz-websocket-tencent"))
 }
 
-plugins {
-    `task-spring-boot-package`
-}
+

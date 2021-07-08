@@ -31,6 +31,5 @@ dependencies {
     api("com.squareup.okhttp3:okhttp")
     api("org.springframework.boot:spring-boot-starter-amqp")
     api("net.sf.json-lib:json-lib")
-    testCompile("org.springframework.boot:spring-boot-starter-test")
     compileOnly("org.springframework.boot:spring-boot-configuration-processor")
 }

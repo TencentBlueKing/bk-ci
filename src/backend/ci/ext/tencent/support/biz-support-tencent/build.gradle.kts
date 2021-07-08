@@ -44,5 +44,5 @@ dependencies {
     api("commons-codec:commons-codec:1.9")
 //    api("org.ansj:ansj_seg:5.1.6"
     api("com.amazonaws:aws-java-sdk-s3")
-    api("net.coobird:thumbnailator:0.4.8")
+    api("net.coobird:thumbnailator")
 }

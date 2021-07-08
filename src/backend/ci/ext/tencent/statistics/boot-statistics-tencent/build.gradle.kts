@@ -30,6 +30,4 @@ dependencies {
 }
 
 
-plugins{
-    `task-spring-boot-package`
-}
+

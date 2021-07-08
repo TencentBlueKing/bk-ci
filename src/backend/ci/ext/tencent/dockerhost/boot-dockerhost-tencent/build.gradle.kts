@@ -32,6 +32,4 @@ dependencies {
     api(("com.squareup.okhttp3:okhttp:3.14.4"))
 }
 
-plugins {
-    `task-spring-boot-package`
-}
+

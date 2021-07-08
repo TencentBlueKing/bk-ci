@@ -30,6 +30,4 @@ dependencies {
     api(project(":ext:tencent:lambda:biz-lambda-tencent") )// tencent是内部版实现
 }
 
-plugins {
-    `task-spring-boot-package`
-}
+

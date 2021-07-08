@@ -30,6 +30,4 @@ dependencies {
     api(project(":ext:tencent:image:biz-image-tencent"))
 }
 
-plugins {
-    `task-spring-boot-package`
-}
+

@@ -26,6 +26,7 @@ allprojects {
 
     // 版本管理
     dependencyManagement {
+        applyMavenExclusions(false)
         dependencies {
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
             dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")

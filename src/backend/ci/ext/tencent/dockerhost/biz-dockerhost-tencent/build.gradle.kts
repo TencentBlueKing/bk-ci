@@ -28,5 +28,5 @@
 dependencies {
     api(project(":core:dockerhost:biz-dockerhost"))
     api(project(":ext:tencent:dockerhost:api-dockerhost-tencent"))
-    api("org.fusesource:sigar:1.6.4")
+    api("org.fusesource:sigar")
 }

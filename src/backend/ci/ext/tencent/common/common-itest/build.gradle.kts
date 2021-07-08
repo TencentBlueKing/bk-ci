@@ -36,7 +36,7 @@ dependencies {
     api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
     api("net.sf.json-lib:json-lib")
-    api(group= "cglib", name = "cglib", version= "2.2.2")
+    api("cglib:cglib")
 }
 
 apply(plugin = "task-deploy-to-maven")

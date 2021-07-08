@@ -29,6 +29,4 @@ dependencies {
     api(project(":ext:tencent:log:biz-log-tencent"))
 }
 
-plugins {
-    `task-spring-boot-package`
-}
+

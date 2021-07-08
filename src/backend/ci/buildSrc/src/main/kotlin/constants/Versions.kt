@@ -23,4 +23,6 @@ object Versions {
     const val ApkParser = "2.5.3"
     const val OshiCore = "3.4.0"
     const val TencentBkRepo = "1.0.0"
+    const val Ant = "1.10.5"
+    const val SnakeYaml = "1.27"
 }

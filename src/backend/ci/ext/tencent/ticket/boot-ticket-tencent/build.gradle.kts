@@ -31,6 +31,4 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-mock"))
 }
 
-plugins{
-    `task-spring-boot-package`
-}
+

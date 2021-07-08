@@ -34,7 +34,7 @@ dependencies {
     api(project(":core:common:common-db"))
     api(project(":core:common:common-auth:common-auth-api"))
     api("com.amazonaws:aws-java-sdk-s3")
-    api("net.coobird:thumbnailator:0.4.8")
+    api("net.coobird:thumbnailator")
     api(project(":core:artifactory:model-artifactory"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
     api(project(":core:artifactory:biz-artifactory"))

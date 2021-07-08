@@ -30,6 +30,4 @@ dependencies {
     api(project(":ext:tencent:environment:biz-environment-op"))
     api(project(":ext:tencent:environment:biz-environment-tencent"))
 }
-plugins {
-    `task-spring-boot-package`
-}
+

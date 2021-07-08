@@ -30,7 +30,3 @@ dependencies {
     api("org.springframework.cloud:spring-cloud-config-server")
     api(project(":core:common:common-web"))
 }
-
-plugins {
-    `task-spring-boot-package`
-}
