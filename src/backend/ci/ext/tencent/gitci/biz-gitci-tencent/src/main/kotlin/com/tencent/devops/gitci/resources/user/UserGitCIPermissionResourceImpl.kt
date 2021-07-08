@@ -41,6 +41,4 @@ class UserGitCIPermissionResourceImpl @Autowired constructor(
     override fun validateUserResourcePermission(userId: String, projectId: String): Result<Boolean> {
         return Result(permissionService.checkEditPermissionAndIgnoreOauth(userId, projectId))
     }
-
-
 }
