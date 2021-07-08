@@ -35,7 +35,6 @@ dependencies {
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     compile("com.amazonaws:aws-java-sdk-s3")
     api("net.coobird:thumbnailator")
-    //api(project(":core:artifactory:model-artifactory")
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":ext:tencent:common:common-wechatwork"))
@@ -45,6 +44,5 @@ dependencies {
     api(project(":core:notify:api-notify"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:experience:model-experience-tencent"))
-
     api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
 }

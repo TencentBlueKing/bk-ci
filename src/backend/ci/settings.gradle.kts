@@ -34,8 +34,8 @@ pluginManagement {
     }
     repositories {
         // TODO 使用SNAPSHOT仓库 , 正式版不用使用
-        //mavenLocal()
-        maven(url = "https://oss.sonatype.org/content/repositories/snapshots/")
+        mavenLocal()
+//        maven(url = "https://oss.sonatype.org/content/repositories/snapshots/")
         mavenCentral()
         gradlePluginPortal()
     }

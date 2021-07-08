@@ -35,7 +35,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import okhttp3.Request
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.json.JSONException
 import org.json.JSONObject
 import org.slf4j.LoggerFactory

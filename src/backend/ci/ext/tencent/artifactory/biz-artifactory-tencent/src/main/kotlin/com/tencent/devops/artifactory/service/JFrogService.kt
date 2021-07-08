@@ -138,7 +138,7 @@ class JFrogService @Autowired constructor(private val objectMapper: ObjectMapper
         val url = sb.toString()
         val mediaType = MediaType.parse("application/octet-stream")
         val requestBody = object : RequestBody() {
-            override fun writeTo(sink: BufferedSink?) {
+            override fun writeTo(sink: BufferedSink) {
                 val source = Okio.source(inputStream)
                 sink!!.writeAll(source)
             }

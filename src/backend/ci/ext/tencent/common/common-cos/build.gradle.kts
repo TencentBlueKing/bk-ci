@@ -30,6 +30,6 @@ dependencies {
     api("com.google.guava:guava")
     api("com.squareup.okhttp3:okhttp")
     api("org.springframework.boot:spring-boot-starter-amqp")
-    api("net.sf.json-lib:json-lib")
+    api(group = "net.sf.json-lib", name = "json-lib", classifier = "jdk15")
     compileOnly("org.springframework.boot:spring-boot-configuration-processor")
 }

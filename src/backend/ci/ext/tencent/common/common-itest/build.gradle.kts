@@ -35,7 +35,7 @@ dependencies {
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
     api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
-    api("net.sf.json-lib:json-lib")
+    api(group = "net.sf.json-lib", name = "json-lib", classifier = "jdk15")
     api("cglib:cglib")
 }
 

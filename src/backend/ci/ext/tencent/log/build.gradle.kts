@@ -27,8 +27,4 @@
 
 subprojects {
     group = "com.tencent.bk.devops.ci.log"
-    dependencies {
-        // 解决依赖冲突：process要求lucene-8.6.0，es-rest-client7.0.0要求lucene-8.0.0
-        api("org.apache.lucene:lucene-core:8.0.0")
-    }
 }

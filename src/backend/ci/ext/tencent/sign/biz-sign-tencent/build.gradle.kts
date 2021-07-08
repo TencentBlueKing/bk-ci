@@ -31,9 +31,9 @@ dependencies {
     api(project(":ext:tencent:common:common-archive-tencent"))
     api(project(":core:common:common-client"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api("io.jsonwebtoken:jjwt-api:0.10.8")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.10.8")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.10.8")
+    api("io.jsonwebtoken:jjwt-api")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson")
 }
 
 plugins {

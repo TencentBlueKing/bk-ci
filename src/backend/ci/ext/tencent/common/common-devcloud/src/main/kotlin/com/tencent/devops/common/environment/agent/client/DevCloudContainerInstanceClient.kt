@@ -35,7 +35,7 @@ import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import okhttp3.Headers
 import okhttp3.Request
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang.RandomStringUtils
+import org.apache.commons.lang3.RandomStringUtils
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 

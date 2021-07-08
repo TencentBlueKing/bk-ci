@@ -39,9 +39,11 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":ext:tencent:lambda:api-lambda-tencent"))
     testImplementation(project(":core:common:common-test"))
-
-    api("org.elasticsearch:elasticsearch")
-    api("org.elasticsearch.client:transport")
-    api("org.elasticsearch.plugin:transport-netty4-client")
     api("com.floragunn:search-guard-ssl")
+
+    // 解决依赖冲突：process要求lucene-8.6.0，es-5.6.14要求lucene-6.6.1
+    api("org.elasticsearch:elasticsearch:5.6.14")
+    api("org.elasticsearch.client:transport:5.6.14")
+    api("org.elasticsearch.plugin:transport-netty4-client:5.6.14")
+    api("org.apache.lucene:lucene-core:6.6.1")
 }

@@ -33,7 +33,6 @@ dependencies {
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":ext:tencent:common:common-wechatwork"))
     api(project(":core:common:common-db"))
-    //api(project(":ticket:model-ticket"))
     api(project(":ext:tencent:support:model-support-tencent"))
     api(project(":core:ticket:api-ticket"))
     api(project(":ext:tencent:process:api-process-tencent"))
@@ -41,8 +40,7 @@ dependencies {
     api(project(":ext:tencent:support:api-support-tencent"))
     api(project(":ext:tencent:common:common-kafka-tencent"))
     api("dom4j:dom4j")
-    api("commons-codec:commons-codec:1.9")
-//    api("org.ansj:ansj_seg:5.1.6"
+    api("commons-codec:commons-codec")
     api("com.amazonaws:aws-java-sdk-s3")
     api("net.coobird:thumbnailator")
 }

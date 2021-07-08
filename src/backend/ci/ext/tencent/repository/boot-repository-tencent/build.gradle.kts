@@ -28,6 +28,3 @@
 dependencies {
     api(project(":ext:tencent:repository:biz-repository-tencent"))
 }
-
-
-

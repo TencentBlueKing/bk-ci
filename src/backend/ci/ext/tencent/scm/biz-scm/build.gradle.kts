@@ -27,12 +27,8 @@
 
 dependencies {
     api(project(":ext:tencent:scm:api-scm"))
-
     api(project(":core:process:api-process"))
-
     api(project(":core:common:common-service"))
-
     api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
-
     api(project(":core:common:common-client"))
 }

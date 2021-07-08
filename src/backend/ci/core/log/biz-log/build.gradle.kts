@@ -41,4 +41,7 @@ dependencies {
     api("org.apache.logging.log4j:log4j-core")
     api("org.apache.logging.log4j:log4j-api")
     api("com.github.ben-manes.caffeine:caffeine")
+
+    // 解决依赖冲突：process要求lucene-8.6.0，es-rest-client7.0.0要求lucene-8.0.0
+    api("org.apache.lucene:lucene-core:8.0.0")
 }

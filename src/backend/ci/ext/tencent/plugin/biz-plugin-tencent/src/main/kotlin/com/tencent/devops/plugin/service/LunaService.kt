@@ -126,7 +126,7 @@ class LunaService @Autowired constructor(
                             val request = with(lunaUploadParam) {
                                 val mediaType = MediaType.parse("application/octet-stream")
                                 val requestBody = object : RequestBody() {
-                                    override fun writeTo(sink: BufferedSink?) {
+                                    override fun writeTo(sink: BufferedSink) {
                                         val source = Okio.source(file.inputStream())
                                         sink!!.writeAll(source)
                                     }

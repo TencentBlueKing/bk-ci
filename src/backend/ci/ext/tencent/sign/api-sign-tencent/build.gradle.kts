@@ -29,7 +29,6 @@ dependencies {
     api(project(":core:sign:api-sign"))
 }
 
-
 plugins{
     `task-deploy-to-maven`
 }

@@ -30,7 +30,7 @@ dependencies {
     api(project(":core:environment:api-environment"))
     api(project(":ext:tencent:common:common-archive-tencent"))
     api("org.glassfish.jersey.media:jersey-media-multipart")
-    api(group="org.json", name= "json", version= "20180130")
+    api("org.json:json")
 }
 plugins {
     `task-deploy-to-maven`

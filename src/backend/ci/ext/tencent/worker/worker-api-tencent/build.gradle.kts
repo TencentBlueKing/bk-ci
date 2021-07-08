@@ -34,10 +34,10 @@ dependencies {
     api(project(":ext:tencent:store:api-store-tencent"))
     api(project(":ext:tencent:store:api-store-service"))
     api(project(":ext:tencent:dispatch:api-dispatch-bcs"))
-    api(group = "me.cassiano", name = "ktlint-html-reporter", version = "0.1.2")
-    api(group = "com.github.shyiko", name = "ktlint", version = "0.29.0")
-    api("com.tencent.bkrepo:api-generic:1.0.0")
-    api("com.tencent.bkrepo:api-repository:1.0.0")
+    api("me.cassiano:ktlint-html-reporter")
+    api("com.github.shyiko:ktlint")
+    api("com.tencent.bkrepo:api-generic")
+    api("com.tencent.bkrepo:api-repository")
 }
 
 plugins {
