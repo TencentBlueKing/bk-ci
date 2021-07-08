@@ -36,6 +36,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -53,7 +54,7 @@ interface UserGitCIPermissionResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
-        @QueryParam("projectId")
+        @PathParam("projectId")
         @ApiParam("项目编码", required = true)
         projectId: String
     ): Result<Boolean>
