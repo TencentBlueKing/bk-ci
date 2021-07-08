@@ -137,7 +137,7 @@ class PipelineBuildVarDao @Autowired constructor() {
             }
             val result = where.fetch()
             val list = mutableListOf<BuildParameters>()
-            result?.forEach {
+            result.forEach {
                 if (it.varType != null) {
                     list.add(BuildParameters(it.key, it.value, BuildFormPropertyType.valueOf(it.varType)))
                 } else {

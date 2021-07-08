@@ -23,7 +23,6 @@ function _M:get_ticket(bk_ticket)
     local user_cache = ngx.shared.user_info_store
     local user_cache_value = user_cache:get(bk_ticket)
     if user_cache_value == nil then
-        ngx.log(ngx.STDERR, "no user info")
         --- 初始化HTTP连接
         local httpc = http.new()
         --- 开始连接
@@ -95,7 +94,6 @@ function _M:get_ticket(bk_ticket)
         user_cache:set(bk_ticket, responseBody, 180)
         return result.data
     else
-        ngx.log(ngx.STDERR, "has user info:", user_cache_value)
         return json.decode(user_cache_value).data
     end
 
@@ -262,7 +260,6 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
 end
 
 function _M:verify_token(access_token)
-    local requestBody = {access_token = access_token}
     --- 初始化HTTP连接
     local httpc = http.new()
     --- 开始连接

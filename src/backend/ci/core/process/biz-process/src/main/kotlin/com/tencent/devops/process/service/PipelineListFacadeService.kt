@@ -1156,7 +1156,9 @@ class PipelineListFacadeService @Autowired constructor(
         }
         val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
         pipelines.forEach {
-            it.instanceFromTemplate = pipelineTemplateMap[it.pipelineId] != null
+            val templateId = pipelineTemplateMap[it.pipelineId]
+            it.instanceFromTemplate = templateId != null
+            it.templateId = templateId
             it.groupLabel = pipelineGroupLabel[it.pipelineId]
         }
 
@@ -1380,17 +1382,18 @@ class PipelineListFacadeService @Autowired constructor(
         if (pipelineInfo.projectId != projectId) {
             throw ParamBlankException("$pipelineId 非 $projectId 流水线")
         }
-        val instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null
-        val favorInfos = pipelineFavorDao.listByPipelineId(
-            dslContext = dslContext,
-            userId = userId,
-            pipelineId = pipelineId
-        )
         val hasEditPermission = pipelinePermissionService.checkPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
+        )
+        val templateId = templatePipelineDao.get(dslContext, pipelineId)?.templateId
+        val instanceFromTemplate = templateId != null
+        val favorInfos = pipelineFavorDao.listByPipelineId(
+            dslContext = dslContext,
+            userId = userId,
+            pipelineId = pipelineId
         )
         val hasCollect = if (favorInfos != null) {
             favorInfos.size > 0
@@ -1403,7 +1406,8 @@ class PipelineListFacadeService @Autowired constructor(
             canManualStartup = pipelineInfo.manualStartup,
             pipelineVersion = pipelineInfo.version.toString(),
             deploymentTime = DateTimeUtil.toDateTime(pipelineInfo.updateTime),
-            hasPermission = hasEditPermission
+            hasPermission = hasEditPermission,
+            templateId = templateId
         )
     }
 

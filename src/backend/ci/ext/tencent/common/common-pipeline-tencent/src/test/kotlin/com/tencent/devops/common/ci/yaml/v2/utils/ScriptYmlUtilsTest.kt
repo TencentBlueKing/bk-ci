@@ -27,15 +27,18 @@
 
 package com.tencent.devops.common.ci.yaml.v2.utils
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import org.junit.Assert
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.regex.Pattern
+import javax.ws.rs.core.Response
 
 class ScriptYmlUtilsTest {
 
@@ -51,16 +54,27 @@ class ScriptYmlUtilsTest {
         while (reader.readLine().also { str = it } != null) {
             sb.append(str).append("\n")
         }
-
-        // println(sb.toString())
+        val formatStr = ScriptYmlUtils.formatYaml(sb.toString())
         val obj = YamlUtil.getObjectMapper().readValue(
-            ScriptYmlUtils.formatYaml(sb.toString()),
+            formatStr,
             PreScriptBuildYaml::class.java
         )
-
         val normalize = ScriptYmlUtils.normalizeGitCiYaml(obj, ".ci.yml")
+    }
 
-        println("1111")
+    @Test
+    fun isV2Version() {
+        val classPathResource = ClassPathResource("Sample1.yml")
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+            sb.append(str).append("\n")
+        }
+        Assert.assertEquals(ScriptYmlUtils.isV2Version(sb.toString()), true)
     }
 
     @Test
@@ -87,6 +101,39 @@ class ScriptYmlUtilsTest {
             println(formatVariablesValue(u.value!!, settingMap))
         }
         println(obj.variables)
+    }
+
+    @Test
+    fun validateYamlTest() {
+        val yamlJsonStr = try {
+            ScriptYmlUtils.convertYamlToJson(ScriptYmlUtils.formatYaml(getFileStr("Sample1.yml")))
+        } catch (e: Throwable) {
+            throw CustomException(Response.Status.BAD_REQUEST, "${e.cause}")
+        }
+
+        val schema = getFileStr("gitciv2-schema.json")
+        println(ScriptYmlUtils.validate(schema, yamlJsonStr))
+    }
+
+    private fun getFileStr(fileName: String): String {
+        val classPathResource = ClassPathResource(fileName)
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+/*            if (str != null && str!!.startsWith("on:")) {
+                sb.append(str!!.replace("on", "trigger-on")).append("\n")
+            } else {
+                sb.append(str).append("\n")
+            }*/
+
+            sb.append(str).append("\n")
+        }
+
+        return sb.toString()
     }
 
     private fun formatVariablesValue(value: String, settingMap: Map<String, String>): String {

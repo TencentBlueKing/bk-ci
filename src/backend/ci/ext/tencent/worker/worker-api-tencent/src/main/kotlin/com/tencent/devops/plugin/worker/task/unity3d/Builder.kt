@@ -30,7 +30,7 @@ package com.tencent.devops.plugin.worker.task.unity3d
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.log.Ansi
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.common.pipeline.enums.Platform
 import com.tencent.devops.plugin.worker.task.unity3d.model.Argument
 import com.tencent.devops.process.pojo.BuildVariables

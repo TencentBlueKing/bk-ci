@@ -29,10 +29,10 @@ package com.tencent.devops.openapi.filter
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RequestFilter
-import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.openapi.service.op.AppUserInfoService
+import com.tencent.devops.openapi.service.op.OpAppUserService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -47,8 +47,9 @@ import javax.ws.rs.ext.Provider
 @RequestFilter
 @Suppress("ALL")
 class UserFilter @Autowired constructor(
-    val client: Client,
-    val redisOperation: RedisOperation
+    val redisOperation: RedisOperation,
+    val appUserInfoService: AppUserInfoService,
+    val opAppUserService: OpAppUserService
 ) : ContainerRequestFilter {
 
     override fun filter(requestContext: ContainerRequestContext?) {
@@ -61,13 +62,17 @@ class UserFilter @Autowired constructor(
             logger.info("path: ${requestContext.uriInfo.path} not need userHead, appCode: $appCode ")
             return
         } else {
-            try {
-                client.get(ServiceTxUserResource::class).get(userId!!)
-            } catch (e: Exception) {
+            if (!opAppUserService.checkUser(userId!!)) {
                 val appCode = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_APP_CODE)
-                logger.warn("$userId is not rtx user, appCode: $appCode , path: ${requestContext.uriInfo.path}")
-                if (redisOperation.get(FAILTRUNFLAG) != null) {
-                    throw ParamBlankException("非法用户")
+                logger.info("$userId is not rtx user, appCode: $appCode , path: ${requestContext.uriInfo.path}")
+                val appManagerUser = appUserInfoService.get(appCode)
+                if (appManagerUser.isNullOrEmpty()) {
+                    logger.warn("$userId is not rtx user, appCode: $appCode not has manager")
+                    if (redisOperation.get(FAILTRUNFLAG) != null) {
+                        throw ParamBlankException("非法用户")
+                    }
+                } else {
+                    requestContext.headers.putSingle(AUTH_HEADER_USER_ID, appManagerUser!!)
                 }
             }
         }

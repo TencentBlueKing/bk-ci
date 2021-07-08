@@ -44,7 +44,7 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
-import com.tencent.devops.dispatch.utils.redis.RedisUtils
+import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -58,7 +58,7 @@ import javax.ws.rs.NotFoundException
 @Suppress("ALL")
 class ThirdPartyAgentService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val redisUtils: RedisUtils,
+    private val thirdPartyAgentBuildRedisUtils: ThirdPartyAgentBuildRedisUtils,
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
@@ -205,7 +205,7 @@ class ThirdPartyAgentService @Autowired constructor(
             return if (agentUpgradeResult.data != null && !agentUpgradeResult.data!!) {
                 agentUpgradeResult
             } else {
-                redisUtils.setThirdPartyAgentUpgrading(projectId, agentId)
+                thirdPartyAgentBuildRedisUtils.setThirdPartyAgentUpgrading(projectId, agentId)
                 AgentResult(AgentStatus.IMPORT_OK, true)
             }
         } catch (t: Throwable) {
@@ -250,7 +250,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 )
                 throw NotFoundException("Fail to get the agent")
             }
-            redisUtils.thirdPartyAgentUpgradingDone(projectId, agentId)
+            thirdPartyAgentBuildRedisUtils.thirdPartyAgentUpgradingDone(projectId, agentId)
             return AgentResult(agentResult.agentStatus!!, true)
         } catch (ignored: Throwable) {
             logger.warn("Fail to finish upgrading", ignored)
@@ -325,7 +325,7 @@ class ThirdPartyAgentService @Autowired constructor(
             logger.warn("Get the null third party agent(${record.agentId})")
             throw RemoteServiceException("Fail to get the third party agent")
         }
-        redisUtils.deleteThirdPartyBuild(agentResult.data!!.secretKey, record.agentId, record.buildId, record.vmSeqId)
+        thirdPartyAgentBuildRedisUtils.deleteThirdPartyBuild(agentResult.data!!.secretKey, record.agentId, record.buildId, record.vmSeqId)
         thirdPartyAgentBuildDao.updateStatus(
             dslContext, record.id,
             if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE

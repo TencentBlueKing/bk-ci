@@ -86,14 +86,18 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.redis.RedisOperation
@@ -158,10 +162,11 @@ class TriggerBuildService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val oauthService: OauthService,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val websocketService: GitCIV2WebsocketService
 ) : V2BaseBuildService<ScriptBuildYaml>(
     client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService
+    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService, websocketService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -171,7 +176,7 @@ class TriggerBuildService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TriggerBuildService::class.java)
-
+        private const val ymlVersion = "v2.0"
         const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
         const val VARIABLE_PREFIX = "variables."
     }
@@ -366,7 +371,7 @@ class TriggerBuildService @Autowired constructor(
                 .getGroups(event.userId, gitBasicSetting.projectCode!!)
                 .data
 
-            yaml.label.forEach {
+            yaml.label?.forEach {
                 // 要设置的标签组不存在，新建标签组和标签（同名）
                 if (!checkPipelineLabel(it, pipelineGroups)) {
                     client.get(UserPipelineGroupResource::class).addGroup(
@@ -524,7 +529,7 @@ class TriggerBuildService @Autowired constructor(
         }
 
         if (job.runsOn.agentSelector.isNullOrEmpty()) {
-            return VMBaseOS.LINUX
+            return VMBaseOS.ALL
         }
         return when (job.runsOn.agentSelector!![0]) {
             "linux" -> VMBaseOS.LINUX
@@ -545,7 +550,7 @@ class TriggerBuildService @Autowired constructor(
         }
 
         // 第三方构建机
-        if (job.runsOn.selfHosted) {
+        if (job.runsOn.selfHosted == true) {
             return ThirdPartyAgentEnvDispatchType(
                 envName = job.runsOn.poolName,
                 workspace = "",
@@ -556,10 +561,10 @@ class TriggerBuildService @Autowired constructor(
         // 公共docker构建机
         if (job.runsOn.poolName == "docker") {
             val containerPool = Pool(
-                container = job.runsOn.container.image,
+                container = job.runsOn.container?.image,
                 credential = Credential(
-                    user = job.runsOn.container.credentials?.username ?: "",
-                    password = job.runsOn.container.credentials?.password ?: ""
+                    user = job.runsOn.container?.credentials?.username ?: "",
+                    password = job.runsOn.container?.credentials?.password ?: ""
                 ),
                 macOS = null,
                 third = null,
@@ -746,6 +751,11 @@ class TriggerBuildService @Autowired constructor(
             }
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
+            if (step.with == null || (step.with != null && !step.with!!.containsKey("authType"))) {
+                inputMap["accessToken"] =
+                    oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
+                inputMap["authType"] = "ACCESS_TOKEN"
+            }
         }
 
         // 拼装插件固定参数
@@ -916,18 +926,24 @@ class TriggerBuildService @Autowired constructor(
 
         val gitProjectName = when (originEvent) {
             is GitPushEvent -> {
+                startParams[PIPELINE_GIT_REPO_URL] = originEvent.repository.git_http_url
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CI_BRANCH] = getBranchName(originEvent.ref)
                 startParams[PIPELINE_GIT_EVENT] = GitPushEvent.classType
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitTagPushEvent -> {
+                startParams[PIPELINE_GIT_REPO_URL] = originEvent.repository.git_http_url
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CI_BRANCH] = getBranchName(originEvent.ref)
                 startParams[PIPELINE_GIT_EVENT] = GitTagPushEvent.classType
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitMergeRequestEvent -> {
+                startParams[PIPELINE_GIT_REPO_URL] = gitBasicSetting.gitHttpUrl
+                startParams[PIPELINE_GIT_BASE_REPO_URL] = originEvent.object_attributes.source.http_url
+                startParams[PIPELINE_GIT_HEAD_REPO_URL] = originEvent.object_attributes.target.http_url
+                startParams[PIPELINE_GIT_MR_URL] = originEvent.object_attributes.url
                 startParams[PIPELINE_GIT_EVENT] = GitMergeRequestEvent.classType
                 startParams[PIPELINE_GIT_HEAD_REF] = originEvent.object_attributes.target_branch
                 startParams[PIPELINE_GIT_BASE_REF] = originEvent.object_attributes.source_branch
@@ -940,6 +956,7 @@ class TriggerBuildService @Autowired constructor(
             }
             else -> {
                 startParams[PIPELINE_GIT_EVENT] = OBJECT_KIND_MANUAL
+                startParams[PIPELINE_GIT_REPO_URL] = gitBasicSetting.gitHttpUrl
                 GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
             }
         }

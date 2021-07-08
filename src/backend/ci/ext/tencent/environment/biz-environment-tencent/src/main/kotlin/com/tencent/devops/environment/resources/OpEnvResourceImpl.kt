@@ -51,6 +51,9 @@ class OpEnvResourceImpl @Autowired constructor(
     }
 
     override fun list(page: Int, pageSize: Int, projectId: String?): Result<ProjectConfigPage> {
-        return Result(ProjectConfigPage(bcsClusterService.countProjectConfig(projectId), bcsClusterService.list(page, pageSize, projectId)))
+        return Result(data = ProjectConfigPage(
+            total = bcsClusterService.countProjectConfig(projectId),
+            data = bcsClusterService.list(page, pageSize, projectId)
+        ))
     }
 }

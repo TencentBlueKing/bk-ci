@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.service.trigger
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitEvent
@@ -56,4 +57,6 @@ interface RequestTriggerInterface<T> {
         pipelineId: String?,
         pipelineName: String?
     ): T?
+
+    fun checkYamlSchema(userId: String, yaml: String): Result<String>
 }

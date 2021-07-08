@@ -29,7 +29,10 @@ package com.tencent.devops.gitci.resources.user
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.CiYamlUtils
+import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCITriggerResource
 import com.tencent.devops.gitci.permission.GitCIV2PermissionService
@@ -38,7 +41,9 @@ import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.pojo.V2TriggerBuildReq
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.service.GitCITriggerService
+import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
 import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.common.CommonConst
 import com.tencent.devops.gitci.v2.service.GitCIV2PipelineService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,7 +52,9 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserGitCITriggerResourceImpl @Autowired constructor(
     private val gitCITriggerService: GitCITriggerService,
     private val gitCIV2PipelineService: GitCIV2PipelineService,
-    private val permissionService: GitCIV2PermissionService
+    private val permissionService: GitCIV2PermissionService,
+    private val requestTriggerFactory: RequestTriggerFactory,
+    private val redisOperation: RedisOperation
 ) : UserGitCITriggerResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserGitCITriggerResourceImpl::class.java)
@@ -80,20 +87,38 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
     }
 
     override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
-        try {
-            val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
-            logger.debug("yaml str : $yamlStr")
+        // 检查yml版本，根据yml版本选择不同的实现
+        val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
+        if (ymlVersion!!.version != "v2.0") {
+            try {
+                val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
+                logger.debug("yaml str : $yamlStr")
 
-            val (validate, message) = gitCITriggerService.validateCIBuildYaml(yamlStr)
-            if (!validate) {
-                logger.error("Validate yaml failed, message: $message")
-                return Result(1, "Invalid yaml: $message", message)
+                val (validate, message) = gitCITriggerService.validateCIBuildYaml(yamlStr)
+                if (!validate) {
+                    logger.error("Check yaml failed, error: $message")
+                    return Result(1, "Invalid yaml: $message", message)
+                }
+                gitCITriggerService.createCIBuildYaml(yaml.yaml)
+
+                return Result("OK")
+            } catch (e: Throwable) {
+                logger.error("Check yaml failed, error: ${e.message}, yaml: $yaml")
+                return Result(1, "Invalid yaml", e.message)
             }
-            gitCITriggerService.createCIBuildYaml(yaml.yaml)
-        } catch (e: Throwable) {
-            logger.error("check yaml failed, error: ${e.message}, yaml: $yaml")
-            return Result(1, "Invalid yaml", e.message)
+        } else {
+            val triggerInterface = requestTriggerFactory.getGitCIRequestTrigger(ymlVersion)
+            return triggerInterface.checkYamlSchema(userId, yaml.yaml)
         }
+    }
+
+    override fun saveYamlSchema(userId: String, yamlSchema: String): Result<String> {
+        logger.info("User: $userId save yamlSchema: $yamlSchema")
+        redisOperation.set(
+            key = CommonConst.REDIS_GITCI_YAML_SCHEMA,
+            value = JsonUtil.toJson(yamlSchema),
+            expired = false
+        )
 
         return Result("OK")
     }

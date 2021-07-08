@@ -40,9 +40,9 @@ import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -54,7 +54,7 @@ import java.time.LocalDateTime
 class UpdateStateForStageCmdFinally(
     private val pipelineStageService: PipelineStageService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val stageBuildDetailService: StageBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter
 ) : StageCmd {
@@ -160,7 +160,7 @@ class UpdateStateForStageCmdFinally(
             if (commandContext.fastKill) {
                 commandContext.buildStatus = BuildStatus.FAILED
             }
-            val allStageStatus = pipelineBuildDetailService.updateStageStatus(
+            val allStageStatus = stageBuildDetailService.updateStageStatus(
                 buildId = event.buildId, stageId = event.stageId, buildStatus = commandContext.buildStatus
             )
             pipelineRuntimeService.updateBuildHistoryStageState(event.buildId, allStageStatus = allStageStatus)

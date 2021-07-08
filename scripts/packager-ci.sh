@@ -87,6 +87,7 @@ packager_ci (){
   echo "ci_pkg_dir is $ci_pkg_dir."
   collect_dirs "support-files" "scripts" "src/gateway"
   rm -rf "$ci_pkg_dir"/support-files/agent-package
+  rm -rf "$ci_pkg_dir"/support-files/codecc
   collect_dirs "docs" || true  # 可选.
   collect_agentpackage
   collect_backend

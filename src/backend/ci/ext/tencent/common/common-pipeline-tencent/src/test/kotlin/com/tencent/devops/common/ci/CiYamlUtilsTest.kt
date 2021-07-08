@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.ci
 
+import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader
@@ -51,5 +53,22 @@ internal class CiYamlUtilsTest {
         println(sb.toString())
 
         // println(CiYamlUtils.parseVersion(sb.toString()))
+    }
+
+    @Test
+    fun toYamlString() {
+        val yamlObj = ScriptBuildYaml(
+            version = "v2.0",
+            name = "myName",
+            label = null,
+            triggerOn = null,
+            variables = null,
+            stages = listOf(),
+            extends = null,
+            resource = null,
+            notices = null,
+            finally = listOf()
+        )
+        println(YamlUtil.toYaml(yamlObj))
     }
 }

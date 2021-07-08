@@ -37,12 +37,14 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
+import com.tencent.devops.repository.api.ServiceGitCommitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
+@Suppress("LongParameterList")
 @Service
 class IptRepoService @Autowired constructor(
     private val client: Client,
@@ -54,35 +56,43 @@ class IptRepoService @Autowired constructor(
     fun getCommitBuildArtifactorytInfo(
         projectId: String,
         pipelineId: String,
+        buildId: String,
         userId: String,
         commitId: String,
         filePath: String?
     ): IptBuildArtifactoryInfo {
-        logger.info("get commit build artifactory info: $projectId, $pipelineId, $userId, $commitId")
         checkPermission(projectId, pipelineId, userId)
 
-        val buildId = getBuildByCommitId(projectId, pipelineId, commitId)
+        val buildId2 = getBuildByCommitId(projectId, pipelineId, commitId)
             ?: throw NotFoundException("can not find build for commit")
 
         val searchFiles = if (filePath != null) listOf(filePath) else null
-        val searchProperty = SearchProps(searchFiles, mapOf("buildId" to buildId, "pipelineId" to pipelineId))
+        val searchProperty = SearchProps(searchFiles, mapOf("buildId" to buildId2, "pipelineId" to pipelineId))
         val fileList = client.get(ServiceIptResource::class)
             .searchFileAndProperty(userId, projectId, searchProperty).data?.records ?: listOf()
 
-        return IptBuildArtifactoryInfo(buildId, fileList)
+        logger.info("getCommitBuildArtifactorytInfo: $projectId|$pipelineId|$buildId|" +
+            "beq=${buildId == buildId2}|$userId|$commitId")
+        return IptBuildArtifactoryInfo(buildId2, fileList)
     }
 
     private fun getBuildByCommitId(projectId: String, pipelineId: String, commitId: String): String? {
-        val headCommits = pipelineBuildVarDao.getVarsByProjectAndPipeline(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            key = "DEVOPS_GIT_REPO_HEAD_COMMIT_ID",
-            value = commitId,
-            offset = 0,
-            limit = 1
-        )
-        return headCommits.firstOrNull()?.buildId
+        val commitData = client.get(ServiceGitCommitResource::class).queryCommitInfo(pipelineId, commitId).data
+        return if (commitData != null) {
+            commitData.buildId
+        } else {
+            logger.warn("BKSystemErrorMonitor|queryCommitInfo|NOT_FOUND|pipeline=$pipelineId|commit=$commitId")
+            val headCommits = pipelineBuildVarDao.getVarsByProjectAndPipeline(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                key = "DEVOPS_GIT_REPO_HEAD_COMMIT_ID",
+                value = commitId,
+                offset = 0,
+                limit = 1
+            )
+            headCommits.firstOrNull()?.buildId
+        }
     }
 
     private fun checkPermission(projectId: String, pipelineId: String, userId: String) {

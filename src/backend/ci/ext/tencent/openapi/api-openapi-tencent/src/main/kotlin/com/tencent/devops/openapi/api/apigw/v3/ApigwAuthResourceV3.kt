@@ -22,7 +22,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwAuthResourceV3 {
-    @ApiOperation("启动构建")
+    @ApiOperation("添加用户组")
     @POST
     @Path("/{projectCode}/group/brach")
     fun batchCreateGroup(

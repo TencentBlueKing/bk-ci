@@ -16,6 +16,10 @@ dispatch:
   #defaultImageUrl: __BK_CI_DOCKER_IMAGE_PREFIX__/paas/bkdevops/centos7.2:v1
   #defaultImageName: centos7.2
   #dockerhostPort: __BK_CI_DOCKERHOST_API_PORT__
+  agentLessRegistryUrl: __BK_CI_AGENTLESS_IMAGE_REGISTRY_URL__
+  agentLessImageName: __BK_CI_AGENTLESS_IMAGE_NAME__
+  agentLessRegistryUserName: __BK_CI_AGENTLESS_IMAGE_REGISTRY_USER__
+  agentLessRegistryPassword: __BK_CI_AGENTLESS_IMAGE_REGISTRY_PASSWORD__
   jobQuota:
     systemAlertReceiver: 
     enable: false

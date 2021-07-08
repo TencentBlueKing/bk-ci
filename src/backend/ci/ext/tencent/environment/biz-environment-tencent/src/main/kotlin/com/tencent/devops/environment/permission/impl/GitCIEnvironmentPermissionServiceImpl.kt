@@ -30,7 +30,6 @@ package com.tencent.devops.environment.permission.impl
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.environment.dao.EnvDao
@@ -148,13 +147,12 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
     }
 
     private fun checkPermission(userId: String, projectId: String): Boolean {
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
-        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
+        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(null) ?: "",
             action = "",
-            projectCode = gitProjectId,
+            projectCode = projectId,
             resourceCode = ""
         ).data ?: false
     }

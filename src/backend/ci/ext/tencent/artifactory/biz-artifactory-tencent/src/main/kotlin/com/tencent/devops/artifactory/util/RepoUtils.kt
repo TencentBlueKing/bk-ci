@@ -42,6 +42,7 @@ object RepoUtils {
     const val PIPELINE_REPO = "pipeline"
     const val CUSTOM_REPO = "custom"
     const val REPORT_REPO = "report"
+    const val LOG_REPO = "log"
 
     fun getRepoByType(repoType: ArtifactoryType): String {
         return when (repoType) {

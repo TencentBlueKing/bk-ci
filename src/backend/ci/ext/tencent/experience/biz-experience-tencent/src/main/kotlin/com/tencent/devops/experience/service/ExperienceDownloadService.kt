@@ -144,8 +144,8 @@ class ExperienceDownloadService @Autowired constructor(
         if (!canExperience) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "没有权限下载资源",
-                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION
+                defaultMessage = "该版本不可用，可能已被下架、已过期或被新版本覆盖，请刷新页面重试",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
             )
         }
 
@@ -185,8 +185,8 @@ class ExperienceDownloadService @Autowired constructor(
         if (!canExperience) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "没有权限下载资源",
-                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION
+                defaultMessage = "该版本不可用，可能已被下架、已过期或被新版本覆盖，请刷新页面重试",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
             )
         }
 

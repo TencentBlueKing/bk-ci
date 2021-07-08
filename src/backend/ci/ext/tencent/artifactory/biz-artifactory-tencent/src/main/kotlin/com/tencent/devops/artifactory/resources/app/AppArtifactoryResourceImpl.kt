@@ -165,6 +165,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         checkParameters(userId, projectId, path)
         val fileDetail = bkRepoService.show(userId, projectId, artifactoryType, path)
         val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
+        val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
         val pipelineInfo = if (pipelineId != StringUtils.EMPTY) {
             client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data
         } else {
@@ -188,7 +189,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 platform = if (fileDetail.name.endsWith(".apk")) PlatformEnum.ANDROID.name else PlatformEnum.IOS.name,
                 size = fileDetail.size,
                 createdTime = fileDetail.createdTime,
-                projectName = projectId,
+                projectName = projectName,
                 pipelineName = pipelineInfo?.pipelineName ?: StringUtils.EMPTY,
                 creator = fileDetail.meta[ARCHIVE_PROPS_USER_ID] ?: StringUtils.EMPTY,
                 bundleIdentifier = fileDetail.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: StringUtils.EMPTY,

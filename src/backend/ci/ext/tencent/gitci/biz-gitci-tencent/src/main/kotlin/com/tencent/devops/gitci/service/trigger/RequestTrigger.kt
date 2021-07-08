@@ -28,6 +28,7 @@
 package com.tencent.devops.gitci.service.trigger
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
@@ -35,7 +36,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
-import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.listener.GitCIRequestDispatcher
 import com.tencent.devops.gitci.listener.GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
@@ -63,7 +63,6 @@ class RequestTrigger @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val repositoryConfService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate,
     private val gitCIEventSaveService: GitCIEventSaveService
@@ -189,6 +188,10 @@ class RequestTrigger @Autowired constructor(
         }
 
         return yamlObject
+    }
+
+    override fun checkYamlSchema(userId: String, yaml: String): Result<String> {
+        return Result("OK")
     }
 
     fun createCIBuildYaml(yamlStr: String, gitProjectId: Long? = null): CIBuildYaml {
