@@ -322,7 +322,7 @@ class TaskBuildDetailService(
             val parentElement = elements[parentElementJobIndex]
             val taskStatus = BuildStatus.parse(parentElement.status)
             if (!(taskStatus.isFinish() || parentElement.id == endElement.id)) {
-                if (tmpElementIndex == elements.size -1) {
+                if (tmpElementIndex == elements.size - 1) {
                     val startIndex = endElementIndex + 1
                     val endIndex = elements.size - 1
                     if (endIndex > startIndex) {

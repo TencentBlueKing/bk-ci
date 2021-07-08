@@ -30,7 +30,7 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.worker.common.env.AgentEnv
-import com.tencent.process.ProcessTree
+import com.tencent.process.BkProcessTree
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -96,7 +96,7 @@ object KillBuildProcessTree {
             return listOf()
         }
 
-        val processTree = ProcessTree.get()
+        val processTree = BkProcessTree.get()
         val processTreeIterator = processTree.iterator()
         val killedProcessIds = mutableListOf<Int>()
         while (processTreeIterator.hasNext()) {

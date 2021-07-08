@@ -95,7 +95,7 @@ class BuildCancelControl @Autowired constructor(
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId = buildId)
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || buildInfo.status.isFinish()) {
-            LOG.info("[$${buildId}|${event.source}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
+            LOG.info("[$$buildId|${event.source}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
             return false
         }
 
@@ -174,8 +174,8 @@ class BuildCancelControl @Autowired constructor(
                 // 获取当前job第一个插件
                 val firstElement = container.elements[0]
                 // 取消构建,当前运行的stage及当前stage下的job不能马上置为取消状态
-                if ((!containerBuildStatus.isFinish() && stageStatus != BuildStatus.RUNNING
-                        && containerBuildStatus != BuildStatus.RUNNING) || firstElement.status.isNullOrBlank()
+                if ((!containerBuildStatus.isFinish() && stageStatus != BuildStatus.RUNNING &&
+                        containerBuildStatus != BuildStatus.RUNNING) || firstElement.status.isNullOrBlank()
                 ) {
                     pipelineRuntimeService.updateContainerStatus(
                         buildId = event.buildId,

@@ -59,36 +59,40 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.jvnet.winp.WinProcess;
 import org.jvnet.winp.WinpException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("all")
-public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IProcessTree, Serializable {
-    protected final Map<Integer, ProcessTree.OSProcess> processes;
+public abstract class BkProcessTree implements Iterable<BkProcessTree.OSProcess>, IProcessTree, Serializable {
+    protected final Map<Integer, BkProcessTree.OSProcess> processes;
     private transient volatile List<ProcessKiller> killers;
     private static final boolean IS_LITTLE_ENDIAN = "little".equals(System.getProperty("sun.cpu.endian"));
-    public static boolean enabled = !Boolean.getBoolean(ProcessTree.class.getName() + ".disable");
+    public static boolean enabled = !Boolean.getBoolean(BkProcessTree.class.getName() + ".disable");
+    private static Logger logger = LoggerFactory.getLogger(BkProcessTree.class);
 
-    private ProcessTree() {
+    private BkProcessTree() {
         this.processes = new HashMap<>();
     }
 
-    public final ProcessTree.OSProcess get(int pid) {
+    public final BkProcessTree.OSProcess get(int pid) {
         return this.processes.get(pid);
     }
 
-    public final Iterator<ProcessTree.OSProcess> iterator() {
+    public final Iterator<BkProcessTree.OSProcess> iterator() {
         return this.processes.values().iterator();
     }
 
-    public abstract ProcessTree.OSProcess get(Process var1);
+    public abstract BkProcessTree.OSProcess get(Process var1);
 
     public abstract void killAll(Map<String, String> var1, boolean forceFlag) throws InterruptedException;
 
     public static void log(String msg) {
+        logger.info(msg);
     }
 
     public void killAll(Process proc, Map<String, String> modelEnvVars, boolean forceFlag) throws InterruptedException {
         log("killAll: process=" + proc + " and envs=" + modelEnvVars);
-        ProcessTree.OSProcess p = this.get(proc);
+        BkProcessTree.OSProcess p = this.get(proc);
         if (p != null) {
             p.killRecursively(forceFlag);
         }
@@ -108,45 +112,44 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
     }
 
     public static void log(String msg, Throwable e) {
-        System.out.println(e);
-        System.out.println(msg);
+        logger.error(msg, e);
     }
 
-    public static ProcessTree get() {
+    public static BkProcessTree get() {
         try {
             if (File.pathSeparatorChar == ';') {
-                return new ProcessTree.Windows();
+                return new BkProcessTree.Windows();
             }
 
             String os = Util.fixNull(System.getProperty("os.name"));
             if (os.equals("Linux")) {
-                return new ProcessTree.Linux();
+                return new BkProcessTree.Linux();
             }
 
             if (os.equals("SunOS")) {
-                return new ProcessTree.Solaris();
+                return new BkProcessTree.Solaris();
             }
 
             if (os.equals("Mac OS X")) {
-                return new ProcessTree.Darwin();
+                return new BkProcessTree.Darwin();
             }
         } catch (Exception var1) {
             log("Failed to load winp. Reverting to the default", var1);
         }
 
-        return new ProcessTree.Default();
+        return new BkProcessTree.Default();
     }
 
-    public abstract static class Local extends ProcessTree {
+    public abstract static class Local extends BkProcessTree {
         Local() {
             super();
         }
     }
 
-    private static class Default extends ProcessTree.Local {
-        public ProcessTree.OSProcess get(final Process proc) {
-            return new ProcessTree.OSProcess(-1) {
-                public ProcessTree.OSProcess getParent() {
+    private static class Default extends BkProcessTree.Local {
+        public BkProcessTree.OSProcess get(final Process proc) {
+            return new BkProcessTree.OSProcess(-1) {
+                public BkProcessTree.OSProcess getParent() {
                     return null;
                 }
 
@@ -173,7 +176,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
         }
     }
 
-    private static class Darwin extends ProcessTree.Unix {
+    private static class Darwin extends BkProcessTree.Unix {
         private final int sizeOf_kinfo_proc;
         private static final int sizeOf_kinfo_proc_32 = 492;
         private static final int sizeOf_kinfo_proc_64 = 648;
@@ -222,7 +225,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
                         for(int base = 0; base < size.getValue(); base += this.sizeOf_kinfo_proc) {
                             int pid = m.getInt((long)(base + this.kinfo_proc_pid_offset));
                             int ppid = m.getInt((long)(base + this.kinfo_proc_ppid_offset));
-                            super.processes.put(pid, new ProcessTree.Darwin.DarwinProcess(pid, ppid));
+                            super.processes.put(pid, new BkProcessTree.Darwin.DarwinProcess(pid, ppid));
                         }
 
                         return;
@@ -240,7 +243,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
             MIB_PROC_ALL = new int[]{1, 14, 0};
         }
 
-        private class DarwinProcess extends ProcessTree.UnixProcess {
+        private class DarwinProcess extends BkProcessTree.UnixProcess {
             private final int ppid;
             private EnvVars envVars;
             private List<String> arguments;
@@ -250,7 +253,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
                 this.ppid = ppid;
             }
 
-            public ProcessTree.OSProcess getParent() {
+            public BkProcessTree.OSProcess getParent() {
                 return Darwin.this.get(this.ppid);
             }
 
@@ -274,7 +277,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
                     this.envVars = new EnvVars();
                     IntByReference defaultSize = new IntByReference();
                     IntByReference argmaxRef = new IntByReference(0);
-                    IntByReference size = new IntByReference(ProcessTree.Darwin.sizeOfInt);
+                    IntByReference size = new IntByReference(BkProcessTree.Darwin.sizeOfInt);
                     if (GNUCLibrary.LIBC.sysctl(new int[]{1, 8}, 2, argmaxRef.getPointer(), size, Pointer.NULL, defaultSize) != 0) {
                         throw new IOException("Failed to get kernl.argmax: " + GNUCLibrary.LIBC.strerror(Native.getLastError()));
                     }
@@ -290,7 +293,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
 
                         int readInt() {
                             int r = this.getInt(this.offset);
-                            this.offset += (long)ProcessTree.Darwin.sizeOfInt;
+                            this.offset += (long) BkProcessTree.Darwin.sizeOfInt;
                             return r;
                         }
 
@@ -346,12 +349,12 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
         }
     }
 
-    static class Solaris extends ProcessTree.ProcfsUnix {
+    static class Solaris extends BkProcessTree.ProcfsUnix {
         Solaris() {
         }
 
-        protected ProcessTree.OSProcess createProcess(int pid) throws IOException {
-            return new ProcessTree.Solaris.SolarisProcess(pid);
+        protected BkProcessTree.OSProcess createProcess(int pid) throws IOException {
+            return new BkProcessTree.Solaris.SolarisProcess(pid);
         }
 
         private static long to64(int i) {
@@ -359,10 +362,10 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
         }
 
         private static int adjust(int i) {
-            return ProcessTree.IS_LITTLE_ENDIAN ? i << 24 | i << 8 & 16711680 | i >> 8 & '\uff00' | i >>> 24 : i;
+            return BkProcessTree.IS_LITTLE_ENDIAN ? i << 24 | i << 8 & 16711680 | i >> 8 & '\uff00' | i >>> 24 : i;
         }
 
-        private class SolarisProcess extends ProcessTree.UnixProcess {
+        private class SolarisProcess extends BkProcessTree.UnixProcess {
             private final int ppid;
             private final int envp;
             private final int argp;
@@ -391,7 +394,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
                 }
             }
 
-            public ProcessTree.OSProcess getParent() {
+            public BkProcessTree.OSProcess getParent() {
                 return Solaris.this.get(this.ppid);
             }
 
@@ -402,7 +405,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
                     try {
 
                         try (RandomAccessFile as = new RandomAccessFile(this.getFile("as"), "r")) {
-                            ProcessTree.log("Reading " + this.getFile("as"));
+                            BkProcessTree.log("Reading " + this.getFile("as"));
                             for (int n = 0; n < this.argc; ++n) {
                                 as.seek(Solaris.to64(this.argp + n * 4));
                                 int p = Solaris.adjust(as.readInt());
@@ -425,7 +428,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
                     try {
 
                         try (RandomAccessFile as = new RandomAccessFile(this.getFile("as"), "r")) {
-                            ProcessTree.log("Reading " + this.getFile("as"));
+                            BkProcessTree.log("Reading " + this.getFile("as"));
                             int n = 0;
 
                             while (true) {
@@ -448,31 +451,31 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
             }
 
             private String readLine(RandomAccessFile as, int p, String prefix) throws IOException {
-                ProcessTree.log("Reading " + prefix + " at " + p);
-                as.seek(ProcessTree.Solaris.to64(p));
+                BkProcessTree.log("Reading " + prefix + " at " + p);
+                as.seek(BkProcessTree.Solaris.to64(p));
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();
 
                 int ch;
                 for(int i = 0; (ch = as.read()) > 0; buf.write(ch)) {
                     ++i;
                     if (i % 100 == 0) {
-                        ProcessTree.log(prefix + " is so far " + buf.toString());
+                        BkProcessTree.log(prefix + " is so far " + buf.toString());
                     }
                 }
 
                 String line = buf.toString();
-                ProcessTree.log(prefix + " was " + line);
+                BkProcessTree.log(prefix + " was " + line);
                 return line;
             }
         }
     }
 
-    static class Linux extends ProcessTree.ProcfsUnix {
+    static class Linux extends BkProcessTree.ProcfsUnix {
         Linux() {
         }
 
-        protected ProcessTree.Linux.LinuxProcess createProcess(int pid) throws IOException {
-            return new ProcessTree.Linux.LinuxProcess(pid);
+        protected BkProcessTree.Linux.LinuxProcess createProcess(int pid) throws IOException {
+            return new BkProcessTree.Linux.LinuxProcess(pid);
         }
 
         public byte[] readFileToByteArray(File file) throws IOException {
@@ -488,7 +491,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
             return var3;
         }
 
-        class LinuxProcess extends ProcessTree.UnixProcess {
+        class LinuxProcess extends BkProcessTree.UnixProcess {
             private int ppid = -1;
             private EnvVars envVars;
             private List<String> arguments;
@@ -512,7 +515,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
                 }
             }
 
-            public ProcessTree.OSProcess getParent() {
+            public BkProcessTree.OSProcess getParent() {
                 return Linux.this.get(this.ppid);
             }
 
@@ -607,7 +610,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
         }
     }
 
-    public abstract class UnixProcess extends ProcessTree.OSProcess {
+    public abstract class UnixProcess extends BkProcessTree.OSProcess {
         protected UnixProcess(int pid) {
             super(pid);
         }
@@ -619,8 +622,8 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
         public void kill(boolean forceFlag) throws InterruptedException {
             try {
                 int pid = this.getPid();
-                ProcessTree.log("Killing pid=" + pid);
-                ProcessTree.UnixReflection.destroy(pid, forceFlag);
+                BkProcessTree.log("Killing pid=" + pid);
+                BkProcessTree.UnixReflection.destroy(pid, forceFlag);
             } catch (IllegalAccessException var3) {
                 IllegalAccessError x = new IllegalAccessError();
                 x.initCause(var3);
@@ -630,14 +633,14 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
                     throw (Error)var4.getTargetException();
                 }
 
-                ProcessTree.log("Failed to terminate pid=" + this.getPid(), var4);
+                BkProcessTree.log("Failed to terminate pid=" + this.getPid(), var4);
             }
 
             this.killByKiller();
         }
 
         public void killRecursively(boolean forceFlag) throws InterruptedException {
-            ProcessTree.log("Recursively killing pid=" + this.getPid());
+            BkProcessTree.log("Recursively killing pid=" + this.getPid());
 
             for (OSProcess p : this.getChildren()) {
                 p.killRecursively(forceFlag);
@@ -649,7 +652,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
         public abstract List<String> getArguments();
     }
 
-    abstract static class ProcfsUnix extends ProcessTree.Unix {
+    abstract static class ProcfsUnix extends BkProcessTree.Unix {
         ProcfsUnix() {
             File[] processes = (new File("/proc")).listFiles(new FileFilter() {
                 public boolean accept(File f) {
@@ -677,16 +680,16 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
             }
         }
 
-        protected abstract ProcessTree.OSProcess createProcess(int var1) throws IOException;
+        protected abstract BkProcessTree.OSProcess createProcess(int var1) throws IOException;
     }
 
-    abstract static class Unix extends ProcessTree.Local {
+    abstract static class Unix extends BkProcessTree.Local {
         Unix() {
         }
 
-        public ProcessTree.OSProcess get(Process proc) {
+        public BkProcessTree.OSProcess get(Process proc) {
             try {
-                return this.get((Integer)ProcessTree.UnixReflection.PID_FIELD.get(proc));
+                return this.get((Integer) BkProcessTree.UnixReflection.PID_FIELD.get(proc));
             } catch (IllegalAccessException var4) {
                 IllegalAccessError x = new IllegalAccessError();
                 x.initCause(var4);
@@ -705,7 +708,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
         }
     }
 
-    private static final class Windows extends ProcessTree.Local {
+    private static final class Windows extends BkProcessTree.Local {
         Windows() {
 
             for (WinProcess p : WinProcess.all()) {
@@ -720,13 +723,13 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
                         }
 
                         public void killRecursively(boolean forceFlag) throws InterruptedException {
-                            ProcessTree.log("Killing recursively " + this.getPid());
+                            BkProcessTree.log("Killing recursively " + this.getPid());
                             p.killRecursively();
                             this.killByKiller();
                         }
 
                         public void kill(boolean forceFlag) throws InterruptedException {
-                            ProcessTree.log("Killing " + this.getPid());
+                            BkProcessTree.log("Killing " + this.getPid());
                             p.kill();
                             this.killByKiller();
                         }
@@ -758,15 +761,15 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
 
         }
 
-        public ProcessTree.OSProcess get(Process proc) {
+        public BkProcessTree.OSProcess get(Process proc) {
             return this.get((new WinProcess(proc)).getPid());
         }
 
         public void killAll(Map<String, String> modelEnvVars, boolean forceFlag) throws InterruptedException {
-            Iterator<ProcessTree.OSProcess> var2 = this.iterator();
+            Iterator<BkProcessTree.OSProcess> var2 = this.iterator();
 
             while(true) {
-                ProcessTree.OSProcess p;
+                BkProcessTree.OSProcess p;
                 do {
                     if (!var2.hasNext()) {
                         return;
@@ -807,7 +810,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
         }
 
         Object readResolve() {
-            return ProcessTree.this.get(this.pid);
+            return BkProcessTree.this.get(this.pid);
         }
     }
 
@@ -822,16 +825,16 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
             return this.pid;
         }
 
-        public abstract ProcessTree.OSProcess getParent();
+        public abstract BkProcessTree.OSProcess getParent();
 
-        final ProcessTree getTree() {
-            return ProcessTree.this;
+        final BkProcessTree getTree() {
+            return BkProcessTree.this;
         }
 
-        public final List<ProcessTree.OSProcess> getChildren() {
-            List<ProcessTree.OSProcess> r = new ArrayList<>();
+        public final List<BkProcessTree.OSProcess> getChildren() {
+            List<BkProcessTree.OSProcess> r = new ArrayList<>();
 
-            for (OSProcess p : ProcessTree.this) {
+            for (OSProcess p : BkProcessTree.this) {
                 if (p.getParent() == this) {
                     r.add(p);
                 }
@@ -844,13 +847,13 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
 
         void killByKiller() throws InterruptedException {
 
-            for (ProcessKiller killer : ProcessTree.this.getKillers()) {
+            for (ProcessKiller killer : BkProcessTree.this.getKillers()) {
                 try {
                     if (killer.kill(this)) {
                         break;
                     }
                 } catch (IOException var4) {
-                    ProcessTree.log("Failed to kill pid=" + this.getPid(), var4);
+                    BkProcessTree.log("Failed to kill pid=" + this.getPid(), var4);
                 }
             }
 
@@ -883,7 +886,7 @@ public abstract class ProcessTree implements Iterable<ProcessTree.OSProcess>, IP
         }
 
         Object writeReplace() {
-            return ProcessTree.this.new SerializedProcess(this.pid);
+            return BkProcessTree.this.new SerializedProcess(this.pid);
         }
     }
 }
