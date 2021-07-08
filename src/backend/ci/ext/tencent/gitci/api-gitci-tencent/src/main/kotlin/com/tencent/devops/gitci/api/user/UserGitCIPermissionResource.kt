@@ -47,14 +47,14 @@ import javax.ws.rs.core.MediaType
 interface UserGitCIPermissionResource {
 
     @GET
-    @Path("/projects/{projectCode}/resource/validate")
+    @Path("/projects/{projectId}/resource/validate")
     @ApiOperation("校验用户是否有action的权限，忽略oatuh验证")
     fun validateUserResourcePermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
-        @QueryParam("projectCode")
+        @QueryParam("projectId")
         @ApiParam("项目编码", required = true)
-        projectCode: String
+        projectId: String
     ): Result<Boolean>
 }

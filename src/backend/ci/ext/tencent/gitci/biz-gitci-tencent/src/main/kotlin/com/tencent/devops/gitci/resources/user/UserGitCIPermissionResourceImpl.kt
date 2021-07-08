@@ -38,8 +38,8 @@ class UserGitCIPermissionResourceImpl @Autowired constructor(
     private val permissionService: GitCIV2PermissionService
 ) : UserGitCIPermissionResource {
 
-    override fun validateUserResourcePermission(userId: String, projectCode: String): Result<Boolean> {
-        return Result(permissionService.checkEditPermissionAndIgnoreOauth(userId, projectCode))
+    override fun validateUserResourcePermission(userId: String, projectId: String): Result<Boolean> {
+        return Result(permissionService.checkEditPermissionAndIgnoreOauth(userId, projectId))
     }
 
 
