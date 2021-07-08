@@ -83,7 +83,8 @@ object KillBuildProcessTree {
         projectId: String,
         buildId: String,
         vmSeqId: String,
-        taskIds: Set<String>? = null
+        taskIds: Set<String>? = null,
+        forceFlag: Boolean = false
     ): List<Int> {
         val currentProcessId = if (AgentEnv.getOS() == OSType.WINDOWS) {
             getCurrentPID()
@@ -126,8 +127,8 @@ object KillBuildProcessTree {
                     flag = flag && taskIds.contains(envTaskId)
                 }
                 if (flag) {
-                    osProcess.killRecursively()
-                    osProcess.kill()
+                    osProcess.killRecursively(forceFlag)
+                    osProcess.kill(forceFlag)
                     killedProcessIds.add(osProcess.pid)
                 }
             } catch (e: Exception) {

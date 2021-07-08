@@ -30,6 +30,7 @@ package com.tencent.devops.worker.common.heartbeat
 import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
@@ -56,12 +57,11 @@ object Heartbeat {
                 try {
                     logger.info("Start to do the heartbeat")
                     val heartBeatInfo = EngineService.heartbeat()
-                    KillBuildProcessTree.killProcessTree(
-                        projectId = heartBeatInfo.projectId,
-                        buildId = heartBeatInfo.buildId,
-                        vmSeqId = heartBeatInfo.vmSeqId,
-                        taskIds = heartBeatInfo.cancelTaskIds
-                    )
+                    val cancelTaskIds = heartBeatInfo.cancelTaskIds
+                    if (!cancelTaskIds.isNullOrEmpty()) {
+                        // 启动线程杀掉取消任务对应的进程
+                        Thread(KillCancelTaskProcessRunnable(heartBeatInfo)).start()
+                    }
                     failCnt = 0
                 } catch (e: Exception) {
                     logger.warn("Fail to do the heartbeat", e)
@@ -90,6 +90,7 @@ object Heartbeat {
         running = true
     }
 
+
     private fun handleRemoteServiceException(e: RemoteServiceException) {
 
         if (e.httpStatus != HTTP_500 && e.responseContent.isNullOrBlank()) {
@@ -109,6 +110,22 @@ object Heartbeat {
             } catch (t: Throwable) {
                 logger.warn("responseContent covert map fail", e)
             }
+        }
+    }
+
+    private class KillCancelTaskProcessRunnable(
+        private val heartBeatInfo: HeartBeatInfo
+    ) : Runnable {
+        override fun run() {
+            val buildId = heartBeatInfo.buildId
+            logger.info("Heartbeat cancel build:$buildId,heartBeatInfo:$heartBeatInfo")
+            KillBuildProcessTree.killProcessTree(
+                projectId = heartBeatInfo.projectId,
+                buildId = buildId,
+                vmSeqId = heartBeatInfo.vmSeqId,
+                taskIds = heartBeatInfo.cancelTaskIds,
+                forceFlag = true
+            )
         }
     }
 

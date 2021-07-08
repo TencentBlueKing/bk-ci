@@ -212,7 +212,7 @@ class TaskControl @Autowired constructor(
      * 1. 需要失败重试，将[buildTask]的构建状态设置为RETRY
      */
     private fun PipelineBuildAtomTaskEvent.finishTask(buildTask: PipelineBuildTask, buildStatus: BuildStatus) {
-        if (buildTask.status == BuildStatus.CANCELED) {
+        if (buildStatus == BuildStatus.CANCELED) {
             // 删除redis中取消构建标识
             redisOperation.delete("${BuildStatus.CANCELED.name}_$buildId")
             // 当task任务是取消状态时，把taskId存入redis供心跳接口获取
