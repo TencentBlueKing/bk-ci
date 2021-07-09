@@ -168,7 +168,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 if (handleProjectPrimaryId >= maxThreadProjectPrimaryId) {
                     // 已经清理完全部项目的流水线的过期构建记录，再重新开始清理
                     redisOperation.delete("$threadName:$PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY")
-                    logger.info("pipelineBuildHistoryDataClear reStart")
+                    logger.info("pipelineBuildHistoryDataClear $threadName reStart")
                     return@Callable true
                 }
             }
