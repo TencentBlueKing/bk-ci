@@ -121,23 +121,35 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             }
 
             // 可安装类型制定
-            val topType = if (platform == PlatformEnum.ANDROID.id) ".apk" else ".ipa"
+            val (topType, secondType) = if (platform == PlatformEnum.ANDROID.id) {
+                Pair("apk", "ipa")
+            } else {
+                Pair("ipa", "apk")
+            }
 
             // 按字母排序
             val comparator = Comparator<AppFileInfo> { a1, a2 -> StringUtils.compareIgnoreCase(a1.name, a2.name) }
             val topSet = sortedSetOf(comparator)
+            val secondSet = sortedSetOf(comparator)
             val otherSet = sortedSetOf(comparator)
 
             data.forEach {
-                if (it.name.endsWith(topType)) {
-                    topSet.add(it)
-                } else {
-                    otherSet.add(it)
+                when {
+                    it.name.endsWith(topType) -> {
+                        topSet.add(it)
+                    }
+                    it.name.endsWith(secondType) -> {
+                        secondSet.add(it)
+                    }
+                    else -> {
+                        otherSet.add(it)
+                    }
                 }
             }
 
             data = mutableListOf<AppFileInfo>().let {
                 it.addAll(topSet)
+                it.addAll(secondSet)
                 it.addAll(otherSet)
                 it
             }
