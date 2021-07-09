@@ -29,7 +29,6 @@ package com.tencent.devops.gitci.permission
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client

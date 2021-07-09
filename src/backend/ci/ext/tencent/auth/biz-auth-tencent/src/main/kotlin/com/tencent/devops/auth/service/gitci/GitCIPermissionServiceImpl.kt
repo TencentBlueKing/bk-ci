@@ -29,12 +29,14 @@ package com.tencent.devops.auth.service.gitci
 
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.slf4j.LoggerFactory
@@ -207,7 +209,9 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         if (publicCheck) {
             return false
         } else {
-            throw PermissionForbiddenException("")
+            throw PermissionForbiddenException(
+                MessageCodeUtil.getCodeMessage(CommonMessageCode.PERMISSION_DENIED, arrayOf(WEB_CHECK))
+            )
         }
     }
 
