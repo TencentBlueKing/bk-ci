@@ -47,7 +47,11 @@
                 return this.$route.params.pipelineId || ''
             },
             src () {
-                return `${location.origin}${API_URL_PREFIX}/artifactory/resource/bk-plugin-fe/${this.atomCode}/${this.atomVersion}/index.html?projectId=${this.$route.params.projectId}&pipelineId=${this.pipelineId}`
+                return `${location.origin}/bk-plugin-fe/${this.atomCode}/${this.atomVersion}/index.html?projectId=${this.$route.params.projectId}&pipelineId=${this.pipelineId}`
+            }
+        },
+        mounted () {
+
             }
         },
         mounted () {
