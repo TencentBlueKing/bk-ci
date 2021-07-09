@@ -64,6 +64,7 @@ class IamEsbService {
                 .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
+                logger.warn("bkiam v3 request failed url:$url response $it")
                 // 请求错误
                 throw RemoteServiceException("bkiam v3 request failed, response: ($it)")
             }
