@@ -161,6 +161,9 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
         @PathParam("projectCode")
         @ApiParam("项目Id")
         projectCode: String,

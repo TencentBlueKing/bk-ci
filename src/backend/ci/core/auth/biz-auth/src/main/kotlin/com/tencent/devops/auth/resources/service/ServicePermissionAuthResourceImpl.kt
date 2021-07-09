@@ -116,6 +116,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
 
     override fun resouceCreateRelation(
         userId: String,
+        token: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String,
