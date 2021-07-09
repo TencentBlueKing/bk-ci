@@ -78,7 +78,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             "pipeline:build:history:data:clear:project:list"
         private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY =
             "pipeline:build:history:data:clear:thread:set"
-        private var executor:ThreadPoolExecutor? = null
+        private var executor: ThreadPoolExecutor? = null
     }
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -173,7 +173,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 }
             }
             // 将线程编号存入redis集合
-            redisOperation.sadd(PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY , threadNo.toString())
+            redisOperation.sadd(PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY, threadNo.toString())
             try {
                 val maxEveryProjectHandleNum = miscBuildDataClearConfig.maxEveryProjectHandleNum
                 var maxHandleProjectPrimaryId = handleProjectPrimaryId ?: 0L
@@ -212,7 +212,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 logger.warn("pipelineBuildHistoryDataClear doClearBus failed", ignore)
             } finally {
                 // 释放redis集合中的线程编号
-                redisOperation.sremove(PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY , threadNo.toString())
+                redisOperation.sremove(PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY, threadNo.toString())
             }
             return@Callable true
         })
