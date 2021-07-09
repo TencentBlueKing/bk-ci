@@ -77,6 +77,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             "pipeline:build:history:data:clear:project:id"
         private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_KEY =
             "pipeline:build:history:data:clear:project:list"
+        private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY =
+            "pipeline:build:history:data:clear:thread:set"
         private var executor:ThreadPoolExecutor? = null
     }
 
@@ -134,12 +136,15 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 } else {
                     index * avgProjectNum + maxProjectNum % maxThreadHandleProjectNum
                 }
-                doClearBus(
-                    threadNo = index,
-                    projectIdList = projectIdList,
-                    minThreadProjectPrimaryId = (index - 1) * avgProjectNum,
-                    maxThreadProjectPrimaryId = maxThreadProjectPrimaryId
-                )
+                // 判断线程是否正在处理任务，如果正在处理任务则不分配新任务
+                if (!redisOperation.isMember(PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY, index.toString())) {
+                    doClearBus(
+                        threadNo = index,
+                        projectIdList = projectIdList,
+                        minThreadProjectPrimaryId = (index - 1) * avgProjectNum,
+                        maxThreadProjectPrimaryId = maxThreadProjectPrimaryId
+                    )
+                }
             }
         } catch (t: Throwable) {
             logger.warn("pipelineBuildHistoryDataClear failed", t)
@@ -168,39 +173,48 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     return@Callable true
                 }
             }
-            val maxEveryProjectHandleNum = miscBuildDataClearConfig.maxEveryProjectHandleNum
-            var maxHandleProjectPrimaryId = handleProjectPrimaryId ?: 0L
-            val projectInfoList = if (projectIdList.isNullOrEmpty()) {
-                val channelCodeList = miscBuildDataClearConfig.clearChannelCodes.split(",")
-                maxHandleProjectPrimaryId = handleProjectPrimaryId + maxEveryProjectHandleNum
-                projectMiscService.getProjectInfoList(
-                    minId = handleProjectPrimaryId,
-                    maxId = maxHandleProjectPrimaryId,
-                    channelCodeList = channelCodeList
-                )
-            } else {
-                projectMiscService.getProjectInfoList(projectIdList = projectIdList)
-            }
-            // 根据项目依次查询T_PIPELINE_INFO表中的流水线数据处理
-            projectInfoList?.forEach { projectInfo ->
-                val channel = projectInfo.channel
-                // 获取项目对应的流水线数据清理配置类，如果不存在说明无需清理该项目下的构建记录
-                val projectDataClearConfigService =
-                    ProjectDataClearConfigFactory.getProjectDataClearConfigService(channel) ?: return@forEach
-                val projectPrimaryId = projectInfo.id
-                if (projectPrimaryId > maxHandleProjectPrimaryId) {
-                    maxHandleProjectPrimaryId = projectPrimaryId
+            // 将线程编号存入redis集合
+            redisOperation.sadd(PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY , threadNo.toString())
+            try {
+                val maxEveryProjectHandleNum = miscBuildDataClearConfig.maxEveryProjectHandleNum
+                var maxHandleProjectPrimaryId = handleProjectPrimaryId ?: 0L
+                val projectInfoList = if (projectIdList.isNullOrEmpty()) {
+                    val channelCodeList = miscBuildDataClearConfig.clearChannelCodes.split(",")
+                    maxHandleProjectPrimaryId = handleProjectPrimaryId + maxEveryProjectHandleNum
+                    projectMiscService.getProjectInfoList(
+                        minId = handleProjectPrimaryId,
+                        maxId = maxHandleProjectPrimaryId,
+                        channelCodeList = channelCodeList
+                    )
+                } else {
+                    projectMiscService.getProjectInfoList(projectIdList = projectIdList)
                 }
-                val projectId = projectInfo.projectId
-                // 清理流水线构建数据
-                clearPipelineBuildData(projectId, projectDataClearConfigService)
+                // 根据项目依次查询T_PIPELINE_INFO表中的流水线数据处理
+                projectInfoList?.forEach { projectInfo ->
+                    val channel = projectInfo.channel
+                    // 获取项目对应的流水线数据清理配置类，如果不存在说明无需清理该项目下的构建记录
+                    val projectDataClearConfigService =
+                        ProjectDataClearConfigFactory.getProjectDataClearConfigService(channel) ?: return@forEach
+                    val projectPrimaryId = projectInfo.id
+                    if (projectPrimaryId > maxHandleProjectPrimaryId) {
+                        maxHandleProjectPrimaryId = projectPrimaryId
+                    }
+                    val projectId = projectInfo.projectId
+                    // 清理流水线构建数据
+                    clearPipelineBuildData(projectId, projectDataClearConfigService)
+                }
+                // 将当前已处理完的最大项目Id存入redis
+                redisOperation.set(
+                    key = "$threadName:$PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY",
+                    value = maxHandleProjectPrimaryId.toString(),
+                    expired = false
+                )
+            } catch (ignore: Exception) {
+                logger.warn("pipelineBuildHistoryDataClear doClearBus failed", ignore)
+            } finally {
+                // 释放redis集合中的线程编号
+                redisOperation.sremove(PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY , threadNo.toString())
             }
-            // 将当前已处理完的最大项目Id存入redis
-            redisOperation.set(
-                key = "$threadName:$PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY",
-                value = maxHandleProjectPrimaryId.toString(),
-                expired = false
-            )
             return@Callable true
         })
     }
