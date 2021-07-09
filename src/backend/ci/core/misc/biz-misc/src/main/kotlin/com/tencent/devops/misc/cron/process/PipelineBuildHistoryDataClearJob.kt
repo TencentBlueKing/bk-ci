@@ -52,7 +52,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.ThreadPoolExecutor.AbortPolicy
 import java.util.concurrent.TimeUnit
 
 @Component
@@ -136,7 +135,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 } else {
                     index * avgProjectNum + maxProjectNum % maxThreadHandleProjectNum
                 }
-                // 判断线程是否正在处理任务，如果正在处理任务则不分配新任务
+                // 判断线程是否正在处理任务，如正在处理则不分配新任务(定时任务12秒执行一次，线程启动到往set集合设置编号耗费时间很短，故不加锁)
                 if (!redisOperation.isMember(PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY, index.toString())) {
                     doClearBus(
                         threadNo = index,
