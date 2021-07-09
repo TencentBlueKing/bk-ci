@@ -106,26 +106,33 @@ class TxV3AuthResourceApiStr @Autowired constructor(
         }
 
         // 新建关联, 会创建对应action的权限以及该action相关的权限
-        val ancestors = mutableListOf<AncestorsApiReq>()
-        if (resourceType != AuthResourceType.PROJECT.value) {
-            ancestors.add(AncestorsApiReq(
-                system = iamConfiguration.systemId,
-                id = projectCode,
-                type = AuthResourceType.PROJECT.value
-            ))
-        }
-        val iamApiReq = EsbCreateApiReq(
-            creator = user,
-            name = resourceName,
-            id = resourceCode,
-            type = resourceType,
-            system = iamConfiguration.systemId,
-            ancestors = ancestors,
-            bk_app_code = "",
-            bk_app_secret = "",
-            bk_username = user
+//        val ancestors = mutableListOf<AncestorsApiReq>()
+//        if (resourceType != AuthResourceType.PROJECT.value) {
+//            ancestors.add(AncestorsApiReq(
+//                system = iamConfiguration.systemId,
+//                id = projectCode,
+//                type = AuthResourceType.PROJECT.value
+//            ))
+//        }
+//        val iamApiReq = EsbCreateApiReq(
+//            creator = user,
+//            name = resourceName,
+//            id = resourceCode,
+//            type = resourceType,
+//            system = iamConfiguration.systemId,
+//            ancestors = ancestors,
+//            bk_app_code = "",
+//            bk_app_secret = "",
+//            bk_username = user
+//        )
+//        iamEsbService.createRelationResource(iamApiReq)
+        client.get(ServicePermissionAuthResource::class).resouceCreateRelation(
+            userId = user,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            resourceName = resourceName,
+            projectCode = projectCode
         )
-        iamEsbService.createRelationResource(iamApiReq)
     }
 
     override fun modifyResource(

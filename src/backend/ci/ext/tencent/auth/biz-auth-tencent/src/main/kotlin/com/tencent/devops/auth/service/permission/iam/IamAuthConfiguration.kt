@@ -62,5 +62,14 @@ class IamAuthConfiguration {
     )
 
     @Bean
+    fun txPermissionExtService(
+        iamConfiguration: IamConfiguration,
+        managerService: com.tencent.bk.sdk.iam.service.ManagerService
+    ) = TxPermissionExtServiceImpl(
+        iamConfiguration = iamConfiguration,
+        managerService = managerService
+    )
+
+    @Bean
     fun managerService(client: Client) = ManagerService(client)
 }
