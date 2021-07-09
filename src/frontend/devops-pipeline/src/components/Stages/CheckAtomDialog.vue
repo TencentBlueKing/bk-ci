@@ -211,7 +211,6 @@
                 })
             },
             handleParamChange (key, value, paramIndex) {
-                // const { key, value, paramIndex } = payload
                 const param = this.data.params
                 if (isMultipleParam(param[paramIndex].valueType) && key === 'value') {
                     Object.assign(param[paramIndex], {

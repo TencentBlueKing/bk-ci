@@ -102,14 +102,6 @@
                 return BOOLEAN
             }
         },
-        watch: {
-            param (v) {
-                console.log(v)
-            }
-        },
-        created () {
-            console.log(this.isMultipleParam, 2222222)
-        },
         methods: {
             isBooleanParam,
             isStringParam,

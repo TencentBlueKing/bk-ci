@@ -300,8 +300,6 @@
             },
 
             handleParamChange (key, value, paramIndex) {
-                console.log(key, value, paramIndex, 111111111)
-                // const { key, value, paramIndex } = payload
                 const param = this.globalParams[paramIndex]
 
                 if (isMultipleParam(param.valueType) && key === 'value') {
