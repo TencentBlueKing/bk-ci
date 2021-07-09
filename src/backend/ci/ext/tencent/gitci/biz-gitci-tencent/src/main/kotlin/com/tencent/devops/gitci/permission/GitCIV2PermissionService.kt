@@ -127,6 +127,6 @@ class GitCIV2PermissionService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIV2PermissionService::class.java)
-        val WEB_CHECK = "webcheck"
+        const val WEB_CHECK = "webcheck"
     }
 }

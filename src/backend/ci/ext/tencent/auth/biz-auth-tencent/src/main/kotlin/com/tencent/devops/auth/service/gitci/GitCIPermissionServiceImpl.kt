@@ -217,6 +217,6 @@ class GitCIPermissionServiceImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(GitCIPermissionServiceImpl::class.java)
-        val WEB_CHECK = "webcheck"
+        const val WEB_CHECK = "webcheck"
     }
 }
