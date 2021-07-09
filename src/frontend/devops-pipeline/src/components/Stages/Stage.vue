@@ -197,7 +197,10 @@
             },
             canTriggerStage () {
                 try {
-                    return this.stage.stageControlOption.triggerUsers.includes(this.$userInfo.username)
+                    const stageControlOption = this.stage.stageControlOption || {}
+                    const reviewGroups = stageControlOption.reviewGroups || []
+                    const curReviewGroup = reviewGroups.find((review) => (review.status === 'REVIEWING'))
+                    return curReviewGroup.reviewers.includes(this.$userInfo.username)
                 } catch (e) {
                     return false
                 }
