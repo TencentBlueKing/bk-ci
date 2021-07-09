@@ -157,7 +157,7 @@ interface ServicePermissionAuthResource {
 
     @Path("/projects/{projectCode}/create/relation")
     @POST
-    fun resouceCreateRelation(
+    fun resourceCreateRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
@@ -170,7 +170,7 @@ interface ServicePermissionAuthResource {
         @QueryParam("resourceType")
         @ApiParam("资源类型")
         resourceType: String,
-        @QueryParam("resourceType")
+        @QueryParam("resourceCode")
         @ApiParam("资源类型")
         resourceCode: String,
         @QueryParam("resourceName")
