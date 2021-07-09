@@ -255,6 +255,10 @@ class InitializationRunner @Autowired constructor(
     private fun setToolOrder() {
         val toolOrder = commonDao.toolOrder
         val langOrder = commonDao.langOrder
+
+        logger.info("start to set tool order: {}", commonDao.toolOrder)
+        logger.info("start to set lang order: {}", commonDao.langOrder)
+
         redisTemplate.opsForValue().set(RedisKeyConstants.KEY_TOOL_ORDER, toolOrder)
         redisTemplate.opsForValue().set(RedisKeyConstants.KEY_LANG_ORDER, langOrder)
     }

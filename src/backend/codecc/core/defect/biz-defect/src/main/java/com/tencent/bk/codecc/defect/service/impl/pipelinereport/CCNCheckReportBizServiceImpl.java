@@ -105,9 +105,9 @@ public class CCNCheckReportBizServiceImpl implements ICheckReportBizService
         ccnSnapShotEntity.setToolNameEn(toolName);
         if (StringUtils.isNotEmpty(projectId))
         {
-            String defectDetailUrl = String.format("http://%s/console/codecc/%s/task/%d/defect/ccn/list?buildId=%s", devopsHost, projectId, taskId, buildId);
+            String defectDetailUrl = String.format("%s/console/codecc/%s/task/%d/defect/ccn/list?buildId=%s", devopsHost, projectId, taskId, buildId);
             ccnSnapShotEntity.setDefectDetailUrl(defectDetailUrl);
-            String defectReportUrl = String.format("http://%s/console/codecc/%s/task/%d/defect/ccn/charts", devopsHost, projectId, taskId);
+            String defectReportUrl = String.format("%s/console/codecc/%s/task/%d/defect/ccn/charts", devopsHost, projectId, taskId);
             ccnSnapShotEntity.setDefectReportUrl(defectReportUrl);
         }
     }

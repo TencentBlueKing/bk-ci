@@ -1123,116 +1123,15 @@
   "brief_introduction" : "基于stylelint的样式规范，支持检测.css,.scss,.less,.wxss,.vue",
   "privated" : true,
   "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  node ./sdk/scan.js --input={input.json} --output={output.json}\"",
-  "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-csslint-codecc-plugin",
-  "docker_image_version" : "v-1618492593623",
+  "docker_image_url" : "bkcodecc/csslint_scan",
+  "docker_image_version" : "latest",
   "docker_image_account" : "g_codecc",
-  "docker_image_passwd" : "+D1gPiekk9cOBOhnlkDR25XXlgWZ9BT/XTe8vlZIN2hFCYN0YjVcgJIDMRTKJB3D",
+  "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
   "debug_pipeline_id" : "p-a1270c94f5ee462fb1c17337c2d52c00",
   "tool_scan_command" : "/bin/bash##-c##\"node ./sdk/scan.js --input={input.json} --output={output.json}\"",
-  "tool_versions" : [
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  node ./sdk/scan.js --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-csslint-codecc-plugin",
-      "docker_image_version" : "v-1618544816088",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:4c19045132696dc140beac1d107a4e001a37dc30d8ea206b47afc4db61cc9ceb",
-      "create_date" : 1618544846506,
-      "created_by" : "galeqin",
-      "updated_date" : 1618544846506,
-      "updated_by" : "galeqin"
-    }
-  ],
   "create_date" : 1618492636017,
   "created_by" : "admin",
   "updated_date" : 1618544846496,
-  "updated_by" : "admin"
-}
-
-{
-  "_id" : {"$oid": "6041d420b13706035fd54155"},
-  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
-  "name" : "STYLELINT",
-  "pattern" : "LINT",
-  "display_name" : "StyleLint",
-  "type" : "STANDARD",
-  "lang" : 65536,
-  "brief_introduction" : "开源CSS代码质量工具",
-  "privated" : true,
-  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-  "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-stylelint-codecc-plugin",
-  "docker_image_version" : "v-1614926841696",
-  "docker_image_account" : "g_codecc",
-  "docker_image_passwd" : "+D1gPiekk9cOBOhnlkDR25XXlgWZ9BT/XTe8vlZIN2hFCYN0YjVcgJIDMRTKJB3D",
-  "debug_pipeline_id" : "p-27eadfc72f45438bb1d8e87876e5900e",
-  "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-  "tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-stylelint-codecc-plugin",
-      "docker_image_version" : "v-1615212885520",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:33a5700eb4959e55eaba9c598e959cbbfbc248d21af0126b10b9f2f1089e47ee",
-      "create_date" : 1615212915930,
-      "created_by" : "admin",
-      "updated_date" : 1616122569395,
-      "updated_by" : "admin"
-    },
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-stylelint-codecc-plugin",
-      "docker_image_version" : "v-1620485105480",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:9da08626344a2c3ddc6c3fabc748f8ae6073eaedfcdea4013a2298c2a044982e",
-      "create_date" : 1620485117869,
-      "created_by" : "admin",
-      "updated_date" : 1620485117869,
-      "updated_by" : "admin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-stylelint-codecc-plugin",
-      "docker_image_version" : "v-1615212885520",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:33a5700eb4959e55eaba9c598e959cbbfbc248d21af0126b10b9f2f1089e47ee",
-      "create_date" : 1615212915930,
-      "created_by" : "admin",
-      "updated_date" : 1615257050844,
-      "updated_by" : "admin"
-    }
-  ],
-  "last_tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-stylelint-codecc-plugin",
-      "docker_image_version" : "v-1614956313844",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:7432b9d495deb56dc21f2d780ef0944cf7edd3dbbc23cd41c1efbc413987caa8",
-      "create_date" : 1614956356383,
-      "created_by" : "admin",
-      "updated_date" : 1616122569395,
-      "updated_by" : "admin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-stylelint-codecc-plugin",
-      "docker_image_version" : "v-1614956313844",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:7432b9d495deb56dc21f2d780ef0944cf7edd3dbbc23cd41c1efbc413987caa8",
-      "create_date" : 1614956356383,
-      "created_by" : "admin",
-      "updated_date" : 1615257050844,
-      "updated_by" : "admin"
-    }
-  ],
-  "create_date" : 1614926872047,
-  "created_by" : "admin",
-  "updated_date" : 1620485117856,
   "updated_by" : "admin"
 }
 
@@ -1247,56 +1146,18 @@
   "brief_introduction" : "SwiftLint 是一个用于强制检查 Swift 代码风格和规定的一个工具，基本上以 Ray Wenderlich's Swift 代码风格指南为基础。",
   "privated" : true,
   "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-  "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-swiftlint-codecc-plugin",
-  "docker_image_version" : "v-1614957260556",
+  "docker_image_url" : "bkcodecc/swiftlint_scan",
+  "docker_image_version" : "latest",
   "docker_image_account" : "g_codecc",
-  "docker_image_passwd" : "+D1gPiekk9cOBOhnlkDR25XXlgWZ9BT/XTe8vlZIN2hFCYN0YjVcgJIDMRTKJB3D",
+  "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
   "debug_pipeline_id" : "p-eaf24faa052e4f309a6209ff491f54a0",
   "tool_scan_command" : "",
-  "tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-swiftlint-codecc-plugin",
-      "docker_image_version" : "v-1615274543129",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:3f91a8111c79f4ec2bc72d5dd387e9b5224818f8350755b2a6898a58802ab4d2",
-      "create_date" : 1615274573479,
-      "created_by" : "admin",
-      "updated_date" : 1615276901478,
-      "updated_by" : "admin"
-    },
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-swiftlint-codecc-plugin",
-      "docker_image_version" : "v-1615274543129",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:3f91a8111c79f4ec2bc72d5dd387e9b5224818f8350755b2a6898a58802ab4d2",
-      "create_date" : 1615274573479,
-      "created_by" : "admin",
-      "updated_date" : 1615274573479,
-      "updated_by" : "admin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-swiftlint-codecc-plugin",
-      "docker_image_version" : "v-1615274543129",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:3f91a8111c79f4ec2bc72d5dd387e9b5224818f8350755b2a6898a58802ab4d2",
-      "create_date" : 1615274573479,
-      "created_by" : "admin",
-      "updated_date" : 1615274752971,
-      "updated_by" : "admin"
-    }
-  ],
   "last_tool_versions" : [
     {
       "version_type" : "G",
       "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "mirrors.tencent.com/codecc/codecc-auto-tools-prod-swiftlint-codecc-plugin",
-      "docker_image_version" : "v-1615263845540",
+      "docker_image_url" : "bkcodecc/codecc-auto-tools-prod-swiftlint-codecc-plugin",
+      "docker_image_version" : "latest",
       "foreign_docker_image_version" : "latest",
       "docker_image_hash" : "sha256:0e27ae4fdebe249b3bb2a7c6779b4f2ecbc801f0666ef7152e791c417a797b07",
       "create_date" : 1615263875899,

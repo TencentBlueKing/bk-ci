@@ -130,15 +130,20 @@ public class GlobalMessageUtil
             for (String key : keyList)
             {
                 String operMsgStr = (String) redisTemplate.opsForValue().get(key);
+
+                if (StringUtils.isBlank(operMsgStr)) {
+                    continue;
+                }
+
                 GlobalMessage operMsgDetail;
                 try
                 {
                     operMsgDetail = objectMapper.readValue(operMsgStr, GlobalMessage.class);
                     message.put(key, operMsgDetail);
                 }
-                catch (IOException e)
+                catch (Exception e)
                 {
-                    logger.error("operation history message deserialize fail!");
+                    logger.error("operation history message deserialize fail!: {}, {}", key, operMsgStr);
                     throw new CodeCCException(CommonMessageCode.UTIL_EXECUTE_FAIL);
                 }
             }
