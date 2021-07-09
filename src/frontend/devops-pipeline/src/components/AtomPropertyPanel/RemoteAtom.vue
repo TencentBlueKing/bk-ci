@@ -51,10 +51,6 @@
             }
         },
         mounted () {
-
-            }
-        },
-        mounted () {
             window.addEventListener('message', this.receiveMsgFromIframe)
         },
         destroyed () {
