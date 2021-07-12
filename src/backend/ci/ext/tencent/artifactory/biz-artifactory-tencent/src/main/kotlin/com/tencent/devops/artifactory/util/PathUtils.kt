@@ -51,6 +51,6 @@ object PathUtils {
 
     fun buildDetailLink(projectId: String, artifactoryType: String, path: String): String {
         return "${HomeHostUtil.outerServerHost()}/share/artifactoryDetail/?flag=artifactoryDetail" +
-                "&projectId=${projectId}&artifactoryType=${artifactoryType}&artifactoryPath=${path}"
+                "&projectId=$projectId&artifactoryType=$artifactoryType&artifactoryPath=$path"
     }
 }
