@@ -25,7 +25,7 @@ function _M:get_tag(ns_config)
     local devops_project = ngx.var.project_id
     local default_tag = ns_config.tag
     local tag = default_tag
-    local header_tag = ngx.header["X-DEVOPS-TAG"]
+    local header_tag = ngx.var.http_x_devops_tag
 
     if header_tag == nil then
         if devops_project ~= nil and devops_project ~= '' then
