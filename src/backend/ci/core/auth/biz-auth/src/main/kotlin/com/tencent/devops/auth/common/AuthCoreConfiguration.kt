@@ -135,6 +135,6 @@ class AuthCoreConfiguration {
     fun tokenFilter(clientTokenService: ClientTokenService) = TokenCheckFilter(clientTokenService)
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(name = ["permissionExtService"])
     fun permissionExtService() = EmptyPermissionExtServiceImpl()
 }
