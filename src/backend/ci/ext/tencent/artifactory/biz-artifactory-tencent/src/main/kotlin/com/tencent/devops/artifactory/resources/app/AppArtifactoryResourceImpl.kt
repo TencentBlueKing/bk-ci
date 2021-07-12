@@ -65,6 +65,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.BadRequestException
 
 @RestResource
+@SuppressWarnings("MagicNumber", "TooManyFunctions", "ThrowsCount")
 class AppArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoService: BkRepoService,
     private val bkRepoSearchService: BkRepoSearchService,
@@ -102,7 +103,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        appVersion: String?
+        appVersion: String?,
+        platform: Int?
     ): Result<List<AppFileInfo>> {
         checkParameters(userId, projectId)
         if (pipelineId.isBlank()) {
@@ -111,11 +113,45 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        val data = bkRepoService.getBuildFileList(userId, projectId, pipelineId, buildId)
+        var data = bkRepoService.getBuildFileList(userId, projectId, pipelineId, buildId)
         val isNewVersion = VersionUtil.compare(appVersion, "2.0.0") >= 0
         if (isNewVersion) {
             data.forEach {
                 it.modifiedTime = it.modifiedTime * 1000
+            }
+
+            // 可安装类型制定
+            val (topType, secondType) = if (platform == PlatformEnum.ANDROID.id) {
+                Pair("apk", "ipa")
+            } else {
+                Pair("ipa", "apk")
+            }
+
+            // 按字母排序
+            val comparator = Comparator<AppFileInfo> { a1, a2 -> StringUtils.compareIgnoreCase(a1.name, a2.name) }
+            val topSet = sortedSetOf(comparator)
+            val secondSet = sortedSetOf(comparator)
+            val otherSet = sortedSetOf(comparator)
+
+            data.forEach {
+                when {
+                    it.name.endsWith(topType) -> {
+                        topSet.add(it)
+                    }
+                    it.name.endsWith(secondType) -> {
+                        secondSet.add(it)
+                    }
+                    else -> {
+                        otherSet.add(it)
+                    }
+                }
+            }
+
+            data = mutableListOf<AppFileInfo>().let {
+                it.addAll(topSet)
+                it.addAll(secondSet)
+                it.addAll(otherSet)
+                it
             }
         }
 
@@ -226,7 +262,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
 
-        var result = if (path.endsWith(".ipa")) {
+        val result = if (path.endsWith(".ipa")) {
             bkRepoAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, false)
         } else {
             // jfrog 对 android app 只有 derected方式
