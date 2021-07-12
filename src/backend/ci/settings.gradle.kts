@@ -33,9 +33,8 @@ pluginManagement {
         id("com.tencent.devops.boot") version DEVOPS_BOOT_VERSION
     }
     repositories {
-        // TODO 使用SNAPSHOT仓库 , 正式版不用使用
         mavenLocal()
-//        maven(url = "https://oss.sonatype.org/content/repositories/snapshots/")
+        maven(url = "https://oss.sonatype.org/content/repositories/snapshots/")// TODO SNAPSHOT版本
         mavenCentral()
         gradlePluginPortal()
     }

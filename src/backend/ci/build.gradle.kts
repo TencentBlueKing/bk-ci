@@ -14,7 +14,7 @@ allprojects {
 
     // 版本管理
     dependencyManagement {
-        applyMavenExclusions(false)
+        setApplyMavenExclusions(false)
         dependencies {
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
             dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")
@@ -44,6 +44,7 @@ allprojects {
             dependency("org.asynchttpclient:async-http-client:${Versions.AsyncHttpClient}")
             dependency("me.cassiano:ktlint-html-reporter:${Versions.KtlintHtmlReport}")
             dependency("com.github.shyiko:ktlint:${Versions.Ktlint}")
+            dependency("log4j:log4j:1.2.17")
             dependencySet("io.swagger:${Versions.Swagger}") {
                 entry("swagger-annotations")
                 entry("swagger-jersey2-jaxrs")
@@ -70,5 +71,10 @@ allprojects {
     // 兼容 Log4j
     configurations.forEach {
         it.exclude("org.springframework.boot", "spring-boot-starter-logging")
+        it.exclude("org.springframework.boot", "spring-boot-starter-tomcat")
+        it.exclude("org.apache.tomcat", "tomcat-jdbc")
+        it.exclude("org.slf4j", "log4j-over-slf4j")
+        it.exclude("org.slf4j", "slf4j-log4j12")
+        it.exclude("org.slf4j", "slf4j-nop")
     }
 }

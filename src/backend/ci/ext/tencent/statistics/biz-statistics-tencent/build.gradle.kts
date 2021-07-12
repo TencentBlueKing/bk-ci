@@ -35,7 +35,7 @@ dependencies {
     api("com.zaxxer:HikariCP")
     api("org.jooq:jooq")
     api("mysql:mysql-connector-java")
-    api("io.jsonwebtoken:jjwt-api:0.10.8")
+    api("io.jsonwebtoken:jjwt-api")
     runtimeOnly("io.jsonwebtoken:jjwt-impl")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson")
     api(group = "net.sf.json-lib", name = "json-lib", classifier = "jdk15")

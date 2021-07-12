@@ -39,33 +39,33 @@ import java.time.LocalDateTime
 class AuthGroupDao {
 
     fun createGroup(dslContext: DSLContext, groupCreateInfo: GroupCreateInfo) {
-        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
-            dslContext.insertInto(
-                this,
-                GROUP_NAME,
-                GROUP_CODE,
-                GROUP_TYPE,
-                RELATION_ID,
-                DISPLAY_NAME,
-                PROJECT_CODE,
-                CREATE_USER,
-                CREATE_TIME,
-                UPDATE_USER,
-                UPDATE_TIME
-            ).values(
-                groupCreateInfo.groupName,
-                groupCreateInfo.groupCode,
-                groupCreateInfo.groupType,
-                groupCreateInfo.relationId,
-                groupCreateInfo.displayName,
-                groupCreateInfo.projectCode,
-                groupCreateInfo.user,
-                LocalDateTime.now(),
-                null,
-                null
-            ).execute()
-        }
-        return
+//        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+//            dslContext.insertInto(
+//                this,
+//                GROUP_NAME,
+//                GROUP_CODE,
+//                GROUP_TYPE,
+//                RELATION_ID,
+//                DISPLAY_NAME,
+//                PROJECT_CODE,
+//                CREATE_USER,
+//                CREATE_TIME,
+//                UPDATE_USER,
+//                UPDATE_TIME
+//            ).values(
+//                groupCreateInfo.groupName,
+//                groupCreateInfo.groupCode,
+//                groupCreateInfo.groupType,
+//                groupCreateInfo.relationId,
+//                groupCreateInfo.displayName,
+//                groupCreateInfo.projectCode,
+//                groupCreateInfo.user,
+//                LocalDateTime.now(),
+//                null,
+//                null
+//            ).execute()
+//        }
+//        return
     }
 
     fun getGroup(dslContext: DSLContext, projectCode: String, groupCode: String): TAuthGroupInfoRecord? {
@@ -94,36 +94,36 @@ class AuthGroupDao {
     }
 
     fun batchCreateGroups(dslContext: DSLContext, groups: List<GroupCreateInfo>) {
-        if (groups.isEmpty()) {
-            return
-        }
-        dslContext.batch(groups.map {
-            with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
-                dslContext.insertInto(
-                    this,
-                    GROUP_NAME,
-                    GROUP_CODE,
-                    GROUP_TYPE,
-                    RELATION_ID,
-                    DISPLAY_NAME,
-                    PROJECT_CODE,
-                    CREATE_USER,
-                    CREATE_TIME,
-                    UPDATE_USER,
-                    UPDATE_TIME
-                ).values(
-                    it.groupName,
-                    it.groupCode,
-                    it.groupType,
-                    it.relationId,
-                    it.displayName,
-                    it.projectCode,
-                    it.user,
-                    LocalDateTime.now(),
-                    null,
-                    null
-                )
-            }
-        }).execute()
+//        if (groups.isEmpty()) {
+//            return
+//        }
+//        dslContext.batch(groups.map {
+//            with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+//                dslContext.insertInto(
+//                    this,
+//                    GROUP_NAME,
+//                    GROUP_CODE,
+//                    GROUP_TYPE,
+//                    RELATION_ID,
+//                    DISPLAY_NAME,
+//                    PROJECT_CODE,
+//                    CREATE_USER,
+//                    CREATE_TIME,
+//                    UPDATE_USER,
+//                    UPDATE_TIME
+//                ).values(
+//                    it.groupName,
+//                    it.groupCode,
+//                    it.groupType,
+//                    it.relationId,
+//                    it.displayName,
+//                    it.projectCode,
+//                    it.user,
+//                    LocalDateTime.now(),
+//                    null,
+//                    null
+//                )
+//            }
+//        }).execute()
     }
 }
