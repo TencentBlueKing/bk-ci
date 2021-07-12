@@ -52,7 +52,7 @@ class TxPermissionExtServiceImpl @Autowired constructor(
         logger.info("resourceCreateRelation $userId $projectCode $resourceCode $resourceName $resourceType")
         val ancestors = mutableListOf<AncestorsApiReq>()
         if (resourceType != AuthResourceType.PROJECT.value) {
-            ancestors.add(AncestorsApiReq(iamConfiguration.systemId, resourceType, projectCode))
+            ancestors.add(AncestorsApiReq(iamConfiguration.systemId, AuthResourceType.PROJECT.value, projectCode))
         }
         val createRelationDTO = CreateRelationDTO(
             iamConfiguration.systemId,
