@@ -35,6 +35,7 @@ import com.tencent.bk.sdk.iam.dto.grant.AncestorsApiReq
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.common.auth.api.AuthResourceType
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class TxPermissionExtServiceImpl @Autowired constructor(
@@ -48,6 +49,7 @@ class TxPermissionExtServiceImpl @Autowired constructor(
         resourceCode: String,
         resourceName: String
     ): Boolean {
+        logger.info("resourceCreateRelation $userId $projectCode $resourceCode $resourceName $resourceType")
         val ancestors = mutableListOf<AncestorsApiReq>()
         if (resourceType != AuthResourceType.PROJECT.value) {
             ancestors.add(AncestorsApiReq(iamConfiguration.systemId, resourceType, projectCode))
@@ -60,7 +62,12 @@ class TxPermissionExtServiceImpl @Autowired constructor(
             userId,
             ancestors
         )
+        logger.info("resourceCreateRelation $createRelationDTO")
         managerService.createResourceRelation(createRelationDTO)
         return true
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(TxPermissionExtServiceImpl::class.java)
     }
 }
