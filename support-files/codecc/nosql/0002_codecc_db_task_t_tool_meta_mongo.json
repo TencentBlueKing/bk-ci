@@ -13,43 +13,7 @@
   "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /usr/codecc/tool_scan/bkcheck/cpp && python3 bklauncher.py --input={input.json} --output={output.json}\"",
   "docker_image_url" : "bkcodecc/bkcheck-cpp",
   "docker_image_version" : "latest",
-  "debug_pipeline_id" : "p-6456504fa11546329d5b1f26b118d8f3",
   "tool_image_revision" : "sha256:f0ef0364abe5facd0772fc0b6005a3f2f7c3f2c3440f1590a92b5c535ba8adc9",
-  "tool_versions" : [
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /usr/codecc/tool_scan/bkcheck/cpp && python3 bklauncher.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/bkcheck-cpp",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:f0ef0364abe5facd0772fc0b6005a3f2f7c3f2c3440f1590a92b5c535ba8adc9",
-      "create_date" : 1611233147466,
-      "created_by" : "admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "admin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /usr/codecc/tool_scan/bkcheck/cpp && python3 bklauncher.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/bkcheck-cpp",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:f0ef0364abe5facd0772fc0b6005a3f2f7c3f2c3440f1590a92b5c535ba8adc9",
-      "create_date" : 1611233147466,
-      "created_by" : "admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "admin"
-    },
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /usr/codecc/tool_scan/bkcheck/cpp && python3 bklauncher.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/bkcheck-cpp",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:f0ef0364abe5facd0772fc0b6005a3f2f7c3f2c3440f1590a92b5c535ba8adc9",
-      "create_date" : 1611233147466,
-      "created_by" : "admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "admin"
-    }
-  ],
   "create_date" : 1591000272202,
   "created_by" : "admin",
   "updated_date" : 1591603087190,
@@ -79,41 +43,6 @@
   "tool_env" : "",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:80ff15af918aa74e39605564ff5fac2ae6fdd161ba851bfdafd842108e7a315a",
-  "tool_versions" : [
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/ccn_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:be4dd7dcaa6e90ec18acf784c403f9f04fd61073887262f735550d25fbf883b7",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/ccn_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:be4dd7dcaa6e90ec18acf784c403f9f04fd61073887262f735550d25fbf883b7",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    },
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/ccn_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:be4dd7dcaa6e90ec18acf784c403f9f04fd61073887262f735550d25fbf883b7",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    }
-  ],
   "create_date" : 1556610726,
   "created_by" : "system_admin",
   "updated_date" : 1556610717,
@@ -139,77 +68,14 @@
   "docker_image_version" : "latest",
   "docker_image_account" : "g_codecc",
   "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
-  "debug_pipeline_id" : "p-d766c18509094d0a81863c3446551b7a",
   "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
   "tool_env" : "",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:613fe2022c041bf382200fb63f6547dae21d0913d3179e7a79f3865b1de63a8d",
-  "tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/checkstyle_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:1976106d360830c0a3ac44fb1f14306fb143c5e20ddd7b4bda403024e3cf26fb",
-      "create_date" : 1617110749250,
-      "created_by" : "warmli",
-      "updated_date" : 1617115109935,
-      "updated_by" : "warmli"
-    },
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/checkstyle_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:1976106d360830c0a3ac44fb1f14306fb143c5e20ddd7b4bda403024e3cf26fb",
-      "create_date" : 1617110749250,
-      "created_by" : "warmli",
-      "updated_date" : 1617110749250,
-      "updated_by" : "warmli"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/checkstyle_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:1976106d360830c0a3ac44fb1f14306fb143c5e20ddd7b4bda403024e3cf26fb",
-      "create_date" : 1617110749250,
-      "created_by" : "warmli",
-      "updated_date" : 1617111377125,
-      "updated_by" : "warmli"
-    }
-  ],
-  "last_tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/checkstyle_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:bf2399829de9bb452503b73120a078185274d1ea0abb79d4a8b4e714809b72bf",
-      "create_date" : 1615538151957,
-      "created_by" : "warmli",
-      "updated_date" : 1617115109935,
-      "updated_by" : "warmli"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/checkstyle_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:e2fa006c0c4f30f753e8a08553d1fc295ca1c88b624fb67773c0736c52ca59d5",
-      "create_date" : 1617106517873,
-      "created_by" : "warmli",
-      "updated_date" : 1617111377125,
-      "updated_by" : "warmli"
-    }
-  ],
+  "create_date" : 1556610726,
+  "created_by" : "system_admin",
   "updated_date" : 1617110749243,
-  "updated_by" : "warmli"
+  "updated_by" : "admin"
 }
 
 
@@ -234,41 +100,6 @@
   "tool_env" : "",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:36107522b9f5c12ee4f8e1fdcd02e87c0f3293d94a466ccbf10b8ea61f43066e",
-  "tool_versions" : [
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/cloc_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:36107522b9f5c12ee4f8e1fdcd02e87c0f3293d94a466ccbf10b8ea61f43066e",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/cloc_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:36107522b9f5c12ee4f8e1fdcd02e87c0f3293d94a466ccbf10b8ea61f43066e",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    },
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/cloc_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:36107522b9f5c12ee4f8e1fdcd02e87c0f3293d94a466ccbf10b8ea61f43066e",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    }
-  ],
   "create_date" : 1570003800241,
   "created_by" : "system_admin",
   "updated_date" : 1570003800241,
@@ -294,74 +125,10 @@
   "docker_image_version" : "latest",
   "docker_image_account" : "g_codecc",
   "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
-  "debug_pipeline_id" : "p-2ffadc9371024ff9901015d1737659a9",
   "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
   "tool_env" : "",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:d34b6abc1e2c235b9120da717b8152d4eea59c905e8e614d43b51ccfd0422716",
-  "tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/cpplint_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:46a90acacb0d64bd2bbf3a8046c27881d56f99ec76fc867ec544e08195fbcb00",
-      "create_date" : 1618314067041,
-      "created_by" : "neildwu",
-      "updated_date" : 1618317005750,
-      "updated_by" : "neildwu"
-    },
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/cpplint_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:e2e839816f76788f5d9f5bb4395ce02f56aec1824faca347dfc76a4a59ce493e",
-      "create_date" : 1618389059910,
-      "created_by" : "",
-      "updated_date" : 1618389059910,
-      "updated_by" : ""
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/cpplint_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:e2e839816f76788f5d9f5bb4395ce02f56aec1824faca347dfc76a4a59ce493e",
-      "create_date" : 1618389059910,
-      "created_by" : "",
-      "updated_date" : 1618405650850,
-      "updated_by" : ""
-    }
-  ],
-  "last_tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/cpplint_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:d34b6abc1e2c235b9120da717b8152d4eea59c905e8e614d43b51ccfd0422716",
-      "create_date" : 1615876131041,
-      "created_by" : "",
-      "updated_date" : 1618317005749,
-      "updated_by" : "neildwu"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/cpplint_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:46a90acacb0d64bd2bbf3a8046c27881d56f99ec76fc867ec544e08195fbcb00",
-      "create_date" : 1618314067041,
-      "created_by" : "neildwu",
-      "updated_date" : 1618405650849,
-      "updated_by" : ""
-    }
-  ],
   "create_date" : 1556610725,
   "created_by" : "system_admin",
   "updated_date" : 1618389059902,
@@ -387,75 +154,10 @@
   "docker_image_version" : "latest",
   "docker_image_account" : "g_codecc",
   "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
-  "debug_pipeline_id" : "p-2411f0499ca44b4eb2a0f890a32d71e2",
   "tool_scan_command" : "/bin/bash##-c##\"python ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
   "tool_env" : "",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:db71a3815d254e02d2314bbcd19d9b0c2ccf61cf19f12330e390c5582e33ecd2",
-  "tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/detekt_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:e044a8f927cb4bf6ea43522695324aa88f9231fbfb864efd6d51e69a98494245",
-      "create_date" : 1616137245605,
-      "created_by" : "admin",
-      "updated_date" : 1616139494403,
-      "updated_by" : "admin"
-    },
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/detekt_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:e044a8f927cb4bf6ea43522695324aa88f9231fbfb864efd6d51e69a98494245",
-      "create_date" : 1616137245605,
-      "created_by" : "admin",
-      "updated_date" : 1616137245605,
-      "updated_by" : "admin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/detekt_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:e044a8f927cb4bf6ea43522695324aa88f9231fbfb864efd6d51e69a98494245",
-      "create_date" : 1616137245605,
-      "created_by" : "admin",
-      "updated_date" : 1616138349412,
-      "updated_by" : "admin"
-    }
-  ],
-  "last_tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/detekt_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:db68e5799ce52124dd44d927ce5135a178bc36c744c2d02b09072b0f86845a10",
-      "create_date" : 1616080029995,
-      "created_by" : "admin",
-      "updated_date" : 1616139494403,
-      "updated_by" : "admin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/detekt_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:db68e5799ce52124dd44d927ce5135a178bc36c744c2d02b09072b0f86845a10",
-      "create_date" : 1616080029995,
-      "created_by" : "admin",
-      "updated_date" : 1616138349412,
-      "updated_by" : "admin"
-    }
-  ],
   "create_date" : 1556610726,
   "created_by" : "system_admin",
   "updated_date" : 1616137245598,
@@ -485,41 +187,6 @@
   "tool_env" : "",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:c36445301dcaa2914ab44051d79367d68877bfbdce6e1b0dea9b29d544223b5c",
-  "tool_versions" : [
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/dupc_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:c36445301dcaa2914ab44051d79367d68877bfbdce6e1b0dea9b29d544223b5c",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/dupc_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:c36445301dcaa2914ab44051d79367d68877bfbdce6e1b0dea9b29d544223b5c",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    },
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/dupc_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:c36445301dcaa2914ab44051d79367d68877bfbdce6e1b0dea9b29d544223b5c",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    }
-  ],
   "create_date" : 1556610726,
   "created_by" : "system_admin",
   "updated_date" : 1556610717,
@@ -546,75 +213,10 @@
   "docker_image_version" : "latest",
   "docker_image_account" : "g_codecc",
   "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
-  "debug_pipeline_id" : "p-b5e71c6512ff4107a691a24071fa23fd",
   "tool_scan_command" : "/bin/bash##-c##\"python ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
   "tool_env" : "",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:55169ffaf54df1f0bae182595128d4a7601eea1afd4ef77b7467411b9fa57e8f",
-  "tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/eslint_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:d1cbf631894da3f321d6df951152e4355d93d2270712588f3f2a107993ff53e1",
-      "create_date" : 1617103927339,
-      "created_by" : "brooklin",
-      "updated_date" : 1617112569028,
-      "updated_by" : "brooklin"
-    },
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/eslint_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:d1cbf631894da3f321d6df951152e4355d93d2270712588f3f2a107993ff53e1",
-      "create_date" : 1617103927339,
-      "created_by" : "brooklin",
-      "updated_date" : 1617103927339,
-      "updated_by" : "brooklin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/eslint_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:d1cbf631894da3f321d6df951152e4355d93d2270712588f3f2a107993ff53e1",
-      "create_date" : 1617103927339,
-      "created_by" : "brooklin",
-      "updated_date" : 1617106121226,
-      "updated_by" : "brooklin"
-    }
-  ],
-  "last_tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/eslint_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:7c3a25db885a488e90d533cb8cebfac2354d7303ab0d3ab4891625b87d279948",
-      "create_date" : 1615549350232,
-      "created_by" : "brooklin",
-      "updated_date" : 1617112569028,
-      "updated_by" : "brooklin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/eslint_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:c64887fec3e153e381b5a854e1974e42502c3763be545dd718b503d5e382c6bd",
-      "create_date" : 1616676043848,
-      "created_by" : "brooklin",
-      "updated_date" : 1617106121226,
-      "updated_by" : "brooklin"
-    }
-  ],
   "create_date" : 1556610725,
   "created_by" : "system_admin",
   "updated_date" : 1617103927327,
@@ -641,75 +243,10 @@
   "docker_image_version" : "latest",
   "docker_image_account" : "g_codecc",
   "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
-  "debug_pipeline_id" : "p-a221ae5d29604ccc9ac0de7dac1b5c9e",
   "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
   "tool_env" : "",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:086d6e540fc95c641f1cd7ad064da298f5ac374843031964ad2f91d158a35108",
-  "tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/goml_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:2086cfc63b2901ec53253ea83a87b5cc2ac4df540f8338717e1a6b96e0606a18",
-      "create_date" : 1616725423850,
-      "created_by" : "chuckchwang",
-      "updated_date" : 1617784178744,
-      "updated_by" : "chuckchwang"
-    },
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/goml_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:2086cfc63b2901ec53253ea83a87b5cc2ac4df540f8338717e1a6b96e0606a18",
-      "create_date" : 1616725423850,
-      "created_by" : "chuckchwang",
-      "updated_date" : 1616725423850,
-      "updated_by" : "chuckchwang"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/goml_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:2086cfc63b2901ec53253ea83a87b5cc2ac4df540f8338717e1a6b96e0606a18",
-      "create_date" : 1616725423850,
-      "created_by" : "chuckchwang",
-      "updated_date" : 1616985078691,
-      "updated_by" : "chuckchwang"
-    }
-  ],
-  "last_tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/goml_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:083c06763217036c279d5359a243a723cd57896445af87671105043b7ef4500c",
-      "create_date" : 1615895617182,
-      "created_by" : "admin",
-      "updated_date" : 1617784178744,
-      "updated_by" : "chuckchwang"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/goml_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:083c06763217036c279d5359a243a723cd57896445af87671105043b7ef4500c",
-      "create_date" : 1615895617182,
-      "created_by" : "admin",
-      "updated_date" : 1616985078691,
-      "updated_by" : "chuckchwang"
-    }
-  ],
   "create_date" : 1556610725,
   "created_by" : "system_admin",
   "updated_date" : 1616725423837,
@@ -731,49 +268,13 @@
   "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
   "docker_image_url" : "bkcodecc/ktlint_scan",
   "docker_image_version" : "latest",
-  "debug_pipeline_id" : "p-24cb929d48404a32af8e83f0ad1471e3",
   "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
   "tool_run_type" : "docker",
   "tool_image_revision" : "sha256:bd6593e97b53a2ad3c3d0f078012120b2490166f1f26cdc4487199028fb133d0",
-  "tool_versions" : [
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/ktlint_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:bd6593e97b53a2ad3c3d0f078012120b2490166f1f26cdc4487199028fb133d0",
-      "create_date" : 1611233147466,
-      "created_by" : "ddlin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "ddlin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/ktlint_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:bd6593e97b53a2ad3c3d0f078012120b2490166f1f26cdc4487199028fb133d0",
-      "create_date" : 1611233147466,
-      "created_by" : "ddlin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "ddlin"
-    },
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/ktlint_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:bd6593e97b53a2ad3c3d0f078012120b2490166f1f26cdc4487199028fb133d0",
-      "create_date" : 1611233147466,
-      "created_by" : "ddlin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "ddlin"
-    }
-  ],
   "create_date" : 1595506228619,
   "created_by" : "",
   "updated_date" : 1595510340262,
-  "updated_by" : "ddlin"
+  "updated_by" : "admin"
 }
 
 
@@ -799,41 +300,6 @@
   "tool_env" : "",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:ac596d59ce4e5a4726ab2f4a04347010b212d4badb3a883311f9244a52ac3182",
-  "tool_versions" : [
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/occheck_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:ac596d59ce4e5a4726ab2f4a04347010b212d4badb3a883311f9244a52ac3182",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/occheck_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:ac596d59ce4e5a4726ab2f4a04347010b212d4badb3a883311f9244a52ac3182",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    },
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/occheck_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:ac596d59ce4e5a4726ab2f4a04347010b212d4badb3a883311f9244a52ac3182",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    }
-  ],
   "create_date" : 1556610726,
   "created_by" : "system_admin",
   "updated_date" : 1556610717,
@@ -863,41 +329,6 @@
   "tool_env" : "",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:60f77a37768122158e6717d891c7def8aae0e8e10f3f0230c2e84cb3eea9b36c",
-  "tool_versions" : [
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/phpc_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:60f77a37768122158e6717d891c7def8aae0e8e10f3f0230c2e84cb3eea9b36c",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/phpc_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:60f77a37768122158e6717d891c7def8aae0e8e10f3f0230c2e84cb3eea9b36c",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    },
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/phpc_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:60f77a37768122158e6717d891c7def8aae0e8e10f3f0230c2e84cb3eea9b36c",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    }
-  ],
   "create_date" : 1556610726,
   "created_by" : "system_admin",
   "updated_date" : 1556610717,
@@ -924,46 +355,10 @@
   "docker_image_version" : "latest",
   "docker_image_account" : "g_codecc",
   "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
-  "debug_pipeline_id" : "p-6670098fb40a4274aa01b9b732f3f1e6",
   "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
   "tool_env" : "",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:bb7c48ede7bcae9ebd3de8ac1a798ed270eab6597bd4dd12e94a8fb6bb604b32",
-  "tool_versions" : [
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/pylint_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:bb7c48ede7bcae9ebd3de8ac1a798ed270eab6597bd4dd12e94a8fb6bb604b32",
-      "create_date" : 1611233147466,
-      "created_by" : "",
-      "updated_date" : 1611233147466,
-      "updated_by" : ""
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/pylint_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:bb7c48ede7bcae9ebd3de8ac1a798ed270eab6597bd4dd12e94a8fb6bb604b32",
-      "create_date" : 1611233147466,
-      "created_by" : "",
-      "updated_date" : 1611233147466,
-      "updated_by" : ""
-    },
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/pylint_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:bb7c48ede7bcae9ebd3de8ac1a798ed270eab6597bd4dd12e94a8fb6bb604b32",
-      "create_date" : 1611233147466,
-      "created_by" : "",
-      "updated_date" : 1611233147466,
-      "updated_by" : ""
-    }
-  ],
   "create_date" : 1556610726,
   "created_by" : "system_admin",
   "updated_date" : 1606826719565,
@@ -987,49 +382,13 @@
   "docker_image_version" : "latest",
   "docker_image_account" : "g_codecc",
   "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
-  "debug_pipeline_id" : "p-2d8b3ce225fd4a56abbbed98d9a7cff9",
   "tool_scan_command" : "python3 ./src/spotbugs.py --input={input.json} --output={output.json}",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:c800ed6bee75d3fbdc9c2db5ce356060e395f64b00c4ab97f8fecdbe860a01c5",
-  "tool_versions" : [
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "python3 ./src/spotbugs.py --input={input.json} --output={output.json}",
-      "docker_image_url" : "bkcodecc/spotbugs",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:c800ed6bee75d3fbdc9c2db5ce356060e395f64b00c4ab97f8fecdbe860a01c5",
-      "create_date" : 1611233147466,
-      "created_by" : "ddlin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "ddlin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "python3 ./src/spotbugs.py --input={input.json} --output={output.json}",
-      "docker_image_url" : "bkcodecc/spotbugs",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:c800ed6bee75d3fbdc9c2db5ce356060e395f64b00c4ab97f8fecdbe860a01c5",
-      "create_date" : 1611233147466,
-      "created_by" : "ddlin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "ddlin"
-    },
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "python3 ./src/spotbugs.py --input={input.json} --output={output.json}",
-      "docker_image_url" : "bkcodecc/spotbugs",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:c800ed6bee75d3fbdc9c2db5ce356060e395f64b00c4ab97f8fecdbe860a01c5",
-      "create_date" : 1611233147466,
-      "created_by" : "ddlin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "ddlin"
-    }
-  ],
   "create_date" : 1594708373163,
-  "created_by" : "jamikxu",
+  "created_by" : "admin",
   "updated_date" : 1598619205900,
-  "updated_by" : "ddlin"
+  "updated_by" : "admin"
 }
 
 
@@ -1051,61 +410,10 @@
   "docker_image_version" : "latest",
   "docker_image_account" : "g_codecc",
   "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
-  "debug_pipeline_id" : "p-6b7d0eaec60342ccbf86a07975975839",
   "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
   "tool_env" : "",
   "tool_run_type" : "local",
   "tool_image_revision" : "sha256:46c8456c6aaafb3fa88ab63bd707f29de431a706ade8b0a012296066bf866cf4",
-  "tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/stylecop_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:46c8456c6aaafb3fa88ab63bd707f29de431a706ade8b0a012296066bf866cf4",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1611233147466,
-      "updated_by" : "system_admin"
-    },
-    {
-      "version_type" : "T",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/stylecop_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:19d566b596c6d21a948d81d1ae7192e9492d9aae6cd73f97a1e48ef11fce7d5d",
-      "create_date" : 1615555081612,
-      "created_by" : "admin",
-      "updated_date" : 1615555081612,
-      "updated_by" : "admin"
-    },
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/stylecop_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:e72c6559797befd519f2e383712bad2bec4b3fcc2fb3aba864a67a5ab445edc9",
-      "create_date" : 1615542242254,
-      "created_by" : "weijianguan",
-      "updated_date" : 1615542966517,
-      "updated_by" : "weijianguan"
-    }
-  ],
-  "last_tool_versions" : [
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/stylecop_scan",
-      "docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:46c8456c6aaafb3fa88ab63bd707f29de431a706ade8b0a012296066bf866cf4",
-      "create_date" : 1611233147466,
-      "created_by" : "system_admin",
-      "updated_date" : 1615542966517,
-      "updated_by" : "weijianguan"
-    }
-  ],
   "create_date" : 1556610725,
   "created_by" : "system_admin",
   "updated_date" : 1615555081605,
@@ -1117,6 +425,7 @@
   "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
   "name" : "CSSLINT",
   "pattern" : "LINT",
+  "status" : "P",
   "display_name" : "CSSLINT",
   "type" : "STANDARD",
   "lang" : 65536,
@@ -1127,7 +436,6 @@
   "docker_image_version" : "latest",
   "docker_image_account" : "g_codecc",
   "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
-  "debug_pipeline_id" : "p-a1270c94f5ee462fb1c17337c2d52c00",
   "tool_scan_command" : "/bin/bash##-c##\"node ./sdk/scan.js --input={input.json} --output={output.json}\"",
   "create_date" : 1618492636017,
   "created_by" : "admin",
@@ -1140,6 +448,7 @@
   "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
   "name" : "SWIFTLINT",
   "pattern" : "LINT",
+  "status" : "P",
   "display_name" : "SwiftLint",
   "type" : "STANDARD",
   "lang" : 1024,
@@ -1150,24 +459,37 @@
   "docker_image_version" : "latest",
   "docker_image_account" : "g_codecc",
   "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
-  "debug_pipeline_id" : "p-eaf24faa052e4f309a6209ff491f54a0",
   "tool_scan_command" : "",
-  "last_tool_versions" : [
-    {
-      "version_type" : "G",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/codecc-auto-tools-prod-swiftlint-codecc-plugin",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:0e27ae4fdebe249b3bb2a7c6779b4f2ecbc801f0666ef7152e791c417a797b07",
-      "create_date" : 1615263875899,
-      "created_by" : "admin",
-      "updated_date" : 1615274752971,
-      "updated_by" : "admin"
-    }
-  ],
   "create_date" : 1614957303867,
   "created_by" : "admin",
   "updated_date" : 1615274573472,
+  "updated_by" : "admin"
+}
+
+{
+  "_id" : {"$oid": "5e903f39b015756a3d1bef7b"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "BKCHECK-OC",
+  "pattern" : "LINT",
+  "display_name" : "bkcheck-oc",
+  "type" : "STANDARD",
+  "lang" : 16,
+  "brief_introduction" : "支持OC代码规范风格检查的工具",
+  "description" : "支持OC代码规范风格检查的工具",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : false,
+  "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /bkcheck/ && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/occheck_scan",
+  "docker_image_version" : "latest",
+  "docker_image_account" : "g_codecc",
+  "docker_image_passwd" : "Hg8Ki8YX7/GEyvmLMLnr4vzxBpEg3SxoMKEg1A6gCa4STz9BKSCYViZpNuu91RRs",
+  "tool_scan_command" : "/bin/bash##-c##\"source /etc/bashrc && cd /bkcheck/ && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "docker",
+  "tool_image_revision" : "sha256:3463d421c7c66af6aa8636f4ce55be9e4cac928a32d55fda32bcd235d780fc6a",
+  "create_date" : 1586485440000,
+  "created_by" : "admin",
+  "updated_date" : 1624502842618,
   "updated_by" : "admin"
 }
