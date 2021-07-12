@@ -38,7 +38,7 @@ import com.tencent.devops.common.auth.service.IamEsbService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service("permissionExtService")
 class BkPermissionExtServiceImpl @Autowired constructor(
     val iamEsbService: IamEsbService,
     val iamConfiguration: IamConfiguration
