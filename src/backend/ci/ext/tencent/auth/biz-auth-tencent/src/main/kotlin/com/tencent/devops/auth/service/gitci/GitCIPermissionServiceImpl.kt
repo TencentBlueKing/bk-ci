@@ -229,6 +229,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         } else {
             GitCIPermissionLevel.NO_PERMISSION
         }
+        logger.info("webCheckAction $projectCode $gitProjectId permission:$permissionCheck public:$publicCheck")
         if (!publicCheck) {
             if (permissionCheck == GitCIPermissionLevel.NO_PERMISSION) {
                 throw PermissionForbiddenException(
