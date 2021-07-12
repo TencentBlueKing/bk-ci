@@ -408,7 +408,7 @@ class UserBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         taskId: String,
-        element: Element,
+        element: Element?,
         isContinue: Boolean,
         stageId: String,
         containerId: String
