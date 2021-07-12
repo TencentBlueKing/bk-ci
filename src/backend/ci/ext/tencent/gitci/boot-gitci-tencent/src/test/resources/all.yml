@@ -1,217 +1,222 @@
-version: v2.0
+#####################################################################################################################
+# 项目ID: oedbe
+# 流水线ID: p-126102ca446847de849c93373165f025
+# 流水线名称: go_k12_hello-编译
+# 导出时间: 2021-07-09 09:47:50
+#
+# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！
+# 注意：[插件]输入参数可能存在敏感信息，请仔细检查，谨慎分享！！！
+# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换
+#####################################################################################################################
 
+---
+version: "v2.0"
 on:
   push:
-    branches:
-      - master
-      - release/*
-    path:
-      - src/*
-  tag:
-    tags:
-      - release_*
-    from-branches:
-      - master
-  mr:
-    target-branches:
-      - master
-    path:
-      - src/*/*
-  schedules:
-    cron: 0 0/5 0 0 0
-    branches:
-      - master
-      - develop
-    always: false
+    branches: [ "*" ]
 
-#variables:
-#  DEPLOY_TYPE:
-#    value: dev
-#  APPROVE:
-#    value: ${{ sss }}_${{ approve22 }}
-#  GIT_USERNAME:
-#    value: user1
-#    readonly: true
-#  template:
-##    - name: variables.yml
-##      parameters:
-##        username: VARIABLES
-#    - name: variable1.yml@repoA
-
+name: "go_k12_hello-编译"
+label: []
+variables:
+  GitPath: haoyanyang/go_k12_hello
+  GitBranch: ""
+  DependencyGitPaths: ""
+  CommandLine: "app.id=${ProjectName} env=PRO"
+  CommandLineForUAT: "app.id=${ProjectName} env=UAT"
+  CommandLineForTest: "app.id=${ProjectName} env=FAT"
+  DockerImage: "csighub.tencentyun.com/csig_edu_fudao/edu-common:latest"
+  BuildGoVersion: "1.9.2"
+  isUT: "false"
 stages:
-  - name: "root_stage_id_1"
-    id: root_stage_id_1
-    label: "${{ varivable.approve }}"
-    if: [ envs.BK_CI_EVENT == 'push' || varivable.approve ]
+  - name: "编译/代码扫描"
+    label:
+      - "Build"
     jobs:
-      root_job_id_1:
-        name: root_job_id_1
+      job_xPb:
+        name: "构建环境-测试、正式包"
         runs-on:
-          - docker-on-vm
-        container:
-          image: tlinux:2.2
-          credentials:
-            username: user1
-            password: password
-        services:
-          mysql1:
-            image: mysql:8.0
-            with:
-              password: 123456
-        if:
-          - variables.DEPLOY_TYPE == 'dev' || cancelled()
+          pool-name: docker
+          container:
+            image: "csighub.tencentyun.com/oed_build/bingo_v2:multiplegov2"
+            credentials: "${oed_image_pull}"
         steps:
-          - name: "root_step_1"
-            id: root_step_1
-            if: xxx
-            uses: UploadArtifactory@1.*
+          - name: "环境清理"
+            run: ""
+          - name: "拉取GIT（命令行）"
+            uses: "gitCodeRepo@4.*"
             with:
-              path: test.txt
-            timeout-minutes: 480
-            continue-on-error: false
-            retry-times: 0
-            env:
-          #          - template: steps.yml
-          #            parameters:
-          #              username: STEP
-          - run: |
-              echo "root_step_1"
-        timeout-minutes: 480
-        env:
-        continue-on-error: false
-        strategy:
-          matrix:
-          fast-kill: true
-          max-parallel: 10
-        depend-on:
-          - job1
-          - job2
-      root_job_id_2:
-        name: root_job_id_2
+              repositoryType: "NAME"
+              repositoryHashId: ""
+              repositoryName: "${GitPath}"
+              pullType: "BRANCH"
+              branchName: "${GitBranch}"
+              tagName: ""
+              commitId: ""
+              localPath: "./"
+              includePath: ""
+              excludePath: ""
+              fetchDepth: ""
+              strategy: "REVERT_UPDATE"
+              enableSubmodule: true
+              submodulePath: ""
+              enableSubmoduleRemote: false
+              enableSubmoduleRecursive: true
+              newEnableSubmoduleRecursive: true
+              enableVirtualMergeBranch: true
+              enableAutoCrlf: false
+              enableGitLfs: false
+              enableGitClean: true
+              enableGitCleanIgnore: true
+              autoCrlf: "false"
+          - name: "项目检查"
+            run: "# "
+          - name: "企业微信机器人推送"
+            uses: "WechatWorkRobot@1.*"
+            with:
+              inputWebhook: "ba6a31d2-3068-44f2-ad77-f230a9dade80"
+              inputMsgtype: "markdown"
+              inputTextContentSource: "text"
+              inputTextContent: ""
+              inputTextContentFileAbsOrRel: ""
+              inputTextContentFile: ""
+              inputRelTextContentFile: ""
+              inputTextMentionedList: ""
+              inputTextMentionedMobileList: ""
+              inputMarkdownContentSource: "text"
+              inputMarkdownContent: "❌\n### ${GitPath}代码编译失败！\n<@${BK_CI_START_WEBHOOK_USER_ID}>\
+            \ 提交的代码编译失败。\n请检查。如遇蓝盾问题可重试：使用右上角“执行”按钮填入分支后执行\n>[查看流水线](http://landun.oa.com/console/pipeline/${BK_CI_PROJECT_NAME}/${BK_CI_PIPELINE_ID}/detail/${BK_CI_BUILD_ID})"
+              inputMarkdownContentFileAbsOrRel: ""
+              inputMarkdownContentFile: ""
+              inputRelMarkdownContentFile: ""
+              inputMarkdownAtShortName: false
+              inputIfMarkdownAttachment: false
+              inputMarkdownAttachmentActionsType: "button"
+              inputIfMarkdownActions2: false
+              inputMarkdownAttachmentActions2Type: "button"
+              inputIfMarkdownActions3: false
+              inputMarkdownAttachmentActions3Type: "button"
+              inputIfMarkdownActions4: false
+              inputMarkdownAttachmentActions4Type: "button"
+              inputIfMarkdownActions5: false
+              inputMarkdownAttachmentActions5Type: "button"
+              inputImageSource: ""
+              inputLocalImageAbsOrRel: ""
+              inputLocalImage: ""
+              inputRelLocalImage: ""
+              inputImageBase64: ""
+              inputImageMd5: ""
+              inputNewsTitle: ""
+              inputNewsUrl: ""
+              inputNewsDescription: ""
+              inputNewsPicurl: ""
+              inputFileSource: ""
+              inputLocalFileAbsOrRel: ""
+              inputLocalFile: ""
+              inputRelLocalFile: ""
+              inputMediaId: ""
+              inputVisibleToUser: ""
+              inputRetry: 1
+              inputProxyPolicy: "disable"
+      job_4lb:
+        name: "构建环境-stress"
+        runs-on:
+          pool-name: docker
+          container:
+            image: "csighub.tencentyun.com/oed_build/bingo_v2:multiplegov2"
+            credentials:
+              username: aaa
+              password: aaaa
         steps:
-          - run: |
-              echo "root_stage_id_1, root_job_id_2"
-        depend-on:
-          - job_id_1
-      template:
-        #        - name: jobs.yml
-        #          parameters:
-        #            username: JOB
-        - name: job1.yml@repoA
-          parameters:
-            username: RES_JOB
-  #  - template: stages.yml
-  #    parameters:
-  #      username: STAGE
-  - template: stage1.yml@repoA
-    parameters:
-      username: RES_STAGE
-#
-#on-fail:
-#  job1:
-#    name: test1
-#  job2:
-#    name: test2
-#  steps:
-#    - run: |
-#        echo "do something when the upstream fails"
-#
-
-finally:
-  root_job_id_1:
-    name: root_job_id_1
-    runs-on:
-      - docker-on-vm
-    container:
-      image: tlinux:2.2
-      credentials:
-        username: user1
-        password: password
-    services:
-      mysql1:
-        image: mysql:8.0
-        with:
-          password: 123456
-    if:
-      - variables.DEPLOY_TYPE == 'dev' || cancelled()
-    steps:
-      - name: "root_step_1"
-        id: root_step_1
-        if: xxx
-        uses: UploadArtifactory@1.*
-        with:
-          path: test.txt
-        timeout-minutes: 480
-        continue-on-error: false
-        retry-times: 0
-        env:
-      #          - template: steps.yml
-      #            parameters:
-      #              username: STEP
-      - run: |
-          echo "root_step_1"
-    timeout-minutes: 480
-    env:
-    continue-on-error: false
-    strategy:
-      matrix:
-      fast-kill: true
-      max-parallel: 10
-    depend-on:
-      - job1
-      - job2
-  root_job_id_2:
-    name: root_job_id_2
-    steps:
-      - run: |
-          echo "root_stage_id_1, root_job_id_2"
-    depend-on:
-      - job_id_1
-  template:
-    #        - name: jobs.yml
-    #          parameters:
-    #            username: JOB
-    - name: job1.yml@repoA
-      parameters:
-        username: RES_JOB
-
-#steps:
-#  - template: steps.yml
-#    parameters:
-#      username: false
-#      stepname: 2
-#
-resources:
-  repositories:
-    - repository: repoC
-      name: repoC
-      ref: master  # 可选
-      credentials:
-        personal-access-token: xxx
-    - repository: repoA
-      name: repoA
-      ref: master  # 可选
-      credentials:
-        personal-access-token: xxx
-#
-#notices:
-#  - type: email
-#    title: this is a email notice
-#    content: this is a email notice,content is hello.
-#    receivers:
-#      - user1
-#      - user2
-#    ccs:
-#      - user3
-#    if: SUCCESS
-#  - type: wework-message
-#    title: this is a wework-message notice
-#    content: this is a wework-message notice,content is hello.
-#    receivers:
-#      - user1
-#      - user2
-#  - type: wework-chat
-#    chat-id:
-#      - xxxxxxxx
-#    content: this is a wework-chat notice,content is hello.
-
+          - name: "环境清理"
+            run: ""
+          - name: "拉取GIT（命令行）"
+            uses: "gitCodeRepo@4.*"
+            with:
+              repositoryType: "NAME"
+              repositoryHashId: ""
+              repositoryName: "${GitPath}"
+              pullType: "BRANCH"
+              branchName: "${GitBranch}"
+              tagName: ""
+              commitId: ""
+              localPath: "./"
+              includePath: ""
+              excludePath: ""
+              fetchDepth: ""
+              strategy: "REVERT_UPDATE"
+              enableSubmodule: true
+              submodulePath: ""
+              enableSubmoduleRemote: false
+              enableSubmoduleRecursive: true
+              newEnableSubmoduleRecursive: true
+              enableVirtualMergeBranch: true
+              enableAutoCrlf: false
+              enableGitLfs: false
+              enableGitClean: true
+              enableGitCleanIgnore: true
+              autoCrlf: "false"
+          - name: "项目检查"
+            run: "# 通"
+          - name: "下载go依赖"
+            uses: "pythonscriptrun@6.*"
+            with:
+              python_version: "3"
+              option_type: "online"
+              scriptcode: ""
+              scriptpath: ""
+          - name: "编译"
+            retry-times: 3
+            run: "# "
+          - name: "归档stress构件"
+            uses: "UploadArtifactory@1.*"
+            with:
+              filePath: "./${ProjectName}.stress.tar.gz"
+              isCustomize: false
+              destPath: "./"
+          - name: "企业微信机器人推送"
+            uses: "WechatWorkRobot@1.*"
+            with:
+              inputWebhook: "ba6a31d2-3068-44f2-ad77-f230a9dade80"
+              inputMsgtype: "markdown"
+              inputTextContentSource: "text"
+              inputTextContent: ""
+              inputTextContentFileAbsOrRel: ""
+              inputTextContentFile: ""
+              inputRelTextContentFile: ""
+              inputTextMentionedList: ""
+              inputTextMentionedMobileList: ""
+              inputMarkdownContentSource: "text"
+              inputMarkdownContent: "❌\n### ${GitPath}代码编译失败！\n<@${BK_CI_START_WEBHOOK_USER_ID}>\
+            \ 提交的代码编译失败。\n请检查。如遇蓝盾问题可重试：使用右上角“执行”按钮填入分支后执行\n>[查看流水线](http://landun.oa.com/console/pipeline/${BK_CI_PROJECT_NAME}/${BK_CI_PIPELINE_ID}/detail/${BK_CI_BUILD_ID})"
+              inputMarkdownContentFileAbsOrRel: ""
+              inputMarkdownContentFile: ""
+              inputRelMarkdownContentFile: ""
+              inputMarkdownAtShortName: false
+              inputIfMarkdownAttachment: false
+              inputMarkdownAttachmentActionsType: "button"
+              inputIfMarkdownActions2: false
+              inputMarkdownAttachmentActions2Type: "button"
+              inputIfMarkdownActions3: false
+              inputMarkdownAttachmentActions3Type: "button"
+              inputIfMarkdownActions4: false
+              inputMarkdownAttachmentActions4Type: "button"
+              inputIfMarkdownActions5: false
+              inputMarkdownAttachmentActions5Type: "button"
+              inputImageSource: ""
+              inputLocalImageAbsOrRel: ""
+              inputLocalImage: ""
+              inputRelLocalImage: ""
+              inputImageBase64: ""
+              inputImageMd5: ""
+              inputNewsTitle: ""
+              inputNewsUrl: ""
+              inputNewsDescription: ""
+              inputNewsPicurl: ""
+              inputFileSource: ""
+              inputLocalFileAbsOrRel: ""
+              inputLocalFile: ""
+              inputRelLocalFile: ""
+              inputMediaId: ""
+              inputVisibleToUser: ""
+              inputRetry: 1
+              inputProxyPolicy: "disable"

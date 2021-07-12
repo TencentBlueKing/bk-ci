@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.v2.template
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -65,7 +66,21 @@ class YamlTemplateTest {
 
         val yaml = ScriptYmlUtils.formatYaml(sb.toString())
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
-        val result = YamlCommonUtils.toYamlNotNull(
+        val preScriptBuildYaml = YamlTemplate(
+        yamlObject = preTemplateYamlObject,
+        filePath = testYaml,
+        triggerUserId = "ruotiantang",
+        triggerProjectId = 580280,
+        triggerToken = "",
+        triggerRef = "master",
+        repo = null,
+        repoTemplateGraph = TemplateGraph(),
+        sourceProjectId = 580280,
+        getTemplateMethod = ::getTestTemplate
+        ).replace()
+        val aa = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
+        println(JsonUtil.toJson(aa))
+/*        val result = YamlCommonUtils.toYamlNotNull(
             YamlTemplate(
                 yamlObject = preTemplateYamlObject,
                 filePath = testYaml,
@@ -81,7 +96,7 @@ class YamlTemplateTest {
         )
         println(
             result
-        )
+        )*/
     }
 
     private fun getTestTemplate(

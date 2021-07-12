@@ -49,6 +49,8 @@ import com.tencent.devops.common.ci.v2.YmlVersion
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.ci.v2.Container
+import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
@@ -352,10 +354,21 @@ object ScriptYmlUtils {
             return RunsOn()
         }
 
-        return try {
-            YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(preRunsOn), RunsOn::class.java)
+        try {
+            val runsOn = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(preRunsOn), RunsOn::class.java)
+            return if (runsOn.container != null) {
+                try {
+                    val container = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container::class.java)
+                    runsOn.copy(container = container)
+                } catch (e: Exception) {
+                    val container = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container2::class.java)
+                    runsOn.copy(container = container)
+                }
+            } else {
+                runsOn
+            }
         } catch (e: Exception) {
-            RunsOn(
+            return RunsOn(
                 poolName = preRunsOn.toString()
             )
         }
