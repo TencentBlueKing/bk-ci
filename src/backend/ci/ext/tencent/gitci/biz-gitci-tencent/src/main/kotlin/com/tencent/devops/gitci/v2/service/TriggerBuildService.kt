@@ -559,7 +559,7 @@ class TriggerBuildService @Autowired constructor(
             )
 
             // 解析contianer(带credentialId)
-            if (job.runsOn.container == null &&
+            if (job.runsOn.container != null &&
                 (job.runsOn.container is com.tencent.devops.common.ci.v2.Container)) {
                 val container = job.runsOn.container as com.tencent.devops.common.ci.v2.Container
                 containerPool = Pool(
@@ -576,7 +576,7 @@ class TriggerBuildService @Autowired constructor(
             }
 
             // 解析contianer(无credentialId)
-            if (job.runsOn.container == null &&
+            if (job.runsOn.container != null &&
                 (job.runsOn.container is com.tencent.devops.common.ci.v2.Container2)) {
                 val container = job.runsOn.container as com.tencent.devops.common.ci.v2.Container2
 
