@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
@@ -45,6 +46,7 @@ import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
+import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
@@ -558,54 +560,56 @@ class TriggerBuildService @Autowired constructor(
                 buildType = BuildType.DOCKER_VM
             )
 
-            // 解析contianer(带credentialId)
-            if (job.runsOn.container != null &&
-                (job.runsOn.container is com.tencent.devops.common.ci.v2.Container)) {
-                val container = job.runsOn.container as com.tencent.devops.common.ci.v2.Container
-                containerPool = Pool(
-                    container = container.image,
-                    credential = Credential(
-                        user = container.credentials?.username ?: "",
-                        password = container.credentials?.password ?: ""
-                    ),
-                    macOS = null,
-                    third = null,
-                    env = job.env,
-                    buildType = BuildType.DOCKER_VM
-                )
-            }
-
-            // 解析contianer(无credentialId)
-            if (job.runsOn.container != null &&
-                (job.runsOn.container is com.tencent.devops.common.ci.v2.Container2)) {
-                val container = job.runsOn.container as com.tencent.devops.common.ci.v2.Container2
-
-                var user = ""
-                var password = ""
-                if (!container.credentials.isNullOrEmpty()) {
-                    val ticketsMap = GitCommonUtils.getCredential(
-                        client = client,
-                        projectId = projectCode,
-                        credentialId = container.credentials ?: "",
-                        type = CredentialType.USERNAME_PASSWORD
+            if (job.runsOn.container != null) {
+                try {
+                    val container = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(job.runsOn.container!!),
+                        com.tencent.devops.common.ci.v2.Container::class.java
                     )
-                    user = ticketsMap["v1"] as String
-                    password = ticketsMap["v2"] as String
+
+                    containerPool = Pool(
+                        container = container.image,
+                        credential = Credential(
+                            user = container.credentials?.username ?: "",
+                            password = container.credentials?.password ?: ""
+                        ),
+                        macOS = null,
+                        third = null,
+                        env = job.env,
+                        buildType = BuildType.DOCKER_VM
+                    )
+                } catch (e: Exception) {
+                    val container = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(job.runsOn.container!!),
+                        Container2::class.java
+                    )
+
+                    var user = ""
+                    var password = ""
+                    if (!container.credentials.isNullOrEmpty()) {
+                        val ticketsMap = GitCommonUtils.getCredential(
+                            client = client,
+                            projectId = projectCode,
+                            credentialId = container.credentials ?: "",
+                            type = CredentialType.USERNAME_PASSWORD
+                        )
+                        user = ticketsMap["v1"] as String
+                        password = ticketsMap["v2"] as String
+                    }
+
+                    containerPool = Pool(
+                        container = container.image,
+                        credential = Credential(
+                            user = user,
+                            password = password
+                        ),
+                        macOS = null,
+                        third = null,
+                        env = job.env,
+                        buildType = BuildType.DOCKER_VM
+                    )
                 }
-
-                containerPool = Pool(
-                    container = container.image,
-                    credential = Credential(
-                        user = user,
-                        password = password
-                    ),
-                    macOS = null,
-                    third = null,
-                    env = job.env,
-                    buildType = BuildType.DOCKER_VM
-                )
             }
-
 
             return GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
         }
