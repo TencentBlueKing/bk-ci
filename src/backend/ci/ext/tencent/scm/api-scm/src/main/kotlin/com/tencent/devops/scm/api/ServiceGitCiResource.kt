@@ -34,6 +34,7 @@ import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -201,4 +202,25 @@ interface ServiceGitCiResource {
         @QueryParam("mrId")
         mrId: Long
     ): Result<GitMrChangeInfo?>
+
+    @ApiOperation("文件内容和一些文件信息")
+    @GET
+    @Path("/getGitFileInfo")
+    fun getGitFileInfo(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String?,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "提交id 或者 分支")
+        @QueryParam("ref")
+        ref: String?,
+        @ApiParam("是否使用accessToken", required = true)
+        @QueryParam("useAccessToken")
+        useAccessToken: Boolean
+    ): Result<GitCodeFileInfo>
 }
