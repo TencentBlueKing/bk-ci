@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.service.gitci
 
 import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.auth.service.gitci.entify.GitCIPermissionLevel
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OauthForbiddenException
@@ -38,6 +39,7 @@ import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -188,31 +190,53 @@ class GitCIPermissionServiceImpl @Autowired constructor(
 
     /**
      * 是否公开, 是否有权限 二维组合
-     * 公开+有权限  展示
-     * 非公开+有权限 展示
-     * 公开+无权限 不展示
-     * 非公开+无权限 报权限异常
+     * 公开+develop以上  展示
+     * 非公开+develop以上 展示
+     * 公开+develop以下成员 不展示
+     * 非公开+develop以下成员 不展示
+     * 公开+ 非项目成员  不展示
+     * 非公开+ 非项目成员  报异常
      */
     private fun webCheckAction(projectCode: String, userId: String): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
 
         val publicCheck = projectInfoService.checkProjectPublic(gitProjectId)
 
-        val gitUserId = projectInfoService.getGitUserByRtx(userId, gitProjectId)
+        val gitToken = client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data?.accessToken
 
-        val permissionCheck = client.getScm(ServiceGitCiResource::class)
-            .checkUserGitAuth(gitUserId!!, gitProjectId).data ?: false
-
-        if (permissionCheck) {
-            return true
-        }
-        if (publicCheck) {
-            return false
-        } else {
+        val gitProjectMembers = client.getScm(ServiceGitCiResource::class).getMembers(
+            token = gitToken!!,
+            gitProjectId = gitProjectId,
+            page = 0,
+            pageSize = 1000,
+            search = null
+        ).data
+        if (gitProjectMembers.isNullOrEmpty()) {
             throw PermissionForbiddenException(
-                MessageCodeUtil.getCodeMessage(CommonMessageCode.PERMISSION_DENIED, arrayOf(WEB_CHECK))
-            )
+                MessageCodeUtil.getCodeMessage(CommonMessageCode.PERMISSION_DENIED, arrayOf(WEB_CHECK)))
         }
+
+        val memberMap = mutableMapOf<String, GitMember>()
+        gitProjectMembers.forEach {
+            memberMap[it.username] = it
+        }
+
+        val permissionCheck = if (memberMap.containsKey(userId)) {
+            val memberInfo = memberMap[userId]
+            if (memberInfo?.accessLevel ?: 0 > 30) {
+                GitCIPermissionLevel.DEVELOP_UP
+            } else GitCIPermissionLevel.DEVELOP_DOWN
+        } else {
+            GitCIPermissionLevel.NO_PERMISSION
+        }
+        if (!publicCheck) {
+            if (permissionCheck == GitCIPermissionLevel.NO_PERMISSION) {
+                throw PermissionForbiddenException(
+                    MessageCodeUtil.getCodeMessage(CommonMessageCode.PERMISSION_DENIED, arrayOf(WEB_CHECK))
+                )
+            } else return permissionCheck != GitCIPermissionLevel.DEVELOP_DOWN
+        }
+        return permissionCheck == GitCIPermissionLevel.DEVELOP_UP
     }
 
     companion object {
