@@ -235,8 +235,9 @@ open class BkRepoDownloadService @Autowired constructor(
     ): List<String> {
         logger.info(
             "getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
-                    ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, ttl: $ttl" +
-                    ", crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, region：$region, userId: $userId"
+                    ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
+                    "ttl: $ttl, crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, region：$region, " +
+                    "userId: $userId"
         )
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
@@ -267,7 +268,8 @@ open class BkRepoDownloadService @Autowired constructor(
                 null
             }
         }
-        logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+        logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, " +
+                "targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
 
         // 校验用户权限, auth权限优化实施后可以去掉
         if (accessUserId != null) {
