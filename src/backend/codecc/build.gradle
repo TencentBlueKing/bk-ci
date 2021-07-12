@@ -229,6 +229,7 @@ subprojects {
             dependencySet(group: "io.swagger", version: "$swaggerVersion") {
                 entry "swagger-annotations"
                 entry "swagger-jersey2-jaxrs"
+                exclude group: 'org.json', module: 'json', version: '20140107'
             }
             dependencySet(group: "com.fasterxml.jackson.module", version: "$jacksonVersion") {
                 entry "jackson-module-kotlin"
