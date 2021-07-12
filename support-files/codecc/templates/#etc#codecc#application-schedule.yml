@@ -15,3 +15,7 @@ spring:
 server:
   port: __BK_CODECC_SCHEDULE_API_PORT__ # 服务端口
 
+codecc:
+  file:
+    data:
+      path: __BK_CODECC_FILE_DATA_PATH__
