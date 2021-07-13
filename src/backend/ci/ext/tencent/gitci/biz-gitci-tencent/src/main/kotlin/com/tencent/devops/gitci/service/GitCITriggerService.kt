@@ -866,7 +866,7 @@ class GitCITriggerService @Autowired constructor(
             return Pair(true, sourceContent)
         }
 
-        if (sourceFile?.blobId == targetFile?.blobId) {
+        if (targetFile?.blobId == sourceFile?.blobId) {
             return Pair(true, sourceContent)
         }
 
@@ -882,7 +882,7 @@ class GitCITriggerService @Autowired constructor(
             gitProjectId = mrEvent.object_attributes.target_project_id.toString(),
             useAccessToken = true
         )
-        if (baseTargetFile?.blobId == sourceFile?.blobId) {
+        if (targetFile?.blobId == baseTargetFile?.blobId) {
             return Pair(true, sourceContent)
         }
 
