@@ -202,15 +202,13 @@ class GitCIPermissionServiceImpl @Autowired constructor(
 
         val publicCheck = projectInfoService.checkProjectPublic(gitProjectId)
 
-        val gitToken = client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data?.accessToken
-
-        val gitProjectMembers = client.getScm(ServiceGitCiResource::class).getMembers(
-            token = gitToken!!,
+        val gitProjectMembers = client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
             gitProjectId = gitProjectId,
             page = 0,
-            pageSize = 1000,
-            search = null
+            pageSize = 100,
+            search = userId
         ).data
+        logger.info("$projectCode project member $userId $gitProjectMembers")
         if (gitProjectMembers.isNullOrEmpty()) {
             throw PermissionForbiddenException(
                 MessageCodeUtil.getCodeMessage(CommonMessageCode.PERMISSION_DENIED, arrayOf(WEB_CHECK)))
