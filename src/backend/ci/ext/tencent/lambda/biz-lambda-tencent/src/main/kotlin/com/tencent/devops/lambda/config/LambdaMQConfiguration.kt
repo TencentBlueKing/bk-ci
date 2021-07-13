@@ -30,6 +30,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.lambda.listener.LambdaBuildTaskFinishListener
 import com.tencent.devops.lambda.listener.LambdaBuildFinishListener
+import com.tencent.devops.lambda.listener.LambdaPipelineModelListener
 import com.tencent.devops.lambda.listener.LambdaProjectListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -171,7 +172,7 @@ class LambdaMQConfiguration {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(projectCreateLambdaQueue.name)
-        container.setConcurrentConsumers(10)
+        container.setConcurrentConsumers(5)
         container.setMaxConcurrentConsumers(10)
         container.setAmqpAdmin(rabbitAdmin)
         container.setPrefetchCount(1)
@@ -213,7 +214,7 @@ class LambdaMQConfiguration {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(projectUpdateLambdaQueue.name)
-        container.setConcurrentConsumers(10)
+        container.setConcurrentConsumers(5)
         container.setMaxConcurrentConsumers(10)
         container.setAmqpAdmin(rabbitAdmin)
         container.setPrefetchCount(1)
@@ -235,7 +236,7 @@ class LambdaMQConfiguration {
     }
 
     @Bean
-    fun PipelineModelAnalysisLambdaQueue() = Queue(LambdaMQ.QUEUE_PROJECT_UPDATE_LAMBDA_EVENT)
+    fun PipelineModelAnalysisLambdaQueue() = Queue(LambdaMQ.QUEUE_PIPELINE_EXTENDS_MODEL_LAMBDA)
 
     @Bean
     fun PipelineModelAnalysisLambdaQueueBind(
@@ -250,17 +251,17 @@ class LambdaMQConfiguration {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired PipelineModelAnalysisLambdaQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired lambdaProjectListener: LambdaProjectListener,
+        @Autowired lambdaPipelineModelListener: LambdaPipelineModelListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(PipelineModelAnalysisLambdaQueue.name)
-        container.setConcurrentConsumers(10)
-        container.setMaxConcurrentConsumers(10)
+        container.setConcurrentConsumers(5)
+        container.setMaxConcurrentConsumers(5)
         container.setAmqpAdmin(rabbitAdmin)
         container.setPrefetchCount(1)
 
-        val adapter = MessageListenerAdapter(lambdaProjectListener, lambdaProjectListener::execute.name)
+        val adapter = MessageListenerAdapter(lambdaPipelineModelListener, lambdaPipelineModelListener::run.name)
         adapter.setMessageConverter(messageConverter)
         container.setMessageListener(adapter)
         return container
