@@ -395,7 +395,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
         FileIndexEntity fileIndexEntity = fileIndexRepository.findFirstByFileName(fileName);
 
         if (fileIndexEntity == null
-                || fileIndexEntity.getFileFolder().startsWith("/data/bkee/codecc/cfs/fail_result_upload/")) {
+                || fileIndexEntity.getFileFolder().contains("fail_result_upload")) {
 
             String uploadFolders = FOLDER_MAP.get(type);
             if (StringUtils.isEmpty(uploadFolders)) {
