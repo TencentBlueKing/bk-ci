@@ -422,8 +422,8 @@ class GitCITriggerService @Autowired constructor(
                         filePath = filePath,
                         originYaml = null,
                         normalizedYaml = null,
-                        reason = TriggerReason.CI_YAML_VERSION_BEHIND.name,
-                        reasonDetail = TriggerReason.CI_YAML_VERSION_BEHIND.detail,
+                        reason = TriggerReason.CI_YAML_NEED_MERGE_OR_REBASE.name,
+                        reasonDetail = TriggerReason.CI_YAML_NEED_MERGE_OR_REBASE.detail,
                         gitProjectId = gitRequestEvent.gitProjectId,
                         sendCommitCheck = true,
                         commitCheckBlock = mrEvent

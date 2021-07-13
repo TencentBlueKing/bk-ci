@@ -35,7 +35,8 @@ enum class TriggerReason(val detail: String) {
     CI_YAML_NOT_FOUND("The YAML file cannot be found in the .ci directory"),
     CI_YAML_CONTENT_NULL("The YAML file is null"),
     CI_YAML_INVALID("YAML is invalid: %s"),
-    CI_YAML_VERSION_BEHIND("The YAML file version of the source branch lags behind the target branch"),
+    CI_YAML_NEED_MERGE_OR_REBASE("The YAML file is modified. " +
+        "Please execute either REBASE or MERGE to update your YAML file from remote target branch."),
     CI_MERGE_CHECKING("Checking whether there is a conflict in MR, please wait"),
     CI_MERGE_CHECK_TIMEOUT("MR check timeout"),
     CI_MERGE_CONFLICT("MR conflict, please resolve the conflict first"),
