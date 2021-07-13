@@ -24,37 +24,27 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.dao
 
-import com.tencent.devops.model.process.Tables
-import com.tencent.devops.model.process.tables.TPipelineResource
-import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
-import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+package com.tencent.devops.lambda.pojo
 
-@Repository
-class LambdaPipelineModelDao {
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    fun getResModel(
-        dslContext: DSLContext,
-        pipelineId: String
-    ): TPipelineResourceRecord? {
-        return with(Tables.T_PIPELINE_RESOURCE) {
-            dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .fetchAny()
-        }
-    }
-
-    fun getBuildDetailModel(
-        dslContext: DSLContext,
-        buildId: String
-    ): TPipelineBuildDetailRecord? {
-        return with(Tables.T_PIPELINE_BUILD_DETAIL) {
-            dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .fetchOne()
-        }
-    }
-}
+@ApiModel("流水线信息")
+data class DataPlatPipelineInfo(
+    val projectId: String,
+    val pipelineId: String,
+    val pipelineName: String,
+    val pipelineDesc: String,
+    var version: Int = 1,
+    val createTime: Long = 0,
+    val updateTime: Long = 0,
+    val creator: String,
+    val lastModifyUser: String,
+    val channelCode: String,
+    val manualStartup: Int,
+    val elementSkip: Int,
+    val taskCount: Int,
+    var delete: Boolean
+)

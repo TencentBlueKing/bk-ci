@@ -24,37 +24,24 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.dao
 
-import com.tencent.devops.model.process.Tables
-import com.tencent.devops.model.process.tables.TPipelineResource
-import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
-import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+package com.tencent.devops.lambda.pojo
 
-@Repository
-class LambdaPipelineModelDao {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    fun getResModel(
-        dslContext: DSLContext,
-        pipelineId: String
-    ): TPipelineResourceRecord? {
-        return with(Tables.T_PIPELINE_RESOURCE) {
-            dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .fetchAny()
-        }
-    }
-
-    fun getBuildDetailModel(
-        dslContext: DSLContext,
-        buildId: String
-    ): TPipelineBuildDetailRecord? {
-        return with(Tables.T_PIPELINE_BUILD_DETAIL) {
-            dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .fetchOne()
-        }
-    }
-}
+@ApiModel("构建详情")
+data class DataPlatPipelineResource(
+    @ApiModelProperty("清洗时间", required = false)
+    val washTime: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("版本号", required = false)
+    val version: Int,
+    @ApiModelProperty("构建详情", required = true)
+    val model: String,
+    @ApiModelProperty("创建人", required = false)
+    val creator: String,
+    @ApiModelProperty("创建时间", required = false)
+    val createTime: String
+)

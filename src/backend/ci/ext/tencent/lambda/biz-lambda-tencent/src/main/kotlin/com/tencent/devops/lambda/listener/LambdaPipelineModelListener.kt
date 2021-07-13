@@ -24,37 +24,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.dao
+package com.tencent.devops.lambda.listener
 
-import com.tencent.devops.model.process.Tables
-import com.tencent.devops.model.process.tables.TPipelineResource
-import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
-import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
+import com.tencent.devops.lambda.service.LambdaPipelineModelService
+import com.tencent.devops.lambda.service.LambdaProjectService
+import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@Repository
-class LambdaPipelineModelDao {
+@Component
+class LambdaPipelineModelListener @Autowired constructor(
+    private val lambdaPipelineModelService: LambdaPipelineModelService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineModelAnalysisEvent>(pipelineEventDispatcher) {
 
-    fun getResModel(
-        dslContext: DSLContext,
-        pipelineId: String
-    ): TPipelineResourceRecord? {
-        return with(Tables.T_PIPELINE_RESOURCE) {
-            dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .fetchAny()
-        }
+    override fun run(event: PipelineModelAnalysisEvent) {
+        lambdaPipelineModelService.onModelExchange(event)
     }
 
-    fun getBuildDetailModel(
-        dslContext: DSLContext,
-        buildId: String
-    ): TPipelineBuildDetailRecord? {
-        return with(Tables.T_PIPELINE_BUILD_DETAIL) {
-            dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .fetchOne()
-        }
-    }
 }
