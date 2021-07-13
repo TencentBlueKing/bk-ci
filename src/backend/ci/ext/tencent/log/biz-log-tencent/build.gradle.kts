@@ -33,7 +33,4 @@ dependencies {
     api(project(":ext:tencent:log:api-log-tencent"))
     api(project(":ext:tencent:auth:sdk-auth-tencent"))
     api(project(":core:auth:api-auth"))
-
-    // 解决依赖冲突：process要求lucene-8.6.0，es-rest-client7.0.0要求lucene-8.0.0
-    api("org.apache.lucene:lucene-core:8.0.0")
 }
