@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service.vmbuild
 
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
@@ -44,11 +45,14 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.control.ControlUtils
+import com.tencent.devops.process.engine.control.lock.TaskIdLock
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
@@ -64,6 +68,7 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.PipelineTaskService
+import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -375,6 +380,30 @@ class EngineVMBuildService @Autowired(required = false) constructor(
      * 构建机完成任务请求
      */
     fun buildCompleteTask(buildId: String, vmSeqId: String, vmName: String, result: BuildTaskResult) {
+        val taskIdLock = TaskIdLock(redisOperation, buildId, result.taskId)
+        try {
+            // 加锁防止和引擎并发改task状态的情况
+            taskIdLock.lock()
+            executeCompleteTaskBus(buildId, result, vmName, vmSeqId)
+        } finally {
+            taskIdLock.unlock()
+        }
+    }
+
+    private fun executeCompleteTaskBus(
+        buildId: String,
+        result: BuildTaskResult,
+        vmName: String,
+        vmSeqId: String
+    ) {
+        val buildTask = pipelineRuntimeService.getBuildTask(buildId, result.taskId)
+        val taskStatus = buildTask?.status
+        if (taskStatus == null || taskStatus.isFinish()) {
+            // 当上报的任务不存在或者状态已经结束，则直接返回
+            LOG.error("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|${result.taskId}|invalid or finish")
+            return
+        }
+
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: run {
             LOG.error("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|buildInfo is null")
             return // 数据为空是平台异常，正常情况不应该出现
@@ -384,33 +413,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         if (result.buildResult.isNotEmpty()) {
             LOG.info("ENGINE|$buildId| Add the build result size(${result.buildResult.size}) to var")
             try {
-                buildVariableService.batchUpdateVariable(projectId = buildInfo.projectId,
+                buildVariableService.batchUpdateVariable(
+                    projectId = buildInfo.projectId,
                     pipelineId = buildInfo.pipelineId, buildId = buildId, variables = result.buildResult
                 )
             } catch (ignored: Exception) { // 防止因为变量字符过长而失败。
                 LOG.warn("ENGINE|$buildId| save var fail: ${ignored.message}", ignored)
             }
         }
-
         val errorType = ErrorType.getErrorType(result.errorType)
-
-        val buildStatus = if (result.success) {
-            pipelineTaskService.removeRetryCache(buildId, result.taskId)
-            pipelineTaskService.removeFailTaskVar(buildId = buildId, projectId = buildInfo.projectId,
-                pipelineId = buildInfo.pipelineId, taskId = result.taskId
-            ) // 清理插件错误信息（重试插件成功的情况下）
-            BuildStatus.SUCCEED
-        } else {
-            if (pipelineTaskService.isRetryWhenFail(taskId = result.taskId, buildId = buildId)) {
-                BuildStatus.RETRY
-            } else { // 记录错误插件信息
-                pipelineTaskService.createFailTaskVar(buildId = buildId, projectId = buildInfo.projectId,
-                    pipelineId = buildInfo.pipelineId, taskId = result.taskId
-                )
-                BuildStatus.FAILED
-            }
-        }
-
+        val buildStatus = getCompleteTaskBuildStatus(result, buildId, buildInfo)
         taskBuildDetailService.taskEnd(
             buildId = buildId, taskId = result.elementId, buildStatus = buildStatus,
             errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
@@ -448,9 +460,42 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
         redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
 
-        LOG.info("ENGINE|$buildId|Agent|END_TASK|j($vmSeqId)|${result.taskId}|$buildStatus|" +
-            "type=$errorType|code=${result.errorCode}|msg=${result.message}]")
+        LOG.info(
+            "ENGINE|$buildId|Agent|END_TASK|j($vmSeqId)|${result.taskId}|$buildStatus|" +
+                "type=$errorType|code=${result.errorCode}|msg=${result.message}]"
+        )
         buildLogPrinter.stopLog(buildId = buildId, tag = result.elementId, jobId = result.containerId ?: "")
+    }
+
+    private fun getCompleteTaskBuildStatus(
+        result: BuildTaskResult,
+        buildId: String,
+        buildInfo: BuildInfo
+    ): BuildStatus {
+        return if (result.success) {
+            pipelineTaskService.removeRetryCache(buildId, result.taskId)
+            pipelineTaskService.removeFailTaskVar(
+                buildId = buildId, projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId, taskId = result.taskId
+            ) // 清理插件错误信息（重试插件成功的情况下）
+            BuildStatus.SUCCEED
+        } else {
+            when {
+                pipelineTaskService.isRetryWhenFail(taskId = result.taskId, buildId = buildId) -> {
+                    BuildStatus.RETRY
+                }
+                result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT -> {
+                    BuildStatus.EXEC_TIMEOUT
+                }
+                else -> { // 记录错误插件信息
+                    pipelineTaskService.createFailTaskVar(
+                        buildId = buildId, projectId = buildInfo.projectId,
+                        pipelineId = buildInfo.pipelineId, taskId = result.taskId
+                    )
+                    BuildStatus.FAILED
+                }
+            }
+        }
     }
 
     /**
@@ -481,10 +526,25 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         }
     }
 
-    fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Boolean {
-        LOG.info("ENGINE|$buildId|Agent|HEART_BEAT|j($vmSeqId)|$vmName")
+    fun heartbeat(projectId: String, buildId: String, vmSeqId: String, vmName: String): HeartBeatInfo {
+        LOG.info("ENGINE|$projectId|$buildId|Agent|HEART_BEAT|j($vmSeqId)|$vmName")
         buildingHeartBeatUtils.addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
-        return true
+        var cancelTaskIds: MutableSet<String>? = null
+        val key = TaskUtils.getCancelTaskIdRedisKey(buildId, vmSeqId)
+        loop@ while (true) {
+            // 获取redis队列中被取消的task任务
+            val cancelTaskId = redisOperation.rightPop(key) ?: break@loop
+            if (cancelTaskIds == null) {
+                cancelTaskIds = mutableSetOf()
+            }
+            cancelTaskIds.add(cancelTaskId)
+        }
+        return HeartBeatInfo(
+            projectId = projectId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            cancelTaskIds = cancelTaskIds
+        )
     }
 
     @Suppress("UNCHECKED_CAST")

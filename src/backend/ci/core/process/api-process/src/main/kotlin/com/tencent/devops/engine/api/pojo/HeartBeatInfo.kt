@@ -25,18 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.engine.api.pojo
 
-import com.tencent.devops.common.pipeline.container.MutexGroup
-import com.tencent.devops.common.pipeline.option.JobControlOption
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- *
- * @version 1.0
- */
-data class PipelineBuildContainerControlOption(
-    val jobControlOption: JobControlOption,
-    val inFinallyStage: Boolean = false,
-    val mutexGroup: MutexGroup? = null,
-    var containPostTaskFlag: Boolean? = null // 是否包含post任务
+@ApiModel("心跳信息")
+data class HeartBeatInfo(
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("构建ID")
+    val buildId: String,
+    @ApiModelProperty("项目ID")
+    val vmSeqId: String,
+    @ApiModelProperty("取消的task任务的id集合")
+    val cancelTaskIds: Set<String>? = null
 )

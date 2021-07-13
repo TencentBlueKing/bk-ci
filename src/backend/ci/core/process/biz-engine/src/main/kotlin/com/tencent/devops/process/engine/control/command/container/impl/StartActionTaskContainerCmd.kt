@@ -121,9 +121,9 @@ class StartActionTaskContainerCmd(
                 breakFlag = containerContext.event.actionType.isStartOrRefresh()
                 // 如果是要终止，则需要拿出当前任务进行终止
                 toDoTask = findRunningTask(containerContext, currentTask = t)
-            } else if (t.status.isFailure() || t.status.isCancel()) {
+            } else if (t.status.isFailure() || t.status.isCancel() || t.status == BuildStatus.EXEC_TIMEOUT) {
                 needTerminate = needTerminate || TaskUtils.isStartVMTask(t) // #4301 构建机启动失败，就需要终止[P0]
-                // 当前任务已经失败or取消，并且没有设置[失败继续]的， 设置给容器最终FAILED状态
+                // 当前任务已经失败or取消or超时，并且没有设置[失败继续]的， 设置给容器最终FAILED状态
                 if (!ControlUtils.continueWhenFailure(t.additionalOptions)) {
                     containerContext.buildStatus = BuildStatusSwitcher.jobStatusMaker.forceFinish(t.status)
                 } else {

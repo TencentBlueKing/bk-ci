@@ -109,6 +109,7 @@ const val MAJORVERSION = "BK_CI_MAJOR_VERSION" // MajorVersion
 const val MINORVERSION = "BK_CI_MINOR_VERSION" // MinorVersion
 const val FIXVERSION = "BK_CI_FIX_VERSION" // FixVersion
 const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
+const val BUILD_STATUS = "BK_CI_BUILD_STATUS" // "BuildStatus"
 
 /**
  * 后续新增的变量统一用“BK_CI_大写的变量名称”命名，历史的变量名称统一整改

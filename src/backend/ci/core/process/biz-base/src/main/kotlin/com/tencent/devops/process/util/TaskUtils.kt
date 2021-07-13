@@ -70,17 +70,34 @@ object TaskUtils {
         if (postInfo == null) {
             return parentTask to postExecuteFlag
         }
-
+        parentTask = taskList.filter { it.taskId == postInfo.parentElementId }.getOrNull(0)
         val runCondition = additionalOptions.runCondition
-        val conditionFlag = if (isContainerFailed) { // 当前容器有失败的任务
-            runCondition in getContinueConditionListWhenFail() // 需要满足[前置任务失败时才运行]或[除了取消才不运行]条件
+        val conditionFlag = if (runCondition == RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT) {
+            // 判断父任务是否是取消或者超时状态
+            parentTask?.status == BuildStatus.CANCELED || parentTask?.status == BuildStatus.EXEC_TIMEOUT
+        } else if (runCondition == RunCondition.PRE_TASK_SUCCESS && !hasFailedTaskInInSuccessContainer) {
+            var flag = true
+            val taskSize = taskList.size - 1
+            for (i in 0..taskSize) {
+                val tmpTask = taskList[i]
+                if (tmpTask.taskId == task.taskId) {
+                    break
+                }
+                if (tmpTask.status != BuildStatus.SUCCEED) {
+                    flag = false
+                    break
+                }
+            }
+            flag
         } else {
-            // 除了[前置任务失败时才运行]的其他条件，或者设置了[前置任务失败时才运行]并且失败并继续的任务
-            runCondition != RunCondition.PRE_TASK_FAILED_ONLY || hasFailedTaskInInSuccessContainer
+            if (isContainerFailed) { // 当前容器有失败的任务
+                runCondition in getContinueConditionListWhenFail() // 需要满足[前置任务失败时才运行]或[除了取消才不运行]条件
+            } else {
+                // 除了[前置任务失败时才运行]的其他条件，或者设置了[前置任务失败时才运行]并且失败并继续的任务
+                runCondition != RunCondition.PRE_TASK_FAILED_ONLY || hasFailedTaskInInSuccessContainer
+            }
         }
-
         if (conditionFlag) {
-            parentTask = taskList.filter { it.taskId == postInfo.parentElementId }.getOrNull(0)
             // 父任务必须是执行过的, 并且在指定的状态下和控制条件
             if (parentTask != null && parentTask.status in realExecuteBuildStatusList) {
                 postExecuteFlag = true
@@ -108,4 +125,9 @@ object TaskUtils {
      * 判断[task]是否为启动构建环境的任务，是返回true
      */
     fun isStartVMTask(task: PipelineBuildTask) = VMUtils.genStartVMTaskId(task.containerId) == task.taskId
+
+    /**
+     * 获取当前构建取消任务ID集合的redis键
+     */
+    fun getCancelTaskIdRedisKey(buildId: String, containerId: String) = "CANCEL_TASK_IDS_${buildId}_$containerId"
 }

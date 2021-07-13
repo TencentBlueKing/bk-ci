@@ -1012,12 +1012,14 @@ class PipelineRuntimeService @Autowired constructor(
                             is NormalContainer -> PipelineBuildContainerControlOption(
                                 jobControlOption = container.jobControlOption!!,
                                 inFinallyStage = stage.finally,
-                                mutexGroup = container.mutexGroup
+                                mutexGroup = container.mutexGroup,
+                                containPostTaskFlag = container.containPostTaskFlag
                             )
                             is VMBuildContainer -> PipelineBuildContainerControlOption(
                                 jobControlOption = container.jobControlOption!!,
                                 inFinallyStage = stage.finally,
-                                mutexGroup = container.mutexGroup
+                                mutexGroup = container.mutexGroup,
+                                containPostTaskFlag = container.containPostTaskFlag
                             )
                             else -> null
                         }

@@ -49,8 +49,6 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.measure.MeasureService
-import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -93,23 +91,23 @@ class BuildCancelControl @Autowired constructor(
     }
 
     private fun execute(event: PipelineBuildCancelEvent): Boolean {
-
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId = event.buildId)
+        val buildId = event.buildId
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId = buildId)
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || buildInfo.status.isFinish()) {
-            LOG.info("[$${event.buildId}|${event.source}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
+            LOG.info("[$$buildId|${event.source}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
             return false
         }
 
-        val model = pipelineBuildDetailService.getBuildModel(buildId = event.buildId)
+        val model = pipelineBuildDetailService.getBuildModel(buildId = buildId)
         return if (model != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
-
+            redisOperation.set("${BuildStatus.CANCELED.name}_$buildId", "true", 5)
             cancelAllPendingTask(event = event, model = model)
             // 修改detail model
             pipelineBuildDetailService.buildCancel(buildId = event.buildId, buildStatus = event.status)
 
-            val pendingStage = pipelineStageService.getPendingStage(event.buildId)
+            val pendingStage = pipelineStageService.getPendingStage(buildId)
             if (pendingStage != null) {
                 pendingStage.dispatchEvent(event)
             } else {
@@ -119,7 +117,7 @@ class BuildCancelControl @Autowired constructor(
             measureService?.postCancelData(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
-                buildId = event.buildId,
+                buildId = buildId,
                 userId = event.userId
             )
             true
@@ -166,13 +164,19 @@ class BuildCancelControl @Autowired constructor(
             if (stage.finally) {
                 return@forEach
             }
+            val stageStatus = BuildStatus.parse(stage.status)
             stage.containers.forEach C@{ container ->
                 unlockMutexGroup(variables = variables, container = container,
                     buildId = event.buildId, projectId = event.projectId, stageId = stage.id!!
                 )
                 // 调整Container状态位
                 val containerBuildStatus = BuildStatus.parse(container.status)
-                if (!containerBuildStatus.isFinish()) {
+                // 获取当前job第一个插件
+                val firstElement = container.elements[0]
+                // 取消构建,当前运行的stage及当前stage下的job不能马上置为取消状态
+                if ((!containerBuildStatus.isFinish() && stageStatus != BuildStatus.RUNNING &&
+                        containerBuildStatus != BuildStatus.RUNNING) || firstElement.status.isNullOrBlank()
+                ) {
                     pipelineRuntimeService.updateContainerStatus(
                         buildId = event.buildId,
                         stageId = stage.id ?: "",
@@ -181,12 +185,6 @@ class BuildCancelControl @Autowired constructor(
                         endTime = LocalDateTime.now(),
                         buildStatus = BuildStatusSwitcher.jobStatusMaker.cancel(containerBuildStatus)
                     )
-                    // 构建机关机
-                    if (container is VMBuildContainer) {
-                        container.shutdown(event = event, executeCount = executeCount)
-                    } else if (container is NormalContainer) { // 非编译环境关机
-                        container.shutdown(event = event, executeCount = executeCount)
-                    }
                     buildLogPrinter.addYellowLine(
                         buildId = event.buildId,
                         message = "[$executeCount]|Job#${container.id} was cancel by ${event.userId}",
@@ -203,37 +201,6 @@ class BuildCancelControl @Autowired constructor(
                 }
             }
         }
-    }
-
-    private fun NormalContainer.shutdown(event: PipelineBuildCancelEvent, executeCount: Int) {
-        pipelineMQEventDispatcher.dispatch(
-            PipelineBuildLessShutdownDispatchEvent(
-                source = "BuildCancelControl",
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                userId = event.userId,
-                buildId = event.buildId,
-                buildResult = true,
-                vmSeqId = id,
-                executeCount = executeCount
-            )
-        )
-    }
-
-    private fun VMBuildContainer.shutdown(event: PipelineBuildCancelEvent, executeCount: Int) {
-        pipelineMQEventDispatcher.dispatch(
-            PipelineAgentShutdownEvent(
-                source = "BuildCancelControl",
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                userId = event.userId,
-                buildId = event.buildId,
-                buildResult = true,
-                vmSeqId = id,
-                routeKeySuffix = dispatchType?.routeKeySuffix?.routeKeySuffix,
-                executeCount = executeCount
-            )
-        )
     }
 
     private fun unlockMutexGroup(

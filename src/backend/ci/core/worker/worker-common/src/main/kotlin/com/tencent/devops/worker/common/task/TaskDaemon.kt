@@ -69,7 +69,7 @@ class TaskDaemon(
             } catch (e: TimeoutException) {
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
-                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorCode = ErrorCode.USER_TASK_OUTTIME_LIMIT,
                     errorMsg = e.message ?: "插件执行超时, 超时时间:${timeout}分钟"
                 )
             } finally {

@@ -53,6 +53,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
+import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
@@ -282,6 +283,10 @@ open class MarketAtomTask : ITask() {
                 "BUILD_ID" to buildVariables.buildId,
                 "VM_SEQ_ID" to buildVariables.vmSeqId
             )
+            val taskId = buildTask.taskId
+            if (!taskId.isNullOrBlank()) {
+                systemEnvVariables[PIPELINE_ELEMENT_ID] = taskId
+            }
             atomDevLanguageEnvVars?.forEach {
                 systemEnvVariables[it.envKey] = it.envValue
             }
