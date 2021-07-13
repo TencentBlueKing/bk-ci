@@ -10,7 +10,7 @@ dependencies {
     compile project(":core:task:api-task")
     compile project(":core:defect:api-defect")
     compile project(":core:quartz:api-quartz")
-    compile "org.json:json:20180130"
+    compile "org.json:json"
     compile "org.springframework.boot:spring-boot-starter-test"
     compile group: 'com.tencent.bk.devops.ci.image', name: 'api-image', version: version, changing: true
     compile group: 'com.tencent.bk.devops.ci.project', name: 'api-project', version: version, changing: true
