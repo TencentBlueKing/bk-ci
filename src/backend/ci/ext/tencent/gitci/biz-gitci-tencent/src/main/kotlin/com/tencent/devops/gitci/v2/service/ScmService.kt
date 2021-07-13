@@ -225,13 +225,18 @@ class ScmService @Autowired constructor(
     }
 
     fun getMergeRequestChangeInfo(
-        userId: String,
+        userId: String?,
+        token: String?,
         gitProjectId: Long,
         mrId: Long
     ): GitMrChangeInfo? {
         logger.info("getMergeRequestChangeInfo: [$gitProjectId|$mrId]")
         return client.getScm(ServiceGitCiResource::class).getMergeRequestChangeInfo(
-            token = getOauthToken(userId, true, gitProjectId),
+            token = if (userId == null) {
+                token!!
+            } else {
+                getOauthToken(userId, true, gitProjectId)
+            },
             gitProjectId = gitProjectId,
             mrId = mrId
         ).data

@@ -393,7 +393,8 @@ class GitCITriggerService @Autowired constructor(
         // 获取mr请求的变更文件列表，用来给后面判断
         val changeSet = if (mrEvent) {
             scmService.getMergeRequestChangeInfo(
-                userId = gitRequestEvent.userId,
+                userId = null,
+                token = gitToken.accessToken,
                 gitProjectId = getProjectId(mrEvent, gitRequestEvent),
                 mrId = (event as GitMergeRequestEvent).object_attributes.id
             )?.files?.filter { !it.deletedFile }?.map { it.newPath }?.toSet() ?: emptySet()
