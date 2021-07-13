@@ -26,7 +26,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
-        if (validatePermission(userId, projectId, authPermission)) {
+        if (!validatePermission(userId, projectId, authPermission)) {
             throw PermissionForbiddenException(message)
         }
     }
