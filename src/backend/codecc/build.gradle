@@ -159,7 +159,6 @@ subprojects {
         all*.exclude group: "org.slf4j", module: "log4j-over-slf4j"
         all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
         all*.exclude group: "org.slf4j", module: "slf4j-nop"
-        all*.exclude group: "com.vaadin.external.google", module: "android-json"
         all*.exclude group: "com.tencent.bk.devops.ci.common", module: "common-archive-tencent"
     }
 
