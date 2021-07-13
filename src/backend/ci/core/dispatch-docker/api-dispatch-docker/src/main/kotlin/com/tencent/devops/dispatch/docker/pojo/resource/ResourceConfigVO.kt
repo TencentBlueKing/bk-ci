@@ -25,22 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo.performance
+package com.tencent.devops.dispatch.docker.pojo.resource
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("devcloud性能用户选项配置")
-data class UserPerformanceOptionsVO(
-    @ApiModelProperty("默认选项")
-    val default: String,
-    @ApiModelProperty("是否展示")
-    val needShow: Boolean,
-    @ApiModelProperty("性能配置")
-    val performanceMaps: List<PerformanceMap>
-)
-
-data class PerformanceMap(
-    val id: String,
-    val performanceConfigVO: PerformanceConfigVO
+@ApiModel("资源配置")
+data class ResourceConfigVO(
+    @ApiModelProperty("蓝盾项目ID")
+    val projectId: String,
+    @ApiModelProperty("CPU")
+    val cpu: Int,
+    @ApiModelProperty("内存")
+    val memory: String,
+    @ApiModelProperty("磁盘")
+    val disk: String,
+    @ApiModelProperty("描述")
+    val description: String
 )

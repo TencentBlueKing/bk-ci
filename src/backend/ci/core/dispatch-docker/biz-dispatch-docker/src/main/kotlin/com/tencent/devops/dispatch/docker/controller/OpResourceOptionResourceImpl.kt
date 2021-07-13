@@ -25,24 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo.performance
+package com.tencent.devops.dispatch.docker.controller
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.op.OPResourceOptionsResource
+import com.tencent.devops.dispatch.docker.pojo.resource.ResourceOptionsVO
+import com.tencent.devops.dispatch.docker.service.DockerHostZoneTaskService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("分页数据包装模型")
-data class ListPage<out T>(
-    @ApiModelProperty("总记录行数", required = true)
-    val count: Long,
-    @ApiModelProperty("第几页", required = true)
-    val page: Int,
-    @ApiModelProperty("每页多少条", required = true)
-    val pageSize: Int,
-    @ApiModelProperty("总共多少页", required = true)
-    val totalPages: Int,
-    @ApiModelProperty("数据", required = true)
-    val records: List<T>
-) {
-    constructor(page: Int, pageSize: Int, count: Long, records: List<T>) :
-            this(count, page, pageSize, Math.ceil(count * 1.0 / pageSize).toInt(), records)
+@RestResource
+class OpResourceOptionResourceImpl @Autowired constructor(
+    private val dockerHostZoneTaskService: DockerHostZoneTaskService
+) : OPResourceOptionsResource {
+    override fun listPerformanceOptions(userId: String): Result<List<ResourceOptionsVO>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun createPerformanceOptions(userId: String, resourceOptionsVO: ResourceOptionsVO): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun updatePerformanceOptions(
+        userId: String,
+        id: Long,
+        resourceOptionsVO: ResourceOptionsVO
+    ): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun deletePerformanceOptions(userId: String, projectId: Long): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
 }

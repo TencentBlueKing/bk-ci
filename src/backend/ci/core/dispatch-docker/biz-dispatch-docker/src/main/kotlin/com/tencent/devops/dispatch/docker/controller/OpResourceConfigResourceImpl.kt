@@ -25,15 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo.performance
+package com.tencent.devops.dispatch.docker.controller
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.op.OPResourceConfigResource
+import com.tencent.devops.dispatch.docker.pojo.resource.CreateResourceConfigVO
+import com.tencent.devops.dispatch.docker.pojo.resource.ListPage
+import com.tencent.devops.dispatch.docker.pojo.resource.ResourceConfigVO
+import com.tencent.devops.dispatch.docker.service.DockerHostZoneTaskService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("devcloud项目性能配置")
-data class OPPerformanceConfigVO(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
-    @ApiModelProperty("性能基础配置ID")
-    val optionId: Long
-)
+@RestResource
+class OpResourceConfigResourceImpl @Autowired constructor(
+    private val dockerHostZoneTaskService: DockerHostZoneTaskService
+) : OPResourceConfigResource {
+    override fun listPerformanceConfig(userId: String, page: Int?, pageSize: Int?): Result<ListPage<ResourceConfigVO>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun createPerformanceConfig(
+        userId: String,
+        createResourceConfigVO: CreateResourceConfigVO
+    ): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun updatePerformanceConfig(
+        userId: String,
+        projectId: String,
+        createResourceConfigVO: CreateResourceConfigVO
+    ): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun deletePerformanceConfig(userId: String, projectId: String): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+}

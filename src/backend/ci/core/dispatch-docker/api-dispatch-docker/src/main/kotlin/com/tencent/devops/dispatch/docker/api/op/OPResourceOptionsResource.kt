@@ -30,7 +30,7 @@ package com.tencent.devops.dispatch.docker.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.docker.pojo.performance.PerformanceOptionsVO
+import com.tencent.devops.dispatch.docker.pojo.resource.ResourceOptionsVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -45,34 +45,34 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_DISPATCH_PERFORMANCE"], description = "OP-构建机性能配置接口")
-@Path("/op/dispatchdocker")
+@Api(tags = ["OP_DISPATCH_RESOURCE"], description = "OP-构建机性能配置接口")
+@Path("/op/dispatch-docker")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OPPerformanceOptionsResource {
+interface OPResourceOptionsResource {
 
     @GET
-    @Path("/performanceOptions/list")
+    @Path("/resource-options/list")
     @ApiOperation("获取docker性能基础配置列表")
     fun listPerformanceOptions(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
-    ): Result<List<PerformanceOptionsVO>>
+    ): Result<List<ResourceOptionsVO>>
 
     @POST
-    @Path("/performanceOptions/add")
+    @Path("/resource-options/add")
     @ApiOperation("新增性能基础配置")
     fun createPerformanceOptions(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("性能配置", required = true)
-        performanceOptionsVO: PerformanceOptionsVO
+        resourceOptionsVO: ResourceOptionsVO
     ): Result<Boolean>
 
     @PUT
-    @Path("/performanceOptions/{id}/update")
+    @Path("/resource-options/{id}/update")
     @ApiOperation("更新性能基础配置")
     fun updatePerformanceOptions(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
@@ -82,11 +82,11 @@ interface OPPerformanceOptionsResource {
         @PathParam("id")
         id: Long,
         @ApiParam("性能配置", required = true)
-        performanceOptionsVO: PerformanceOptionsVO
+        resourceOptionsVO: ResourceOptionsVO
     ): Result<Boolean>
 
     @DELETE
-    @Path("/performanceOptions/delete/{id}")
+    @Path("/resource-options/delete/{id}")
     @ApiOperation("删除docker性能基础配置")
     fun deletePerformanceOptions(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)

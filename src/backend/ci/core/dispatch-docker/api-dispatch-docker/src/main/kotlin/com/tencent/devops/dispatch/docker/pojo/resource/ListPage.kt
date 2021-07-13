@@ -25,21 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo.performance
+package com.tencent.devops.dispatch.docker.pojo.resource
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("devcloud项目性能配置")
-data class PerformanceConfigVO(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
-    @ApiModelProperty("CPU")
-    val cpu: Int,
-    @ApiModelProperty("内存")
-    val memory: String,
-    @ApiModelProperty("磁盘")
-    val disk: String,
-    @ApiModelProperty("描述")
-    val description: String
-)
+@ApiModel("分页数据包装模型")
+data class ListPage<out T>(
+    @ApiModelProperty("总记录行数", required = true)
+    val count: Long,
+    @ApiModelProperty("第几页", required = true)
+    val page: Int,
+    @ApiModelProperty("每页多少条", required = true)
+    val pageSize: Int,
+    @ApiModelProperty("总共多少页", required = true)
+    val totalPages: Int,
+    @ApiModelProperty("数据", required = true)
+    val records: List<T>
+) {
+    constructor(page: Int, pageSize: Int, count: Long, records: List<T>) :
+            this(count, page, pageSize, Math.ceil(count * 1.0 / pageSize).toInt(), records)
+}
