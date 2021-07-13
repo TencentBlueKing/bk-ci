@@ -201,32 +201,38 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
 
         val publicCheck = projectInfoService.checkProjectPublic(gitProjectId)
+        var permissionCheck: GitCIPermissionLevel?
+        try {
+            val gitProjectMembers = client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
+                gitProjectId = gitProjectId,
+                page = 0,
+                pageSize = 100,
+                search = userId
+            ).data
+            logger.info("$projectCode project member $userId $gitProjectMembers")
+            if (gitProjectMembers.isNullOrEmpty()) {
+                throw PermissionForbiddenException(
+                    MessageCodeUtil.getCodeMessage(CommonMessageCode.PERMISSION_DENIED, arrayOf(WEB_CHECK)))
+            }
 
-        val gitProjectMembers = client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
-            gitProjectId = gitProjectId,
-            page = 0,
-            pageSize = 100,
-            search = userId
-        ).data
-        logger.info("$projectCode project member $userId $gitProjectMembers")
-        if (gitProjectMembers.isNullOrEmpty()) {
-            throw PermissionForbiddenException(
-                MessageCodeUtil.getCodeMessage(CommonMessageCode.PERMISSION_DENIED, arrayOf(WEB_CHECK)))
+            val memberMap = mutableMapOf<String, GitMember>()
+            gitProjectMembers.forEach {
+                memberMap[it.username] = it
+            }
+
+            permissionCheck = if (memberMap.containsKey(userId)) {
+                val memberInfo = memberMap[userId]
+                if (memberInfo?.accessLevel ?: 0 > 30) {
+                    GitCIPermissionLevel.DEVELOP_UP
+                } else GitCIPermissionLevel.DEVELOP_DOWN
+            } else {
+                GitCIPermissionLevel.NO_PERMISSION
+            }
+        } catch (e: Exception) {
+            logger.warn("$userId is not $gitProjectId member")
+            permissionCheck = GitCIPermissionLevel.NO_PERMISSION
         }
 
-        val memberMap = mutableMapOf<String, GitMember>()
-        gitProjectMembers.forEach {
-            memberMap[it.username] = it
-        }
-
-        val permissionCheck = if (memberMap.containsKey(userId)) {
-            val memberInfo = memberMap[userId]
-            if (memberInfo?.accessLevel ?: 0 > 30) {
-                GitCIPermissionLevel.DEVELOP_UP
-            } else GitCIPermissionLevel.DEVELOP_DOWN
-        } else {
-            GitCIPermissionLevel.NO_PERMISSION
-        }
         logger.info("webCheckAction $projectCode $gitProjectId permission:$permissionCheck public:$publicCheck")
         if (!publicCheck) {
             if (permissionCheck == GitCIPermissionLevel.NO_PERMISSION) {
