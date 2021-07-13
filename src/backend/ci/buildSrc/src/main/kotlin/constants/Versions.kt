@@ -6,7 +6,7 @@ object Versions {
     const val BouncyCastle = "1.46"
     const val Dom4j = "1.6.1"
     const val JsonSchema = "2.2.6"
-    const val Jasypt = "2.0.0"
+    const val Jasypt = "3.0.3"
     const val Lucene = "8.6.0"
     const val Swagger = "1.6.2"
     const val Mockito = "1.10.19"

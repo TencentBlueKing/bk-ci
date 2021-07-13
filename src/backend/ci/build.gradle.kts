@@ -48,6 +48,7 @@ allprojects {
             dependencySet("io.swagger:${Versions.Swagger}") {
                 entry("swagger-annotations")
                 entry("swagger-jersey2-jaxrs")
+                entry("swagger-models")
             }
             dependencySet("com.github.docker-java:${Versions.DockerJava}") {
                 entry("docker-java")
