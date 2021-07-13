@@ -74,7 +74,7 @@ class TxV3EnvironmentPermissionService constructor(
             userId = userId,
             projectCode = projectId,
             resourceCode = projectId,
-            resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value,
+            resourceType = AuthResourceType.PROJECT.value,
             relationResourceType = null,
             action = buildEnvAction(permission)
         ).data ?: false
@@ -103,7 +103,7 @@ class TxV3EnvironmentPermissionService constructor(
             userId = userId,
             projectCode = projectId,
             resourceCode = projectId,
-            resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
+            resourceType = AuthResourceType.PROJECT.value,
             relationResourceType = null,
             action = buildNodeAction(permission)
         ).data ?: false

@@ -78,7 +78,7 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
             userId = userId,
             projectCode = projectId,
             resourceCode = projectId,
-            resourceType = AuthResourceType.TICKET_CREDENTIAL.value,
+            resourceType = AuthResourceType.PROJECT.value,
             action = buildCredentialAction(authPermission),
             relationResourceType = null
         ).data ?: false
