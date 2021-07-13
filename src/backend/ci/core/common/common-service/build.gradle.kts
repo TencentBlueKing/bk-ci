@@ -36,4 +36,5 @@ dependencies {
     api("javax.servlet:javax.servlet-api")
     api("org.springframework:spring-web")
     api("org.apache.commons:commons-lang3")
+    api("org.springframework.cloud:spring-cloud-starter-bootstrap")
 }
