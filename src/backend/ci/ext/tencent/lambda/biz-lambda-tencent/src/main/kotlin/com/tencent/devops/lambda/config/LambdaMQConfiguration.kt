@@ -229,33 +229,33 @@ class LambdaMQConfiguration {
      * 构建model更新广播交换机
      */
     @Bean
-    fun PipelineModelAnalysisFanoutExchange(): FanoutExchange {
+    fun pipelineModelAnalysisFanoutExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_EXTENDS_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
 
     @Bean
-    fun PipelineModelAnalysisLambdaQueue() = Queue(LambdaMQ.QUEUE_PIPELINE_EXTENDS_MODEL_LAMBDA)
+    fun pipelineModelAnalysisLambdaQueue() = Queue(LambdaMQ.QUEUE_PIPELINE_EXTENDS_MODEL_LAMBDA)
 
     @Bean
-    fun PipelineModelAnalysisLambdaQueueBind(
-        @Autowired PipelineModelAnalysisLambdaQueue: Queue,
-        @Autowired PipelineModelAnalysisFanoutExchange: FanoutExchange
+    fun pipelineModelAnalysisLambdaQueueBind(
+        @Autowired pipelineModelAnalysisLambdaQueue: Queue,
+        @Autowired pipelineModelAnalysisFanoutExchange: FanoutExchange
     ): Binding {
-        return BindingBuilder.bind(PipelineModelAnalysisLambdaQueue).to(PipelineModelAnalysisFanoutExchange)
+        return BindingBuilder.bind(pipelineModelAnalysisLambdaQueue).to(pipelineModelAnalysisFanoutExchange)
     }
 
     @Bean
     fun PipelineModelAnalysisListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired PipelineModelAnalysisLambdaQueue: Queue,
+        @Autowired pipelineModelAnalysisLambdaQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired lambdaPipelineModelListener: LambdaPipelineModelListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(PipelineModelAnalysisLambdaQueue.name)
+        container.setQueueNames(pipelineModelAnalysisLambdaQueue.name)
         container.setConcurrentConsumers(5)
         container.setMaxConcurrentConsumers(5)
         container.setAmqpAdmin(rabbitAdmin)
