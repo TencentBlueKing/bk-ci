@@ -30,6 +30,7 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.AncestorsApiReq
@@ -41,7 +42,8 @@ import org.springframework.stereotype.Service
 @Service("permissionExtService")
 class BkPermissionExtServiceImpl @Autowired constructor(
     val iamEsbService: IamEsbService,
-    val iamConfiguration: IamConfiguration
+    val iamConfiguration: IamConfiguration,
+    val iamCacheService: IamCacheService
 ) : PermissionExtService {
 
     // 企业版默认通过esb请求iam完成新建关联
@@ -71,6 +73,10 @@ class BkPermissionExtServiceImpl @Autowired constructor(
             bk_app_secret = "",
             bk_username = userId
         )
-        return iamEsbService.createRelationResource(iamApiReq)
+        val createResult = iamEsbService.createRelationResource(iamApiReq)
+        if (createResult) {
+            iamCacheService.refreshUserExpression(userId, resourceType)
+        }
+        return createResult
     }
 }

@@ -94,7 +94,7 @@ open class AbsPermissionService @Autowired constructor(
             if (iamCacheService.checkProjectManager(userId, projectCode)) {
                 return arrayListOf("*")
             }
-            val expression = iamCacheService.getUserExpression(userId, action)
+            val expression = iamCacheService.getUserExpression(userId, action, resourceType)
             logger.info("[iam V3] getUserResourceByPermission action: $action, expression:$expression")
 
             if (expression == null) {
