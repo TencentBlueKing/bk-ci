@@ -340,7 +340,9 @@ class TriggerBuildService @Autowired constructor(
                         label = emptyList(),
                         ifField = null,
                         fastKill = false,
-                        jobs = yaml.finally!!
+                        jobs = yaml.finally!!,
+                        checkIn = null,
+                        checkOut = null
                     ),
                     event = event,
                     gitBasicSetting = gitBasicSetting,

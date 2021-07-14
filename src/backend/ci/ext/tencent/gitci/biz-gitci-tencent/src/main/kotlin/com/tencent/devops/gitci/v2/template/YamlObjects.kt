@@ -31,11 +31,13 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Credentials
+import com.tencent.devops.common.ci.v2.Notices
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.Variable
+import com.tencent.devops.common.ci.v2.stageCheck.Gate
 import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
 
 object YamlObjects {
@@ -141,7 +143,7 @@ object YamlObjects {
         }
     }
 
-    private fun <T> transValue(file: String, type: String, value: Any?): T {
+   private inline fun <reified T> transValue(file: String, type: String, value: Any?): T {
         if (value == null) {
             throw RuntimeException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
         }
