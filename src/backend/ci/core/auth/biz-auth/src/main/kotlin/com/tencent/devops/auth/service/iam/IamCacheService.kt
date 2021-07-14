@@ -111,9 +111,9 @@ class IamCacheService @Autowired constructor(
             return
         }
         val userExpressionActions = userActionCache.getIfPresent(cacheKey)
-        userExpressionActions!!.forEach { action ->
+        userExpressionActions!!.split(",").forEach { action ->
             val actionDto = ActionDTO()
-            actionDto.id = action.toString()
+            actionDto.id = action
             val expression = policyService!!.getPolicyByAction(userId, actionDto, null) ?: return
             userExpressionCache.put(cacheKey, expression)
         }
