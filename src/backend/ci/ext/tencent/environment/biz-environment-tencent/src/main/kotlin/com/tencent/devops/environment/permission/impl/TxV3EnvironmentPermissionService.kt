@@ -212,7 +212,7 @@ class TxV3EnvironmentPermissionService constructor(
             serviceCode = null,
             resourceType = TActionUtils.extResourceType(AuthResourceType.ENVIRONMENT_ENVIRONMENT),
             projectCode = projectId,
-            resourceCode = envId.toString(),
+            resourceCode = HashUtil.encodeLongId(envId),
             resourceName = envName
         )
     }
@@ -231,7 +231,7 @@ class TxV3EnvironmentPermissionService constructor(
             serviceCode = null,
             resourceType = TActionUtils.extResourceType(AuthResourceType.ENVIRONMENT_ENV_NODE),
             projectCode = projectId,
-            resourceCode = nodeId.toString(),
+            resourceCode = HashUtil.encodeLongId(nodeId),
             resourceName = nodeName
         )
     }
@@ -277,6 +277,6 @@ class TxV3EnvironmentPermissionService constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(TxV3EnvironmentPermissionService::class.java)
     }
 }

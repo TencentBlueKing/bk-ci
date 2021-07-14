@@ -29,6 +29,7 @@ package com.tencent.devops.repository.service.impl
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -80,7 +81,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
             return managerIds
         }
 
-        return resourceCodeList.map { it.toLong() }
+        return resourceCodeList.map { HashUtil.decodeIdToLong(it) }
     }
 
     override fun filterRepositories(
@@ -110,7 +111,8 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
             val ids = if (value.contains("*")) {
                 projectRepositoryIds
             } else {
-                value.map { it.toLong() }
+                // 因存在iam内的id为加密后的id,此处需要解密
+                value.map { HashUtil.decodeIdToLong(it)}
             }
             resultMap[key] = ids
             if (key == AuthPermission.VIEW) {
@@ -126,13 +128,21 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         repositoryId: Long?
     ): Boolean {
-        val resourceCode = repositoryId?.toString() ?: projectId
+        var resourceCode: String
+        var resourceType : String
+        if (repositoryId != null) {
+            resourceCode = HashUtil.encodeLongId(repositoryId!!)
+            resourceType = AuthResourceType.CODE_REPERTORY.value
+        } else {
+            resourceCode = projectId
+            resourceType = AuthResourceType.PROJECT.value
+        }
 
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
-            resourceType = AuthResourceType.CODE_REPERTORY.value,
+            resourceType = resourceType,
             relationResourceType = null,
             action = TActionUtils.buildAction(authPermission, AuthResourceType.CODE_REPERTORY),
             resourceCode = resourceCode
