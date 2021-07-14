@@ -114,7 +114,8 @@ class CheckPauseReviewStageCmd(
         if (event.source == BS_MANUAL_START_STAGE || option?.manualTrigger != true) {
             return false
         }
-        return option.groupToReview() != null
+        // TODO 下次发布去掉对triggered的判断
+        return option.groupToReview() != null || option.triggered == null
     }
 
     /**
