@@ -29,12 +29,10 @@ package com.tencent.devops.worker.common.task
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.process.engine.common.Timeout
-import org.springframework.stereotype.Component
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 
-@Component
-class TaskExecutorCache {
+object TaskExecutorCache {
 
     private val taskExecutorCache = Caffeine.newBuilder()
         .maximumSize(50)

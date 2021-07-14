@@ -30,7 +30,6 @@ package com.tencent.devops.worker.common.heartbeat
 import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
@@ -129,12 +128,11 @@ object Heartbeat {
                 forceFlag = true
             )
             if (!cancelTaskIds.isNullOrEmpty()) {
-                val taskExecutorCache: TaskExecutorCache = SpringContextUtil.getBean(TaskExecutorCache::class.java)
-                val taskExecutorMap = taskExecutorCache.getAllPresent(cancelTaskIds)
+                val taskExecutorMap = TaskExecutorCache.getAllPresent(cancelTaskIds)
                 taskExecutorMap?.forEach { taskId, executor ->
                     logger.info("Heartbeat taskId[$taskId] executor shutdownNow")
                     executor.shutdownNow()
-                    taskExecutorCache.invalidate(taskId)
+                    TaskExecutorCache.invalidate(taskId)
                 }
             }
         }

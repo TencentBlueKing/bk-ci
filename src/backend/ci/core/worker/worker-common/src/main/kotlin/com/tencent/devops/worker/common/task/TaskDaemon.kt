@@ -30,7 +30,6 @@ package com.tencent.devops.worker.common.task
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -66,10 +65,9 @@ class TaskDaemon(
             workspace = workspace
         )
         val executor = Executors.newCachedThreadPool()
-        val taskExecutorCache: TaskExecutorCache = SpringContextUtil.getBean(TaskExecutorCache::class.java)
         val taskId = buildTask.taskId
         if (taskId != null) {
-            taskExecutorCache.put(taskId, executor)
+            TaskExecutorCache.put(taskId, executor)
         }
         val f1 = executor.submit(taskDaemon)
         try {
@@ -83,7 +81,7 @@ class TaskDaemon(
         } finally {
             executor.shutdownNow()
             if (taskId != null) {
-                taskExecutorCache.invalidate(taskId)
+                TaskExecutorCache.invalidate(taskId)
             }
         }
     }
