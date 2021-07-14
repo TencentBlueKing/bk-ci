@@ -128,6 +128,7 @@ object ProcessMessageCode {
     const val ERROR_ATOM_PARAM_VALUE_TOO_LARGE = "2101070" // 流水线: 插件[{0}]的参数[{1}]值超限，阈值为[{2}]个字符，请联系发布者
     const val ERROR_FINAL_STAGE_CANNOT_CANCEL = "2101071" // 流水线: final stage 处于运行中不允许被取消
     const val ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER = "2101072" // Stage[{0}]的审核组[{1}]没有未配置可执行人
+    const val ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND = "2101073" // Stage[{0}]的审核组ID[{1}]不存在
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败

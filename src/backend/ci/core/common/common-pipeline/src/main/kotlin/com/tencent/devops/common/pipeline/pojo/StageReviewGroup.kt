@@ -34,6 +34,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("Stage审核组信息")
 data class StageReviewGroup(
+    @ApiModelProperty("审核组ID", required = true)
+    val id: String,
     @ApiModelProperty("审核组名称", required = true)
     val name: String = "default",
     @ApiModelProperty("审核人员", required = true)

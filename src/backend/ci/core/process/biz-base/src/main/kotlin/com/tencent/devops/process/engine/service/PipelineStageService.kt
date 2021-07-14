@@ -167,13 +167,22 @@ class PipelineStageService @Autowired constructor(
         buildStage: PipelineBuildStage,
         reviewRequest: StageReviewRequest?
     ) {
-        buildStage.controlOption!!.stageControlOption.reviewCurrentGroup(
-            userId = userId,
-            action = ManualReviewAction.PROCESS,
-            params = reviewRequest?.reviewParams,
-            suggest = reviewRequest?.suggest
-        )
         with(buildStage) {
+            this.controlOption!!.stageControlOption.reviewGroup(
+                userId = userId,
+                groupId = reviewRequest?.id,
+                action = ManualReviewAction.PROCESS,
+                params = reviewRequest?.reviewParams,
+                suggest = reviewRequest?.suggest
+            )
+            stageBuildDetailService.stageReview(
+                buildId = buildId,
+                stageId = stageId,
+                controlOption = buildStage.controlOption!!
+            )
+            // #4531 如果没有其他需要审核的审核组则可以启动stage，否则直接返回
+            if ( this.controlOption!!.stageControlOption.groupToReview() != null) return
+
             val allStageStatus = stageBuildDetailService.stageStart(
                 buildId = buildId,
                 stageId = stageId,
@@ -217,11 +226,12 @@ class PipelineStageService @Autowired constructor(
 
     fun cancelStage(
         userId: String,
-        buildStage: PipelineBuildStage
+        buildStage: PipelineBuildStage,
+        groupId: String?
     ) {
-
-        buildStage.controlOption!!.stageControlOption.reviewCurrentGroup(
+        buildStage.controlOption!!.stageControlOption.reviewGroup(
             userId = userId,
+            groupId = groupId,
             action = ManualReviewAction.ABORT
         )
         stageBuildDetailService.stageCancel(

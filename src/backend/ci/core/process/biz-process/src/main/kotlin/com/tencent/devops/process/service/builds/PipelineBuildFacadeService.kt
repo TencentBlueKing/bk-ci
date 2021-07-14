@@ -779,6 +779,15 @@ class PipelineBuildFacadeService(
             params = arrayOf(stageId)
         )
 
+        if (reviewRequest?.id != buildStage.controlOption?.stageControlOption?.groupToReview()?.id) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND,
+                defaultMessage = "(${reviewRequest?.id?: "default"})非Stage($stageId)当前待审核组",
+                params = arrayOf(stageId, reviewRequest?.id?: "default")
+            )
+        }
+
         if (buildStage.controlOption?.stageControlOption?.reviewerContains(userId) != true) {
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
@@ -807,7 +816,8 @@ class PipelineBuildFacadeService(
             if (isCancel) {
                 pipelineStageService.cancelStage(
                     userId = userId,
-                    buildStage = buildStage
+                    buildStage = buildStage,
+                    groupId = reviewRequest?.id
                 )
             } else {
                 buildStage.controlOption!!.stageControlOption.reviewParams = reviewRequest?.reviewParams

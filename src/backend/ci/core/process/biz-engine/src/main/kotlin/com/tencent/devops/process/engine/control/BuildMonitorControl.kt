@@ -236,7 +236,11 @@ class BuildMonitorControl @Autowired constructor(
                 jobId = "",
                 executeCount = executeCount
             )
-            pipelineStageService.cancelStage(userId = userId, buildStage = this)
+            pipelineStageService.cancelStage(
+                userId = userId,
+                buildStage = this,
+                groupId = controlOption?.stageControlOption?.groupToReview()?.id
+            )
         }
 
         return interval

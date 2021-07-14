@@ -165,6 +165,31 @@ class StageBuildDetailService(
         }, BuildStatus.STAGE_SUCCESS)
     }
 
+    fun stageReview(
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption
+    ) {
+        logger.info("[$buildId]|stage_review|stageId=$stageId")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindStage(stage: Stage, model: Model): Traverse {
+                if (stage.id == stageId) {
+                    update = true
+                    stage.stageControlOption?.reviewGroups = controlOption.stageControlOption.reviewGroups
+                    stage.stageControlOption?.reviewParams = controlOption.stageControlOption.reviewParams
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
     fun stageStart(
         buildId: String,
         stageId: String,
