@@ -1451,6 +1451,7 @@
                         } else {
                             const index = this.listData.defectList.records.findIndex(item => item.entityId === data.defectKeySet[0])
                             this.listData.defectList.records.splice(index, 1)
+                            this.totalCount -= 1
                         }
                         this.initParams()
 
