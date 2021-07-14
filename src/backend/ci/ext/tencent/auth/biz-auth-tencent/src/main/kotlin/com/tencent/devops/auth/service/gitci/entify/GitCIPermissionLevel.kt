@@ -28,7 +28,7 @@
 package com.tencent.devops.auth.service.gitci.entify
 
 enum class GitCIPermissionLevel(val level: Int) {
-    DEVELOP_UP(1),  // develop及以上
+    DEVELOP_UP(1), // develop及以上
     DEVELOP_DOWN(2), // develop以下的项目成员
     NO_PERMISSION(0); // 非项目成员
 }
