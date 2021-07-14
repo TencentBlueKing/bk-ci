@@ -25,31 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.engine
+package com.tencent.devops.process.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildTaskResult
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface EngineBuildSDKApi : WorkerRestApiSDK {
-
-    fun getRequestUrl(path: String, retryCount: Int = 0): String
-
-    fun setStarted(retryCount: Int): Result<BuildVariables>
-
-    fun claimTask(retryCount: Int): Result<BuildTask>
-
-    fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean>
-
-    fun endTask(retryCount: Int): Result<Boolean>
-
-    fun heartbeat(): Result<Boolean>
-
-    fun timeout(): Result<Boolean>
-
-    fun getCiToken(): String
-
-    fun getCiUrl(): String
-}
+@ApiModel("流水线暂停操作实体类")
+data class BuildTaskPauseInfo(
+    @ApiModelProperty("任务ID")
+    val taskId: String,
+    @ApiModelProperty("element信息,若插件内有变量变更需给出变更后的element")
+    val element: Element?,
+    @ApiModelProperty("是否继续 true:继续构建 false：停止构建")
+    val isContinue: Boolean,
+    @ApiModelProperty("当前stageId")
+    val stageId: String,
+    @ApiModelProperty("当前containerId")
+    val containerId: String
+)
