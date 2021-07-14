@@ -25,20 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.resources.user
+package com.tencent.devops.auth.service.gitci.entify
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.user.UserGitCIPermissionResource
-import com.tencent.devops.gitci.permission.GitCIV2PermissionService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class UserGitCIPermissionResourceImpl @Autowired constructor(
-    private val permissionService: GitCIV2PermissionService
-) : UserGitCIPermissionResource {
-
-    override fun validateUserResourcePermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(permissionService.checkWebPermission(userId, projectId))
-    }
+enum class GitCIPermissionLevel(val level: Int) {
+    DEVELOP_UP(1), // develop及以上
+    DEVELOP_DOWN(2), // develop以下的项目成员
+    NO_PERMISSION(0); // 非项目成员
 }
