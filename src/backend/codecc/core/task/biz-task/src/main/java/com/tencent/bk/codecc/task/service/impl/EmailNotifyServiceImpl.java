@@ -14,6 +14,7 @@ package com.tencent.bk.codecc.task.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.common.math.IntMath;
 import com.tencent.bk.codecc.defect.api.ServiceDefectTreeResource;
 import com.tencent.bk.codecc.defect.api.ServiceTaskLogOverviewResource;
@@ -82,7 +83,6 @@ import net.sf.json.JSONObject;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Sets;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;

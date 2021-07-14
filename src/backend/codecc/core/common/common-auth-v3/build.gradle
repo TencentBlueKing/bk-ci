@@ -14,7 +14,9 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-jersey"
     compile "org.springframework.boot:spring-boot-starter-undertow"
     compile "org.springframework.boot:spring-boot-starter-web"
-    compile "io.swagger:swagger-jersey2-jaxrs"
+    compile ("io.swagger:swagger-jersey2-jaxrs") {
+        exclude group: 'org.json', module: 'json'
+    }
     compile group: 'com.tencent.bk.devops.ci.process', name: 'api-process', version: version, changing: true
     compile group: 'com.tencent.bk.devops.ci.common', name: 'common-auth-v3', version: version, changing: true
 }

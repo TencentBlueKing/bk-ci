@@ -47,6 +47,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 
@@ -80,6 +81,13 @@ class InitializationRunner @Autowired constructor(
                     .set(RedisKeyConstants.CODECC_TASK_ID, (taskInfoEntity.taskId + 1).toString())
             }
         }
+
+        val jedisConnectionFactory: JedisConnectionFactory = redisTemplate.connectionFactory as JedisConnectionFactory
+        logger.info("start to init data with redis: {}, {}, {}",
+            jedisConnectionFactory.hostName,
+            jedisConnectionFactory.port,
+            jedisConnectionFactory.database)
+
 
         // 国际化操作[ 响应码、操作记录、规则包、规则名称、报表日期、工具参数、工具描述、操作类型 ]
         globalMessage(redisTemplate)
@@ -129,10 +137,12 @@ class InitializationRunner @Autowired constructor(
         // 工具参数标签[ labelName ]国际化
         val labelName = initResponseCode.getToolParams()
         redisTemplate.opsForHash<String, String>().putAll(RedisKeyConstants.GLOBAL_TOOL_PARAMS_LABEL_NAME, labelName)
+        logger.info("init global params GLOBAL_TOOL_PARAMS_LABEL_NAME: {}", labelName)
 
         // 工具参数提示[ tips ]国际化
         val tips = initResponseCode.getToolParamsTips()
         redisTemplate.opsForHash<String, String>().putAll(RedisKeyConstants.GLOBAL_TOOL_PARAMS_TIPS, tips)
+        logger.info("init global params GLOBAL_TOOL_PARAMS_TIPS: {}", tips)
 
         // 操作类型国际化
         val operTypeMap = initResponseCode.getOperTypeMap()
