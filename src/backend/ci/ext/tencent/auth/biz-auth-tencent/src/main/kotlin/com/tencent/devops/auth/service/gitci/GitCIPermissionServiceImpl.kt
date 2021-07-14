@@ -222,7 +222,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
 
             permissionCheck = if (memberMap.containsKey(userId)) {
                 val memberInfo = memberMap[userId]
-                if (memberInfo?.accessLevel ?: 0 > 30) {
+                if (memberInfo?.accessLevel ?: 0 > 20) {
                     GitCIPermissionLevel.DEVELOP_UP
                 } else GitCIPermissionLevel.DEVELOP_DOWN
             } else {
