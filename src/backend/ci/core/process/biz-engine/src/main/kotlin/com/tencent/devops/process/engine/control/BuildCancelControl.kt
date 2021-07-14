@@ -102,7 +102,7 @@ class BuildCancelControl @Autowired constructor(
         val model = pipelineBuildDetailService.getBuildModel(buildId = buildId)
         return if (model != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
-            redisOperation.set("${BuildStatus.CANCELED.name}_$buildId", "true", 5)
+            redisOperation.set("${BuildStatus.CANCELED.name}_$buildId", "true", 10)
             cancelAllPendingTask(event = event, model = model)
             // 修改detail model
             pipelineBuildDetailService.buildCancel(buildId = event.buildId, buildStatus = event.status)
