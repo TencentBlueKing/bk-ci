@@ -44,4 +44,7 @@ dependencies {
     api("org.elasticsearch.client:transport")
     api("org.elasticsearch.plugin:transport-netty4-client")
     api("com.floragunn:search-guard-ssl")
+    api("com.fasterxml.jackson.core:jackson-databind")
+    api("com.fasterxml.jackson.core:jackson-core")
+    api("com.fasterxml.jackson.core:jackson-annotations")
 }

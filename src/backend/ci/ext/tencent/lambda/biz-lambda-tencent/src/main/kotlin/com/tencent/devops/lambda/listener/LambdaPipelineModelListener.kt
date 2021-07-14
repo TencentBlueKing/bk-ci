@@ -27,15 +27,10 @@
 package com.tencent.devops.lambda.listener
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.lambda.service.LambdaDataService
 import com.tencent.devops.lambda.service.LambdaPipelineModelService
-import com.tencent.devops.lambda.service.LambdaProjectService
-import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
-import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
-import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 

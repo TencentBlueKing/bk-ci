@@ -154,7 +154,7 @@ class LambdaDataService @Autowired constructor(
         return true
     }
 
-    fun onModelExchange(event: PipelineModelAnalysisEvent) {
+/*    fun onModelExchange(event: PipelineModelAnalysisEvent) {
         try {
             logger.info("onModelExchange sync pipeline resource, pipelineId: ${event.pipelineId}")
             val pipelineResource = lambdaPipelineModelDao.getResModel(dslContext, event.pipelineId)
@@ -190,7 +190,7 @@ class LambdaDataService @Autowired constructor(
         } catch (e: Exception) {
             logger.error("onModelExchange sync pipelineInfo failed, pipelineId: ${event.pipelineId}", e)
         }
-    }
+    }*/
 
     private fun getAtomCodeFromTask(task: TPipelineBuildTaskRecord): String {
         return if (!task.taskAtom.isNullOrBlank()) {
