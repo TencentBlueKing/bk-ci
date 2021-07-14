@@ -30,9 +30,11 @@ package com.tencent.devops.worker.common.heartbeat
 import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
+import com.tencent.devops.worker.common.task.TaskExecutorCache
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Executors
@@ -118,13 +120,23 @@ object Heartbeat {
         override fun run() {
             val buildId = heartBeatInfo.buildId
             logger.info("Heartbeat cancel build:$buildId,heartBeatInfo:$heartBeatInfo")
+            val cancelTaskIds = heartBeatInfo.cancelTaskIds
             KillBuildProcessTree.killProcessTree(
                 projectId = heartBeatInfo.projectId,
                 buildId = buildId,
                 vmSeqId = heartBeatInfo.vmSeqId,
-                taskIds = heartBeatInfo.cancelTaskIds,
+                taskIds = cancelTaskIds,
                 forceFlag = true
             )
+            if (!cancelTaskIds.isNullOrEmpty()) {
+                val taskExecutorCache: TaskExecutorCache = SpringContextUtil.getBean(TaskExecutorCache::class.java)
+                val taskExecutorMap = taskExecutorCache.getAllPresent(cancelTaskIds)
+                taskExecutorMap?.forEach { taskId, executor ->
+                    logger.info("Heartbeat taskId[$taskId] executor shutdownNow")
+                    executor.shutdownNow()
+                    taskExecutorCache.invalidate(taskId)
+                }
+            }
         }
     }
 

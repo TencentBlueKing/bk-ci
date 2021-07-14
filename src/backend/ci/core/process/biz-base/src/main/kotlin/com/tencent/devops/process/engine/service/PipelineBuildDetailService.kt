@@ -211,7 +211,7 @@ class PipelineBuildDetailService @Autowired constructor(
             override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (e.status == BuildStatus.RUNNING.name || e.status == BuildStatus.REVIEWING.name) {
                     val status = if (e.status == BuildStatus.RUNNING.name) {
-                        BuildStatus.TERMINATE.name
+                        BuildStatus.CANCELED.name
                     } else buildStatus.name
                     e.status = status
                     if (e.status != BuildStatus.RUNNING.name && c.containPostTaskFlag != true) {

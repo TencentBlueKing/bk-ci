@@ -30,6 +30,7 @@ package com.tencent.devops.worker.common.task
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -58,22 +59,31 @@ class TaskDaemon(
 
     fun run() {
         val timeout = TaskUtil.getTimeOut(buildTask)
-        if (timeout == null || timeout == 0L) {
-            task.run(buildTask, buildVariables, workspace)
-        } else {
-            val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspace)
-            val executor = Executors.newCachedThreadPool()
-            val f1 = executor.submit(taskDaemon)
-            try {
-                f1.get(timeout, TimeUnit.MINUTES) ?: throw TimeoutException("插件执行超时, 超时时间:${timeout}分钟")
-            } catch (e: TimeoutException) {
-                throw TaskExecuteException(
-                    errorType = ErrorType.USER,
-                    errorCode = ErrorCode.USER_TASK_OUTTIME_LIMIT,
-                    errorMsg = e.message ?: "插件执行超时, 超时时间:${timeout}分钟"
-                )
-            } finally {
-                executor.shutdownNow()
+        val taskDaemon = TaskDaemon(
+            task = task,
+            buildTask = buildTask,
+            buildVariables = buildVariables,
+            workspace = workspace
+        )
+        val executor = Executors.newCachedThreadPool()
+        val taskExecutorCache: TaskExecutorCache = SpringContextUtil.getBean(TaskExecutorCache::class.java)
+        val taskId = buildTask.taskId
+        if (taskId != null) {
+            taskExecutorCache.put(taskId, executor)
+        }
+        val f1 = executor.submit(taskDaemon)
+        try {
+            f1.get(timeout, TimeUnit.MINUTES) ?: throw TimeoutException("插件执行超时, 超时时间:${timeout}分钟")
+        } catch (e: TimeoutException) {
+            throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OUTTIME_LIMIT,
+                errorMsg = e.message ?: "插件执行超时, 超时时间:${timeout}分钟"
+            )
+        } finally {
+            executor.shutdownNow()
+            if (taskId != null) {
+                taskExecutorCache.invalidate(taskId)
             }
         }
     }
