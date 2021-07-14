@@ -247,7 +247,7 @@ class LambdaMQConfiguration {
     }
 
     @Bean
-    fun PipelineModelAnalysisListenerContainer(
+    fun pipelineModelAnalysisListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pipelineModelAnalysisLambdaQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,

@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -57,6 +58,7 @@ import com.tencent.devops.lambda.dao.LambdaPipelineTemplateDao
 import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
 import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
+import com.tencent.devops.lambda.pojo.DataPlatPipelineResource
 import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
 import com.tencent.devops.lambda.pojo.ElementData
 import com.tencent.devops.lambda.pojo.MakeUpBuildVO
@@ -65,6 +67,7 @@ import com.tencent.devops.lambda.storage.ESService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -105,31 +108,6 @@ class LambdaDataService @Autowired constructor(
         val projectInfo = projectCache.get(history.projectId)
         pushBuildHistory(projectInfo, history)
         pushBuildDetail(projectInfo, event.pipelineId, model)
-
-/*        val info = getBuildInfo(event.buildId)
-        if (info == null) {
-            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build info is not exist")
-            return
-        }
-
-        val data = BuildData(
-            projectId = info.projectId,
-            pipelineId = info.pipelineId,
-            buildId = info.buildId,
-            userId = info.startUser,
-            status = info.status.name,
-            trigger = info.trigger,
-            beginTime = info.startTime ?: 0,
-            endTime = info.endTime ?: 0,
-            buildNum = info.buildNum,
-            templateId = templateCache.get(info.pipelineId),
-            bgName = projectInfo.bgName,
-            deptName = projectInfo.deptName,
-            centerName = projectInfo.centerName,
-            model = model.model,
-            errorInfoList = event.errorInfoList
-        )
-        esService.build(data)*/
     }
 
     fun onBuildTaskFinish(event: PipelineBuildTaskFinishBroadCastEvent) {
@@ -139,8 +117,6 @@ class LambdaDataService @Autowired constructor(
             return
         }
         pushTaskDetail(task)
-/*        pushElementData2Es(event, task)
-        pushGitTaskInfo(event, task)*/
     }
 
     fun makeUpBuildHistory(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Boolean {
@@ -176,6 +152,44 @@ class LambdaDataService @Autowired constructor(
         }
 
         return true
+    }
+
+    fun onModelExchange(event: PipelineModelAnalysisEvent) {
+        try {
+            logger.info("onModelExchange sync pipeline resource, pipelineId: ${event.pipelineId}")
+            val pipelineResource = lambdaPipelineModelDao.getResModel(dslContext, event.pipelineId)
+            if (pipelineResource != null) {
+                val dataPlatPipelineResource = DataPlatPipelineResource(
+                    washTime = LocalDateTime.now().format(dateTimeFormatter),
+                    pipelineId = event.pipelineId,
+                    version = pipelineResource.version,
+                    model = pipelineResource.model,
+                    creator = pipelineResource.creator,
+                    createTime = pipelineResource.createTime.timestampmilli().toString()
+                )
+                kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_RESOURCE_TOPIC, JsonUtil.toJson(dataPlatPipelineResource))
+            } else {
+                logger.error("onModelExchange sync pipeline resource failed, pipelineId: ${event.pipelineId}, pipelineResource is null.")
+            }
+        } catch (e: Exception) {
+            logger.error("onModelExchange sync pipeline resource failed, pipelineId: ${event.pipelineId}", e)
+        }
+
+        try {
+            logger.info("onModelExchange sync pipelineInfo, pipelineId: ${event.pipelineId}")
+            val pipelineInfo = client.get(ServicePipelineResource::class).status(
+                userId = event.userId,
+                projectId = event.projectId,
+                pipelineId = event.pipelineId
+            ).data
+            if (pipelineInfo != null) {
+                kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_INFO_TOPIC, JsonUtil.toJson(pipelineInfo))
+            } else {
+                logger.error("onModelExchange sync pipelineInfo failed, pipelineId: ${event.pipelineId}, pipelineInfo is null.")
+            }
+        } catch (e: Exception) {
+            logger.error("onModelExchange sync pipelineInfo failed, pipelineId: ${event.pipelineId}", e)
+        }
     }
 
     private fun getAtomCodeFromTask(task: TPipelineBuildTaskRecord): String {
