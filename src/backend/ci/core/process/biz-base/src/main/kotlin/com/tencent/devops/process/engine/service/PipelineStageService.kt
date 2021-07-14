@@ -168,7 +168,8 @@ class PipelineStageService @Autowired constructor(
         reviewRequest: StageReviewRequest?
     ): Boolean {
         with(buildStage) {
-            val success = this.controlOption!!.stageControlOption.reviewGroup(
+            val option = this.controlOption!!.stageControlOption
+            val success = option.reviewGroup(
                 userId = userId,
                 groupId = reviewRequest?.id,
                 action = ManualReviewAction.PROCESS,
@@ -182,7 +183,7 @@ class PipelineStageService @Autowired constructor(
                 controlOption = buildStage.controlOption!!
             )
             // #4531 如果没有其他需要审核的审核组则可以启动stage，否则直接返回
-            if (this.controlOption!!.stageControlOption.groupToReview() != null) return true
+            if (option.groupToReview() != null) return true
 
             val allStageStatus = stageBuildDetailService.stageStart(
                 buildId = buildId,

@@ -177,8 +177,7 @@ class StageBuildDetailService(
             override fun onFindStage(stage: Stage, model: Model): Traverse {
                 if (stage.id == stageId) {
                     update = true
-                    stage.stageControlOption?.reviewGroups = controlOption.stageControlOption.reviewGroups
-                    stage.stageControlOption?.reviewParams = controlOption.stageControlOption.reviewParams
+                    stage.stageControlOption = controlOption.stageControlOption
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -205,8 +204,7 @@ class StageBuildDetailService(
                     update = true
                     stage.status = BuildStatus.QUEUE.name
                     stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
-                    stage.stageControlOption?.reviewGroups = controlOption.stageControlOption.reviewGroups
-                    stage.stageControlOption?.reviewParams = controlOption.stageControlOption.reviewParams
+                    stage.stageControlOption = controlOption.stageControlOption
                     allStageStatus = fetchHistoryStageStatus(model)
                     return Traverse.BREAK
                 }

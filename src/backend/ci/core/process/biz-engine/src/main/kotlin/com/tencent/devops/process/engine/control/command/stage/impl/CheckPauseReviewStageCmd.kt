@@ -96,15 +96,19 @@ class CheckPauseReviewStageCmd(
     }
 
     private fun saveStageReviewParams(stage: PipelineBuildStage, stageControlOption: StageControlOption?) {
+        val reviewVariables = mutableMapOf<String, String>()
+        // # 4531 遍历全部审核组的参数，后序覆盖前序的同名变量
+        stageControlOption?.reviewGroups?.forEach { group ->
+            group.params?.forEach {
+                reviewVariables[it.key] = it.value.toString()
+            }
+        }
         if (stageControlOption?.reviewParams?.isNotEmpty() == true) {
             buildVariableService.batchUpdateVariable(
                 projectId = stage.projectId,
                 pipelineId = stage.pipelineId,
                 buildId = stage.buildId,
-                variables = stageControlOption.reviewParams!!
-                    .filter { it.key.isNotBlank() }
-                    .map { it.key to it.value.toString() }
-                    .toMap()
+                variables = reviewVariables
             )
         }
     }
@@ -127,7 +131,7 @@ class CheckPauseReviewStageCmd(
         val group = option.groupToReview() ?: return
         val notifyUsers = mutableListOf<String>()
 
-        if (group.status == null || group.status == ManualReviewAction.REVIEWING.name) {
+        if (group.status == null) {
             val reviewers = group.reviewers.joinToString(",")
             val realReviewers = EnvUtils.parseEnv(reviewers, commandContext.variables)
                 .split(",").toList()
