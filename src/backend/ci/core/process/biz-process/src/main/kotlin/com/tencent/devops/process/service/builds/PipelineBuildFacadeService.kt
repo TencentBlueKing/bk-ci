@@ -813,7 +813,7 @@ class PipelineBuildFacadeService(
                     defaultMessage = "Stage启动失败![${interceptResult.message}]"
                 )
             }
-            if (isCancel) {
+            val success = if (isCancel) {
                 pipelineStageService.cancelStage(
                     userId = userId,
                     buildStage = buildStage,
@@ -827,6 +827,12 @@ class PipelineBuildFacadeService(
                     reviewRequest = reviewRequest
                 )
             }
+            if (!success) throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT,
+                defaultMessage = "审核Stage($stageId)数据异常",
+                params = arrayOf(stageId)
+            )
         } finally {
             runLock.unlock()
         }

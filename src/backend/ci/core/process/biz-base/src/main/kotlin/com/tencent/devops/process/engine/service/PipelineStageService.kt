@@ -166,22 +166,23 @@ class PipelineStageService @Autowired constructor(
         userId: String,
         buildStage: PipelineBuildStage,
         reviewRequest: StageReviewRequest?
-    ) {
+    ): Boolean {
         with(buildStage) {
-            this.controlOption!!.stageControlOption.reviewGroup(
+            val success = this.controlOption!!.stageControlOption.reviewGroup(
                 userId = userId,
                 groupId = reviewRequest?.id,
                 action = ManualReviewAction.PROCESS,
                 params = reviewRequest?.reviewParams,
                 suggest = reviewRequest?.suggest
             )
+            if (!success) return false
             stageBuildDetailService.stageReview(
                 buildId = buildId,
                 stageId = stageId,
                 controlOption = buildStage.controlOption!!
             )
             // #4531 如果没有其他需要审核的审核组则可以启动stage，否则直接返回
-            if (this.controlOption!!.stageControlOption.groupToReview() != null) return
+            if (this.controlOption!!.stageControlOption.groupToReview() != null) return true
 
             val allStageStatus = stageBuildDetailService.stageStart(
                 buildId = buildId,
@@ -221,6 +222,7 @@ class PipelineStageService @Autowired constructor(
                 )
                 // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
             )
+            return true
         }
     }
 
@@ -228,7 +230,7 @@ class PipelineStageService @Autowired constructor(
         userId: String,
         buildStage: PipelineBuildStage,
         groupId: String?
-    ) {
+    ): Boolean {
         buildStage.controlOption!!.stageControlOption.reviewGroup(
             userId = userId,
             groupId = groupId,
@@ -275,6 +277,7 @@ class PipelineStageService @Autowired constructor(
             )
             // #3400 FinishEvent会刷新HISTORY列表的Stage状态
         )
+        return true
     }
 
     fun getLastStage(buildId: String): PipelineBuildStage? {
