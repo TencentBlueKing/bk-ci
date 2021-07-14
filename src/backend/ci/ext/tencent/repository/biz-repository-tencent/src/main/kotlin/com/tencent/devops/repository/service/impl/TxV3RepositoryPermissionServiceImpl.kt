@@ -128,6 +128,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         repositoryId: Long?
     ): Boolean {
+        // iamV3存的代码库Id为hashId(为兼容企业版),故此处需要再次加密做校验
         var resourceCode: String
         var resourceType : String
         if (repositoryId != null) {

@@ -61,7 +61,7 @@ class TxV3EnvironmentPermissionService constructor(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
-            resourceCode = envId.toString(),
+            resourceCode = HashUtil.encodeLongId(envId),  // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
             resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value,
             relationResourceType = null,
             action = buildEnvAction(permission)
@@ -90,7 +90,7 @@ class TxV3EnvironmentPermissionService constructor(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
-            resourceCode = nodeId.toString(),
+            resourceCode = HashUtil.encodeLongId(nodeId),  // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
             resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
             relationResourceType = null,
             action = buildNodeAction(permission)
@@ -141,6 +141,7 @@ class TxV3EnvironmentPermissionService constructor(
         ).data ?: emptyMap()
         val instanceMap = mutableMapOf<AuthPermission, List<String>>()
         val projectAllId = mutableListOf<String>()
+        // iam存储的为hashId,故全量数据需要转hash
         envDao.list(dslContext, projectId).map {
             projectAllId.add(HashUtil.encodeLongId(it.envId))
         }
@@ -191,6 +192,7 @@ class TxV3EnvironmentPermissionService constructor(
             action = actions
         ).data ?: emptyMap()
 
+        // iam存储的为hashId,故全量数据需要转hash
         val instanceIds = mutableListOf<String>()
         nodeDao.listNodes(dslContext, projectId).map {
             instanceIds.add(HashUtil.encodeLongId(it.nodeId))
