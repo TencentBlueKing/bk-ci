@@ -155,7 +155,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
             serviceCode = null,
             resourceType = TActionUtils.extResourceType(AuthResourceType.CODE_REPERTORY),
             projectCode = projectId,
-            resourceCode = repositoryId.toString(),
+            resourceCode = HashUtil.encodeLongId(repositoryId),
             resourceName = repositoryName
         )
     }
