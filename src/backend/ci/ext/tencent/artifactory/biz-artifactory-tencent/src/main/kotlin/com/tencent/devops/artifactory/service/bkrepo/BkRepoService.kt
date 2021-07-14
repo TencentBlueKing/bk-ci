@@ -178,8 +178,8 @@ class BkRepoService @Autowired constructor(
     ): List<FileDetail> {
         logger.info(
             "getPropertiesByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
-                "artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
-                "crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo"
+                    "artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
+                    "crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo"
         )
 
         var targetProjectId = projectId
@@ -329,7 +329,9 @@ class BkRepoService @Autowired constructor(
                 var bundleIdentifier: String? = null
                 if (it.properties != null) {
                     for (property in it.properties!!) {
-                        if (property.key == ARCHIVE_PROPS_PIPELINE_ID && pipelineCanDownloadList.contains(property.value)) {
+                        if (property.key == ARCHIVE_PROPS_PIPELINE_ID &&
+                            pipelineCanDownloadList.contains(property.value)
+                        ) {
                             canDownload = true
                         }
 
@@ -451,8 +453,10 @@ class BkRepoService @Autowired constructor(
                         ""
                     }
 
-                    logger.info("pipelineHasPermissionList.contains(pipelineId):" +
-                        " ${(!checkPermission || pipelineHasPermissionList.contains(pipelineId))}")
+                    logger.info(
+                        "pipelineHasPermissionList.contains(pipelineId):" +
+                                " ${(!checkPermission || pipelineHasPermissionList.contains(pipelineId))}"
+                    )
                     if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
                     ) {
@@ -639,8 +643,11 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return StringUtil.chineseUrlEncode("${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
-        }/bkrepo/api/external/repository$shareUri&download=true")
+        return StringUtil.chineseUrlEncode(
+            "${
+                HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
+            }/bkrepo/api/external/repository$shareUri&download=true"
+        )
     }
 
     fun internalDownloadUrl(
@@ -661,7 +668,7 @@ class BkRepoService @Autowired constructor(
             timeoutInSeconds = ttl.toLong()
         )
         return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}" +
-            "/bkrepo/api/external/repository$shareUri&download=true"
+                "/bkrepo/api/external/repository$shareUri&download=true"
     }
 
     fun internalTemporaryAccessDownloadUrls(

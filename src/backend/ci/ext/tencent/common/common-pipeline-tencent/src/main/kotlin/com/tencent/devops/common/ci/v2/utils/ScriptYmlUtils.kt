@@ -103,19 +103,29 @@ object ScriptYmlUtils {
             return null
         }
 
-        val yaml = Yaml()
-        val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
-        return YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
+        return try {
+            val yaml = Yaml()
+            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
+        } catch (e: Exception) {
+            logger.error("Check yaml version failed. return null")
+            null
+        }
     }
 
     fun isV2Version(yamlStr: String?): Boolean {
         if (yamlStr == null) {
             return false
         }
-        val yaml = Yaml()
-        val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
-        val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
-        return version != null && version.version == "v2.0"
+        return try {
+            val yaml = Yaml()
+            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
+            version != null && version.version == "v2.0"
+        } catch (e: Exception) {
+            logger.error("Check yaml version failed. Set default v2.0")
+            true
+        }
     }
 
     fun parseVariableValue(value: String?, settingMap: Map<String, String?>): String? {

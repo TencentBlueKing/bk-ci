@@ -35,10 +35,8 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
 import com.tencent.devops.repository.api.ServiceGitCommitResource
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,9 +46,7 @@ import javax.ws.rs.NotFoundException
 @Service
 class IptRepoService @Autowired constructor(
     private val client: Client,
-    private val authPermissionApi: AuthPermissionApi,
-    private val dslContext: DSLContext,
-    private val pipelineBuildVarDao: PipelineBuildVarDao
+    private val authPermissionApi: AuthPermissionApi
 ) {
 
     fun getCommitBuildArtifactorytInfo(
@@ -77,22 +73,7 @@ class IptRepoService @Autowired constructor(
     }
 
     private fun getBuildByCommitId(projectId: String, pipelineId: String, commitId: String): String? {
-        val commitData = client.get(ServiceGitCommitResource::class).queryCommitInfo(pipelineId, commitId).data
-        return if (commitData != null) {
-            commitData.buildId
-        } else {
-            logger.warn("BKSystemErrorMonitor|queryCommitInfo|NOT_FOUND|pipeline=$pipelineId|commit=$commitId")
-            val headCommits = pipelineBuildVarDao.getVarsByProjectAndPipeline(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                key = "DEVOPS_GIT_REPO_HEAD_COMMIT_ID",
-                value = commitId,
-                offset = 0,
-                limit = 1
-            )
-            headCommits.firstOrNull()?.buildId
-        }
+        return client.get(ServiceGitCommitResource::class).queryCommitInfo(pipelineId, commitId).data?.buildId
     }
 
     private fun checkPermission(projectId: String, pipelineId: String, userId: String) {
