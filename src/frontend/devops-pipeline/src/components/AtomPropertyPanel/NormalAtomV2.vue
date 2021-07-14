@@ -65,6 +65,7 @@
     import Parameter from '@/components/AtomFormComponent/Parameter'
     import Tips from '@/components/AtomFormComponent/Tips'
     import DynamicParameter from '@/components/AtomFormComponent/DynamicParameter'
+    import DynamicParameterSimple from '@/components/AtomFormComponent/DynamicParameterSimple'
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
     import copyIcon from '@/components/copyIcon'
     export default {
@@ -78,6 +79,7 @@
             Parameter,
             Tips,
             DynamicParameter,
+            DynamicParameterSimple,
             copyIcon
         },
         mixins: [atomMixin, validMixins],
