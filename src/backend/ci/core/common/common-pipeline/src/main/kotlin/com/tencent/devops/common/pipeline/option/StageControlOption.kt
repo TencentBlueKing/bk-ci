@@ -132,7 +132,7 @@ data class StageControlOption(
     /**
      * 获取指定ID的审核组
      */
-    private fun getReviewGroupById(groupId: String?): StageReviewGroup? {
+    fun getReviewGroupById(groupId: String?): StageReviewGroup? {
         refreshReviewOption()
         // #4531 兼容旧的前端交互，如果是不带ID审核参数则默认返回第一个审核组（旧数据）
         if (groupId.isNullOrBlank()) return reviewGroups?.first()

@@ -778,8 +778,9 @@ class PipelineBuildFacadeService(
             defaultMessage = "Stage($stageId)未处于暂停状态",
             params = arrayOf(stageId)
         )
-
-        if (reviewRequest?.id != buildStage.controlOption?.stageControlOption?.groupToReview()?.id) {
+        val option = buildStage.controlOption?.stageControlOption
+        val group = option?.getReviewGroupById(reviewRequest?.id)
+        if (group?.id != option?.groupToReview()?.id) {
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND,
@@ -788,7 +789,7 @@ class PipelineBuildFacadeService(
             )
         }
 
-        if (buildStage.controlOption?.stageControlOption?.reviewerContains(userId) != true) {
+        if (option?.reviewerContains(userId) != true) {
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
