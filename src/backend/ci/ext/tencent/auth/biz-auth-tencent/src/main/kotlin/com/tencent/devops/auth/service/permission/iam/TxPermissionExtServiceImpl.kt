@@ -33,6 +33,7 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.CreateRelationDTO
 import com.tencent.bk.sdk.iam.dto.grant.AncestorsApiReq
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.slf4j.LoggerFactory
@@ -40,7 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 class TxPermissionExtServiceImpl @Autowired constructor(
     val managerService: ManagerService,
-    val iamConfiguration: IamConfiguration
+    val iamConfiguration: IamConfiguration,
+    val iamCacheService: IamCacheService
 ): PermissionExtService {
     override fun resourceCreateRelation(
         userId: String,
@@ -64,6 +66,7 @@ class TxPermissionExtServiceImpl @Autowired constructor(
         )
         logger.info("resourceCreateRelation $createRelationDTO")
         managerService.createResourceRelation(createRelationDTO)
+        iamCacheService.refreshUserExpression(userId, resourceType)
         return true
     }
 
