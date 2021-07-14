@@ -113,8 +113,8 @@ data class StageControlOption(
             )
 
             newReviewGroups.add(group)
-            triggerUsers = null
-            triggered = null
+//            triggerUsers = null
+//            triggered = null
         }
         if (reviewGroups.isNullOrEmpty()) {
             reviewGroups = newReviewGroups
