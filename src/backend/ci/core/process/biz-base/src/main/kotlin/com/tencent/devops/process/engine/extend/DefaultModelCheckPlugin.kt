@@ -165,6 +165,7 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     private fun checkStageReviewers(stage: Stage) {
+        stage.stageControlOption?.refreshReviewOption()
         if (stage.stageControlOption?.reviewGroups?.isNullOrEmpty() == true) {
             throw ErrorCodeException(
                 defaultMessage = "手动触发的Stage未配置审核组",
