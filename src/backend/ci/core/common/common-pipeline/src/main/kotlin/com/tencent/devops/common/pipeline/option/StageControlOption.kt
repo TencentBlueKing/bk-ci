@@ -105,7 +105,7 @@ data class StageControlOption(
      */
     fun refreshReviewOption() {
         val newReviewGroups = mutableListOf<StageReviewGroup>()
-        if (triggerUsers?.isNotEmpty() == true) {
+        if (triggerUsers?.isNotEmpty() == true && reviewGroups?.isNullOrEmpty() == true) {
             val group = if (triggered == true) StageReviewGroup(
                 id = UUIDUtil.generate(),
                 reviewers = triggerUsers!!,
@@ -118,14 +118,15 @@ data class StageControlOption(
             )
             newReviewGroups.add(group)
             // TODO 在下一次发布中增加抹除旧数据逻辑
+            reviewGroups = newReviewGroups
 //            triggerUsers = null
 //            triggered = null
         }
-        if (reviewGroups.isNullOrEmpty()) {
-            reviewGroups = newReviewGroups
-        } else {
-            reviewGroups!!.addAll(newReviewGroups)
-        }
+//        if (reviewGroups.isNullOrEmpty()) {
+//
+//        } else {
+//            reviewGroups!!.addAll(newReviewGroups)
+//        }
     }
 
     /**

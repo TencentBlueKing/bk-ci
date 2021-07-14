@@ -181,7 +181,7 @@ class PipelineStageService @Autowired constructor(
                 controlOption = buildStage.controlOption!!
             )
             // #4531 如果没有其他需要审核的审核组则可以启动stage，否则直接返回
-            if ( this.controlOption!!.stageControlOption.groupToReview() != null) return
+            if (this.controlOption!!.stageControlOption.groupToReview() != null) return
 
             val allStageStatus = stageBuildDetailService.stageStart(
                 buildId = buildId,
