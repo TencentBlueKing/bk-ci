@@ -33,6 +33,8 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.CreateRelationDTO
 import com.tencent.bk.sdk.iam.dto.grant.AncestorsApiReq
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
+import com.tencent.devops.auth.refresh.event.IamCacheRefreshEvent
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -42,7 +44,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class TxPermissionExtServiceImpl @Autowired constructor(
     val managerService: ManagerService,
     val iamConfiguration: IamConfiguration,
-    val iamCacheService: IamCacheService
+    val iamCacheService: IamCacheService,
+    val authRefreshDispatch: AuthRefreshDispatch
 ): PermissionExtService {
     override fun resourceCreateRelation(
         userId: String,
@@ -65,8 +68,20 @@ class TxPermissionExtServiceImpl @Autowired constructor(
             ancestors
         )
         logger.info("resourceCreateRelation $createRelationDTO")
-        managerService.createResourceRelation(createRelationDTO)
-        iamCacheService.refreshUserExpression(userId, resourceType)
+        try {
+            managerService.createResourceRelation(createRelationDTO)
+            // 刷新所有实例iam缓存
+            authRefreshDispatch.dispatch(
+                IamCacheRefreshEvent(
+                    userId = userId,
+                    refreshType = "IamCacheRefresh",
+                    resourceType = resourceType
+                )
+            )
+        } catch (e: Exception) {
+            logger.warn("resourceCreateRelation fail, $userId $resourceCode $resourceType $e")
+            return false
+        }
         return true
     }
 
