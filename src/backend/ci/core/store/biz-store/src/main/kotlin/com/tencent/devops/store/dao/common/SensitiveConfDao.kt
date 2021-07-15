@@ -172,12 +172,11 @@ class SensitiveConfDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_CODE.eq(storeCode))
             conditions.add(STORE_TYPE.eq(storeType))
-            if(!filedTypeList.isNullOrEmpty()) {
+            if (!filedTypeList.isNullOrEmpty()) {
                 conditions.add(FIELD_TYPE.`in`(filedTypeList))
             }
             return dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType))
+                .where(conditions)
                 .fetch()
         }
     }
