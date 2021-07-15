@@ -320,7 +320,7 @@ export default {
     [ADD_STAGE]: (state, { stages, insertStageIndex, insertStageIsFinally = false }) => {
         stages.splice(insertStageIndex, 0, {
             id: `s-${hashID(32)}`,
-            name: insertStageIsFinally === true ? 'Finally' : `stage-${insertStageIndex + 1}`,
+            name: insertStageIsFinally === true ? 'Final' : `stage-${insertStageIndex + 1}`,
             tag: [...state.defaultStageTags],
             containers: [],
             finally: insertStageIsFinally === true || undefined
