@@ -99,7 +99,8 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                 data = false
             )
         }
-        val fieldValueEncrypted = if (sensitiveConfReq.fieldType == FieldTypeEnum.BACKEND.name) {
+        val fieldType = sensitiveConfReq.fieldType
+        val fieldValueEncrypted = if (fieldType == FieldTypeEnum.BACKEND.name) {
             // 字段如果只是给后端使用需要对字段值进行加密
             AESUtil.encrypt(aesKey, fieldValue)
         } else {
@@ -112,6 +113,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             storeCode = storeCode,
             storeType = storeType.type.toByte(),
             fieldName = fieldName,
+            fieldType = fieldType,
             fieldValue = fieldValueEncrypted,
             fieldDesc = sensitiveConfReq.fieldDesc
         )
@@ -161,7 +163,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             )
         }
         val fieldType = sensitiveConfReq.fieldType
-        val fieldValueEncrypted =  if (fieldType == FieldTypeEnum.BACKEND.name) {
+        val fieldValueEncrypted = if (fieldType == FieldTypeEnum.BACKEND.name) {
             // 对字段值进行加密
             if (fieldValue == aesMock) {
                 null
@@ -176,6 +178,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             userId = userId,
             id = id,
             fieldName = fieldName,
+            fieldType = fieldType,
             fieldValue = fieldValueEncrypted,
             fieldDesc = sensitiveConfReq.fieldDesc
         )
