@@ -112,7 +112,6 @@ class IamCacheService @Autowired constructor(
     }
 
     // 新增场景下, 需要刷新缓存,否则新建实例后,无法拉取到
-    // TODO: 此处还需要考虑多实例的场景, 需要刷新其他实例的缓存,否则请求到其他实例,仍然会查不到新实例
     fun refreshUserExpression(userId: String, resourceType: String) {
         val cacheKey = userId + resourceType
         if (userActionCache.getIfPresent(cacheKey) == null) {
