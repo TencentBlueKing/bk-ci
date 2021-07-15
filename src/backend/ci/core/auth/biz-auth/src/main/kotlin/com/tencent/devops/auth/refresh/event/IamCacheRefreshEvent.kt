@@ -25,31 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.engine
+package com.tencent.devops.auth.refresh.event
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildTaskResult
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
-interface EngineBuildSDKApi : WorkerRestApiSDK {
-
-    fun getRequestUrl(path: String, retryCount: Int = 0): String
-
-    fun setStarted(retryCount: Int): Result<BuildVariables>
-
-    fun claimTask(retryCount: Int): Result<BuildTask>
-
-    fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean>
-
-    fun endTask(retryCount: Int): Result<Boolean>
-
-    fun heartbeat(): Result<Boolean>
-
-    fun timeout(): Result<Boolean>
-
-    fun getCiToken(): String
-
-    fun getCiUrl(): String
-}
+@Event(exchange = MQ.EXCHANGE_AUTH_REFRESH_FANOUT, routeKey = MQ.ROUTE_AUTH_REFRESH_FANOUT)
+data class IamCacheRefreshEvent(
+    override val refreshType: String,
+    override var retryCount: Int = 0,
+    override var delayMills: Int = 0,
+    val userId: String,
+    val resourceType: String
+): RefreshBroadCastEvent(refreshType, retryCount, delayMills)
