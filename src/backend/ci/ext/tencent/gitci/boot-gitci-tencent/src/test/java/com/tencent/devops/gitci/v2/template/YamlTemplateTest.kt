@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
 import org.junit.Test
 
