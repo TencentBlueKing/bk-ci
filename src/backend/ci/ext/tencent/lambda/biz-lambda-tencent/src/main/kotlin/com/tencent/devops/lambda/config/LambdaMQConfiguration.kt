@@ -261,7 +261,7 @@ class LambdaMQConfiguration {
         container.setAmqpAdmin(rabbitAdmin)
         container.setPrefetchCount(1)
 
-        val adapter = MessageListenerAdapter(lambdaPipelineModelListener, lambdaPipelineModelListener::run.name)
+        val adapter = MessageListenerAdapter(lambdaPipelineModelListener, lambdaPipelineModelListener::execute.name)
         adapter.setMessageConverter(messageConverter)
         container.setMessageListener(adapter)
         return container

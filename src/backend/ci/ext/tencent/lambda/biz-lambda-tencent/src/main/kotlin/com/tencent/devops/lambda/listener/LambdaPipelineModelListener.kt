@@ -29,7 +29,6 @@ package com.tencent.devops.lambda.listener
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
-import com.tencent.devops.lambda.service.LambdaDataService
 import com.tencent.devops.lambda.service.LambdaPipelineModelService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -37,12 +36,11 @@ import org.springframework.stereotype.Component
 @Component
 class LambdaPipelineModelListener @Autowired constructor(
     private val lambdaPipelineModelService: LambdaPipelineModelService,
-    private val lambdaDataService: LambdaDataService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineModelAnalysisEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineModelAnalysisEvent) {
-        lambdaDataService.onModelExchange(event)
+        lambdaPipelineModelService.onModelExchange(event)
     }
 
 }
