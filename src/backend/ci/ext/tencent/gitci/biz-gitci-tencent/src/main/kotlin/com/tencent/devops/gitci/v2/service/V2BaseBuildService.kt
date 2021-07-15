@@ -160,7 +160,7 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                     buildId = buildId,
                     userId = event.userId,
                     status = GitCICommitCheckState.PENDING,
-                    context = "${pipeline.displayName}(${pipeline.filePath})",
+                    context = pipeline.filePath,
                     gitCIBasicSetting = gitCIBasicSetting,
                     pipelineId = pipeline.pipelineId,
                     block = event.objectKind == OBJECT_KIND_MERGE_REQUEST

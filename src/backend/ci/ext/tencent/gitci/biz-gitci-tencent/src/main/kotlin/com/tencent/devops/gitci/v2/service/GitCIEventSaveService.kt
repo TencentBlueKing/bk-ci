@@ -121,8 +121,8 @@ class GitCIEventSaveService @Autowired constructor(
                 userId = event.userId,
                 block = realBlock,
                 state = GitCICommitCheckState.FAILURE,
-                context = "${pipelineName ?: ""}($filePath): " +
-                    "${TriggerReason.getTriggerReason(reason)?.summary ?: reason}",
+                context = filePath,
+                description = TriggerReason.getTriggerReason(reason)?.summary ?: reason,
                 gitCIBasicSetting = gitBasicSetting,
                 jumpRequest = true
             )

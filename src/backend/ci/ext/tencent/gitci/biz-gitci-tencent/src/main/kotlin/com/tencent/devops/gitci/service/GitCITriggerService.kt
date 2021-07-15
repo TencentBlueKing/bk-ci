@@ -926,7 +926,8 @@ class GitCITriggerService @Autowired constructor(
                 state = state,
                 context = context,
                 gitCIBasicSetting = gitProjectConf,
-                jumpRequest = false
+                jumpRequest = false,
+                description = null
             )
         }
     }

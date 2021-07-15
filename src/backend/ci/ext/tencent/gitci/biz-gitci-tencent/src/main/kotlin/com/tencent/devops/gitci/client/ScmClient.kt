@@ -190,7 +190,8 @@ class ScmClient @Autowired constructor(
         block: Boolean,
         gitCIBasicSetting: GitCIBasicSetting,
         // 详情是否跳转request界面
-        jumpRequest: Boolean
+        jumpRequest: Boolean,
+        description: String?
     ) = try {
         val titleData = mutableListOf<String>()
         val resultMap = mutableMapOf<String, MutableList<List<String>>>()
@@ -207,14 +208,12 @@ class ScmClient @Autowired constructor(
             commitId = commitId,
             state = state.value,
             targetUrl = if (jumpRequest) {
-                GitCIPipelineUtils.genGitCIV1RequestUrl(
-                    homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl")
-                )
+                GitCIPipelineUtils.genGitCIV1RequestUrl(homePage = gitCIBasicSetting.homepage)
             } else {
                 ""
             },
             context = context,
-            description = "",
+            description = description ?: "",
             block = block,
             mrRequestId = mergeRequestId,
             reportData = Pair(titleData, resultMap)
