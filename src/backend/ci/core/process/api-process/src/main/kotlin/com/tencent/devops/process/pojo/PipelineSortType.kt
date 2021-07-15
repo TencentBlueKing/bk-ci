@@ -30,5 +30,6 @@ package com.tencent.devops.process.pojo
 enum class PipelineSortType {
     NAME,
     CREATE_TIME,
-    UPDATE_TIME
+    UPDATE_TIME,
+    LAST_EXEC_TIME
 }
