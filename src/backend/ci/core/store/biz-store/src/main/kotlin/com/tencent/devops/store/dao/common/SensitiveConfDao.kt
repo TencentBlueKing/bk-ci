@@ -70,6 +70,7 @@ class SensitiveConfDao {
         storeType: Byte,
         fieldName: String,
         fieldValue: String,
+        fieldType: String,
         fieldDesc: String?
     ) {
         with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
@@ -80,6 +81,7 @@ class SensitiveConfDao {
                 STORE_TYPE,
                 FIELD_NAME,
                 FIELD_VALUE,
+                FIELD_TYPE,
                 FIELD_DESC,
                 CREATOR,
                 MODIFIER
@@ -90,6 +92,7 @@ class SensitiveConfDao {
                     storeType,
                     fieldName,
                     fieldValue,
+                    fieldType,
                     fieldDesc,
                     userId,
                     userId
@@ -105,13 +108,14 @@ class SensitiveConfDao {
         userId: String,
         id: String,
         fieldName: String,
+        fieldType: String,
         fieldValue: String?,
         fieldDesc: String?
     ) {
         with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
             val baseStep = dslContext.update(this)
                 .set(FIELD_NAME, fieldName)
-
+                .set(FIELD_TYPE, fieldType)
             if (fieldValue != null) baseStep.set(FIELD_VALUE, fieldValue)
             if (fieldDesc != null) baseStep.set(FIELD_DESC, fieldDesc)
 
