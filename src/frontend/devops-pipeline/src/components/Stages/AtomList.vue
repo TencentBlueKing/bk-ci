@@ -2,7 +2,7 @@
     <section>
         <draggable class="container-atom-list" :class="{ 'trigger-container': isTriggerContainer(container), 'readonly': !editable }" :data-baseos="container.baseOS || container.classType" v-model="atomList" v-bind="dragOptions" :move="checkMove">
             <li v-for="(atom, index) in atomList" :key="atom.id" :class="{ 'atom-item': true,
-                                                                           [atom.status]: atom.status,
+                                                                           [atomCls(atom)]: true,
                                                                            'quality-item': (atom['@type'] === 'qualityGateOutTask') || (atom['@type'] === 'qualityGateInTask'),
                                                                            'last-quality-item': (atom['@type'] === 'qualityGateOutTask' && index === atomList.length - 1),
                                                                            'arrival-atom': atom.status,
@@ -10,7 +10,7 @@
             }"
                 @click.stop="showPropertyPanel(index)"
             >
-                <section class="atom-item atom-section normal-atom" :class="{ [atom.status]: atom.status,
+                <section class="atom-item atom-section normal-atom" :class="{ [atomCls(atom)]: true,
                                                                               'is-error': atom.isError,
                                                                               'quality-atom': atom['@type'] === 'qualityGateOutTask',
                                                                               'is-intercept': atom.isQualityCheck,
@@ -440,6 +440,13 @@
 
             useSkipStyle (atom) {
                 return (atom && (atom.status === 'SKIP' || (atom.additionalOptions && atom.additionalOptions.enable === false))) || this.containerDisabled
+            },
+
+            atomCls (atom) {
+                if (atom && atom.additionalOptions && atom.additionalOptions.enable === false) {
+                    return 'DISABLED'
+                }
+                return atom && atom.status ? atom.status : ''
             }
         }
     }
@@ -800,58 +807,36 @@
                         color: #c4cdd6;
                     }
                 }
-                &.CANCELED, &.REVIEWING {
+                &.CANCELED,
+                &.SKIP,
+                &.REVIEWING {
                     border-color: $warningColor;
-                    // &:before {
-                    //     background: $warningColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $warningColor;
-                    //     background: white;
-                    // }
+                    
                     .atom-icon {
                         color: $warningColor;
                     }
                 }
-                &.FAILED, &.QUALITY_CHECK_FAIL, &.HEARTBEAT_TIMEOUT, &.QUEUE_TIMEOUT, .EXEC_TIMEOUT {
+                &.FAILED,
+                &.QUALITY_CHECK_FAIL,
+                &.HEARTBEAT_TIMEOUT,
+                &.QUEUE_TIMEOUT,
+                &.EXEC_TIMEOUT {
                     border-color: $dangerColor;
-                    // &:before {
-                    //     background: $dangerColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $dangerColor;
-                    //     background: white;
-                    // }
                     .atom-icon {
                         color: $dangerColor;
                     }
                 }
-                &.SUCCEED, &.REVIEW_PROCESSED {
+                &.SUCCEED,
+                &.REVIEW_PROCESSED {
                     border-color: $successColor;
-                    // &:before {
-                    //     background: $successColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $successColor;
-                    //     background: white;
-                    // }
+                    
                     .atom-icon {
                         color: $successColor;
                     }
                 }
                 &.PAUSE {
                     border-color: $pauseColor;
-                    // &:before {
-                    //     background: $successColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $successColor;
-                    //     background: white;
-                    // }
+                    
                     .atom-icon {
                         color: $pauseColor;
                     }
