@@ -13,22 +13,6 @@
                 "required": true
               },
               {
-                "id": "project_edit",
-                "required": false
-              },
-              {
-                "id": "project_delete",
-                "required": false
-              },
-              {
-                "id": "project_manage",
-                "required": false
-              },
-              {
-                "id": "pipeline_create",
-                "required": false
-              },
-              {
                 "id": "project_views_manager",
                 "required": false
               },
@@ -204,11 +188,7 @@
                     "required": false
                   },
                   {
-                    "id": "quality_group_update",
-                    "required": false
-                  },
-                  {
-                    "id": "quality_group_use",
+                    "id": "quality_group_edit",
                     "required": false
                   }
                 ]
@@ -221,11 +201,11 @@
                     "required": false
                   },
                   {
-                    "id": "rule_update",
+                    "id": "rule_edit",
                     "required": false
                   },
                   {
-                    "id": "rule_use",
+                    "id": "rule_enable",
                     "required": false
                   }
                 ]
@@ -238,7 +218,7 @@
                     "required": false
                   },
                   {
-                    "id": "experience_group_update",
+                    "id": "experience_group_edit",
                     "required": false
                   }
                 ]
@@ -251,7 +231,7 @@
                     "required": false
                   },
                   {
-                    "id": "experience_task_update",
+                    "id": "experience_task_edit",
                     "required": false
                   }
                 ]

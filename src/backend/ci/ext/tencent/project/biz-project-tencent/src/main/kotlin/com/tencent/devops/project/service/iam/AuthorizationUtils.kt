@@ -187,8 +187,8 @@ object AuthorizationUtils {
             .build()
     }
 
-    private const val projectAction = "project_view,project_edit,project_delete,all_action," +
-        "project_manage,pipeline_create,project_views_manager," +
+    private const val projectAction = "project_view,all_action," +
+        "pipeline_create,project_views_manager," +
         "repertory_create,credential_create," +
         "environment_create,env_node_create," +
         "cert_create,rule_create,quality_group_create"
@@ -199,8 +199,8 @@ object AuthorizationUtils {
     private const val environmentAction = "environment_view,environment_edit,environment_delete,environment_use"
     private const val envNodeAction = "env_node_view,env_node_edit,env_node_delete,env_node_use"
     private const val certAction = "cert_view,cert_edit,cert_delete,cert_use"
-    private const val groupAction = "quality_group_delete,quality_group_update,quality_group_use"
-    private const val ruleAction = "rule_delete,rule_update,rule_use"
-    private const val experienceGroupAction = "experience_group_delete,experience_group_update"
-    private const val experienceTaskAction = "experience_task_delete,experience_task_update"
+    private const val groupAction = "quality_group_delete,quality_group_edit"
+    private const val ruleAction = "rule_delete,rule_edit,rule_enable"
+    private const val experienceGroupAction = "experience_group_delete,experience_group_edit"
+    private const val experienceTaskAction = "experience_task_delete,experience_task_edit"
 }

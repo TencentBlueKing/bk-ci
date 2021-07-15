@@ -26,91 +26,6 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "project_create",
-        "name": "添加项目",
-        "name_en": "Project Create",
-        "type": "create",
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
-        "id": "project_edit",
-        "name": "编辑项目",
-        "name_en": "Project Edit",
-        "type": "edit",
-        "related_resource_types": [
-          {
-            "system_id": "bk_ci",
-            "id": "project",
-            "related_instance_selections": [
-              {
-                "system_id": "bk_ci",
-                "id": "project_instance"
-              }
-            ]
-          }
-        ],
-        "related_actions": [
-          "project_view"
-        ],
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
-        "id": "project_delete",
-        "name": "禁用项目",
-        "name_en": "Project Delete",
-        "type": "delete",
-        "related_resource_types": [
-          {
-            "system_id": "bk_ci",
-            "id": "project",
-            "related_instance_selections": [
-              {
-                "system_id": "bk_ci",
-                "id": "project_instance"
-              }
-            ]
-          }
-        ],
-        "related_actions": [
-          "project_view"
-        ],
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
-        "id": "project_manage",
-        "name": "项目管理",
-        "name_en": "Project Manage",
-        "type": "manage",
-        "related_resource_types": [
-          {
-            "system_id": "bk_ci",
-            "id": "project",
-            "related_instance_selections": [
-              {
-                "system_id": "bk_ci",
-                "id": "project_instance"
-              }
-            ]
-          }
-        ],
-        "related_actions": [
-          "project_view"
-        ],
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
         "id": "project_views_manager",
         "name": "项目视图管理",
         "name_en": "Project Views Manager",
@@ -996,9 +911,9 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "experience_task_update",
+        "id": "experience_task_edit",
         "name": "修改版本体验任务",
-        "name_en": "Experience Task Update",
+        "name_en": "Experience Task Edit",
         "type": "edit",
         "related_resource_types": [
           {
@@ -1046,9 +961,9 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "experience_group_update",
+        "id": "experience_group_edit",
         "name": "修改版本体验用户组",
-        "name_en": "Experience Group Update",
+        "name_en": "Experience Group Edit",
         "type": "edit",
         "related_resource_types": [
           {
@@ -1121,9 +1036,9 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "rule_update",
+        "id": "rule_edit",
         "name": "编辑质量红线规则",
-        "name_en": "Rule Update",
+        "name_en": "Rule Edit",
         "type": "edit",
         "related_resource_types": [
           {
@@ -1146,9 +1061,9 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "rule_use",
-        "name": "使用质量红线规则",
-        "name_en": "Rule Use",
+        "id": "rule_enable",
+        "name": "停用/启用质量红线规则",
+        "name_en": "Rule Enable",
         "type": "execute",
         "related_resource_types": [
           {
@@ -1213,8 +1128,7 @@
           }
         ],
         "related_actions": [
-          "project_view",
-          "quality_group_use"
+          "project_view"
         ],
         "version": 1
       }
@@ -1222,36 +1136,10 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "quality_group_update",
+        "id": "quality_group_edit",
         "name": "编辑质量红线通知组",
-        "name_en": "Group Update",
+        "name_en": "Group Edit",
         "type": "edit",
-        "related_resource_types": [
-          {
-            "system_id": "bk_ci",
-            "id": "quality_group",
-            "related_instance_selections": [
-              {
-                "system_id": "bk_ci",
-                "id": "quality_group_rule"
-              }
-            ]
-          }
-        ],
-        "related_actions": [
-          "project_view",
-          "quality_group_use"
-        ],
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
-        "id": "quality_group_use",
-        "name": "使用质量红线通知组",
-        "name_en": "Group USE",
-        "type": "execute",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
