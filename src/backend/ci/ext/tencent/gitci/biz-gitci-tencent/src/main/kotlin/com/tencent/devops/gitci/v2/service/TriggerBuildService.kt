@@ -100,12 +100,10 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
-import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
@@ -115,7 +113,6 @@ import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.common.ci.v2.Stage as GitCIV2Stage
-import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_ACTOR
