@@ -37,7 +37,7 @@ import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.experience.dao.ExperienceDao
-import com.tencent.devops.experience.dao.ExperienceGroupDao
+import com.tencent.devops.experience.dao.GroupDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,7 +46,7 @@ import org.springframework.stereotype.Service
 @Service
 class AuthExperienceService @Autowired constructor(
     val experienceDao: ExperienceDao,
-    val experienceGroupDao: ExperienceGroupDao,
+    val experienceGroupDao: GroupDao,
     val dslContext: DSLContext,
     val authTokenApi: AuthTokenApi
 ) {
@@ -123,6 +123,83 @@ class AuthExperienceService @Autowired constructor(
             entityInfo.add(entity)
         }
         val count = experienceDao.countByProject(dslContext, projectId)
+        logger.info("entityInfo $entityInfo, count $count")
+        return result.buildSearchInstanceResult(entityInfo, count)
+    }
+
+
+    fun getExperienceGroup(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+        authTokenApi.checkToken(token)
+        val experienceGroupInfos = experienceGroupDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            offset = offset,
+            limit = limit
+        )
+        val result = ListInstanceInfo()
+        if (experienceGroupInfos == null) {
+            logger.info("$projectId 项目下无体验组")
+            return result.buildListInstanceFailResult()
+        }
+        val entityInfo = mutableListOf<InstanceInfoDTO>()
+        experienceGroupInfos?.map {
+            val entity = InstanceInfoDTO()
+            entity.id = HashUtil.encodeLongId(it.id)
+            entity.displayName = it.name
+            entityInfo.add(entity)
+        }
+        val count = experienceGroupDao.count(dslContext, projectId)
+        logger.info("entityInfo $entityInfo, count $count")
+        return result.buildListInstanceResult(entityInfo, count)
+    }
+
+    fun getExperienceGroupInfo(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+        authTokenApi.checkToken(token)
+        val experienceGroupInfos = experienceGroupDao.list(dslContext, ids!!.toSet() as Set<Long>)
+        val result = FetchInstanceInfo()
+        if (experienceGroupInfos == null || experienceGroupInfos.isEmpty()) {
+            logger.info("$ids 无体验用户组")
+            return result.buildFetchInstanceFailResult()
+        }
+        val entityInfo = mutableListOf<InstanceInfoDTO>()
+        experienceGroupInfos?.map {
+            val entity = InstanceInfoDTO()
+            entity.id = HashUtil.encodeLongId(it.id)
+            entity.displayName = it.name
+            entityInfo.add(entity)
+        }
+        logger.info("entityInfo $entityInfo, count ${experienceGroupInfos.size.toLong()}")
+        return result.buildFetchInstanceResult(entityInfo)
+    }
+
+    fun searchExperienceGroup(
+        projectId: String,
+        keyword: String,
+        limit: Int,
+        offset: Int,
+        token: String
+    ): SearchInstanceInfo {
+        authTokenApi.checkToken(token)
+        val experienceGroupInfos = experienceGroupDao.search(
+            dslContext = dslContext,
+            projectId = projectId,
+            offset = offset,
+            limit = limit,
+            name = keyword
+        )
+        val result = SearchInstanceInfo()
+        if (experienceGroupInfos == null) {
+            logger.info("$projectId 项目下无体验用户组")
+            return result.buildSearchInstanceFailResult()
+        }
+        val entityInfo = mutableListOf<InstanceInfoDTO>()
+        experienceGroupInfos?.map {
+            val entity = InstanceInfoDTO()
+            entity.id = HashUtil.encodeLongId(it.id)
+            entity.displayName = it.name
+            entityInfo.add(entity)
+        }
+        val count = experienceGroupDao.count(dslContext, projectId)
         logger.info("entityInfo $entityInfo, count $count")
         return result.buildSearchInstanceResult(entityInfo, count)
     }

@@ -72,6 +72,32 @@ class ServiceExperienceAuthResourceImpl @Autowired constructor(
     }
 
     override fun experienceGroup(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
-        TODO("Not yet implemented")
+        val method = callBackInfo.method
+        val page = callBackInfo.page
+        val projectId = callBackInfo.filter.parent.id
+        when (method) {
+            CallbackMethodEnum.LIST_INSTANCE -> {
+                return authExperienceService.getExperienceGroup(
+                    projectId = projectId,
+                    offset = page.offset.toInt(),
+                    limit = page.limit.toInt(),
+                    token = token
+                )
+            }
+            CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
+                val ids = callBackInfo.filter.idList.map { it.toString() }
+                return authExperienceService.getExperienceGroupInfo(ids, token)
+            }
+            CallbackMethodEnum.SEARCH_INSTANCE -> {
+                return authExperienceService.searchExperienceGroup(
+                    projectId = projectId,
+                    keyword = callBackInfo.filter.keyword,
+                    limit = page.offset.toInt(),
+                    offset = page.limit.toInt(),
+                    token = token
+                )
+            }
+        }
+        return null
     }
 }
