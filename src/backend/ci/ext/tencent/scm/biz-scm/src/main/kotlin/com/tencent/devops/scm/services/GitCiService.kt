@@ -239,6 +239,33 @@ class GitCiService {
         }
     }
 
+    fun getGitCIAllMembers(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        query: String?
+    ): List<GitMember> {
+        val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/members/all" +
+            "?access_token=$token" +
+            if (query != null) {
+                "&query=$query"
+            } else {
+                ""
+            } +
+            "&page=$page" + "&per_page=$pageSize"
+        logger.info("getGitCIAllMembers request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            if (!it.isSuccessful) throw RuntimeException("fail to getGitCIAllMembers with: $url($data)")
+            return JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
+        }
+    }
+
     fun getFileInfo(
         gitProjectId: String,
         token: String?,
