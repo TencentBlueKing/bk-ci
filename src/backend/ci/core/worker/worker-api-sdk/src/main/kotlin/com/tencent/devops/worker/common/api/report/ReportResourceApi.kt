@@ -46,7 +46,13 @@ import java.io.File
 @Suppress("ALL")
 class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
 
-    override fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
+    override fun uploadReport(
+        file: File,
+        taskId: String,
+        relativePath: String,
+        buildVariables: BuildVariables,
+        token: String?
+    ) {
         val purePath = "$taskId/${purePath(relativePath)}".removeSuffix("/${file.name}")
         logger.info("[${buildVariables.buildId}]| purePath=$purePath")
         val url = "/ms/artifactory/api/build/artifactories/file/archive" +
