@@ -37,4 +37,4 @@ data class IamCacheRefreshEvent(
     override var delayMills: Int = 0,
     val userId: String,
     val resourceType: String
-): RefreshBroadCastEvent(refreshType, retryCount, delayMills)
+) : RefreshBroadCastEvent(refreshType, retryCount, delayMills)
