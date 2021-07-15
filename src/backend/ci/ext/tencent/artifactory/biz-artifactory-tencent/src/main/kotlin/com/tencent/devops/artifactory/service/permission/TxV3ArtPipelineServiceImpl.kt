@@ -66,7 +66,7 @@ class TxV3ArtPipelineServiceImpl @Autowired constructor(
             projectId = projectId,
             page = 0,
             pageSize = 1000,
-            channelCode = ChannelCode.GIT,
+            channelCode = ChannelCode.BS,
             checkPermission = false
         ).data?.records
 
