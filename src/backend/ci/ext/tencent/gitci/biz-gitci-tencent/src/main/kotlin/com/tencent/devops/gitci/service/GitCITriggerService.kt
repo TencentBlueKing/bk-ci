@@ -403,6 +403,48 @@ class GitCITriggerService @Autowired constructor(
         }
 
         yamlPathList.forEach { filePath ->
+
+            // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
+            var displayName = filePath
+            ciFileExtensions.forEach {
+                displayName = filePath.removeSuffix(it)
+            }
+            val existsPipeline = path2PipelineExists[filePath]
+            // 如果该流水线已保存过，则继续使用
+            val buildPipeline = existsPipeline
+                ?: GitProjectPipeline(
+                    gitProjectId = gitProjectConf.gitProjectId,
+                    displayName = displayName,
+                    pipelineId = "", // 留空用于是否创建判断
+                    filePath = filePath,
+                    enabled = true,
+                    creator = gitRequestEvent.userId,
+                    latestBuildInfo = null
+                )
+
+            // 流水线未启用则跳过
+            if (!buildPipeline.enabled) {
+                logger.warn(
+                    "Pipeline is not enabled, return, " +
+                        "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+                )
+                gitCIEventSaveService.saveBuildNotBuildEvent(
+                    userId = gitRequestEvent.userId,
+                    eventId = gitRequestEvent.id!!,
+                    pipelineId = buildPipeline.pipelineId,
+                    pipelineName = buildPipeline.displayName,
+                    filePath = buildPipeline.filePath,
+                    originYaml = null,
+                    normalizedYaml = null,
+                    reason = TriggerReason.PIPELINE_DISABLE.name,
+                    reasonDetail = TriggerReason.PIPELINE_DISABLE.detail,
+                    gitProjectId = gitRequestEvent.gitProjectId,
+                    sendCommitCheck = false,
+                    commitCheckBlock = false
+                )
+                return@forEach
+            }
+
             // 检查版本落后信息和真正要触发的文件
             val originYaml = if (mrEvent) {
                 val (result, orgYaml) = checkYmlVersion(
@@ -440,23 +482,6 @@ class GitCITriggerService @Autowired constructor(
                 )
             }
 
-            // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
-            var displayName = filePath
-            ciFileExtensions.forEach {
-                displayName = filePath.removeSuffix(it)
-            }
-            val existsPipeline = path2PipelineExists[filePath]
-            // 如果该流水线已保存过，则继续使用
-            val buildPipeline = existsPipeline
-                ?: GitProjectPipeline(
-                    gitProjectId = gitProjectConf.gitProjectId,
-                    displayName = displayName,
-                    pipelineId = "", // 留空用于是否创建判断
-                    filePath = filePath,
-                    enabled = true,
-                    creator = gitRequestEvent.userId,
-                    latestBuildInfo = null
-                )
             try {
                 // 为已存在的流水线设置名称
                 buildPipeline.displayName = displayName
@@ -480,29 +505,6 @@ class GitCITriggerService @Autowired constructor(
                         gitProjectId = gitRequestEvent.gitProjectId,
                         sendCommitCheck = true,
                         commitCheckBlock = mrEvent
-                    )
-                    return@forEach
-                }
-
-                // 流水线未启用则跳过
-                if (!buildPipeline.enabled) {
-                    logger.warn(
-                        "Pipeline is not enabled, return, " +
-                            "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
-                    )
-                    gitCIEventSaveService.saveBuildNotBuildEvent(
-                        userId = gitRequestEvent.userId,
-                        eventId = gitRequestEvent.id!!,
-                        pipelineId = buildPipeline.pipelineId,
-                        pipelineName = buildPipeline.displayName,
-                        filePath = buildPipeline.filePath,
-                        originYaml = originYaml,
-                        normalizedYaml = null,
-                        reason = TriggerReason.PIPELINE_DISABLE.name,
-                        reasonDetail = TriggerReason.PIPELINE_DISABLE.detail,
-                        gitProjectId = gitRequestEvent.gitProjectId,
-                        sendCommitCheck = false,
-                        commitCheckBlock = false
                     )
                     return@forEach
                 }

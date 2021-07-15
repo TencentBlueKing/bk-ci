@@ -40,10 +40,10 @@ enum class TriggerReason(val summary: String, val detail: String) {
         "The YAML file is null"),
     CI_YAML_INVALID("YAML is invalid",
         "YAML is invalid: %s"),
-    CI_YAML_NEED_MERGE_OR_REBASE("The YAML file is modified. " +
-        "Please execute either REBASE or MERGE to update your YAML file from remote target branch.",
-        "The YAML file is modified. " +
-            "Please execute either REBASE or MERGE to update your YAML file from remote target branch."),
+    CI_YAML_NEED_MERGE_OR_REBASE("The YAML is modified. " +
+        "Please execute either REBASE or MERGE to update your YAML from remote target branch.",
+        "The YAML is modified. " +
+            "Please execute either REBASE or MERGE to update your YAML from remote target branch."),
     CI_MERGE_CHECKING("Checking whether there is a conflict in MR, please wait",
         "Checking whether there is a conflict in MR, please wait"),
     CI_MERGE_CHECK_TIMEOUT("MR check timeout",
