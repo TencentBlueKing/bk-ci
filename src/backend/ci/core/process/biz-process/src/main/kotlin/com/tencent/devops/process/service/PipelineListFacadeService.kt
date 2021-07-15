@@ -123,7 +123,7 @@ class PipelineListFacadeService @Autowired constructor(
                     b.deploymentTime.compareTo(a.deploymentTime)
                 }
                 PipelineSortType.LAST_EXEC_TIME -> {
-                    b.deploymentTime.compareTo(a.latestBuildStartTime?:0)
+                    b.deploymentTime.compareTo(a.latestBuildStartTime ?: 0)
                 }
             }
         })
