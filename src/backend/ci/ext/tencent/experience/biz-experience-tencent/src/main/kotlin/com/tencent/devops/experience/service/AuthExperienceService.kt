@@ -127,7 +127,6 @@ class AuthExperienceService @Autowired constructor(
         return result.buildSearchInstanceResult(entityInfo, count)
     }
 
-
     fun getExperienceGroup(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
         authTokenApi.checkToken(token)
         val experienceGroupInfos = experienceGroupDao.list(

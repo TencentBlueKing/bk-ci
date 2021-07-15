@@ -46,7 +46,7 @@ class TxPermissionExtServiceImpl @Autowired constructor(
     val iamConfiguration: IamConfiguration,
     val iamCacheService: IamCacheService,
     val authRefreshDispatch: AuthRefreshDispatch
-): PermissionExtService {
+) : PermissionExtService {
     override fun resourceCreateRelation(
         userId: String,
         projectCode: String,

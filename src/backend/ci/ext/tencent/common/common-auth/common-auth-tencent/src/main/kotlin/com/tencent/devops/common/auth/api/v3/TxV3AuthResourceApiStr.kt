@@ -3,10 +3,7 @@ package com.tencent.devops.common.auth.api.v3
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.auth.api.AuthResourceApiStr
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.AncestorsApiReq
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.api.pojo.EsbCreateApiReq
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.client.Client
@@ -126,7 +123,7 @@ class TxV3AuthResourceApiStr @Autowired constructor(
 //            bk_username = user
 //        )
 //        iamEsbService.createRelationResource(iamApiReq)
-        client.get(ServicePermissionAuthResource::class).resouceCreateRelation(
+        client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = user,
             resourceType = resourceType,

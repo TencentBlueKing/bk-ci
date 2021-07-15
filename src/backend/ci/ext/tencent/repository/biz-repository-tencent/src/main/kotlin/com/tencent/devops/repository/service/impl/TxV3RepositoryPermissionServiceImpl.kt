@@ -112,7 +112,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
                 projectRepositoryIds
             } else {
                 // 因存在iam内的id为加密后的id,此处需要解密
-                value.map { HashUtil.decodeIdToLong(it)}
+                value.map { HashUtil.decodeIdToLong(it) }
             }
             resultMap[key] = ids
             if (key == AuthPermission.VIEW) {
@@ -130,7 +130,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         // iamV3存的代码库Id为hashId(为兼容企业版),故此处需要再次加密做校验
         var resourceCode: String
-        var resourceType : String
+        var resourceType: String
         if (repositoryId != null) {
             resourceCode = HashUtil.encodeLongId(repositoryId!!)
             resourceType = AuthResourceType.CODE_REPERTORY.value

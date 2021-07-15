@@ -28,7 +28,6 @@
 package com.tencent.devops.environment.permission.impl
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
-import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceApiStr
