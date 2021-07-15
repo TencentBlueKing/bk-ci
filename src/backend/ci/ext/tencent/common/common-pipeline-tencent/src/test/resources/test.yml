@@ -1,1328 +1,164 @@
-#####################################################################################################################
-# 项目ID: oedbe 
-# 流水线ID: p-126102ca446847de849c93373165f025 
-# 流水线名称: go_k12_hello-编译 
-# 导出时间: 2021-07-09 09:47:50 
-# 
-# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ 
-# 注意：[插件]输入参数可能存在敏感信息，请仔细检查，谨慎分享！！！ 
-# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 
-#####################################################################################################################
+version: v2.0   # YAML 的版本，v2.0 为此新版语法
+name: 勋章事件-master分支监听  # 流水线名称，必填
 
----
-version: "v2.0"
-on:
+on: # on上的注释
   push:
-    branches: [ "*" ]
+    branches:
+      - master
+      - release/*
+    branches-ignore:
+      - master
+      - develop
+#    paths:
+#      - src/*
+#    paths-ignore:
+#      - release
+#    users:
+#      - zhangsan
+#    users-ignore:
+#      - lisi
+#  tag:
+#    tags:
+#      - release_*
+#    tags-ignore:
+#      - master
+#    from-branches:
+#      - master
+#    users:
+#      - zhangsan
+#    users-ignore:
+#      - lisi
+#  mr:
+#    target-branches:
+#      - master
+#    source-branches-ignore:
+#      - story
+#    paths:
+#      - src/*/*
+#    paths-ignore:
+#      - build/
+#    action:
+#      - open
+#      - reopen
+#      - push-update
+#    users:
+#      - zhangsan
+#    users-ignore:
+#      - lisi
+#  schedules:
+#    cron: 0 0/5 0 0 0
+#    branches:
+#      - master
+#      - develop
+#    always: false
 
-name: "go_k12_hello-编译"
-label: []
 variables:
-  GitPath: haoyanyang/go_k12_hello
-  GitBranch: ""
-  DependencyGitPaths: ""
-  CommandLine: "app.id=${ProjectName} env=PRO"
-  CommandLineForUAT: "app.id=${ProjectName} env=UAT"
-  CommandLineForTest: "app.id=${ProjectName} env=FAT"
-  DockerImage: "csighub.tencentyun.com/csig_edu_fudao/edu-common:latest"
-  BuildGoVersion: "1.9.2"
-  isUT: "false"
+  DEPLOY_TYPE:
+    value: dev
+  APPROVE:
+    value: ${{ sss }}_${{ approve22 }}
+  GIT_USERNAME:
+    value: user1
+    readonly: true
+
+#variables:
+#  - template: templates/vars.yml@repoA
+#  - name: var_1
+#    value: val_1
+
 stages:
-  - name: "编译/代码扫描"
+  - name: "stage1"
+    id: abc
     label:
-      - "Build"
+      - Build
+    if: envs.BK_CI_EVENT == 'push' || varivable.approve
     jobs:
-      job_xPb:
-        name: "构建环境-测试、正式包"
-        runs-on:
-          pool-name: docker
-          container:
-            image: "csighub.tencentyun.com/oed_build/bingo_v2:multiplegov2"
-            credentials: "${oed_image_pull}"
-        steps:
-          - name: "环境清理"
-            run: "# 您可以通过setEnv函数设置插件间传递的参数\n# echo \"::set-output name=FILENAME::package.zip\"\
-          \n\n# 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\"\
-          \ $myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进\
-          入当前工作空间目录\n\nrm -rf ${WORKSPACE}/*\n\n# 设置项目的Branch，兼容手工和自动触发场景,优先使用手动指定\
-          的\nGitBranch=$([ -z \"$GitBranch\" ] && echo $BK_CI_REPO_GIT_WEBHOOK_BRANCH\
-          \ || echo \"$GitBranch\")\n# 兜底方案，如果仍没获取到分支，则使用master\nGitBranch=$([ -z\
-          \ \"$GitBranch\" ] && echo \"master\" || echo \"$GitBranch\")\n\nProjectName=$(echo\
-          \ $GitPath | awk -F\"/\" '{print $2}')\necho \"::set-output name=GitBranch::$GitBranch\"\
-          \necho \"::set-output name=PRJ_DIR::${WORKSPACE}\"\n\nprintenv\n\npython3\
-          \ --version\n"
-          - name: "拉取GIT（命令行）"
-            uses: "gitCodeRepo@4.*"
-            with:
-              repositoryType: "NAME"
-              repositoryHashId: ""
-              repositoryName: "${GitPath}"
-              pullType: "BRANCH"
-              branchName: "${GitBranch}"
-              tagName: ""
-              commitId: ""
-              localPath: "./"
-              includePath: ""
-              excludePath: ""
-              fetchDepth: ""
-              strategy: "REVERT_UPDATE"
-              enableSubmodule: true
-              submodulePath: ""
-              enableSubmoduleRemote: false
-              enableSubmoduleRecursive: true
-              newEnableSubmoduleRecursive: true
-              enableVirtualMergeBranch: true
-              enableAutoCrlf: false
-              enableGitLfs: false
-              enableGitClean: true
-              enableGitCleanIgnore: true
-              autoCrlf: "false"
-          - name: "项目检查"
-            run: "# "
-          - name: "下载go依赖"
-            uses: "pythonscriptrun@6.*"
-            with:
-              python_version: "3"
-              option_type: "online"
-              scriptcode: "# 下载依赖 python >= 3.9.1\n\nimport multiprocessing\nimport os\n\
-            import shutil\nimport zipfile\nfrom pprint import pprint\n\nimport requests\n\
-            \nGOPATH = '/data/go'\nDEPENDENCYGITPATHS = '${DependencyGitPaths}'\n\
-            # DEPENDENCYGITPATHS = \"http://git.code.oa.com/csig_edu_base_service/go_k12_push_sdk.git,http://git.code.oa.com/gofra/gofra.git\"\
-            \nGITBRANCH = '${GitBranch}'\n\n# 以下内容无需修改\nshutil.rmtree(GOPATH, ignore_errors=True)\n\
-            \ngo_dependencies = [\n    f'http://git.code.oa.com/SNG_EDU_COMMON_PKG/bingo.git:{GITBRANCH}',\n\
-            \    f'http://git.code.oa.com/SNG_EDU_COMMON_PKG/edu_common.git:{GITBRANCH}',\n\
-            \    \"http://git.code.oa.com/SNG_EDU_COMMON_PKG/github.com.git:master\"\
-            ,\n    \"http://git.code.oa.com/SNG_EDU_COMMON_PKG/golang.org.git:master\"\
-            ,\n    \"http://git.code.oa.com/SNG_EDU_COMMON_PKG/google.golang.org.git:master\"\
-            ,\n    \"http://git.code.oa.com/SNG_EDU_COMMON_PKG/gopkg.in.git:master\"\
-            ,\n]\nfor u in DEPENDENCYGITPATHS.split(','):\n    go_dependencies.append(f'{u}:master'\
-            \ if u.count(':') == 1 else u)\ngo_dependencies = [d for d in go_dependencies\
-            \ if bool(d) and ('/' in d)]\n\n# 处理 go_dependencies 和用户定义重复的条目，以用户定义的\
-            为准\ndic = {tuple(e.split(':')[:-1]): e for e in go_dependencies}\npprint(dic)\n\
-            go_dependencies = list(dic.values())\n\npprint(go_dependencies)\n\nGIT_RENAME_COMPATIBLE\
-            \ = [\n    'EDU_CPP',\n    'SNG_EDU_GO_SVR',\n    'KETANG_GOLANG',\n \
-            \   'EDU_JAVA',\n    'SNG_EDU_GO_CRON_SVR',\n    'CSIG_EDU_MEDIA_SERVICE',\n\
-            \    'CSIG_EDU_PAY_SERVICE',\n    'CSIG_EDU_COMMON',\n    'CSIG_EDU_BASE_SERVICE',\n\
-            \    'CISG_EDU_DATA_SERVICE',\n    'CSIG_EDU_DATA_SERVICE',\n    'CSIG_EDU_DEVOPS_SERVICE',\n\
-            \    'CSIG_EDU_KETANG_SERVICE',\n    'CSIG_EDU_FUDAO_SERVICE',\n    'csig_edu_media_service',\n\
-            \    'csig_edu_pay_service',\n    'csig_edu_common',\n    'csig_edu_base_service',\n\
-            \    'cisg_edu_data_service',\n    'csig_edu_data_service',\n    'csig_edu_devops_service',\n\
-            \    'csig_edu_ketang_service',\n    'csig_edu_fudao_service',\n]\n\n\n\
-            def download_file(url, local_filename):\n    with requests.get(url, stream=True)\
-            \ as r:\n        with open(local_filename, 'wb') as f:\n            shutil.copyfileobj(r.raw,\
-            \ f)\n\n\ndef down_dependency(url_with_branch):\n    git_url = ':'.join(url_with_branch.split(':')[:2])\n\
-            \    git_branch = url_with_branch.split(':')[-1]\n    git_domain = url_with_branch.split('/')[2]\n\
-            \    git_group = url_with_branch.split('/')[3]\n    git_project = url_with_branch.split('/')[4].split(':')[0]\n\
-            \    git_project = git_project[:-4] if git_project.endswith('.git') else\
-            \ git_project\n\n    os.makedirs(f'{GOPATH}/src/{git_domain}/{git_group}',\
-            \ exist_ok=True)\n    shutil.rmtree(f'{GOPATH}/src/{git_domain}/{git_group}/{git_project}',\
-            \ ignore_errors=True)\n\n    down_link = ''\n    if git_domain == \"git.code.oa.com\"\
-            :\n        down_link = f\"http://git.code.oa.com/api/v3/projects/{git_group}%2f{git_project}/repository/archive?private_token=QUKJQmb0uG_Fr2qRGQFM&sha={git_branch}\"\
-            \n    elif git_domain == \"github.com\":\n        down_link = f\"https://codeload.github.com/{git_group}/{git_project}/zip/{git_branch}\"\
-            \n\n    pprint(locals())\n\n    download_file(down_link, f'{GOPATH}/src/{git_domain}/{git_group}/{git_project}.zip')\n\
-            \n    with zipfile.ZipFile(f'{GOPATH}/src/{git_domain}/{git_group}/{git_project}.zip',\
-            \ 'r') as zip_ref:\n        zip_ref.extractall(f'{GOPATH}/src/{git_domain}/{git_group}/{git_project}')\n\
-            \n    # 针对github.com仓库的规则\n    if git_domain == \"github.com\":\n    \
-            \    shutil.move(f\"{GOPATH}/src/{git_domain}/{git_group}/{git_project}/*/*\"\
-            ,\n                    f\"{GOPATH}/src/{git_domain}/{git_group}/{git_project}/\"\
-            )\n\n    # 兼容工蜂上备份的github仓库的规则\n    if git_project in (\"github.com\"\
-            , \"google.golang.org\", \"golang.org\", \"gopkg.in\"):\n        os.makedirs(f\"\
-            {GOPATH}/src/{git_project}\", exist_ok=True)\n        shutil.copytree(f\"\
-            {GOPATH}/src/{git_domain}/{git_group}/{git_project}/\",\n            \
-            \            f\"{GOPATH}/src/{git_project}/\", dirs_exist_ok=True)\n \
-            \       shutil.rmtree(f\"{GOPATH}/src/{git_domain}/{git_group}/{git_project}/\"\
-            , ignore_errors=True)\n\n    # 兼容git重命名导致的问题\n    if any([g in url_with_branch\
-            \ for g in GIT_RENAME_COMPATIBLE]):\n        for compatible_group in GIT_RENAME_COMPATIBLE:\n\
-            \            if git_group == compatible_group:\n                continue\n\
-            \            shutil.copytree(f\"{GOPATH}/src/{git_domain}/{git_group}/{git_project}/\"\
-            ,\n                            f\"{GOPATH}/src/{git_domain}/{compatible_group}/{git_project}/\"\
-            , dirs_exist_ok=True)\n\n\ndef down_wrapper(url_with_branch):\n    if\
-            \ 'SNG_EDU_COMMON_PKG/bingo' in url_with_branch:\n        try:\n     \
-            \       down_dependency(url_with_branch)\n        except zipfile.BadZipFile:\n\
-            \            print('没有和服务分支同名的bingo分支，故切换bingo到master分支')\n          \
-            \  down_dependency('http://git.code.oa.com/SNG_EDU_COMMON_PKG/bingo.git:master')\n\
-            \    elif 'SNG_EDU_COMMON_PKG/edu_common' in url_with_branch:\n      \
-            \  try:\n            down_dependency(url_with_branch)\n        except\
-            \ zipfile.BadZipFile:\n            print('没有和服务分支同名的edu_common分支，故切换edu_common到\
-            master分支')\n            down_dependency('http://git.code.oa.com/SNG_EDU_COMMON_PKG/edu_common.git:master')\n\
-            \    else:\n        down_dependency(url_with_branch)\n\n\nif __name__\
-            \ == '__main__':\n    with multiprocessing.Pool(len(go_dependencies))\
-            \ as p:\n        p.map(down_wrapper, go_dependencies)\n"
-              scriptpath: ""
-          - name: "编译"
-            retry-times: 3
-            run: "# 通过./xxx.sh的方式执行脚本\n# 即若脚本中未指定解释器，则使用系统默认的shell\n\n# 您可以通过setEnv函数设\
-          置插件间传递的参数\n# echo \"::set-output name=FILENAME::package.zip\"\n\n# 您可以在质\
-          量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" $myValue\n\
-          # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进入当前工作空间目录\n\n\
-          {\n  # 此处的步骤依赖构建镜像\n  # 编译hippo库\n  cd \"${GOPATH}/src/git.code.oa.com/SNG_EDU_COMMON_PKG/bingo/mq/hippo/hippoc++\"\
-          \n  make\n  cp libhippocwrapper.a lib/\n  # 替换msgQ底层库\n  cp /usr/local/services/libmsgQ_api.a\
-          \ \"${GOPATH}/src/git.code.oa.com/SNG_EDU_COMMON_PKG/bingo/mq/msgq/msgqapi_lib/libmsgQ_api.a\"\
-          \n  cd \"${PRJ_DIR}\"\n}\n\n{\n  # 仅go项目使用的规则，将自身加入GOPATH\n  GIT_RENAME_COMPATIBLE=(\n\
-          \    'EDU_CPP'\n    'SNG_EDU_GO_SVR'\n    'KETANG_GOLANG'\n    'EDU_JAVA'\n\
-          \    'SNG_EDU_GO_CRON_SVR'\n    'CSIG_EDU_MEDIA_SERVICE'\n    'CSIG_EDU_PAY_SERVICE'\n\
-          \    'CSIG_EDU_COMMON'\n    'CSIG_EDU_BASE_SERVICE'\n    'CISG_EDU_DATA_SERVICE'\n\
-          \    'CSIG_EDU_DATA_SERVICE'\n    'CSIG_EDU_DEVOPS_SERVICE'\n    'CSIG_EDU_KETANG_SERVICE'\n\
-          \    'CSIG_EDU_FUDAO_SERVICE'\n    'csig_edu_media_service'\n    'csig_edu_pay_service'\n\
-          \    'csig_edu_common'\n    'csig_edu_base_service'\n    'cisg_edu_data_service'\n\
-          \    'csig_edu_data_service'\n    'csig_edu_devops_service'\n    'csig_edu_ketang_service'\n\
-          \    'csig_edu_fudao_service'\n  )\n\n  cd \"${PRJ_DIR}\"\n  GitRemoteUrl=$(git\
-          \ config --get remote.origin.url)\n  GitGroup=$(echo \"${GitRemoteUrl}\"\
-          \ | awk -F\"/\" '{print $4}')\n  GitProject=$(echo \"${GitRemoteUrl}\" |\
-          \ awk -F\"/\" '{print $5}' | awk -F\":\" '{print $1}' | awk -F\".git\" '{print\
-          \ $1}')\n  mkdir -p ${GOPATH}/src/git.code.oa.com/${GitGroup}/${GitProject}\n\
-          \  cp -r $(ls -A \"${PRJ_DIR}\" | grep -v \"_artifacts\") \"${GOPATH}/src/git.code.oa.com/${GitGroup}/${GitProject}\"\
-          \n\n  for element in \"${GIT_RENAME_COMPATIBLE[@]}\"; do\n    mkdir -pv\
-          \ ${GOPATH}/src/git.code.oa.com/${element}\n    [ ! -d \"${GOPATH}/src/git.code.oa.com/${element}/${GitProject}\"\
-          \ ] && ln -s \"${GOPATH}/src/git.code.oa.com/${GitGroup}/${GitProject}\"\
-          \ \"${GOPATH}/src/git.code.oa.com/${element}/${GitProject}\"\n  done\n}\n\
-          \n{\n  export PATH=/opt/golang/${BuildGoVersion}/go/bin:$PATH\n  go version\n\
-          \  \n  go_version=`go version`\n  echo $go_version\n  if [[ \"$go_version\"\
-          \ == *go1.15* ]];then\n      echo \"go is 1.15\"\n      go env -w CGO_CFLAGS_ALLOW=\"\
-          .*\"\n  fi\n\n  # 执行构建\n  cd \"${PRJ_DIR}\"\n  mkdir -pv /data/go/src/go\
-          \ && cp -r /opt/golang/${BuildGoVersion}/go/src /data/go/src/go # 兼容一些项目\
-          的导包方式\n\n  bingo_v2 build\n  # 编译失败后蓝盾不会退出，这里复制一下保证蓝盾报错退出\n  mkdir -p bin\
-          \ && cp ${ProjectName} bin\n}\n"
-          - name: "生成运行配置"
-            run: "# 通过./xxx.sh的方式执行脚本\n# 即若脚本中未指定解释器，则使用系统默认的shell\n\n# 您可以通过setEnv函数设\
-          置插件间传递的参数\n# echo \"::set-output name=FILENAME::package.zip\"\n\n# 您可以在质\
-          量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" $myValue\n\
-          # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进入当前工作空间目录\n\n\
-          # 生成docker镜像和织云包。\n{\n  # 进入构件目录。\n  cd ${WORKSPACE}\n\n  # 生成启动配置。\n  echo\
-          \ \"[Unit]\nDescription=${ProjectName}\n\n[Service]\nWorkingDirectory=/usr/local/services/${ProjectName}-1.0/bin\n\
-          ExecStartPre=/bin/sh -c '/usr/local/services/l5_protocol_32os-1.0/bin/L5GetRoute1\
-          \ 1494401 262144 1 | grep \\\"ip is\\\" | grep \\\"port is\\\"'\nExecStartPre=/bin/sh\
-          \ -c '/usr/local/services/l5_protocol_32os-1.0/bin/L5GetRoute1 1862849 65536\
-          \ 1 | grep \\\"ip is\\\" | grep \\\"port is\\\"' \nExecStartPre=/bin/sh\
-          \ -c 'dig support.for.stke.check.ready.local.sng | grep \\\"status: NOERROR\\\
-          \"'\nExecStartPre=/bin/sh -c '/usr/local/services/qconf_dispatcher-1.0/bin/qconf\
-          \ get_conf /zk | grep online'\nExecStartPre=/usr/local/services/go_edu_l5_initializer-1.0/bin/edu_l5_initializer.sh\n\
-          ExecStart=/usr/local/services/${ProjectName}-1.0/bin/${ProjectName} ${CommandLine}\n\
-          Restart=always\nRestartSec=3\n\n[Install]\nWantedBy=multi-user.target\n\"\
-          \ >${ProjectName}.service\n\n\n  # 生成预发布启动配置。\n  echo \"[Unit]\nDescription=${ProjectName}\n\
-          \n[Service]\nWorkingDirectory=/usr/local/services/${ProjectName}-1.0/bin\n\
-          ExecStartPre=/bin/sh -c '/usr/local/services/l5_protocol_32os-1.0/bin/L5GetRoute1\
-          \ 1494401 262144 1 | grep \\\"ip is\\\" | grep \\\"port is\\\"'\nExecStartPre=/bin/sh\
-          \ -c 'dig support.for.stke.check.ready.local.sng | grep \\\"status: NOERROR\\\
-          \"'\nExecStartPre=/bin/sh -c '/usr/local/services/qconf_dispatcher-1.0/bin/qconf\
-          \ get_conf /zk | grep online'\nExecStartPre=/usr/local/services/go_edu_l5_initializer-1.0/bin/edu_l5_initializer.sh\n\
-          ExecStart=/usr/local/services/${ProjectName}-1.0/bin/${ProjectName} ${CommandLineForUAT}\n\
-          Restart=always\nRestartSec=3\n\n[Install]\nWantedBy=multi-user.target\n\"\
-          \ >${ProjectName}.uat.service\n\n  # 生成测试启动配置，主要目的是传递测试环境启动参数。\n  echo \"\
-          [Unit]\nDescription=${ProjectName}\n\n[Service]\nExecStart=/usr/local/services/${ProjectName}-1.0/bin/${ProjectName}\
-          \ ${CommandLineForTest}\n\n[Install]\nWantedBy=multi-user.target\n\" >${ProjectName}.test.service\n\
-          \n  # 生成docker配置。\n  echo \"FROM ${DockerImage}\n\nADD ./bin  /usr/local/services/${ProjectName}-1.0/bin\n\
-          ADD ./conf /usr/local/services/${ProjectName}-1.0/conf\n\nRUN mkdir /data/log/${ProjectName}-1.0\n\
-          RUN ln -s /data/log/${ProjectName}-1.0 /usr/local/services/${ProjectName}-1.0/log\n\
-          \nADD ./${ProjectName}.service /usr/lib/systemd/system/${ProjectName}.service\n\
-          RUN systemctl enable ${ProjectName}.service\n\nENTRYPOINT [\\\"/usr/sbin/init\\\
-          \"]\n\" >Dockerfile\n\n  ls -l ./\n\n  # 处理config目录多出来的go文件的问题\n  rm -rf\
-          \ conf/*.go\n  rm -rf test/conf/*.go\n\n  # 生成压缩包。\n  tar zcvf ${ProjectName}.prd.tar.gz\
-          \ bin conf Dockerfile ${ProjectName}.service\n  # 两个push_adapter的预发布配置放置\
-          在test/conf上，需要特殊处理\n  if [ \"${ProjectName}\" == \"go_k12_push_center_adapter\"\
-          \ ] || [ \"${ProjectName}\" == \"go_edu_push_adapter\" ]; then\n       \
-          \ tar zcvf ${ProjectName}.uat.tar.gz --transform='s/test\\/conf/conf/' bin\
-          \ test/conf Dockerfile ${ProjectName}.uat.service\n  else\n        tar zcvf\
-          \ ${ProjectName}.uat.tar.gz bin conf Dockerfile ${ProjectName}.uat.service\n\
-          \  fi\n  tar zcvf ${ProjectName}.test.tar.gz --transform='s/test\\/conf/conf/'\
-          \ bin test/conf Dockerfile ${ProjectName}.test.service\n}\n"
-          - name: "归档生产，预发布和测试构件"
-            uses: "UploadArtifactory@1.*"
-            with:
-              filePath: "./${ProjectName}.prd.tar.gz,./${ProjectName}.uat.tar.gz,./${ProjectName}.test.tar.gz"
-              isCustomize: false
-              destPath: "./"
-          - name: "企业微信机器人推送"
-            uses: "WechatWorkRobot@1.*"
-            with:
-              inputWebhook: "ba6a31d2-3068-44f2-ad77-f230a9dade80"
-              inputMsgtype: "markdown"
-              inputTextContentSource: "text"
-              inputTextContent: ""
-              inputTextContentFileAbsOrRel: ""
-              inputTextContentFile: ""
-              inputRelTextContentFile: ""
-              inputTextMentionedList: ""
-              inputTextMentionedMobileList: ""
-              inputMarkdownContentSource: "text"
-              inputMarkdownContent: "❌\n### ${GitPath}代码编译失败！\n<@${BK_CI_START_WEBHOOK_USER_ID}>\
-            \ 提交的代码编译失败。\n请检查。如遇蓝盾问题可重试：使用右上角“执行”按钮填入分支后执行\n>[查看流水线](http://landun.oa.com/console/pipeline/${BK_CI_PROJECT_NAME}/${BK_CI_PIPELINE_ID}/detail/${BK_CI_BUILD_ID})"
-              inputMarkdownContentFileAbsOrRel: ""
-              inputMarkdownContentFile: ""
-              inputRelMarkdownContentFile: ""
-              inputMarkdownAtShortName: false
-              inputIfMarkdownAttachment: false
-              inputMarkdownAttachmentActionsType: "button"
-              inputIfMarkdownActions2: false
-              inputMarkdownAttachmentActions2Type: "button"
-              inputIfMarkdownActions3: false
-              inputMarkdownAttachmentActions3Type: "button"
-              inputIfMarkdownActions4: false
-              inputMarkdownAttachmentActions4Type: "button"
-              inputIfMarkdownActions5: false
-              inputMarkdownAttachmentActions5Type: "button"
-              inputImageSource: ""
-              inputLocalImageAbsOrRel: ""
-              inputLocalImage: ""
-              inputRelLocalImage: ""
-              inputImageBase64: ""
-              inputImageMd5: ""
-              inputNewsTitle: ""
-              inputNewsUrl: ""
-              inputNewsDescription: ""
-              inputNewsPicurl: ""
-              inputFileSource: ""
-              inputLocalFileAbsOrRel: ""
-              inputLocalFile: ""
-              inputRelLocalFile: ""
-              inputMediaId: ""
-              inputVisibleToUser: ""
-              inputRetry: 1
-              inputProxyPolicy: "disable"
-      job_4lb:
-        name: "构建环境-stress"
-        runs-on:
-          pool-name: docker
-          container:
-            image: "csighub.tencentyun.com/oed_build/bingo_v2:multiplegov2"
-            credentials: "${oed_image_pull}"
-        steps:
-          - name: "环境清理"
-            run: "# 您可以通过setEnv函数设置插件间传递的参数\n# echo \"::set-output name=FILENAME::package.zip\"\
-          \n\n# 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\"\
-          \ $myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进\
-          入当前工作空间目录\n\nrm -rf ${WORKSPACE}/*\n\n# 设置项目的Branch，兼容手工和自动触发场景,优先使用手动指定\
-          的\nGitBranch=$([ -z \"$GitBranch\" ] && echo $BK_CI_REPO_GIT_WEBHOOK_BRANCH\
-          \ || echo \"$GitBranch\")\n# 兜底方案，如果仍没获取到分支，则使用master\nGitBranch=$([ -z\
-          \ \"$GitBranch\" ] && echo \"master\" || echo \"$GitBranch\")\n\nProjectName=$(echo\
-          \ $GitPath | awk -F\"/\" '{print $2}')\necho \"::set-output name=GitBranch::$GitBranch\"\
-          \necho \"::set-output name=PRJ_DIR::${WORKSPACE}\"\n\nprintenv\n\npython3\
-          \ --version\n"
-          - name: "拉取GIT（命令行）"
-            uses: "gitCodeRepo@4.*"
-            with:
-              repositoryType: "NAME"
-              repositoryHashId: ""
-              repositoryName: "${GitPath}"
-              pullType: "BRANCH"
-              branchName: "${GitBranch}"
-              tagName: ""
-              commitId: ""
-              localPath: "./"
-              includePath: ""
-              excludePath: ""
-              fetchDepth: ""
-              strategy: "REVERT_UPDATE"
-              enableSubmodule: true
-              submodulePath: ""
-              enableSubmoduleRemote: false
-              enableSubmoduleRecursive: true
-              newEnableSubmoduleRecursive: true
-              enableVirtualMergeBranch: true
-              enableAutoCrlf: false
-              enableGitLfs: false
-              enableGitClean: true
-              enableGitCleanIgnore: true
-              autoCrlf: "false"
-          - name: "项目检查"
-            run: "# 通"
-          - name: "下载go依赖"
-            uses: "pythonscriptrun@6.*"
-            with:
-              python_version: "3"
-              option_type: "online"
-              scriptcode: ""
-              scriptpath: ""
-          - name: "编译"
-            retry-times: 3
-            run: "# "
-          - name: "生成运行配置"
-            run: "# 通过./xxx.sh的方式执行脚本\n# 即若脚本中未指定解释器，则使用系统默认的shell\n\n# 您可以通过setEnv函数设\
-          置插件间传递的参数\n# echo \"::set-output name=FILENAME::package.zip\"\n\n# 您可以在质\
-          量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" $myValue\n\
-          # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进入当前工作空间目录\n\n\
-          # 生成docker镜像和织云包。\n{\n  # 进入构件目录。\n  cd ${WORKSPACE}\n\n  # 生成启动配置。\n  echo\
-          \ \"[Unit]\nDescription=${ProjectName}\n\n[Service]\nWorkingDirectory=/usr/local/services/${ProjectName}-1.0/bin\n\
-          ExecStartPre=/bin/sh -c '/usr/local/services/l5_protocol_32os-1.0/bin/L5GetRoute1\
-          \ 1494401 262144 1 | grep \\\"ip is\\\" | grep \\\"port is\\\"'\nExecStartPre=/bin/sh\
-          \ -c 'dig support.for.stke.check.ready.local.sng | grep \\\"status: NOERROR\\\
-          \"'\nExecStartPre=/bin/sh -c '/usr/local/services/qconf_dispatcher-1.0/bin/qconf\
-          \ get_conf /zk | grep online'\nExecStartPre=/usr/local/services/go_edu_l5_initializer-1.0/bin/edu_l5_initializer.sh\n\
-          ExecStart=/usr/local/services/${ProjectName}-1.0/bin/${ProjectName} ${CommandLine}\n\
-          Restart=always\nRestartSec=3\n\n[Install]\nWantedBy=multi-user.target\n\"\
-          \ >${ProjectName}.service\n\n\n  # 生成预发布启动配置。\n  echo \"[Unit]\nDescription=${ProjectName}\n\
-          \n[Service]\nWorkingDirectory=/usr/local/services/${ProjectName}-1.0/bin\n\
-          ExecStartPre=/bin/sh -c '/usr/local/services/l5_protocol_32os-1.0/bin/L5GetRoute1\
-          \ 1494401 262144 1 | grep \\\"ip is\\\" | grep \\\"port is\\\"'\nExecStartPre=/bin/sh\
-          \ -c 'dig support.for.stke.check.ready.local.sng | grep \\\"status: NOERROR\\\
-          \"'\nExecStartPre=/bin/sh -c '/usr/local/services/qconf_dispatcher-1.0/bin/qconf\
-          \ get_conf /zk | grep online'\nExecStartPre=/usr/local/services/go_edu_l5_initializer-1.0/bin/edu_l5_initializer.sh\n\
-          ExecStart=/usr/local/services/${ProjectName}-1.0/bin/${ProjectName} ${CommandLineForUAT}\n\
-          Restart=always\nRestartSec=3\n\n[Install]\nWantedBy=multi-user.target\n\"\
-          \ >${ProjectName}.uat.service\n\n  # 生成测试启动配置，主要目的是传递测试环境启动参数。\n  echo \"\
-          [Unit]\nDescription=${ProjectName}\n\n[Service]\nExecStart=/usr/local/services/${ProjectName}-1.0/bin/${ProjectName}\
-          \ ${CommandLineForTest}\n\n[Install]\nWantedBy=multi-user.target\n\" >${ProjectName}.test.service\n\
-          \n  # 生成docker配置。\n  echo \"FROM ${DockerImage}\n\nADD ./bin  /usr/local/services/${ProjectName}-1.0/bin\n\
-          ADD ./conf /usr/local/services/${ProjectName}-1.0/conf\n\nRUN mkdir /data/log/${ProjectName}-1.0\n\
-          RUN ln -s /data/log/${ProjectName}-1.0 /usr/local/services/${ProjectName}-1.0/log\n\
-          \nADD ./${ProjectName}.service /usr/lib/systemd/system/${ProjectName}.service\n\
-          RUN systemctl enable ${ProjectName}.service\n\nENTRYPOINT [\\\"/usr/sbin/init\\\
-          \"]\n\" >Dockerfile\n\n  ls -l ./\n\n  # 处理config目录多出来的go文件的问题\n  rm -rf\
-          \ conf/*.go\n  rm -rf test/conf/*.go\n\n  # 生成压缩包。\n  tar zcvf ${ProjectName}.prd.tar.gz\
-          \ bin conf Dockerfile ${ProjectName}.service\n  # 两个push_adapter的预发布配置放置\
-          在test/conf上，需要特殊处理\n  if [ \"${ProjectName}\" == \"go_k12_push_center_adapter\"\
-          \ ] || [ \"${ProjectName}\" == \"go_edu_push_adapter\" ]; then\n       \
-          \ tar zcvf ${ProjectName}.uat.tar.gz --transform='s/test\\/conf/conf/' bin\
-          \ test/conf Dockerfile ${ProjectName}.uat.service\n  else\n        tar zcvf\
-          \ ${ProjectName}.uat.tar.gz bin conf Dockerfile ${ProjectName}.uat.service\n\
-          \  fi\n  tar zcvf ${ProjectName}.test.tar.gz --transform='s/test\\/conf/conf/'\
-          \ bin test/conf Dockerfile ${ProjectName}.test.service\n  tar zcvf ${ProjectName}.stress.tar.gz\
-          \ --transform='s/test\\/conf/conf/' bin test/conf Dockerfile ${ProjectName}.test.service\n\
-          }\n"
-          - name: "归档stress构件"
-            uses: "UploadArtifactory@1.*"
-            with:
-              filePath: "./${ProjectName}.stress.tar.gz"
-              isCustomize: false
-              destPath: "./"
-          - name: "企业微信机器人推送"
-            uses: "WechatWorkRobot@1.*"
-            with:
-              inputWebhook: "ba6a31d2-3068-44f2-ad77-f230a9dade80"
-              inputMsgtype: "markdown"
-              inputTextContentSource: "text"
-              inputTextContent: ""
-              inputTextContentFileAbsOrRel: ""
-              inputTextContentFile: ""
-              inputRelTextContentFile: ""
-              inputTextMentionedList: ""
-              inputTextMentionedMobileList: ""
-              inputMarkdownContentSource: "text"
-              inputMarkdownContent: "❌\n### ${GitPath}代码编译失败！\n<@${BK_CI_START_WEBHOOK_USER_ID}>\
-            \ 提交的代码编译失败。\n请检查。如遇蓝盾问题可重试：使用右上角“执行”按钮填入分支后执行\n>[查看流水线](http://landun.oa.com/console/pipeline/${BK_CI_PROJECT_NAME}/${BK_CI_PIPELINE_ID}/detail/${BK_CI_BUILD_ID})"
-              inputMarkdownContentFileAbsOrRel: ""
-              inputMarkdownContentFile: ""
-              inputRelMarkdownContentFile: ""
-              inputMarkdownAtShortName: false
-              inputIfMarkdownAttachment: false
-              inputMarkdownAttachmentActionsType: "button"
-              inputIfMarkdownActions2: false
-              inputMarkdownAttachmentActions2Type: "button"
-              inputIfMarkdownActions3: false
-              inputMarkdownAttachmentActions3Type: "button"
-              inputIfMarkdownActions4: false
-              inputMarkdownAttachmentActions4Type: "button"
-              inputIfMarkdownActions5: false
-              inputMarkdownAttachmentActions5Type: "button"
-              inputImageSource: ""
-              inputLocalImageAbsOrRel: ""
-              inputLocalImage: ""
-              inputRelLocalImage: ""
-              inputImageBase64: ""
-              inputImageMd5: ""
-              inputNewsTitle: ""
-              inputNewsUrl: ""
-              inputNewsDescription: ""
-              inputNewsPicurl: ""
-              inputFileSource: ""
-              inputLocalFileAbsOrRel: ""
-              inputLocalFile: ""
-              inputRelLocalFile: ""
-              inputMediaId: ""
-              inputVisibleToUser: ""
-              inputRetry: 1
-              inputProxyPolicy: "disable"
-      job_4ii:
-        name: "构建环境-覆盖率包"
-        runs-on:
-          pool-name: docker
-          container:
-            image: "csighub.tencentyun.com/oed_build/bingo_v2:multiplegov2"
-            credentials: "${oed_image_pull}"
-        steps:
-          - name: "环境清理"
-            run: "# 您可以通过setEnv函数设置插件间传递的参数\n# echo \"::set-output name=FILENAME::package.zip\"\
-          \n\n# 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\"\
-          \ $myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进\
-          入当前工作空间目录\n\nrm -rf ${WORKSPACE}/*\n\n# 设置项目的Branch，兼容手工和自动触发场景,优先使用手动指定\
-          的\nGitBranch=$([ -z \"$GitBranch\" ] && echo $BK_CI_REPO_GIT_WEBHOOK_BRANCH\
-          \ || echo \"$GitBranch\")\n# 兜底方案，如果仍没获取到分支，则使用master\nGitBranch=$([ -z\
-          \ \"$GitBranch\" ] && echo \"master\" || echo \"$GitBranch\")\n\nProjectName=$(echo\
-          \ $GitPath | awk -F\"/\" '{print $2}')\necho \"::set-output name=GitBranch::$GitBranch\"\
-          \necho \"::set-output name=PRJ_DIR::${WORKSPACE}\"\n\nprintenv\n\npython3\
-          \ --version\n"
-          - name: "拉取GIT（命令行）"
-            uses: "gitCodeRepo@4.*"
-            with:
-              repositoryType: "NAME"
-              repositoryHashId: ""
-              repositoryName: "${GitPath}"
-              pullType: "BRANCH"
-              branchName: "${GitBranch}"
-              tagName: ""
-              commitId: ""
-              localPath: "./"
-              includePath: ""
-              excludePath: ""
-              fetchDepth: ""
-              strategy: "REVERT_UPDATE"
-              enableSubmodule: true
-              submodulePath: ""
-              enableSubmoduleRemote: false
-              enableSubmoduleRecursive: true
-              newEnableSubmoduleRecursive: true
-              enableVirtualMergeBranch: true
-              enableAutoCrlf: false
-              enableGitLfs: false
-              enableGitClean: true
-              enableGitCleanIgnore: true
-              autoCrlf: "false"
-          - name: "拉取覆盖率工具"
-            uses: "gitCodeRepo@4.*"
-            with:
-              repositoryType: "NAME"
-              repositoryHashId: ""
-              repositoryName: "Griffin/GriffinGoTools"
-              pullType: "BRANCH"
-              branchName: "feature/eduissue"
-              tagName: ""
-              commitId: ""
-              localPath: "../tools"
-              includePath: ""
-              excludePath: ""
-              fetchDepth: ""
-              strategy: "REVERT_UPDATE"
-              enableSubmodule: true
-              submodulePath: ""
-              enableSubmoduleRemote: false
-              enableSubmoduleRecursive: true
-              newEnableSubmoduleRecursive: true
-              enableVirtualMergeBranch: true
-              enableAutoCrlf: false
-              enableGitLfs: false
-              enableGitClean: true
-              enableGitCleanIgnore: true
-              autoCrlf: "false"
-          - name: "代码库迁移兼容处理"
-            uses: "pythonscriptrun@6.*"
-            with:
-              python_version: "0"
-              option_type: "online"
-              scriptcode: "import json\nimport requests\n\n\ndef query_https_url_to_repo_report(BK_CI_GIT_REPO_ALIAS_NAME):\n\
-            \    url = 'https://git.woa.com/api/v3/projects?search=%s&private_token=rFNqb5sWDjywCdp7LtYS'\
-            \ % (\n        BK_CI_GIT_REPO_ALIAS_NAME)\n    r = requests.get(url)\n\
-            \    print(\"ret is\", r.text)\n    if r.text == \"[]\":\n        service_name\
-            \ = BK_CI_GIT_REPO_ALIAS_NAME.split(\"/\")[1]\n        print(service_name)\n\
-            \        url = 'https://git.woa.com/api/v3/projects?search=%s&private_token=rFNqb5sWDjywCdp7LtYS'\
-            \ % (\n            service_name)\n        r = requests.get(url)\n    \
-            \    ok = json.loads(r.text)\n        service_name_total = service_name\
-            \ + \".git\"\n        print(service_name_total)\n        for value in\
-            \ ok:\n            print(value)\n            if service_name_total in\
-            \ str(value):\n                value1 = value['name_with_namespace']\n\
-            \                print(value1)\n                print(\"set_env('NEW_ALIAS_NAME','{}')\"\
-            .format(value1))\n    else:\n        group_name = BK_CI_GIT_REPO_ALIAS_NAME.split(\"\
-            /\")[0]\n        if group_name == 'SNG_EDU_GO_SVR' or group_name == 'SNG_EDU_COMMON_PKG':\n\
-            \            print(\"set_env('NEW_ALIAS_NAME','{}')\".format(BK_CI_GIT_REPO_ALIAS_NAME))\n\
-            \        else:\n            print(\"set_env('NEW_ALIAS_NAME','{}')\".format(BK_CI_GIT_REPO_ALIAS_NAME.lower()))\n\
-            \n\n# query_https_url_to_repo_report(${BK_CI_GIT_REPO_ALIAS_NAME})\nprint(\"\
-            ${BK_CI_GIT_REPO_ALIAS_NAME}\")\nquery_https_url_to_repo_report(\"${BK_CI_GIT_REPO_ALIAS_NAME}\"\
-            )"
-              scriptpath: ""
-          - name: "获取基线commit ID"
-            uses: "pythonscriptrun@6.*"
-            with:
-              python_version: "0"
-              option_type: "online"
-              scriptcode: "import json\nimport requests\nfrom datetime import datetime,\
-            \ timedelta\nBK_CI_GIT_REPO_URL_NEW = ''\ndef query_https_url_to_repo_report(BK_CI_GIT_REPO_ALIAS_NAME):\n\
-            \    url = 'https://git.woa.com/api/v3/projects?search=%s&private_token=rFNqb5sWDjywCdp7LtYS'\
-            \ % (\n        BK_CI_GIT_REPO_ALIAS_NAME)\n    r = requests.get(url)\n\
-            \    print(\"ret is\", r.text)\n    if r.text == \"[]\":\n        service_name\
-            \ = BK_CI_GIT_REPO_ALIAS_NAME.split(\"/\")[1]\n        print(service_name)\n\
-            \        url = 'https://git.woa.com/api/v3/projects?search=%s&private_token=rFNqb5sWDjywCdp7LtYS'\
-            \ % (\n            service_name)\n        r = requests.get(url)\n    \
-            \    ok = json.loads(r.text)\n        service_name_total = service_name\
-            \ + \".git\"\n        print(service_name_total)\n        for value in\
-            \ ok:\n            print(value)\n            if service_name_total in\
-            \ str(value):\n                value1 = value['name_with_namespace']\n\
-            \                print(value1)\n                BK_CI_GIT_REPO_URL_NEW\
-            \ = value1\n                return BK_CI_GIT_REPO_URL_NEW\n    else:\n\
-            \        return \"${BK_CI_GIT_REPO_ALIAS_NAME}\"\n\ndef query_service(service_total_patch,\
-            \ git_branch):\n    url = 'https://git.woa.com/api/v3/projects/%s/repository/commits?ref_name=%s&per_page=1000&private_token=rFNqb5sWDjywCdp7LtYS'\
-            \ % (\n        service_total_patch, \"master\")\n    r = requests.get(url)\n\
-            \    print(\"ret is\", r.text)\n    if r.text != \"[]\" and git_branch\
-            \ == \"master\":\n        return_value = json.loads(r.text)\n        print(return_value[len(return_value)\
-            \ - 1]['id'])\n        print(\"set_env('base_commitid','{}')\".format(return_value[len(return_value)-1]['id']))\n\
-            \    check = \"Merge branch '%s' into 'master'\" %(git_branch)\n    if\
-            \ r.text != \"[]\" and git_branch != \"master\":\n        return_value\
-            \ = json.loads(r.text)\n        print(\"enter1\")\n        if check in\
-            \ str(return_value):\n            print(\"enter23\")\n            for\
-            \ check_value in return_value:\n                if check in str(check_value):\n\
-            \                    print(check_value['id'])\n                    print(\"\
-            set_env('base_commitid','{}')\".format(check_value['id']))\n         \
-            \           break\n        else:\n            time_start = query_service_lifecycle(service_total_patch,\
-            \ git_branch)\n            print(\"enter\")\n            if time_start\
-            \ !=0:\n                url = 'https://git.woa.com/api/v3/projects/%s/repository/commits?ref_name=%s&until=%s&per_page=1000&private_token=rFNqb5sWDjywCdp7LtYS'\
-            \ % (\n                    service_total_patch, git_branch,time_start)\n\
-            \                print(url)\n                r = requests.get(url)\n \
-            \               print(\"rddd\", r.text)\n                if r.text !=\
-            \ \"[]\":\n                    return_value = json.loads(r.text)\n   \
-            \                 print(return_value)\n                    print(\"set_env('base_commitid','{}')\"\
-            .format(return_value[0]['id']))\ndef query_service_lifecycle(service_total_patch,\
-            \ git_branch):\n    url = 'https://git.woa.com/api/v3/projects/%s/tloc/branch/lifecycle?branch_name=%s&private_token=rFNqb5sWDjywCdp7LtYS'\
-            \ % (\n        service_total_patch, git_branch)\n    r = requests.get(url)\n\
-            \    print(\"ret is\", r.text)\n    if r.text != \"[]\":\n        ok =\
-            \ json.loads(r.text)\n        for value in ok:\n            value1 = value['create_date']\n\
-            \            print(value1)\n            # now = \"2018-07-17T08:55:31.151Z\"\
-            \n            value_UTC_style = value1[0:19] + \".000Z\"\n           \
-            \ print(value_UTC_style)\n            UTC_FORMAT = \"%Y-%m-%dT%H:%M:%S.%fZ\"\
-            \n            utcTime = datetime.strptime(value_UTC_style, UTC_FORMAT)\n\
-            \            print(\"utt\", utcTime)\n            rounded = utcTime -\
-            \ timedelta(minutes=0,\n                                          seconds=30,\n\
-            \                                          microseconds=utcTime.microsecond)\n\
-            \            print(\"utt1\", rounded)\n            rounded1 = str(rounded)\n\
-            \            change_value = rounded1[0:10] + \"T\" + rounded1[11:19] +\
-            \ '+' + value1[20:24]\n            print(change_value)\n            value2\
-            \ = change_value[0:19] + \"%2B\" +  change_value[20:24]\n            print(value2)\n\
-            \            return value2\n    else:\n        print(\"cannot find this\
-            \ branch\")\n        return \"\"\n\nBK_CI_GIT_REPO_URL_NEW = query_https_url_to_repo_report(\"\
-            ${BK_CI_GIT_REPO_ALIAS_NAME}\")\nservice_total_patch = BK_CI_GIT_REPO_URL_NEW.split('/')[0]\
-            \ + \"%2f\" + BK_CI_GIT_REPO_URL_NEW.split('/')[1]\nprint(\"total is\"\
-            , service_total_patch)\nquery_service(service_total_patch, \"${BK_CI_GIT_REPO_BRANCH}\"\
-            )\n"
-              scriptpath: ""
-          - name: "项目检查"
-            run: "# "
-          - name: "下载go依赖"
-            uses: "pythonscriptrun@6.*"
-            with:
-              python_version: "3"
-              option_type: "online"
-              scriptcode: "# 下载依赖 python >= 3.9.1\n\nimport multiprocessing\nimport os\n\
-            import shutil\nimport zipfile\nfrom pprint import pprint\n\nimport requests\n\
-            \nGOPATH = '/data/go'\nDEPENDENCYGITPATHS = '${DependencyGitPaths}'\n\
-            # DEPENDENCYGITPATHS = \"http://git.code.oa.com/csig_edu_base_service/go_k12_push_sdk.git,http://git.code.oa.com/gofra/gofra.git\"\
-            \nGITBRANCH = '${GitBranch}'\n\n# 以下内容无需修改\nshutil.rmtree(GOPATH, ignore_errors=True)\n\
-            \ngo_dependencies = [\n    f'http://git.code.oa.com/SNG_EDU_COMMON_PKG/bingo.git:{GITBRANCH}',\n\
-            \    f'http://git.code.oa.com/SNG_EDU_COMMON_PKG/edu_common.git:{GITBRANCH}',\n\
-            \    \"http://git.code.oa.com/SNG_EDU_COMMON_PKG/github.com.git:master\"\
-            ,\n    \"http://git.code.oa.com/SNG_EDU_COMMON_PKG/golang.org.git:master\"\
-            ,\n    \"http://git.code.oa.com/SNG_EDU_COMMON_PKG/google.golang.org.git:master\"\
-            ,\n    \"http://git.code.oa.com/SNG_EDU_COMMON_PKG/gopkg.in.git:master\"\
-            ,\n]\nfor u in DEPENDENCYGITPATHS.split(','):\n    go_dependencies.append(f'{u}:master'\
-            \ if u.count(':') == 1 else u)\ngo_dependencies = [d for d in go_dependencies\
-            \ if bool(d) and ('/' in d)]\n\n# 处理 go_dependencies 和用户定义重复的条目，以用户定义的\
-            为准\ndic = {tuple(e.split(':')[:-1]): e for e in go_dependencies}\npprint(dic)\n\
-            go_dependencies = list(dic.values())\n\npprint(go_dependencies)\n\nGIT_RENAME_COMPATIBLE\
-            \ = [\n    'EDU_CPP',\n    'SNG_EDU_GO_SVR',\n    'KETANG_GOLANG',\n \
-            \   'EDU_JAVA',\n    'SNG_EDU_GO_CRON_SVR',\n    'CSIG_EDU_MEDIA_SERVICE',\n\
-            \    'CSIG_EDU_PAY_SERVICE',\n    'CSIG_EDU_COMMON',\n    'CSIG_EDU_BASE_SERVICE',\n\
-            \    'CISG_EDU_DATA_SERVICE',\n    'CSIG_EDU_DATA_SERVICE',\n    'CSIG_EDU_DEVOPS_SERVICE',\n\
-            \    'CSIG_EDU_KETANG_SERVICE',\n    'CSIG_EDU_FUDAO_SERVICE',\n    'csig_edu_media_service',\n\
-            \    'csig_edu_pay_service',\n    'csig_edu_common',\n    'csig_edu_base_service',\n\
-            \    'cisg_edu_data_service',\n    'csig_edu_data_service',\n    'csig_edu_devops_service',\n\
-            \    'csig_edu_ketang_service',\n    'csig_edu_fudao_service',\n]\n\n\n\
-            def download_file(url, local_filename):\n    with requests.get(url, stream=True)\
-            \ as r:\n        with open(local_filename, 'wb') as f:\n            shutil.copyfileobj(r.raw,\
-            \ f)\n\n\ndef down_dependency(url_with_branch):\n    git_url = ':'.join(url_with_branch.split(':')[:2])\n\
-            \    git_branch = url_with_branch.split(':')[-1]\n    git_domain = url_with_branch.split('/')[2]\n\
-            \    git_group = url_with_branch.split('/')[3]\n    git_project = url_with_branch.split('/')[4].split(':')[0]\n\
-            \    git_project = git_project[:-4] if git_project.endswith('.git') else\
-            \ git_project\n\n    os.makedirs(f'{GOPATH}/src/{git_domain}/{git_group}',\
-            \ exist_ok=True)\n    shutil.rmtree(f'{GOPATH}/src/{git_domain}/{git_group}/{git_project}',\
-            \ ignore_errors=True)\n\n    down_link = ''\n    if git_domain == \"git.code.oa.com\"\
-            :\n        down_link = f\"http://git.code.oa.com/api/v3/projects/{git_group}%2f{git_project}/repository/archive?private_token=QUKJQmb0uG_Fr2qRGQFM&sha={git_branch}\"\
-            \n    elif git_domain == \"github.com\":\n        down_link = f\"https://codeload.github.com/{git_group}/{git_project}/zip/{git_branch}\"\
-            \n\n    pprint(locals())\n\n    download_file(down_link, f'{GOPATH}/src/{git_domain}/{git_group}/{git_project}.zip')\n\
-            \n    with zipfile.ZipFile(f'{GOPATH}/src/{git_domain}/{git_group}/{git_project}.zip',\
-            \ 'r') as zip_ref:\n        zip_ref.extractall(f'{GOPATH}/src/{git_domain}/{git_group}/{git_project}')\n\
-            \n    # 针对github.com仓库的规则\n    if git_domain == \"github.com\":\n    \
-            \    shutil.move(f\"{GOPATH}/src/{git_domain}/{git_group}/{git_project}/*/*\"\
-            ,\n                    f\"{GOPATH}/src/{git_domain}/{git_group}/{git_project}/\"\
-            )\n\n    # 兼容工蜂上备份的github仓库的规则\n    if git_project in (\"github.com\"\
-            , \"google.golang.org\", \"golang.org\", \"gopkg.in\"):\n        os.makedirs(f\"\
-            {GOPATH}/src/{git_project}\", exist_ok=True)\n        shutil.copytree(f\"\
-            {GOPATH}/src/{git_domain}/{git_group}/{git_project}/\",\n            \
-            \            f\"{GOPATH}/src/{git_project}/\", dirs_exist_ok=True)\n \
-            \       shutil.rmtree(f\"{GOPATH}/src/{git_domain}/{git_group}/{git_project}/\"\
-            , ignore_errors=True)\n\n    # 兼容git重命名导致的问题\n    if any([g in url_with_branch\
-            \ for g in GIT_RENAME_COMPATIBLE]):\n        for compatible_group in GIT_RENAME_COMPATIBLE:\n\
-            \            if git_group == compatible_group:\n                continue\n\
-            \            shutil.copytree(f\"{GOPATH}/src/{git_domain}/{git_group}/{git_project}/\"\
-            ,\n                            f\"{GOPATH}/src/{git_domain}/{compatible_group}/{git_project}/\"\
-            , dirs_exist_ok=True)\n\n\ndef down_wrapper(url_with_branch):\n    if\
-            \ 'SNG_EDU_COMMON_PKG/bingo' in url_with_branch:\n        try:\n     \
-            \       down_dependency(url_with_branch)\n        except zipfile.BadZipFile:\n\
-            \            print('没有和服务分支同名的bingo分支，故切换bingo到master分支')\n          \
-            \  down_dependency('http://git.code.oa.com/SNG_EDU_COMMON_PKG/bingo.git:master')\n\
-            \    elif 'SNG_EDU_COMMON_PKG/edu_common' in url_with_branch:\n      \
-            \  try:\n            down_dependency(url_with_branch)\n        except\
-            \ zipfile.BadZipFile:\n            print('没有和服务分支同名的edu_common分支，故切换edu_common到\
-            master分支')\n            down_dependency('http://git.code.oa.com/SNG_EDU_COMMON_PKG/edu_common.git:master')\n\
-            \    else:\n        down_dependency(url_with_branch)\n\n\nif __name__\
-            \ == '__main__':\n    with multiprocessing.Pool(len(go_dependencies))\
-            \ as p:\n        p.map(down_wrapper, go_dependencies)\n"
-              scriptpath: ""
-          - name: "编译"
-            run: "# 通过./xxx.sh的方式执行脚本\n# 即若脚本中未指定解释器，则使用系统默认的shell\n\n# 您可以通过setEnv函数设\
-          置插件间传递的参数\n# echo \"::set-output name=FILENAME::package.zip\"\n\n# 您可以在质\
-          量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" $myValue\n\
-          # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进入当前工作空间目录\n\n\
-          {\n  # 此处的步骤依赖构建镜像\n  # 编译hippo库\n  cd \"${GOPATH}/src/git.code.oa.com/SNG_EDU_COMMON_PKG/bingo/mq/hippo/hippoc++\"\
-          \n  make\n  cp libhippocwrapper.a lib/\n  # 替换msgQ底层库\n  cp /usr/local/services/libmsgQ_api.a\
-          \ \"${GOPATH}/src/git.code.oa.com/SNG_EDU_COMMON_PKG/bingo/mq/msgq/msgqapi_lib/libmsgQ_api.a\"\
-          \n  cd \"${PRJ_DIR}\"\n}\n\n{\n  # 仅go项目使用的规则，将自身加入GOPATH\n  GIT_RENAME_COMPATIBLE=(\n\
-          \    'EDU_CPP'\n    'SNG_EDU_GO_SVR'\n    'KETANG_GOLANG'\n    'EDU_JAVA'\n\
-          \    'SNG_EDU_GO_CRON_SVR'\n    'CSIG_EDU_MEDIA_SERVICE'\n    'CSIG_EDU_PAY_SERVICE'\n\
-          \    'CSIG_EDU_COMMON'\n    'CSIG_EDU_BASE_SERVICE'\n    'CISG_EDU_DATA_SERVICE'\n\
-          \    'CSIG_EDU_DATA_SERVICE'\n    'CSIG_EDU_DEVOPS_SERVICE'\n    'CSIG_EDU_KETANG_SERVICE'\n\
-          \    'CSIG_EDU_FUDAO_SERVICE'\n    'csig_edu_media_service'\n    'csig_edu_pay_service'\n\
-          \    'csig_edu_common'\n    'csig_edu_base_service'\n    'cisg_edu_data_service'\n\
-          \    'csig_edu_data_service'\n    'csig_edu_devops_service'\n    'csig_edu_ketang_service'\n\
-          \    'csig_edu_fudao_service'\n  )\n\n  cd \"${PRJ_DIR}\"\n  GitRemoteUrl=$(git\
-          \ config --get remote.origin.url)\n  GitGroup=$(echo \"${GitRemoteUrl}\"\
-          \ | awk -F\"/\" '{print $4}')\n  GitProject=$(echo \"${GitRemoteUrl}\" |\
-          \ awk -F\"/\" '{print $5}' | awk -F\":\" '{print $1}' | awk -F\".git\" '{print\
-          \ $1}')\n  mkdir -p ${GOPATH}/src/git.code.oa.com/${GitGroup}/${GitProject}\n\
-          \  cp -r $(ls -A \"${PRJ_DIR}\" | grep -v \"_artifacts\") \"${GOPATH}/src/git.code.oa.com/${GitGroup}/${GitProject}\"\
-          \n\n  for element in \"${GIT_RENAME_COMPATIBLE[@]}\"; do\n    mkdir -pv\
-          \ ${GOPATH}/src/git.code.oa.com/${element}\n    [ ! -d \"${GOPATH}/src/git.code.oa.com/${element}/${GitProject}\"\
-          \ ] && ln -s \"${GOPATH}/src/git.code.oa.com/${GitGroup}/${GitProject}\"\
-          \ \"${GOPATH}/src/git.code.oa.com/${element}/${GitProject}\"\n  done\n}\n\
-          \n{\n  export PATH=/opt/golang/${BuildGoVersion}/go/bin:$PATH\n  go version\n\
-          \  \n  go_version=`go version`\n  echo $go_version\n  if [[ \"$go_version\"\
-          \ == *go1.15* ]];then\n      echo \"go is 1.15\"\n      go env -w CGO_CFLAGS_ALLOW=\"\
-          .*\"\n  fi\n  \n  # 执行构建\n  cd ${GOPATH}/src/git.code.oa.com/${GitGroup}/${GitProject}\n\
-          \  mkdir -pv /data/go/src/go && cp -r /opt/golang/${BuildGoVersion}/go/src\
-          \ /data/go/src/go # 兼容一些项目的导包方式\n\n\n  chmod +x ${WORKSPACE}/../tools/Linux/griffingo\n\
-          \n  git status\n  rm -rf *.log\n  go get github.com/gin-gonic/gin\n  \n\
-          \  TaskNameALL=${ProjectName}-$( echo \"${GitBranch}\" | sed 's/\\//-/g'|sed\
-          \ 's/\\./-/g' )\n  TaskName=`echo ${TaskNameALL: 0: 50}`\n  GriffinCovProject=7a5c0c741c46ad5d\n\
-          \  echo ${TaskName}\n  echo \"::set-output name=TaskName::${TaskName}\"\n\
-          \  \n  ${WORKSPACE}/../tools/Linux/griffingo clear -path=./\n  \n  ${WORKSPACE}/../tools/Linux/griffingo\
-          \ -host=http://devcov.oa.com -mod=false build -path=./ -build=true -project=${GriffinCovProject}\
-          \ -task=${TaskName} -center=http://10.56.100.5 -o ${ProjectName} -repo=${NEW_ALIAS_NAME}\
-          \ -user=downeyhuang -c ${base_commitid}\n  \n  md5sum ${ProjectName}\n \
-          \ # 编译失败后蓝盾不会退出，这里复制一下保证蓝盾报错退出\n  mkdir -p ${PRJ_DIR}/bin && cp ${ProjectName}\
-          \ ${PRJ_DIR}/bin\n  sleep 60\n}\n"
-          - name: "生成运行配置"
-            run: "# 通过./xxx.sh的方式执行脚本\n# 即若脚本中未指定解释器，则使用系统默认的shell\n\n# 您可以通过setEnv函数设\
-          置插件间传递的参数\n# echo \"::set-output name=FILENAME::package.zip\"\n\n# 您可以在质\
-          量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" $myValue\n\
-          # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进入当前工作空间目录\n\n\
-          # 生成docker镜像和织云包。\n{\n  # 进入构件目录。\n  cd ${WORKSPACE}\n\n  # 生成启动配置。\n  echo\
-          \ \"[Unit]\nDescription=${ProjectName}\n\n[Service]\nWorkingDirectory=/usr/local/services/${ProjectName}-1.0/bin\n\
-          ExecStartPre=/bin/sh -c '/usr/local/services/l5_protocol_32os-1.0/bin/L5GetRoute1\
-          \ 1494401 262144 1 | grep \\\"ip is\\\" | grep \\\"port is\\\"'\nExecStartPre=/bin/sh\
-          \ -c 'dig support.for.stke.check.ready.local.sng | grep \\\"status: NOERROR\\\
-          \"'\nExecStartPre=/bin/sh -c '/usr/local/services/qconf_dispatcher-1.0/bin/qconf\
-          \ get_conf /zk | grep online'\nExecStartPre=/usr/local/services/go_edu_l5_initializer-1.0/bin/edu_l5_initializer.sh\n\
-          ExecStart=/usr/local/services/${ProjectName}-1.0/bin/${ProjectName} ${CommandLine}\n\
-          Restart=always\nRestartSec=3\n\n[Install]\nWantedBy=multi-user.target\n\"\
-          \ >${ProjectName}.service\n\n  # 生成测试启动配置，主要目的是传递测试环境启动参数。\n  echo \"[Unit]\n\
-          Description=${ProjectName}\n\n[Service]\nExecStart=/usr/local/services/${ProjectName}-1.0/bin/${ProjectName}\
-          \ ${CommandLineForTest}\n\n[Install]\nWantedBy=multi-user.target\n\" >${ProjectName}.test.service\n\
-          \n  # 生成docker配置。\n  echo \"FROM ${DockerImage}\n\nADD ./bin  /usr/local/services/${ProjectName}-1.0/bin\n\
-          ADD ./conf /usr/local/services/${ProjectName}-1.0/conf\n\nRUN mkdir /data/log/${ProjectName}-1.0\n\
-          RUN ln -s /data/log/${ProjectName}-1.0 /usr/local/services/${ProjectName}-1.0/log\n\
-          \nADD ./${ProjectName}.service /usr/lib/systemd/system/${ProjectName}.service\n\
-          RUN systemctl enable ${ProjectName}.service\n\nENTRYPOINT [\\\"/usr/sbin/init\\\
-          \"]\n\" >Dockerfile\n\n  ls -l ./\n\n  # 生成压缩包。\n  tar zcvf ${ProjectName}.coverity.tar.gz\
-          \ --transform='s/test\\/conf/conf/' bin test/conf Dockerfile ${ProjectName}.test.service\n\
-          }\n"
-          - name: "归档覆盖率构件"
-            uses: "UploadArtifactory@1.*"
-            with:
-              filePath: "./${ProjectName}.coverity.tar.gz"
-              isCustomize: false
-              destPath: "./"
-          - name: "覆盖率报告生成"
-            uses: "pythonscriptrun@6.*"
-            with:
-              python_version: "0"
-              option_type: "online"
-              scriptcode: "# coding=UTF-8\n\nimport json\nimport sys\nimport requests\n\
-            import pymysql\nfrom urllib import parse\n\n\ndef build_cov_report(project,\
-            \ task, report_type):\n    url = \"http://griffin.oa.com/reports\"\n \
-            \   if report_type == 1:\n        report_name = \"total_report\"\n   \
-            \ else:\n        report_name = \"diff_report\"\n    body = {\n       \
-            \ \"pro_name\": project,\n        \"code_stream\": task,\n        \"report_name\"\
-            : report_name,\n        \"report_type\": report_type,\n        \"code_range\"\
-            : 20190101000000,\n        \"exec_range\": 20190101000000,\n        \"\
-            source\": \"edu_api\"\n    }\n    body = parse.urlencode(body)\n    print(body)\n\
-            \    headers = {'content-type': 'application/x-www-form-urlencoded'}\n\
-            \    r = requests.post(url=url, headers=headers, data=body)\n    print(r.text)\n\
-            \    report_id = json.loads(r.text)['report_id']\n    print(\"build report\
-            \ success!!\")\n    return report_id\n\n\ndef save_report_id(reportid,\
-            \ gitName, branch,report_type):\n    sql = \"insert into t44_cov_report\
-            \ (gitname,branch,report_id,report_type) value ('%s','%s',%s,%s)\" % \\\
-            \n          (gitName, branch, reportid, report_type)\n    print(sql)\n\
-            \    record_db = pymysql.connect(host=\"10.101.206.211\", user=\"edu_recorder\"\
-            , password=\"edutest@123!\",db= \"edu_record\", port=3306)\n    record_cursor\
-            \ = record_db.cursor()\n    try:\n        record_cursor.execute(sql)\n\
-            \        record_db.commit()\n    except Exception as e:\n        record_db.rollback()\n\
-            \        print(\"Insert Failed!\")\n        print(e)\n    record_db.close()\n\
-            # server1.stop()\n    print(\"success\")\n\n# 生成全量覆盖率报告\nreport_id = build_cov_report(\"\
-            ${GriffinCovProject}\", \"${TaskName}\", 1)\nsave_report_id(report_id,\
-            \ \"${ProjectName}\", \"${GitBranch}\",1)\n# 生成增量覆盖率报告\nreport_id = build_cov_report(\"\
-            ${GriffinCovProject}\", \"${TaskName}\", 2)\nsave_report_id(report_id,\
-            \ \"${ProjectName}\", \"${GitBranch}\",2)"
-              scriptpath: ""
-      job_bwj:
-        name: "代码分析 质量红线"
-        runs-on:
-          pool-name: docker
-          container:
-            image: "csighub.tencentyun.com/oed_build/bingo_v2:multiplegov2"
-            credentials: "${oed_image_pull}"
-        steps:
-          - name: "环境清理"
-            run: "# 您可以通过setEnv函数设置插件间传递的参数\n# echo \"::set-output name=FILENAME::package.zip\"\
-          \n\n# 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\"\
-          \ $myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进\
-          入当前工作空间目录\n\nrm -rf ${WORKSPACE}/*\n\n# 设置项目的Branch，兼容手工和自动触发场景,优先使用手动指定\
-          的\nGitBranch=$([ -z \"$GitBranch\" ] && echo $BK_CI_REPO_GIT_WEBHOOK_BRANCH\
-          \ || echo \"$GitBranch\")\n# 兜底方案，如果仍没获取到分支，则使用master\nGitBranch=$([ -z\
-          \ \"$GitBranch\" ] && echo \"master\" || echo \"$GitBranch\")\n\nProjectName=$(echo\
-          \ $GitPath | awk -F\"/\" '{print $2}')\necho \"::set-output name=GitBranch::$GitBranch\"\
-          \necho \"::set-output name=PRJ_DIR::${WORKSPACE}\"\n\nprintenv\n\npython3\
-          \ --version\n"
-          - name: "拉取GIT（命令行）"
-            uses: "gitCodeRepo@4.*"
-            with:
-              repositoryType: "NAME"
-              repositoryHashId: ""
-              repositoryName: "${GitPath}"
-              pullType: "BRANCH"
-              branchName: "${GitBranch}"
-              tagName: ""
-              commitId: ""
-              localPath: "./"
-              includePath: ""
-              excludePath: ""
-              fetchDepth: ""
-              strategy: "REVERT_UPDATE"
-              enableSubmodule: true
-              submodulePath: ""
-              enableSubmoduleRemote: false
-              enableSubmoduleRecursive: true
-              newEnableSubmoduleRecursive: true
-              enableVirtualMergeBranch: true
-              enableAutoCrlf: false
-              enableGitLfs: false
-              enableGitClean: true
-              enableGitCleanIgnore: true
-              autoCrlf: "false"
-          - name: "下载go依赖"
-            uses: "pythonscriptrun@6.*"
-            with:
-              python_version: "3"
-              option_type: "online"
-              scriptcode: "# 下载依赖 python >= 3.9.1\n\nimport multiprocessing\nimport os\n\
-            import shutil\nimport zipfile\nfrom pprint import pprint\n\nimport requests\n\
-            \nGOPATH = '/data/go'\nDEPENDENCYGITPATHS = '${DependencyGitPaths}'\n\
-            # DEPENDENCYGITPATHS = \"http://git.code.oa.com/csig_edu_base_service/go_k12_push_sdk.git,http://git.code.oa.com/gofra/gofra.git\"\
-            \nGITBRANCH = '${GitBranch}'\n\n# 以下内容无需修改\nshutil.rmtree(GOPATH, ignore_errors=True)\n\
-            \ngo_dependencies = [\n    f'http://git.code.oa.com/SNG_EDU_COMMON_PKG/bingo.git:{GITBRANCH}',\n\
-            \    f'http://git.code.oa.com/SNG_EDU_COMMON_PKG/edu_common.git:{GITBRANCH}',\n\
-            \    \"http://git.code.oa.com/SNG_EDU_COMMON_PKG/github.com.git:master\"\
-            ,\n    \"http://git.code.oa.com/SNG_EDU_COMMON_PKG/golang.org.git:master\"\
-            ,\n    \"http://git.code.oa.com/SNG_EDU_COMMON_PKG/google.golang.org.git:master\"\
-            ,\n    \"http://git.code.oa.com/SNG_EDU_COMMON_PKG/gopkg.in.git:master\"\
-            ,\n]\nfor u in DEPENDENCYGITPATHS.split(','):\n    go_dependencies.append(f'{u}:master'\
-            \ if u.count(':') == 1 else u)\ngo_dependencies = [d for d in go_dependencies\
-            \ if bool(d) and ('/' in d)]\n\n# 处理 go_dependencies 和用户定义重复的条目，以用户定义的\
-            为准\ndic = {tuple(e.split(':')[:-1]): e for e in go_dependencies}\npprint(dic)\n\
-            go_dependencies = list(dic.values())\n\npprint(go_dependencies)\n\nGIT_RENAME_COMPATIBLE\
-            \ = [\n    'EDU_CPP',\n    'SNG_EDU_GO_SVR',\n    'KETANG_GOLANG',\n \
-            \   'EDU_JAVA',\n    'SNG_EDU_GO_CRON_SVR',\n    'CSIG_EDU_MEDIA_SERVICE',\n\
-            \    'CSIG_EDU_PAY_SERVICE',\n    'CSIG_EDU_COMMON',\n    'CSIG_EDU_BASE_SERVICE',\n\
-            \    'CISG_EDU_DATA_SERVICE',\n    'CSIG_EDU_DATA_SERVICE',\n    'CSIG_EDU_DEVOPS_SERVICE',\n\
-            \    'CSIG_EDU_KETANG_SERVICE',\n    'CSIG_EDU_FUDAO_SERVICE',\n    'csig_edu_media_service',\n\
-            \    'csig_edu_pay_service',\n    'csig_edu_common',\n    'csig_edu_base_service',\n\
-            \    'cisg_edu_data_service',\n    'csig_edu_data_service',\n    'csig_edu_devops_service',\n\
-            \    'csig_edu_ketang_service',\n    'csig_edu_fudao_service',\n]\n\n\n\
-            def download_file(url, local_filename):\n    with requests.get(url, stream=True)\
-            \ as r:\n        with open(local_filename, 'wb') as f:\n            shutil.copyfileobj(r.raw,\
-            \ f)\n\n\ndef down_dependency(url_with_branch):\n    git_url = ':'.join(url_with_branch.split(':')[:2])\n\
-            \    git_branch = url_with_branch.split(':')[-1]\n    git_domain = url_with_branch.split('/')[2]\n\
-            \    git_group = url_with_branch.split('/')[3]\n    git_project = url_with_branch.split('/')[4].split(':')[0]\n\
-            \    git_project = git_project[:-4] if git_project.endswith('.git') else\
-            \ git_project\n\n    os.makedirs(f'{GOPATH}/src/{git_domain}/{git_group}',\
-            \ exist_ok=True)\n    shutil.rmtree(f'{GOPATH}/src/{git_domain}/{git_group}/{git_project}',\
-            \ ignore_errors=True)\n\n    down_link = ''\n    if git_domain == \"git.code.oa.com\"\
-            :\n        down_link = f\"http://git.code.oa.com/api/v3/projects/{git_group}%2f{git_project}/repository/archive?private_token=QUKJQmb0uG_Fr2qRGQFM&sha={git_branch}\"\
-            \n    elif git_domain == \"github.com\":\n        down_link = f\"https://codeload.github.com/{git_group}/{git_project}/zip/{git_branch}\"\
-            \n\n    pprint(locals())\n\n    download_file(down_link, f'{GOPATH}/src/{git_domain}/{git_group}/{git_project}.zip')\n\
-            \n    with zipfile.ZipFile(f'{GOPATH}/src/{git_domain}/{git_group}/{git_project}.zip',\
-            \ 'r') as zip_ref:\n        zip_ref.extractall(f'{GOPATH}/src/{git_domain}/{git_group}/{git_project}')\n\
-            \n    # 针对github.com仓库的规则\n    if git_domain == \"github.com\":\n    \
-            \    shutil.move(f\"{GOPATH}/src/{git_domain}/{git_group}/{git_project}/*/*\"\
-            ,\n                    f\"{GOPATH}/src/{git_domain}/{git_group}/{git_project}/\"\
-            )\n\n    # 兼容工蜂上备份的github仓库的规则\n    if git_project in (\"github.com\"\
-            , \"google.golang.org\", \"golang.org\", \"gopkg.in\"):\n        os.makedirs(f\"\
-            {GOPATH}/src/{git_project}\", exist_ok=True)\n        shutil.copytree(f\"\
-            {GOPATH}/src/{git_domain}/{git_group}/{git_project}/\",\n            \
-            \            f\"{GOPATH}/src/{git_project}/\", dirs_exist_ok=True)\n \
-            \       shutil.rmtree(f\"{GOPATH}/src/{git_domain}/{git_group}/{git_project}/\"\
-            , ignore_errors=True)\n\n    # 兼容git重命名导致的问题\n    if any([g in url_with_branch\
-            \ for g in GIT_RENAME_COMPATIBLE]):\n        for compatible_group in GIT_RENAME_COMPATIBLE:\n\
-            \            if git_group == compatible_group:\n                continue\n\
-            \            shutil.copytree(f\"{GOPATH}/src/{git_domain}/{git_group}/{git_project}/\"\
-            ,\n                            f\"{GOPATH}/src/{git_domain}/{compatible_group}/{git_project}/\"\
-            , dirs_exist_ok=True)\n\n\ndef down_wrapper(url_with_branch):\n    if\
-            \ 'SNG_EDU_COMMON_PKG/bingo' in url_with_branch:\n        try:\n     \
-            \       down_dependency(url_with_branch)\n        except zipfile.BadZipFile:\n\
-            \            print('没有和服务分支同名的bingo分支，故切换bingo到master分支')\n          \
-            \  down_dependency('http://git.code.oa.com/SNG_EDU_COMMON_PKG/bingo.git:master')\n\
-            \    elif 'SNG_EDU_COMMON_PKG/edu_common' in url_with_branch:\n      \
-            \  try:\n            down_dependency(url_with_branch)\n        except\
-            \ zipfile.BadZipFile:\n            print('没有和服务分支同名的edu_common分支，故切换edu_common到\
-            master分支')\n            down_dependency('http://git.code.oa.com/SNG_EDU_COMMON_PKG/edu_common.git:master')\n\
-            \    else:\n        down_dependency(url_with_branch)\n\n\nif __name__\
-            \ == '__main__':\n    with multiprocessing.Pool(len(go_dependencies))\
-            \ as p:\n        p.map(down_wrapper, go_dependencies)\n"
-              scriptpath: ""
-          - name: "加入统一忽略规则"
-            uses: "writeFile@1.*"
-            with:
-              filename: "./.code.yml"
-              contents: "source:\n    # 文件或目录使用绝对路径，绝对路径按代码库根目录计算，以/开头。\n    # 提供产品代码库\
-            中编写的测试代码存放目录或文件名格式，以便代码检查时进行排除处理\n    # 不要使用.*/等正则表达式屏蔽掉所有代码，会使得代码存在风险\
-            ，还会导致Coverity扫不到任何代码而失败\n    test_source:\n        #用于匹配文件; 匹配方式为正则表达式\
-            ，例如[\".*/java/test/.*\", \".*/test.java\"]\n        filepath_regex:  [\"\
-            .*/test/.*\"]\n    # 提供产品代码库中工具或框架自动生成的且在代码库中的代码，没有可为空。以便代码检查时进行排除处理。\n\
-            \    auto_generate_source:\n        # 自动生成代码文件的正则表达式，若无统一标识格式，可以指定具体目录\
-            ，样例可参考test_source举例\n        filepath_regex: [\".*/proto/.*\",\".*/rpcclient/.*\"\
-            ,\".*/monitor/.*\",\".*/rpc/.*\"]\n    # 提供产品代码库中直接以源码形式存在的第三方代码目录或代码文\
-            件名的正则表达。\n    # 此处备注的第三方代码将在代码检查时进行排除，若代码库中不存在需要排除的第三方代码，该项配置标识可为空\n \
-            \   third_party_source:\n        #第三方代码文件的正则表达式，若无统一标识格式，可以指定具体目录，样例可参\
-            考test_source举例\n        filepath_regex: "
-          - name: "腾讯代码分析(最新)"
-            uses: "CodeccCheckAtomDebug@4.*"
-            with:
-              beAutoLang: false
-              languages:
-                - "GOLANG"
-              checkerSetType: "openScan"
-              tools:
-                - "DUPC"
-                - "GOML"
-                - "WOODPECKER_SENSITIVE"
-                - "COVERITY"
-                - "CCN"
-              asyncTask: false
-              asyncTaskId: ""
-              goPath: ""
-              pyVersion: "py3"
-              scriptType: "SHELL"
-              script: "# Coverity/Klocwork将通过调用编译脚本来编译您的代码，以追踪深层次的缺陷\n# 请使用依赖的构建工具如maven/cmake等\
-            写一个编译脚本build.sh\n# 确保build.sh能够编译代码\n# cd path/to/build.sh\n# sh build.sh\n\
-            \ncd ${WORKSPACE}/\nbingo_v2 build\n"
-              languageRuleSetMap:
-                GOLANG_RULE:
-                  - "standard_go"
-                  - "pecker_go"
-                  - "codecc_default_coverity_go"
-              C_CPP_RULE: []
-              rtxReceiverType: "0"
-              rtxReceiverList: []
-              botWebhookUrl: ""
-              botRemindRange: "1"
-              botRemindSeverity: "7"
-              botRemaindTools: []
-              emailReceiverType: "0"
-              emailReceiverList: []
-              emailCCReceiverList: []
-              instantReportStatus: "2"
-              reportDate: []
-              reportTime: ""
-              reportTools: []
-              toolScanType: "1"
-              mrCommentEnable: true
-              newDefectJudgeFromDate: ""
-              transferAuthorList: []
-              path: []
-              customPath: []
-              scanTestSource: false
-              openScanPrj: false
-              GOLANG_RULE:
-                - "standard_go"
-                - "pecker_go"
-                - "codecc_default_coverity_go"
-              GOLANG_TOOL:
-                - toolList:
-                    - "GOML"
-                - toolList:
-                    - "WOODPECKER_SENSITIVE"
-                    - "IP_CHECK"
-                - toolList:
-                    - "COVERITY"
-            timeout-minutes: 5
-      job_tFZ:
-        name: "构建环境-单元测试"
-        runs-on:
-          pool-name: docker
-          container:
-            image: "csighub.tencentyun.com/oed_build/bingo_v2:multiplegov2"
-            credentials: "${oed_image_pull}"
-        steps:
-          - name: "环境清理"
-            run: "# 您可以通过setEnv函数设置插件间传递的参数\n# echo \"::set-output name=FILENAME::package.zip\"\
-          \n\n# 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\"\
-          \ $myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进\
-          入当前工作空间目录\n\nrm -rf ${WORKSPACE}/*\n\n# 设置项目的Branch，兼容手工和自动触发场景,优先使用手动指定\
-          的\nGitBranch=$([ -z \"$GitBranch\" ] && echo $BK_CI_REPO_GIT_WEBHOOK_BRANCH\
-          \ || echo \"$GitBranch\")\n# 兜底方案，如果仍没获取到分支，则使用master\nGitBranch=$([ -z\
-          \ \"$GitBranch\" ] && echo \"master\" || echo \"$GitBranch\")\n\nProjectName=$(echo\
-          \ $GitPath | awk -F\"/\" '{print $2}')\necho \"::set-output name=GitBranch::$GitBranch\"\
-          \necho \"::set-output name=PRJ_DIR::${WORKSPACE}\"\n\nprintenv\n\npython3\
-          \ --version\n"
-          - name: "拉取GIT（命令行）"
-            uses: "gitCodeRepo@4.*"
-            with:
-              repositoryType: "NAME"
-              repositoryHashId: ""
-              repositoryName: "${GitPath}"
-              pullType: "BRANCH"
-              branchName: "${GitBranch}"
-              tagName: ""
-              commitId: ""
-              localPath: "./"
-              includePath: ""
-              excludePath: ""
-              fetchDepth: ""
-              strategy: "REVERT_UPDATE"
-              enableSubmodule: true
-              submodulePath: ""
-              enableSubmoduleRemote: false
-              enableSubmoduleRecursive: true
-              newEnableSubmoduleRecursive: true
-              enableVirtualMergeBranch: true
-              enableAutoCrlf: false
-              enableGitLfs: false
-              enableGitClean: true
-              enableGitCleanIgnore: true
-              autoCrlf: "false"
-          - name: "下载go依赖"
-            uses: "pythonscriptrun@6.*"
-            with:
-              python_version: "3"
-              option_type: "online"
-              scriptcode: "# "
-              scriptpath: ""
-          - name: "覆盖率-前置信息采集"
-            uses: "covPreInfo@5.*"
-            with:
-              codePath: "${WORKSPACE}"
-              covProductId: ""
-              baseCommitEnv: ""
-              gitPullFromType: ""
-              chooseConfigType: "pluginConfigFilter"
-              pathFilterType: "pathNoFilter"
-              pathFilterWhite: ""
-              fileFilterWhite: ""
-              pathFilterBlack: ""
-              fileFilterBlack: ""
-              pathBothFilterWhite: ""
-              fileBothFilterWhite: ""
-              pathBothFilterBlack: ""
-              fileBothFilterBlack: ""
-              fileSuffix: ".go"
-              baseCommitType: "plugSel"
-              baseCommitPlugSel: "lastcommit"
-              baseCommitTarCommit: "${BK_CI_GIT_REPO_MR_TARGET_HEAD_COMMIT_ID}"
-              baseCommitGitCmd: ""
-              baseCommitFeature: "${BK_CI_HOOK_SOURCE_BRANCH}"
-              diffStartSel: "specify_time"
-              diffTimeCommitId: ""
-              diffCommitTime: "1"
-              diffStartTime: ""
-              diffWeekEndTime: ""
-              diffDoubleWeekEndTime: ""
-              diffMonthEndTime: ""
-              diffUserEndTime: ""
-              diffWeekTime: "1"
-              diffDoubleWeekTime: "1"
-              diffMonthTime: "1"
-              diffUserdefTime: "1"
-              diffWeekHmsTime: ""
-              diffDoubleWeekHmsTime: ""
-              diffMonthHmsTime: ""
-              diffUserHmsTime: ""
-              isReplay: false
-              appVersion: "${MajorVersion}.${MinorVersion}.${FixVersion}"
-              appBuild: "${BuildNo}"
-              haveCgiTest: 0
-              codeLanguage: "java"
-              fileTypeCpp: "gcno"
-              fileTypeObjectC: "xcresult"
-              fileTypeGoLang: "out"
-              fileTypeJs: "js-xml"
-              fileTypeJava: "jacoco_xml"
-              fileTypeDart: "info"
-              fileName: ""
-              haveUnit: false
-              gatherReportUnit: ""
-              generateCMDUnit: ""
-              havaWindowPc: false
-              gatherReportWindowPc: ""
-              haveSameSource: false
-              gatherReportSameSource: ""
-              generateCMDSameSource: ""
-              haveXingHai: false
-              gatherReportXingHai: ""
-              generateCMDXinghai: ""
-              haveLogreplay: false
-              gatherReportLogreplay: ""
-              generateCMDLogreplay: ""
-              haveChaos: false
-              gatherReportChaos: ""
-              generateCMDChaos: ""
-              needMerge: 1
-              covProduct: ""
-              gitSubmodule: false
-              preMRCheck: true
-              preMRShell: "#"
-              epCheck: false
-              epBranchName: ""
-              epMonthFlag: "${ep_month_flag}"
-              gitMrNumber: "${git_mr_number}"
-              multiGitFlagSwitch: false
-          - name: "单元测试 打包文件"
-            run: "# 通过./xxx.sh的方式执行脚本\n# 即若脚本中未指定解释器，则使用系统默认的shell\n\n# 您可以通过setEnv函数设\
-          置插件间传递的参数\n# echo \"::set-output name=FILENAME::package.zip\"\n\n# 您可以在质\
-          量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" $myValue\n\
-          # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进入当前工作空间目录\n\n\
-          # set -uxo\nset +e\n\n# 设置常用全局变量\n{\n  cd \"${PRJ_DIR}\"\n  GitRemoteUrl=$(git\
-          \ config --get remote.origin.url)\n  # 获取Git信息。\n  GitCommitId=$(git log\
-          \ -n 1 --pretty=format:\"%h\")\n  # 提交的Hash值。\n  GitCommitterName=$(git\
-          \ log -n 1 --pretty=format:\"%cn\")\n  GitGroup=$(echo \"${GitRemoteUrl}\"\
-          \ | awk -F\"/\" '{print $4}')\n\n  GitProject=$(echo \"${GitRemoteUrl}\"\
-          \ | awk -F\"/\" '{print $5}' | awk -F\":\" '{print $1}' | awk -F\".git\"\
-          \ '{print $1}')\n\n  # 设置变量，在后续插件中使用。\n  echo \"::set-output name=GitCommitId::$GitCommitId\"\
-          \n  echo \"::set-output name=GitGroup::$GitGroup\"\n  \n\n    zip_out=\"\
-          ${WORKSPACE}/${pipeline.build.id}_test.zip\"\n    cover_out=\"${WORKSPACE}/cover.out\"\
-          \n    report_out=\"${WORKSPACE}/report.out\"\n}\n\n\n{\n  # 此处的步骤依赖构建镜像\n\
-          \  # 编译hippo库\n  cd \"${GOPATH}/src/git.code.oa.com/SNG_EDU_COMMON_PKG/bingo/mq/hippo/hippoc++\"\
-          \n  make\n  cp libhippocwrapper.a lib/\n  # 替换msgQ底层库\n  cp /usr/local/services/libmsgQ_api.a\
-          \ \"${GOPATH}/src/git.code.oa.com/SNG_EDU_COMMON_PKG/bingo/mq/msgq/msgqapi_lib/libmsgQ_api.a\"\
-          \n  cd \"${PRJ_DIR}\"\n}\n\n{\n  # 仅go项目使用的规则，将自身加入GOPATH\n  GIT_RENAME_COMPATIBLE=(\n\
-          \    'EDU_CPP'\n    'SNG_EDU_GO_SVR'\n    'KETANG_GOLANG'\n    'EDU_JAVA'\n\
-          \    'SNG_EDU_GO_CRON_SVR'\n    'CSIG_EDU_MEDIA_SERVICE'\n    'CSIG_EDU_PAY_SERVICE'\n\
-          \    'CSIG_EDU_COMMON'\n    'CSIG_EDU_BASE_SERVICE'\n    'CISG_EDU_DATA_SERVICE'\n\
-          \    'CSIG_EDU_DATA_SERVICE'\n    'CSIG_EDU_DEVOPS_SERVICE'\n    'CSIG_EDU_KETANG_SERVICE'\n\
-          \    'CSIG_EDU_FUDAO_SERVICE'\n    'csig_edu_media_service'\n    'csig_edu_pay_service'\n\
-          \    'csig_edu_common'\n    'csig_edu_base_service'\n    'cisg_edu_data_service'\n\
-          \    'csig_edu_data_service'\n    'csig_edu_devops_service'\n    'csig_edu_ketang_service'\n\
-          \    'csig_edu_fudao_service'\n  )\n\n  cd \"${PRJ_DIR}\"\n  GitRemoteUrl=$(git\
-          \ config --get remote.origin.url)\n  GitGroup=$(echo \"${GitRemoteUrl}\"\
-          \ | awk -F\"/\" '{print $4}')\n  GitProject=$(echo \"${GitRemoteUrl}\" |\
-          \ awk -F\"/\" '{print $5}' | awk -F\":\" '{print $1}' | awk -F\".git\" '{print\
-          \ $1}')\n  mkdir -p ${GOPATH}/src/git.code.oa.com/${GitGroup}/${GitProject}\n\
-          \  cp -r $(ls -A \"${PRJ_DIR}\" | grep -v \"_artifacts\") \"${GOPATH}/src/git.code.oa.com/${GitGroup}/${GitProject}\"\
-          \n\n  for element in \"${GIT_RENAME_COMPATIBLE[@]}\"; do\n    mkdir -pv\
-          \ ${GOPATH}/src/git.code.oa.com/${element}\n    [ ! -d \"${GOPATH}/src/git.code.oa.com/${element}/${GitProject}\"\
-          \ ] && ln -s \"${GOPATH}/src/git.code.oa.com/${GitGroup}/${GitProject}\"\
-          \ \"${GOPATH}/src/git.code.oa.com/${element}/${GitProject}\"\n  done\n}\n\
-          \n{\n  export PATH=/opt/golang/1.14.13/go/bin:$PATH\n  go version\n  # 执\
-          行构建\n  cd \"${PRJ_DIR}\"\n  mkdir -pv /data/go/src/go && cp -r /opt/golang/${BuildGoVersion}/go/src\
-          \ /data/go/src/go # 兼容一些项目的导包方式\n\n  # bingo_v2 build\n  # 编译失败后蓝盾不会退出，这\
-          里复制一下保证蓝盾报错退出\n  # mkdir -p bin && cp ${ProjectName} bin\n}\n\n\n## 执行单元\
-          测试\n{\n  cd \"${PRJ_DIR}\"\n\n  echo '********'\n  echo 'execute go get'\n\
-          \  # go env > go.env\n  # source go.env\n  go get github.com/axw/gocov/gocov\n\
-          \  go get github.com/matm/gocov-html\n  go get github.com/gogo/protobuf/proto\n\
-          \  \n  \n  # leifwu建议的依赖\n  go get git.code.oa.com/NGTest/ngmock\n  go get\
-          \ github.com/stretchr/testify/assert\n  go get git.code.oa.com/NGTest/gomonkey\n\
-          \  go get git.code.oa.com/NGTest/go-forceexport\n  # 行覆盖率\n  cd /data/go/src/git.code.oa.com/${GitGroup}/${GitProject}\n\
-          \n  # 生成空白测试文件\n  # go覆盖率工具，计算覆盖率只包含写了测试用例的包。为了计算整体覆盖率，需对没有的生成伪用例\n  # 伪\
-          用例的写法是代码文件 + _test.go后缀，文件内容是代码文件中的包名\n  for line in $(find $(pwd) -type\
-          \ f -name '*.go' -type f ! -name '*_test.go' -type f ! -wholename '*/test/*'\
-          \ -type f ! -wholename '*/proto/*'); do\n    filebase=${line%.*}\n    if\
-          \ [ ! -f \"${filebase}_test.go\" ]; then\n      grep ^package \"${filebase}.go\"\
-          \ >\"${filebase}_test.go\"\n    fi\n  done\n\n  echo '********'\n  echo\
-          \ 'execute go test'\n#   go test -v -coverprofile=cover.out | tee ${report_out}\
-          \ ./...\n  go test -v ./... -coverprofile=cover.out | tee ${report_out}\n\
-          \n  echo \"::set-output name=UT_EXIT_CODE::$?\"\n  zip -q ${zip_out} ${cover_out}\n\
-          \n    # 函数覆盖率\n  echo '********'\n  echo 'execute go tool'\n  go tool cover\
-          \ -func=cover.out -o coverfunc.out\n  # 上传报告\n  $GOPATH/bin/gocov convert\
-          \ cover.out > cover.json\n  $GOPATH/bin/gocov-html cover.json > coverage.html\n\
-          \n\n  # 总覆盖率\n  echo \"::set-output name=UT_REPORT_URL::http://devops.oa.com/console/pipeline/${BK_CI_PROJECT_NAME}/${BK_CI_PIPELINE_ID}/detail/${BK_CI_BUILD_ID}/output\"\
-          \n  echo '********'\n  echo '###总覆盖率: '$coverageRate'%'\n  echo \"###详情见\
-          ：${UT_REPORT_URL}\"\n\n  echo \"::set-output name=UT_COVERAGE_RATE::$coverageRate\"\
-          \n  rm -rf /usr/local/testRport\n  mkdir -p /usr/local/testRport\n  echo\
-          \ '当前项目：'${GitProject}''>> /usr/local/testRport/report.txt\n  echo '当前分支\
-          ：'${GitBranch}''>> /usr/local/testRport/report.txt\n  echo '总覆盖率: '${coverageRate}'%'\
-          \ >> /usr/local/testRport/report.txt\n  echo \"详情见：${UT_REPORT_URL}\" >>\
-          \ /usr/local/testRport/report.txt\n\n  cat /usr/local/testRport/report.txt\n\
-          \n}"
-          - name: "单元测试产物 归档构件"
-            uses: "UploadArtifactory@1.*"
-            with:
-              filePath: "${WORKSPACE}/report.out"
-              isCustomize: false
-              destPath: "./"
-          - name: "上报单测结果"
-            uses: "pythonscriptrun@6.*"
-            with:
-              python_version: "3"
-              option_type: "online"
-              scriptcode: "# 脚本功能\n# 上报单元测试报告到mongodb里面，包括单测是否通过，覆盖率如何， 报告路径，\n# 并且新增六\
-            个字段：build_id end_time pipeline_name git_commit_id git_committer, git_branch\n\
-            \n\nimport urllib.parse\nfrom datetime import datetime\nfrom pprint import\
-            \ pprint\n\nfrom env_helper import getEnv\nfrom pymongo import MongoClient\n\
-            \n# mongo信息\nusername = urllib.parse.quote_plus('mongouser')\npassword\
-            \ = urllib.parse.quote_plus('edudocker123')\nmongo_client = MongoClient(f\"\
-            mongodb://{username}:{password}@9.135.126.208:27017/\")\n\nCODE_SCAN_DATABASE_NAME\
-            \ = 'oed_record'\nCODE_SCAN_COLLECTION_NAME = 'unittest'\n\n# 蓝盾api信息\n\
-            ACCESS_TOKEN = \"4CycM33YHv6Em8asff5X15uFPcnEFQ\"\nREQ_TIMEOUT = 10\n\
-            HEADERS = {\"Accept\": \"application/json\", \"Content-type\": \"application/json\"\
-            }\nPARAMS = {\"access_token\": ACCESS_TOKEN}\n\n\ndef insert_record(collection_name:\
-            \ str, filter_obj: dict, doc_obj: dict, database_name=CODE_SCAN_DATABASE_NAME):\n\
-            \    collection = mongo_client[database_name][collection_name]\n    r\
-            \ = collection.replace_one(filter_obj, doc_obj, upsert=True)\n    return\
-            \ r\n\n\ndef save_unittest_report():\n    filter_obj = {'build_id': getEnv(\"\
-            BK_CI_BUILD_ID\")}\n\n    doc_obj = dict()\n\n    doc_obj['result'] =\
-            \ getEnv(\"UT_EXIT_CODE\") == '0'\n    doc_obj['coverage'] = getEnv(\"\
-            UT_COVERAGE_RATE\") + '%'\n    doc_obj['report_url'] = getEnv(\"UT_REPORT_URL\"\
-            )\n\n    doc_obj['build_id'] = getEnv(\"BK_CI_BUILD_ID\")\n    doc_obj['end_time']\
-            \ = datetime.now()\n    doc_obj['pipeline_name'] = getEnv(\"BK_CI_PIPELINE_NAME\"\
-            )\n    doc_obj['git_commit_id'] = getEnv(\"GitCommitId\")\n    doc_obj['git_committer']\
-            \ = getEnv(\"GitCommitterName\")\n    doc_obj['git_branch'] = getEnv(\"\
-            GitBranch\")\n\n    pprint(doc_obj)\n    pprint(filter_obj)\n\n    insert_record(CODE_SCAN_COLLECTION_NAME,\
-            \ filter_obj, doc_obj)\n\n\nif __name__ == '__main__':\n    save_unittest_report()\n"
-              scriptpath: ""
-          - name: "归档构件"
-            uses: "UploadArtifactory@1.*"
-            with:
-              filePath: "/data/go/src/git.code.oa.com/${GitGroup}/${GitProject}/cover.json,/data/go/src/git.code.oa.com/${GitGroup}/${GitProject}/coverfunc.out,/data/go/src/git.code.oa.com/${GitGroup}/${GitProject}/cover.out"
-              isCustomize: false
-              destPath: "./"
-          - name: "归档报告"
-            uses: "ReportArctifactoryNew@1.*"
-            with:
-              fileDir: "/data/go/src/git.code.oa.com/${GitGroup}/${GitProject}/"
-              indexFile: "coverage.html"
-              indexFileCharset: "UTF-8"
-              reportName: "coverage.html"
-              isParallel: false
-              isSendEmail: false
-              receivers: ""
-              body: "【${pipeline.name}】  #${pipeline.build.num} 自定义报告已归档"
-          - name: "覆盖率-后置信息处理"
-            uses: "covParseData@5.*"
-            with:
-              codePath: "${WORKSPACE}"
-              covProduct: ""
-              codeLanguage: "golang"
-              fileTypeJava: "jacoco_xml"
-              fileTypePython: "pytest"
-              fileTypeObjectC: "xcresult"
-              fileTypePhp: "clover_xml"
-              fileTypeJs: "js-xml"
-              fileTypeCpp: "gcno"
-              gccVersion: "4.4"
-              fileTypeGoLang: "out"
-              fileTypeScala: "cobertura_xml"
-              localPreMr: false
-              fileTypeRust: "rust_json"
-              fileTypeDart: "info"
-              fileFromType: "local"
-              trigerId: "${trigerId}"
-              cgiEcPath: "${CGI-EC}"
-              autoShell: "#脚本将在${WORKSPACE}下运行\n# cd ${WORKSPACE} 可进入当前工作空间目录\n #下载的zip包\
-            位于填写的代码位置，例如${WORKSPACE}/CovTemp/ecdown/auto_download下面   \n##请将最后生成的\
-            jacocoReport.xml或者xml集合的zip包的绝对路径输出到变量 jacocoPath中， 例如 setEnv \"jacocoPath\"\
-            \ xxx#!/bin/sh\n"
-              cgiShell: "#脚本将在${WORKSPACE}下运行\n# cd ${WORKSPACE} 可进入当前工作空间目录\n #下载的zip包\
-            位于填写的代码位置，例如${WORKSPACE}/CovTemp/ecdown/auto_download下面   \n##请将最后生成的\
-            jacocoReport.xml 填写到下面的文件路径输入框中 xxx#!/bin/sh\n"
-              pipeLineType: "pipeLine"
-              filePath: "${WORKSPACE}/cover.out"
-              testFromType: "local"
-              appVersion: "${MajorVersion}.${MinorVersion}.${FixVersion}"
-              appBuild: "${BuildNo}"
-              testType: "unit_test"
-              multiGitFlagSwitch: false
-              needMerge: 1
-              needReport: "need"
-              needRobot: false
-              covRobotId: ""
-          - name: "企业微信机器人推送"
-            uses: "WechatWorkRobot@1.*"
-            with:
-              inputWebhook: "835c6cfd-bcca-4241-a805-8ced16f51482"
-              inputMsgtype: "text"
-              inputTextContentSource: "file"
-              inputTextContent: ""
-              inputTextContentFileAbsOrRel: "absolute"
-              inputTextContentFile: "/usr/local/testRport/report.txt"
-              inputRelTextContentFile: ""
-              inputTextMentionedList: ""
-              inputTextMentionedMobileList: ""
-              inputMarkdownContentSource: "text"
-              inputMarkdownContent: ""
-              inputMarkdownContentFileAbsOrRel: ""
-              inputMarkdownContentFile: ""
-              inputRelMarkdownContentFile: ""
-              inputMarkdownAtShortName: false
-              inputIfMarkdownAttachment: false
-              inputMarkdownAttachmentActionsType: "button"
-              inputIfMarkdownActions2: false
-              inputMarkdownAttachmentActions2Type: "button"
-              inputIfMarkdownActions3: false
-              inputMarkdownAttachmentActions3Type: "button"
-              inputIfMarkdownActions4: false
-              inputMarkdownAttachmentActions4Type: "button"
-              inputIfMarkdownActions5: false
-              inputMarkdownAttachmentActions5Type: "button"
-              inputImageSource: ""
-              inputLocalImageAbsOrRel: ""
-              inputLocalImage: ""
-              inputRelLocalImage: ""
-              inputImageBase64: ""
-              inputImageMd5: ""
-              inputNewsTitle: ""
-              inputNewsUrl: ""
-              inputNewsDescription: ""
-              inputNewsPicurl: ""
-              inputFileSource: ""
-              inputLocalFileAbsOrRel: ""
-              inputLocalFile: ""
-              inputRelLocalFile: ""
-              inputMediaId: ""
-              inputVisibleToUser: ""
-              inputRetry: 1
-              inputProxyPolicy: "disable"
-          - name: "删除临时分支"
-            run: "# "
-  - name: "stage-3"
-    label:
-      - "Build"
-    jobs:
-      job_E3z:
-        name: "同源质量红线"
+      job_id_1:
+        name: my_job_1
         runs-on: agentless
+        services:
+          mysql1:
+            image: mysql:8.0
+            with:
+              password: 123456
+        if: variables.DEPLOY_TYPE == 'dev' || cancelled()
         steps:
-          - name: "同源-单元测试产物解析"
-            uses: "ngtestUnitTest@7.*"
+          - name: xxx
+            id: idxxx
+            if: xxx
+            uses: UploadArtifactory@1.*
             with:
-              test_type: "0"
-              project_caseset: []
-              unit_namespace: ""
-              git_url: ""
-              is_static_scan: true
-              branch_name: ""
-              commit_id: ""
-              api_dir: ""
-          - name: "同源后台质量红线"
-            uses: "ngtestQuality@1.*"
+              path: test.txt
+            timeout-minutes: 480
+            continue-on-error: false
+            retry-times: 0
+            env:
+
+          - run: |
+              echo "stage1, job_id_1"
+              echo "hello world" >> test.txt
+
+        timeout-minutes: 480
+        env:
+
+        continue-on-error: false
+        strategy:
+          matrix:
+
+          fast-kill: true
+          max-parallel: 10
+        depend-on:
+          - job1
+          - job2
+
+      job_id_2:
+        name: my_job_2
+        steps:
+          - run: |
+              echo "stage1, job_id_2"
+
+      build_docker:
+        name: build and push docker
+        runs-on:
+          self-hosted: true
+          pool-name: sawyer-test
+          agent-selector: [ windows ]
+        steps:
+          - checkout: self
+          - uses: DockerBuildAndPushImage@3.*
             with:
-              test_type: "unitest"
-              env_type: "all"
-              data_type: "all"
-              poll_time: "20"
-              custom_group_key: ""
-              is_use_unitTest: "${is_use_unitTest}"
-              is_use_apiTest: "${is_use_apiTest}"
-              is_use_report: "${is_use_report}"
+              targetImage: ${{ variables.IMAGE_NAME }}
+              targetImageTag: ${{ variables.IMAGE_TAG }}
+              dockerBuildDir: .
+              dockerFilePath: ./Dockerfile
+              targetRepoItem:
+                url: ${{ variables.IMAGE_HOST }}
+                username: ${{ settings.CSIGHUB_USER }}
+                password: ${{ settings.CSIGHUB_PWD }}
+
+finally:
+#  f_job_1:
+#    name: f-job-1
+#    if: FAILURE
+#    steps:
+#      - run: |
+#          echo "[f-job-1]variables.a is ${{ variables.a }}"
+#      - template: steps.yml
+#  f_job_2:
+#    name: f-job-2
+#    steps:
+#      - run: |
+#          echo "[f-job-2]variables.a is ${{ variables.a }}"
+#  template:
+#    - name: jobs.yml
+
+extends:
+  template: epc-build.yml
+  parameters:
+    repo: "hello/my-first-repo"
+resources:
+  repositories:
+    - repository: epc-ieg-bk-common
+      name: ieg/epc-ieg-bk-common
+      ref: refs/tags/v1.0
+
