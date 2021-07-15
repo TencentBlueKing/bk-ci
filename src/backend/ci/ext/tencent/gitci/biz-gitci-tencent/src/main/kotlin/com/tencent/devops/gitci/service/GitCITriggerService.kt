@@ -395,7 +395,7 @@ class GitCITriggerService @Autowired constructor(
             scmService.getMergeRequestChangeInfo(
                 userId = null,
                 token = gitToken.accessToken,
-                gitProjectId = getProjectId(mrEvent, gitRequestEvent),
+                gitProjectId = gitRequestEvent.gitProjectId,
                 mrId = (event as GitMergeRequestEvent).object_attributes.id
             )?.files?.filter { !it.deletedFile }?.map { it.newPath }?.toSet() ?: emptySet()
         } else {
@@ -447,6 +447,7 @@ class GitCITriggerService @Autowired constructor(
 
             // 检查版本落后信息和真正要触发的文件
             val originYaml = if (mrEvent) {
+                // todo: 将超级token根据项目ID塞到Map里，每次取一下，没有了就重新拿
                 val (result, orgYaml) = checkYmlVersion(
                     mrEvent = event as GitMergeRequestEvent,
                     sourceGitToken = forkGitToken,
