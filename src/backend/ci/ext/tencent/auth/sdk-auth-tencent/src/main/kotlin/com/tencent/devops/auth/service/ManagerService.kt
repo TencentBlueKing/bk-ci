@@ -85,7 +85,7 @@ class ManagerService @Autowired constructor(
         val manageInfo = if (userPermissionMap.getIfPresent(userId) == null) {
             val remoteManagerInfo = client.get(ServiceManagerUserResource::class).getManagerInfo(userId)
             if (remoteManagerInfo.data != null && remoteManagerInfo.data!!.isNotEmpty()) {
-                userPermissionMap.put(userId, remoteManagerInfo.data)
+                userPermissionMap.put(userId, remoteManagerInfo.data!!)
                 remoteManagerInfo.data
             } else {
                 null

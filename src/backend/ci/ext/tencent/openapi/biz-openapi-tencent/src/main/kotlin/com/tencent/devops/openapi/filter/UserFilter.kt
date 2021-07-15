@@ -36,6 +36,8 @@ import com.tencent.devops.openapi.service.op.OpAppUserService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import javax.annotation.Priority
+import javax.ws.rs.Priorities
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
@@ -46,6 +48,7 @@ import javax.ws.rs.ext.Provider
 @PreMatching
 @RequestFilter
 @Suppress("ALL")
+@Priority(Priorities.USER)
 class UserFilter @Autowired constructor(
     val redisOperation: RedisOperation,
     val appUserInfoService: AppUserInfoService,

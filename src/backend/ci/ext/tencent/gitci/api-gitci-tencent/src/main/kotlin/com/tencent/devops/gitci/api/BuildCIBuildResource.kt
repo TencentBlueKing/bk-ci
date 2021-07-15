@@ -25,35 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.configuration
+package com.tencent.devops.gitci.api
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.gitci.GitCIPermissionProjectServiceImpl
-import com.tencent.devops.auth.service.gitci.GitCIPermissionServiceImpl
-import com.tencent.devops.auth.service.gitci.GitCiProjectInfoService
-import com.tencent.devops.common.client.Client
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Configuration
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-class GitCIConfiguration {
-    @Bean
-    fun gitCIPermissionServiceImpl(
-        client: Client,
-        managerService: ManagerService,
-        projectInfoService: GitCiProjectInfoService
-    ) = GitCIPermissionServiceImpl(client, managerService, projectInfoService)
+@Api(tags = ["BUILD_CI_BUILD"], description = "CI Build")
+@Path("/build/ci")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildCIBuildResource {
 
-    @Bean
-    fun gitCIPermissionProjectServiceImpl(
-        client: Client,
-        projectInfoService: GitCiProjectInfoService
-    ) = GitCIPermissionProjectServiceImpl(client, projectInfoService)
-
-    @Bean
-    fun gitProjectInfoService(
-        client: Client
-    ) = GitCiProjectInfoService(client)
+    @ApiOperation("获取URL链接")
+    @GET
+    @Path("/url/{projectId}")
+    fun getUrl(
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<String?>
 }
