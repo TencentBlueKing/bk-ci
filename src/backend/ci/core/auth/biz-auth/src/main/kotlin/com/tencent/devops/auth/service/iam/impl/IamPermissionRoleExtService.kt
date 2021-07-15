@@ -365,7 +365,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         const val NODEACTION = "env_node_create"
         const val RULECREATEACTION = "rule_create"
         const val GROUPCREATEACTION = "quality_group_create"
-        const val RULEACTION = "rule_delete,rule_update,rule_use"
-        const val GROUPACTION = "quality_group_delete,quality_group_update,quality_group_use"
+        const val RULEACTION = "rule_delete,rule_edit,rule_enable"
+        const val GROUPACTION = "quality_group_delete,quality_group_edit"
     }
 }
