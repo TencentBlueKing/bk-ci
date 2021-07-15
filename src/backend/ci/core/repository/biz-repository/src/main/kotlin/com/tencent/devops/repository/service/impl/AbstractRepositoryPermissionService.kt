@@ -109,7 +109,7 @@ abstract class AbstractRepositoryPermissionService constructor(
                 serviceCode = codeAuthServiceCode,
                 resourceType = AuthResourceType.CODE_REPERTORY,
                 projectCode = projectId,
-                resourceCode = HashUtil.encodeOtherLongId(repositoryId),
+                resourceCode = repositoryId.toString(),
                 permission = authPermission
             )
         }
