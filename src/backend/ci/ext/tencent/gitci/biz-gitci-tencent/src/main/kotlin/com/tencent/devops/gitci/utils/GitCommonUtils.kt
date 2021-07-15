@@ -192,14 +192,20 @@ object GitCommonUtils {
         }
     }
 
-    fun getCredential(client: Client, projectId: String, credentialId: String, type: CredentialType): MutableMap<String, String> {
+    fun getCredential(
+        client: Client,
+        projectId: String,
+        credentialId: String,
+        type: CredentialType
+    ): MutableMap<String, String> {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
         val credentialResult = client.get(ServiceCredentialResource::class).get(projectId, credentialId,
             encoder.encodeToString(pair.publicKey))
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
+            logger.error("Fail to get the credential($credentialId) of project($projectId) " +
+                    "because of ${credentialResult.message}")
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }
 
