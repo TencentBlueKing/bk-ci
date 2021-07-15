@@ -91,7 +91,7 @@ class TxProjectServiceImpl @Autowired constructor(
     redisOperation: RedisOperation,
     gray: Gray,
     client: Client,
-    projectDispatcher: ProjectDispatcher,
+    private val projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val managerService: ManagerService,
