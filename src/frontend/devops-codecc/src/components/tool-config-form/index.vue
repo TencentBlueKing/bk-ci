@@ -200,7 +200,8 @@
                     if (this.codeMessage.repoHashId === this.repoList[i].repoHashId && !this.formData.repoHashId) {
                         this.$set(this.formData, 'repoHashId', this.codeMessage.repoHashId)
                         this.$set(this.formData, 'aliasName', this.repoList[i].aliasName)
-                        this.$set(this.formData, 'branch', this.codeMessage.branch === '' ? 'master' : this.codeMessage.branch)
+                        const branch = this.codeMessage.branch || (this.codeMessage.codeInfo && this.codeMessage.codeInfo[0] && this.codeMessage.codeInfo[0].branch)
+                        this.$set(this.formData, 'branch', branch)
                     }
                 }
                 return Object.assign({}, toolParams)
