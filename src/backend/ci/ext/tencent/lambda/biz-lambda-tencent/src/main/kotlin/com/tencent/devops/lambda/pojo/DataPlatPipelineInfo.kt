@@ -27,24 +27,11 @@
 
 package com.tencent.devops.lambda.pojo
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.pojo.Pipeline
 import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线信息")
 data class DataPlatPipelineInfo(
-    val projectId: String,
-    val pipelineId: String,
-    val pipelineName: String,
-    val pipelineDesc: String,
-    var version: Int = 1,
-    val createTime: Long = 0,
-    val updateTime: Long = 0,
-    val creator: String,
-    val lastModifyUser: String,
-    val channelCode: String,
-    val manualStartup: Int,
-    val elementSkip: Int,
-    val taskCount: Int,
-    var delete: Boolean
+    val washTime: String,
+    val pipelineInfo: Pipeline
 )

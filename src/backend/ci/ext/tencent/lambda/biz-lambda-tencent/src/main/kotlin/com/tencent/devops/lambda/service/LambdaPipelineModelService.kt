@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.lambda.dao.LambdaPipelineModelDao
+import com.tencent.devops.lambda.pojo.DataPlatPipelineInfo
 import com.tencent.devops.lambda.pojo.DataPlatPipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.jooq.DSLContext
@@ -79,7 +80,10 @@ class LambdaPipelineModelService @Autowired constructor(
                 pipelineId = event.pipelineId
             ).data
             if (pipelineInfo != null) {
-                kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_INFO_TOPIC, JsonUtil.toJson(pipelineInfo))
+                kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_INFO_TOPIC, JsonUtil.toJson(DataPlatPipelineInfo(
+                    washTime = LocalDateTime.now().format(dateTimeFormatter),
+                    pipelineInfo = pipelineInfo
+                )))
             } else {
                 logger.error("onModelExchange sync pipelineInfo failed, pipelineId: ${event.pipelineId}, pipelineInfo is null.")
             }
