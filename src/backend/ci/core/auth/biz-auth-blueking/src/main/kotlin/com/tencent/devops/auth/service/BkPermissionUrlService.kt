@@ -29,6 +29,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.devops.auth.pojo.PermissionUrlDTO
+import com.tencent.devops.auth.service.iam.PermissionUrlService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -42,12 +43,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class IamService @Autowired constructor(
+class BkPermissionUrlService @Autowired constructor(
     val iamEsbService: IamEsbService,
     @Autowired(required = false) // v3 才会有
     val iamConfiguration: IamConfiguration?
-) {
-    fun getPermissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
+): PermissionUrlService {
+
+    override fun getPermissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
         logger.info("get permissionUrl permissionUrlDTO: $permissionUrlDTO")
         val actions = mutableListOf<Action>()
         permissionUrlDTO.map {
@@ -103,6 +105,6 @@ class IamService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(BkPermissionUrlService::class.java)
     }
 }

@@ -33,6 +33,7 @@ import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
 import com.tencent.devops.auth.service.DefaultDeptServiceImpl
 import com.tencent.devops.auth.service.EmptyPermissionExtServiceImpl
+import com.tencent.devops.auth.service.EmptyPermissionUrlServiceImpl
 import com.tencent.devops.auth.utils.HostUtils
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
@@ -137,4 +138,8 @@ class AuthCoreConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = ["permissionExtService"])
     fun permissionExtService() = EmptyPermissionExtServiceImpl()
+
+    @Bean
+    @ConditionalOnMissingBean(name = ["permissionUrlService"])
+    fun permissionUrlService() = EmptyPermissionUrlServiceImpl()
 }
