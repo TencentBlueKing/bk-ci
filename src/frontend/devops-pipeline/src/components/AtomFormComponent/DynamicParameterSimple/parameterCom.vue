@@ -2,13 +2,6 @@
     <section class="param-input-home">
         <section class="parameter-input">
             <bk-input
-                class="input-main mb10"
-                :clearable="!disabled"
-                :disabled="disabled"
-                :placeholder="$t('propertyNameInputTips')"
-                :value="id"
-                @blur="(newValue) => $emit('update-key', newValue)" />
-            <bk-input
                 v-if="type === 'input'"
                 class="input-main"
                 :clearable="!disabled"

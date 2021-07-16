@@ -1,5 +1,8 @@
 <template>
     <ul class="param-main" v-bkloading="{ isLoading }">
+        <li class="param-label" style="display: flex; padding-right:30px;">
+            <span c v-for="(item, index) in curParameters[0].rowAttributes" :key="index" class="input-label" :title="item.id">{{ item.id }}：</span>
+        </li>
         <li class="param-com" v-for="(parameter, paramIndex) in curParameters" :key="paramIndex">
             <parameter-com v-for="(model, index) in parameter.rowAttributes"
                 :class="[{ 'last-child': index === parameter.rowAttributes.length - 1 }, 'input-com']"
@@ -143,6 +146,13 @@
                     margin-right: 0;
                 }
             }
+        }
+        .param-label {
+            display: flex;
+            padding-right: 30px;
+        }
+        .input-label {
+            flex: 1;
         }
     }
     .bk-icon {
