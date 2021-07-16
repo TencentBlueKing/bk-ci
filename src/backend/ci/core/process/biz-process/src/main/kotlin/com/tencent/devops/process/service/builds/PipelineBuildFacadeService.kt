@@ -615,7 +615,7 @@ class PipelineBuildFacadeService(
                 if (paramsKeyList.contains(it.id)) {
                     return@forEach
                 }
-                startParams.add(BuildParameters(key = it.id,  value = it.defaultValue, readOnly = it.readOnly))
+                startParams.add(BuildParameters(key = it.id, value = it.defaultValue, readOnly = it.readOnly))
             }
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
