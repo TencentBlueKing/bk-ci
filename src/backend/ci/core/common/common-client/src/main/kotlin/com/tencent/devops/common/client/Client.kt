@@ -224,7 +224,18 @@ class Client @Autowired constructor(
 
     // devnet区域的，只能直接通过ip访问
     fun <T : Any> getScm(clz: KClass<T>): T {
-        return getGateway(clz, GatewayType.IDC_PROXY)
+        // 从网关访问去掉后缀，否则会变成 /process-devops/api/service/piplines 导致访问失败
+        val serviceName = findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        // 获取为feign定义的拦截器
+        val requestInterceptor = SpringContextUtil.getBeansWithClass(RequestInterceptor::class.java)
+        return Feign.builder()
+            .client(feignClient)
+            .errorDecoder(clientErrorDecoder)
+            .encoder(jacksonEncoder)
+            .decoder(jacksonDecoder)
+            .contract(jaxRsContract)
+            .requestInterceptors(requestInterceptor)
+            .target(clz.java, buildGatewayUrl(path = "/$serviceName/api", gatewayType = GatewayType.IDC_PROXY))
     }
 
     fun <T : Any> getImpl(clz: KClass<T>): T {
