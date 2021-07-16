@@ -158,7 +158,7 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 scmClient.pushCommitCheck(
                     commitId = event.commitId,
                     description = if (event.description.isNullOrBlank()) {
-                        buildRunningDesc
+                        buildRunningDesc.format(pipeline.displayName)
                     } else {
                         event.description ?: ""
                     },
