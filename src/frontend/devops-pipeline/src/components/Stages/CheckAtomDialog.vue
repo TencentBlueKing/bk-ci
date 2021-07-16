@@ -212,47 +212,5 @@
         .check-suggest {
             margin-top: 0px;
         }
-        .params-item {
-            display: flex;
-            margin-bottom: 10px;
-           .form-field {
-               width: 286px;
-               margin-right: 10px;
-           }
-            > .bk-form-item {
-                width: 286px;
-                height: 32px;
-                margin-top: 0px !important;
-            }
-            .is-required-icon {
-                color: red;
-                position: relative;
-                top: 10px;
-                right: -6px;
-            }
-            .default-required {
-                width: 8px;
-                height: 8px;
-            }
-            .is-required:after {
-                height: 8px;
-                line-height: 1;
-                content: "*";
-                color: #ea3636;
-                font-size: 12px;
-                position: relative;
-                left: -6px;
-                top: 4px;
-                display: inline-block;
-            }
-        }
     }
-    .required-error-item {
-        .bk-select,
-        .bk-form-input,
-        .bk-form-textarea {
-            border: 1px solid red;
-        }
-    }
-    
 </style>
