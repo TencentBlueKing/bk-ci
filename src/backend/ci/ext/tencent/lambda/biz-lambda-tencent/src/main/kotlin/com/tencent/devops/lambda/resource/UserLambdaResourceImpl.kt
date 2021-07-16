@@ -33,9 +33,9 @@ import com.tencent.devops.lambda.api.user.UserLambdaResource
 import com.tencent.devops.lambda.pojo.MakeUpBuildVO
 import com.tencent.devops.lambda.pojo.MakeUpPipelineListVO
 import com.tencent.devops.lambda.pojo.MakeUpProjectListVO
-import com.tencent.devops.lambda.service.LambdaDataService
-import com.tencent.devops.lambda.service.LambdaPipelineModelService
-import com.tencent.devops.lambda.service.LambdaProjectService
+import com.tencent.devops.lambda.service.process.LambdaDataService
+import com.tencent.devops.lambda.service.process.LambdaPipelineModelService
+import com.tencent.devops.lambda.service.project.LambdaProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

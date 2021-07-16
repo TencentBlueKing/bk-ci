@@ -31,7 +31,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.lambda.api.service.ServiceLambdaResource
 import com.tencent.devops.lambda.pojo.BG
 import com.tencent.devops.lambda.pojo.BuildResultWithPage
-import com.tencent.devops.lambda.storage.ESService
+import com.tencent.devops.lambda.service.lambda.ESService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

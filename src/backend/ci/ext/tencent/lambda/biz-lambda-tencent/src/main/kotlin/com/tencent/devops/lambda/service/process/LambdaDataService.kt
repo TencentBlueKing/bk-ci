@@ -24,7 +24,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.service
+package com.tencent.devops.lambda.service.process
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
@@ -58,10 +58,8 @@ import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
 import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
 import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
-import com.tencent.devops.lambda.pojo.ElementData
 import com.tencent.devops.lambda.pojo.MakeUpBuildVO
 import com.tencent.devops.lambda.pojo.ProjectOrganize
-import com.tencent.devops.lambda.storage.ESService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
@@ -87,7 +85,6 @@ class LambdaDataService @Autowired constructor(
     private val lambdaPipelineTemplateDao: LambdaPipelineTemplateDao,
     private val lambdaBuildTaskDao: LambdaBuildTaskDao,
     private val lambdaBuildContainerDao: LambdaBuildContainerDao,
-    private val esService: ESService,
     private val kafkaClient: KafkaClient
 ) {
 
@@ -151,44 +148,6 @@ class LambdaDataService @Autowired constructor(
         return true
     }
 
-/*    fun onModelExchange(event: PipelineModelAnalysisEvent) {
-        try {
-            logger.info("onModelExchange sync pipeline resource, pipelineId: ${event.pipelineId}")
-            val pipelineResource = lambdaPipelineModelDao.getResModel(dslContext, event.pipelineId)
-            if (pipelineResource != null) {
-                val dataPlatPipelineResource = DataPlatPipelineResource(
-                    washTime = LocalDateTime.now().format(dateTimeFormatter),
-                    pipelineId = event.pipelineId,
-                    version = pipelineResource.version,
-                    model = pipelineResource.model,
-                    creator = pipelineResource.creator,
-                    createTime = pipelineResource.createTime.timestampmilli().toString()
-                )
-                kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_RESOURCE_TOPIC, JsonUtil.toJson(dataPlatPipelineResource))
-            } else {
-                logger.error("onModelExchange sync pipeline resource failed, pipelineId: ${event.pipelineId}, pipelineResource is null.")
-            }
-        } catch (e: Exception) {
-            logger.error("onModelExchange sync pipeline resource failed, pipelineId: ${event.pipelineId}", e)
-        }
-
-        try {
-            logger.info("onModelExchange sync pipelineInfo, pipelineId: ${event.pipelineId}")
-            val pipelineInfo = client.get(ServicePipelineResource::class).status(
-                userId = event.userId,
-                projectId = event.projectId,
-                pipelineId = event.pipelineId
-            ).data
-            if (pipelineInfo != null) {
-                kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_INFO_TOPIC, JsonUtil.toJson(pipelineInfo))
-            } else {
-                logger.error("onModelExchange sync pipelineInfo failed, pipelineId: ${event.pipelineId}, pipelineInfo is null.")
-            }
-        } catch (e: Exception) {
-            logger.error("onModelExchange sync pipelineInfo failed, pipelineId: ${event.pipelineId}", e)
-        }
-    }*/
-
     private fun getAtomCodeFromTask(task: TPipelineBuildTaskRecord): String {
         return if (!task.taskAtom.isNullOrBlank()) {
             task.taskAtom
@@ -200,29 +159,6 @@ class LambdaDataService @Autowired constructor(
                 logger.warn("unexpected taskParams with no atomCode:${task.taskParams}")
                 ""
             }
-        }
-    }
-
-    private fun pushElementData2Es(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
-        val data = ElementData(
-            projectId = event.projectId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            elementId = event.taskId,
-            elementName = task.taskName ?: "",
-            status = BuildStatus.values()[task.status ?: 0].name,
-            beginTime = task.startTime?.timestampmilli() ?: 0,
-            endTime = task.endTime?.timestampmilli() ?: 0,
-            type = task.taskType ?: "",
-            atomCode = getAtomCodeFromTask(task),
-            errorType = event.errorType,
-            errorCode = event.errorCode,
-            errorMsg = event.errorMsg
-        )
-        try {
-            esService.buildElement(data)
-        } catch (e: Exception) {
-            logger.error("Push elementData to es error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
         }
     }
 
