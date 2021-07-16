@@ -1,7 +1,14 @@
 <template>
     <ul class="param-main" v-bkloading="{ isLoading }">
         <li class="param-label" style="display: flex; padding-right:30px;">
-            <span c v-for="(item, index) in curParameters[0].rowAttributes" :key="index" class="input-label" :title="item.id">{{ item.id }}：</span>
+            <span
+                v-for="(item, index) in curParameters[0].rowAttributes"
+                :key="index"
+                class="input-label"
+                :title="item.label">
+                {{ item.label }}：
+                <i class="bk-icon icon-info-circle label-desc" v-bk-tooltips.top="{ content: item.desc }" />
+            </span>
         </li>
         <li class="param-com" v-for="(parameter, paramIndex) in curParameters" :key="paramIndex">
             <parameter-com v-for="(model, index) in parameter.rowAttributes"
@@ -159,5 +166,15 @@
         margin-left: 5px;
         font-size: 14px;
         cursor: pointer;
+    }
+    .label-desc {
+        position: relative;
+        bottom: 1px;
+        right: 6px;
+        margin-left: 0;
+        cursor: auto;
+        color: #C3CDD7;
+        font-size: 14px;
+        vertical-align: middle;
     }
 </style>

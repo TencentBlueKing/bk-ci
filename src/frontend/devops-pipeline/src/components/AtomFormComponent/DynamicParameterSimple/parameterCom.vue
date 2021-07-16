@@ -7,7 +7,7 @@
                 :clearable="!disabled"
                 :disabled="disabled"
                 :value="value"
-                :placeholder="$t('propertyValueInputTips')"
+                :placeholder="placeholder"
                 @change="(newValue) => $emit('update-value', newValue)" />
             <section
                 v-else
@@ -15,6 +15,7 @@
                 <bk-select
                     :disabled="disabled"
                     v-model="value"
+                    :placeholder="placeholder"
                     @change="(newValue) => $emit('update-value', newValue)"
                     ext-cls="select-custom"
                     ext-popover-cls="select-popover-custom"
@@ -52,6 +53,10 @@
             },
             options: {
                 type: Array
+            },
+            placeholder: {
+                type: String,
+                default: ''
             }
         }
     }
