@@ -142,6 +142,7 @@
                 this.privateObj = {
                     fieldName: '',
                     fieldValue: '',
+                    fieldType: 'BACKEND',
                     fieldDesc: ''
                 }
             },
