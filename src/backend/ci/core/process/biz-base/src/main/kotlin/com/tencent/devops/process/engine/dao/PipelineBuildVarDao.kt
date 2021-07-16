@@ -49,8 +49,7 @@ class PipelineBuildVarDao @Autowired constructor() {
         pipelineId: String,
         buildId: String,
         name: String,
-        value: Any,
-        readOnly: Boolean
+        value: Any
     ) {
 
         with(T_PIPELINE_BUILD_VAR) {
@@ -60,10 +59,9 @@ class PipelineBuildVarDao @Autowired constructor() {
                 PIPELINE_ID,
                 BUILD_ID,
                 KEY,
-                VALUE,
-                READ_ONLY
+                VALUE
             )
-                .values(projectId, pipelineId, buildId, name, value.toString(), readOnly)
+                .values(projectId, pipelineId, buildId, name, value.toString())
                 .onDuplicateKeyUpdate()
                 .set(PROJECT_ID, projectId)
                 .set(PIPELINE_ID, pipelineId)
