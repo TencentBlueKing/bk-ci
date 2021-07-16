@@ -103,6 +103,11 @@ class GitCIBuildFinishListener @Autowired constructor(
     @Value("\${rtx.v2GitUrl:#{null}}")
     private val v2GitUrl: String? = null
 
+    private val buildRunningDesc = "Your pipeline「%s」is running..."
+    private val buildSuccessDesc = "Your pipeline「%s」 is succeed."
+    private val buildCancelDesc = "Your pipeline「%s」 was cancelled."
+    private val buildFailedDesc = "Your pipeline「%s」 is failed."
+
     @RabbitListener(
         bindings = [(QueueBinding(
             value = Queue(value = MQ.QUEUE_PIPELINE_BUILD_FINISH_GITCI, durable = "true"),
@@ -180,7 +185,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     if (isV2) {
                         scmClient.pushCommitCheck(
                             commitId = commitId,
-                            description = description,
+                            description = getDescByBuildStatus(description, buildStatus),
                             mergeRequestId = mergeRequestId,
                             buildId = buildFinishEvent.buildId,
                             userId = buildFinishEvent.userId,
@@ -288,6 +293,27 @@ class GitCIBuildFinishListener @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)
+        }
+    }
+
+    // 根据状态切换描述
+    private fun getDescByBuildStatus(oldDesc: String?, buildStatus: BuildStatus): String {
+        return when {
+            oldDesc != null -> {
+                oldDesc
+            }
+            buildStatus.isRunning() -> {
+                buildRunningDesc
+            }
+            buildStatus.isSuccess() -> {
+                buildSuccessDesc
+            }
+            buildStatus.isCancel() -> {
+                buildCancelDesc
+            }
+            else -> {
+                buildFailedDesc
+            }
         }
     }
 
