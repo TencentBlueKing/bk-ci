@@ -31,7 +31,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.agent.utils.KillBuildProcessTree
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
-import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.Runner
@@ -61,7 +60,7 @@ object WorkRunner {
 
             val startFile = getStartFile()
             if (!startFile.isNullOrBlank()) {
-                val file = File(startFile!!)
+                val file = File(startFile)
                 if (file.exists()) {
                     logger.info("The file ${file.absolutePath} will be deleted when exit")
                     file.deleteOnExit()
@@ -85,13 +84,7 @@ object WorkRunner {
                     ): Pair<File, File> {
                         val replaceWorkspace = if (workspace.isNotBlank()) {
                             ReplacementUtils.replace(workspace, object : ReplacementUtils.KeyReplacement {
-                                override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                                    return if (doubleCurlyBraces) {
-                                        variables[key] ?: "\${{$key}}"
-                                    } else {
-                                        variables[key] ?: "\${$key}"
-                                    }
-                                }
+                                override fun getReplacement(key: String): String? = variables[key]
                             }, mapOf(
                                 WORKSPACE_CONTEXT to workspace,
                                 JOB_OS_CONTEXT to AgentEnv.getOS().name
@@ -113,9 +106,9 @@ object WorkRunner {
         } catch (e: PropertyNotExistException) {
             logger.warn("The property(${e.key}) is not exist")
             exitProcess(-1)
-        } catch (t: Throwable) {
-            logger.error("Encounter unknown exception", t)
-            LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + t.message).reset().toString())
+        } catch (ignore: Throwable) {
+            logger.error("Encounter unknown exception", ignore)
+            LoggerService.addRedLine("Other unknown error has occurred: " + ignore.message)
             exitProcess(-1)
         }
     }
@@ -127,11 +120,13 @@ object WorkRunner {
                     logger.info("start kill process tree")
                     val killedProcessIds =
                         KillBuildProcessTree.killProcessTree(buildInfo.projectId, buildInfo.buildId, buildInfo.vmSeqId)
-                    logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed, pid(s): $killedProcessIds")
+                    logger.info(
+                        "kill process tree done, ${killedProcessIds.size} process(s) killed, pid(s): $killedProcessIds"
+                    )
                 }
             })
-        } catch (t: Throwable) {
-            logger.warn("Fail to add shutdown hook", t)
+        } catch (ignore: Throwable) {
+            logger.warn("Fail to add shutdown hook", ignore)
         }
     }
 
@@ -144,8 +139,8 @@ object WorkRunner {
         try {
             logger.info("Start read the build info ($buildInfoStr)")
             return JsonUtil.getObjectMapper().readValue(buildInfoStr)
-        } catch (t: Throwable) {
-            logger.warn("Fail to read the build Info", t)
+        } catch (ignore: Throwable) {
+            logger.warn("Fail to read the build Info", ignore)
             exitProcess(1)
         }
     }
