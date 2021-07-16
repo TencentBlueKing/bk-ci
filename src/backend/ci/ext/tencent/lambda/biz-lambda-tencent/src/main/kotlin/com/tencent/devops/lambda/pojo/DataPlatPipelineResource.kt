@@ -41,7 +41,7 @@ data class DataPlatPipelineResource(
     @ApiModelProperty("构建详情", required = true)
     val model: String,
     @ApiModelProperty("创建人", required = false)
-    val creator: String,
+    val creator: String?,
     @ApiModelProperty("创建时间", required = false)
-    val createTime: String
+    val createTime: String?
 )
