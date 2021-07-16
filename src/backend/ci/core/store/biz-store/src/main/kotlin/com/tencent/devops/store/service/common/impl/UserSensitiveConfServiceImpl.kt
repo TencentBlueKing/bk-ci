@@ -158,8 +158,8 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         val finalFieldValue = if (fieldValue == aesMock) {
             val dbFieldType = sensitiveConfRecord.fieldType
             if (dbFieldType == FieldTypeEnum.BACKEND.name && dbFieldType != fieldType) {
-                // 如果字段类型由BACKEND改为其它，需把字段内容解密存储
-                AESUtil.decrypt(aesKey, fieldValue)
+                // 如果字段类型由BACKEND改为其它，需把数据库里字段内容解密存储
+                AESUtil.decrypt(aesKey, sensitiveConfRecord.fieldValue)
             } else {
                 null
             }
