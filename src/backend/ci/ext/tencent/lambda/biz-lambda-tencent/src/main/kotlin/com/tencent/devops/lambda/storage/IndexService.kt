@@ -29,7 +29,7 @@ package com.tencent.devops.lambda.storage
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.lambda.dao.LambdaBuildIndexDao
+import com.tencent.devops.lambda.dao.lambda.LambdaBuildIndexDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

@@ -32,7 +32,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
-import com.tencent.devops.lambda.dao.LambdaPipelineModelDao
+import com.tencent.devops.lambda.dao.process.LambdaPipelineInfoDao
+import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.pojo.DataPlatPipelineInfo
 import com.tencent.devops.lambda.pojo.DataPlatPipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -42,23 +43,54 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.ForkJoinPool
+
 
 @Service
 class LambdaPipelineModelService @Autowired constructor(
     private val client: Client,
     private val kafkaClient: KafkaClient,
     private val dslContext: DSLContext,
-    private val lambdaPipelineModelDao: LambdaPipelineModelDao
+    private val lambdaPipelineModelDao: LambdaPipelineModelDao,
+    private val lambdaPipelineInfoDao: LambdaPipelineInfoDao
 ) {
 
     fun onModelExchange(event: PipelineModelAnalysisEvent) {
+        pushPipelineResource2Kafka(event.pipelineId, null)
+
+        pushPipelineInfo2Kafka(
+            pipelineId = event.pipelineId,
+            userId = event.userId,
+            projectId = event.projectId
+        )
+    }
+
+    fun syncPipelineInfo(minId: Long, maxId: Long): Boolean {
+        logger.info("====================>> syncPipelineInfo startId: $minId, endId: $maxId")
+        val pipelineInfoList = lambdaPipelineInfoDao.getPipelineInfoList(
+            dslContext = dslContext,
+            maxId = maxId,
+            minId = minId
+        )
+        val forkJoinPool = ForkJoinPool(10)
+        forkJoinPool.submit {
+            pipelineInfoList.parallelStream().forEach {
+                pushPipelineInfo2Kafka(it.pipelineId, it.lastModifyUser, it.projectId)
+                pushPipelineResource2Kafka(it.pipelineId, it.version)
+            }
+        }
+
+        return true
+    }
+
+    private fun pushPipelineResource2Kafka(pipelineId: String, version: Int?) {
         try {
-            logger.info("onModelExchange sync pipeline resource, pipelineId: ${event.pipelineId}")
-            val pipelineResource = lambdaPipelineModelDao.getResModel(dslContext, event.pipelineId)
+            logger.info("onModelExchange sync pipeline resource, pipelineId: $pipelineId")
+            val pipelineResource = lambdaPipelineModelDao.getResModel(dslContext, pipelineId, version)
             if (pipelineResource != null) {
                 val dataPlatPipelineResource = DataPlatPipelineResource(
                     washTime = LocalDateTime.now().format(dateTimeFormatter),
-                    pipelineId = event.pipelineId,
+                    pipelineId = pipelineId,
                     version = pipelineResource.version,
                     model = pipelineResource.model,
                     creator = pipelineResource.creator,
@@ -66,18 +98,25 @@ class LambdaPipelineModelService @Autowired constructor(
                 )
                 kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_RESOURCE_TOPIC, JsonUtil.toJson(dataPlatPipelineResource))
             } else {
-                logger.error("onModelExchange sync pipeline resource failed, pipelineId: ${event.pipelineId}, pipelineResource is null.")
+                logger.error("onModelExchange sync pipeline resource failed, pipelineId: $pipelineId," +
+                        " pipelineResource is null.")
             }
         } catch (e: Exception) {
-            logger.error("onModelExchange sync pipeline resource failed, pipelineId: ${event.pipelineId}", e)
+            logger.error("onModelExchange sync pipeline resource failed, pipelineId: $pipelineId", e)
         }
+    }
 
+    private fun pushPipelineInfo2Kafka(
+        pipelineId: String,
+        userId: String,
+        projectId: String
+    ) {
         try {
-            logger.info("onModelExchange sync pipelineInfo, pipelineId: ${event.pipelineId}")
+            logger.info("onModelExchange sync pipelineInfo, pipelineId: $pipelineId")
             val pipelineInfo = client.get(ServicePipelineResource::class).status(
-                userId = event.userId,
-                projectId = event.projectId,
-                pipelineId = event.pipelineId
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId
             ).data
             if (pipelineInfo != null) {
                 kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_INFO_TOPIC, JsonUtil.toJson(DataPlatPipelineInfo(
@@ -85,15 +124,11 @@ class LambdaPipelineModelService @Autowired constructor(
                     pipelineInfo = pipelineInfo
                 )))
             } else {
-                logger.error("onModelExchange sync pipelineInfo failed, pipelineId: ${event.pipelineId}, pipelineInfo is null.")
+                logger.error("onModelExchange sync pipelineInfo failed, pipelineId: $pipelineId, pipelineInfo is null.")
             }
         } catch (e: Exception) {
-            logger.error("onModelExchange sync pipelineInfo failed, pipelineId: ${event.pipelineId}", e)
+            logger.error("onModelExchange sync pipelineInfo failed, pipelineId: $pipelineId", e)
         }
-    }
-
-    fun syncPipelineInfo(startTime: String, endTime: String) {
-
     }
 
     companion object {

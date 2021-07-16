@@ -29,18 +29,23 @@ package com.tencent.devops.lambda.service
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
+import com.tencent.devops.lambda.dao.project.LambdaProjectDao
 import com.tencent.devops.lambda.pojo.project.DataPlatProjectInfo
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.ForkJoinPool
 
 @Service
 class LambdaProjectService @Autowired constructor(
-    private val kafkaClient: KafkaClient
+    private val kafkaClient: KafkaClient,
+    private val dslContext: DSLContext,
+    private val lambdaProjectDao: LambdaProjectDao
 ) {
 
     fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
@@ -93,6 +98,41 @@ class LambdaProjectService @Autowired constructor(
         } catch (e: Exception) {
             logger.error("onReceiveProjectUpdate failed, projectId: ${event.projectId}", e)
         }
+    }
+
+    fun syncProjectInfo(minId: Long, maxId: Long): Boolean {
+        logger.info("====================>> syncProjectInfo startId: $minId, endId: $maxId")
+        val projectList = lambdaProjectDao.getProjectList(dslContext, minId, maxId)
+        val forkJoinPool = ForkJoinPool(10)
+        forkJoinPool.submit {
+            projectList.parallelStream().forEach {
+                try {
+                    val projectInfo = DataPlatProjectInfo(
+                        projectName = it.projectName,
+                        projectType = it.projectType,
+                        bgId = it.bgId,
+                        bgName = it.bgName,
+                        centerId = it.centerId,
+                        centerName = it.centerName,
+                        deptId = it.deptId,
+                        deptName = it.deptName,
+                        description = it.description,
+                        englishName = it.englishName,
+                        ccAppId = it.ccAppId,
+                        ccAppName = it.ccAppName,
+                        kind = it.kind,
+                        secrecy = it.isSecrecy,
+                        washTime = LocalDateTime.now().format(dateTimeFormatter)
+                    )
+                    kafkaClient.send(KafkaTopic.LANDUN_PROJECT_INFO_TOPIC, JsonUtil.toJson(projectInfo))
+                    logger.info("Success send project: ${it.projectId} to kafka.")
+                } catch (e: Exception) {
+                    logger.error("Failed send project: ${it.projectId} to kafka.", e)
+                }
+            }
+        }
+
+        return true
     }
 
     companion object {

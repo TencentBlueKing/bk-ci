@@ -24,51 +24,38 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.dao
+package com.tencent.devops.lambda.dao.process
 
-import com.tencent.devops.model.process.Tables
-import com.tencent.devops.model.process.tables.TPipelineResource
-import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
-import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
+import com.tencent.devops.model.process.tables.TPipelineBuildTask
+import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
-class LambdaPipelineModelDao {
+class LambdaBuildTaskDao {
 
-    fun getResModel(
+    fun getTask(
         dslContext: DSLContext,
-        pipelineId: String
-    ): TPipelineResourceRecord? {
-        return with(Tables.T_PIPELINE_RESOURCE) {
-            dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .fetchAny()
+        buildId: String,
+        taskId: String
+    ): TPipelineBuildTaskRecord? {
+        with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(TASK_ID.eq(taskId))
+                .fetchOne()
         }
     }
 
-    fun getResourceList(
-        dslContext: DSLContext,
-        startTime: LocalDateTime,
-        endTime: LocalDateTime
-    ): Result<TPipelineResourceRecord> {
-        return with(Tables.T_PIPELINE_RESOURCE) {
-            dslContext.selectFrom(this)
-                .where(CREATE_TIME.between(startTime, endTime))
-                .fetch()
-        }
-    }
-
-    fun getBuildDetailModel(
+    fun getTaskByBuildId(
         dslContext: DSLContext,
         buildId: String
-    ): TPipelineBuildDetailRecord? {
-        return with(Tables.T_PIPELINE_BUILD_DETAIL) {
-            dslContext.selectFrom(this)
+    ): Result<TPipelineBuildTaskRecord> {
+        with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
+            return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .fetchOne()
+                .fetch()
         }
     }
 }

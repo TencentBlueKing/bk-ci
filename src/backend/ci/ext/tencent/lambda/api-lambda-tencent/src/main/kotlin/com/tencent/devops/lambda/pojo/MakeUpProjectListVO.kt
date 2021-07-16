@@ -24,26 +24,10 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.dao
 
-import com.tencent.devops.model.process.tables.TPipelineInfo
-import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+package com.tencent.devops.lambda.pojo
 
-@Repository
-class LambdaPipelineInfoDao {
-
-    fun getPipelineInfoList(
-        dslContext: DSLContext,
-        minId: Long,
-        maxId: Long
-    ): Result<TPipelineInfoRecord> {
-        with(TPipelineInfo.T_PIPELINE_INFO) {
-            return dslContext.selectFrom(this)
-                .where(ID.between(minId, maxId))
-                .fetch()
-        }
-    }
-}
+data class MakeUpProjectListVO(
+    val minId: Long,
+    val maxId: Long
+)

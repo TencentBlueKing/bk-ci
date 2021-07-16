@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -50,15 +49,14 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
-import com.tencent.devops.lambda.dao.LambdaBuildContainerDao
-import com.tencent.devops.lambda.dao.LambdaBuildTaskDao
-import com.tencent.devops.lambda.dao.LambdaPipelineBuildDao
-import com.tencent.devops.lambda.dao.LambdaPipelineModelDao
-import com.tencent.devops.lambda.dao.LambdaPipelineTemplateDao
+import com.tencent.devops.lambda.dao.process.LambdaBuildContainerDao
+import com.tencent.devops.lambda.dao.process.LambdaBuildTaskDao
+import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
+import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
+import com.tencent.devops.lambda.dao.process.LambdaPipelineTemplateDao
 import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
 import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
-import com.tencent.devops.lambda.pojo.DataPlatPipelineResource
 import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
 import com.tencent.devops.lambda.pojo.ElementData
 import com.tencent.devops.lambda.pojo.MakeUpBuildVO
@@ -67,7 +65,6 @@ import com.tencent.devops.lambda.storage.ESService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource

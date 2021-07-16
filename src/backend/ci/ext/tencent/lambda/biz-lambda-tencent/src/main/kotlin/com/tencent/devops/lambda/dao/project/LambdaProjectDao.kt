@@ -24,37 +24,25 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.dao
+package com.tencent.devops.lambda.dao.project
 
-import com.tencent.devops.model.process.tables.TPipelineBuildTask
-import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
+import com.tencent.devops.model.project.tables.TProject
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class LambdaBuildTaskDao {
+class LambdaProjectDao {
 
-    fun getTask(
+    fun getProjectList(
         dslContext: DSLContext,
-        buildId: String,
-        taskId: String
-    ): TPipelineBuildTaskRecord? {
-        with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
+        minId: Long,
+        maxId: Long
+    ): Result<TProjectRecord> {
+        with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .and(TASK_ID.eq(taskId))
-                .fetchOne()
-        }
-    }
-
-    fun getTaskByBuildId(
-        dslContext: DSLContext,
-        buildId: String
-    ): Result<TPipelineBuildTaskRecord> {
-        with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
-            return dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(ID.between(minId, maxId))
                 .fetch()
         }
     }
