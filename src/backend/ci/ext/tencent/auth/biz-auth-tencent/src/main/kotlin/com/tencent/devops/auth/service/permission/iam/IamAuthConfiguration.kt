@@ -76,5 +76,14 @@ class IamAuthConfiguration {
     )
 
     @Bean
+    fun permissionUrlService(
+        iamConfiguration: IamConfiguration,
+        managerService: com.tencent.bk.sdk.iam.service.ManagerService
+    ) = TxPermissionUrlServiceImpl(
+        iamConfiguration = iamConfiguration,
+        managerService = managerService
+    )
+
+    @Bean
     fun managerService(client: Client) = ManagerService(client)
 }
