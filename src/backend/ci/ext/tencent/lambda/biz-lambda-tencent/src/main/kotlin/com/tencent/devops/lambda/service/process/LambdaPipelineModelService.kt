@@ -27,7 +27,6 @@
 package com.tencent.devops.lambda.service.process
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.kafka.KafkaClient
@@ -44,7 +43,6 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.ForkJoinPool
-
 
 @Service
 class LambdaPipelineModelService @Autowired constructor(

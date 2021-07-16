@@ -42,5 +42,4 @@ class LambdaPipelineModelListener @Autowired constructor(
     override fun run(event: PipelineModelAnalysisEvent) {
         lambdaPipelineModelService.onModelExchange(event)
     }
-
 }
