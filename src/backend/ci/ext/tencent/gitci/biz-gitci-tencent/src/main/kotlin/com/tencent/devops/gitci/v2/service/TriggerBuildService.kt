@@ -109,6 +109,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
@@ -136,6 +137,11 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
+import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
+import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequest
+import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -237,8 +243,75 @@ class TriggerBuildService @Autowired constructor(
 
         val model = createPipelineModel(event, gitBasicSetting, yaml)
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
+
+        // 新增质量红线
+        val (checkInId, checkOutId) = createGates(event, yaml)
+        logger.info("checkInId: $checkInId, checkOutId: $checkOutId")
+
         savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
+    }
+
+    private fun createGates(event: GitRequestEvent, yaml: ScriptBuildYaml): Pair<String?, String?> {
+        val operations = QualityOperation.values().map { QualityOperation.convertToSymbol(it) }.toSet()
+        var checkIn: String? = null
+        var checkOut: String? = null
+        yaml.stages.forEach { stage ->
+            if (stage.checkIn != null) {
+                checkIn = CreateGates(stage, operations, event, ControlPointPosition.BEFORE_POSITION)
+            }
+            if (stage.checkOut != null) {
+                checkOut = CreateGates(stage, operations, event, ControlPointPosition.AFTER_POSITION)
+            }
+        }
+        return Pair(checkIn, checkOut)
+    }
+
+    /**
+     * 根据规则创建红线
+     * 规则实例： CodeccCheckAtomDebug.coverity_serious_defect <= 2
+     */
+    private fun CreateGates(
+        stage: GitCIV2Stage,
+        operations: Set<String>,
+        event: GitRequestEvent,
+        position: String
+    ): String? {
+        stage.checkIn?.gates?.forEach GateEach@{ gate ->
+            val indicators = gate.rule.map { rule ->
+                val (atomCode, mid) = rule.split(".")
+                val op = operations.filter { mid.contains(it) }.toSet()
+                if (op.isEmpty() || op.size > 1) {
+                    return@GateEach
+                }
+                val (medata, threshold) = mid.split(op.first())
+                RuleCreateRequest.CreateRequestIndicator(
+                    atomCode = atomCode,
+                    metaDataId = medata.trim(),
+                    operation = op.first(),
+                    threshold = threshold.trim()
+                )
+            }
+            return client.get(ServiceQualityRuleResource::class).create(
+                userId = event.userId,
+                projectId = "git_${event.gitProjectId}",
+                rule = RuleCreateRequest(
+                    name = gate.name,
+                    desc = "",
+                    indicatorIds = indicators,
+                    position = position,
+                    operation = RuleOperation.END,
+                    notifyTypeList = GitCINotifyType.getNotifyListByYaml(gate.notifyOnFail?.map { it.type }),
+                    notifyGroupList = null,
+                    // todo: 人和通知的方式不匹配
+                    notifyUserList = null,
+                    auditUserList = null,
+                    auditTimeoutMinutes = null,
+                    gatewayId = null
+                )
+            ).data
+        }
+        return null
     }
 
     fun savePipelineModel(
@@ -460,7 +533,9 @@ class TriggerBuildService @Autowired constructor(
             id = stage.id,
             name = stage.name ?: if (finalStage) {
                 "Final"
-            } else { "Stage-$stageIndex" },
+            } else {
+                "Stage-$stageIndex"
+            },
             tag = stage.label,
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
