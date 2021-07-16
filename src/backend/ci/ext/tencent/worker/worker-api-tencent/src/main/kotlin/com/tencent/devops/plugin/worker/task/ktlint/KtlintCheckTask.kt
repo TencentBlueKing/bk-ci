@@ -33,11 +33,15 @@ import com.tencent.devops.common.pipeline.element.KtlintStyleElement
 import com.tencent.devops.common.pipeline.element.ktlint.KtlintReporter
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.worker.common.utils.BkRepoUtil
+import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Paths
@@ -94,6 +98,7 @@ class KtlintCheckTask : ITask() {
         try {
             KtlintChecker(codeDir).check(args.toTypedArray())
         } finally {
+            var token: String? = null
             ktlintReporters.filter { !it.reportOutput.isNullOrBlank() }.forEach {
                 val file = File(codeDir, it.reportOutput)
                 if (!file.exists()) {
@@ -101,10 +106,30 @@ class KtlintCheckTask : ITask() {
                     LoggerService.addNormalLine("The reporter file ${it.reportOutput} is not exist")
                     return@forEach
                 }
+                if (token.isNullOrBlank()) {
+                    token = BkRepoUtil.createBkRepoTemporaryToken(
+                        userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                        projectId = buildVariables.projectId,
+                        repoName = "report",
+                        path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+                        type = TokenType.UPLOAD,
+                        expireSeconds = TaskUtil.getTimeOut(buildTask)?.times(60)
+                    )
+                }
                 LoggerService.addNormalLine("Adding the ${it.reporter}'s reporter with file ${it.reportOutput}")
                 val relativePath = Paths.get(codeDir.canonicalPath).relativize(Paths.get(file.canonicalPath)).toString()
-                reportArchiveResourceApi.uploadReport(file, buildTask.elementId!!, relativePath, buildVariables)
-                reportArchiveResourceApi.createReportRecord(buildTask.elementId!!, it.reportName ?: it.reporter.name, it.reporter.name)
+                reportArchiveResourceApi.uploadReport(
+                    file = file,
+                    taskId = buildTask.elementId!!,
+                    relativePath = relativePath,
+                    buildVariables = buildVariables,
+                    token = token
+                )
+                reportArchiveResourceApi.createReportRecord(
+                    taskId = buildTask.elementId!!,
+                    indexFile = it.reportName ?: it.reporter.name,
+                    name = it.reporter.name
+                )
             }
         }
     }

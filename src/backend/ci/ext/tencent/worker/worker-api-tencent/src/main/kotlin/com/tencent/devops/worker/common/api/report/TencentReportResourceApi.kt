@@ -119,15 +119,15 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         }
     }
 
-    override fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
+    override fun uploadReport(
+        file: File,
+        taskId: String,
+        relativePath: String,
+        buildVariables: BuildVariables,
+        token: String?
+    ) {
         if (bkrepoResourceApi.tokenAccess()) {
-            val token = bkrepoResourceApi.createBkRepoTemporaryToken(
-                projectId = buildVariables.projectId,
-                repoName = "report",
-                path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
-                type = TokenType.UPLOAD
-            )
-            uploadBkRepoReportByToken(file, token, taskId, relativePath, buildVariables)
+            uploadBkRepoReportByToken(file, token!!, taskId, relativePath, buildVariables)
         } else {
             uploadBkRepoReport(file, taskId, relativePath, buildVariables)
         }

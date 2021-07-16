@@ -33,12 +33,16 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.element.SensitiveScanElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.task.script.CommandFactory
+import com.tencent.devops.worker.common.utils.BkRepoUtil
+import com.tencent.devops.worker.common.utils.TaskUtil
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.TextProgressMonitor
 import org.slf4j.LoggerFactory
@@ -124,13 +128,22 @@ class SensitiveScanTask : ITask() {
 
         val fileDirPath = Paths.get(fileDir.canonicalPath)
         val allFileList = recursiveGetFiles(fileDir)
+        val token = BkRepoUtil.createBkRepoTemporaryToken(
+            userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+            projectId = buildVariables.projectId,
+            repoName = "report",
+            path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+            type = TokenType.UPLOAD,
+            expireSeconds = TaskUtil.getTimeOut(buildTask)?.times(60)
+        )
         allFileList.forEach {
             val relativePath = fileDirPath.relativize(Paths.get(it.canonicalPath)).toString()
             reportArchiveResourceApi.uploadReport(
                 file = it,
                 taskId = elementId,
                 relativePath = relativePath,
-                buildVariables = buildVariables
+                buildVariables = buildVariables,
+                token = token
             )
         }
         reportArchiveResourceApi.createReportRecord(
