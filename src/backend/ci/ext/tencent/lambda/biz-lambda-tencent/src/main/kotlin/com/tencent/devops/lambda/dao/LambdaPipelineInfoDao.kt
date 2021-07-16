@@ -24,24 +24,26 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.dao
 
-dependencies {
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-client"))
-    api(project(":core:process:api-process"))
-    // api(project(":core:process:model-process"))
-    api(project(":ext:tencent:lambda:model-lambda"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:lambda:api-lambda-tencent"))
-    testImplementation(project(":core:common:common-test"))
+import com.tencent.devops.model.process.tables.TPipelineInfo
+import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-    api("org.elasticsearch:elasticsearch")
-    api("org.elasticsearch.client:transport")
-    api("org.elasticsearch.plugin:transport-netty4-client")
-    api("com.floragunn:search-guard-ssl")
+@Repository
+class LambdaPipelineInfoDao {
+
+    fun getPipelineInfoList(
+        dslContext: DSLContext,
+        minId: Long,
+        maxId: Long
+    ): Result<TPipelineInfoRecord> {
+        with(TPipelineInfo.T_PIPELINE_INFO) {
+            return dslContext.selectFrom(this)
+                .where(ID.between(minId, maxId))
+                .fetch()
+        }
+    }
 }

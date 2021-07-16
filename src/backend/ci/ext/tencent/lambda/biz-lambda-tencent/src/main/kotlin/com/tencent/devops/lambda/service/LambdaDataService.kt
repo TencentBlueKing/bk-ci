@@ -265,7 +265,6 @@ class LambdaDataService @Autowired constructor(
                             washTime = LocalDateTime.now().format(dateTimeFormatter)
                         )
 
-                        logger.info("pushJobDetail: ${JsonUtil.toJson(dataPlatJobDetail)}")
                         kafkaClient.send(KafkaTopic.LANDUN_JOB_DETAIL_TOPIC, JsonUtil.toJson(dataPlatJobDetail))
                     }
                 }

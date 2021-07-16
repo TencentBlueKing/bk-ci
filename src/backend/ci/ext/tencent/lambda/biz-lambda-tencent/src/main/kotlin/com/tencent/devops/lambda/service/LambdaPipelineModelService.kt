@@ -92,6 +92,10 @@ class LambdaPipelineModelService @Autowired constructor(
         }
     }
 
+    fun syncPipelineInfo(startTime: String, endTime: String) {
+
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(LambdaPipelineModelService::class.java)
         private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")

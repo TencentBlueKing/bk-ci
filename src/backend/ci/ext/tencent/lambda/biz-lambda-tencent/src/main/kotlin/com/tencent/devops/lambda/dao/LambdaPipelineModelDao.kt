@@ -31,7 +31,9 @@ import com.tencent.devops.model.process.tables.TPipelineResource
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class LambdaPipelineModelDao {
@@ -44,6 +46,18 @@ class LambdaPipelineModelDao {
             dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .fetchAny()
+        }
+    }
+
+    fun getResourceList(
+        dslContext: DSLContext,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): Result<TPipelineResourceRecord> {
+        return with(Tables.T_PIPELINE_RESOURCE) {
+            dslContext.selectFrom(this)
+                .where(CREATE_TIME.between(startTime, endTime))
+                .fetch()
         }
     }
 
