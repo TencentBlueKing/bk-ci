@@ -95,5 +95,7 @@ data class DataPlatBuildHistory(
     @ApiModelProperty("是否重试", required = false)
     val retry: Boolean = false,
     @ApiModelProperty("流水线任务执行错误", required = false)
-    var errorInfoList: String?
+    var errorInfoList: String?,
+    @ApiModelProperty("启动用户", required = false)
+    var startUser: String?
 )

@@ -471,7 +471,8 @@ class LambdaDataService @Autowired constructor(
                 startType = getStartType(trigger, webhookType),
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
-                errorInfoList = errorInfo
+                errorInfoList = errorInfo,
+                startUser = startUser
             )
         }
     }
