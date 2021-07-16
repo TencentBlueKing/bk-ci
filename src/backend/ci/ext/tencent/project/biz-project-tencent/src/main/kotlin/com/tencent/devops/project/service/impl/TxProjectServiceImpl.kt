@@ -311,14 +311,20 @@ class TxProjectServiceImpl @Autowired constructor(
             return emptyList()
         }
         logger.info("getV3userProject tag: $v3Tag")
-        ConsulContent.setConsulContent(v3Tag)
-        // 请求V3的项目,流量必须指向到v3,需指定项目头
-        val iamV3List = client.get(ServiceProjectAuthResource::class).getUserProjects(
-            userId = userId,
-            token = tokenService.getSystemToken(null)!!
-        ).data
-        ConsulContent.removeConsulContent()
-        return iamV3List
+        try {
+            ConsulContent.setConsulContent(v3Tag)
+            // 请求V3的项目,流量必须指向到v3,需指定项目头
+            val iamV3List = client.get(ServiceProjectAuthResource::class).getUserProjects(
+                userId = userId,
+                token = tokenService.getSystemToken(null)!!
+            ).data
+            ConsulContent.removeConsulContent()
+            return iamV3List
+        } catch (e: Exception) {
+            // 为防止V0,V3发布存在时间差,导致项目列表拉取异常
+            logger.warn("getV3Project fail $userId $e")
+            return emptyList()
+        }
     }
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
