@@ -171,7 +171,11 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                 AESUtil.encrypt(aesKey, fieldValue)
             }
         } else {
-            fieldValue
+            if (fieldValue == aesMock) {
+                null
+            } else {
+                fieldValue
+            }
         }
         sensitiveConfDao.update(
             dslContext = dslContext,
