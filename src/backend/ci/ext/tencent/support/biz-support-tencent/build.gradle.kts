@@ -45,4 +45,5 @@ dependencies {
 //    api("org.ansj:ansj_seg:5.1.6"
     api("com.amazonaws:aws-java-sdk-s3")
     api("net.coobird:thumbnailator:0.4.8")
+    api("com.github.ben-manes.caffeine:caffeine")
 }

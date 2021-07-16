@@ -25,35 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.configuration
+package com.tencent.devops.gitci.resources.user
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.gitci.GitCIPermissionProjectServiceImpl
-import com.tencent.devops.auth.service.gitci.GitCIPermissionServiceImpl
-import com.tencent.devops.auth.service.gitci.GitCiProjectInfoService
-import com.tencent.devops.common.client.Client
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.gitci.api.user.UserGitCIPermissionResource
+import com.tencent.devops.gitci.permission.GitCIV2PermissionService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Configuration
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-class GitCIConfiguration {
-    @Bean
-    fun gitCIPermissionServiceImpl(
-        client: Client,
-        managerService: ManagerService,
-        projectInfoService: GitCiProjectInfoService
-    ) = GitCIPermissionServiceImpl(client, managerService, projectInfoService)
+@RestResource
+class UserGitCIPermissionResourceImpl @Autowired constructor(
+    private val permissionService: GitCIV2PermissionService
+) : UserGitCIPermissionResource {
 
-    @Bean
-    fun gitCIPermissionProjectServiceImpl(
-        client: Client,
-        projectInfoService: GitCiProjectInfoService
-    ) = GitCIPermissionProjectServiceImpl(client, projectInfoService)
-
-    @Bean
-    fun gitProjectInfoService(
-        client: Client
-    ) = GitCiProjectInfoService(client)
+    override fun validateUserResourcePermission(userId: String, projectId: String): Result<Boolean> {
+        return Result(permissionService.checkEditPermissionAndIgnoreOauth(userId, projectId))
+    }
 }

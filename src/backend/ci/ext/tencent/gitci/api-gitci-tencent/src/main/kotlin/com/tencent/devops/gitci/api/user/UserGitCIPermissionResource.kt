@@ -25,35 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.configuration
+package com.tencent.devops.gitci.api.user
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.gitci.GitCIPermissionProjectServiceImpl
-import com.tencent.devops.auth.service.gitci.GitCIPermissionServiceImpl
-import com.tencent.devops.auth.service.gitci.GitCiProjectInfoService
-import com.tencent.devops.common.client.Client
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Configuration
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-class GitCIConfiguration {
-    @Bean
-    fun gitCIPermissionServiceImpl(
-        client: Client,
-        managerService: ManagerService,
-        projectInfoService: GitCiProjectInfoService
-    ) = GitCIPermissionServiceImpl(client, managerService, projectInfoService)
+@Api(tags = ["USER_GIT_CI_BUILD"], description = "user-permission资源")
+@Path("/user/permission")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserGitCIPermissionResource {
 
-    @Bean
-    fun gitCIPermissionProjectServiceImpl(
-        client: Client,
-        projectInfoService: GitCiProjectInfoService
-    ) = GitCIPermissionProjectServiceImpl(client, projectInfoService)
-
-    @Bean
-    fun gitProjectInfoService(
-        client: Client
-    ) = GitCiProjectInfoService(client)
+    @GET
+    @Path("/projects/{projectId}/resource/validate")
+    @ApiOperation("校验用户是否有action的权限，忽略oatuh验证")
+    fun validateUserResourcePermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
+        userId: String,
+        @PathParam("projectId")
+        @ApiParam("项目编码", required = true)
+        projectId: String
+    ): Result<Boolean>
 }

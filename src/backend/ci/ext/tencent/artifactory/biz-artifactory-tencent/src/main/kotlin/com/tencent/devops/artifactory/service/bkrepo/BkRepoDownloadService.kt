@@ -115,7 +115,14 @@ open class BkRepoDownloadService @Autowired constructor(
         argPathSet.forEach { path ->
             normalizedPaths.add(PathUtils.checkAndNormalizeAbsPath(path))
         }
-        val urls = bkRepoService.internalTemporaryAccessDownloadUrls(userId, projectId, artifactoryType, normalizedPaths, ttl, permits)
+        val urls = bkRepoService.internalTemporaryAccessDownloadUrls(
+            userId,
+            projectId,
+            artifactoryType,
+            normalizedPaths,
+            ttl,
+            permits
+        )
         return urls.map { Url(it) }
     }
 
@@ -131,7 +138,7 @@ open class BkRepoDownloadService @Autowired constructor(
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val repo = RepoUtils.getRepoByType(artifactoryType)
         val url = "${HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)}" +
-            "/bkrepo/api/user/generic/$projectId/$repo$normalizedPath?download=true"
+                "/bkrepo/api/user/generic/$projectId/$repo$normalizedPath?download=true"
         return Url(url, url)
     }
 
@@ -143,12 +150,19 @@ open class BkRepoDownloadService @Autowired constructor(
     ): Url {
         logger.info("getExternalUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-        val fileInfo = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
-            ?: throw NotFoundException("文件($path)不存在")
+        val fileInfo =
+            bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
+                ?: throw NotFoundException("文件($path)不存在")
         val properties = fileInfo.metadata
         val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw RuntimeException("元数据(pipelineId)不存在")
         val buildId = properties[ARCHIVE_PROPS_BUILD_ID] ?: throw RuntimeException("元数据(buildId)不存在")
-        val shortUrl = shortUrlService.createShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId.toString(), buildId.toString()), 24 * 3600 * 30)
+        val shortUrl = shortUrlService.createShortUrl(
+            PathUtils.buildDetailLink(
+                projectId,
+                artifactoryType.name,
+                fileInfo.fullPath
+            ), 24 * 3600 * 30
+        )
         return Url(shortUrl)
     }
 
@@ -169,7 +183,13 @@ open class BkRepoDownloadService @Autowired constructor(
             }
             ArtifactoryType.PIPELINE -> {
                 val pipelineId = pipelineService.getPipelineId(path)
-                pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.SHARE, "用户($userId)在项目($projectId)下没有流水线${pipelineId}分享权限")
+                pipelineService.validatePermission(
+                    userId,
+                    projectId,
+                    pipelineId,
+                    AuthPermission.SHARE,
+                    "用户($userId)在项目($projectId)下没有流水线${pipelineId}分享权限"
+                )
             }
         }
         val downloadUrl = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, path, ttl)
@@ -213,9 +233,12 @@ open class BkRepoDownloadService @Autowired constructor(
         region: String?,
         userId: String?
     ): List<String> {
-        logger.info("getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
-            ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, ttl: $ttl" +
-            ", crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, region：$region, userId: $userId")
+        logger.info(
+            "getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
+                    ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
+                    "ttl: $ttl, crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, region：$region, " +
+                    "userId: $userId"
+        )
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
@@ -238,17 +261,23 @@ open class BkRepoDownloadService @Autowired constructor(
                 userId!!
             }
             !crossProjectId.isNullOrBlank() -> {
-                client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+                client.get(ServicePipelineResource::class)
+                    .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
             }
             else -> {
                 null
             }
         }
-        logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+        logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, " +
+                "targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
 
         // 校验用户权限, auth权限优化实施后可以去掉
         if (accessUserId != null) {
-            if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(accessUserId, targetProjectId)) {
+            if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
+                    accessUserId,
+                    targetProjectId
+                )
+            ) {
                 throw PermissionForbiddenException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
@@ -268,7 +297,9 @@ open class BkRepoDownloadService @Autowired constructor(
         pathArray.forEach { path ->
             val absPath = "/${JFrogUtil.normalize(path).removePrefix("/")}"
             val filePath = if (artifactoryType == ArtifactoryType.PIPELINE) {
-                "/$targetPipelineId/$targetBuildId/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /$projectId/$pipelineId/$buildId/path/
+                "/$targetPipelineId/$targetBuildId/${
+                    JFrogUtil.getParentFolder(absPath).removePrefix("/")
+                }" // /$projectId/$pipelineId/$buildId/path/
             } else {
                 "/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /path/
             }

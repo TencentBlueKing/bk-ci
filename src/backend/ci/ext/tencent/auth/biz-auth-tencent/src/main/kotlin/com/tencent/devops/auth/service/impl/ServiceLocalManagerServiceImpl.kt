@@ -25,35 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.configuration
+package com.tencent.devops.auth.service.impl
 
+import com.tencent.devops.auth.api.ServiceLocalManagerService
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.gitci.GitCIPermissionProjectServiceImpl
-import com.tencent.devops.auth.service.gitci.GitCIPermissionServiceImpl
-import com.tencent.devops.auth.service.gitci.GitCiProjectInfoService
-import com.tencent.devops.common.client.Client
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Configuration
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-class GitCIConfiguration {
-    @Bean
-    fun gitCIPermissionServiceImpl(
-        client: Client,
-        managerService: ManagerService,
-        projectInfoService: GitCiProjectInfoService
-    ) = GitCIPermissionServiceImpl(client, managerService, projectInfoService)
-
-    @Bean
-    fun gitCIPermissionProjectServiceImpl(
-        client: Client,
-        projectInfoService: GitCiProjectInfoService
-    ) = GitCIPermissionProjectServiceImpl(client, projectInfoService)
-
-    @Bean
-    fun gitProjectInfoService(
-        client: Client
-    ) = GitCiProjectInfoService(client)
+@RestResource
+class ServiceLocalManagerServiceImpl @Autowired constructor(
+    val managerService: ManagerService
+) : ServiceLocalManagerService {
+    override fun validateUserActionPermission(
+        userId: String,
+        token: String,
+        projectCode: String,
+        resourceType: String,
+        action: String
+    ): Result<Boolean> {
+        return Result(managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectCode,
+            resourceType = AuthResourceType.get(resourceType),
+            authPermission = AuthPermission.get(action)
+        ))
+    }
 }
