@@ -103,7 +103,6 @@ class GitCIBuildFinishListener @Autowired constructor(
     @Value("\${rtx.v2GitUrl:#{null}}")
     private val v2GitUrl: String? = null
 
-    private val buildRunningDesc = "Your pipeline「%s」is running..."
     private val buildSuccessDesc = "Your pipeline「%s」 is succeed."
     private val buildCancelDesc = "Your pipeline「%s」 was cancelled."
     private val buildFailedDesc = "Your pipeline「%s」 is failed."
@@ -299,11 +298,8 @@ class GitCIBuildFinishListener @Autowired constructor(
     // 根据状态切换描述
     private fun getDescByBuildStatus(oldDesc: String?, buildStatus: BuildStatus): String {
         return when {
-            oldDesc != null -> {
+            !oldDesc.isNullOrBlank() -> {
                 oldDesc
-            }
-            buildStatus.isRunning() -> {
-                buildRunningDesc
             }
             buildStatus.isSuccess() -> {
                 buildSuccessDesc

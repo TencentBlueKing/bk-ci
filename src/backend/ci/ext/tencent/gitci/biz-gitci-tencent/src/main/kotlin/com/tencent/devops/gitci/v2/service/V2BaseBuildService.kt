@@ -71,6 +71,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
+    private val buildRunningDesc = "Your pipeline「%s」is running..."
+
     abstract fun gitStartBuild(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
@@ -155,7 +157,11 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
             if (event.objectKind != OBJECT_KIND_MANUAL) {
                 scmClient.pushCommitCheck(
                     commitId = event.commitId,
-                    description = event.description ?: "",
+                    description = if (event.description.isNullOrBlank()) {
+                        buildRunningDesc
+                    } else {
+                        event.description ?: ""
+                    },
                     mergeRequestId = event.mergeRequestId ?: 0L,
                     buildId = buildId,
                     userId = event.userId,
