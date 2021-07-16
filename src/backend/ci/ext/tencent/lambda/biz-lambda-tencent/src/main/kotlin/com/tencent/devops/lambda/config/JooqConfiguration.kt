@@ -54,7 +54,7 @@ import javax.sql.DataSource
 class JooqConfiguration {
 
     private val regex =
-        "\\.(tsource|ttarget|process|project|lambda)".toRegex()
+        "\\.(tsource|ttarget|process|project)".toRegex()
 
     companion object {
         private val LOG = LoggerFactory.getLogger(JooqConfiguration::class.java)
@@ -71,6 +71,13 @@ class JooqConfiguration {
         if (Constructor::class.java.isAssignableFrom(annotatedElement::class.java)) {
             val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
             val packageName = declaringClass.getPackage().name
+            if (packageName == "com.tencent.devops.lambda.service.lambda") {
+                val configuration = configurationMap["lambdaJooqConfiguration"]
+                    ?: throw NoSuchBeanDefinitionException("no lambdaJooqConfiguration")
+                LOG.info("dslContext_init|lambdaJooqConfiguration|${declaringClass.name}")
+                return DSL.using(configuration)
+            }
+
             val matchResult = regex.find(packageName)
             if (matchResult != null) {
                 val configuration = configurationMap["${matchResult.groupValues[1]}JooqConfiguration"]

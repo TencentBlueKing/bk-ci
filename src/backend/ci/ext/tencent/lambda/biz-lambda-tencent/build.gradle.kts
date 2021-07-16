@@ -31,7 +31,7 @@ dependencies {
     api(project(":ext:tencent:common:common-digest-tencent"))
     api(project(":ext:tencent:common:common-kafka-tencent"))
     api(project(":core:common:common-event"))
-    api(project(":core:common:common-db"))
+    // api(project(":core:common:common-db"))
     api(project(":core:common:common-client"))
     api(project(":core:process:api-process"))
     // api(project(":core:process:model-process"))
@@ -40,8 +40,15 @@ dependencies {
     api(project(":ext:tencent:lambda:api-lambda-tencent"))
     testImplementation(project(":core:common:common-test"))
 
+    api("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
     api("org.elasticsearch:elasticsearch")
     api("org.elasticsearch.client:transport")
     api("org.elasticsearch.plugin:transport-netty4-client")
     api("com.floragunn:search-guard-ssl")
+
+    api("org.json:json")
+    api("org.springframework.boot:spring-boot-starter-jooq")
+    api("com.zaxxer:HikariCP")
+    api("org.jooq:jooq")
+    api("mysql:mysql-connector-java")
 }
