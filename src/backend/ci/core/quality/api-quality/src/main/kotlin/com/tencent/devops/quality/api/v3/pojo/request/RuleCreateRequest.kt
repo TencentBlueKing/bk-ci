@@ -25,22 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.quality.api.v3.pojo.request
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.quality.pojo.enum.RuleOperation
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线暂停操作实体类")
-data class BuildTaskPauseInfo(
-    @ApiModelProperty("任务ID")
-    val taskId: String,
-    @ApiModelProperty("element信息,若插件内有变量变更需给出变更后的element")
-    val element: Element?,
-    @ApiModelProperty("是否继续 true:继续构建 false：停止构建")
-    val isContinue: Boolean,
-    @ApiModelProperty("当前stageId")
-    val stageId: String,
-    @ApiModelProperty("当前containerId")
-    val containerId: String
-)
+@ApiModel("规则创建请求")
+data class RuleCreateRequest(
+    @ApiModelProperty("规则名称", required = true)
+    val name: String,
+    @ApiModelProperty("规则描述", required = true)
+    val desc: String,
+    @ApiModelProperty("指标类型", required = true)
+    val indicatorIds: List<CreateRequestIndicator>,
+    @ApiModelProperty("控制点位置", required = true)
+    val position: String,
+    @ApiModelProperty("操作类型", required = true)
+    val operation: RuleOperation,
+    @ApiModelProperty("通知类型", required = false)
+    val notifyTypeList: List<NotifyType>?,
+    @ApiModelProperty("通知组名单", required = false)
+    val notifyGroupList: List<String>?,
+    @ApiModelProperty("通知人员名单", required = false)
+    val notifyUserList: List<String>?,
+    @ApiModelProperty("审核通知人员", required = false)
+    val auditUserList: List<String>?,
+    @ApiModelProperty("审核超时时间", required = false)
+    val auditTimeoutMinutes: Int?,
+    @ApiModelProperty("红线匹配的id", required = false)
+    val gatewayId: String?
+) {
+    data class CreateRequestIndicator(
+        val atomCode: String,
+        val metaDataId: String,
+        val operation: String,
+        val threshold: String
+    )
+}
