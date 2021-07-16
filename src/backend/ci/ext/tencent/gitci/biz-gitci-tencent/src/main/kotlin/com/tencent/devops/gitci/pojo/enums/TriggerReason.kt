@@ -52,7 +52,7 @@ enum class TriggerReason(val summary: String, val detail: String) {
         "MR conflict, please resolve the conflict first"),
     TRIGGER_NOT_MATCH("Does not meet the trigger condition",
         "Does not meet the trigger condition"),
-    PIPELINE_RUN_ERROR("pipeline run with error", "pipeline run with error"),
+    PIPELINE_RUN_ERROR("Pipeline run with error", "pipeline run with error"),
     PIPELINE_DISABLE("Pipeline is disabled", "Pipeline is disabled"),
     CI_YAML_TEMPLATE_ERROR("YAML template parse error", "YAML template parse error: %s"),
     PIPELINE_PREPARE_ERROR("Pipeline prepare error", "Pipeline prepare error: %s"),
