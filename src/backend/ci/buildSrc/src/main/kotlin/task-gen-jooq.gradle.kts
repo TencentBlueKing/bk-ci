@@ -48,6 +48,9 @@ val moduleNames = when (val moduleName = name.split("-")[1]) {
     "statistics" -> {
         listOf("process", "project", "openapi")
     }
+    "lambda" -> {
+        listOf("process", "project", "lambda")
+    }
     else -> listOf(moduleName)
 }
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")
