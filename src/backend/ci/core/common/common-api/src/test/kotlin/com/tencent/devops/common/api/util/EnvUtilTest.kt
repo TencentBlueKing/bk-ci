@@ -35,21 +35,16 @@ class EnvUtilTest {
     @Test
     fun parseEnvTwice() {
         val map = mutableMapOf<String, String>()
-        map["GDP"] = "\${{GDP}}"
-        map["People"] = "\${{People}}"
-        map["Country"] = "\${Country}"
-        val template = "{\"GDP\": \"\${{GDP}}亿\", \"People\": \${{People}} \"Country\": \"\${twice}\"}"
-        println("beforeTwice=$template")
-
         map["GDP"] = "10000000"
         map["People"] = "1400000000"
         map["Country"] = "中华人民共和国"
         map["twice"] = "\${Country}" // twice 二次解析
-        val expect = "{\"GDP\": \"${map["GDP"]}亿\", \"People\": ${map["People"]} \"Country\": \"${map["Country"]}\"}"
-        println("expectTwice=$expect")
 
-        val replaceTemplate = EnvUtils.parseEnv(template, map)
-        Assert.assertEquals(expect, replaceTemplate)
+        parseAndEquals(
+            data = map,
+            template = "{\"GDP\": \"\${{GDP}}亿\", \"People\": \${{People}} \"Country\": \"\${twice}\"}",
+            expect = "{\"GDP\": \"${map["GDP"]}亿\", \"People\": ${map["People"]} \"Country\": \"${map["Country"]}\"}"
+        )
 
         val data = HashMap<String, String>()
         data["ab3c"] = "123"
@@ -58,17 +53,41 @@ class EnvUtilTest {
 
         val template2 = "abcd_\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
         val buff = EnvUtils.parseEnv(template2, data)
-        println("buff=$buff")
         Assert.assertEquals(template2, buff)
-        val template3 = "abcd_\${abc}_ffs_\${{ce}}_\${{t.cd}}_ end"
-        val buff2 = EnvUtils.parseEnv(template3, data)
-        println("buff2=$buff2")
-        Assert.assertEquals("abcd_\${abc}_ffs_\${{ce}}_${data["ab.cd"]}_ end", buff2)
 
-        data["ce"] = "\${none}"
-        val buff3 = EnvUtils.parseEnv("abcd_\${abc}_ffs_\${{ce}}_\${{t.cd}}_ end", data)
-        println("buff3=$buff3")
-        Assert.assertEquals("abcd_\${abc}_ffs_\${none}_${data["ab.cd"]}_ end", buff3)
+        parseAndEquals(
+            data = data,
+            template = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end",
+            expect = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
+        )
+
+        parseAndEquals(
+            data = data,
+            template = "abcd_\${abc}_ffs_\${{ce}}_\${{t.cd}}_ end结束%\n # 这是注释行a1\$ab_^%!#@",
+            expect = "abcd_\${abc}_ffs_twice_${data["ab.cd"]}_ end结束%\n # 这是注释行a1\$ab_^%!#@",
+            contextMap = mapOf("ce" to "twice")
+        )
+
+        data["c_e"] = "\${none}"
+        parseAndEquals(
+            data = data,
+            template = "abcd_\${abc}_ffs_\${{c_e}}_\${{t.cd}}_ end",
+            expect = "abcd_\${abc}_ffs_\${none}_${data["ab.cd"]}_ end"
+        )
+
+        data["center中"] = "中国"
+        parseAndEquals(data = data, template = "abcd_\${center中}_ffs", expect = "abcd_中国_ffs")
+    }
+
+    private fun parseAndEquals(
+        data: Map<String, String>,
+        template: String,
+        expect: String,
+        contextMap: Map<String, String> = emptyMap()
+    ) {
+        val buff = EnvUtils.parseEnv(template, data, contextMap = contextMap)
+        println("template=$template\nreplaced=$buff\n")
+        Assert.assertEquals(expect, buff)
     }
 
     @Test

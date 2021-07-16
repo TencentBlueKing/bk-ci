@@ -86,7 +86,7 @@ object EnvUtils {
         return if (buff.isNotEmpty()) buff.toString() else command
     }
 
-    private val tPattern = Pattern.compile("(\\$[{](?<single>[ .\\w]+)})|(\\$[{]{2}(?<double>[ .\\w]+)[}]{2})")
+    private val tPattern = Pattern.compile("(\\$[{](?<single>[^$^{}]+)})|(\\$[{]{2}(?<double>[^$^{}]+)[}]{2})")
 
     private fun escapeSpecialWord(keyword: String): String {
         var replaceWord = keyword
