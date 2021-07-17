@@ -180,8 +180,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         destPath: String,
         file: File,
         headers: Map<String, String>?,
-        isVmBuildEnv: Boolean,
-        token: String?
+        isVmBuildEnv: Boolean
     ): Result<Boolean> {
         LoggerService.addNormalLine("upload file url >>> $url")
         val fileBody = RequestBody.create(MultipartFormData, file)

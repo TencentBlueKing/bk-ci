@@ -34,6 +34,9 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.archive.element.SingleArchiveElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.ArchiveUtils.archiveCustomFiles
@@ -48,15 +51,32 @@ class SingleFileArchiveTask : ITask() {
         val taskParams = buildTask.params ?: mapOf()
         val filePath = taskParams["filePath"] ?: throw ParamBlankException("param [filePath] is empty")
         val isCustomize = taskParams["customize"] ?: throw ParamBlankException("param [isCustomize] is empty")
-
         TaskUtil.setTaskId(buildTask.taskId ?: "")
-
+        val token = RepoServiceFactory.getInstance().getRepoToken(
+            userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+            projectId = buildVariables.projectId,
+            repoName = if (isCustomize.toBoolean()) "custom" else "pipeline",
+            path = if (isCustomize.toBoolean()) "/" else "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+            type = TokenType.UPLOAD,
+            expireSeconds = TaskUtil.getTimeOut(buildTask)?.times(60)
+        )
         try {
             val count = if (isCustomize.toBoolean()) {
                 val destPath = taskParams["destPath"] ?: throw ParamBlankException("param [destPath] is empty")
-                archiveCustomFiles(filePath, destPath, workspace, buildVariables)
+                archiveCustomFiles(
+                    filePath = filePath,
+                    destPath = destPath,
+                    workspace = workspace,
+                    buildVariables = buildVariables,
+                    token = token
+                )
             } else {
-                archivePipelineFiles(filePath, workspace, buildVariables)
+                archivePipelineFiles(
+                    filePath = filePath,
+                    workspace = workspace,
+                    buildVariables = buildVariables,
+                    token = token
+                )
             }
             if (count == 0) {
                 throw TaskExecuteException(
