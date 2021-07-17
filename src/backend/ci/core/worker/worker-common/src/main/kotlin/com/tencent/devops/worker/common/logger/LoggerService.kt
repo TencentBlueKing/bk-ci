@@ -43,10 +43,14 @@ import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.LOG_FILE_LENGTH_LIMIT
 import com.tencent.devops.worker.common.LOG_MESSAGE_LENGTH_LIMIT
 import com.tencent.devops.worker.common.LOG_UPLOAD_BUFFER_SIZE
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
+import com.tencent.devops.worker.common.utils.TaskUtil
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -278,6 +282,15 @@ object LoggerService {
 
     fun archiveLogFiles() {
         logger.info("Start to archive log files with LogMode[${AgentEnv.getLogMode()}]")
+        val expireSeconds = buildVariables!!.timeoutMills / 1000
+        val token = RepoServiceFactory.getInstance().getRepoToken(
+            userId = buildVariables!!.variables[PIPELINE_START_USER_ID] ?: "",
+            projectId = buildVariables!!.projectId,
+            repoName = "log",
+            path = "/",
+            type = TokenType.UPLOAD,
+            expireSeconds = expireSeconds
+        )
         try {
             var archivedCount = 0
             // 将所有日志存储状态为LOCAL的插件进行文件归档
@@ -300,7 +313,12 @@ object LoggerService {
 
                 // 开始归档符合归档条件的日志文件
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
-                ArchiveUtils.archiveLogFile(property.logFile, property.childPath, buildVariables!!)
+                ArchiveUtils.archiveLogFile(
+                    file = property.logFile,
+                    destFullPath = property.childPath,
+                    buildVariables = buildVariables!!,
+                    token = token
+                )
                 property.logStorageMode = LogStorageMode.ARCHIVED
                 archivedCount++
             }
