@@ -75,7 +75,7 @@ import com.tencent.devops.dockerhost.pojo.DockerRunPortBinding
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
 import com.tencent.devops.dockerhost.utils.RandomUtil
-import com.tencent.devops.dockerhost.utils.SigarUtil
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.apache.commons.lang3.StringUtils
@@ -604,9 +604,9 @@ class DockerHostBuildService(
      * 监控系统负载，超过一定阈值，对于占用负载较高的容器，主动降低负载
      */
     fun monitorSystemLoad() {
-        logger.info("Monitor|cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
-        if (SigarUtil.getAverageLongCpuLoad() > dockerHostConfig.elasticitySystemCpuThreshold ?: 80 ||
-            SigarUtil.getAverageLongMemLoad() > dockerHostConfig.elasticitySystemMemThreshold ?: 80
+        logger.info("Monitor|cpu: ${SystemInfoUtil.getAverageLongCpuLoad()}, mem: ${SystemInfoUtil.getAverageLongMemLoad()}")
+        if (SystemInfoUtil.getAverageLongCpuLoad() > dockerHostConfig.elasticitySystemCpuThreshold ?: 80 ||
+            SystemInfoUtil.getAverageLongMemLoad() > dockerHostConfig.elasticitySystemMemThreshold ?: 80
         ) {
             checkContainerStats()
         }

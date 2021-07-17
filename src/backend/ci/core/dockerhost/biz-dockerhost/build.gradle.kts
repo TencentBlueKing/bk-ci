@@ -40,5 +40,5 @@ dependencies {
     api(group = "org.glassfish.jersey.core", name = "jersey-common", version = "2.25.1")
     api("org.slf4j:slf4j-api")
     api("com.squareup.okhttp3:okhttp:3.14.4")
-    api(group = "com.tencent.devops.ci-plugins", name = "sigar")
+    implementation("com.github.oshi:oshi-core:5.7.5")
 }

@@ -35,7 +35,7 @@ import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.pojo.DockerRunResponse
 import com.tencent.devops.dockerhost.pojo.Status
-import com.tencent.devops.dockerhost.utils.SigarUtil
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -176,11 +176,11 @@ class DockerService @Autowired constructor(
     fun getDockerHostLoad(): DockerHostLoad {
         return DockerHostLoad(
             usedContainerNum = dockerHostBuildService.getContainerNum(),
-            averageCpuLoad = SigarUtil.getAverageCpuLoad(),
-            averageMemLoad = SigarUtil.getAverageMemLoad(),
-            averageDiskLoad = SigarUtil.getAverageDiskLoad(),
-            averageDiskIOLoad = SigarUtil.getAverageDiskIOLoad()
-            )
+            averageCpuLoad = SystemInfoUtil.getAverageCpuLoad(),
+            averageMemLoad = SystemInfoUtil.getAverageMemLoad(),
+            averageDiskLoad = SystemInfoUtil.getAverageDiskLoad(),
+            averageDiskIOLoad = SystemInfoUtil.getAverageDiskIOLoad()
+        )
     }
 
     fun getContainerStatus(containerId: String): Boolean {
