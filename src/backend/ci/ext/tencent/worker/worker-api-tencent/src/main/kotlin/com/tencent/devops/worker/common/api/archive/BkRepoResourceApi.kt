@@ -176,8 +176,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         isVmBuildEnv: Boolean
     ) {
         val url = "/generic/temporary/download/$projectId/$repoName$fullPath?token=$token"
-        var header = HashMap<String, String>()
-        header.set("X-BKREPO-UID", userId)
+        val header = HashMap<String, String>()
+        header[BKREPO_UID] = userId
         val request = buildGet(url, header, isVmBuildEnv)
         download(request, destPath)
     }
@@ -190,8 +190,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         destPath: File
     ) {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullPath"
-        var header = HashMap<String, String>()
-        header.set("X-BKREPO-UID", user)
+        val header = HashMap<String, String>()
+        header[BKREPO_UID] = user
         val request = buildGet(url, header, true)
         download(request, destPath)
     }
@@ -204,13 +204,13 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         parseAppMetadata: Boolean,
         token: String? = null
     ) {
-        if (tokenAccess()) {
+        if (!token.isNullOrBlank()) {
             uploadFileByToken(
                 file = file,
                 projectId = buildVariables.projectId,
                 repoName = repoName,
                 destFullPath = destFullPath,
-                token = token!!,
+                token = token,
                 buildVariables = buildVariables,
                 parseAppMetadata = parseAppMetadata
             )

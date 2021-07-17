@@ -25,34 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.utils
+package com.tencent.devops.agent.service
 
-import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+import com.tencent.devops.worker.common.service.RepoService
+import com.tencent.devops.worker.common.utils.BkRepoUtil
 
-object BkRepoUtil {
+class BkRepoServiceImpl : RepoService {
 
-    private val bkRepoResourceApi = BkRepoResourceApi()
-    private const val DEFAULT_EXPIRE_SECONDS = 86400L
-
-    /**
-     * 创建仓库token
-     */
-    fun createBkRepoTemporaryToken(
+    override fun getRepoToken(
         userId: String,
         projectId: String,
         repoName: String,
         path: String,
         type: TokenType,
-        expireSeconds: Long? = DEFAULT_EXPIRE_SECONDS
+        expireSeconds: Long?
     ): String? {
-        return if (bkRepoResourceApi.tokenAccess()) bkRepoResourceApi.createBkRepoTemporaryToken(
+        return BkRepoUtil.createBkRepoTemporaryToken(
             userId = userId,
             projectId = projectId,
             repoName = repoName,
             path = path,
             type = type,
-            expireSeconds = expireSeconds ?: DEFAULT_EXPIRE_SECONDS
-        ) else null
+            expireSeconds = expireSeconds
+        )
     }
 }
