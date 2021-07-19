@@ -10,7 +10,7 @@
                         :key="childPanel.name"
                         @click="childTabClick(childPanel)"
                         :class="['transition-child-tab', { active: activeChildTab === childPanel.name }]"
-                    >{{ childPanel.label }} <icon name="loadout" size="22" v-if="childPanel.link"></icon> </li>
+                    >{{ childPanel.label }} <icon name="loadout" size="18" v-if="childPanel.link"></icon> </li>
                 </ul>
             </transition>
             <slot></slot>

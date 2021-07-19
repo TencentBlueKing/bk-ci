@@ -76,6 +76,7 @@
 
         var API_URL_PREFIX = '/ms'     // api接口前缀
         var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
+        var PERM_DOMAIN = '__PERM_DOMAIN__' // 权限中心域名
         var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__'  // 文档中心域名
         var LOGIN_SERVICE_URL = '__BK_CI_PAAS_LOGIN_URL__' // 蓝鲸PaaS登录入口
         var DEVOPS_LS_VERSION = '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
@@ -84,14 +85,13 @@
         var ENTERPRISE_VERSION = false
     </script>
     
-    
     <script>
         // 动态加载js
         function importScript (src, oHead, fOnload) {
             var oScript = document.createElement('script')
             oScript.type = 'text\/javascript'
             
-            if (fOnload) { 
+            if (fOnload) {
                 oScript.onload = fOnload
             }
             
@@ -174,11 +174,11 @@
                         var key = decodeURIComponent(item[0])
                         if (key === 'projectCode') {
                             return decodeURIComponent(item[1])
-                        } 
+                        }
                     }
-                    return ''    
+                    return ''
                 }else if (location.pathname.match(/^\/console\/store\/(\w+)?/)){ // TODO store没有projectId
-                    return ''    
+                    return ''
                 } else {
                     var res = location.pathname.match(reg)
                     return res ? res[1] : ''
@@ -198,7 +198,7 @@
         
         window.getLoginUrl = function () {
             var cUrl = location.origin + location.pathname + encodeURIComponent(location.search)
-            if (/=%s/.test(LOGIN_SERVICE_URL)) { 
+            if (/=%s/.test(LOGIN_SERVICE_URL)) {
                 return LOGIN_SERVICE_URL.replace(/%s/, cUrl)
             }else {
                 const loginUrl = new URL(LOGIN_SERVICE_URL)
@@ -311,7 +311,7 @@
             if (Array.isArray(projectList) && projectList.length > 0) {
                 var firstProj = projectList[0]
                 var firstPid = firstProj && firstProj.projectCode ? firstProj.projectCode : undefined
-                for(var i = 0; i < projectList.length; i++) { 
+                for(var i = 0; i < projectList.length; i++) {
                     var proj = projectList[i]
                     if (proj && !proj.gray) {
                         return proj.projectCode
@@ -340,7 +340,6 @@
                 window.setProjectIdCookie(defaultPid)
             }
 
-
             window.allServices = allServices
             window.serviceObject = serviceObject
             window.currentPage = page
@@ -361,7 +360,6 @@
                 loadJsAssets()
             }
         }
-        
         
         var CACHE_PREFIX = '_cache_'
         window.setLsCacheItem = function (key, value) {
@@ -441,7 +439,7 @@
                     }
 
                     reject(e)
-                }) 
+                })
             })
         }
 
@@ -450,14 +448,13 @@
         }).catch(function (e) {
             console.log(e)
             printError(e.status)
-        })  
-        
+        })
 
         function printError (status) {
             const locale = getCookie('blueking_language')
             const msg = locale === 'en' ? 'Oops! Looks like something went wrong' : '后端服务异常，请稍后重试'
             document.writeln(
-                '<div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">' 
+                '<div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">'
                 + '<img src="/console/static/' + (status || 503) + '.png" />'
                 + '<p style="font-size: 20px; color: #979797; margin: 32px 0;">' + msg + '</p>'
                 + '</div>'
