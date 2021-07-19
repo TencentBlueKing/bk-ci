@@ -35,11 +35,11 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("质量红线-匹配拦截规则原子v2")
 data class QualityRuleMatchTask(
     @ApiModelProperty("原子ID", required = true)
-    val taskId: String?,
+    val taskId: String,
     @ApiModelProperty("原子名称", required = true)
-    val taskName: String?,
+    val taskName: String,
     @ApiModelProperty("原子控制阶段", required = true)
-    val controlStage: ControlPointPosition?,
+    val controlStage: ControlPointPosition,
     @ApiModelProperty("规则列表", required = true)
     val ruleList: List<RuleMatchRule>,
     @ApiModelProperty("阈值列表", required = false)

@@ -153,6 +153,9 @@ class QualityRuleService @Autowired constructor(
     }
 
     fun serviceCreate(userId: String, projectId: String, pipelineId: String, ruleRequestList: List<RuleCreateRequestV3>): List<RuleCreateResponseV3> {
+        val size = qualityRuleDao.deleteByPipelineId(dslContext, projectId, pipelineId)
+        logger.info("finish to clean pre rule: $projectId, $pipelineId, $size")
+
         return ruleRequestList.map {  ruleRequest ->
             logger.info("start to create or update rule: $projectId, $pipelineId, ${ruleRequest.name}")
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
@@ -167,6 +170,7 @@ class QualityRuleService @Autowired constructor(
                     ))
                 }
             }
+
             val ruleId = serviceCreate(
                 userId,
                 projectId,
@@ -206,6 +210,18 @@ class QualityRuleService @Autowired constructor(
             authPermission = AuthPermission.EDIT,
             message = "用户没有拦截规则的编辑权限"
         )
+        serviceUpdate(userId, projectId, ruleHashId, ruleRequest)
+        qualityPermissionService.modifyRuleResource(
+            projectId = projectId,
+            ruleId = ruleId,
+            ruleName = ruleRequest.name
+        )
+        return true
+    }
+
+    fun serviceUpdate(userId: String, projectId: String, ruleHashId: String, ruleRequest: RuleUpdateRequest): Boolean {
+        val ruleId = HashUtil.decodeIdToLong(ruleHashId)
+
         dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             qualityRuleDao.update(context, userId, projectId, ruleId, ruleRequest)
@@ -222,11 +238,6 @@ class QualityRuleService @Autowired constructor(
                     auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes ?: 15
                 )
             }
-            qualityPermissionService.modifyRuleResource(
-                projectId = projectId,
-                ruleId = ruleId,
-                ruleName = ruleRequest.name
-            )
             refreshRedis(projectId, ruleId)
         }
         return true
@@ -699,7 +710,7 @@ class QualityRuleService @Autowired constructor(
                     })
                 }
                 // 生成结果
-                matchTaskList.add(QualityRuleMatchTask(controlPoint?.name, controlPoint?.cnName, position,
+                matchTaskList.add(QualityRuleMatchTask(controlPoint.name, controlPoint.cnName, position,
                     taskRuleList, taskThresholdList, taskAuditUserList))
             }
         }
