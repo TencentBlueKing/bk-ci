@@ -29,6 +29,7 @@ package com.tencent.devops.auth.service.permission.iam
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.RelatedResourceTypes
+import com.tencent.bk.sdk.iam.dto.RelationResourceInstance
 import com.tencent.bk.sdk.iam.dto.RelationResourceInstances
 import com.tencent.bk.sdk.iam.dto.action.UrlAction
 import com.tencent.bk.sdk.iam.service.ManagerService
@@ -122,22 +123,23 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
                     emptyList()
                 ))
             } else {
-                val relatedInstances = mutableListOf<RelationResourceInstances>()
+                val relatedInstanceInfos = mutableListOf<RelationResourceInstance>()
 
                 it.instanceId?.forEach {
-                    val relatedInstance = RelationResourceInstances(
+                    val relatedInstance = RelationResourceInstance(
                         iamConfiguration.systemId,
                         it.type,
                         it.id,
                         ""
                     )
-                    relatedInstances.add(relatedInstance)
+                    relatedInstanceInfos.add(relatedInstance)
                 }
+                val relatedInstanceList = RelationResourceInstances(relatedInstanceInfos)
 
                 relatedResourceTypes.add(RelatedResourceTypes(
                     iamConfiguration.systemId,
                     relatedResourceType,
-                    relatedInstances,
+                    arrayListOf(relatedInstanceList),
                     emptyList()
                 ))
             }
