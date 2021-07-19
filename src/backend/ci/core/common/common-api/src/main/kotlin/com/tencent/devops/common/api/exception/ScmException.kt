@@ -31,4 +31,4 @@ package com.tencent.devops.common.api.exception
  *
  * Powered By Tencent
  */
-class ScmException(message: String, val scmType: String) : RuntimeException(message)
+open class ScmException(message: String, val scmType: String) : RuntimeException(message)
