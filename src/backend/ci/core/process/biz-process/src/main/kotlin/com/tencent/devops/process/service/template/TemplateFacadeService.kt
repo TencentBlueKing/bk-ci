@@ -1355,6 +1355,40 @@ class TemplateFacadeService @Autowired constructor(
                 )
             }
         }
+
+        // #4673,流水线更新应该单独一个事务,不然在发送完流水线更新MQ消息时,如果MQ的消费者查询流水线最新model,可能会查不到
+        val templateModel: Model = objectMapper.readValue(templateContent)
+        val labels = if (useTemplateSettings) {
+            templateModel.labels
+        } else {
+            val tmpLabels = ArrayList<String>()
+            pipelineGroupService.getGroups(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = templateInstanceUpdate.pipelineId
+            ).forEach { group ->
+                tmpLabels.addAll(group.labels)
+            }
+            tmpLabels
+        }
+        val instanceModel = getInstanceModel(
+            pipelineId = templateInstanceUpdate.pipelineId,
+            templateModel = templateModel,
+            pipelineName = templateInstanceUpdate.pipelineName,
+            buildNo = templateInstanceUpdate.buildNo,
+            param = templateInstanceUpdate.param,
+            labels = labels
+        )
+        instanceModel.templateId = templateId
+        pipelineInfoFacadeService.editPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = templateInstanceUpdate.pipelineId,
+            model = instanceModel,
+            channelCode = ChannelCode.BS,
+            checkPermission = true,
+            checkTemplate = false
+        )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             templatePipelineDao.update(
@@ -1363,38 +1397,6 @@ class TemplateFacadeService @Autowired constructor(
                 versionName = versionName,
                 userId = userId,
                 instance = templateInstanceUpdate
-            )
-            val templateModel: Model = objectMapper.readValue(templateContent)
-            val labels = if (useTemplateSettings) {
-                templateModel.labels
-            } else {
-                val tmpLabels = ArrayList<String>()
-                pipelineGroupService.getGroups(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = templateInstanceUpdate.pipelineId
-                ).forEach { group ->
-                    tmpLabels.addAll(group.labels)
-                }
-                tmpLabels
-            }
-            val instanceModel = getInstanceModel(
-                pipelineId = templateInstanceUpdate.pipelineId,
-                templateModel = templateModel,
-                pipelineName = templateInstanceUpdate.pipelineName,
-                buildNo = templateInstanceUpdate.buildNo,
-                param = templateInstanceUpdate.param,
-                labels = labels
-            )
-            instanceModel.templateId = templateId
-            pipelineInfoFacadeService.editPipeline(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = templateInstanceUpdate.pipelineId,
-                model = instanceModel,
-                channelCode = ChannelCode.BS,
-                checkPermission = true,
-                checkTemplate = false
             )
 
             if (useTemplateSettings) {
