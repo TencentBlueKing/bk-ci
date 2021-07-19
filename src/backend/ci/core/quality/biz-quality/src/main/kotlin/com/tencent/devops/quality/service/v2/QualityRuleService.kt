@@ -52,6 +52,9 @@ import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
 import com.tencent.devops.quality.api.v2.pojo.response.UserQualityRule
+import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
+import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
+import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.dao.v2.QualityRuleMapDao
 import com.tencent.devops.quality.pojo.RefreshType
@@ -74,12 +77,14 @@ class QualityRuleService @Autowired constructor(
     private val ruleOperationService: QualityRuleOperationService,
     private val qualityRuleDao: QualityRuleDao,
     private val ruleMapDao: QualityRuleMapDao,
+    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
     private val indicatorService: QualityIndicatorService,
     private val qualityControlPointService: QualityControlPointService,
     private val dslContext: DSLContext,
     private val client: Client,
     private val qualityCacheService: QualityCacheService,
-    private val qualityPermissionService: QualityPermissionService
+    private val qualityPermissionService: QualityPermissionService,
+    private val metadataService: QualityMetadataService
 ) {
 
     companion object {
@@ -109,7 +114,7 @@ class QualityRuleService @Autowired constructor(
         )
     }
 
-    fun serviceCreate(userId: String, projectId: String, ruleRequest: RuleCreateRequest): String {
+    fun serviceCreate(userId: String, projectId: String, ruleRequest: RuleCreateRequest, createAuth: Boolean = true): String {
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
 
@@ -133,14 +138,62 @@ class QualityRuleService @Autowired constructor(
                     auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes ?: 15
                 )
             }
-            qualityPermissionService.createRuleResource(
-                userId = userId,
-                projectId = projectId,
-                ruleId = ruleId,
-                ruleName = ruleRequest.name
-            )
+            if (createAuth) {
+                qualityPermissionService.createRuleResource(
+                    userId = userId,
+                    projectId = projectId,
+                    ruleId = ruleId,
+                    ruleName = ruleRequest.name
+                )
+            }
+
             refreshRedis(projectId, ruleId)
             HashUtil.encodeLongId(ruleId)
+        }
+    }
+
+    fun serviceCreate(userId: String, projectId: String, pipelineId: String, buildId: String, ruleRequestList: List<RuleCreateRequestV3>): List<RuleCreateResponseV3> {
+
+        return ruleRequestList.map {  ruleRequest ->
+            logger.info("start to create or update rule: $projectId, $pipelineId, $buildId, ${ruleRequest.name}")
+            val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
+
+            ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
+                val indicatorMap = indicators.map { it.metaDataId to  it }.toMap()
+                metadataService.serviceListByDataId(atomCode, indicators.map { it.metaDataId }).forEach {
+                    indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
+                        it.hashId,
+                        indicatorMap[it.dataId]!!.operation,
+                        indicatorMap[it.dataId]!!.threshold
+                    ))
+                }
+            }
+            val ruleId = serviceCreate(
+                userId,
+                projectId,
+                RuleCreateRequest(
+                    name = ruleRequest.name,
+                    desc = ruleRequest.desc ?: "",
+                    indicatorIds = indicatorIds,
+                    controlPoint = "",
+                    controlPointPosition = ruleRequest.position,
+                    range = ruleRequest.range ?: listOf(),
+                    templateRange = ruleRequest.templateRange ?: listOf(),
+                    operation = ruleRequest.operation,
+                    notifyTypeList = ruleRequest.notifyTypeList,
+                    notifyGroupList = ruleRequest.notifyGroupList,
+                    notifyUserList = ruleRequest.notifyUserList,
+                    auditUserList = ruleRequest.auditUserList,
+                    auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes,
+                    gatewayId = ruleRequest.gatewayId
+                ),
+                createAuth = false)
+
+            logger.info("start to create rule snapshot: $projectId, $pipelineId, $buildId, ${ruleRequest.name}")
+            val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId, buildId,
+                HashUtil.decodeIdToLong(ruleId), ruleRequest, indicatorIds)
+
+            RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, buildId, HashUtil.encodeLongId(id))
         }
     }
 
