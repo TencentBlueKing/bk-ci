@@ -61,6 +61,7 @@ interface UserAuthUrlResource {
         @QueryParam("projectId")
         projectId: String,
         @ApiParam(value = "用户组Id")
+        @QueryParam("projectId")
         roleId: String?
     ): Result<String?>
 }
