@@ -45,7 +45,8 @@ import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.utils.CommonUtils
-import com.tencent.devops.dockerhost.utils.SigarUtil
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageLongCpuLoad
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageLongMemLoad
 import com.tencent.devops.dockerhost.utils.ThreadPoolUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.slf4j.LoggerFactory
@@ -63,7 +64,7 @@ class DockerHostBuildService(
     private val environment: Environment,
     private val dockerHostBuildApi: DockerHostBuildResourceApi,
     private val dockerHostBuildLogResourceApi: DockerHostBuildLogResourceApi,
-    private val alertApi: AlertApi
+    private val alertApi: AlertApi,
 ) : AbstractDockerHostBuildService(dockerHostConfig, dockerHostBuildApi) {
 
     companion object {
@@ -74,7 +75,7 @@ class DockerHostBuildService(
         buildId: String,
         checkImageRequest: CheckImageRequest,
         containerId: String?,
-        containerHashId: String?
+        containerHashId: String?,
     ): Result<CheckImageResponse?> {
         logger.info("checkImage buildId: $buildId, checkImageRequest: $checkImageRequest")
         // 判断用户录入的镜像信息是否能正常拉取到镜像
@@ -166,12 +167,12 @@ class DockerHostBuildService(
                 val containerName = container.names[0]
                 if (containerName.contains(getDockerRunStopPattern(dockerHostBuildInfo))) {
                     logger.info("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
-                            "stop dockerRun container, containerId: ${container.id}")
+                        "stop dockerRun container, containerId: ${container.id}")
                     httpLongDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
                 }
             } catch (e: Exception) {
                 logger.error("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
-                        "Stop dockerRun container failed, containerId: ${container.id}", e)
+                    "Stop dockerRun container failed, containerId: ${container.id}", e)
             }
         }
     }
@@ -514,14 +515,15 @@ class DockerHostBuildService(
      * 监控系统负载，超过一定阈值，对于占用负载较高的容器，主动降低负载
      */
     fun monitorSystemLoad() {
-        logger.info("Monitor|cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
-        if (SigarUtil.getAverageLongCpuLoad() > dockerHostConfig.elasticitySystemCpuThreshold ?: 80 ||
-            SigarUtil.getAverageLongMemLoad() > dockerHostConfig.elasticitySystemMemThreshold ?: 80
+        logger.info("Monitor|cpu: ${getAverageLongCpuLoad()}, mem: ${getAverageLongMemLoad()}")
+        if (getAverageLongCpuLoad() > (dockerHostConfig.elasticitySystemCpuThreshold ?: 80) ||
+            getAverageLongMemLoad() > (dockerHostConfig.elasticitySystemMemThreshold ?: 80)
         ) {
             checkContainerStats()
         }
     }
 
+    @Suppress("ComplexMethod", "LoopWithTooManyJumpStatements")
     private fun checkContainerStats() {
         val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
         for (container in containerInfo) {
@@ -573,7 +575,7 @@ class DockerHostBuildService(
         container: Container,
         statistics: Statistics,
         cpuUsagePer: Long,
-        memUsage: Long
+        memUsage: Long,
     ) {
         dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
             "containerName" to container.names[0],

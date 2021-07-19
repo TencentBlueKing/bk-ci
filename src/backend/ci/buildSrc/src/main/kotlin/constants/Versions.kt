@@ -11,7 +11,6 @@ object Versions {
     const val Mockito = "1.10.19"
     const val JsonLib = "2.4"
     const val CronUtils = "7.0.1"
-    const val SigarPlugin = "1.7.0.0"
     const val Thumbnailator = "0.4.8"
     const val EmojiJava = "5.1.1"
     const val CommonCsv = "1.8"
@@ -34,4 +33,5 @@ object Versions {
     const val Lucene = "8.2.0"
     const val Feign = "11.6" // TODO 修复这个BUG:https://github.com/OpenFeign/feign/pull/1347 , 后续SpringCloud升级后可以去掉
     const val PinyinPlus = "1.0"
+    const val Oshi = "5.8.3"
 }

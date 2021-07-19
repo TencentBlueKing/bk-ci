@@ -44,7 +44,6 @@ allprojects {
             dependency("org.apache.commons:commons-collections4:${Versions.CommonCollections4}")
             dependency("net.coobird:thumbnailator:${Versions.Thumbnailator}")
             dependency("com.vmware:vijava:${Versions.Vmware}")
-            dependency("com.tencent.devops.ci-plugins:sigar:${Versions.SigarPlugin}")
             dependency("net.sf.json-lib:json-lib:${Versions.JsonLib}")
             dependency("com.googlecode.plist:dd-plist:${Versions.DdPlist}")
             dependency("com.github.oshi:oshi-core:${Versions.OshiCore}")
@@ -60,6 +59,7 @@ allprojects {
             dependency("org.elasticsearch:elasticsearch:${Versions.Elasticsearch}")
             dependency("org.elasticsearch.client:elasticsearch-rest-client:${Versions.Elasticsearch}")
             dependency("org.elasticsearch.client:elasticsearch-rest-high-level-client:${Versions.Elasticsearch}")
+            dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
             dependencySet("io.github.openfeign:${Versions.Feign}") {
                 entry("feign-core")
                 entry("feign-jackson")
