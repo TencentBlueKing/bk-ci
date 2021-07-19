@@ -221,7 +221,7 @@ class MonitorNotifyJob @Autowired constructor(
               status:200 AND host:"devnet-backend.devops.oa.com" AND log:"2Fstart" AND !log:"2Fdevops.apigw.o.oa.com"
             """.trimIndent()
         )
-        sourceBuilder.query(QueryBuilders.boolQuery().filter(queryStringQuery))
+        sourceBuilder.query(QueryBuilders.boolQuery().must(queryStringQuery))
         sourceBuilder.aggregation(AggregationBuilders.avg("avg_ms").field("ms"))
 
         val searchRequest = SearchRequest()
