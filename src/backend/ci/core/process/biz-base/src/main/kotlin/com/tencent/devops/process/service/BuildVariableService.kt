@@ -176,7 +176,8 @@ class BuildVariableService @Autowired constructor(
             pipelineBuildParameters.add(BuildParameters(
                 key = key,
                 value = valueAndType.first,
-                valueType = valueAndType.second
+                valueType = valueAndType.second,
+                readOnly = getReadOnly(key, variables)
             ))
         }
 
@@ -217,5 +218,14 @@ class BuildVariableService @Autowired constructor(
             redisLock.unlock()
             LogUtils.printCostTimeWE(watch)
         }
+    }
+
+    private fun getReadOnly(key: String, variables: List<BuildParameters>): Boolean? {
+        variables.forEach {
+            if (key == it.key) {
+                return it.readOnly
+            }
+        }
+        return false
     }
 }
