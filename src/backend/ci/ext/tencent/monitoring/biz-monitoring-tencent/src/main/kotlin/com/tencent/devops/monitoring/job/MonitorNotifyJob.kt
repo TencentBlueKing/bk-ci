@@ -706,4 +706,3 @@ class MonitorNotifyJob @Autowired constructor(
         private val logger = LoggerFactory.getLogger(MonitorNotifyJob::class.java)
     }
 }
-
