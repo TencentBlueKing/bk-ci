@@ -48,7 +48,7 @@ class ServiceQualityRuleResourceImpl @Autowired constructor(
         return Result(qualityRuleCheckService.check(buildCheckParams))
     }
 
-    override fun create(userId: String, projectId: String, pipelineId: String, buildId: String, ruleList: List<RuleCreateRequestV3>): Result<List<RuleCreateResponseV3>> {
-        return Result(qualityRuleService.serviceCreate(userId, projectId, pipelineId, buildId, ruleList))
+    override fun create(userId: String, projectId: String, pipelineId: String, ruleList: List<RuleCreateRequestV3>): Result<List<RuleCreateResponseV3>> {
+        return Result(qualityRuleService.serviceCreate(userId, projectId, pipelineId, ruleList))
     }
 }
