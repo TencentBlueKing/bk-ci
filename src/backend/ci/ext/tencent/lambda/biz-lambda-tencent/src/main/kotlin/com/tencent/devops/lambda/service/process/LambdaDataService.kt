@@ -24,7 +24,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.service
+package com.tencent.devops.lambda.service.process
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
@@ -49,19 +49,17 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
-import com.tencent.devops.lambda.dao.LambdaBuildContainerDao
-import com.tencent.devops.lambda.dao.LambdaBuildTaskDao
-import com.tencent.devops.lambda.dao.LambdaPipelineBuildDao
-import com.tencent.devops.lambda.dao.LambdaPipelineModelDao
-import com.tencent.devops.lambda.dao.LambdaPipelineTemplateDao
+import com.tencent.devops.lambda.dao.process.LambdaBuildContainerDao
+import com.tencent.devops.lambda.dao.process.LambdaBuildTaskDao
+import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
+import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
+import com.tencent.devops.lambda.dao.process.LambdaPipelineTemplateDao
 import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
 import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
 import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
-import com.tencent.devops.lambda.pojo.ElementData
 import com.tencent.devops.lambda.pojo.MakeUpBuildVO
 import com.tencent.devops.lambda.pojo.ProjectOrganize
-import com.tencent.devops.lambda.storage.ESService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
@@ -87,7 +85,6 @@ class LambdaDataService @Autowired constructor(
     private val lambdaPipelineTemplateDao: LambdaPipelineTemplateDao,
     private val lambdaBuildTaskDao: LambdaBuildTaskDao,
     private val lambdaBuildContainerDao: LambdaBuildContainerDao,
-    private val esService: ESService,
     private val kafkaClient: KafkaClient
 ) {
 
@@ -105,31 +102,6 @@ class LambdaDataService @Autowired constructor(
         val projectInfo = projectCache.get(history.projectId)
         pushBuildHistory(projectInfo, history)
         pushBuildDetail(projectInfo, event.pipelineId, model)
-
-/*        val info = getBuildInfo(event.buildId)
-        if (info == null) {
-            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build info is not exist")
-            return
-        }
-
-        val data = BuildData(
-            projectId = info.projectId,
-            pipelineId = info.pipelineId,
-            buildId = info.buildId,
-            userId = info.startUser,
-            status = info.status.name,
-            trigger = info.trigger,
-            beginTime = info.startTime ?: 0,
-            endTime = info.endTime ?: 0,
-            buildNum = info.buildNum,
-            templateId = templateCache.get(info.pipelineId),
-            bgName = projectInfo.bgName,
-            deptName = projectInfo.deptName,
-            centerName = projectInfo.centerName,
-            model = model.model,
-            errorInfoList = event.errorInfoList
-        )
-        esService.build(data)*/
     }
 
     fun onBuildTaskFinish(event: PipelineBuildTaskFinishBroadCastEvent) {
@@ -139,8 +111,6 @@ class LambdaDataService @Autowired constructor(
             return
         }
         pushTaskDetail(task)
-/*        pushElementData2Es(event, task)
-        pushGitTaskInfo(event, task)*/
     }
 
     fun makeUpBuildHistory(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Boolean {
@@ -192,29 +162,6 @@ class LambdaDataService @Autowired constructor(
         }
     }
 
-    private fun pushElementData2Es(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
-        val data = ElementData(
-            projectId = event.projectId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            elementId = event.taskId,
-            elementName = task.taskName ?: "",
-            status = BuildStatus.values()[task.status ?: 0].name,
-            beginTime = task.startTime?.timestampmilli() ?: 0,
-            endTime = task.endTime?.timestampmilli() ?: 0,
-            type = task.taskType ?: "",
-            atomCode = getAtomCodeFromTask(task),
-            errorType = event.errorType,
-            errorCode = event.errorCode,
-            errorMsg = event.errorMsg
-        )
-        try {
-            esService.buildElement(data)
-        } catch (e: Exception) {
-            logger.error("Push elementData to es error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
-        }
-    }
-
     private fun pushTaskDetail(task: TPipelineBuildTaskRecord) {
         try {
             val startTime = task.startTime?.timestampmilli() ?: 0
@@ -251,7 +198,6 @@ class LambdaDataService @Autowired constructor(
                             washTime = LocalDateTime.now().format(dateTimeFormatter)
                         )
 
-                        logger.info("pushJobDetail: ${JsonUtil.toJson(dataPlatJobDetail)}")
                         kafkaClient.send(KafkaTopic.LANDUN_JOB_DETAIL_TOPIC, JsonUtil.toJson(dataPlatJobDetail))
                     }
                 }
@@ -525,7 +471,8 @@ class LambdaDataService @Autowired constructor(
                 startType = getStartType(trigger, webhookType),
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
-                errorInfoList = errorInfo
+                errorInfoList = errorInfo,
+                startUser = startUser
             )
         }
     }

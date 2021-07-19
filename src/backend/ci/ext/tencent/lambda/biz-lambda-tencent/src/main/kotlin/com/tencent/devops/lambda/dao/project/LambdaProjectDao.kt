@@ -24,58 +24,26 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.dao
+package com.tencent.devops.lambda.dao.project
 
-import com.tencent.devops.model.lambda.tables.TLambdaBuildIndices
-import com.tencent.devops.model.lambda.tables.records.TLambdaBuildIndicesRecord
+import com.tencent.devops.model.project.tables.TProject
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
 
 @Repository
-class LambdaBuildIndexDao {
+class LambdaProjectDao {
 
-    fun create(
+    fun getProjectList(
         dslContext: DSLContext,
-        buildId: String,
-        indexName: String
-    ) {
-        with(TLambdaBuildIndices.T_LAMBDA_BUILD_INDICES) {
-            dslContext.insertInto(this,
-                BUILD_ID,
-                INDEX_NAME)
-                .values(
-                    buildId,
-                    indexName
-                )
-                .onDuplicateKeyIgnore()
-                .execute()
-        }
-    }
-
-    fun update(
-        dslContext: DSLContext,
-        buildId: String,
-        startTime: Long,
-        endTime: Long
-    ) {
-        with(TLambdaBuildIndices.T_LAMBDA_BUILD_INDICES) {
-            dslContext.update(this)
-                .set(START_TIME, Timestamp(startTime).toLocalDateTime())
-                .set(END_TIME, Timestamp(endTime).toLocalDateTime())
-                .where(BUILD_ID.eq(buildId))
-                .execute()
-        }
-    }
-
-    fun get(
-        dslContext: DSLContext,
-        buildId: String
-    ): TLambdaBuildIndicesRecord? {
-        with(TLambdaBuildIndices.T_LAMBDA_BUILD_INDICES) {
+        minId: Long,
+        maxId: Long
+    ): Result<TProjectRecord> {
+        with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .fetchOne()
+                .where(ID.between(minId, maxId))
+                .fetch()
         }
     }
 }

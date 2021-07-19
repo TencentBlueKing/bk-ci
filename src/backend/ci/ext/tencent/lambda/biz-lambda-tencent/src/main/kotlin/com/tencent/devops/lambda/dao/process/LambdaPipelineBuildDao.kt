@@ -24,23 +24,24 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.listener
+package com.tencent.devops.lambda.dao.process
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
-import com.tencent.devops.lambda.service.process.LambdaDataService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
+import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-@Component
-class LambdaBuildTaskFinishListener @Autowired constructor(
-    private val lambdaDataService: LambdaDataService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildTaskFinishBroadCastEvent>(pipelineEventDispatcher) {
+@Repository
+class LambdaPipelineBuildDao {
 
-    override fun run(event: PipelineBuildTaskFinishBroadCastEvent) {
-//        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build element finish event - ($event)")
-        lambdaDataService.onBuildTaskFinish(event)
+    fun getBuildHistory(
+        dslContext: DSLContext,
+        buildId: String
+    ): TPipelineBuildHistoryRecord? {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .fetchOne()
+        }
     }
 }

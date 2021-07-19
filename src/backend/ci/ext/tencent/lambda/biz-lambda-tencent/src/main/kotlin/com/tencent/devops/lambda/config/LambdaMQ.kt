@@ -24,23 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
-import com.tencent.devops.lambda.service.process.LambdaDataService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+package com.tencent.devops.lambda.config
 
-@Component
-class LambdaBuildTaskFinishListener @Autowired constructor(
-    private val lambdaDataService: LambdaDataService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildTaskFinishBroadCastEvent>(pipelineEventDispatcher) {
+object LambdaMQ {
+    const val QUEUE_PROJECT_CREATE_LAMBDA_EVENT = "q.project.create.project.queue.lambda"
+    const val QUEUE_PROJECT_UPDATE_LAMBDA_EVENT = "q.project.update.project.queue.lambda"
 
-    override fun run(event: PipelineBuildTaskFinishBroadCastEvent) {
-//        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build element finish event - ($event)")
-        lambdaDataService.onBuildTaskFinish(event)
-    }
+    const val QUEUE_PIPELINE_EXTENDS_MODEL_LAMBDA = "q.engine.pipeline.extends.model.lambda"
 }

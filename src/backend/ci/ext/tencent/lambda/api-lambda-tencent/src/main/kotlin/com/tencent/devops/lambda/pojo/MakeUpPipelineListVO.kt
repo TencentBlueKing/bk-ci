@@ -24,23 +24,10 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
-import com.tencent.devops.lambda.service.process.LambdaDataService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+package com.tencent.devops.lambda.pojo
 
-@Component
-class LambdaBuildTaskFinishListener @Autowired constructor(
-    private val lambdaDataService: LambdaDataService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildTaskFinishBroadCastEvent>(pipelineEventDispatcher) {
-
-    override fun run(event: PipelineBuildTaskFinishBroadCastEvent) {
-//        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build element finish event - ($event)")
-        lambdaDataService.onBuildTaskFinish(event)
-    }
-}
+data class MakeUpPipelineListVO(
+    val minId: Long,
+    val maxId: Long
+)

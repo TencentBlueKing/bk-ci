@@ -26,21 +26,27 @@
  */
 package com.tencent.devops.lambda.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
-import com.tencent.devops.lambda.service.process.LambdaDataService
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.lambda.service.project.LambdaProjectService
+import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class LambdaBuildTaskFinishListener @Autowired constructor(
-    private val lambdaDataService: LambdaDataService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildTaskFinishBroadCastEvent>(pipelineEventDispatcher) {
+class LambdaProjectListener @Autowired constructor(
+    private val lambdaProjectService: LambdaProjectService
+) : Listener<ProjectBroadCastEvent> {
 
-    override fun run(event: PipelineBuildTaskFinishBroadCastEvent) {
-//        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build element finish event - ($event)")
-        lambdaDataService.onBuildTaskFinish(event)
+    override fun execute(event: ProjectBroadCastEvent) {
+        when (event) {
+            is ProjectCreateBroadCastEvent -> {
+                lambdaProjectService.onReceiveProjectCreate(event)
+            }
+            is ProjectUpdateBroadCastEvent -> {
+                lambdaProjectService.onReceiveProjectUpdate(event)
+            }
+        }
     }
 }

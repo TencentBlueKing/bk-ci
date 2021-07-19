@@ -24,12 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.storage
+package com.tencent.devops.lambda.service.lambda
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.lambda.dao.LambdaBuildIndexDao
+import com.tencent.devops.lambda.dao.lambda.LambdaBuildIndexDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
