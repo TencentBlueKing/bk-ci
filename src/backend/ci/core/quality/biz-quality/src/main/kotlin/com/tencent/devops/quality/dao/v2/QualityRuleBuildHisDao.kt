@@ -36,7 +36,7 @@ import org.springframework.stereotype.Repository
 
 @Repository@Suppress("ALL")
 class QualityRuleBuildHisDao {
-    fun create(dslContext: DSLContext, userId: String, projectId: String, pipelineId: String, buildId: String,
+    fun create(dslContext: DSLContext, userId: String, projectId: String, pipelineId: String,
                ruleId: Long, ruleRequest: RuleCreateRequestV3,
                indicatorIds: List<RuleCreateRequest.CreateRequestIndicator>): Long {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
@@ -44,7 +44,6 @@ class QualityRuleBuildHisDao {
                 this,
                 PROJECT_ID,
                 PIPELINE_ID,
-                BUILD_ID,
                 RULE_ID,
                 RULE_POS,
                 RULE_NAME,
@@ -61,15 +60,14 @@ class QualityRuleBuildHisDao {
             ).values(
                 projectId,
                 pipelineId,
-                buildId,
                 ruleId,
                 ruleRequest.position,
                 ruleRequest.name,
                 ruleRequest.desc,
                 ruleRequest.gatewayId,
                 indicatorIds.map { HashUtil.decodeIdToLong(it.hashId) }.joinToString(","),
-                indicatorIds.map { it.operation }.joinToString(","),
-                indicatorIds.map { it.threshold }.joinToString(","),
+                indicatorIds.joinToString(",") { it.operation },
+                indicatorIds.joinToString(",") { it.threshold },
                 ruleRequest.operation.name,
                 ruleRequest.notifyUserList?.joinToString(","),
                 ruleRequest.notifyGroupList?.joinToString(","),

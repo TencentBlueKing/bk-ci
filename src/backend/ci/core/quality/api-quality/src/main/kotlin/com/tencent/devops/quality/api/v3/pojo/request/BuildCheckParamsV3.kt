@@ -33,8 +33,8 @@ import io.swagger.annotations.ApiModel
 data class BuildCheckParamsV3(
     val projectId: String,
     val pipelineId: String,
-    val buildId: String,
     val position: String,
     val templateId: String?,
+    val ruleIds: Set<String>,
     val runtimeVariable: Map<String, String>?
 )
