@@ -218,7 +218,7 @@ class MonitorNotifyJob @Autowired constructor(
         val sourceBuilder = SearchSourceBuilder()
         val queryStringQuery = QueryBuilders.queryStringQuery(
             """
-              status:200 AND host:"devnet-backend.devops.oa.com" AND log:"2Fstart"
+              log:"/proxy-devnet" AND log:"2Fstart" AND !log:"2Fdevops.apigw.o.oa.com"
             """.trimIndent()
         )
         sourceBuilder.query(QueryBuilders.boolQuery().filter(queryStringQuery))
@@ -229,7 +229,7 @@ class MonitorNotifyJob @Autowired constructor(
         searchRequest.source(sourceBuilder)
 
         val aggregations = restHighLevelClient.search(searchRequest).aggregations
-        val avgSecs = aggregations.get<Avg>("avg_ms").value / 1000.0
+        val avgSecs = aggregations.get<Avg>("avg_ms").value
 
         oteamStatus(avgSecs, oteamJobTimeTarget, startTime)
 
@@ -238,7 +238,7 @@ class MonitorNotifyJob @Autowired constructor(
             rowList = listOf(Triple("dispatch", avgSecs, jobTimeDetailUrl!!)),
             observableUrl = jobTimeObservableUrl,
             amountKey = "耗时",
-            amountUnit = "secs"
+            amountUnit = "ms"
         )
     }
 
@@ -706,3 +706,4 @@ class MonitorNotifyJob @Autowired constructor(
         private val logger = LoggerFactory.getLogger(MonitorNotifyJob::class.java)
     }
 }
+
