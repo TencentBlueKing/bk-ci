@@ -218,7 +218,7 @@ class MonitorNotifyJob @Autowired constructor(
         val sourceBuilder = SearchSourceBuilder()
         val queryStringQuery = QueryBuilders.queryStringQuery(
             """
-              log:"/proxy-devnet" AND log:"2Fstart" AND !log:"2Fdevops.apigw.o.oa.com"
+              status:200 AND host:"devnet-backend.devops.oa.com" AND log:"2Fstart" AND !log:"2Fdevops.apigw.o.oa.com"
             """.trimIndent()
         )
         sourceBuilder.query(QueryBuilders.boolQuery().filter(queryStringQuery))
