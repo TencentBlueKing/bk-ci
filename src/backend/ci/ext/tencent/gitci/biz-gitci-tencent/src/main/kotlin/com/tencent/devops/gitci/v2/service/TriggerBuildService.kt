@@ -1017,7 +1017,8 @@ class TriggerBuildService @Autowired constructor(
 
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())
-        putVariables2StartParams(yaml, gitBasicSetting, startParams)
+        // putVariables2StartParams(yaml, gitBasicSetting, startParams)
+        val buildFormProperties = getBuildFormPropertyFromYmlVariable(yaml, gitBasicSetting, startParams)
 
         startParams.forEach {
             result.add(
@@ -1037,8 +1038,40 @@ class TriggerBuildService @Autowired constructor(
                 )
             )
         }
+        result.addAll(buildFormProperties)
 
         return result
+    }
+
+    private fun getBuildFormPropertyFromYmlVariable(
+        yaml: ScriptBuildYaml,
+        gitBasicSetting: GitCIBasicSetting,
+        startParams: MutableMap<String, String>
+    ): List<BuildFormProperty> {
+        if (yaml.variables == null) {
+            return emptyList()
+        }
+        val buildFormProperties = mutableListOf<BuildFormProperty>()
+        yaml.variables!!.forEach { (key, variable) ->
+            buildFormProperties.add(
+                BuildFormProperty(
+                    id = VARIABLE_PREFIX + key,
+                    required = false,
+                    type = BuildFormPropertyType.STRING,
+                    defaultValue = formatVariablesValue(variable.value, gitBasicSetting, startParams) ?: "",
+                    options = null,
+                    desc = null,
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null,
+                    readOnly = variable.readonly
+                )
+            )
+        }
+        return buildFormProperties
     }
 
     private fun putVariables2StartParams(
