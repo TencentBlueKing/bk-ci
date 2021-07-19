@@ -40,7 +40,7 @@ import com.tencent.devops.quality.service.v2.QualityRuleService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceQualityRuleResourceImpl @Autowired constructor(
+class ServiceQualityRuleV3ResourceImpl @Autowired constructor(
     private val qualityRuleService: QualityRuleService,
     private val qualityRuleCheckService: QualityRuleCheckService
 ): ServiceQualityRuleResource {

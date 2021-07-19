@@ -158,7 +158,7 @@ class QualityRuleService @Autowired constructor(
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
-                val indicatorMap = indicators.map { it.metaDataId to  it }.toMap()
+                val indicatorMap = indicators.map { it.metaDataId to it }.toMap()
                 metadataService.serviceListByDataId(atomCode, indicators.map { it.metaDataId }).forEach {
                     indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
                         it.hashId,
@@ -184,7 +184,7 @@ class QualityRuleService @Autowired constructor(
                     notifyUserList = ruleRequest.notifyUserList,
                     auditUserList = ruleRequest.auditUserList,
                     auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes,
-                    gatewayId = ruleRequest.gatewayId
+                    gatewayId = ruleRequest.gatewayId ?: ""
                 ),
                 createAuth = false)
 
@@ -649,8 +649,8 @@ class QualityRuleService @Autowired constructor(
                 indicatorIds = ruleData.indicators.map {
                     RuleCreateRequest.CreateRequestIndicator(it.hashId, it.operation.name, it.threshold)
                 }, // indicatorIds
-                controlPoint = ruleData.controlPoint?.name,
-                controlPointPosition = ruleData.controlPoint?.position?.name,
+                controlPoint = ruleData.controlPoint.name,
+                controlPointPosition = ruleData.controlPoint.position.name,
                 range = listOf(),
                 templateRange = listOf(request.targetTemplateId),
                 operation = ruleData.operation,
