@@ -30,8 +30,9 @@ package com.tencent.devops.quality.api.v3
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParams
-import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequest
+import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
+import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
+import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -55,11 +56,11 @@ interface ServiceQualityRuleResource {
     @POST
     fun check(
         @ApiParam("构建检查参数", required = true)
-        buildCheckParams: BuildCheckParams
+        buildCheckParams: BuildCheckParamsV3
     ): Result<RuleCheckResult>
 
     @ApiOperation("创建拦截规则")
-    @Path("/{projectId}/")
+    @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/create")
     @POST
     fun create(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -68,7 +69,13 @@ interface ServiceQualityRuleResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
         @ApiParam("规则内容", required = true)
-        rule: RuleCreateRequest
-    ): Result<String>
+        ruleList: List<RuleCreateRequestV3>
+    ): Result<List<RuleCreateResponseV3>>
 }

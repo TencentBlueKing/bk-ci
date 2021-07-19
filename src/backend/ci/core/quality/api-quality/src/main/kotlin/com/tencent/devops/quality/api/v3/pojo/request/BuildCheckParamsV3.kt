@@ -27,40 +27,14 @@
 
 package com.tencent.devops.quality.api.v3.pojo.request
 
-import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.quality.pojo.enum.RuleOperation
 import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("规则创建请求")
-data class RuleCreateRequest(
-    @ApiModelProperty("规则名称", required = true)
-    val name: String,
-    @ApiModelProperty("规则描述", required = true)
-    val desc: String,
-    @ApiModelProperty("指标类型", required = true)
-    val indicatorIds: List<CreateRequestIndicator>,
-    @ApiModelProperty("控制点位置", required = true)
+@ApiModel("构建检查参数")
+data class BuildCheckParamsV3(
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
     val position: String,
-    @ApiModelProperty("操作类型", required = true)
-    val operation: RuleOperation,
-    @ApiModelProperty("通知类型", required = false)
-    val notifyTypeList: List<NotifyType>?,
-    @ApiModelProperty("通知组名单", required = false)
-    val notifyGroupList: List<String>?,
-    @ApiModelProperty("通知人员名单", required = false)
-    val notifyUserList: List<String>?,
-    @ApiModelProperty("审核通知人员", required = false)
-    val auditUserList: List<String>?,
-    @ApiModelProperty("审核超时时间", required = false)
-    val auditTimeoutMinutes: Int?,
-    @ApiModelProperty("红线匹配的id", required = false)
-    val gatewayId: String?
-) {
-    data class CreateRequestIndicator(
-        val atomCode: String,
-        val metaDataId: String,
-        val operation: String,
-        val threshold: String
-    )
-}
+    val templateId: String?,
+    val runtimeVariable: Map<String, String>?
+)
