@@ -35,4 +35,8 @@ class EmptyPermissionUrlServiceImpl : PermissionUrlService {
     override fun getPermissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
         return Result("")
     }
+
+    override fun getRolePermissionUrl(projectId: String, groupId: String?): String? {
+        return null
+    }
 }

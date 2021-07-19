@@ -32,4 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 
 interface PermissionUrlService {
     fun getPermissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?>
+
+    fun getRolePermissionUrl(projectId: String, groupId: String?): String?
 }

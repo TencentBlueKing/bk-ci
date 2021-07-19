@@ -168,7 +168,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         return roleList
     }
 
-    private fun getProjectId(projectCode: String): Int {
+    fun getProjectId(projectCode: String): Int {
         val iamProjectId = if (projectIdCache.getIfPresent(projectCode) != null) {
             projectIdCache.getIfPresent(projectCode)!!
         } else {

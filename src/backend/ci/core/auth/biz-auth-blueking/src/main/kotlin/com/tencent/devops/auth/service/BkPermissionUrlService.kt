@@ -40,14 +40,19 @@ import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.auth.utils.ActionUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class BkPermissionUrlService @Autowired constructor(
     val iamEsbService: IamEsbService,
     @Autowired(required = false) // v3 才会有
-    val iamConfiguration: IamConfiguration?
+    val iamConfiguration: IamConfiguration?,
+    val bkPermissionProjectService: BkPermissionProjectService
 ) : PermissionUrlService {
+
+    @Value("\${auth.webHost:#{null}}")
+    val permissionCenterHost: String? = null
 
     override fun getPermissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
         logger.info("get permissionUrl permissionUrlDTO: $permissionUrlDTO")
@@ -102,6 +107,18 @@ class BkPermissionUrlService @Autowired constructor(
         )
         logger.info("get permissionUrl iamEsbReq: $iamEsbReq")
         return Result(iamEsbService.getPermissionUrl(iamEsbReq))
+    }
+
+    override fun getRolePermissionUrl(projectId: String, groupId: String?): String? {
+        val projectRelationId = bkPermissionProjectService.getProjectId(projectId)
+        val rolePermissionUrl = "user-group-detail/$groupId?current_role_id=$projectRelationId&tab=group_perm"
+        return if (permissionCenterHost.isNullOrEmpty()) {
+            null
+        } else if (permissionCenterHost!!.endsWith("/")) {
+            permissionCenterHost + rolePermissionUrl
+        } else {
+            "$permissionCenterHost/$rolePermissionUrl"
+        }
     }
 
     companion object {
