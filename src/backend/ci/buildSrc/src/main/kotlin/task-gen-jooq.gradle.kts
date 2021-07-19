@@ -80,7 +80,7 @@ jooq {
             val mysqlUserKey =
                 if (specialModule && specialDbName.contains(moduleName)) "${moduleName}MysqlUser" else "mysqlUser"
             val mysqlPasswordKey =
-                if (specialModule && specialDbName.contains(moduleName)) "${moduleName}MysqlPassword" else "mysqlPassword"
+                if (specialModule && specialDbName.contains(moduleName)) "${moduleName}MysqlPasswd" else "mysqlPasswd"
 
             create(taskName) {
                 jooqConfiguration.apply {
