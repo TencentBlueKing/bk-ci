@@ -457,7 +457,8 @@ class ExperienceDao {
                     if (null == name) it else it.and(NAME.eq(name))
                 }
                 .orderBy(CREATE_TIME.desc())
-                .limit(offset, limit)
+                .offset(offset)
+                .limit(limit)
                 .fetch()
         }
     }
