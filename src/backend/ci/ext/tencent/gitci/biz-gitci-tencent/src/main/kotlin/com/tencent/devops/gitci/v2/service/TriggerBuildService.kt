@@ -140,7 +140,8 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
-import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequest
+import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
+import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_RUN
@@ -245,23 +246,27 @@ class TriggerBuildService @Autowired constructor(
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
         // 新增质量红线
-        val (checkInId, checkOutId) = createGates(event, yaml)
+        val (checkInId, checkOutId) = createGates(event, yaml, pipeline)
         logger.info("checkInId: $checkInId, checkOutId: $checkOutId")
 
         savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
     }
 
-    private fun createGates(event: GitRequestEvent, yaml: ScriptBuildYaml): Pair<String?, String?> {
+    private fun createGates(
+        event: GitRequestEvent,
+        yaml: ScriptBuildYaml,
+        pipeline: GitProjectPipeline
+    ): Pair<List<RuleCreateResponseV3>?, List<RuleCreateResponseV3>?> {
         val operations = QualityOperation.values().map { QualityOperation.convertToSymbol(it) }.toSet()
-        var checkIn: String? = null
-        var checkOut: String? = null
+        var checkIn: List<RuleCreateResponseV3>? = null
+        var checkOut: List<RuleCreateResponseV3>? = null
         yaml.stages.forEach { stage ->
             if (stage.checkIn != null) {
-                checkIn = CreateGates(stage, operations, event, ControlPointPosition.BEFORE_POSITION)
+                checkIn = CreateGates(stage, operations, event, ControlPointPosition.BEFORE_POSITION, pipeline)
             }
             if (stage.checkOut != null) {
-                checkOut = CreateGates(stage, operations, event, ControlPointPosition.AFTER_POSITION)
+                checkOut = CreateGates(stage, operations, event, ControlPointPosition.AFTER_POSITION, pipeline)
             }
         }
         return Pair(checkIn, checkOut)
@@ -275,8 +280,10 @@ class TriggerBuildService @Autowired constructor(
         stage: GitCIV2Stage,
         operations: Set<String>,
         event: GitRequestEvent,
-        position: String
-    ): String? {
+        position: String,
+        pipeline: GitProjectPipeline
+    ): List<RuleCreateResponseV3>? {
+        val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
         stage.checkIn?.gates?.forEach GateEach@{ gate ->
             val indicators = gate.rule.map { rule ->
                 val (atomCode, mid) = rule.split(".")
@@ -285,21 +292,21 @@ class TriggerBuildService @Autowired constructor(
                     return@GateEach
                 }
                 val (medata, threshold) = mid.split(op.first())
-                RuleCreateRequest.CreateRequestIndicator(
+                RuleCreateRequestV3.CreateRequestIndicator(
                     atomCode = atomCode,
                     metaDataId = medata.trim(),
                     operation = op.first(),
                     threshold = threshold.trim()
                 )
             }
-            return client.get(ServiceQualityRuleResource::class).create(
-                userId = event.userId,
-                projectId = "git_${event.gitProjectId}",
-                rule = RuleCreateRequest(
+            ruleList.add(
+                RuleCreateRequestV3(
                     name = gate.name,
                     desc = "",
-                    indicatorIds = indicators,
+                    indicators = indicators,
                     position = position,
+                    range = null,
+                    templateRange = null,
                     operation = RuleOperation.END,
                     notifyTypeList = GitCINotifyType.getNotifyListByYaml(gate.notifyOnFail?.map { it.type }),
                     notifyGroupList = null,
@@ -309,9 +316,14 @@ class TriggerBuildService @Autowired constructor(
                     auditTimeoutMinutes = null,
                     gatewayId = null
                 )
-            ).data
+            )
         }
-        return null
+        return client.get(ServiceQualityRuleResource::class).create(
+                userId = event.userId,
+                projectId = "git_${event.gitProjectId}",
+                pipelineId = pipeline.pipelineId,
+                ruleList = ruleList
+            ).data
     }
 
     fun savePipelineModel(
