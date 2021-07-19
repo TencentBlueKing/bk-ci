@@ -1,15 +1,14 @@
 plugins {
     kotlin("jvm")
+    detektCheck
 }
-
-apply("$rootDir/detekt.gradle.kts")
 
 allprojects {
     // 包路径
     group = "com.tencent.bk.devops.ci"
 
     // 版本
-    version = "1.5.5"
+    version = "1.6.0"
     val devopsVersion = System.getProperty("ci_version")
     if (devopsVersion != null) {
         version = devopsVersion

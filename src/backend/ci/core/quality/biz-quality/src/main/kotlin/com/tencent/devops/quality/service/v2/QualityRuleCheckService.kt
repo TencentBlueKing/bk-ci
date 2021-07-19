@@ -29,6 +29,7 @@ package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -40,6 +41,7 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
@@ -250,8 +252,11 @@ class QualityRuleCheckService @Autowired constructor(
                                 interceptRecordList = interceptRecordList,
                                 endNotifyTypeList = rule.notifyTypeList ?: listOf(),
                                 endNotifyGroupList = rule.notifyGroupList ?: listOf(),
-                                endNotifyUserList = rule.notifyUserList ?: listOf())
+                                endNotifyUserList = (rule.notifyUserList ?: listOf()).map {
+                                    EnvUtils.parseEnv(it, runtimeVariable ?: mapOf())
+                                })
                         } else {
+                            val startUser = runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
                             sendAuditNotification(
                                 projectId = projectId,
                                 pipelineId = pipelineId,
@@ -259,7 +264,9 @@ class QualityRuleCheckService @Autowired constructor(
                                 buildNo = buildNo,
                                 createTime = createTime,
                                 resultList = resultList,
-                                auditNotifyUserList = rule.auditUserList ?: listOf())
+                                auditNotifyUserList = (rule.auditUserList ?: listOf()).toSet().plus(startUser).map {
+                                    EnvUtils.parseEnv(it, runtimeVariable ?: mapOf())
+                                })
                         }
                     } catch (t: Throwable) {
                         logger.error("send notification fail", t)

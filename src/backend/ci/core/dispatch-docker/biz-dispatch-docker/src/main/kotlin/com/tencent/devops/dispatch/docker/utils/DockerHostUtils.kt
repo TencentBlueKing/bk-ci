@@ -202,41 +202,43 @@ class DockerHostUtils @Autowired constructor(
     }
 
     fun updateTaskSimpleAndRecordDriftLog(
-        dispatchMessage: DispatchMessage,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
         containerId: String,
         newIp: String,
         driftIpInfo: String
     ) {
         val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
             dslContext = dslContext,
-            pipelineId = dispatchMessage.pipelineId,
-            vmSeq = dispatchMessage.vmSeqId
+            pipelineId = pipelineId,
+            vmSeq = vmSeqId
         )
 
         if (taskHistory != null && taskHistory.dockerIp != newIp) {
             // 记录漂移日志
             pipelineDockerTaskDriftDao.create(
-                dslContext,
-                dispatchMessage.pipelineId,
-                dispatchMessage.buildId,
-                dispatchMessage.vmSeqId,
-                taskHistory.dockerIp,
-                newIp,
-                driftIpInfo
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeq = vmSeqId,
+                oldIp = taskHistory.dockerIp,
+                newIp = newIp,
+                oldIpInfo = driftIpInfo
             )
         }
 
         pipelineDockerTaskSimpleDao.updateDockerIp(
-            dslContext,
-            dispatchMessage.pipelineId,
-            dispatchMessage.vmSeqId,
-            newIp
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            vmSeq = vmSeqId,
+            dockerIp = newIp
         )
 
         pipelineDockerBuildDao.updateContainerId(
             dslContext = dslContext,
-            buildId = dispatchMessage.buildId,
-            vmSeqId = Integer.valueOf(dispatchMessage.vmSeqId),
+            buildId = buildId,
+            vmSeqId = Integer.valueOf(vmSeqId),
             containerId = containerId
         )
     }

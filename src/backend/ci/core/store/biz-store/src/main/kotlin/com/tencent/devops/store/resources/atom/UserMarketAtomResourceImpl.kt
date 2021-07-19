@@ -137,4 +137,8 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     override fun getAtomYmlInfo(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
         return Result(marketAtomService.generateCiYaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag ?: false))
     }
+
+    override fun getAtomYmlV2Info(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
+        return Result(marketAtomService.generateCiV2Yaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag ?: false))
+    }
 }

@@ -31,5 +31,5 @@ out
 .prebuild.yml
 .temp
 .history
-
+.codecc
 build.yml

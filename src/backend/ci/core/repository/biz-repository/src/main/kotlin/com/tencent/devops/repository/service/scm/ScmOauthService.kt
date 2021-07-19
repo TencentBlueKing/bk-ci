@@ -201,8 +201,7 @@ class ScmOauthService @Autowired constructor(
                     svnConfig.svnHookUrl
                 }
                 else -> {
-                    logger.warn("Unknown repository type ($type) when add webhook")
-                    throw RuntimeException("Unknown repository type ($type) when add webhook")
+                    throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
                 }
             }
             ScmOauthFactory.getScm(projectName = projectName,

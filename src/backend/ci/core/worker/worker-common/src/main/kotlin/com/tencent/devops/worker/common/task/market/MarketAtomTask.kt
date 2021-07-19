@@ -28,12 +28,24 @@
 package com.tencent.devops.worker.common.task.market
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.constant.ARTIFACT
+import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
+import com.tencent.devops.common.api.constant.LABEL
+import com.tencent.devops.common.api.constant.PATH
+import com.tencent.devops.common.api.constant.REPORT
+import com.tencent.devops.common.api.constant.REPORT_TYPE
+import com.tencent.devops.common.api.constant.STRING
+import com.tencent.devops.common.api.constant.TYPE
+import com.tencent.devops.common.api.constant.URL
+import com.tencent.devops.common.api.constant.VALUE
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -44,8 +56,11 @@ import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
+import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
+import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_ENV
@@ -60,6 +75,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
+import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -90,12 +106,12 @@ open class MarketAtomTask : ITask() {
     @Suppress("UNCHECKED_CAST")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
-        val atomName = taskParams["name"] as String
+        val taskName = taskParams["name"] as String
         val atomCode = taskParams["atomCode"] as String
         val atomVersion = taskParams["version"] as String
         val data = taskParams["data"] ?: "{}"
         val map = JsonUtil.toMutableMapSkipEmpty(data)
-        logger.info("${buildTask.buildId}|RUN_ATOM|atomName=$atomName|ver=$atomVersion|code=$atomCode" +
+        logger.info("${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
             "|workspace=${workspace.absolutePath}")
 
         // 获取插件基本信息
@@ -103,7 +119,7 @@ open class MarketAtomTask : ITask() {
         logger.info("atomEnvResult is:$atomEnvResult")
         val atomData =
             atomEnvResult.data ?: throw TaskExecuteException(
-                errorMsg = "can not found $atomName: ${atomEnvResult.message}",
+                errorMsg = "can not found $taskName: ${atomEnvResult.message}",
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
@@ -148,16 +164,32 @@ open class MarketAtomTask : ITask() {
         try {
             val inputMap = map["input"] as Map<String, Any>?
             inputMap?.forEach { (name, value) ->
+                var valueStr = JsonUtil.toJson(value)
+                valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
+                    override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+                        return CredentialUtils.getCredentialContextValue(key) ?: if (doubleCurlyBraces) {
+                                "\${{$key}}"
+                            } else {
+                                "\${$key}"
+                            }
+                    }
+                })
+
                 // 只有构建环境下运行的插件才有workspace变量
                 if (buildTask.containerType == VMBuildContainer.classType) {
                     atomParams[name] = EnvUtils.parseEnv(
-                        command = JsonUtil.toJson(value),
+                        command = valueStr,
                         data = systemVariables,
                         contextMap = contextMap(buildTask).plus(
-                            mapOf(WORKSPACE_CONTEXT to workspace.absolutePath))
+                            mapOf(
+                                WORKSPACE_CONTEXT to workspace.absolutePath,
+                                CI_TOKEN_CONTEXT to (buildVariables.variables[CI_TOKEN_CONTEXT] ?: ""),
+                                JOB_OS_CONTEXT to AgentEnv.getOS().name
+                            )
+                        )
                     )
                 } else {
-                    atomParams[name] = JsonUtil.toJson(value)
+                    atomParams[name] = valueStr
                 }
             }
         } catch (e: Throwable) {
@@ -184,6 +216,8 @@ open class MarketAtomTask : ITask() {
             "N"
         }
         runtimeVariables = runtimeVariables.plus(Pair("testVersionFlag", testVersionFlag)) // 设置是否是测试版本的标识
+        // 设置插件名称和任务名称变量
+        runtimeVariables = runtimeVariables.plus(mapOf("atomName" to atomData.atomName, "taskName" to taskName))
         val variables = runtimeVariables.plus(atomParams)
         logger.info("atomCode is:$atomCode ,variables is:$variables")
 
@@ -292,7 +326,8 @@ open class MarketAtomTask : ITask() {
                         runtimeVariables = environment,
                         dir = atomTmpSpace,
                         workspace = workspace,
-                        errorMessage = errorMessage
+                        errorMessage = errorMessage,
+                        elementId = buildTask.elementId
                     )
                 }
                 AgentEnv.getOS() == OSType.LINUX || AgentEnv.getOS() == OSType.MAC_OS -> {
@@ -310,7 +345,8 @@ open class MarketAtomTask : ITask() {
                         buildEnvs = buildEnvs,
                         runtimeVariables = environment,
                         systemEnvVariables = systemEnvVariables,
-                        errorMessage = errorMessage
+                        errorMessage = errorMessage,
+                        elementId = buildTask.elementId
                     )
                 }
             }
@@ -485,7 +521,7 @@ open class MarketAtomTask : ITask() {
             val outputData = atomResult.data
             val env = mutableMapOf<String, String>()
             outputData?.forEach { (varKey, output) ->
-                val type = output["type"]
+                val type = output[TYPE]
                 val key = if (!namespace.isNullOrBlank()) {
                     "${namespace}_$varKey" // 用户前缀_插件输出变量名
                 } else {
@@ -506,17 +542,32 @@ open class MarketAtomTask : ITask() {
                         "label": "",  # 报告别名，用于产出物报告界面标识当前报告
                         "path": "",   # 报告目录所在路径，相对于工作空间
                         "target": "", # 报告入口文件
+                        "enableEmail": true, # 是否开启发送邮件
+                        "emailReceivers": [], # 邮件接收人
+                        "emailTitle": "" # 邮件标题
                     }
                 }
                  */
                 TaskUtil.setTaskId(buildTask.taskId ?: "")
                 when (type) {
-                    "string" -> env[key] = output["value"] as String
-                    "report" -> env[key] = archiveReport(buildTask, output, buildVariables, bkWorkspace)
-                    "artifact" -> env[key] = archiveArtifact(output, bkWorkspace, buildVariables)
+                    STRING -> env[key] = output[VALUE] as String
+                    REPORT -> env[key] = archiveReport(
+                        buildTask = buildTask,
+                        varKey = varKey,
+                        output = output,
+                        buildVariables = buildVariables,
+                        atomWorkspace = bkWorkspace
+                    )
+                    ARTIFACT -> env[key] = archiveArtifact(
+                        varKey = varKey,
+                        output = output,
+                        atomWorkspace = bkWorkspace,
+                        buildVariables = buildVariables
+                    )
                 }
 
                 env["steps.${buildTask.elementId ?: ""}.outputs.$key"] = env[key] ?: ""
+                env["jobs.${buildVariables.containerId}.os"] = AgentEnv.getOS().name
 
                 TaskUtil.removeTaskId()
                 if (outputTemplate.containsKey(varKey)) {
@@ -583,16 +634,28 @@ open class MarketAtomTask : ITask() {
      */
     @Suppress("UNCHECKED_CAST")
     private fun archiveArtifact(
+        varKey: String,
         output: Map<String, Any>,
         atomWorkspace: File,
         buildVariables: BuildVariables
     ): String {
         var oneArtifact = ""
         try {
-            val artifacts = output["value"] as List<String>
+            val artifacts = output[VALUE] as List<String>
+            val artifactoryType = (output[ARTIFACTORY_TYPE] as? String) ?: ArtifactoryType.PIPELINE.name
             artifacts.forEach { artifact ->
                 oneArtifact = artifact
-                ArchiveUtils.archivePipelineFiles(artifact, atomWorkspace, buildVariables)
+                if (artifactoryType == ArtifactoryType.PIPELINE.name) {
+                    ArchiveUtils.archivePipelineFiles(artifact, atomWorkspace, buildVariables)
+                } else if (artifactoryType == ArtifactoryType.CUSTOM_DIR.name) {
+                    output[PATH] ?: throw TaskExecuteException(
+                        errorMsg = "$varKey.$PATH cannot be empty",
+                        errorType = ErrorType.USER,
+                        errorCode = ErrorCode.USER_INPUT_INVAILD
+                    )
+                    val destPath = output[PATH] as String
+                    ArchiveUtils.archiveCustomFiles(artifact, destPath, atomWorkspace, buildVariables)
+                }
             }
         } catch (e: Exception) {
             LoggerService.addRedLine("获取输出构件[artifact]值错误：${e.message}")
@@ -606,38 +669,67 @@ open class MarketAtomTask : ITask() {
      */
     private fun archiveReport(
         buildTask: BuildTask,
+        varKey: String,
         output: Map<String, Any>,
         buildVariables: BuildVariables,
         atomWorkspace: File
     ): String {
+        output[LABEL] ?: throw TaskExecuteException(
+            errorMsg = "$varKey.$LABEL cannot be empty",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_INPUT_INVAILD
+        )
         val params = mutableMapOf<String, String>()
         if (buildTask.params != null) {
             params.putAll(buildTask.params!!)
         }
         val resultData: String
-        val reportType = output["reportType"] ?: ReportTypeEnum.INTERNAL.name // 报告类型，如果用户不传则默认为平台内置类型
-        params["reportType"] = reportType.toString()
+        val reportType = output[REPORT_TYPE] ?: ReportTypeEnum.INTERNAL.name // 报告类型，如果用户不传则默认为平台内置类型
+        params[REPORT_TYPE] = reportType.toString()
         if (reportType == ReportTypeEnum.INTERNAL.name) {
-            params["fileDir"] = output["path"] as String
-            val target = output["target"] as String
+            output[PATH] ?: throw TaskExecuteException(
+                errorMsg = "$varKey.$PATH cannot be empty",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            )
+            output[KEY_TARGET] ?: throw TaskExecuteException(
+                errorMsg = "$varKey.$KEY_TARGET cannot be empty",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            )
+            params["fileDir"] = output[PATH] as String
+            val target = output[KEY_TARGET] as String
             params["indexFile"] = target
             resultData = target
         } else {
-            val url = output["url"] as String
+            output[URL] ?: throw TaskExecuteException(
+                errorMsg = "$varKey.$URL cannot be empty",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            )
+            val url = output[URL] as String
             params["reportUrl"] = url
             resultData = url
         }
-        params["reportName"] = output["label"] as String
+        params["reportName"] = output[LABEL] as String
+        val emailReceivers = output["emailReceivers"] as? String
+        val emailTitle = output["emailTitle"] as? String
+        if (emailReceivers != null && emailTitle != null) {
+            params["enableEmail"] = output["enableEmail"].toString()
+            params["emailReceivers"] = JsonUtil.toJson(emailReceivers)
+            params["emailTitle"] = emailTitle
+        }
         val reportArchTask = BuildTask(
-            buildTask.buildId,
-            buildTask.vmSeqId,
-            buildTask.status,
-            buildTask.taskId,
-            buildTask.elementId,
-            buildTask.elementName,
-            buildTask.type,
-            params,
-            buildTask.buildVariable
+            buildId = buildTask.buildId,
+            vmSeqId = buildTask.vmSeqId,
+            status = buildTask.status,
+            taskId = buildTask.taskId,
+            elementId = buildTask.elementId,
+            elementName = buildTask.elementName,
+            type = buildTask.type,
+            params = params,
+            buildVariable = buildTask.buildVariable,
+            containerType = buildTask.containerType
         )
         logger.info("${buildTask.buildId}|reportArchTask|atomWorkspacePath=${atomWorkspace.absolutePath}")
 

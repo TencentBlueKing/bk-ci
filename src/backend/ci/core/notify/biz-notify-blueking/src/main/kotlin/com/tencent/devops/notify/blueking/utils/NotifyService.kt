@@ -33,6 +33,7 @@ import com.tencent.devops.common.notify.pojo.WechatNotifyPost
 import com.tencent.devops.notify.blueking.sdk.CMSApi
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.IllegalArgumentException
 
 @Service
 
@@ -64,7 +65,7 @@ class NotifyService @Autowired constructor(private val cmsApi: CMSApi) {
                 cmsApi.sendWeixin(postData as WechatNotifyPost)
             }
             else -> {
-                throw RuntimeException("Unknown message type")
+                throw IllegalArgumentException("Unknown message type")
             }
         }
         return NotifyResult(

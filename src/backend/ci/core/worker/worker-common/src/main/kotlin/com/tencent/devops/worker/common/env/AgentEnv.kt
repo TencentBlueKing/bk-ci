@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.env
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.service.env.Env
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
 import com.tencent.devops.worker.common.utils.WorkspaceUtils.getLandun
@@ -60,7 +61,7 @@ object AgentEnv {
     private var gateway: String? = null
     private var os: OSType? = null
     private var env: Env? = null
-    private var logMode: LogMode? = null
+    private var logStorageMode: LogStorageMode? = null
 
     private var property: Properties? = null
 
@@ -212,21 +213,25 @@ object AgentEnv {
         return BuildEnv.getBuildType() == BuildType.DOCKER
     }
 
-    fun getLogMode(): LogMode {
-        if (null == logMode) {
+    fun getLogMode(): LogStorageMode {
+        if (null == logStorageMode) {
             synchronized(this) {
-                if (null == logMode) {
-                    logMode = try {
-                        LogMode.valueOf(System.getenv(AGENT_LOG_SAVE_MODE)
+                if (null == logStorageMode) {
+                    logStorageMode = try {
+                        LogStorageMode.valueOf(System.getenv(AGENT_LOG_SAVE_MODE)
                             ?: throw PropertyNotExistException(AGENT_LOG_SAVE_MODE, "Empty log mode"))
                     } catch (t: Throwable) {
                         logger.warn("not system variable named log mode!")
-                        LogMode.UPLOAD
+                        LogStorageMode.UPLOAD
                     }
-                    logger.info("get the log mode $logMode")
+                    logger.info("get the log mode $logStorageMode")
                 }
             }
         }
-        return logMode!!
+        return logStorageMode!!
+    }
+
+    fun setLogMode(storageMode: LogStorageMode) {
+        logStorageMode = storageMode
     }
 }
