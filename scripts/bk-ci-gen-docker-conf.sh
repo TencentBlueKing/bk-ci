@@ -77,7 +77,7 @@ mkdir -p "$(dirname "$conf_daemon")"
 old_data_root=$(jq -r '.["data-root"] // ""' "$conf_daemon")
 data_root_default="/var/lib/docker"
 case "$old_data_root" in
-  ""|"$data_root_default"|"$docker_data_root")  # 仅默认修改这些data-root.
+  ""|"$data_root_default"|"$docker_data_root"|*/docker-bkci|*/docker-bkci/)  # 仅默认修改这些data-root.
     gen_docker_conf "$docker_data_root"
     ;;
   *)

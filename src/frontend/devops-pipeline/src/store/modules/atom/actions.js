@@ -428,6 +428,12 @@ export default {
         return request.post(`${STORE_API_URL_PREFIX}/user/market/atom/install`, param).then(() => dispatch('fetchAtoms', { projectCode: param.projectCode[0] }))
     },
 
+    getAtomEnvConfig ({ commit }, atomCode) {
+        return request.get(`${STORE_API_URL_PREFIX}/user/market/ATOM/component/${atomCode}/sensitiveConf/list/?types=FRONTEND,ALL`).then((res) => {
+            return res.data || []
+        })
+    },
+
     // 获取项目下已安装的插件列表
     getInstallAtomList ({ commit }, projectCode) {
         return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=2000`)
