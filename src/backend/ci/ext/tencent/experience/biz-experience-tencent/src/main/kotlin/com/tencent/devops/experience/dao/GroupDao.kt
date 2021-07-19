@@ -60,7 +60,7 @@ class GroupDao {
     ): Result<TGroupRecord> {
         return with(TGroup.T_GROUP) {
             dslContext.selectFrom(this)
-                .where(PROJECT_ID.equals(projectId))
+                .where(PROJECT_ID.eq(projectId))
                 .let {
                     if (null == name) it else it.and(NAME.eq(name))
                 }
