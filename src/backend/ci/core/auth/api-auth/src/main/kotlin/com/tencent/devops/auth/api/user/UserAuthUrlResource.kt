@@ -33,9 +33,11 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.POST
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["AUTH_RESOURCE"], description = "用户态-权限")
@@ -51,4 +53,14 @@ interface UserAuthUrlResource {
         @ApiParam(value = "待申请实例信息")
         permissionUrlDTO: List<PermissionUrlDTO>
     ): Result<String?>
+
+    @GET
+    @Path("/group/permission/url")
+    fun getRolePermissionUrl(
+        @ApiParam(value = "待分配权限用户组所属项目")
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "用户组Id")
+        roleId: String?
+    ): Result<String>
 }
