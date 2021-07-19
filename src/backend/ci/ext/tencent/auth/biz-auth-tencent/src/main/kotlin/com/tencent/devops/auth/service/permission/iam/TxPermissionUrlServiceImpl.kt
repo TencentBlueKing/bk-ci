@@ -41,12 +41,16 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 class TxPermissionUrlServiceImpl @Autowired constructor(
     private val iamConfiguration: IamConfiguration,
-    private val managerService: ManagerService
+    private val managerService: ManagerService,
+    private val permissionProjectService: TxPermissionProjectServiceImpl
 ) : PermissionUrlService {
 
+    @Value("\${auth.webHost:#{null}}")
+    val permissionCenterHost: String? = null
     /**
     {
     "system": "bk_job",  # 权限的系统
@@ -167,6 +171,18 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
         )
         logger.info("get permissionUrl permissionUrlDTO: $permissionUrlDTO")
         return Result(managerService.getPermissionUrl(permissionUrlDTO))
+    }
+
+    override fun getRolePermissionUrl(projectId: String, groupId: String?): String? {
+        val projectRelationId = permissionProjectService.getProjectId(projectId)
+        val rolePermissionUrl = "user-group-detail/$groupId?current_role_id=$projectRelationId&tab=group_perm"
+        return if (permissionCenterHost.isNullOrEmpty()) {
+            null
+        } else if (permissionCenterHost!!.endsWith("/")) {
+            permissionCenterHost + rolePermissionUrl
+        } else {
+            "$permissionCenterHost/$rolePermissionUrl"
+        }
     }
 
     companion object {
