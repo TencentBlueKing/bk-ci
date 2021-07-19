@@ -72,9 +72,6 @@ interface ServiceQualityRuleResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
         @ApiParam("规则内容", required = true)
         ruleList: List<RuleCreateRequestV3>
     ): Result<List<RuleCreateResponseV3>>
