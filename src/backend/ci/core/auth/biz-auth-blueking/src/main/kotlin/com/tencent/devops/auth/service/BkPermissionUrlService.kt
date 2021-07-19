@@ -47,7 +47,7 @@ class BkPermissionUrlService @Autowired constructor(
     val iamEsbService: IamEsbService,
     @Autowired(required = false) // v3 才会有
     val iamConfiguration: IamConfiguration?
-): PermissionUrlService {
+) : PermissionUrlService {
 
     override fun getPermissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
         logger.info("get permissionUrl permissionUrlDTO: $permissionUrlDTO")
@@ -94,11 +94,11 @@ class BkPermissionUrlService @Autowired constructor(
             }
         }
         val iamEsbReq = EsbPermissionUrlReq(
-                system = iamConfiguration!!.systemId,
-                actions = actions,
-                bk_app_code = "",
-                bk_app_secret = "",
-                bk_username = "admin"
+            system = iamConfiguration!!.systemId,
+            actions = actions,
+            bk_app_code = "",
+            bk_app_secret = "",
+            bk_username = "admin"
         )
         logger.info("get permissionUrl iamEsbReq: $iamEsbReq")
         return Result(iamEsbService.getPermissionUrl(iamEsbReq))
