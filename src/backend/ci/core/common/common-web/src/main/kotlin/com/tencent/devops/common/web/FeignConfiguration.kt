@@ -101,7 +101,7 @@ class FeignConfiguration {
     @Bean
     fun gatewayTagRequestInterceptor(): RequestInterceptor {
         return RequestInterceptor { requestTemplate ->
-            logger.info("add X-GATEWAY-TAG $tag")
+            logger.debug("add X-GATEWAY-TAG $tag")
             if (!requestTemplate.headers().containsKey(AUTH_HEADER_GATEWAY_TAG)) {
                 requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, tag)
             }
