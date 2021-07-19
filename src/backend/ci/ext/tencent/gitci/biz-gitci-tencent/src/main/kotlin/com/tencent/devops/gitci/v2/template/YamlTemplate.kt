@@ -107,6 +107,10 @@ class YamlTemplate(
         private const val MAX_TEMPLATE_NUMB = 10
         private const val MAX_TEMPLATE_DEEP = 5
 
+        // 质量红线数量和红线中的规则数量
+        private const val STAGE_CHECK_GATE_NUMB = 10
+        private const val STAGE_CHECK_GATE_RULE_NUMB = 100
+
         // 异常模板
         const val TEMPLATE_ID_DUPLICATE = "Format error: ID [%s] in template [%s] and template [%s] are duplicated"
         const val TEMPLATE_ROOT_ID_DUPLICATE = "[%s] Format error: IDs [%s] are duplicated"
@@ -127,6 +131,10 @@ class YamlTemplate(
         const val EXTENDS_TEMPLATE_ON_ERROR = "[%s]Triggers are not supported in the template"
         const val VALUE_NOT_IN_ENUM = "[%s][%s=%s]Parameter error, the expected value is [%s]"
         const val FINALLY_FORMAT_ERROR = "final stage not support stage's template"
+        const val STAGE_CHECK_GATE_NUMB_BEYOND =
+            "[%s][%s]The number of gates reaches the limit:  no more than $STAGE_CHECK_GATE_NUMB. "
+        const val STAGE_CHECK_GATE_RULE_NUMB_BEYOND =
+            "[%s][%s][%s]The number of rules reaches the limit:  no more than $STAGE_CHECK_GATE_RULE_NUMB. "
     }
 
     // 存储当前库的模板信息，减少重复获取 key: templatePath value： template
@@ -559,6 +567,7 @@ class YamlTemplate(
 
     // 替换Stage准入准出信息
     private fun replaceStageCheckTemplate(
+        stageName: String,
         check: Map<String, Any>?,
         fromPath: String
     ): PreStageCheck? {
@@ -567,6 +576,7 @@ class YamlTemplate(
         }
         val checkObject = YamlObjects.getObjectFromYaml<PreTemplateStageCheck>(fromPath, YamlUtil.toYaml(check))
         val gateList = mutableListOf<Gate>()
+
         checkObject.gates?.forEach { gate ->
             val toPath = gate.template
             val templateObject = replaceResAndParam(
@@ -579,6 +589,14 @@ class YamlTemplate(
             gateList.addAll(
                 gateTemplate.gates
             )
+            gateTemplate.gates.forEach {
+                if (it.rule.size > STAGE_CHECK_GATE_RULE_NUMB) {
+                    error(STAGE_CHECK_GATE_RULE_NUMB_BEYOND.format(fromPath, stageName, it.name))
+                }
+            }
+            if (gateList.size > STAGE_CHECK_GATE_NUMB) {
+                error(STAGE_CHECK_GATE_NUMB_BEYOND.format(fromPath, stageName))
+            }
         }
         return PreStageCheck(
             reviews = checkObject.reviews,
@@ -822,6 +840,7 @@ class YamlTemplate(
             },
             checkIn = if (stage["check-in"] != null) {
                 replaceStageCheckTemplate(
+                    stageName = stage["name"]?.toString() ?: "",
                     check = transValue<Map<String, Any>>(fromPath, TemplateType.GATE.text, stage["check-in"]),
                     fromPath = filePath
                 )
@@ -830,6 +849,7 @@ class YamlTemplate(
             },
             checkOut = if (stage["check-out"] != null) {
                 replaceStageCheckTemplate(
+                    stageName = stage["name"]?.toString() ?: "",
                     check = transValue<Map<String, Any>>(fromPath, TemplateType.GATE.text, stage["check-out"]),
                     fromPath = filePath
                 )
