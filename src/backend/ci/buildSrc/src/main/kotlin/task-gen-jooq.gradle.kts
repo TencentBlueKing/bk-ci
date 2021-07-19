@@ -80,7 +80,7 @@ jooq {
             val mysqlUserKey =
                 if (specialModule && specialDbName.contains(moduleName)) "${moduleName}MysqlUser" else "mysqlUser"
             val mysqlPasswordKey =
-                if (specialModule && specialDbName.contains(moduleName)) "${moduleName}MysqlPassword" else "mysqlPassword"
+                if (specialModule && specialDbName.contains(moduleName)) "${moduleName}MysqlPasswd" else "mysqlPasswd"
 
             create(taskName) {
                 jooqConfiguration.apply {
@@ -94,6 +94,10 @@ jooq {
                             mysqlUser = System.getenv(mysqlUserKey)
                             mysqlPasswd = System.getenv(mysqlPasswordKey)
                         }
+
+                        println("mysqlURL : $mysqlURL")
+                        println("mysqlUser : $mysqlUser")
+                        println("mysqlPasswd : ${mysqlPasswd.substring(0, 3)}****")
 
                         if (mysqlURL == null) {
                             println("use default mysql database.")
