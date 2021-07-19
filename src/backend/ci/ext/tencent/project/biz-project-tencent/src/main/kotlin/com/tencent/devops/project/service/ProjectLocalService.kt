@@ -42,9 +42,11 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.gitci.api.service.ServiceGitForAppResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -74,20 +76,21 @@ import java.io.InputStream
 import java.nio.file.Files
 
 @Service
+@SuppressWarnings("LongParameterList", "TooManyFunctions")
 class ProjectLocalService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
     private val objectMapper: ObjectMapper,
     private val redisOperation: RedisOperation,
     private val bkAuthProjectApi: BSAuthProjectApi,
-    private val bkAuthProperties: BkAuthProperties,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
-    private val projectPermissionService: ProjectPermissionService,
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi,
     private val projectService: ProjectService,
     private val projectIamV0Service: ProjectIamV0Service,
-    private val projectTagService: ProjectTagService
+    private val projectTagService: ProjectTagService,
+    private val client: Client,
+    bkAuthProperties: BkAuthProperties
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -152,6 +155,13 @@ class ProjectLocalService @Autowired constructor(
             } else {
                 val countByEnglishName = projectDao.countByEnglishName(dslContext, projectIds, searchName)
                 countByEnglishName > offset + limit
+            }
+
+            if (!hasNext) {
+                val gitCIProjectList =
+                    client.get(ServiceGitForAppResource::class, "dev-gitci")//TODO 不能写死
+                        .getGitCIProjectList(userId, 1, 10000, searchName)
+                gitCIProjectList.data?.records?.let { records.addAll(it) }
             }
 
             return Pagination(hasNext, records)
