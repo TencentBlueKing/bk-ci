@@ -38,8 +38,6 @@ data class RuleCreateResponseV3(
     val projectId: String,
     @ApiModelProperty("流水线id", required = true)
     val pipelineId: String,
-    @ApiModelProperty("构建id", required = true)
-    val buildId: String,
     @ApiModelProperty("规则某次构建生成的临时ID", required = true)
     val ruleBuildId: String?
 )

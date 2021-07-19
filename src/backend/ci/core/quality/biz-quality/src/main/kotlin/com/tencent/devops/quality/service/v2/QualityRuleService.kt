@@ -152,10 +152,9 @@ class QualityRuleService @Autowired constructor(
         }
     }
 
-    fun serviceCreate(userId: String, projectId: String, pipelineId: String, buildId: String, ruleRequestList: List<RuleCreateRequestV3>): List<RuleCreateResponseV3> {
-
+    fun serviceCreate(userId: String, projectId: String, pipelineId: String, ruleRequestList: List<RuleCreateRequestV3>): List<RuleCreateResponseV3> {
         return ruleRequestList.map {  ruleRequest ->
-            logger.info("start to create or update rule: $projectId, $pipelineId, $buildId, ${ruleRequest.name}")
+            logger.info("start to create or update rule: $projectId, $pipelineId, ${ruleRequest.name}")
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
@@ -189,11 +188,11 @@ class QualityRuleService @Autowired constructor(
                 ),
                 createAuth = false)
 
-            logger.info("start to create rule snapshot: $projectId, $pipelineId, $buildId, ${ruleRequest.name}")
-            val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId, buildId,
+            logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
+            val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId,
                 HashUtil.decodeIdToLong(ruleId), ruleRequest, indicatorIds)
 
-            RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, buildId, HashUtil.encodeLongId(id))
+            RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, HashUtil.encodeLongId(id))
         }
     }
 
