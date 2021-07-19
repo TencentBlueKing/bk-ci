@@ -66,7 +66,7 @@ class AuthQualityService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         qualityRuleInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = HashUtil.encodeLongId(it.id)
+            entity.id = it.id.toString()
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -88,7 +88,7 @@ class AuthQualityService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         certInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = HashUtil.encodeLongId(it.id)
+            entity.id = it.id.toString()
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -118,7 +118,7 @@ class AuthQualityService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         qualityRuleInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = HashUtil.encodeLongId(it.id)
+            entity.id = it.id.toString()
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -146,7 +146,7 @@ class AuthQualityService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         qualityGroupInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = HashUtil.encodeLongId(it.id)
+            entity.id = it.id.toString()
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -169,7 +169,7 @@ class AuthQualityService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         qualityGroupInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = HashUtil.encodeLongId(it.id)
+            entity.id = it.id.toString()
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -199,7 +199,7 @@ class AuthQualityService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         qualityGroupInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = HashUtil.encodeLongId(it.id)
+            entity.id = it.id.toString()
             entity.displayName = it.name
             entityInfo.add(entity)
         }
