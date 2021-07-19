@@ -81,7 +81,7 @@ install_ci__common (){
   id -u "$MS_USER" &>/dev/null || \
     useradd -m -c "BlueKing CE User" --shell /bin/bash "$MS_USER"
 
-  os_pkg_install jq
+  [ -x /usr/bin/jq ] || os_pkg_install jq  # 如果已有jq则无需安装.
   local d
   for d in /etc/blueking/env "$BK_CI_HOME" "$BK_CI_LOGS_DIR" "${BK_CI_DATA_DIR%/?*}"; do
     command install -o "$MS_USER" -g "$MS_USER" -m 755 -d "$d"
