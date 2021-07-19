@@ -225,7 +225,7 @@ class MonitorNotifyJob @Autowired constructor(
         sourceBuilder.aggregation(AggregationBuilders.avg("avg_ms").field("ms"))
 
         val searchRequest = SearchRequest()
-        searchRequest.indices("v2_9_bklog_prod_ci_service_access_${DateFormatUtils.format(startTime, "yyyyMMdd")}*")
+        searchRequest.indices("v2_9_bklog_prod_ci_gateway_access_${DateFormatUtils.format(startTime, "yyyyMMdd")}*")
         searchRequest.source(sourceBuilder)
 
         val aggregations = restHighLevelClient.search(searchRequest).aggregations
