@@ -67,7 +67,7 @@ class AuthExperienceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         experienceTaskInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id
+            entity.id = it.id.toString()
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -87,7 +87,7 @@ class AuthExperienceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         experienceTaskInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id
+            entity.id = it.id.toString()
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -117,7 +117,7 @@ class AuthExperienceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         experienceTaskInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id
+            entity.id = it.id.toString()
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -142,7 +142,7 @@ class AuthExperienceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         experienceGroupInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id
+            entity.id = it.id.toString()
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -162,7 +162,7 @@ class AuthExperienceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         experienceGroupInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id
+            entity.id = it.id.toString()
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -193,7 +193,7 @@ class AuthExperienceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         experienceGroupInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id
+            entity.id = it.id.toString()
             entity.displayName = it.name
             entityInfo.add(entity)
         }
