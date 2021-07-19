@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@SuppressWarnings("LongParameterList")
 class GitCIAppService @Autowired constructor(
     private val dslContext: DSLContext,
     private val scmService: ScmService,
@@ -50,7 +51,6 @@ class GitCIAppService @Autowired constructor(
 
     // 返回GITCI保存的流水线ID
     fun getGitCIPipelines(
-        userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
