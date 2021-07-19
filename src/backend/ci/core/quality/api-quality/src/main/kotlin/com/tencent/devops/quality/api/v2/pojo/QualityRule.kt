@@ -43,7 +43,7 @@ data class QualityRule(
     @ApiModelProperty("红线指标列表", required = true)
     val indicators: List<QualityIndicator>,
     @ApiModelProperty("控制点", required = true)
-    val controlPoint: RuleControlPoint,
+    val controlPoint: RuleControlPoint?,
     @ApiModelProperty("流水线范围", required = true)
     val range: List<String>,
     @ApiModelProperty("模板范围", required = true)

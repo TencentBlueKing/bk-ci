@@ -189,7 +189,7 @@ class QualityRuleService @Autowired constructor(
                 createAuth = false)
 
             logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
-            val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId,
+            val id = qualityRuleBuildHisDao.create(dslContext, projectId, pipelineId,
                 HashUtil.decodeIdToLong(ruleId), ruleRequest, indicatorIds)
 
             RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, HashUtil.encodeLongId(id))
@@ -649,8 +649,8 @@ class QualityRuleService @Autowired constructor(
                 indicatorIds = ruleData.indicators.map {
                     RuleCreateRequest.CreateRequestIndicator(it.hashId, it.operation.name, it.threshold)
                 }, // indicatorIds
-                controlPoint = ruleData.controlPoint.name,
-                controlPointPosition = ruleData.controlPoint.position.name,
+                controlPoint = ruleData.controlPoint?.name,
+                controlPointPosition = ruleData.controlPoint?.position?.name,
                 range = listOf(),
                 templateRange = listOf(request.targetTemplateId),
                 operation = ruleData.operation,
@@ -667,10 +667,10 @@ class QualityRuleService @Autowired constructor(
 
     fun listMatchTask(ruleList: List<QualityRule>): List<QualityRuleMatchTask> {
         val matchTaskList = mutableListOf<QualityRuleMatchTask>()
-        ruleList.groupBy { it.controlPoint.position.name }.forEach { (_, rules) ->
+        ruleList.groupBy { it.controlPoint?.position?.name }.forEach { (_, rules) ->
 
             // 按照控制点拦截位置再分组
-            rules.groupBy { it.controlPoint.position }.forEach { (position, positionRules) ->
+            rules.groupBy { it.controlPoint?.position }.forEach { (position, positionRules) ->
                 val controlPoint = positionRules.first().controlPoint
                 val taskRuleList = mutableListOf<QualityRuleMatchTask.RuleMatchRule>()
                 val taskThresholdList = mutableListOf<QualityRuleMatchTask.RuleThreshold>()
@@ -699,7 +699,7 @@ class QualityRuleService @Autowired constructor(
                     })
                 }
                 // 生成结果
-                matchTaskList.add(QualityRuleMatchTask(controlPoint.name, controlPoint.cnName, position,
+                matchTaskList.add(QualityRuleMatchTask(controlPoint?.name, controlPoint?.cnName, position,
                     taskRuleList, taskThresholdList, taskAuditUserList))
             }
         }
