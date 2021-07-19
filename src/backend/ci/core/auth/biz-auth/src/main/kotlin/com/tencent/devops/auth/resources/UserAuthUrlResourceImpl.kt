@@ -42,7 +42,7 @@ class UserAuthUrlResourceImpl @Autowired constructor(
         return urlService.getPermissionUrl(permissionUrlDTO)
     }
 
-    override fun getRolePermissionUrl(projectId: String, roleId: String?): Result<String> {
-        return Reuslt(urlService.getRolePermissionUrl(projectId, roleId))
+    override fun getRolePermissionUrl(projectId: String, roleId: String?): Result<String?> {
+        return Result(urlService.getRolePermissionUrl(projectId, roleId))
     }
 }

@@ -62,5 +62,5 @@ interface UserAuthUrlResource {
         projectId: String,
         @ApiParam(value = "用户组Id")
         roleId: String?
-    ): Result<String>
+    ): Result<String?>
 }
