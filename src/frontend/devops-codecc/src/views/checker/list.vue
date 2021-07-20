@@ -81,7 +81,8 @@
                 </bk-table-column>
                 <bk-table-column label="工具" prop="toolName" sortable="custom">
                     <template slot-scope="props">
-                        <a class="cc-link table-tool" :href="iwikiCodeccTool" target="_blank">{{formatTool(props.row.toolName)}}</a>
+                        <!-- <a class="cc-link table-tool" :href="iwikiCodeccTool" target="_blank">{{formatTool(props.row.toolName)}}</a> -->
+                        {{formatTool(props.row.toolName)}}
                     </template>
                 </bk-table-column>
                 <bk-table-column label="标签" prop="checkerTag" sortable="custom" width="170">

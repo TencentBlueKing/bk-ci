@@ -165,12 +165,6 @@
                     </bk-table>
                 </div>
             </div>
-            <new-analyse
-                @changeItem="changeItem"
-                @newAnalyse="newAnalyse"
-                :never-show="neverShow"
-                :visible.sync="dialogAnalyseVisible">
-            </new-analyse>
         </div>
         <div class="dupc-list" v-else>
             <div class="main-container large boder-none">
@@ -199,7 +193,6 @@
 <script>
     import { mapState } from 'vuex'
     import util from '@/mixins/defect-list'
-    import newAnalyse from '@/components/new-analyse'
     import dupcDetail from './dupc-detail'
     import Empty from '@/components/empty'
     // eslint-disable-next-line
@@ -207,7 +200,6 @@
 
     export default {
         components: {
-            newAnalyse,
             dupcDetail,
             Empty
         },

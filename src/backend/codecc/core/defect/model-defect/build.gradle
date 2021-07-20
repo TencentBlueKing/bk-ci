@@ -3,5 +3,5 @@ dependencies {
     compile "org.projectlombok:lombok"
     compile "com.fasterxml.jackson.core:jackson-annotations"
     compile "com.alibaba:fastjson:1.2.68"
-    compile group: 'org.json', name: 'json', version: '20180130'
+    compile group: 'org.json', name: 'json'
 }

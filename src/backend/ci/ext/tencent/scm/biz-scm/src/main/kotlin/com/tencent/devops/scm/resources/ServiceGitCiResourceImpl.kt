@@ -143,4 +143,21 @@ class ServiceGitCiResourceImpl @Autowired constructor(
     ): Result<List<GitCodeProjectInfo>> {
         return Result(gitCiService.getProjectList(accessToken, userId, page, pageSize, search))
     }
+
+    override fun getProjectMembersAll(
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        query: String?
+    ): Result<List<GitMember>> {
+        return Result(
+            gitCiService.getGitCIAllMembers(
+                token = gitService.getToken(gitProjectId).accessToken,
+                gitProjectId = gitProjectId,
+                page = page,
+                pageSize = pageSize,
+                query = query
+            )
+        )
+    }
 }
