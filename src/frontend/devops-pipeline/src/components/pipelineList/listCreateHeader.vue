@@ -55,6 +55,9 @@
                     }, {
                         'id': 'UPDATE_TIME',
                         'name': this.$t('newlist.orderByUpdateTime')
+                    }, {
+                        'id': 'LAST_EXEC_TIME',
+                        'name': this.$t('newlist.orderByExecuteTime')
                     }
                 ]
             }
