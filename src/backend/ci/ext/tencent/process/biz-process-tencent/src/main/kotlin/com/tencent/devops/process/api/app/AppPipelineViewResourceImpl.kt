@@ -106,7 +106,7 @@ class AppPipelineViewResourceImpl @Autowired constructor(
             channelCode = channelCode,
             viewId = viewId,
             checkPermission = true,
-            filterByPipelineName = filterByPipelineName,
+            filterByPipelineName = if (channelCode == ChannelCode.GIT) null else filterByPipelineName,
             filterByCreator = filterByCreator, filterByLabels = filterByLabels,
             filterInvalid = filterInvalid ?: true
         )
