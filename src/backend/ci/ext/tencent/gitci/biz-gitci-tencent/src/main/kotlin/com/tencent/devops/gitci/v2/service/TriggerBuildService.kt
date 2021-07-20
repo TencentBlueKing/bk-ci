@@ -474,30 +474,6 @@ class TriggerBuildService @Autowired constructor(
         jobIndex: Int,
         finalStage: Boolean = false
     ) {
-
-/*        val listPreAgentResult =
-            client.get(ServicePreBuildAgentResource::class).listPreBuildAgent(userId, getUserProjectId(userId), os)
-        if (listPreAgentResult.isNotOk()) {
-            logger.error("list prebuild agent failed")
-            throw OperationException("list prebuild agent failed")
-        }
-        val preAgents = listPreAgentResult.data!!
-
-        val dispatchType = getDispatchType(job, startUpReq, agentInfo)
-
-        val vmBaseOS = if (vmType == ResourceType.REMOTE) {
-            when (dispatchType) {
-                is ThirdPartyAgentIDDispatchType -> {
-                    job.job.pool?.os ?: VMBaseOS.LINUX
-                }
-                is ThirdPartyAgentEnvDispatchType -> {
-                    job.job.pool?.os ?: VMBaseOS.LINUX
-                }
-                is MacOSDispatchType -> VMBaseOS.MACOS
-                else -> VMBaseOS.LINUX
-            }
-        } else VMBaseOS.valueOf(agentInfo.os)*/
-
         val vmContainer = VMBuildContainer(
             jobId = job.id,
             name = job.name ?: "Job-${jobIndex + 1}",

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.v2.template
 
+import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.v2.service.TicketService
@@ -68,13 +69,13 @@ class YamlTemplateService @Autowired constructor(
         fileName: String
     ): String {
         if (token != null) {
-            return scmService.getYamlFromGit(
+            return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
                 token = token,
                 gitProjectId = gitProjectId,
                 ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
-            )
+            ))
         }
         if (personalAccessToken.isNullOrBlank()) {
             val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
@@ -84,13 +85,13 @@ class YamlTemplateService @Autowired constructor(
                 gitProjectId = targetRepo!!,
                 useAccessToken = true
             )?.gitProjectId ?: throw RuntimeException(NOT_FIND_REPO.format(targetRepo))
-            return scmService.getYamlFromGit(
+            return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
                 token = oAuthToken,
                 gitProjectId = targetProjectId.toLong(),
                 ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
-            )
+            ))
         } else {
             val (isTicket, key) = getKey(personalAccessToken)
             val personToken = if (isTicket) {
@@ -110,13 +111,13 @@ class YamlTemplateService @Autowired constructor(
                 gitProjectId = targetRepo!!,
                 useAccessToken = false
             )?.gitProjectId ?: throw RuntimeException(NOT_FIND_REPO.format(targetRepo))
-            return scmService.getYamlFromGit(
+            return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
                 token = personToken,
                 gitProjectId = targetProjectId.toLong(),
                 ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = false
-            )
+            ))
         }
     }
 

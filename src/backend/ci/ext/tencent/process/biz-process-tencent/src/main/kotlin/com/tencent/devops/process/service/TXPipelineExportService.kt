@@ -67,6 +67,7 @@ import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.common.ci.v2.Step as V2Step
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -81,6 +82,7 @@ import javax.ws.rs.core.StreamingOutput
 @Service("TXPipelineExportService")
 class TXPipelineExportService @Autowired constructor(
     private val stageTagService: StageTagService,
+    private val pipelineGroupService: PipelineGroupService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val storeImageHelper: StoreImageHelper
@@ -112,7 +114,12 @@ class TXPipelineExportService @Autowired constructor(
             model = model,
             isGitCI = isGitCI
         )
-
+        val pipelineGroupsMap = mutableMapOf<String, String>()
+        pipelineGroupService.getGroups(userId, projectId).forEach {
+            it.labels.forEach { label ->
+                pipelineGroupsMap[label.id] = label.name
+            }
+        }
         val stageTagsMap = stageTagService.getAllStageTag().data?.map {
             it.id to it.stageTagName
         }?.toMap() ?: emptyMap()
@@ -121,7 +128,7 @@ class TXPipelineExportService @Autowired constructor(
             ExportPreScriptBuildYaml(
                 version = "v2.0",
                 name = model.name,
-                label = if (model.labels.isNullOrEmpty()) null else model.labels,
+                label = model.labels.map { pipelineGroupsMap[it] ?: "" },
                 triggerOn = null,
                 variables = getVariableFromModel(model),
                 stages = getV2StageFromModel(
@@ -234,11 +241,18 @@ class TXPipelineExportService @Autowired constructor(
     ): Map<String, PreJob>? {
         val jobs = mutableMapOf<String, PreJob>()
         stage.containers.forEach {
+            val jobKey = if (!it.jobId.isNullOrBlank()) {
+                it.jobId!!
+            } else if (!it.id.isNullOrBlank()) {
+                "job_${it.id!!}"
+            } else {
+                "unknown_job"
+            }
             when (it.getClassType()) {
                 NormalContainer.classType -> {
                     val job = it as NormalContainer
                     val timeoutMinutes = job.jobControlOption?.timeout ?: 480
-                    jobs[job.jobId ?: "job_${job.id}"] = PreJob(
+                    jobs[jobKey] = PreJob(
                         name = job.name,
                         runsOn = RunsOn(
                             selfHosted = null,
@@ -331,7 +345,7 @@ class TXPipelineExportService @Autowired constructor(
                         }
                     }
 
-                    jobs[job.jobId ?: "job_${job.id}"] = PreJob(
+                    jobs[jobKey] = PreJob(
                         name = job.name,
                         runsOn = runsOn,
                         container = null,
