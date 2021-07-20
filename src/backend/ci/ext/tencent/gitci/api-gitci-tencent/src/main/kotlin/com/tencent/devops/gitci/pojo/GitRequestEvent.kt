@@ -51,7 +51,7 @@ data class GitRequestEvent(
     val targetBranch: String?,
     @ApiModelProperty("COMMIT_ID")
     val commitId: String,
-    @ApiModelProperty("COMMIT_MSG")
+    @ApiModelProperty("COMMIT_MESSAGE")
     val commitMsg: String?,
     @ApiModelProperty("COMMIT_TIMESTAMP")
     val commitTimeStamp: String?,
