@@ -51,4 +51,6 @@ interface EngineBuildSDKApi : WorkerRestApiSDK {
     fun timeout(): Result<Boolean>
 
     fun getCiToken(): String
+
+    fun getCiUrl(): String
 }

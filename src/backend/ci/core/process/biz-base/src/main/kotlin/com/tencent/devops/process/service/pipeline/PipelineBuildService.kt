@@ -143,7 +143,11 @@ class PipelineBuildService(
 
             val defaultParam = mutableListOf<BuildParameters>()
             triggerContainer.params.forEach {
-                defaultParam.add(BuildParameters(key = it.id, value = it.defaultValue, valueType = it.type))
+                defaultParam.add(BuildParameters(
+                        key = it.id,
+                        value = it.defaultValue,
+                        valueType = it.type,
+                        readOnly = it.readOnly))
             }
             val startParamsWithType = buildParamCompatibilityTransformer.transform(inputBuildParam, defaultParam)
 

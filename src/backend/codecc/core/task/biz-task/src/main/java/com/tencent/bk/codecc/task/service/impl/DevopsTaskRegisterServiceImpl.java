@@ -155,7 +155,7 @@ public class DevopsTaskRegisterServiceImpl extends AbstractTaskRegisterService
 
     protected TaskIdVO rollbackTask(TaskInfoEntity taskInfoEntity, String errMsg, Exception e)
     {
-        log.error("{}: {}", errMsg, taskInfoEntity.getNameEn(), e);
+        log.error("{}: {}", errMsg, taskInfoEntity, e);
         taskRepository.delete(taskInfoEntity);
         throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{errMsg}, null);
     }
