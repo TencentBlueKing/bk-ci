@@ -100,6 +100,30 @@ stages:
         - name: job1.yml@repoA
           parameters:
             username: RES_JOB
+    check-in:
+      reviews:
+        flows:
+          - name: 审批组1
+            reviewers: [ a, b, c ] # a、b、c 三人中任意一人操作即可
+          - name: 审批组2
+            reviewers: fayewang
+        variables:
+          var_1:
+            default: 1
+            label: 中文
+            type: SELECTOR
+            values: [ 1,2,3 ]
+        description: |
+          说明下如何审核
+          参数var_1如何取值
+      gates:
+        - template: epc_checks.yml@repoA
+          parameters:
+            receivers:
+              - 1
+              - 2
+              - 3
+      timeout-hours: 10
   #  - template: stages.yml
   #    parameters:
   #      username: STAGE

@@ -36,7 +36,11 @@ import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Repositories
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Variable
-import com.tencent.devops.gitci.v2.template.pojo.ParametersTemplateNull
+import com.tencent.devops.common.ci.v2.stageCheck.Gate
+import com.tencent.devops.common.ci.v2.stageCheck.GateTemplate
+import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
+import com.tencent.devops.common.ci.v2.stageCheck.PreTemplateStageCheck
+import com.tencent.devops.common.ci.v2.ParametersTemplateNull
 import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
 import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -103,6 +107,10 @@ class YamlTemplate(
         private const val MAX_TEMPLATE_NUMB = 10
         private const val MAX_TEMPLATE_DEEP = 5
 
+        // 质量红线数量和红线中的规则数量
+        private const val STAGE_CHECK_GATE_NUMB = 10
+        private const val STAGE_CHECK_GATE_RULE_NUMB = 100
+
         // 异常模板
         const val TEMPLATE_ID_DUPLICATE = "Format error: ID [%s] in template [%s] and template [%s] are duplicated"
         const val TEMPLATE_ROOT_ID_DUPLICATE = "[%s] Format error: IDs [%s] are duplicated"
@@ -123,6 +131,10 @@ class YamlTemplate(
         const val EXTENDS_TEMPLATE_ON_ERROR = "[%s]Triggers are not supported in the template"
         const val VALUE_NOT_IN_ENUM = "[%s][%s=%s]Parameter error, the expected value is [%s]"
         const val FINALLY_FORMAT_ERROR = "final stage not support stage's template"
+        const val STAGE_CHECK_GATE_NUMB_BEYOND =
+            "[%s][%s]The number of gates reaches the limit:  no more than $STAGE_CHECK_GATE_NUMB. "
+        const val STAGE_CHECK_GATE_RULE_NUMB_BEYOND =
+            "[%s][%s][%s]The number of rules reaches the limit:  no more than $STAGE_CHECK_GATE_RULE_NUMB. "
     }
 
     // 存储当前库的模板信息，减少重复获取 key: templatePath value： template
@@ -553,6 +565,46 @@ class YamlTemplate(
         return stepList
     }
 
+    // 替换Stage准入准出信息
+    private fun replaceStageCheckTemplate(
+        stageName: String,
+        check: Map<String, Any>?,
+        fromPath: String
+    ): PreStageCheck? {
+        if (check == null) {
+            return null
+        }
+        val checkObject = YamlObjects.getObjectFromYaml<PreTemplateStageCheck>(fromPath, YamlUtil.toYaml(check))
+        val gateList = mutableListOf<Gate>()
+
+        checkObject.gates?.forEach { gate ->
+            val toPath = gate.template
+            val templateObject = replaceResAndParam(
+                templateType = TemplateType.GATE,
+                toPath = toPath,
+                parameters = gate.parameters,
+                fromPath = fromPath
+            )
+            val gateTemplate = YamlObjects.getObjectFromYaml<GateTemplate>(toPath, YamlUtil.toYaml(templateObject))
+            gateList.addAll(
+                gateTemplate.gates
+            )
+            gateTemplate.gates.forEach {
+                if (it.rule.size > STAGE_CHECK_GATE_RULE_NUMB) {
+                    error(STAGE_CHECK_GATE_RULE_NUMB_BEYOND.format(fromPath, stageName, it.name))
+                }
+            }
+            if (gateList.size > STAGE_CHECK_GATE_NUMB) {
+                error(STAGE_CHECK_GATE_NUMB_BEYOND.format(fromPath, stageName))
+            }
+        }
+        return PreStageCheck(
+            reviews = checkObject.reviews,
+            gates = gateList,
+            timeoutHours = checkObject.timeoutHours
+        )
+    }
+
     // 替换远程库和参数信息
     private fun replaceResAndParam(
         templateType: TemplateType,
@@ -561,19 +613,30 @@ class YamlTemplate(
         fromPath: String
     ): Map<String, Any> {
         // 判断是否为远程库，如果是远程库将其远程库文件打平进行替换
-        var newTemplate = if (toPath.contains(FILE_REPO_SPLIT)) {
-            replaceResTemplateFile(
-                templateType = templateType,
-                toPath = toPath,
-                parameters = parameters,
-                toRepo = checkAndGetRepo(
-                    fromPath,
-                    toPath.split(FILE_REPO_SPLIT)[1]
-                )
-            )
-        } else {
-            getTemplate(toPath)
-        }
+        var newTemplate =
+            if (toPath.contains(FILE_REPO_SPLIT)) {
+                // 针对stageCheck的Gates做特殊处理(没有循环嵌套)
+                if (templateType == TemplateType.GATE) {
+                    getTemplate(
+                        path = toPath.split(FILE_REPO_SPLIT).first(),
+                        repo = checkAndGetRepo(
+                            fromPath,
+                            toPath.split(FILE_REPO_SPLIT)[1]
+                        ))
+                } else {
+                    replaceResTemplateFile(
+                        templateType = templateType,
+                        toPath = toPath,
+                        parameters = parameters,
+                        toRepo = checkAndGetRepo(
+                            fromPath,
+                            toPath.split(FILE_REPO_SPLIT)[1]
+                        )
+                    )
+                }
+            } else {
+                getTemplate(toPath)
+            }
         // 检查模板格式
         YamlObjects.checkTemplate(toPath, newTemplate, templateType)
         // 将需要替换的变量填入模板文件
@@ -684,9 +747,9 @@ class YamlTemplate(
                     val valueName = param.name
                     val newValue = parameters[param.name]
                     if (parameters.keys.contains(valueName)) {
-                        if (!param.values.isNullOrEmpty() && !param.values.contains(newValue)) {
+                        if (!param.values.isNullOrEmpty() && !param.values!!.contains(newValue)) {
                             error(VALUE_NOT_IN_ENUM.format(fromPath, valueName, newValue,
-                                param.values.joinToString(",")))
+                                param.values!!.joinToString(",")))
                         } else {
                             newParameters[index] = param.copy(default = newValue)
                         }
@@ -774,6 +837,24 @@ class YamlTemplate(
                     map.putAll(newJob)
                 }
                 map
+            },
+            checkIn = if (stage["check-in"] != null) {
+                replaceStageCheckTemplate(
+                    stageName = stage["name"]?.toString() ?: "",
+                    check = transValue<Map<String, Any>>(fromPath, TemplateType.GATE.text, stage["check-in"]),
+                    fromPath = filePath
+                )
+            } else {
+                null
+            },
+            checkOut = if (stage["check-out"] != null) {
+                replaceStageCheckTemplate(
+                    stageName = stage["name"]?.toString() ?: "",
+                    check = transValue<Map<String, Any>>(fromPath, TemplateType.GATE.text, stage["check-out"]),
+                    fromPath = filePath
+                )
+            } else {
+                null
             }
         )
     }
@@ -806,6 +887,19 @@ class YamlTemplate(
         return templates[path]!!
     }
 
+    private fun getTemplate(path: String, repo: Repositories): String {
+        val template = getTemplateMethod(
+            null,
+            sourceProjectId,
+            repo.repository,
+            repo.ref ?: triggerRef,
+            repo.credentials?.personalAccessToken,
+            path
+        )
+        setTemplate(path, template)
+        return templates[path]!!
+    }
+
     private fun addAndCheckTemplateNumb(file: String) {
         if (templateNumb.containsKey(file)) {
             templateNumb[file] = templateNumb[file]!! + 1
@@ -832,7 +926,7 @@ class YamlTemplate(
         templates[path] = template
     }
 
-    private fun <T> transValue(file: String, type: String, value: Any?): T {
+    private inline fun <reified T> transValue(file: String, type: String, value: Any?): T {
         if (value == null) {
             throw RuntimeException(TRANS_AS_ERROR.format(file, type))
         }

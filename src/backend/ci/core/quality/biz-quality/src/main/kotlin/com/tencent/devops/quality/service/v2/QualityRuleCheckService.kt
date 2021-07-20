@@ -51,7 +51,9 @@ import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.AtomRuleResponse
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
+import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
+import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.pojo.RuleCheckSingleResult
@@ -80,7 +82,8 @@ class QualityRuleCheckService @Autowired constructor(
     private val controlPointService: QualityControlPointService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val qualityCacheService: QualityCacheService
+    private val qualityCacheService: QualityCacheService,
+    private val ruleBuildHisDao: QualityRuleBuildHisDao
 ) {
     private val DEFAULT_TIMEOUT_MINUTES = 15
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
@@ -221,6 +224,10 @@ class QualityRuleCheckService @Autowired constructor(
             logger.info("end check pipeline($pipelineId) build($buildId) task(${buildCheckParams.taskId})")
             return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60, resultList)
         }
+    }
+
+    fun check(buildCheckParams: BuildCheckParamsV3): RuleCheckResult {
+        TODO()
     }
 
     private fun checkPostHandle(

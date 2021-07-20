@@ -25,25 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2
+package com.tencent.devops.quality.api.v3.pojo.response
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci)异常
- */
-data class Stage(
-    val name: String?,
-    val id: String?,
-    val label: List<String> = emptyList(),
-    @JsonProperty("if")
-    val ifField: String? = null,
-    @JsonProperty("fast-kill")
-    val fastKill: Boolean? = false,
-    val jobs: List<Job>,
-    @JsonProperty("check-in")
-    val checkIn: StageCheck?,
-    @JsonProperty("check-out")
-    val checkOut: StageCheck?
+@ApiModel("规则创建请求")
+data class RuleCreateResponseV3(
+    @ApiModelProperty("规则名称", required = true)
+    val name: String,
+    @ApiModelProperty("项目id", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线id", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("规则某次构建生成的临时ID", required = true)
+    val ruleBuildId: String?
 )

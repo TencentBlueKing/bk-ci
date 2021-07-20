@@ -109,6 +109,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
@@ -136,6 +137,12 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
+import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
+import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
+import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
+import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -237,8 +244,86 @@ class TriggerBuildService @Autowired constructor(
 
         val model = createPipelineModel(event, gitBasicSetting, yaml)
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
+
+        // 新增质量红线
+        val (checkInId, checkOutId) = createGates(event, yaml, pipeline)
+        logger.info("checkInId: $checkInId, checkOutId: $checkOutId")
+
         savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
+    }
+
+    private fun createGates(
+        event: GitRequestEvent,
+        yaml: ScriptBuildYaml,
+        pipeline: GitProjectPipeline
+    ): Pair<List<RuleCreateResponseV3>?, List<RuleCreateResponseV3>?> {
+        val operations = QualityOperation.values().map { QualityOperation.convertToSymbol(it) }.toSet()
+        var checkIn: List<RuleCreateResponseV3>? = null
+        var checkOut: List<RuleCreateResponseV3>? = null
+        yaml.stages.forEach { stage ->
+            if (stage.checkIn != null) {
+                checkIn = CreateGates(stage, operations, event, ControlPointPosition.BEFORE_POSITION, pipeline)
+            }
+            if (stage.checkOut != null) {
+                checkOut = CreateGates(stage, operations, event, ControlPointPosition.AFTER_POSITION, pipeline)
+            }
+        }
+        return Pair(checkIn, checkOut)
+    }
+
+    /**
+     * 根据规则创建红线
+     * 规则实例： CodeccCheckAtomDebug.coverity_serious_defect <= 2
+     */
+    private fun CreateGates(
+        stage: GitCIV2Stage,
+        operations: Set<String>,
+        event: GitRequestEvent,
+        position: String,
+        pipeline: GitProjectPipeline
+    ): List<RuleCreateResponseV3>? {
+        val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
+        stage.checkIn?.gates?.forEach GateEach@{ gate ->
+            val indicators = gate.rule.map { rule ->
+                val (atomCode, mid) = rule.split(".")
+                val op = operations.filter { mid.contains(it) }.toSet()
+                if (op.isEmpty() || op.size > 1) {
+                    return@GateEach
+                }
+                val (medata, threshold) = mid.split(op.first())
+                RuleCreateRequestV3.CreateRequestIndicator(
+                    atomCode = atomCode,
+                    metaDataId = medata.trim(),
+                    operation = op.first(),
+                    threshold = threshold.trim()
+                )
+            }
+            ruleList.add(
+                RuleCreateRequestV3(
+                    name = gate.name,
+                    desc = "",
+                    indicators = indicators,
+                    position = position,
+                    range = null,
+                    templateRange = null,
+                    operation = RuleOperation.END,
+                    notifyTypeList = GitCINotifyType.getNotifyListByYaml(gate.notifyOnFail?.map { it.type }),
+                    notifyGroupList = null,
+                    // todo: 人和通知的方式不匹配
+                    notifyUserList = null,
+                    auditUserList = null,
+                    auditTimeoutMinutes = null,
+                    gatewayId = null
+                )
+            )
+        }
+        return client.get(ServiceQualityRuleResource::class).create(
+                userId = event.userId,
+                projectId = "git_${event.gitProjectId}",
+                pipelineId = pipeline.pipelineId,
+                ruleList = ruleList
+            ).data
     }
 
     fun savePipelineModel(
@@ -340,7 +425,9 @@ class TriggerBuildService @Autowired constructor(
                         label = emptyList(),
                         ifField = null,
                         fastKill = false,
-                        jobs = yaml.finally!!
+                        jobs = yaml.finally!!,
+                        checkIn = null,
+                        checkOut = null
                     ),
                     event = event,
                     gitBasicSetting = gitBasicSetting,
@@ -458,7 +545,9 @@ class TriggerBuildService @Autowired constructor(
             id = stage.id,
             name = stage.name ?: if (finalStage) {
                 "Final"
-            } else { "Stage-$stageIndex" },
+            } else {
+                "Stage-$stageIndex"
+            },
             tag = stage.label,
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,

@@ -25,15 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.template.pojo
+package com.tencent.devops.common.ci.v2
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-
-data class ParametersTemplate(
-    val parameters: List<Parameters>
+data class Parameters(
+    val name: String,
+    val type: String,
+    val default: Any?,
+    val values: List<Any>?
 )
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ParametersTemplateNull(
-    val parameters: List<Parameters>?
-)
+enum class ParametersType(val value: String) {
+    STRING("string"),
+    NUMBER("number"),
+    BOOLEAN("boolean"),
+//    OBJECT("object"),
+//    TASK("task"),
+//    TASKLIST("taskList"),
+//    JOB("job"),
+//    JOBLIST("jobList"),
+//    STAGE("stage"),
+//    STAGELIST("stageList")
+}
