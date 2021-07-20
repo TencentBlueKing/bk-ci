@@ -30,7 +30,7 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.log.Ansi
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
@@ -92,7 +92,8 @@ object ShellUtil {
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
-        print2Logger: Boolean = true
+        print2Logger: Boolean = true,
+        elementId: String? = null
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
@@ -110,7 +111,8 @@ object ShellUtil {
             errorMessage = errorMessage,
             print2Logger = print2Logger,
             executeErrorMessage = "",
-            buildId = buildId
+            buildId = buildId,
+            elementId = elementId
         )
     }
 
@@ -217,7 +219,8 @@ object ShellUtil {
         errorMessage: String? = null,
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
-        buildId: String? = null
+        buildId: String? = null,
+        elementId: String? = null
     ): String {
         try {
             return CommandLineUtils.execute(
@@ -226,7 +229,8 @@ object ShellUtil {
                 print2Logger = print2Logger,
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
-                buildId = buildId
+                buildId = buildId,
+                elementId = elementId
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"

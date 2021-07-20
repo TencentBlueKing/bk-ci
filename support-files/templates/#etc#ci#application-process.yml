@@ -35,6 +35,9 @@ build:
  
 # 流水线相关配置 
 pipeline:
+  build:
+    retry:
+      limitDays: -1  # 多少天之前的构建可以被重试（不是rebuild)，-1表示不限制， 0表示不可重试
   setting:
     common:
       maxModelSize: 16777215

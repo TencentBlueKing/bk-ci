@@ -38,7 +38,7 @@
                             <bk-popover placement="right">
                                 <i class="devops-icon icon-info-circle"></i>
                                 <div slot="content" style="white-space: normal;">
-                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/document/6.0/129/7523`">{{ $t('ticket.learnMore') }}。</a> </div>
+                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/services/ticket`">{{ $t('ticket.learnMore') }}。</a> </div>
                                 </div>
                             </bk-popover>
                         </div>
@@ -68,7 +68,7 @@
                     <div class="bk-form-item">
                         <label class="bk-label">{{ $t('ticket.name') }}：</label>
                         <div class="bk-form-content">
-                            <input type="text" name="credentialName" v-validate="{ regex: /^[\u4e00-\u9fa5a-zA-Z0-9\-\.\_]{0,30}$/ }" class="bk-form-input" :placeholder="$t('ticket.credential.validateName')"
+                            <input type="text" name="credentialName" v-validate="{ regex: /^[\u4e00-\u9fa5a-zA-Z0-9\-\.\_]{0,64}$/ }" class="bk-form-input" :placeholder="$t('ticket.credential.validateName')"
                                 v-model="localConfig.credentialName"
                                 :class="{
                                     'is-danger': errors.has('credentialName')

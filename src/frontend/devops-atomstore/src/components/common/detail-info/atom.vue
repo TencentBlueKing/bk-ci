@@ -14,7 +14,7 @@
                         <span class="approve-msg">{{approveMsg}}</span>
                     </h5>
                 </template>
-                <h5 :title="$t('store.点击查看YAML片段')" v-if="detail.yamlFlag && detail.recommendFlag" @click="$emit('update:currentTab', 'YAML')">
+                <h5 :title="$t('store.点击查看YAML片段')" v-if="detail.yamlFlag && detail.recommendFlag" @click="$emit('update:currentTab', 'YAMLV2')">
                     <icon class="detail-img" name="yaml" size="16" />
                     <span class="approve-msg">{{ $t('store.YAML可用') }}</span>
                 </h5>

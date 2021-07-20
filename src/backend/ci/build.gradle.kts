@@ -1,8 +1,7 @@
 plugins {
     kotlin("jvm")
+    detektCheck
 }
-
-apply("$rootDir/detekt.gradle.kts")
 
 allprojects {
     // 包路径
@@ -93,9 +92,9 @@ subprojects {
     tasks.getByName("install") {
         onlyIf {
             sourceSets.main.get().allSource.files.isNotEmpty() &&
-                    !name.startsWith("model-") &&
-                    !name.startsWith("boot-") &&
-                    !name.startsWith("biz-")
+                !name.startsWith("model-") &&
+                !name.startsWith("boot-") &&
+                !name.startsWith("biz-")
         }
     }
 
@@ -106,6 +105,7 @@ subprojects {
         it.exclude("org.slf4j", "log4j-over-slf4j")
         it.exclude("org.slf4j", "slf4j-log4j12")
         it.exclude("org.slf4j", "slf4j-nop")
+        it.exclude("javax.ws.rs", "jsr311-api")
     }
 
     dependencies {

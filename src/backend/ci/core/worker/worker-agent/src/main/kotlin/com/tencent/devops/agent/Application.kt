@@ -36,6 +36,7 @@ import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.task.TaskFactory
+import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import java.io.File
 import java.lang.RuntimeException
 
@@ -49,30 +50,33 @@ fun main(args: Array<String>) {
     when (buildType) {
         BuildType.DOCKER.name ->
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
+                override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
                     val workspace = System.getProperty("devops_workspace")
 
-                    val dir = if (workspace.isNullOrBlank()) {
+                    val workspaceDir = if (workspace.isNullOrBlank()) {
                         File("/data/devops/workspace")
                     } else {
                         File(workspace)
                     }
-                    dir.mkdirs()
-                    return dir
+                    workspaceDir.mkdirs()
+
+                    val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
+                    return Pair(workspaceDir, logPathDir)
                 }
             })
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
-                    val dir = File("./$pipelineId/src")
-                    if (dir.exists()) {
-                        if (!dir.isDirectory) {
-                            throw RuntimeException("Work space directory conflict: ${dir.canonicalPath}")
+                override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
+                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(pipelineId, "")
+                    if (workspaceDir.exists()) {
+                        if (!workspaceDir.isDirectory) {
+                            throw RuntimeException("Work space directory conflict: ${workspaceDir.canonicalPath}")
                         }
                     } else {
-                        dir.mkdirs()
+                        workspaceDir.mkdirs()
                     }
-                    return dir
+                    val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
+                    return Pair(workspaceDir, logPathDir)
                 }
             })
         }

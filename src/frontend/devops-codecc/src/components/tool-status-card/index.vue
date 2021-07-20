@@ -393,7 +393,7 @@
             width: 100%;
             text-align: center;
             .card-num {
-                font-size: 32px;
+                font-size: 24px;
                 padding: 24px 0 4px 0;
                 a {
                     color: #313238;

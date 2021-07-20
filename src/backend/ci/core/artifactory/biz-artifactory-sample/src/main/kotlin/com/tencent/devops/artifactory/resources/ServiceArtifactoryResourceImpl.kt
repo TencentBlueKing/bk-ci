@@ -97,6 +97,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun search(
+        userId: String?,
         projectId: String,
         page: Int?,
         pageSize: Int?,

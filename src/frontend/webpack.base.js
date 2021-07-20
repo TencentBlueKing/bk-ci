@@ -24,12 +24,12 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             rules: [
                 {
                     test: /\.vue$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve('../node_modules/@blueking/log')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
                     loader: 'vue-loader'
                 },
                 {
                     test: /\.js$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve('../node_modules/@blueking/log')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
                     use: [
                         {
                             loader: 'babel-loader'

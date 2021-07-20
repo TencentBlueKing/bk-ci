@@ -207,6 +207,10 @@ object ArchiveUtils {
         }
     }
 
+    fun archiveLogFile(file: File, destFullPath: String, buildVariables: BuildVariables) {
+        api.uploadLog(file, destFullPath, buildVariables)
+    }
+
     fun recursiveGetFiles(file: File): List<File> {
         val fileList = mutableListOf<File>()
         file.listFiles()?.forEach {
