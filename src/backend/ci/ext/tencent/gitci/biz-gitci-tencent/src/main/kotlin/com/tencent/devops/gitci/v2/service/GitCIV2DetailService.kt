@@ -206,9 +206,11 @@ class GitCIV2DetailService @Autowired constructor(
             .data!!.toMutableList()
         // 更换域名来支持工蜂的页面
         reportList.forEachIndexed { index, report ->
-            reportList[index] = report.copy(
-                indexFileUrl = reportPrefix + report.indexFileUrl
-            )
+            if (report.type == ReportTypeEnum.INTERNAL.name) {
+                reportList[index] = report.copy(
+                    indexFileUrl = reportPrefix + report.indexFileUrl
+                )
+            }
         }
         return reportList.toList()
     }
