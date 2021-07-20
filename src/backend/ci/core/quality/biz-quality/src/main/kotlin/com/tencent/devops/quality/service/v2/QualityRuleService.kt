@@ -156,7 +156,7 @@ class QualityRuleService @Autowired constructor(
         logger.info("finish to clean pre rule: $projectId, $pipelineId, $size")
 
         return ruleRequestList.map {  ruleRequest ->
-            logger.info("start to create or update rule: $projectId, $pipelineId, ${ruleRequest.name}")
+            logger.info("start to create rule: $projectId, $pipelineId, ${ruleRequest.name}")
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->

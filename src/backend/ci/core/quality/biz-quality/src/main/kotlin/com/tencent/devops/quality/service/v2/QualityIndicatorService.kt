@@ -158,7 +158,7 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun serviceList(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
-        return indicatorDao.listByElementType(dslContext, elementType, enNameSet = enNameSet)?.map { indicator ->
+        return indicatorDao.listByElementType(dslContext, elementType, type = null, enNameSet = enNameSet)?.map { indicator ->
             val metadataIds = convertMetaIds(indicator.metadataIds)
             val metadata = metadataService.serviceListMetadata(metadataIds).map {
                 QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)

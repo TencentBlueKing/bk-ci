@@ -30,7 +30,7 @@ package com.tencent.devops.quality.api.v3.pojo.response
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("规则创建请求")
+@ApiModel("规则创建响应")
 data class RuleCreateResponseV3(
     @ApiModelProperty("规则名称", required = true)
     val name: String,
@@ -39,5 +39,5 @@ data class RuleCreateResponseV3(
     @ApiModelProperty("流水线id", required = true)
     val pipelineId: String,
     @ApiModelProperty("规则某次构建生成的临时ID", required = true)
-    val ruleBuildId: String?
+    val ruleBuildId: String
 )

@@ -201,7 +201,7 @@ class QualityRuleCheckService @Autowired constructor(
     fun check(buildCheckParams: BuildCheckParamsV3): RuleCheckResult {
         with(buildCheckParams) {
             // 遍历项目下所有拦截规则
-            val ruleList = qualityRuleBuildHisService.list(ruleIds.map { HashUtil.decodeIdToLong(it) })
+            val ruleList = qualityRuleBuildHisService.list(ruleBuildIds.map { HashUtil.decodeIdToLong(it) })
 
             val filterRuleList = ruleList.filter { rule ->
                 logger.info("validate whether to check rule with gatewayId: " +
