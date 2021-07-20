@@ -111,7 +111,7 @@ class ProjectLocalService @Autowired constructor(
 
         // 先查询GITCI的项目
         if (page == 1) {
-            val gitCIProjectList = ConsulContent.invokeByTag("dev-gitci") {
+            val gitCIProjectList = ConsulContent.invokeByTag(gitCI) {
                 try {
                     client.get(ServiceGitForAppResource::class).getGitCIProjectList(userId, 1, 10000, searchName)
                 } catch (e: Exception) {

@@ -41,6 +41,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.view.PipelineViewService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class AppPipelineViewResourceImpl @Autowired constructor(
@@ -48,6 +49,10 @@ class AppPipelineViewResourceImpl @Autowired constructor(
     private val pipelineViewService: PipelineViewService,
     private val client: Client
 ) : AppPipelineViewResource {
+
+    @Value("\${gitCI.tag:#{null}}")
+    private val gitCI: String? = null
+
     override fun listViewPipelines(
         userId: String,
         projectId: String,
@@ -108,7 +113,7 @@ class AppPipelineViewResourceImpl @Autowired constructor(
 
         // gitci 返回值兼容
         if (channelCode == ChannelCode.GIT) {
-            val gitciPipelines = ConsulContent.invokeByTag("dev-gitci") {
+            val gitciPipelines = ConsulContent.invokeByTag(gitCI) {
                 client.get(ServiceGitForAppResource::class).getGitCIPipelines(
                     projectId = projectId,
                     page = 1,
@@ -118,7 +123,7 @@ class AppPipelineViewResourceImpl @Autowired constructor(
                 )
             }.data?.records?.associate { it.pipelineId to it.displayName } ?: emptyMap()
 
-            listViewPipelines.records.forEach {
+            listViewPipelines.records.filter { gitciPipelines.containsKey(it.pipelineId) }.forEach {
                 gitciPipelines[it.pipelineId]?.let { display -> it.pipelineName = display }
             }
         }
