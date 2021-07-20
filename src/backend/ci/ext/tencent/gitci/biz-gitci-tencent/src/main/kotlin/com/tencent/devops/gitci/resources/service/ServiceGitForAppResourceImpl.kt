@@ -23,6 +23,10 @@ class ServiceGitForAppResourceImpl @Autowired constructor(
         return Result(gitCIAppService.getGitCIProjectList(userId, page, pageSize, searchName))
     }
 
+    override fun getGitCIPipeline(projectId: String, pipelineId: String): Result<GitProjectPipeline?> {
+        return Result(gitCIAppService.getGitCIPipeline(projectId, pipelineId))
+    }
+
     override fun getGitCIPipelines(
         projectId: String,
         page: Int?,

@@ -31,24 +31,37 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.gitci.api.service.ServiceGitForAppResource
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.app.pipeline.AppPipeline
 import com.tencent.devops.process.pojo.app.pipeline.AppPipelineHistory
 import com.tencent.devops.process.pojo.app.pipeline.AppProject
+import com.tencent.devops.process.pojo.pipeline.AppModelDetail
+import com.tencent.devops.process.service.app.AppBuildService
 import com.tencent.devops.process.service.app.AppPipelineService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class AppPipelineResourceImpl @Autowired constructor(
+    private val appBuildService: AppBuildService,
     private val appPipelineService: AppPipelineService,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineBuildFacadeService: PipelineBuildFacadeService
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val client: Client
 ) : AppPipelineResource {
+
+    @Value("\${gitCI.tag:#{null}}")
+    private val gitCI: String? = null
 
     override fun listProjects(
         userId: String,
@@ -155,6 +168,53 @@ class AppPipelineResourceImpl @Autowired constructor(
         isCollect: Boolean
     ): Result<Boolean> {
         return Result(0, "", pipelineGroupService.favorPipeline(userId, projectId, pipelineId, isCollect))
+    }
+
+    override fun getBuildDetail(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<AppModelDetail> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        // 对特殊的buildid进行处理。
+        var buildIdReal = when (buildId) {
+            "latest" -> {
+                pipelineRuntimeService.getLatestBuildId(projectId, pipelineId)
+            }
+            "latestSucceeded" -> {
+                pipelineRuntimeService.getLatestSucceededBuildId(projectId, pipelineId)
+            }
+            "latestFailed" -> {
+                pipelineRuntimeService.getLatestFailedBuildId(projectId, pipelineId)
+            }
+            "latestFinished" -> {
+                pipelineRuntimeService.getLatestFinishedBuildId(projectId, pipelineId)
+            }
+            else -> {
+                buildId
+            }
+        }
+        if (buildIdReal == null) {
+            buildIdReal = buildId
+        }
+
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+        val data = appBuildService.getBuildDetail(userId, projectId, pipelineId, buildIdReal, channelCode)
+        if (channelCode == ChannelCode.GIT) {
+            ConsulContent.invokeByTag(gitCI) {
+                try {
+                    client.get(ServiceGitForAppResource::class)
+                        .getGitCIPipeline(projectId, pipelineId).data?.displayName
+                } catch (e: Exception) {
+                    null
+                }
+            }?.let { data.pipelineName = it }
+        }
+        return Result(data)
     }
 
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {

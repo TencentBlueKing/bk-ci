@@ -89,4 +89,16 @@ interface ServiceGitForAppResource {
         @QueryParam("search")
         search: String?
     ): Result<Pagination<GitProjectPipeline>>
+
+    @ApiOperation("根据流水线ID获取工蜂流水线信息")
+    @GET
+    @Path("/pipelineInfo")
+    fun getGitCIPipeline(
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String
+    ): Result<GitProjectPipeline?>
 }
