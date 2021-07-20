@@ -6,6 +6,7 @@ import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.project.pojo.app.AppProjectVO
+import com.tencent.devops.project.pojo.enums.ProjectSourceEnum
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -38,12 +39,13 @@ class GitCIAppService @Autowired constructor(
         if (projectIdMap.isNullOrEmpty()) {
             return Pagination(false, emptyList())
         }
-        val projects = gitCIBasicSettingDao.searchProjectByIds(dslContext, projectIdMap?.keys)
+        val projects = gitCIBasicSettingDao.searchProjectByIds(dslContext, projectIdMap.keys)
         val result = projects.map {
             AppProjectVO(
                 projectCode = it.projectCode,
                 projectName = it.name,
-                logoUrl = projectIdMap[it.id]?.avatarUrl
+                logoUrl = projectIdMap[it.id]?.avatarUrl,
+                projectSource = ProjectSourceEnum.GIT_CI.id
             )
         }
         return Pagination(hasNext, result)

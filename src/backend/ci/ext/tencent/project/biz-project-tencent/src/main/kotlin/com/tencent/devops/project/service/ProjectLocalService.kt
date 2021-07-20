@@ -59,6 +59,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.app.AppProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectSourceEnum
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.tof.Response
@@ -148,11 +149,14 @@ class ProjectLocalService @Autowired constructor(
                                 it.logoAddr.removePrefix("http://radosgw.open.oa.com")
                     } else {
                         it.logoAddr
-                    }
+                    },
+                    projectSource = ProjectSourceEnum.BK_CI.id
                 )
             }.toList()
 
-            return Pagination(false, records)
+            finalRecords.addAll(records)
+
+            return Pagination(false, finalRecords)
         } else {
             val records = projectDao.listByEnglishName(
                 dslContext = dslContext,
@@ -170,7 +174,8 @@ class ProjectLocalService @Autowired constructor(
                                 it.logoAddr.removePrefix("http://radosgw.open.oa.com")
                     } else {
                         it.logoAddr
-                    }
+                    },
+                    projectSource = ProjectSourceEnum.BK_CI.id
                 )
             }
 
@@ -181,7 +186,9 @@ class ProjectLocalService @Autowired constructor(
                 countByEnglishName > offset + limit
             }
 
-            return Pagination(hasNext, records)
+            finalRecords.addAll(records)
+
+            return Pagination(hasNext, finalRecords)
         }
     }
 
