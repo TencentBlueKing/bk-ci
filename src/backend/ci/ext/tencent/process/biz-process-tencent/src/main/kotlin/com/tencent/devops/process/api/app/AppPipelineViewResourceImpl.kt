@@ -29,8 +29,11 @@ package com.tencent.devops.process.api.app
 
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.gitci.api.service.ServiceGitForAppResource
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -42,7 +45,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class AppPipelineViewResourceImpl @Autowired constructor(
     private val pipelineListFacadeService: PipelineListFacadeService,
-    private val pipelineViewService: PipelineViewService
+    private val pipelineViewService: PipelineViewService,
+    private val client: Client
 ) : AppPipelineViewResource {
     override fun listViewPipelines(
         userId: String,
@@ -101,6 +105,23 @@ class AppPipelineViewResourceImpl @Autowired constructor(
             filterByCreator = filterByCreator, filterByLabels = filterByLabels,
             filterInvalid = filterInvalid ?: true
         )
+
+        // gitci 返回值兼容
+        if (channelCode == ChannelCode.GIT) {
+            val gitciPipelines = ConsulContent.invokeByTag("dev-gitci") {
+                client.get(ServiceGitForAppResource::class).getGitCIPipelines(
+                    projectId = projectId,
+                    page = 1,
+                    pageSize = 10000,
+                    sortType = sortType,
+                    search = filterByPipelineName
+                )
+            }.data?.records?.associate { it.pipelineId to it.displayName } ?: emptyMap()
+
+            listViewPipelines.records.forEach {
+                gitciPipelines[it.pipelineId]?.let { display -> it.pipelineName = display }
+            }
+        }
 
         val hasNext = listViewPipelines.count > listViewPipelines.page * listViewPipelines.pageSize
 

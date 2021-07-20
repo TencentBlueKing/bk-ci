@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.project.pojo.app.AppProjectVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -66,4 +68,25 @@ interface ServiceGitForAppResource {
         @QueryParam("searchName")
         searchName: String?
     ): Result<Pagination<AppProjectVO>>
+
+    @ApiOperation("获取gitci流水线列表")
+    @GET
+    @Path("/pipelines")
+    fun getGitCIPipelines(
+        @ApiParam("项目", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("流水线排序", required = false)
+        @QueryParam("sortType")
+        sortType: PipelineSortType?,
+        @ApiParam("流水线名称", required = false)
+        @QueryParam("search")
+        search: String?
+    ): Result<Pagination<GitProjectPipeline>>
 }
