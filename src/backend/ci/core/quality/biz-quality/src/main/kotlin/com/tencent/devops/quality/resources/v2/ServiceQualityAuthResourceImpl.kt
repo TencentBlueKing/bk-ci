@@ -43,7 +43,7 @@ class ServiceQualityAuthResourceImpl @Autowired constructor(
     override fun qualityRuleInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
-        val projectId = callBackInfo.filter.parent.id
+        val projectId = callBackInfo.filter.parent?.id ?: "" // FETCH_INSTANCE_INFO场景下iam不会传parentId
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
                 return authQualityService.getQualityRule(projectId, page.offset.toInt(), page.limit.toInt(), token)
@@ -68,7 +68,7 @@ class ServiceQualityAuthResourceImpl @Autowired constructor(
     override fun qualityGroupInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
-        val projectId = callBackInfo.filter.parent.id
+        val projectId = callBackInfo.filter.parent?.id ?: "" // FETCH_INSTANCE_INFO场景下iam不会传parentId
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
                 return authQualityService.getQualityGroup(projectId, page.offset.toInt(), page.limit.toInt(), token)
