@@ -159,7 +159,7 @@ class ProjectLocalService @Autowired constructor(
 
             if (!hasNext) {
                 val gitCIProjectList =
-                    client.get(ServiceGitForAppResource::class, "dev-gitci")//TODO 不能写死
+                    client.getByTag(ServiceGitForAppResource::class, "dev-gitci")//TODO 不能写死
                         .getGitCIProjectList(userId, 1, 10000, searchName)
                 gitCIProjectList.data?.records?.let { records.addAll(it) }
             }
