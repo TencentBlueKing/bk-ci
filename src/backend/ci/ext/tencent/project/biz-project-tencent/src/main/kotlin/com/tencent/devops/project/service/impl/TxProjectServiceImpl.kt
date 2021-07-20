@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
@@ -97,7 +98,8 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val managerService: ManagerService,
     private val projectIamV0Service: ProjectIamV0Service,
-    private val tokenService: ClientTokenService
+    private val tokenService: ClientTokenService,
+    private val bsAuthTokenApi: BSAuthTokenApi
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -288,7 +290,12 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     private fun getV0UserProject(userId: String?, accessToken: String?): List<String> {
-        val url = "$v0IamUrl/projects?access_token=$accessToken"
+        val token = if (accessToken.isNullOrEmpty()) {
+            val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+        } else {
+            accessToken
+        }
+        val url = "$v0IamUrl/projects?access_token=$token"
         logger.info("Start to get auth projects - ($url)")
         val request = Request.Builder().url(url).get().build()
         val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
