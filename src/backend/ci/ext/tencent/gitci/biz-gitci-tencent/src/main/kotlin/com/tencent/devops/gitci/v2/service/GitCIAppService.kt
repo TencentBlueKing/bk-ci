@@ -52,7 +52,7 @@ class GitCIAppService @Autowired constructor(
         return Pagination(hasNext, result)
     }
 
-    // 返回GITCI保存的流水线ID
+    // 返回GITCI保存的流水线
     fun getGitCIPipelines(
         projectId: String,
         page: Int?,
@@ -61,11 +61,7 @@ class GitCIAppService @Autowired constructor(
         search: String?
     ): Pagination<GitProjectPipeline> {
         val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val gitProjectId = if (projectId.trim().startsWith("git")) {
-            projectId.removePrefix("git_").toLong()
-        } else {
-            projectId.toLong()
-        }
+        val gitProjectId = getGitProjectId(projectId)
         val pipelines = pipelineResourceDao.getAppDataByGitProjectId(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
@@ -91,5 +87,36 @@ class GitCIAppService @Autowired constructor(
                 )
             }
         )
+    }
+
+    fun getGitCIPipeline(
+        projectId: String,
+        pipelineId: String
+    ): GitProjectPipeline? {
+        val gitProjectId = getGitProjectId(projectId)
+        val pipeline = pipelineResourceDao.getPipelineById(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId
+        ) ?: return null
+        with(pipeline) {
+            return GitProjectPipeline(
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                filePath = filePath,
+                displayName = displayName,
+                enabled = enabled,
+                creator = creator,
+                latestBuildInfo = null
+            )
+        }
+    }
+
+    private fun getGitProjectId(projectId: String): Long {
+        return if (projectId.trim().startsWith("git")) {
+            projectId.removePrefix("git_").toLong()
+        } else {
+            projectId.toLong()
+        }
     }
 }
