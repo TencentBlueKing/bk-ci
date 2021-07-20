@@ -430,7 +430,7 @@
             display: block;
             overflow-x: hidden;
             .main-left {
-                width: calc(100% - 400px);
+                width: calc(100% - 350px);
                 padding-right: 10px;
                 /* .tool-cards {
                     padding: 10px 8px 5px 8px;
@@ -485,7 +485,7 @@
                 margin-left: -9px;
             }
             .main-right {
-                width: 400px;
+                width: 350px;
             }
         }
 
@@ -518,11 +518,11 @@
                     padding-right: 20px;
                     text-align: right;
                     &.time {
-                        width: 200px;
+                        width: 230px;
                     }
                 }
                 dd {
-                    width: 240px;
+                    width: 210px;
                     color: #313238;
                     overflow: hidden;
                     text-overflow:ellipsis;
@@ -542,7 +542,7 @@
                     }
                     .checkerset {
                         display: inline-block;
-                        max-width: 240px;
+                        max-width: 210px;
                         overflow: hidden;
                         text-overflow:ellipsis;
                         white-space: nowrap;
