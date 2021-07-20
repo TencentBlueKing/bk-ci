@@ -28,7 +28,6 @@
 package com.tencent.devops.agent.runner
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.agent.utils.KillBuildProcessTree
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.log.meta.Ansi
@@ -42,6 +41,7 @@ import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -85,13 +85,7 @@ object WorkRunner {
                     ): Pair<File, File> {
                         val replaceWorkspace = if (workspace.isNotBlank()) {
                             ReplacementUtils.replace(workspace, object : ReplacementUtils.KeyReplacement {
-                                override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                                    return if (doubleCurlyBraces) {
-                                        variables[key] ?: "\${{$key}}"
-                                    } else {
-                                        variables[key] ?: "\${$key}"
-                                    }
-                                }
+                                override fun getReplacement(key: String): String? = variables[key]
                             }, mapOf(
                                 WORKSPACE_CONTEXT to workspace,
                                 JOB_OS_CONTEXT to AgentEnv.getOS().name
