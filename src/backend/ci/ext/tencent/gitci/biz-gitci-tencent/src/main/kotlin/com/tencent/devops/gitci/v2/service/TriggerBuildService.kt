@@ -50,6 +50,7 @@ import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Step
+import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -141,7 +142,6 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
-import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_RUN
@@ -246,55 +246,66 @@ class TriggerBuildService @Autowired constructor(
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
         // 新增质量红线
-        val (checkInId, checkOutId) = createGates(event, yaml, pipeline)
-        logger.info("checkInId: $checkInId, checkOutId: $checkOutId")
+        val (checkInRuleIds, checkOutRuleIds) = createRules(event, yaml, pipeline)
+        logger.info("checkInId: $checkInRuleIds, checkOutId: $checkOutRuleIds")
 
         savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
     }
 
-    private fun createGates(
+    private fun createRules(
+        stage: GitCIV2Stage,
         event: GitRequestEvent,
         yaml: ScriptBuildYaml,
         pipeline: GitProjectPipeline
-    ): Pair<List<RuleCreateResponseV3>?, List<RuleCreateResponseV3>?> {
+    ): Pair<List<String>?, List<String>?> {
         val operations = QualityOperation.values().map { QualityOperation.convertToSymbol(it) }.toSet()
-        var checkIn: List<RuleCreateResponseV3>? = null
-        var checkOut: List<RuleCreateResponseV3>? = null
-        yaml.stages.forEach { stage ->
-            if (stage.checkIn != null) {
-                checkIn = createGates(stage, operations, event, ControlPointPosition.BEFORE_POSITION, pipeline)
-            }
-            if (stage.checkOut != null) {
-                checkOut = createGates(stage, operations, event, ControlPointPosition.AFTER_POSITION, pipeline)
-            }
+        var checkInRuleIds: List<String>? = null
+        var checkOutRuleIds: List<String>? = null
+        if (stage.checkIn != null) {
+            checkInRuleIds = createRules(
+                stageCheck = stage.checkIn!!,
+                operations = operations,
+                event = event,
+                position = ControlPointPosition.BEFORE_POSITION,
+                pipeline = pipeline
+            )
         }
-        return Pair(checkIn, checkOut)
+        if (stage.checkOut != null) {
+            checkOutRuleIds = createRules(
+                stageCheck = stage.checkOut!!,
+                operations = operations,
+                event = event,
+                position = ControlPointPosition.AFTER_POSITION,
+                pipeline = pipeline
+            )
+        }
+        return Pair(checkInRuleIds, checkOutRuleIds)
     }
 
     /**
      * 根据规则创建红线
      * 规则实例： CodeccCheckAtomDebug.coverity_serious_defect <= 2
      */
-    private fun createGates(
-        stage: GitCIV2Stage,
+    private fun createRules(
+        stageCheck: StageCheck,
         operations: Set<String>,
         event: GitRequestEvent,
         position: String,
         pipeline: GitProjectPipeline
-    ): List<RuleCreateResponseV3>? {
+    ): List<String>? {
         val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
-        stage.checkIn?.gates?.forEach GateEach@{ gate ->
+        stageCheck.gates?.forEach GateEach@{ gate ->
             val indicators = gate.rule.map { rule ->
                 val (atomCode, mid) = rule.split(".")
                 val op = operations.filter { mid.contains(it) }.toSet()
                 if (op.isEmpty() || op.size > 1) {
                     return@GateEach
                 }
-                val (medata, threshold) = mid.split(op.first())
+                val (enName, threshold) = mid.split(op.first())
                 RuleCreateRequestV3.CreateRequestIndicator(
                     atomCode = atomCode,
-                    enName = medata.trim(),
+                    enName = enName.trim(),
                     operation = op.first(),
                     threshold = threshold.trim()
                 )
@@ -318,12 +329,18 @@ class TriggerBuildService @Autowired constructor(
                 )
             )
         }
-        return client.get(ServiceQualityRuleResource::class).create(
+        try {
+            val resultList = client.get(ServiceQualityRuleResource::class).create(
                 userId = event.userId,
                 projectId = "git_${event.gitProjectId}",
                 pipelineId = pipeline.pipelineId,
                 ruleList = ruleList
             ).data
+            if (!resultList.isNullOrEmpty()) return resultList.map { it.ruleBuildId }
+        } catch (ignore: Throwable) {
+            logger.error("Failed to save quality rules with error: ", ignore)
+        }
+        return null
     }
 
     fun savePipelineModel(
@@ -431,7 +448,8 @@ class TriggerBuildService @Autowired constructor(
                     ),
                     event = event,
                     gitBasicSetting = gitBasicSetting,
-                    finalStage = true)
+                    finalStage = true
+                )
             )
         }
 
