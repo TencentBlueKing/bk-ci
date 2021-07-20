@@ -48,7 +48,7 @@ import org.springframework.beans.factory.annotation.Value
 class AppPipelineResourceImpl @Autowired constructor(
     private val appPipelineService: AppPipelineService,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService
 ) : AppPipelineResource {
 
     @Value("\${gitCI.tag:#{null}}")
