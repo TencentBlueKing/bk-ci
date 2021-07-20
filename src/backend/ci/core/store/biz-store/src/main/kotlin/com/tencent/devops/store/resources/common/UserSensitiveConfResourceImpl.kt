@@ -73,7 +73,18 @@ class UserSensitiveConfResourceImpl @Autowired constructor(
         return userSensitiveConfService.get(userId, storeType, storeCode, id)
     }
 
-    override fun list(userId: String, storeType: StoreTypeEnum, storeCode: String): Result<List<SensitiveConfResp>?> {
-        return userSensitiveConfService.list(userId, storeType, storeCode, false)
+    override fun list(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        types: String?
+    ): Result<List<SensitiveConfResp>?> {
+        return userSensitiveConfService.list(
+            userId = userId,
+            storeType = storeType,
+            storeCode = storeCode,
+            isDecrypt = false,
+            types = types
+        )
     }
 }

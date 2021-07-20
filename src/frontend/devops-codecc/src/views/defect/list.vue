@@ -470,12 +470,6 @@
                     </bk-button>
                 </div>
             </bk-dialog>
-            <new-analyse
-                :never-show="neverShow"
-                :visible.sync="dialogAnalyseVisible"
-                @changeItem="changeItem"
-                @newAnalyse="newAnalyse">
-            </new-analyse>
         </section>
         <div class="coverity-list" v-else>
             <div class="main-container large boder-none">
@@ -499,7 +493,6 @@
     import defectCache from '@/mixins/defect-cache'
     // import CodeMirror from '@/common/codemirror'
     import Record from '@/components/operate-record/index'
-    import newAnalyse from '@/components/new-analyse'
     import Empty from '@/components/empty'
     import tableFile from './table-file'
     import tableDefect from './table-defect'
@@ -510,7 +503,6 @@
     export default {
         components: {
             Record,
-            newAnalyse,
             Empty,
             tableFile,
             tableDefect,
@@ -1459,6 +1451,7 @@
                         } else {
                             const index = this.listData.defectList.records.findIndex(item => item.entityId === data.defectKeySet[0])
                             this.listData.defectList.records.splice(index, 1)
+                            this.totalCount -= 1
                         }
                         this.initParams()
 

@@ -56,6 +56,7 @@ import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPaasCCService
@@ -90,7 +91,7 @@ class TxProjectServiceImpl @Autowired constructor(
     redisOperation: RedisOperation,
     gray: Gray,
     client: Client,
-    projectDispatcher: ProjectDispatcher,
+    private val projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val managerService: ManagerService,
@@ -163,6 +164,14 @@ class TxProjectServiceImpl @Autowired constructor(
                 projectId = projectId,
                 accessToken = accessToken!!,
                 projectCreateInfo = projectCreateInfo
+            )
+
+            projectDispatcher.dispatch(
+                ProjectCreateBroadCastEvent(
+                    userId = userId,
+                    projectId = projectId,
+                    projectInfo = projectCreateInfo
+                )
             )
         }
     }
