@@ -170,37 +170,6 @@ class GitCIBuildService @Autowired constructor(
         return startBuild(pipeline, event, gitProjectConf, model, gitBuildId)
     }
 
-    private fun addCommitCheck(
-        buildId: String,
-        pipeline: GitProjectPipeline,
-        event: GitRequestEvent,
-        gitProjectConf: GitRepositoryConf
-    ) {
-        // 锁定mr构建提交，人工触发时不推送构建消息
-        if (event.objectKind == OBJECT_KIND_MERGE_REQUEST) {
-            scmClient.pushCommitCheckWithBlock(
-                commitId = event.commitId,
-                mergeRequestId = event.mergeRequestId ?: 0L,
-                userId = event.userId,
-                block = true,
-                state = GitCICommitCheckState.PENDING,
-                context = "${pipeline.displayName}(${pipeline.filePath})",
-                gitProjectConf = gitProjectConf
-            )
-        } else if (event.objectKind != OBJECT_KIND_MANUAL) {
-            scmClient.pushCommitCheck(
-                commitId = event.commitId,
-                description = event.description ?: "",
-                mergeRequestId = event.mergeRequestId ?: 0L,
-                buildId = buildId,
-                userId = event.userId,
-                status = GitCICommitCheckState.PENDING,
-                context = "${pipeline.displayName}(${pipeline.filePath})",
-                gitProjectConf = gitProjectConf
-            )
-        }
-    }
-
     private fun unblockCommitCheck(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,

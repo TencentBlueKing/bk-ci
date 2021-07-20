@@ -188,7 +188,10 @@ class ScmClient @Autowired constructor(
         context: String,
         state: GitCICommitCheckState,
         block: Boolean,
-        gitCIBasicSetting: GitCIBasicSetting
+        gitCIBasicSetting: GitCIBasicSetting,
+        // 详情是否跳转request界面
+        jumpRequest: Boolean,
+        description: String?
     ) = try {
         val titleData = mutableListOf<String>()
         val resultMap = mutableMapOf<String, MutableList<List<String>>>()
@@ -204,9 +207,13 @@ class ScmClient @Autowired constructor(
             region = null,
             commitId = commitId,
             state = state.value,
-            targetUrl = "",
+            targetUrl = if (jumpRequest) {
+                GitCIPipelineUtils.genGitCIV1RequestUrl(homePage = gitCIBasicSetting.homepage)
+            } else {
+                ""
+            },
             context = context,
-            description = "",
+            description = description ?: "",
             block = block,
             mrRequestId = mergeRequestId,
             reportData = Pair(titleData, resultMap)
