@@ -155,6 +155,10 @@ const optionConfigMixin = {
                         {
                             id: 'CUSTOM_CONDITION_MATCH',
                             name: this.$t('storeMap.customCondition')
+                        },
+                        {
+                            id: 'PARENT_TASK_CANCELED_OR_TIMEOUT',
+                            name: this.$t('storeMap.userCancelExec')
                         }
                     ]
                 },
