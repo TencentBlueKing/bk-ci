@@ -138,12 +138,11 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
                     )
                     relatedInstanceInfos.add(relatedInstance)
                 }
-                val relatedInstanceList = RelationResourceInstances(relatedInstanceInfos)
 
                 relatedResourceTypes.add(RelatedResourceTypes(
                     iamConfiguration.systemId,
                     relatedResourceType,
-                    arrayListOf(relatedInstanceList),
+                    arrayListOf(relatedInstanceInfos),
                     emptyList()
                 ))
             }
