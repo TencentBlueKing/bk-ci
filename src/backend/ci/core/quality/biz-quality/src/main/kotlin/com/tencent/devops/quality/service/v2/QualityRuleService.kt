@@ -83,8 +83,7 @@ class QualityRuleService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val qualityCacheService: QualityCacheService,
-    private val qualityPermissionService: QualityPermissionService,
-    private val metadataService: QualityMetadataService
+    private val qualityPermissionService: QualityPermissionService
 ) {
 
     companion object {
@@ -161,12 +160,11 @@ class QualityRuleService @Autowired constructor(
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
-                val indicatorMap = indicators.map { it.metaDataId to it }.toMap()
-                metadataService.serviceListByDataId(atomCode, indicators.map { it.metaDataId }).forEach {
+                indicatorService.serviceList(atomCode, indicators.map { it.enName }).forEach {
                     indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
                         it.hashId,
-                        indicatorMap[it.dataId]!!.operation,
-                        indicatorMap[it.dataId]!!.threshold
+                        it.operation.name,
+                        it.threshold
                     ))
                 }
             }
@@ -193,7 +191,7 @@ class QualityRuleService @Autowired constructor(
                 createAuth = false)
 
             logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
-            val id = qualityRuleBuildHisDao.create(dslContext, projectId, pipelineId,
+            val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId,
                 HashUtil.decodeIdToLong(ruleId), ruleRequest, indicatorIds)
 
             RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, HashUtil.encodeLongId(id))

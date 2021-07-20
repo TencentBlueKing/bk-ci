@@ -35,10 +35,11 @@ import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository@Suppress("ALL")
 class QualityRuleBuildHisDao {
-    fun create(dslContext: DSLContext, projectId: String, pipelineId: String,
+    fun create(dslContext: DSLContext, userId: String, projectId: String, pipelineId: String,
                ruleId: Long, ruleRequest: RuleCreateRequestV3,
                indicatorIds: List<RuleCreateRequest.CreateRequestIndicator>): Long {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
@@ -58,7 +59,9 @@ class QualityRuleBuildHisDao {
                 NOTIFY_USER,
                 NOTIFY_GROUP_ID,
                 AUDIT_USER,
-                AUDIT_TIMEOUT
+                AUDIT_TIMEOUT,
+                CREATE_TIME,
+                CREATE_USER
             ).values(
                 projectId,
                 pipelineId,
@@ -74,7 +77,9 @@ class QualityRuleBuildHisDao {
                 ruleRequest.notifyUserList?.joinToString(","),
                 ruleRequest.notifyGroupList?.joinToString(","),
                 ruleRequest.auditUserList?.joinToString(","),
-                ruleRequest.auditTimeoutMinutes
+                ruleRequest.auditTimeoutMinutes,
+                LocalDateTime.now(),
+                userId
             ).onDuplicateKeyUpdate()
                 .set(RULE_ID, ruleId)
                 .returning(ID)

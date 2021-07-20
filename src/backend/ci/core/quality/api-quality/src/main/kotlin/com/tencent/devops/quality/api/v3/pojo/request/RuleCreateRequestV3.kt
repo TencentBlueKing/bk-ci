@@ -63,7 +63,7 @@ data class RuleCreateRequestV3(
 ) {
     data class CreateRequestIndicator(
         val atomCode: String,
-        val metaDataId: String,
+        val enName: String,
         val operation: String,
         val threshold: String
     )

@@ -47,7 +47,7 @@ class QualityRuleBuildHisService constructor(
         val allRule = qualityRuleBuildHisDao.list(dslContext, ruleIds)
         val allIndicatorIds = mutableSetOf<Long>()
         allRule.forEach {
-            allIndicatorIds.addAll(it.indicatorIds.map { it.toLong() })
+            allIndicatorIds.addAll(it.indicatorIds.map { indicatorId -> indicatorId.toLong() })
         }
         val qualityIndicatorMap = qualityIndicatorService.serviceList(allIndicatorIds).map {
             HashUtil.decodeIdToLong(it.hashId).toString() to it
@@ -57,7 +57,9 @@ class QualityRuleBuildHisService constructor(
                 hashId = HashUtil.encodeLongId(it.ruleId),
                 name = it.ruleName,
                 desc = it.ruleDesc,
-                indicators = it.indicatorIds.split(",").map { indicatorId -> qualityIndicatorMap[indicatorId]!! },
+                indicators = it.indicatorIds.split(",").map { indicatorId ->
+                    qualityIndicatorMap[indicatorId] ?: throw IllegalArgumentException("indicatorId not found in map: $indicatorId, $qualityIndicatorMap")
+                },
                 controlPoint = QualityRule.RuleControlPoint("", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()),
                 range = listOf(it.pipelineId!!),
                 templateRange = listOf(),
