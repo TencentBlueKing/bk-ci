@@ -86,13 +86,15 @@ class AppPipelineViewResourceImpl @Autowired constructor(
         viewId: String,
         filterInvalid: Boolean?
     ): Result<Pagination<Pipeline>> {
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+
         val listViewPipelines = pipelineListFacadeService.listViewPipelines(
             userId = userId,
             projectId = projectId,
             page = page,
             pageSize = pageSize,
             sortType = sortType ?: PipelineSortType.CREATE_TIME,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             viewId = viewId,
             checkPermission = true,
             filterByPipelineName = filterByPipelineName,

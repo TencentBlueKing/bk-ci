@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
@@ -77,7 +78,7 @@ import java.io.InputStream
 import java.nio.file.Files
 
 @Service
-@SuppressWarnings("LongParameterList", "TooManyFunctions")
+@SuppressWarnings("LongParameterList", "TooManyFunctions", "LongMethod", "MagicNumber", "TooGenericExceptionCaught")
 class ProjectLocalService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
@@ -100,10 +101,32 @@ class ProjectLocalService @Autowired constructor(
 
     fun listForApp(
         userId: String,
-        offset: Int,
-        limit: Int,
+        page: Int,
+        pageSize: Int,
         searchName: String?
     ): Pagination<AppProjectVO> {
+
+        val finalRecords = mutableListOf<AppProjectVO>()
+
+        // 先查询GITCI的项目
+        if (page == 1) {
+            val gitCIProjectList = ConsulContent.invokeByTag("dev-gitci") {
+                try {
+                    client.get(ServiceGitForAppResource::class).getGitCIProjectList(userId, 1, 10000, searchName)
+                } catch (e: Exception) {
+                    logger.warn("ServiceGitForAppResource is error", e)
+                    return@invokeByTag null
+                }
+            }
+            gitCIProjectList?.data?.records?.let {
+                finalRecords.addAll(it)
+            }
+        }
+
+        // 再查询蓝盾项目
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val offset = sqlLimit.offset
+        val limit = sqlLimit.limit
         val projectIds = bkAuthProjectApi.getUserProjects(bsPipelineAuthServiceCode, userId, null)
         // 如果使用搜索 且 总数量少于1000 , 则全量获取
         if (searchName != null &&
@@ -156,13 +179,6 @@ class ProjectLocalService @Autowired constructor(
             } else {
                 val countByEnglishName = projectDao.countByEnglishName(dslContext, projectIds, searchName)
                 countByEnglishName > offset + limit
-            }
-
-            if (!hasNext) {
-                val gitCIProjectList = ConsulContent.invokeByTag("dev-gitci") {
-                    client.get(ServiceGitForAppResource::class).getGitCIProjectList(userId, 1, 10000, searchName)
-                }
-                gitCIProjectList.data?.records?.let { records.addAll(it) }
             }
 
             return Pagination(hasNext, records)
