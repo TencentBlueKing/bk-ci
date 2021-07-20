@@ -440,6 +440,7 @@ class TXPipelineExportService @Autowired constructor(
                     val inputMap = if (input != null && !(input as MutableMap<String, Any>).isNullOrEmpty()) {
                         input
                     } else null
+
                     stepList.add(
                         V2Step(
                             name = step.name,
@@ -731,6 +732,6 @@ class TXPipelineExportService @Autowired constructor(
             formatScript =
                 formatScript.replace(result.value, "echo \"::set-output name=$key::$value\"\n")
         }
-        return formatScript
+        return replaceStringWithDoubleCurlybraces(formatScript)
     }
 }
