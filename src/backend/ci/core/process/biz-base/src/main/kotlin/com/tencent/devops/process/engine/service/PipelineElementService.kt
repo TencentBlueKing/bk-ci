@@ -210,7 +210,7 @@ class PipelineElementService @Autowired constructor(
             "always()" -> {
                 postAtomRunCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
             }
-            "parentTaskCanceledOrTimeOut()" -> {
+            "canceledOrTimeOut()" -> {
                 postAtomRunCondition = RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT
             }
         }

@@ -102,7 +102,8 @@ class BuildCancelControl @Autowired constructor(
         val model = pipelineBuildDetailService.getBuildModel(buildId = buildId)
         return if (model != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
-            redisOperation.set("${BuildStatus.CANCELED.name}_$buildId", "true", 10)
+            // 往redis中设置取消构建标识以防止重复提交
+            setBuildCancelRedisFlag(buildId)
             cancelAllPendingTask(event = event, model = model)
             // 修改detail model
             pipelineBuildDetailService.buildCancel(buildId = event.buildId, buildStatus = event.status)
@@ -125,6 +126,9 @@ class BuildCancelControl @Autowired constructor(
             false
         }
     }
+
+    private fun setBuildCancelRedisFlag(buildId: String) =
+        redisOperation.set("${BuildStatus.CANCELED.name}_$buildId", "true", 10)
 
     private fun sendBuildFinishEvent(event: PipelineBuildCancelEvent) {
         pipelineMQEventDispatcher.dispatch(
