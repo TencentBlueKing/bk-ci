@@ -245,6 +245,7 @@ class GitCIBasicSettingDao {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(projectIds))
+                .and(ENABLE_CI.eq(true))
                 .fetch()
         }
     }
