@@ -34,13 +34,18 @@ object RepoServiceFactory {
 
     private val repoServiceMap = ConcurrentHashMap<String, RepoService>()
 
-    private val propertyInputStream = RepoServiceFactory::class.java.getResourceAsStream("/.agent.properties")
+    private var property: Properties? = null
+
+    private const val REPO_CLASS_NAME = "repo.class.name"
 
     fun getInstance(): RepoService {
-        val property = Properties()
-        property.load(propertyInputStream)
         // 从配置文件读取类名
-        val className = property["repo.class.name"] as String
+        if (property == null) {
+            val fileInputStream = RepoServiceFactory::class.java.getResourceAsStream("/.agent.properties")
+            property = Properties()
+            property!!.load(fileInputStream)
+        }
+        val className = property!![REPO_CLASS_NAME] as String
         var repoService = repoServiceMap[className]
         if (repoService == null) {
             // 通过反射生成对象并放入缓存中
