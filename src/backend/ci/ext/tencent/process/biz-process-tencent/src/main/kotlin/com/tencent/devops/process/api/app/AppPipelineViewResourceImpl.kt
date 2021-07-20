@@ -112,7 +112,7 @@ class AppPipelineViewResourceImpl @Autowired constructor(
         )
 
         // gitci 返回值兼容
-        if (channelCode == ChannelCode.GIT) {
+        val records = if (channelCode == ChannelCode.GIT) {
             val gitciPipelines = ConsulContent.invokeByTag(gitCI) {
                 client.get(ServiceGitForAppResource::class).getGitCIPipelines(
                     projectId = projectId,
@@ -123,14 +123,16 @@ class AppPipelineViewResourceImpl @Autowired constructor(
                 )
             }.data?.records?.associate { it.pipelineId to it.displayName } ?: emptyMap()
 
-            listViewPipelines.records.filter { gitciPipelines.containsKey(it.pipelineId) }.forEach {
+            listViewPipelines.records.filter { gitciPipelines.containsKey(it.pipelineId) }.onEach {
                 gitciPipelines[it.pipelineId]?.let { display -> it.pipelineName = display }
-            }
+            }.toList()
+        } else {
+            listViewPipelines.records
         }
 
         val hasNext = listViewPipelines.count > listViewPipelines.page * listViewPipelines.pageSize
 
-        return Result(Pagination(hasNext, listViewPipelines.records))
+        return Result(Pagination(hasNext, records))
     }
 
     override fun getViewSettings(userId: String, projectId: String): Result<PipelineViewSettings> {
