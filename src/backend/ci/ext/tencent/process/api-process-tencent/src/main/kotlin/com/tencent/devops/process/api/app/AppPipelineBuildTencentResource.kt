@@ -47,7 +47,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
-interface AppPipelineBuildResource {
+interface AppPipelineBuildTencentResource {
     @ApiOperation("获取构建详情")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/detail")

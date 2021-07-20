@@ -42,11 +42,11 @@ import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 @SuppressWarnings("SwallowedException", "TooGenericExceptionCaught", "ThrowsCount")
-class AppPipelineBuildResourceImpl @Autowired constructor(
+class AppPipelineBuildTencentResourceImpl @Autowired constructor(
     private val appBuildService: AppBuildService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val client: Client
-) : AppPipelineBuildResource {
+) : AppPipelineBuildTencentResource {
 
     @Value("\${gitCI.tag:#{null}}")
     private val gitCI: String? = null
