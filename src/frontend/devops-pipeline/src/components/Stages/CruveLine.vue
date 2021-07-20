@@ -33,6 +33,10 @@
             },
             straight: {
                 type: Boolean
+            },
+            vertical: {
+                type: Boolean,
+                default: true
             }
         },
         computed: {
@@ -47,7 +51,8 @@
                 const distance = startPoint[0] + this.distance * isPositive
                 const QPoint1 = [distance + cruveRadius, startPoint[1], distance + cruveRadius, startPoint[1] + this.cruveRadius]
                 const QPoint2 = [QPoint1[0], endPoint[1], QPoint1[0] + cruveRadius, endPoint[1]]
-                return `M ${startPoint.join(' ')} L ${distance} ${startPoint[1]} Q ${QPoint1.join(' ')} L ${QPoint1[0]} ${this.height} Q ${QPoint2.join(' ')} L ${endPoint.join(' ')}`
+                return this.vertical ? `M ${startPoint.join(' ')} L ${distance} ${startPoint[1]} Q ${QPoint1.join(' ')} L ${QPoint1[0]} ${this.height}`
+                    : `M ${QPoint1[0]} ${this.height} Q ${QPoint2.join(' ')} L ${endPoint.join(' ')}`
             },
             straightD () {
                 const isPositive = this.direction ? 1 : -1
@@ -55,7 +60,8 @@
                 const startPoint = [this.direction ? 1 : this.width - 1, 0]
                 const endPoint = [this.direction ? this.width : 0, this.height + this.cruveRadius]
                 const QPoint = [startPoint[0], endPoint[1], startPoint[0] + cruveRadius, endPoint[1]]
-                return `M ${startPoint.join(' ')} L ${startPoint[0]} ${this.height} Q ${QPoint.join(' ')} L ${endPoint.join(' ')}`
+                return this.vertical ? `M ${startPoint.join(' ')} L ${startPoint[0]} ${this.height}`
+                    : `M ${startPoint[0]} ${this.height} Q ${QPoint.join(' ')} L ${endPoint.join(' ')}`
             },
             d () {
                 return this.straight ? this.straightD : this.cruveD

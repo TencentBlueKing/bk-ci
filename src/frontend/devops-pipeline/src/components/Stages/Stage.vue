@@ -25,6 +25,7 @@
         </bk-button>
         <draggable v-model="computedContainer" v-bind="dragOptions" :move="checkMove" tag="ul">
             <stage-container v-for="(container, index) in computedContainer"
+                :container-list="computedContainer"
                 :key="container.containerId"
                 :stage-index="stageIndex"
                 :pre-container="containers[index - 1]"
