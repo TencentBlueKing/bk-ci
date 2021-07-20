@@ -160,11 +160,12 @@ class QualityRuleService @Autowired constructor(
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
+                val indicatorMap = indicators.map { it.enName to it }.toMap()
                 indicatorService.serviceList(atomCode, indicators.map { it.enName }).forEach {
                     indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
                         it.hashId,
-                        it.operation.name,
-                        it.threshold
+                        indicatorMap[it.enName]!!.operation,
+                        indicatorMap[it.enName]!!.threshold
                     ))
                 }
             }

@@ -77,10 +77,13 @@ class QualityIndicatorDao {
 
     fun listByElementType(dslContext: DSLContext,
                           elementType: String,
-                          type: IndicatorType = IndicatorType.MARKET,
+                          type: IndicatorType? = IndicatorType.MARKET,
                           enNameSet: Collection<String>? = null): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
-            val cond = TYPE.eq(type.name).and(ELEMENT_TYPE.eq(elementType))
+            val cond = ELEMENT_TYPE.eq(elementType)
+            if (type != null) {
+                cond.and(TYPE.eq(type.name))
+            }
             if (!enNameSet.isNullOrEmpty()) {
                 cond.and(EN_NAME.`in`(enNameSet))
             }

@@ -154,7 +154,7 @@ class QualityIndicatorService @Autowired constructor(
                 QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
             }
             convertRecord(indicator, metadata)
-        }?.toList() ?: listOf()
+        } ?: listOf()
     }
 
     fun serviceList(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
@@ -164,7 +164,7 @@ class QualityIndicatorService @Autowired constructor(
                 QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
             }
             convertRecord(indicator, metadata)
-        }?.toList() ?: listOf()
+        } ?: listOf()
     }
 
     fun opList(userId: String, page: Int?, pageSize: Int?): Page<IndicatorData> {
