@@ -74,6 +74,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.time.LocalDateTime
+import java.util.regex.Pattern
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
@@ -477,7 +478,7 @@ class TXPipelineExportService @Autowired constructor(
                                 null
                             },
                             uses = "${step.getAtomCode()}@${step.version}",
-                            with = inputMap,
+                            with = replaceMapWithDoubleCurlybraces(inputMap),
                             timeoutMinutes = timeoutMinutes,
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
@@ -530,6 +531,48 @@ class TXPipelineExportService @Autowired constructor(
             }
         }
         return stepList
+    }
+
+    fun replaceMapWithDoubleCurlybraces(inputMap: MutableMap<String, Any>?): Map<String, Any?>? {
+        if (inputMap.isNullOrEmpty()) {
+            return null
+        }
+        val result = mutableMapOf<String, Any>()
+        inputMap.forEach { key, value ->
+            result.put(key, replaceValueWithDoubleCurlybraces(value))
+        }
+        return result
+    }
+
+    private fun replaceValueWithDoubleCurlybraces(value: Any): Any {
+        if (value is String) {
+            return replaceStringWithDoubleCurlybraces(value)
+        }
+        if (value is List<*>) {
+            val result = mutableListOf<Any?>()
+            value.forEach {
+                if (it is String) {
+                    result.add(replaceStringWithDoubleCurlybraces(it as String))
+                } else  {
+                    result.add(it)
+                }
+            }
+            return result
+        }
+
+        return value
+    }
+
+    private fun replaceStringWithDoubleCurlybraces(value: String): String {
+        val pattern = Pattern.compile("\\\$\\{([^{}]+?)}")
+        val matcher = pattern.matcher(value)
+        var newValue = value as String
+        while (matcher.find()) {
+            val realValue = "\${{ variables." + matcher.group(1).trim() + " }}"
+            newValue = newValue.replace(matcher.group(), realValue)
+        }
+
+        return newValue
     }
 
     private fun getYamlStringBuilder(
