@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.process.BkProcessTree
+import com.tencent.process.EnvVars
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -101,7 +102,13 @@ object KillBuildProcessTree {
         val killedProcessIds = mutableListOf<Int>()
         while (processTreeIterator.hasNext()) {
             val osProcess = processTreeIterator.next()
-            val envVars = osProcess.environmentVariables
+            var envVars: EnvVars?
+            try {
+                envVars = osProcess.environmentVariables
+            } catch (ignore: Throwable) {
+                logger.warn("read [${osProcess.pid}] environmentVariables fail, skip", ignore)
+                continue
+            }
             if (envVars.isEmpty()) {
                 continue
             }

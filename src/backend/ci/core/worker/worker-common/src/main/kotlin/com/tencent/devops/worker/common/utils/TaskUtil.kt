@@ -30,7 +30,10 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 
 object TaskUtil {
 
@@ -47,14 +50,14 @@ object TaskUtil {
         return false
     }
 
-    fun getTimeOut(buildTask: BuildTask): Long? {
+    fun getTimeOut(buildTask: BuildTask): Long {
         val params = buildTask.params
         if (params != null && null != params["additionalOptions"]) {
             val additionalOptionsStr = params["additionalOptions"]
             val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
-            return additionalOptions?.timeout
+            return additionalOptions?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN.toLong()
         }
-        return 0
+        return Timeout.MAX_JOB_RUN_DAYS
     }
 
     fun setTaskId(taskId: String) {
@@ -71,5 +74,17 @@ object TaskUtil {
 
     fun isVmBuildEnv(containerType: String? = null): Boolean {
         return containerType == VMBuildContainer.classType
+    }
+
+    fun getTaskEnvVariables(buildVariables: BuildVariables, taskId: String?): MutableMap<String, String> {
+        val taskEnvVariables = mutableMapOf(
+            "PROJECT_ID" to buildVariables.projectId,
+            "BUILD_ID" to buildVariables.buildId,
+            "VM_SEQ_ID" to buildVariables.vmSeqId
+        )
+        if (!taskId.isNullOrBlank()) {
+            taskEnvVariables[PIPELINE_ELEMENT_ID] = taskId
+        }
+        return taskEnvVariables
     }
 }

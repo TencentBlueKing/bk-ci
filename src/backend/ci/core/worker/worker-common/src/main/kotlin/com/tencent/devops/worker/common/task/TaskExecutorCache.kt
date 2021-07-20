@@ -25,31 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.common
+package com.tencent.devops.worker.common.task
 
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.process.engine.common.Timeout
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 
-object Timeout {
+object TaskExecutorCache {
 
-    const val DEFAULT_TIMEOUT_MIN = 900
-    const val DEFAULT_PREPARE_MINUTES = 10 // 10分钟
-    const val DEFAULT_STAGE_TIMEOUT_HOURS = 24 // 24小时
-    private const val MAX_STAGE_REVIEW_DAYS = 30L // 审核最大天数
-    const val MAX_JOB_RUN_DAYS = 7L // Job运行最大天数
+    private val taskExecutorCache = Caffeine.newBuilder()
+        .maximumSize(50)
+        .expireAfterWrite(Timeout.MAX_JOB_RUN_DAYS, TimeUnit.DAYS)
+        .build<String, ExecutorService>()
 
-    val MAX_HOURS = TimeUnit.DAYS.toHours(MAX_STAGE_REVIEW_DAYS) // 60 * 24 = 1440 小时 = 审核最多超时60天
+    fun invalidate(taskId: String) {
+        taskExecutorCache.invalidate(taskId)
+    }
 
-    val STAGE_MAX_MILLS = TimeUnit.HOURS.toMillis(MAX_HOURS) + 1 // 毫秒+1
+    fun put(taskId: String, executor: ExecutorService) {
+        taskExecutorCache.put(taskId, executor)
+    }
 
-    val MAX_MINUTES = TimeUnit.DAYS.toMinutes(MAX_JOB_RUN_DAYS).toInt() // 7 * 24 * 60 = 10080 分钟 = 最多超时7天
+    fun getIfPresent(taskId: String): ExecutorService? {
+        return taskExecutorCache.getIfPresent(taskId)
+    }
 
-    val CONTAINER_MAX_MILLS = TimeUnit.MINUTES.toMillis(MAX_MINUTES.toLong()).toInt() + 1 // 毫秒+1
-
-    fun transMinuteTimeoutToMills(timeoutMinutes: Int?): Pair<Int, Long> {
-        var minute = timeoutMinutes ?: DEFAULT_TIMEOUT_MIN
-        if (minute <= 0 || minute > MAX_MINUTES) {
-            minute = MAX_MINUTES
-        }
-        return minute to TimeUnit.MINUTES.toMillis(minute.toLong())
+    fun getAllPresent(taskIds: Set<String>): Map<String, ExecutorService>? {
+        return taskExecutorCache.getAllPresent(taskIds)
     }
 }
