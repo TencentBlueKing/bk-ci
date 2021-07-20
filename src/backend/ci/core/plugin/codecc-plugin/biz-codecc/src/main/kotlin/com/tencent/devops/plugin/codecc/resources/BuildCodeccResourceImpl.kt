@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -32,7 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.api.BuildCodeccResource
 import com.tencent.devops.plugin.codecc.config.CodeccScriptConfig
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
-import com.tencent.devops.plugin.codecc.service.CodeccDownloaderService
+import com.tencent.devops.plugin.codecc.service.CodeccToolDownloaderService
 import com.tencent.devops.plugin.codecc.service.CodeccService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -40,15 +41,15 @@ import javax.ws.rs.core.Response
 @RestResource
 class BuildCodeccResourceImpl @Autowired constructor(
     private val codeccService: CodeccService,
-    private val codeccDownloaderService: CodeccDownloaderService
+    private val codeccToolDownloaderService: CodeccToolDownloaderService
 ) : BuildCodeccResource {
 
     override fun downloadTool(toolName: String, osType: OSType, fileMd5: String, is32Bit: Boolean?): Response {
-        return codeccDownloaderService.downloadTool(toolName, osType, fileMd5, is32Bit)
+        return codeccToolDownloaderService.downloadTool(toolName, osType, fileMd5, is32Bit)
     }
 
     override fun downloadToolsScript(osType: OSType, fileMd5: String): Response {
-        return codeccDownloaderService.downloadToolsScript(osType, fileMd5)
+        return codeccToolDownloaderService.downloadToolsScript(osType, fileMd5)
     }
 
     override fun queryCodeccTaskDetailUrl(projectId: String, pipelineId: String, buildId: String): String {

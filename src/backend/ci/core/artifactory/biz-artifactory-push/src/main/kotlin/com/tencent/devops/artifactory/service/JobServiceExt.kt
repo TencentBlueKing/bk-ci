@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.artifactory.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -5,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.constant.PushMessageCode
 import com.tencent.devops.artifactory.pojo.FastPushFileRequest
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import okhttp3.Request
@@ -15,6 +43,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ALL")
 class JobServiceExt @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
@@ -28,7 +57,7 @@ class JobServiceExt @Autowired constructor(
         if (taskInstanceId <= 0) {
             // 失败处理
             logger.warn("start jobDevOpsFastPushfile failed")
-            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(PushMessageCode.JOB_EXECUTE_FAIL))
+            throw ErrorCodeException(errorCode = MessageCodeUtil.getCodeLanMessage(PushMessageCode.JOB_EXECUTE_FAIL))
         }
         return taskInstanceId
     }
@@ -53,7 +82,7 @@ class JobServiceExt @Autowired constructor(
             } else {
                 val msg = response["message"] as String
                 logger.warn("start job failed, msg: $msg")
-                throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.JOB_EXECUTE_FAIL, arrayOf(msg)))
+                throw ErrorCodeException(errorCode = PushMessageCode.JOB_EXECUTE_FAIL, params = arrayOf(msg))
             }
         }
     }
@@ -73,32 +102,32 @@ class JobServiceExt @Autowired constructor(
                     return when (status) {
                         3 -> {
                             logger.info("Job execute task finished and success")
-                            TaskResult(true, true, "Success")
+                            TaskResult(isFinish = true, success = true, msg = "Success")
                         }
                         4 -> {
                             logger.error("Job execute task failed")
-                            TaskResult(true, false, "Job failed")
+                            TaskResult(isFinish = true, success = false, msg = "Job failed")
                         }
                         else -> {
                             logger.info("Job execute task running")
-                            TaskResult(false, false, "Job Running")
+                            TaskResult(isFinish = false, success = false, msg = "Job Running")
                         }
                     }
                 } else {
                     val msg = response["message"] as String
                     logger.error("job execute failed, msg: $msg")
-                    throw RuntimeException("job execute failed, msg: $msg")
+                    throw ErrorCodeException(errorCode = PushMessageCode.JOB_EXECUTE_FAIL, params = arrayOf(msg))
                 }
             }
         } catch (e: Exception) {
             logger.error("execute job error", e)
-            throw RuntimeException("execute job error: ${e.message}")
+            throw ErrorCodeException(errorCode = PushMessageCode.JOB_EXECUTE_FAIL, params = arrayOf(e.message ?: ""))
         }
     }
 
     data class TaskResult(val isFinish: Boolean, val success: Boolean, val msg: String)
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(JobServiceExt::class.java)
     }
 }

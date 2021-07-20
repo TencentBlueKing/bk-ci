@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -78,6 +79,8 @@ class DateTimeUtilTest {
         val date = "2019-09-02T08:58:46+0000"
         val expected: Long = 1567414726000
         Assert.assertEquals(expected, DateTimeUtil.zoneDateToTimestamp(date))
+        val date2 = "2019-09-02T08:58:46Z"
+        Assert.assertEquals(expected, DateTimeUtil.zoneDateToTimestamp(date2))
     }
 
     @Test
@@ -114,5 +117,50 @@ class DateTimeUtilTest {
         val format = "yyyy-MM-dd HH:mm:ss"
         val expected = LocalDateTime.parse("2020-07-06 01:59:59", DateTimeFormatter.ofPattern(format))
         Assert.assertEquals(expected, DateTimeUtil.stringToLocalDateTime(date, format))
+    }
+
+    @Test
+    fun test() {
+        val date = LocalDateTime.of(2020, 12, 15, 21, 9, 59)
+        val dateStr = DateTimeUtil.toDateTime(date)
+        println(dateStr)
+    }
+
+    @Test
+    fun outOfBoundsInt() {
+        val year = 525600
+        val lastTime = (DateTimeUtil.minuteToSecond(year) * 1000)
+        val maxInt = Int.MAX_VALUE
+        Assert.assertFalse(lastTime - maxInt > 0)
+    }
+
+    @Test
+    fun outOfBoundsLong() {
+        val year = 525600
+        val lastTime = (DateTimeUtil.minuteToSecond(year).toLong() * 1000)
+        val maxInt = Int.MAX_VALUE
+        Assert.assertTrue(lastTime - maxInt > 0)
+    }
+
+    @Test
+    fun stringToLocalDateTime() {
+        var dateStr = "2021"
+        var convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy")
+        Assert.assertEquals(convertDate.toString(), "2021-01-01T00:00")
+        dateStr = "2021-04"
+        convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM")
+        Assert.assertEquals(convertDate.toString(), "2021-04-01T00:00")
+        dateStr = "2021-04-29"
+        convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, DateTimeUtil.YYYY_MM_DD)
+        Assert.assertEquals(convertDate.toString(), "2021-04-29T00:00")
+        dateStr = "2021-04-29 15"
+        convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM-dd HH")
+        Assert.assertEquals(convertDate.toString(), "2021-04-29T15:00")
+        dateStr = "2021-04-29 15:02"
+        convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM-dd HH:mm")
+        Assert.assertEquals(convertDate.toString(), "2021-04-29T15:02")
+        dateStr = "2021-04-29 15:02:01"
+        convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM-dd HH:mm:ss")
+        Assert.assertEquals(convertDate.toString(), "2021-04-29T15:02:01")
     }
 }

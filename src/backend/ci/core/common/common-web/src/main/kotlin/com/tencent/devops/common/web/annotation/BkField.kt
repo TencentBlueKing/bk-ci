@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,6 +39,8 @@ import kotlin.reflect.KClass
 annotation class BkField(
     val patternStyle: BkStyleEnum = BkStyleEnum.COMMON_STYLE, // 字段对应的正则表达式
     val required: Boolean = true, // 是否必须
+    val minLength: Int = -1, // 最小长度，-1代表不校验
+    val maxLength: Int = -1, // 最大长度，-1代表不校验
     val message: String = "parameter is not valid", // 默认错误提示信息
     val groups: Array<KClass<*>> = [], // 约束注解在验证时所属的组别
     val payload: Array<KClass<out Payload>> = [] // 给约束条件指定严重级别

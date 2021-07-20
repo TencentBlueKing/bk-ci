@@ -1,6 +1,8 @@
 ![LOGO](docs/resource/img/bkci_cn.png)
 ---
-[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-ci/blob/master/LICENSE) [![Release Version](https://img.shields.io/badge/release-0.0.1-brightgreen.svg)](https://github.com/Tencent/bk-ci/releases) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-ci/pulls) ![Backend CI](https://github.com/Tencent/bk-ci/workflows/Backend%20CI/badge.svg?branch=master)
+[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-ci/blob/master/LICENSE.txt) [![Release Version](https://img.shields.io/github/v/release/Tencent/bk-ci?include_prereleases)](https://github.com/Tencent/bk-ci/releases) [![Backend CI](https://github.com/Tencent/bk-ci/workflows/Backend%20CI/badge.svg?branch=master)](https://img.shields.io/github/workflow/status/Tencent/bk-ci/Tag%20Realse)
+
+[English](README_EN.md) | 简体中文
 
 > **重要提示**: `master` 分支在开发过程中可能处于 *不稳定或者不可用状态* 。
 请通过[releases](https://github.com/tencent/bk-ci/releases) 而非 `master` 去获取稳定的二进制文件。
@@ -40,14 +42,9 @@ bk-ci提供了流水线、代码库、凭证管理、环境管理、研发商店
 - [下载与编译](docs/overview/source_compile.md)
 - [一分钟安装部署](docs/overview/installation.md)
 
-## RoadMap
-- [版本规划](docs/VERSION.md)
-- [版本日志](version.md)
-
 ## Support
-1. [wiki](https://github.com/Tencent/bk-ci/wiki)
-2. [蓝鲸社区](https://bk.tencent.com/s-mart/community)
-3. QQ群：744672165
+1. [GitHub讨论区](https://github.com/Tencent/bk-ci/discussions)
+2. QQ群：495299374
 
 ## BlueKing Community
 - [BK-BCS](https://github.com/Tencent/bk-bcs)：蓝鲸容器管理平台是以容器技术为基础，为微服务业务提供编排管理的基础服务平台。

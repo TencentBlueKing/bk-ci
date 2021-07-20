@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,21 +34,22 @@ import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.constant.HTTP_404
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
+import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
-import com.tencent.devops.process.pojo.code.github.GithubWebhook
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
-import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
+import com.tencent.devops.scm.pojo.Project
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -59,8 +61,10 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 
 @Service
+@Suppress("ALL")
 @ConditionalOnMissingClass
 class GithubService @Autowired constructor(
     private val githubTokenService: GithubTokenService,
@@ -109,7 +113,7 @@ class GithubService @Autowired constructor(
     override fun updateCheckRuns(
         token: String,
         projectName: String,
-        checkRunId: Int,
+        checkRunId: Long,
         checkRuns: GithubCheckRuns
     ) {
         logger.info("Github add check [projectName=$projectName, checkRuns=$checkRuns]")
@@ -217,7 +221,12 @@ class GithubService @Autowired constructor(
         val url = "https://raw.githubusercontent.com/$projectName/$ref/$filePath"
         OkhttpUtils.doGet(url).use {
             logger.info("github content url: $url")
-            if (!it.isSuccessful) throw RuntimeException("get github file fail")
+            if (!it.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = it.body()!!.toString()
+                )
+            }
             return it.body()!!.string()
         }
     }

@@ -2,9 +2,10 @@
     <ul class="param-main" v-bkloading="{ isLoading }">
         <li class="param-input" v-for="(parameter, paramIndex) in parameters" :key="paramIndex">
             <parameter-input v-for="(model, index) in parameter.paramModels"
+                :style="{ maxWidth: `calc(${100 / parameter.paramModels.length}% - ${58 / parameter.paramModels.length}px)` }"
                 :key="model.id"
                 :class="[{ 'last-child': index === parameter.paramModels.length - 1 }, 'input-com']"
-                @updateValue="(newValue) => updateValue(model, newValue)"
+                @update-value="(newValue) => updateValue(model, newValue)"
                 :param-values="paramValues"
                 v-bind="model"
             ></parameter-input>
@@ -67,10 +68,12 @@
         methods: {
             plusParam (parameter, index) {
                 this.parameters.splice(index, 0, JSON.parse(JSON.stringify(parameter)))
+                this.updateParameters()
             },
 
             minusParam (index) {
                 this.parameters.splice(index, 1)
+                this.updateParameters()
             },
 
             initData () {
@@ -85,24 +88,23 @@
             },
 
             addParams () {
-                let url = this.param.url || ''
-                let isErrorParam = false
-
-                this.queryKey = []
-                url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
-                    const value = this.paramValues[key]
-                    this.queryKey.push(key)
-                    if (typeof value === 'undefined') isErrorParam = true
-                    return value
-                })
-
-                if (isErrorParam) return
-                this.isLoading = true
-                this.$ajax.get(url).then((res) => {
-                    const data = res.data || []
-                    this.parameters = data
-                    this.setValue()
-                }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.isLoading = false))
+                // let url = this.param.url || ''
+                if (typeof this.param.url === 'string' && this.param.url !== '') {
+                    const [url, queryKey] = this.generateReqUrl(this.param.url, this.paramValues)
+                    this.queryKey = queryKey
+                    // url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
+                    //     const value = this.paramValues[key]
+                    //     this.queryKey.push(key)
+                    //     if (typeof value === 'undefined') isErrorParam = true
+                    //     return value
+                    // })
+                    if (!url) return
+                    this.isLoading = true
+                    this.$ajax.get(url).then((res) => {
+                        this.parameters = this.getResponseData(res, this.param.dataPath || 'data.records')
+                        this.setValue()
+                    }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.isLoading = false))
+                }
             },
 
             setValue () {

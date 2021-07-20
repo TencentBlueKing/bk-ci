@@ -6,7 +6,7 @@
                 <component
                     :is="obj.component"
                     :name="key"
-                    v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                    v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
                     :handle-change="handleMethods"
                     :value="element[key]"
                     v-bind="obj"
@@ -31,7 +31,7 @@
         },
         async mounted () {
             try {
-                const res = await this.$store.dispatch('soda/getGithubAppUrl')
+                const res = await this.$store.dispatch('common/getGithubAppUrl')
                 this.githubAppUrl = res.url
             } catch (err) {
                 this.$showTips({

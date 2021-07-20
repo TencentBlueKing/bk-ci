@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,15 +29,17 @@ package com.tencent.devops.worker.common.env
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.service.env.Env
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
 import com.tencent.devops.worker.common.utils.WorkspaceUtils.getLandun
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
-import java.util.Properties
 import java.util.Locale
+import java.util.Properties
 
+@Suppress("ALL")
 object AgentEnv {
 
     private val logger = LoggerFactory.getLogger(AgentEnv::class.java)
@@ -58,7 +61,7 @@ object AgentEnv {
     private var gateway: String? = null
     private var os: OSType? = null
     private var env: Env? = null
-    private var logMode: LogMode? = null
+    private var logStorageMode: LogStorageMode? = null
 
     private var property: Properties? = null
 
@@ -150,7 +153,7 @@ object AgentEnv {
                     } catch (t: Throwable) {
                         gateway = System.getProperty("devops.gateway", "")
                     }
-                    logger.info("Get the gateway($gateway)")
+                    logger.info("gateway: $gateway")
                 }
             }
         }
@@ -210,21 +213,25 @@ object AgentEnv {
         return BuildEnv.getBuildType() == BuildType.DOCKER
     }
 
-    fun getLogMode(): LogMode {
-        if (null == logMode) {
+    fun getLogMode(): LogStorageMode {
+        if (null == logStorageMode) {
             synchronized(this) {
-                if (null == logMode) {
-                    logMode = try {
-                        LogMode.valueOf(System.getenv(AGENT_LOG_SAVE_MODE)
-                                ?: throw PropertyNotExistException(AGENT_LOG_SAVE_MODE, "Empty log mode"))
+                if (null == logStorageMode) {
+                    logStorageMode = try {
+                        LogStorageMode.valueOf(System.getenv(AGENT_LOG_SAVE_MODE)
+                            ?: throw PropertyNotExistException(AGENT_LOG_SAVE_MODE, "Empty log mode"))
                     } catch (t: Throwable) {
                         logger.warn("not system variable named log mode!")
-                        LogMode.UPLOAD
+                        LogStorageMode.UPLOAD
                     }
-                    logger.info("get the log mode $logMode")
+                    logger.info("get the log mode $logStorageMode")
                 }
             }
         }
-        return logMode!!
+        return logStorageMode!!
+    }
+
+    fun setLogMode(storageMode: LogStorageMode) {
+        logStorageMode = storageMode
     }
 }

@@ -73,7 +73,7 @@
             this.init()
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestReportList'
             ]),
             async init () {
@@ -131,7 +131,7 @@
             }
             iframe {
                 width: 100%;
-                min-height: 100%;
+                height: 100%;
                 border: 0;
             }
         }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,6 +31,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
@@ -57,6 +60,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/templates")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserPTemplateResource {
 
     @ApiOperation("创建流水线模板")
@@ -106,6 +110,27 @@ interface UserPTemplateResource {
         version: Long
     ): Result<Boolean>
 
+    @ApiOperation("删除流水线模板")
+    @DELETE
+    @Path("/projects/{projectId}/templates/{templateId}/versionNames/{versionName}")
+    fun deleteTemplate(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 34)
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @PathParam("templateId")
+        @BkField(minLength = 1, maxLength = 32)
+        templateId: String,
+        @ApiParam("版本号", required = true)
+        @PathParam("versionName")
+        @BkField(minLength = 1, maxLength = 64)
+        versionName: String
+    ): Result<Boolean>
+
     @ApiOperation("更新流水线模板")
     @PUT
     @Path("/projects/{projectId}/templates/{templateId}")
@@ -115,12 +140,15 @@ interface UserPTemplateResource {
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 34)
         projectId: String,
         @ApiParam("模板ID", required = true)
         @PathParam("templateId")
+        @BkField(minLength = 1, maxLength = 32)
         templateId: String,
         @ApiParam("版本名", required = true)
         @QueryParam("versionName")
+        @BkField(minLength = 1, maxLength = 64)
         versionName: String,
         @ApiParam("模板", required = true)
         template: Model
@@ -144,9 +172,11 @@ interface UserPTemplateResource {
         storeFlag: Boolean?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
+        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
         @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?
     ): Result<TemplateListModel>
 
@@ -165,9 +195,11 @@ interface UserPTemplateResource {
         templateType: TemplateType?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
+        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
         @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?
     ): Result<OptionalTemplateList>
 

@@ -56,7 +56,8 @@ export default {
                     axisLabel: {
                         textStyle: {
                             fontSize: 12,
-                            color: '#777'
+                            color: '#777',
+                            align: 'center'
                         }
                     }
                 },

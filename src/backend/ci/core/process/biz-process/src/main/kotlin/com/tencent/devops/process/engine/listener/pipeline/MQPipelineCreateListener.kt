@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,133 +27,58 @@
 
 package com.tencent.devops.process.engine.listener.pipeline
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
-import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.websocket.constant.WebsocketCode
-import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import com.tencent.devops.common.websocket.enum.NotityLevel
-import com.tencent.devops.common.websocket.pojo.BuildPageInfo
-import com.tencent.devops.common.websocket.pojo.NotifyPost
-import com.tencent.devops.common.websocket.pojo.WebSocketType
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.CallBackControl
-import com.tencent.devops.process.engine.pojo.PipelineWebhook
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
+import com.tencent.devops.process.engine.service.AgentPipelineRefService
+import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.websocket.page.EditPageBuild
-import com.tencent.devops.process.websocket.push.WebHookWebsocketPush
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import org.springframework.util.StopWatch
 
 /**
  *  MQ实现的流水线创建事件
  *
  * @version 1.0
  */
+@Suppress("ALL")
 @Component
 class MQPipelineCreateListener @Autowired constructor(
     private val pipelineWebhookService: PipelineWebhookService,
-    private val webSocketDispatcher: WebSocketDispatcher,
-    private val redisOperation: RedisOperation,
+    private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     private val callBackControl: CallBackControl,
-    private val objectMapper: ObjectMapper,
+    private val agentPipelineRefService: AgentPipelineRefService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineCreateEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineCreateEvent) {
-        val watch = StopWatch("pipelineCreateEventWatch")
-        val pipelineId = event.pipelineId
-        if (event.source == ("create_pipeline")) {
-            watch.start("createPipeline[pipelineId:$pipelineId]")
-            callBackControl.pipelineCreateEvent(projectId = event.projectId, pipelineId = pipelineId)
-            watch.stop()
-        }
-        if (event.source == "createWebhook") {
-            logger.info("[$pipelineId] createGitWebhook!MQ内调用")
-            watch.start("createWebHook[pipelineId:$pipelineId]")
-            addWebHook(event.element!!, event)
-            watch.stop()
-        }
-        logger.info("pipelineId:$pipelineId pipelineCreateEvent watch is:$watch")
-    }
+        val watcher = Watcher(id = "${event.traceId}|CreatePipeline#${event.pipelineId}|${event.userId}")
+        try {
 
-    private fun addWebHook(e: Element, event: PipelineCreateEvent) {
-        val (repositoryConfig, scmType, eventType) = when (e) {
-            is CodeGitWebHookTriggerElement -> Triple(
-                    RepositoryConfigUtils.buildConfig(e),
-                    ScmType.CODE_GIT,
-                    e.eventType
-            )
-            is CodeGitlabWebHookTriggerElement -> Triple(
-                    RepositoryConfigUtils.buildConfig(e),
-                    ScmType.CODE_GITLAB,
-                    null
-            )
-            is CodeSVNWebHookTriggerElement -> Triple(RepositoryConfigUtils.buildConfig(e), ScmType.CODE_SVN, null)
-            is CodeGithubWebHookTriggerElement -> Triple(RepositoryConfigUtils.buildConfig(e), ScmType.GITHUB, null)
-            else -> Triple(null, null, null)
-        }
-
-        if (repositoryConfig != null && scmType != null) {
-            logger.info("[${event.pipelineId}]| Trying to add the $scmType web hook for repo($repositoryConfig)")
-            try {
-                pipelineWebhookService.saveWebhook(
-                        pipelineWebhook = PipelineWebhook(
-                                projectId = event.projectId,
-                                pipelineId = event.pipelineId,
-                                repositoryType = scmType,
-                                repoType = repositoryConfig.repositoryType,
-                                repoHashId = repositoryConfig.repositoryHashId,
-                                repoName = repositoryConfig.repositoryName
-                        ), codeEventType = eventType, variables = event.variables as Map<String, String>,
-                        // TODO 此处需做成传入参数
-                        createPipelineFlag = true
-                )
-            } catch (e: Exception) {
-                val post = NotifyPost(
-                        module = "process",
-                        message = e.message!!,
-                        level = NotityLevel.HIGH_LEVEL.getLevel(),
-                        dealUrl = EditPageBuild().buildPage(
-                                BuildPageInfo(
-                                        projectId = event.projectId,
-                                        pipelineId = event.pipelineId,
-                                        buildId = null,
-                                        atomId = null
-                                )
-                        ),
-                        code = WebsocketCode.WEBHOOK_ADD_ERROR,
-                        webSocketType = WebSocketType.changWebType(WebSocketType.WEBHOOK),
-                        page = null
-                )
-                websocketDispatch(post, event)
-                logger.warn("[${event.pipelineId}]异步调用webhook返回未知异常。webSocket推送异常信息[$post]")
+            watcher.start("callback")
+            callBackControl.pipelineCreateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
+            watcher.stop()
+            watcher.start("updateAtomPipelineNum")
+            pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version ?: 1)
+            watcher.stop()
+            watcher.start("updateAgentPipelineRef")
+            with(event) {
+                agentPipelineRefService.updateAgentPipelineRef(userId, "create_pipeline", projectId, pipelineId)
             }
+            watcher.stop()
+            watcher.start("addWebhook")
+            pipelineWebhookService.addWebhook(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                version = event.version
+            )
+            watcher.stop()
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher = watcher)
         }
-    }
-
-    private fun websocketDispatch(notifyPost: NotifyPost, event: PipelineCreateEvent) {
-        webSocketDispatcher.dispatch(
-                WebHookWebsocketPush(
-                        buildId = null,
-                        pipelineId = event.pipelineId,
-                        projectId = event.projectId,
-                        userId = event.userId,
-                        pushType = WebSocketType.WEBHOOK,
-                        redisOperation = redisOperation,
-                        page = notifyPost.dealUrl,
-                        objectMapper = objectMapper,
-                        notifyPost = notifyPost
-                )
-        )
     }
 }

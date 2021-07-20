@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: artifactory${service-suffix}
     desc: DevOps Artifactory Service
@@ -7,3 +9,6 @@ spring:
 
 server:
   port: 21922
+
+artifactory:
+  realm: local

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,13 +32,14 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.MacOSGray
-import com.tencent.devops.common.service.gray.RepoGray
+import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.SystemEnums
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -45,14 +47,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.util.CollectionUtils
 
+@Suppress("ALL")
 class DefaultOpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val projectDispatcher: ProjectDispatcher,
-    redisOperation: RedisOperation,
+    private val redisOperation: RedisOperation,
     gray: Gray,
-    repoGray: RepoGray,
     macosGray: MacOSGray
 ) : AbsOpProjectServiceImpl(
     dslContext,
@@ -60,16 +62,15 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     projectLabelRelDao,
     redisOperation,
     gray,
-    repoGray,
     macosGray,
     projectDispatcher
 ) {
 
-    fun fixUpdateOpRequest(projectInfoRequest: OpProjectUpdateInfoRequest) {
-        logger.info("[${projectInfoRequest.projectId}]|do nothing for project ${projectInfoRequest.projectName}")
-    }
-
-    override fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int {
+    override fun updateProjectFromOp(
+        userId: String,
+        accessToken: String,
+        projectInfoRequest: OpProjectUpdateInfoRequest
+    ): Int {
         logger.info("the projectInfoRequest is: $projectInfoRequest")
         val projectId = projectInfoRequest.projectId
         val dbProjectRecord = projectDao.get(dslContext, projectId)
@@ -79,7 +80,8 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
         }
         // 判断项目是不是审核的情况
         var flag = false
-        if (1 == dbProjectRecord.approvalStatus && (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
+        if (1 == dbProjectRecord.approvalStatus &&
+            (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
             flag = true
             projectInfoRequest.approver = projectInfoRequest.approver
             projectInfoRequest.approvalTime = System.currentTimeMillis()
@@ -92,7 +94,6 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
             val transactionContext = DSL.using(configuration)
 
             try {
-                fixUpdateOpRequest(projectInfoRequest)
                 projectDao.updateProjectFromOp(transactionContext, projectInfoRequest)
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectInfoRequest", e)
@@ -102,7 +103,12 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
             projectLabelRelDao.deleteByProjectId(transactionContext, projectId)
             val labelIdList = projectInfoRequest.labelIdList
             if (!CollectionUtils.isEmpty(labelIdList)) {
-                projectLabelRelDao.batchAdd(dslContext = transactionContext, projectId = projectId, labelIdList = labelIdList!!)
+                projectLabelRelDao.batchAdd(transactionContext, projectId = projectId, labelIdList = labelIdList!!)
+            }
+            if (!projectInfoRequest.secrecyFlag) {
+                redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, dbProjectRecord.englishName)
+            } else {
+                redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, dbProjectRecord.englishName)
             }
         }
 
@@ -148,5 +154,9 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     override fun synProjectInit(isRefresh: Boolean?): Result<List<String>> {
         logger.info("[synProjectInit]| isRefresh=$isRefresh| do nothing")
         return Result(emptyList())
+    }
+
+    override fun setGrayExt(projectCodeList: List<String>, operateFlag: Int, system: SystemEnums) {
+        return
     }
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,7 +31,7 @@ import com.cronutils.mapper.CronMapper
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
-import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -71,7 +72,7 @@ data class TimerTriggerElement(
             val qaurtzCron = parser.parse(expression)
             val mapper = CronMapper.fromUnixToQuartz()
             mapper.map(qaurtzCron).asString()
-        } catch (e: IllegalArgumentException) {
+        } catch (ignore: IllegalArgumentException) {
             // The old cron, just return it
             expression
         }
@@ -112,15 +113,11 @@ data class TimerTriggerElement(
         }
     }
 
-    private fun checkLength(expression: String) {
-        val newExpression = expression.trim()
-        val expressionParts = newExpression.split(" ")
-        // minutes hours dayOfMonth month dayOfWeek
-        if (expressionParts.size != 5) {
-            throw InvalidParamException(
-                message = "Cron expression contains ${expressionParts.size} parts but we expect one of 5(minutes hours dayOfMonth month dayOfWeek)",
-                params = arrayOf(expression)
-            )
+    override fun findFirstTaskIdByStartType(startType: StartType): String {
+        return if (startType.name == StartType.TIME_TRIGGER.name) {
+            this.id!!
+        } else {
+            super.findFirstTaskIdByStartType(startType)
         }
     }
 }

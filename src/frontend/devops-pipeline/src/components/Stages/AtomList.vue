@@ -2,7 +2,7 @@
     <section>
         <draggable class="container-atom-list" :class="{ 'trigger-container': isTriggerContainer(container), 'readonly': !editable }" :data-baseos="container.baseOS || container.classType" v-model="atomList" v-bind="dragOptions" :move="checkMove">
             <li v-for="(atom, index) in atomList" :key="atom.id" :class="{ 'atom-item': true,
-                                                                           [atom.status]: atom.status,
+                                                                           [atomCls(atom)]: true,
                                                                            'quality-item': (atom['@type'] === 'qualityGateOutTask') || (atom['@type'] === 'qualityGateInTask'),
                                                                            'last-quality-item': (atom['@type'] === 'qualityGateOutTask' && index === atomList.length - 1),
                                                                            'arrival-atom': atom.status,
@@ -10,21 +10,21 @@
             }"
                 @click.stop="showPropertyPanel(index)"
             >
-                <section class="atom-item atom-section normal-atom" :class="{ [atom.status]: atom.status,
+                <section class="atom-item atom-section normal-atom" :class="{ [atomCls(atom)]: true,
                                                                               'is-error': atom.isError,
                                                                               'quality-atom': atom['@type'] === 'qualityGateOutTask',
                                                                               'is-intercept': atom.isQualityCheck,
                                                                               'template-compare-atom': atom.templateModify }"
                     v-if="atom['@type'] !== 'qualityGateInTask' && atom['@type'] !== 'qualityGateOutTask'">
-                    <status-icon v-if="atom.status && atom.status !== 'SKIP'" type="element" :status="atom.status" />
+                    <status-icon v-if="atom.status && atom.status !== 'SKIP'" type="element" :status="atom.status" :is-hook="((atom.additionalOptions || {}).elementPostInfo || false)" />
                     <status-icon v-else-if="isWaiting && atom.status !== 'SKIP'" type="element" status="WAITING" />
-                    <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon" :src="atomMap[atom.atomCode].icon" :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" />
-                    <logo v-else :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" :name="getAtomIcon(atom.atomCode)" size="18" />
+                    <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon && !(atom.additionalOptions || {}).elementPostInfo" :src="atomMap[atom.atomCode].icon" :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" />
+                    <logo v-else :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" :name="getAtomIcon(atom)" size="18" />
                     <p class="atom-name">
                         <span :title="atom.name" :class="{ 'skip-name': useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
                     </p>
                     <bk-popover placement="top" v-if="atom.isReviewing">
-                        <span @click.stop="checkAtom(atom)" :class="isCurrentUser(atom.computedReviewers) ? 'atom-reviewing-tips' : 'atom-review-diasbled-tips'">{{ $t('editPage.toCheck') }}</span>
+                        <span @click.stop="checkAtom(atom, index)" :class="isCurrentUser(atom.computedReviewers) ? 'atom-reviewing-tips' : 'atom-review-diasbled-tips'">{{ $t('editPage.toCheck') }}</span>
                         <template slot="content">
                             <p>{{ $t('editPage.checkUser') }}{{ atom.computedReviewers.join(';') }}</p>
                         </template>
@@ -35,8 +35,15 @@
                             <p>{{ $t('editPage.abortTips') }}{{ $t('editPage.checkUser') }}{{ execDetail.cancelUserId }}</p>
                         </template>
                     </bk-popover>
-                    <a href="javascript: void(0);" class="atom-single-retry" v-if="atom.status !== 'SKIP' && atom.canRetry" @click.stop="singleRetry(atom.id)">{{ $t('retry') }}</a>
-                    <bk-popover placement="top" v-else-if="atom.status !== 'SKIP'" :disabled="!atom.elapsed">
+                    <template v-if="atom.status === 'PAUSE'">
+                        <span @click.stop="continueExecute(index)" :class="[{ 'disabled': isExecStop }, 'pause-button']">{{ $t('resume') }}</span>
+                        <span @click.stop="stopExecute(index)" class="pause-button">
+                            <i class="devops-icon icon-circle-2-1 executing-job" v-if="isExecStop" />
+                            <span v-else>{{ $t('pause') }}</span>
+                        </span>
+                    </template>
+                    <a href="javascript: void(0);" class="atom-single-retry" v-else-if="atom.status !== 'SKIP' && atom.canRetry" @click.stop="singleRetry(atom.id)">{{ $t('retry') }}</a>
+                    <bk-popover placement="top" v-else-if="atom.status !== 'SKIP' && !atom.canSkip" :disabled="!atom.elapsed">
                         <span :class="atom.status === 'SUCCEED' ? 'atom-success-timer' : (atom.status === 'REVIEW_ABORT' ? 'atom-warning-timer' : 'atom-fail-timer')">
                             <span v-if="atom.elapsed && atom.elapsed >= 36e5">&gt;</span>{{ atom.elapsed ? atom.elapsed > 36e5 ? '1h' : localTime(atom.elapsed) : '' }}
                         </span>
@@ -44,6 +51,7 @@
                             <p>{{ atom.elapsed ? localTime(atom.elapsed) : '' }}</p>
                         </template>
                     </bk-popover>
+                    <a href="javascript: void(0);" class="atom-single-skip" v-if="atom.status !== 'SKIP' && atom.canSkip" @click.stop="singleRetry(atom.id, true)">{{ $t('details.statusMap.SKIP') }}</a>
                     <span class="devops-icon copy" v-if="editable && stageIndex !== 0 && !atom.isError" :title="$t('editPage.copyAtom')" @click.stop="copyAtom(index)">
                         <Logo name="copy" size="18"></Logo>
                     </span>
@@ -73,7 +81,7 @@
                 <span v-if="atomList.length === 0">{{ $t('editPage.addAtom') }}</span>
             </span>
         </draggable>
-        <check-atom-dialog :is-show-check-dialog="isShowCheckDialog" :atom="currentAtom" :toggle-check="toggleCheckDialog"></check-atom-dialog>
+        <check-atom-dialog :is-show-check-dialog="isShowCheckDialog" :atom="currentAtom" :toggle-check="toggleCheckDialog" :element="element"></check-atom-dialog>
     </section>
 </template>
 
@@ -115,18 +123,20 @@
             return {
                 reviewLoading: false,
                 isShowCheckDialog: false,
+                isExecStop: false,
                 currentAtom: {}
             }
         },
         computed: {
-            ...mapState('soda', [
+            ...mapState('common', [
                 'ruleList',
                 'templateRuleList'
             ]),
             ...mapState('atom', [
                 'execDetail',
                 'atomMap',
-                'pipeline'
+                'pipeline',
+                'pipelineLimit'
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
@@ -148,8 +158,9 @@
             atomList: {
                 get () {
                     const atoms = this.getElements(this.container)
+
                     atoms.forEach(atom => {
-                        if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
+                        if (Array.isArray(this.curMatchRules) && this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
                                 || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
@@ -185,7 +196,7 @@
             }
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'reviewExcuteAtom',
                 'requestAuditUserList'
             ]),
@@ -194,16 +205,63 @@
                 'togglePropertyPanel',
                 'addAtom',
                 'deleteAtom',
-                'setPipelineEditing'
+                'setPipelineEditing',
+                'pausePlugin',
+                'requestPipelineExecDetail'
             ]),
+
+            continueExecute (elementIndex) {
+                if (this.isExecStop) return
+                const { stageIndex, containerIndex } = this
+                this.togglePropertyPanel({
+                    isShow: true,
+                    showPanelType: 'PAUSE',
+                    editingElementPos: {
+                        stageIndex,
+                        containerIndex,
+                        elementIndex
+                    }
+                })
+            },
+
+            stopExecute (elementIndex) {
+                if (this.isExecStop) return
+                const stages = this.execDetail.model.stages || []
+                const stage = stages[this.stageIndex] || {}
+                const elements = this.container.elements || []
+                const element = elements[elementIndex] || {}
+                const postData = {
+                    projectId: this.routerParams.projectId,
+                    pipelineId: this.routerParams.pipelineId,
+                    buildId: this.routerParams.buildNo,
+                    taskId: element.id,
+                    isContinue: false,
+                    stageId: stage.id,
+                    containerId: this.container.id,
+                    element
+                }
+                this.isExecStop = true
+                this.pausePlugin(postData).then(() => {
+                    return this.requestPipelineExecDetail(this.routerParams)
+                }).catch((err) => {
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }).finally(() => {
+                    this.isExecStop = false
+                })
+            },
+
             toggleCheckDialog (isShow = false) {
                 this.isShowCheckDialog = isShow
                 if (!isShow) {
                     this.currentAtom = {}
                 }
             },
-            checkAtom (atom) {
+            checkAtom (atom, elementIndex) {
                 if (!this.isCurrentUser(atom.computedReviewers)) return
+                this.element = this.container.elements[elementIndex]
                 this.currentAtom = atom
                 this.toggleCheckDialog(true)
             },
@@ -230,7 +288,13 @@
                     return false
                 }
             },
-            getAtomIcon (atomCode) {
+            getAtomIcon (atom) {
+                const additionalOptions = atom.additionalOptions || {}
+                const elementPostInfo = additionalOptions.elementPostInfo
+                if (elementPostInfo) {
+                    return 'icon-build-hooks'
+                }
+                const atomCode = atom.atomCode
                 if (!atomCode) {
                     return 'placeholder'
                 }
@@ -246,7 +310,7 @@
                 const list = atom.reviewUsers || (atom.data && atom.data.input && atom.data.input.reviewers)
                 const reviewUsers = list.map(user => user.split(';').map(val => val.trim())).reduce((prev, curr) => {
                     return prev.concat(curr)
-                })
+                }, [])
                 return reviewUsers
             },
             showPropertyPanel (elementIndex) {
@@ -263,6 +327,13 @@
             editAtom (atomIndex, isAdd) {
                 const { stageIndex, containerIndex, container, addAtom, deleteAtom } = this
                 const editAction = isAdd ? addAtom : deleteAtom
+                if (isAdd && this.container.elements.length >= this.pipelineLimit.atomLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.atomLimit') + this.pipelineLimit.atomLimit
+                    })
+                    return
+                }
                 editAction({
                     container,
                     atomIndex,
@@ -271,6 +342,13 @@
                 })
             },
             copyAtom (atomIndex) {
+                if (this.container.elements.length >= this.pipelineLimit.atomLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.atomLimit') + this.pipelineLimit.atomLimit
+                    })
+                    return
+                }
                 try {
                     const { id, ...element } = this.container.elements[atomIndex]
                     this.container.elements.splice(atomIndex + 1, 0, JSON.parse(JSON.stringify({
@@ -316,15 +394,15 @@
                     }
                 }
             },
-            singleRetry (taskId) {
+            singleRetry (taskId, skip) {
                 if (typeof taskId === 'string') {
-                    this.retryPipeline(taskId)
+                    this.retryPipeline(taskId, skip)
                 }
             },
             /**
              * 重试流水线
              */
-            async retryPipeline (taskId) {
+            async retryPipeline (taskId, skip = false) {
                 let message, theme
                 try {
                     // 请求执行构建
@@ -332,29 +410,26 @@
                         projectId: this.routerParams.projectId,
                         pipelineId: this.routerParams.pipelineId,
                         buildId: this.routerParams.buildNo,
-                        taskId: taskId
+                        taskId: taskId,
+                        skip
                     })
                     if (res.id) {
-                        message = this.$t('subpage.retrySuc')
+                        message = this.$t(`subpage.${skip ? 'skipSuc' : 'retrySuc'}`)
                         theme = 'success'
                     } else {
-                        message = this.$t('subpage.retryFail')
+                        message = this.$t(`subpage.${skip ? 'skipFail' : 'retryFail'}`)
                         theme = 'error'
                     }
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('exec')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.routerParams.projectId}&service_code=pipeline&role_executor=pipeline:${this.routerParams.pipelineId}`
-                        })
-                        return
-                    } else {
-                        message = err.message || err
-                        theme = 'error'
-                    }
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.routerParams.pipelineId,
+                            name: this.routerParams.pipelineId
+                        }],
+                        projectId: this.routerParams.projectId
+                    }], this.getPermUrlByRole(this.routerParams.projectId, this.routerParams.pipelineId, this.roleMap.executor))
                 } finally {
                     message && this.$showTips({
                         message,
@@ -362,8 +437,16 @@
                     })
                 }
             },
+
             useSkipStyle (atom) {
                 return (atom && (atom.status === 'SKIP' || (atom.additionalOptions && atom.additionalOptions.enable === false))) || this.containerDisabled
+            },
+
+            atomCls (atom) {
+                if (atom && atom.additionalOptions && atom.additionalOptions.enable === false) {
+                    return 'DISABLED'
+                }
+                return atom && atom.status ? atom.status : ''
             }
         }
     }
@@ -403,6 +486,17 @@
             }
             .atom-icon.skip-icon {
                 color: #c4cdd6;
+            }
+            .atom-name span.skip-name {
+                text-decoration: line-through;
+                color: #c4cdd6;
+                &:hover {
+                    color: #c4cdd6;
+                }
+            }
+            .pause-button {
+                margin-right: 8px;
+                color: $primaryColor;
             }
 
             &.is-error {
@@ -492,6 +586,18 @@
                     color: $primaryColor;
                 }
             }
+            .disabled {
+                cursor: not-allowed;
+                color: #c4cdd6;
+            }
+
+            .executing-job {
+                cursor: default;
+                &:before {
+                    display: inline-block;
+                    animation: rotating infinite .6s ease-in-out;
+                }
+            }
 
             .atom-review-diasbled-tips {
                 cursor: default;
@@ -514,7 +620,8 @@
                 margin: 0 8px 0 2px;
                 color: $warningColor;
             }
-            .atom-single-retry {
+            .atom-single-retry,
+            .atom-single-skip {
                 margin: 0 8px 0 2px;
                 color: $primaryColor;
             }
@@ -564,7 +671,7 @@
 
         .quality-atom {
             margin-left: 84px;
-            width: 70px;
+            width: 55px;
             border-radius: 12px;
             z-index: 9;
             .atom-title {
@@ -584,8 +691,8 @@
                     width: 62px;
                 }
                 &:after {
-                    left: 154px;
-                    width: 85px;
+                    left: 138px;
+                    width: 100px;
                 }
             }
             &.is-success {
@@ -622,7 +729,7 @@
             }
             .handler-list {
                 position: absolute;
-                right: 10px;
+                right: 0;
                 span {
                     color: $primaryColor;
                     font-size: 12px;
@@ -700,46 +807,38 @@
                         color: #c4cdd6;
                     }
                 }
-                &.CANCELED, &.REVIEWING {
+                &.CANCELED,
+                &.SKIP,
+                &.REVIEWING {
                     border-color: $warningColor;
-                    // &:before {
-                    //     background: $warningColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $warningColor;
-                    //     background: white;
-                    // }
+                    
                     .atom-icon {
                         color: $warningColor;
                     }
                 }
-                &.FAILED, &.QUALITY_CHECK_FAIL, &.HEARTBEAT_TIMEOUT, &.QUEUE_TIMEOUT, .EXEC_TIMEOUT {
+                &.FAILED,
+                &.QUALITY_CHECK_FAIL,
+                &.HEARTBEAT_TIMEOUT,
+                &.QUEUE_TIMEOUT,
+                &.EXEC_TIMEOUT {
                     border-color: $dangerColor;
-                    // &:before {
-                    //     background: $dangerColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $dangerColor;
-                    //     background: white;
-                    // }
                     .atom-icon {
                         color: $dangerColor;
                     }
                 }
-                &.SUCCEED, &.REVIEW_PROCESSED {
+                &.SUCCEED,
+                &.REVIEW_PROCESSED {
                     border-color: $successColor;
-                    // &:before {
-                    //     background: $successColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $successColor;
-                    //     background: white;
-                    // }
+                    
                     .atom-icon {
                         color: $successColor;
+                    }
+                }
+                &.PAUSE {
+                    border-color: $pauseColor;
+                    
+                    .atom-icon {
+                        color: $pauseColor;
                     }
                 }
             }

@@ -52,7 +52,7 @@
                             </p>
                         </span>
                         <bk-popover placement="left" v-if="!hasPermission">
-                            <i class="devops-icon icon-new-download disabled-btn"></i>
+                            <i @click="requestDownloadPermission" class="devops-icon icon-new-download disabled-btn"></i>
                             <template slot="content">
                                 <p>{{ $t('details.noDownloadPermTips') }}</p>
                             </template>
@@ -217,7 +217,7 @@
                 }
 
                 try {
-                    const res = await this.$store.dispatch('soda/requestPartFile', {
+                    const res = await this.$store.dispatch('common/requestPartFile', {
                         projectId: this.projectId,
                         params
                     })
@@ -241,7 +241,6 @@
             },
             async requestUrl (row, key, index, type) {
                 this.curIndexItemUrl = ''
-
                 this.partList.forEach((vv, kk) => {
                     if (kk === index) {
                         vv.display = !vv.display
@@ -252,7 +251,7 @@
 
                 try {
                     if (key === 'url') {
-                        const res = await this.$store.dispatch('soda/requestExternalUrl', {
+                        const res = await this.$store.dispatch('common/requestExternalUrl', {
                             projectId: this.projectId,
                             artifactoryType: row.artifactoryType,
                             path: row.path
@@ -260,24 +259,39 @@
 
                         this.curIndexItemUrl = res.url
                     } else {
-                        const isDevnet = await this.$store.dispatch('soda/requestDevnetGateway')
-                        const res = await this.$store.dispatch('soda/requestDownloadUrl', {
+                        const res = await this.$store.dispatch('common/requestDownloadUrl', {
                             projectId: this.projectId,
                             artifactoryType: row.artifactoryType,
                             path: row.path
                         })
-                        const url = isDevnet ? res.url : res.url2
-                        window.location.href = type ? `${GW_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
+                        const url = res.url2
+                        window.location.href = type ? `${API_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
                     }
                 } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$showTips({
-                        message,
-                        theme
-                    })
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.download,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.pipelineId,
+                            name: this.pipelineId
+                        }],
+                        projectId: this.projectId
+                    }])
                 }
+            },
+
+            requestDownloadPermission () {
+                this.$showAskPermissionDialog({
+                    noPermissionList: [{
+                        actionId: this.$permissionActionMap.download,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.pipelineId,
+                            name: this.pipelineId
+                        }],
+                        projectId: this.projectId
+                    }]
+                })
             },
             clickHandler (event) {
                 if (event.target.id !== 'partviewqrcode') {
@@ -300,7 +314,7 @@
                 const permission = 'DOWNLOAD'
 
                 try {
-                    const res = await this.$store.dispatch('soda/requestExecPipPermission', {
+                    const res = await this.$store.dispatch('common/requestExecPipPermission', {
                         projectId: this.projectId,
                         pipelineId,
                         permission
@@ -330,7 +344,7 @@
                 try {
                     sideSliderConfig.isLoading = true
                     const type = row.artifactoryType === 'PIPELINE' ? 'PIPELINE' : 'CUSTOM_DIR'
-                    const res = await this.$store.dispatch('soda/requestFileInfo', {
+                    const res = await this.$store.dispatch('common/requestFileInfo', {
                         projectId: projectId,
                         type: type,
                         path: `${row.fullPath}`
@@ -340,20 +354,12 @@
                     sideSliderConfig.data = res
                     sideSliderConfig.isLoading = false
                 } catch (err) {
-                    if (err.code === 403) {
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('details.artifactory'),
-                                option: this.$t('view')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=artifactory&project_code=${this.projectId}&service_code=artifactory&role_manager=artifactory`
-                        })
-                    } else {
-                        this.$showTips({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    }
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.view,
+                        resourceId: this.$permissionResourceMap.artifactory,
+                        instanceId: [],
+                        projectId: this.projectId
+                    }])
                 }
             },
             /**
@@ -399,7 +405,7 @@
                         files: [artifactory.name],
                         copyAll: false
                     }
-                    const res = await this.$store.dispatch('soda/requestCopyArtifactory', {
+                    const res = await this.$store.dispatch('common/requestCopyArtifactory', {
                         projectId,
                         pipelineId,
                         buildId: buildNo,
@@ -554,6 +560,7 @@
         }
         .disabled-btn {
             color: $fontLigtherColor;
+            cursor: url(../../images/cursor-lock.png),auto;
             &:hover {
                 color: $fontLigtherColor;
             }

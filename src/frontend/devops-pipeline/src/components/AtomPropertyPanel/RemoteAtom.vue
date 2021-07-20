@@ -16,6 +16,7 @@
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
     import AtomOutput from './AtomOutput'
@@ -25,6 +26,9 @@
             AtomOutput
         },
         mixins: [atomMixin, validMixins],
+        props: {
+            atom: Object
+        },
         data () {
             return {
                 newModel: {},
@@ -34,14 +38,19 @@
         },
         computed: {
             atomVersion () {
-                return '1.0.0'
+                return this.atom.version || '1.0.0'
+            },
+            atomCode () {
+                return this.atom.atomCode
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId || ''
             },
             src () {
-                return `${PERM_URL_PIRFIX}/bk-plugin-fe/CodeccCheckAtom/${this.atomVersion}/index.html?projectId=${this.$route.params.projectId}`
+                return `${location.origin}/bk-plugin-fe/${this.atomCode}/${this.atomVersion}/index.html?projectId=${this.$route.params.projectId}&pipelineId=${this.pipelineId}`
             }
         },
         mounted () {
-            console.log(this.atomPropsModel, this.element, 343)
             window.addEventListener('message', this.receiveMsgFromIframe)
         },
         destroyed () {
@@ -50,22 +59,54 @@
             }, 1000)
         },
         methods: {
-            onLoad () {
+            ...mapActions('atom', [
+                'setPipelineEditing',
+                'getAtomEnvConfig'
+            ]),
+            async onLoad () {
+                const { baseOS, dispatchType } = this.container
+                const containerInfo = { baseOS, dispatchType }
+                const currentUserInfo = this.$userInfo || {}
+                const atomDisabled = this.disabled || false
+                const envConf = await this.getEnvConf()
                 this.loading = false
                 const iframe = document.getElementById('atom-iframe').contentWindow
-                iframe.postMessage({ atomPropsValue: this.element.data.input, atomPropsModel: this.atomPropsModel.input }, '*')
+                iframe.postMessage({
+                    atomPropsValue: this.element.data.input,
+                    atomPropsModel: this.atomPropsModel.input,
+                    containerInfo,
+                    currentUserInfo,
+                    envConf,
+                    atomDisabled,
+                    hostInfo: {
+                        ...this.$route.params
+                    }
+                }, '*')
             },
             receiveMsgFromIframe (e) {
                 // if (location.href.indexOf(e.origin) === 0) return
-                // console.log(e, e.data, 'top1')
                 if (!e.data) return
                 if (e.data.atomValue) {
+                    this.setPipelineEditing(true)
                     this.$nextTick(this.handleUpdateWholeAtomInput(e.data.atomValue))
                 } else if (e.data.isError !== undefined) {
                     this.handleUpdateElement('isError', e.data.isError)
                 } else if (e.data.iframeHeight) {
                     this.iframeHeight = parseInt(e.data.iframeHeight)
                 }
+            },
+            async getEnvConf () {
+                let env = {}
+                try {
+                    const atomEnvs = await this.getAtomEnvConfig(this.atomCode) || []
+                    atomEnvs.forEach(function (item) {
+                        console.log(item, item.fieldName, item.fieldValue)
+                        Object.assign(env, { [item.fieldName]: item.fieldValue })
+                    })
+                } catch (err) {
+                    env = {}
+                }
+                return env
             }
         }
     }

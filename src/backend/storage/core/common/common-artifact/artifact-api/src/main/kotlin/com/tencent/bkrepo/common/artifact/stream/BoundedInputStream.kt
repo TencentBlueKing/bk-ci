@@ -1,0 +1,106 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package com.tencent.bkrepo.common.artifact.stream
+
+import java.io.InputStream
+import kotlin.math.min
+
+/**
+ * 限定长度的输入流
+ * @param delegate 实际操作的输入流
+ * @param limit 限制读取的长度
+ */
+class BoundedInputStream(
+    delegate: InputStream,
+    limit: Long
+) : DelegateInputStream(delegate) {
+
+    private var pos: Long = 0
+    private val length: Long = limit
+    private var isPropagateClose: Boolean = true
+
+    init {
+        require(length >= 0) { "Limit value must greater than 0." }
+    }
+
+    override fun read(): Int {
+        if (pos >= length) {
+            return EOF
+        }
+        val result = super.read()
+        pos++
+        return result
+    }
+
+    override fun read(byteArray: ByteArray): Int {
+        return this.read(byteArray, 0, byteArray.size)
+    }
+
+    override fun read(byteArray: ByteArray, off: Int, len: Int): Int {
+        if (pos >= length) {
+            return EOF
+        }
+        val maxRead = min(len.toLong(), length - pos).toInt()
+        val bytesRead = super.read(byteArray, off, maxRead)
+        if (bytesRead != EOF) {
+            pos += bytesRead
+        }
+        return bytesRead
+    }
+
+    override fun skip(n: Long): Long {
+        val toSkip = min(n, (length - pos))
+        val skippedBytes = super.skip(toSkip)
+        pos += skippedBytes
+        return skippedBytes
+    }
+
+    override fun available(): Int {
+        return (length - pos).toInt()
+    }
+
+    override fun close() {
+        if (isPropagateClose) {
+            super.close()
+        }
+    }
+
+    @Synchronized
+    override fun reset() {
+        super.reset()
+    }
+
+    @Synchronized
+    override fun mark(readlimit: Int) {
+        super.mark(readlimit)
+    }
+}

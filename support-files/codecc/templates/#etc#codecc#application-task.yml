@@ -1,0 +1,43 @@
+# 服务配置文件模板
+spring:
+  application:
+    name: task${service.suffix.codecc}
+    desc: Task Service
+    packageName: com.tencent.bk.codecc.task
+  data:
+    mongodb:
+      uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_ADDR__/db_task?readPreference=secondaryPreferred
+
+server:
+  port: __BK_CODECC_TASK_API_PORT__ # 服务端口
+
+
+time:
+  analysis:
+    maxhour: __BK_CODECC_TASK_ANALYSIS_MAX_HOUR__
+
+devops:
+  imageName: __BK_CODECC_PIPELINE_IMAGE_NAME__
+  retry:
+    attempt: 7
+    interval: 1000
+  dispatch:
+    imageName: __BK_CODECC_PIPELINE_IMAGE_NAME__
+    buildType: __BK_CODECC_PIPELINE_BUILD_TYPE__
+    imageVersion: __BK_CODECC_PIPELINE_IMAGE_TAG__
+
+aes:
+  encryptor:
+    password: __BK_CODECC_TASK_ENCRYPTOR_KEY__
+
+pipeline:
+  atomCode:
+    codecc: __BK_CODECC_PIPELINE_ATOM_CODE__
+    codeccVersion: __BK_CODECC_PIPELINE_ATOM_VERSION__
+    git: __
+  imageType: __BK_CODECC_PIPELINE_IMAGE_TYPE__
+  scmType:
+    svn:
+      old: __BK_CODECC_PIPELINE_SCM_IS_OLD_SVN__
+    github:
+      old: __BK_CODECC_PIPELINE_SCM_IS_OLD_GITHUB__

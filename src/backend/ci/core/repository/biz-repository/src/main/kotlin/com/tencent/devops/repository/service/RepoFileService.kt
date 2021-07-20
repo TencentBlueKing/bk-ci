@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,6 +28,8 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
@@ -34,6 +37,7 @@ import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -51,8 +55,10 @@ import org.springframework.stereotype.Service
 import java.lang.StringBuilder
 import java.net.URI
 import java.util.Base64
+import javax.ws.rs.NotFoundException
 
 @Service
+@Suppress("ALL")
 class RepoFileService @Autowired constructor(
     private val repositoryService: RepositoryService,
     private val gitTokenDao: GitTokenDao,
@@ -83,7 +89,7 @@ class RepoFileService @Autowired constructor(
         return when (repo) {
             is CodeSvnRepository -> {
                 logger.info("get file content of svn repo:\n$repo")
-                if (reversion.isNullOrBlank()) throw RuntimeException("Illegal reversion: $reversion")
+                if (reversion.isNullOrBlank()) throw ParamBlankException("Illegal reversion: $reversion")
                 if (svnFullPath) {
                     getSvnSingleFileV2(
                         repo = repo,
@@ -145,6 +151,24 @@ class RepoFileService @Autowired constructor(
                     )
                 } else {
                     getGithubFile(
+                        repo = repo,
+                        filePath = filePath,
+                        ref = branch ?: "master",
+                        subModule = subModule
+                    )
+                }
+            }
+            is CodeTGitRepository -> {
+                logger.info("get file content of tGit repo:\n$repo")
+                if (!reversion.isNullOrBlank()) {
+                    getTGitSingleFile(
+                        repo = repo,
+                        filePath = filePath,
+                        ref = reversion ?: "",
+                        subModule = subModule
+                    )
+                } else {
+                    getTGitSingleFile(
                         repo = repo,
                         filePath = filePath,
                         ref = branch ?: "master",
@@ -234,7 +258,7 @@ class RepoFileService @Autowired constructor(
             AESUtil.decrypt(
                 key = aesKey,
                 content = gitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken
-                    ?: throw RuntimeException("get access token for user(${repo.userName}) fail")
+                    ?: throw NotFoundException("get access token for user(${repo.userName}) fail")
             )
         } else {
             getCredential(repo.projectId ?: "", repo).privateKey
@@ -242,6 +266,7 @@ class RepoFileService @Autowired constructor(
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         logger.info("getGitSingleFile for projectName: $projectName")
         return gitService.getGitFileContent(
+            repoUrl = repo.url,
             repoName = projectName!!,
             filePath = filePath.removePrefix("/"),
             authType = repo.authType,
@@ -268,6 +293,25 @@ class RepoFileService @Autowired constructor(
         )
     }
 
+    private fun getTGitSingleFile(
+        repo: CodeTGitRepository,
+        filePath: String,
+        ref: String,
+        subModule: String?
+    ): String {
+        logger.info("getTGitSingleFile for repo: ${repo.projectName}(subModule: $subModule)")
+        val token = getCredential(repo.projectId ?: "", repo).privateKey
+        val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
+        return gitService.getGitFileContent(
+            repoUrl = repo.url,
+            repoName = projectName ?: "",
+            filePath = filePath,
+            authType = RepoAuthType.HTTPS,
+            token = token,
+            ref = ref
+        )
+    }
+
     private fun getGithubFile(repo: GithubRepository, filePath: String, ref: String, subModule: String?): String {
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         logger.info("getGithubFile for projectName: $projectName")
@@ -284,8 +328,10 @@ class RepoFileService @Autowired constructor(
             publicKey = encoder.encodeToString(pair.publicKey)
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
-            throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
+            throw ErrorCodeException(
+                errorCode = credentialResult.status.toString(),
+                defaultMessage = credentialResult.message
+            )
         }
 
         val credential = credentialResult.data!!

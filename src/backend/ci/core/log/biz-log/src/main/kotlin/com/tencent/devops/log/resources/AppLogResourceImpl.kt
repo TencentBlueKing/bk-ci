@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,10 +36,10 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.AppLogResource
-import com.tencent.devops.log.model.pojo.EndPageQueryLogs
-import com.tencent.devops.log.model.pojo.PageQueryLogs
-import com.tencent.devops.log.model.pojo.QueryLogs
-import com.tencent.devops.log.service.LogServiceDispatcher
+import com.tencent.devops.common.log.pojo.EndPageQueryLogs
+import com.tencent.devops.common.log.pojo.PageQueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -48,7 +49,7 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class AppLogResourceImpl @Autowired constructor(
-    private val logDispatcher: LogServiceDispatcher,
+    private val buildLogQuery: BuildLogQueryService,
     private val authPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : AppLogResource {
@@ -62,27 +63,27 @@ class AppLogResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?,
         page: Int?,
         pageSize: Int?
     ): Result<PageQueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getInitLogsPage(
-                userId,
-                projectId,
-                pipelineId,
-                buildId,
-                isAnalysis,
-                queryKeywords,
-                tag,
-                jobId,
-                executeCount,
-                page,
-                pageSize
+        return buildLogQuery.getInitLogsPage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            debug = debug,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            page = page,
+            pageSize = pageSize
         )
     }
 
@@ -91,26 +92,30 @@ class AppLogResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
+        debug: Boolean?,
         num: Int?,
         fromStart: Boolean?,
         start: Long,
         end: Long,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getMoreLogs(
-                projectId,
-                pipelineId,
-                buildId,
-                num ?: defaultNum,
-                fromStart,
-                start,
-                end,
-                tag,
-                jobId,
-                executeCount
+        return buildLogQuery.getMoreLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            debug = debug,
+            num = num ?: defaultNum,
+            fromStart = fromStart,
+            start = start,
+            end = end,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
         )
     }
 
@@ -120,23 +125,51 @@ class AppLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         start: Long,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getAfterLogs(
-                projectId,
-                pipelineId,
-                buildId,
-                start,
-                isAnalysis,
-                queryKeywords,
-                tag,
-                jobId,
-                executeCount
+        return buildLogQuery.getAfterLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            start = start,
+            debug = debug,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+    }
+
+    override fun getBeforeLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        end: Long,
+        debug: Boolean?,
+        size: Int?,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<QueryLogs> {
+        validateAuth(userId, projectId, pipelineId, buildId)
+        return buildLogQuery.getBeforeLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            end = end,
+            debug = debug,
+            size = size,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
         )
     }
 
@@ -146,25 +179,75 @@ class AppLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Response {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag, jobId, executeCount, null)
+        return buildLogQuery.downloadLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            fileName = null
+        )
     }
 
-    override fun getEndLogs(
+    override fun getEndLogsPage(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
         size: Int,
+        debug: Boolean?,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<EndPageQueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getEndLogs(userId, projectId, pipelineId, buildId, size, tag, jobId, executeCount)
+        return buildLogQuery.getEndLogsPage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            size = size,
+            debug = debug,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+    }
+
+    override fun getBottomLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        debug: Boolean?,
+        size: Int?,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<QueryLogs> {
+        validateAuth(userId, projectId, pipelineId, buildId)
+        return buildLogQuery.getBottomLogs(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            debug = debug,
+            size = size,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     private fun validateAuth(userId: String, projectId: String, pipelineId: String, buildId: String) {

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,6 +28,7 @@
 package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -65,5 +67,13 @@ data class AppModelDetail(
     @ApiModelProperty("是否收藏", required = false)
     val hasCollect: Boolean,
     @ApiModelProperty("编排文件", required = true)
-    val model: Model
+    val model: Model,
+    @ApiModelProperty("原材料", required = false)
+    val material: List<PipelineBuildMaterial>? = null,
+    @ApiModelProperty("备注", required = false)
+    val remark: String? = null,
+    @ApiModelProperty("运行耗时(秒，不包括人工审核时间)", required = false)
+    val executeTime: Long? = null,
+    @ApiModelProperty("构建信息", required = false)
+    var buildMsg: String? = null
 )

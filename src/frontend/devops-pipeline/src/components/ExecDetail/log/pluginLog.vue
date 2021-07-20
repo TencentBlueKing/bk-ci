@@ -1,68 +1,30 @@
 <template>
     <section class="plugin-log">
-        <search :worker="worker"
-            :execute-count="executeCount"
-            :search-str.sync="searchStr"
-            :show-time.sync="showTime"
-            :down-load-link="downLoadLink"
-            @showSearchLog="showSearchLog"
-            @changeExecute="changeExecute"
-
-        ></search>
-        <virtual-scroll class="log-scroll" ref="scroll" :id="id" :worker="worker">
-            <template slot-scope="item">
-                <span class="item-txt selection-color">
-                    <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
-                    <span :class="['selection-color', { 'cur-search': curSearchIndex === item.data.index }]" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
-                </span>
+        <bk-log-search :execute-count="executeCount" @change-execute="changeExecute" class="log-tools">
+            <template v-slot:tool>
+                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? 'Hide Debug Log' : 'Show Debug Log' }}</li>
+                <li class="more-button" @click="downloadLog">Download Log</li>
             </template>
-        </virtual-scroll>
+        </bk-log-search>
+        <bk-log class="bk-log" ref="scroll" @tag-change="tagChange"></bk-log>
     </section>
 </template>
 
 <script>
     import { mapActions, mapState } from 'vuex'
-    import virtualScroll from './virtualScroll'
-    import search from '../tools/search'
     import { hashID } from '@/utils/util.js'
-    // eslint-disable-next-line
-    const Worker = require('worker-loader!./worker.js')
-    // eslint-disable-next-line
-    const DataWorker = require('worker-loader!./dataWorker.js')
-
-    function prezero (num) {
-        num = Number(num)
-        if (num < 10) return '0' + num
-        return num
-    }
-
-    function millisecond (num) {
-        num = Number(num)
-        if (num < 10) return '00' + num
-        else if (num < 100) return '0' + num
-        return num
-    }
+    import { bkLogSearch, bkLog } from '@blueking/log'
 
     export default {
-        filters: {
-            timeFilter (val) {
-                if (!val) return ''
-                const time = new Date(val)
-                return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}:${millisecond(time.getMilliseconds())}`
-            }
-        },
-
         components: {
-            virtualScroll,
-            search
+            bkLogSearch,
+            bkLog
         },
 
         props: {
             id: {
-                type: String
-            },
-            currentTab: {
-                type: String
+                type: String,
+                default: undefined
             },
             buildId: {
                 type: String
@@ -74,21 +36,19 @@
 
         data () {
             return {
-                searchStr: '',
-                showTime: false,
-                worker: new Worker(),
-                dataWorker: new DataWorker(),
-                curSearchIndex: 0,
                 postData: {
                     projectId: this.$route.params.projectId,
                     pipelineId: this.$route.params.pipelineId,
                     buildId: this.buildId,
                     tag: this.id,
+                    subTag: '',
                     currentExe: this.executeCount,
-                    lineNo: 0
+                    lineNo: 0,
+                    debug: false
                 },
                 timeId: '',
-                clearIds: []
+                clearIds: [],
+                showDebug: false
             }
         },
 
@@ -98,11 +58,16 @@
                 'editingElementPos'
             ]),
 
-            downLoadLink () {
+            downloadLink () {
                 const editingElementPos = this.editingElementPos
                 const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${this.currentElement.name}`))
                 const tag = this.currentElement.id
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${this.postData.currentExe}&fileName=${fileName}`
+                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${this.postData.currentExe}&fileName=${fileName}`
+            },
+
+            downloadAllLink () {
+                const fileName = encodeURI(encodeURI(this.execDetail.pipelineName))
+                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
             },
 
             currentElement () {
@@ -115,28 +80,20 @@
         },
 
         mounted () {
-            this.initAssistWorker()
-            this.worker.postMessage({ type: 'initStatus', pluginList: [this.id] })
             this.getLog()
         },
 
         beforeDestroy () {
-            this.worker.terminate()
-            this.dataWorker.terminate()
             this.closeLog()
         },
 
         methods: {
             ...mapActions('atom', [
                 'getInitLog',
-                'getAfterLog'
+                'getAfterLog',
+                'getLogStatus',
+                'getDownloadLogFromArtifactory'
             ]),
-
-            initAssistWorker () {
-                const dataChannel = new MessageChannel()
-                this.dataWorker.postMessage({ type: 'init', dataPort: dataChannel.port1 }, [dataChannel.port1])
-                this.worker.postMessage({ type: 'initAssistWorker', dataPort: dataChannel.port2 }, [dataChannel.port2])
-            },
 
             getLog () {
                 const id = hashID()
@@ -174,6 +131,13 @@
                     const lastLogNo = lastLog.lineNo || this.postData.lineNo - 1 || -1
                     this.postData.lineNo = +lastLogNo + 1
 
+                    const subTags = res.subTags
+                    if (subTags && subTags.length > 0) {
+                        const tags = subTags.map((tag) => ({ label: tag, value: tag }))
+                        tags.unshift({ label: 'ALL', value: '' })
+                        scroll.setSubTag(tags)
+                    }
+
                     if (res.finished) {
                         if (res.hasMore) {
                             scroll.addLogData(logs)
@@ -187,12 +151,18 @@
                     }
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
-                    this.$refs.scroll.handleApiErr(err.message)
+                    if (scroll) scroll.handleApiErr(err.message)
                 })
             },
 
+            tagChange (val) {
+                this.postData.subTag = val
+                this.postData.lineNo = 0
+                this.closeLog()
+                this.getLog()
+            },
+
             changeExecute (execute) {
-                this.$refs.scroll.resetData()
                 this.postData.currentExe = execute
                 this.postData.lineNo = 0
                 this.closeLog()
@@ -204,44 +174,42 @@
                 this.clearIds.push(this.getLog.id)
             },
 
-            showSearchLog ({ index, realIndex }) {
-                this.curSearchIndex = realIndex
-                index -= 5
-                if (index < 0) index = 0
-                this.$refs.scroll.scrollPageByIndex(index)
-            },
-
             handleApiErr (err) {
                 const scroll = this.$refs.scroll
                 if (scroll) scroll.handleApiErr(err)
             },
 
-            valuefilter (val) {
-                const valArr = val.split(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi)
-                const transSearch = this.searchStr.replace(/\*|\.|\?|\+|\$|\^|\[|\]|\(|\)|\{|\}|\||\\|\//g, (str) => `\\${str}`)
-                const searchReg = new RegExp(`^${transSearch}$`, 'i')
-                const transVal = (val = '') => {
-                    let regStr = '\\s|<|>'
-                    if (transSearch !== '') regStr += `|${transSearch}`
-                    const tranReg = new RegExp(regStr, 'gi')
-                    return val.replace(tranReg, (str) => {
-                        if (str === '<') return '&lt;'
-                        else if (str === '>') return '&gt;'
-                        else if (searchReg.test(str)) return `<span class="search-str">${str}</span>`
-                        else if (/\t/.test(str)) return '&nbsp;&nbsp;&nbsp;&nbsp;'
-                        else return '&nbsp;'
-                    })
+            toggleShowDebugLog () {
+                this.showDebug = !this.showDebug
+                this.$refs.scroll.changeExecute()
+                this.postData.debug = this.showDebug
+                this.postData.lineNo = 0
+                this.closeLog()
+                this.getLog()
+            },
+
+            async downloadLog () {
+                const isPluginLog = this.id !== undefined
+                let downloadLink = this.downloadAllLink
+
+                if (isPluginLog) {
+                    const pluginData = {
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.$route.params.pipelineId,
+                        buildId: this.buildId,
+                        tag: this.id,
+                        executeCount: this.postData.currentExe
+                    }
+                    const logStatusRes = await this.getLogStatus(pluginData)
+                    const data = logStatusRes.data || {}
+                    const logMode = data.logMode || ''
+                    downloadLink = logMode === 'ARCHIVED' ? await this.getDownloadLogFromArtifactory(pluginData) : this.downloadLink
+                    if (logMode === 'LOCAL') {
+                        this.$bkMessage({ theme: 'primary', message: this.$t('history.uploadLog') })
+                        return
+                    }
                 }
-                let valRes = ''
-                for (let index = 0; index < valArr.length; index += 3) {
-                    if (typeof valArr[index] === 'undefined') continue
-                    const firstVal = valArr[index]
-                    const secVal = valArr[index + 1]
-                    const thirdVal = valArr[index + 2]
-                    valRes += transVal(firstVal)
-                    if (secVal) valRes += `<a href='${secVal}' target='_blank'>${transVal(thirdVal)}</a>`
-                }
-                return valRes
+                location.href = downloadLink
             }
         }
     }
@@ -252,60 +220,15 @@
         display: flex;
         flex-direction: column;
         flex: 1;
-    }
-
-    .log-scroll {
-        flex: 1;
-        color: #ffffff;
-        font-family: Consolas, "Courier New", monospace;
-        font-weight: normal;
-        cursor: text;
-        white-space: nowrap;
-        letter-spacing: 0px;
-        font-size: 12px;
-        line-height: 16px;
-        margin-left: 10px;
-        margin-top: 5px;
-        .item-txt {
-            position: relative;
-            padding: 0 5px;
-            .cur-search {
-                /deep/ .search-str {
-                    color: rgb(255, 255, 255);
-                    background: rgb(33, 136, 255);
-                    outline: rgb(121, 184, 255) solid 1px;
-                }
-            }
-            /deep/ .search-str {
-                color: rgb(36, 41, 46);
-                background: rgb(255, 223, 93);
-                outline: rgb(255, 223, 93) solid 1px;
-            }
-        }
-        .item-time {
-            display: inline-block;
-            min-width: 166px;
-            color: #959da5;
-            font-weight: 400;
-            padding-right: 5px;
-        }
-        /deep/ a {
-            color: #3c96ff;
-            text-decoration: underline;
-            &:active, &:visited, &:hover {
-                color: #3c96ff;
-            }
-        }
-        /deep/ a, /deep/ .selection-color {
-            &::selection {
-                background-color: rgba(70, 146, 222, 0.54);
-            }
-            &::-moz-selection {
-                background: rgba(70, 146, 222, 0.54);
-            }
-            &::-webkit-selection {
-                background: rgba(70, 146, 222, 0.54);
-            }
+        .log-tools {
+            position: absolute;
+            right: 20px;
+            top: 13px;
+            display: flex;
+            align-items: center;
+            line-height: 30px;
+            user-select: none;
+            background: none;
         }
     }
 </style>

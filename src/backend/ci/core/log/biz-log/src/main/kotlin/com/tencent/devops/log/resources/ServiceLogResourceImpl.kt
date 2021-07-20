@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,8 +30,8 @@ package com.tencent.devops.log.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
-import com.tencent.devops.log.model.pojo.QueryLogs
-import com.tencent.devops.log.service.LogServiceDispatcher
+import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -40,26 +41,34 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class ServiceLogResourceImpl @Autowired constructor(
-    private val logDispatcher: LogServiceDispatcher
+    private val buildLogQueryService: BuildLogQueryService
 ) : ServiceLogResource {
 
     override fun getInitLogs(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getInitLogs(projectId, pipelineId, buildId, isAnalysis, queryKeywords, tag, jobId, executeCount)
+        return buildLogQueryService.getInitLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            debug = debug,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     override fun getMoreLogs(
         projectId: String,
         pipelineId: String,
         buildId: String,
+        debug: Boolean?,
         num: Int?,
         fromStart: Boolean?,
         start: Long,
@@ -68,7 +77,19 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getMoreLogs(projectId, pipelineId, buildId, num, fromStart, start, end, tag, jobId, executeCount)
+        return buildLogQueryService.getMoreLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            debug = debug,
+            num = num,
+            fromStart = fromStart,
+            start = start,
+            end = end,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     override fun getAfterLogs(
@@ -76,22 +97,20 @@ class ServiceLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         start: Long,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getAfterLogs(
-                projectId,
-                pipelineId,
-                buildId,
-                start,
-                isAnalysis,
-                queryKeywords,
-                tag,
-                jobId,
-                executeCount
+        return buildLogQueryService.getAfterLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            start = start,
+            debug = debug,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount
         )
     }
 
@@ -103,6 +122,14 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Response {
-        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag, jobId, executeCount, null)
+        return buildLogQueryService.downloadLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount,
+            fileName = null
+        )
     }
 }

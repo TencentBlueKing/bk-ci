@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,6 +29,7 @@ package com.tencent.devops.common.client.ms
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_SERVICE_NO_FOUND
 import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
@@ -35,6 +37,7 @@ import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import java.util.concurrent.ConcurrentHashMap
 
+@Suppress("ALL")
 class MicroServiceTarget<T> constructor(
     private val serviceName: String,
     private val type: Class<T>,
@@ -57,10 +60,18 @@ class MicroServiceTarget<T> constructor(
 
         val matchTagInstances = ArrayList<ServiceInstance>()
 
-        instances.forEach { serviceInstance ->
-            if (serviceInstance.metadata.isEmpty())
-                return@forEach
-            if (serviceInstance.metadata.values.contains(tag)) {
+        // 若前文中有指定过consul tag则用指定的，否则用本地的consul tag
+        val consulContentTag = ConsulContent.getConsulContent()
+        val useConsulTag = if (!consulContentTag.isNullOrEmpty()) {
+            consulContentTag
+        } else tag
+
+        instances.forEach next@{ serviceInstance ->
+            if (serviceInstance.metadata.isEmpty()) {
+                return@next
+            }
+
+            if (serviceInstance.metadata.values.contains(useConsulTag)) {
                 // 已经用过的不选择
                 if (!usedInstance.contains(serviceInstance.url())) {
                     matchTagInstances.add(serviceInstance)
@@ -74,7 +85,7 @@ class MicroServiceTarget<T> constructor(
         }
 
         if (matchTagInstances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]服务提供者")
+            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]-[$useConsulTag]服务提供者")
         } else if (matchTagInstances.size > 1) {
             matchTagInstances.shuffle()
         }

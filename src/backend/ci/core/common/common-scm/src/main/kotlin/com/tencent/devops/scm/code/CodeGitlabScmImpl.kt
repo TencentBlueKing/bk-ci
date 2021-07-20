@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,16 +34,20 @@ import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
+import java.net.URLEncoder
 
 class CodeGitlabScmImpl constructor(
     override val projectName: String,
     override val branchName: String?,
     override val url: String,
     private val token: String,
-    gitConfig: GitConfig
+    gitConfig: GitConfig,
+    private val event: String? = null
 ) : IScm {
 
     private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.gitlabApiUrl, repoUrl = url)
@@ -57,11 +62,21 @@ class CodeGitlabScmImpl constructor(
         )
     }
 
-    override fun getBranches() =
-        gitApi.listBranches(apiUrl, token, projectName)
+    override fun getBranches(search: String?) =
+        gitApi.listBranches(
+            host = apiUrl,
+            token = token,
+            projectName = projectName,
+            search = search
+        )
 
-    override fun getTags() =
-        gitApi.listTags(apiUrl, token, projectName)
+    override fun getTags(search: String?) =
+        gitApi.listTags(
+            host = apiUrl,
+            token = token,
+            projectName = projectName,
+            search = search
+        )
 
     override fun checkTokenAndPrivateKey() {
         try {
@@ -69,7 +84,7 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -81,7 +96,7 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -102,10 +117,10 @@ class CodeGitlabScmImpl constructor(
         }
         try {
             logger.info("[HOOK_API]|$apiUrl")
-            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, null)
-        } catch (e: ScmException) {
+            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
+        } catch (ignored: Throwable) {
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -118,11 +133,9 @@ class CodeGitlabScmImpl constructor(
         context: String,
         description: String,
         block: Boolean
-    ) {
-    }
+    ) = Unit
 
-    override fun addMRComment(mrId: Long, comment: String) {
-    }
+    override fun addMRComment(mrId: Long, comment: String) = Unit
 
     override fun lock(repoName: String, applicant: String, subpath: String) {
         logger.info("gitlab can not lock")
@@ -130,6 +143,24 @@ class CodeGitlabScmImpl constructor(
 
     override fun unlock(repoName: String, applicant: String, subpath: String) {
         logger.info("gitlab can not unlock")
+    }
+
+    override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo {
+        val url = "projects/${URLEncoder.encode(projectName, "UTF-8")}/merge_requests/$mrId/changes"
+        return gitApi.getMergeRequestChangeInfo(
+            host = apiUrl,
+            token = token,
+            url = url
+        )
+    }
+
+    override fun getMrInfo(mrId: Long): GitMrInfo {
+        val url = "projects/${URLEncoder.encode(projectName, "UTF-8")}/merge_requests/$mrId"
+        return gitApi.getMrInfo(
+            host = apiUrl,
+            token = token,
+            url = url
+        )
     }
 
     companion object {

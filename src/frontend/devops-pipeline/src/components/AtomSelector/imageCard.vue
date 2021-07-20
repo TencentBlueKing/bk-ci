@@ -20,7 +20,7 @@
             </p>
             <template v-if="card.availableFlag">
                 <template v-if="type === 'store'">
-                    <bk-button size="small" class="info-button" @click="choose" :disabled="code === card.code" v-if="card.installed">{{code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select')}}</bk-button>
+                    <bk-button size="small" class="info-button" @click="choose" :disabled="code === card.code" v-if="card.installedFlag">{{code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select')}}</bk-button>
                     <bk-button size="small" class="info-button" @click="installImage" v-else-if="card.flag" :loading="isInstalling">{{ $t('editPage.install') }}</bk-button>
                     <bk-button size="small" class="info-button" v-else :disabled="true" :title="$t('editPage.noInstallRight')">{{ $t('editPage.install') }}</bk-button>
                 </template>
@@ -90,7 +90,7 @@
 
         methods: {
             goToStore () {
-                window.open(`${WEB_URL_PIRFIX}/store/atomStore/detail/image/${this.card.code}`, '_blank')
+                window.open(`${WEB_URL_PREFIX}/store/atomStore/detail/image/${this.card.code}`, '_blank')
             },
 
             convertTime (val) {
@@ -114,7 +114,7 @@
                 }
                 this.isInstalling = true
                 this.$store.dispatch('pipelines/requestInstallImage', postData).then((res) => {
-                    this.card.installed = true
+                    this.card.installedFlag = true
                     this.$showTips({ theme: 'success', message: this.$t('editPage.installSuc') })
                 }).catch((err) => {
                     this.$showTips({ theme: 'error', message: err.message || err })

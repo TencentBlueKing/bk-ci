@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,31 +27,66 @@
 
 package com.tencent.devops.common.api.util
 
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
+@Suppress("LongParameterList")
 object EnvUtils {
-    fun parseEnv(command: String?, data: Map<String, String>, replaceWithEmpty: Boolean = false, isEscape: Boolean = false): String {
+
+    fun parseEnv(
+        command: String?,
+        data: Map<String, String>,
+        replaceWithEmpty: Boolean = false,
+        isEscape: Boolean = false
+    ): String {
+        return parseEnv(command, data, replaceWithEmpty, isEscape, emptyMap())
+    }
+
+    fun parseEnv(
+        command: String?,
+        data: Map<String, String>,
+        replaceWithEmpty: Boolean = false,
+        isEscape: Boolean = false,
+        contextMap: Map<String, String> = emptyMap()
+    ): String {
         if (command.isNullOrBlank()) {
             return command ?: ""
         }
-        val newValue = StringBuilder()
-        var index = 0
-        while (index < command!!.length) {
-            val c = command[index]
-            if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
-                val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, data, replaceWithEmpty)
-                if (isEscape) {
-                    // 将动态参数值里面的特殊字符转义
-                    newValue.append(escapeSpecialWord(inside.toString()))
-                } else {
-                    newValue.append(inside)
-                }
-            } else {
-                newValue.append(c)
-                index++
-            }
-        }
-        return newValue.toString()
+        return parseTokenTwice(command, data, contextMap, replaceWithEmpty, isEscape)
     }
+
+    private fun parseTokenTwice(
+        command: String,
+        data: Map<String, String>,
+        contextMap: Map<String, String>?,
+        replaceWithEmpty: Boolean = false,
+        isEscape: Boolean = false,
+        depth: Int = 1
+    ): String {
+        if (depth < 0) {
+            return command
+        }
+        val matcher = tPattern.matcher(command)
+        val buff = StringBuffer()
+        while (matcher.find()) {
+            val key = (matcher.group("single") ?: matcher.group("double")).trim()
+            var value = data[key] ?: contextMap?.get(key)
+            if (value == null) {
+                value = if (!replaceWithEmpty) matcher.group() else ""
+            } else {
+                if (depth > 0 && tPattern.matcher(value).find()) {
+                    value = parseTokenTwice(value, data, contextMap, replaceWithEmpty, isEscape, depth = depth - 1)
+                } else if (isEscape) {
+                    value = escapeSpecialWord(value)
+                }
+            }
+            matcher.appendReplacement(buff, Matcher.quoteReplacement(value))
+        }
+        matcher.appendTail(buff)
+        return if (buff.isNotEmpty()) buff.toString() else command
+    }
+
+    private val tPattern = Pattern.compile("(\\$[{](?<single>[^$^{}]+)})|(\\$[{]{2}(?<double>[^$^{}]+)[}]{2})")
 
     private fun escapeSpecialWord(keyword: String): String {
         var replaceWord = keyword
@@ -63,44 +99,5 @@ object EnvUtils {
             }
         }
         return replaceWord
-    }
-
-    private fun parseVariable(
-        command: String,
-        start: Int,
-        newValue: StringBuilder,
-        data: Map<String, String>,
-        replaceWithEmpty: Boolean = false
-    ): Int {
-        val token = StringBuilder()
-        var index = start
-        while (index < command.length) {
-            val c = command[index]
-            if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
-                val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, data, replaceWithEmpty)
-                token.append(inside)
-            } else if (c == '}') {
-                val value = getVariable(data, token.toString()) ?: if (replaceWithEmpty) {
-                    ""
-                } else {
-                    "\${$token}"
-                }
-
-                newValue.append(value)
-                return index + 1
-            } else {
-                token.append(c)
-                index++
-            }
-        }
-        newValue.append("\${").append(token)
-        return index
-    }
-
-    private fun getVariable(data: Map<String, String>, key: String) = if (data[key] != null) {
-        data[key]!!
-    } else {
-        null
     }
 }

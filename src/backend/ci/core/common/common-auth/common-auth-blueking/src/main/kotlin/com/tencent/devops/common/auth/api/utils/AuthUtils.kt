@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,15 +37,10 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import java.io.IOException
-import java.util.Comparator
 import java.util.TreeMap
 
-@Component
-class AuthUtils constructor(
-    xBkAuthProperties: BkAuthProperties
-) {
+class AuthUtils constructor(xBkAuthProperties: BkAuthProperties) {
     private val logger = LoggerFactory.getLogger(AuthUtils::class.java)
     private val host = xBkAuthProperties.url!!
 
@@ -53,7 +49,7 @@ class AuthUtils constructor(
      */
     fun doAuthGetRequest(uri: String, params: Map<String, Any>?, xBkAppCode: String, xBkAppSecret: String): JSONObject {
         val url = this.getAuthRequestUrl(uri, params)
-        logger.debug("bkiam get request: $url")
+        logger.debug("bkiam get url: {}", url)
 
         val request = Request.Builder()
             .url(url)
@@ -61,7 +57,7 @@ class AuthUtils constructor(
             .addHeader("X-BK-APP-SECRET", xBkAppSecret)
             .build()
         val result = this.doRequest(request)
-        logger.debug("bkiam get request result: $result")
+        logger.debug("bkiam get request result: {}", result)
         return result
     }
 
@@ -71,8 +67,7 @@ class AuthUtils constructor(
     fun doAuthPostRequest(uri: String, jsonbody: JSONObject, bkAppCode: String, bkAppSecret: String): JSONObject {
         val body = RequestBody.create(MediaType.parse("application/json"), jsonbody.toString())
         val url = this.getAuthRequestUrl(uri, null)
-        logger.debug("bkiam post url: $url")
-        logger.debug("bkiam post body: $jsonbody")
+        logger.debug("bkiam post url: {}, body: {}", url, jsonbody)
 
         val request = Request.Builder()
             .url(url)
@@ -81,7 +76,7 @@ class AuthUtils constructor(
             .addHeader("X-BK-APP-SECRET", bkAppSecret)
             .build()
         val result = this.doRequest(request)
-        logger.debug("bkiam post request result: $result")
+        logger.debug("bkiam post request result: {}", result)
         return result
     }
 
@@ -91,8 +86,7 @@ class AuthUtils constructor(
     fun doAuthPutRequest(uri: String, jsonbody: JSONObject, xBkAppCode: String, xBkAppSecret: String): JSONObject {
         val body = RequestBody.create(MediaType.parse("application/json"), jsonbody.toString())
         val url = this.getAuthRequestUrl(uri, null)
-        logger.debug("bkiam put url: $url")
-        logger.debug("bkiam put body: $jsonbody")
+        logger.debug("bkiam put url: {}, body: {}", url, jsonbody)
 
         val request = Request.Builder()
             .url(url)
@@ -101,7 +95,7 @@ class AuthUtils constructor(
             .addHeader("X-BK-APP-SECRET", xBkAppSecret)
             .build()
         val result = this.doRequest(request)
-        logger.debug("bkiam put request result: $result")
+        logger.debug("bkiam put request result: {}", result)
         return result
     }
 
@@ -111,7 +105,7 @@ class AuthUtils constructor(
     fun doAuthDeleteRequest(uri: String, jsonbody: JSONObject, xBkAppCode: String, xBkAppSecret: String): JSONObject {
         val body = RequestBody.create(MediaType.parse("application/json"), jsonbody.toString())
         val url = this.getAuthRequestUrl(uri, null)
-        logger.debug("bkiam delete request: $url")
+        logger.debug("bkiam delete url: {}", url)
 
         val request = Request.Builder()
             .url(url)
@@ -120,7 +114,7 @@ class AuthUtils constructor(
             .addHeader("X-BK-APP-SECRET", xBkAppSecret)
             .build()
         val result = this.doRequest(request)
-        logger.debug("bkiam delete request result: $result")
+        logger.debug("bkiam delete request result: {}", result)
         return result
     }
 
@@ -150,12 +144,11 @@ class AuthUtils constructor(
             val msg = jsonObject.getString("message")
             jsonObject.put("message", msg)
             jsonObject.put("code", responseCode)
-            logger.error("bkiam failed , message: $msg")
-        } catch (e: IOException) {
-            e.printStackTrace()
-            jsonObject.put("msg", "IO exception, network not ok")
-        } catch (e: JSONException) {
-            jsonObject.put("msg", "json parse error, bkiam response json format failed")
+            logger.warn("bkiam failed , message: $msg")
+        } catch (ioe: IOException) {
+            jsonObject.put("msg", "IO exception, network not ok: ${ioe.message}")
+        } catch (je: JSONException) {
+            jsonObject.put("msg", "json parse error, bkiam response json format failed: ${je.message}")
         }
         return jsonObject
     }
@@ -180,7 +173,7 @@ class AuthUtils constructor(
             } else {
                 notfirst = true
             }
-            sb.append(String.format("%s=%s", key, value.toString()))
+            sb.append("$key=$value")
         }
         return host + sb.toString()
     }

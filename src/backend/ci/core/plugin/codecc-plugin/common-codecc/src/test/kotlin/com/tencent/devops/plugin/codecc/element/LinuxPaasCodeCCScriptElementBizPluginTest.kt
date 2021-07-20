@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,9 +31,11 @@ import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityResult
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
@@ -61,6 +64,9 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
         asynchronous = true,
         path = "/tmp/codecc",
         languages = listOf(ProjectLanguage.JAVA)
+    )
+    private val container = TriggerContainer(
+        id = "1"
     )
 
     @Test
@@ -92,7 +98,8 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
             pipelineName = pipelineName,
             userId = userId,
             channelCode = ChannelCode.BS,
-            create = true
+            create = true,
+            container = container
         )
     }
 
@@ -113,7 +120,8 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
             pipelineName = pipelineName,
             userId = userId,
             channelCode = ChannelCode.BS,
-            create = false
+            create = false,
+            container = container
         )
     }
 
@@ -144,7 +152,8 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
             pipelineName = pipelineName,
             userId = userId,
             channelCode = ChannelCode.BS,
-            create = false
+            create = false,
+            container = container
         )
     }
 
@@ -182,7 +191,8 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
             pipelineName = pipelineName,
             userId = userId,
             channelCode = ChannelCode.BS,
-            create = true
+            create = true,
+            container = container
         )
         val map = coverityResult.data as Map<String, Any>
         assertEquals(map["taskId"], element.codeCCTaskId)
@@ -190,20 +200,23 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
 
     @Test
     fun beforeDeleteFail() {
-        plugin.beforeDelete(element = element, userId = userId, pipelineId = pipelineId)
+        val param = BeforeDeleteParam(userId, projectId, pipelineId)
+        plugin.beforeDelete(element = element, param = param)
     }
 
     @Test
     fun beforeDeleteWhenIDNull() {
+        val param = BeforeDeleteParam(userId, projectId, pipelineId)
         element.codeCCTaskId = null
-        plugin.beforeDelete(element = element, userId = userId, pipelineId = pipelineId)
+        plugin.beforeDelete(element = element, param = param)
         element.codeCCTaskId = ""
-        plugin.beforeDelete(element = element, userId = userId, pipelineId = pipelineId)
+        plugin.beforeDelete(element = element, param = param)
     }
 
     @Test
     fun beforeDeleteWhenSuccess() {
-        plugin.beforeDelete(element = element, userId = userId, pipelineId = pipelineId)
+        val param = BeforeDeleteParam(userId, projectId, pipelineId)
+        plugin.beforeDelete(element = element, param = param)
         assertEquals(element.codeCCTaskId, null)
     }
 }

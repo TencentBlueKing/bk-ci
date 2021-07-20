@@ -25,7 +25,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import ajax from '../utils/ajax'
 import pipelines from './modules/pipelines/'
-import soda from './modules/soda/'
+import common from './modules/common/'
 import atom from './modules/atom'
 
 import {
@@ -38,7 +38,7 @@ export default new Vuex.Store({
     modules: {
         atom,
         pipelines,
-        soda
+        common
     },
     // 公共 store
     state: {
@@ -78,7 +78,7 @@ export default new Vuex.Store({
     // 公共 actions
     actions: {
         requestProjectDetail: async ({ commit }, { projectId }) => {
-            return ajax.get(AJAX_URL_PIRFIX + `/project/api/user/projects/${projectId}/`).then(response => {
+            return ajax.get(API_URL_PREFIX + `/project/api/user/projects/${projectId}/`).then(response => {
                 let data = {}
                 if (typeof response.data === 'object' && typeof response.data.data === 'object') {
                     data = response.data.data

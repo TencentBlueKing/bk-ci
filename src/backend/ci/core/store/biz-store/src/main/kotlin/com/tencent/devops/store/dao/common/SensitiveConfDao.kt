@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,6 +35,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class SensitiveConfDao {
 
@@ -53,7 +55,7 @@ class SensitiveConfDao {
             conditions.add(STORE_TYPE.eq(storeType))
             if (fieldName != null) conditions.add(FIELD_NAME.eq(fieldName))
             if (id != null) conditions.add(ID.notEqual(id))
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java) > 0
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!! > 0
         }
     }
 
@@ -68,6 +70,7 @@ class SensitiveConfDao {
         storeType: Byte,
         fieldName: String,
         fieldValue: String,
+        fieldType: String,
         fieldDesc: String?
     ) {
         with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
@@ -78,6 +81,7 @@ class SensitiveConfDao {
                 STORE_TYPE,
                 FIELD_NAME,
                 FIELD_VALUE,
+                FIELD_TYPE,
                 FIELD_DESC,
                 CREATOR,
                 MODIFIER
@@ -88,6 +92,7 @@ class SensitiveConfDao {
                     storeType,
                     fieldName,
                     fieldValue,
+                    fieldType,
                     fieldDesc,
                     userId,
                     userId
@@ -103,13 +108,14 @@ class SensitiveConfDao {
         userId: String,
         id: String,
         fieldName: String,
+        fieldType: String,
         fieldValue: String?,
         fieldDesc: String?
     ) {
         with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
             val baseStep = dslContext.update(this)
                 .set(FIELD_NAME, fieldName)
-
+                .set(FIELD_TYPE, fieldType)
             if (fieldValue != null) baseStep.set(FIELD_VALUE, fieldValue)
             if (fieldDesc != null) baseStep.set(FIELD_DESC, fieldDesc)
 
@@ -159,13 +165,30 @@ class SensitiveConfDao {
     fun list(
         dslContext: DSLContext,
         storeType: Byte,
-        storeCode: String
+        storeCode: String,
+        filedTypeList: List<String>? = null
     ): Result<TStoreSensitiveConfRecord>? {
         with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            if (!filedTypeList.isNullOrEmpty()) {
+                conditions.add(FIELD_TYPE.`in`(filedTypeList))
+            }
             return dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType))
+                .where(conditions)
                 .fetch()
+        }
+    }
+
+    /**
+     * 删除敏感信息配置
+     */
+    fun deleteSensitiveConf(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .execute()
         }
     }
 }

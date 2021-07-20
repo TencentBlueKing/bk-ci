@@ -18,7 +18,7 @@
                                 :to="addConsole(service.link_new)"
                             >
                                 <Logo
-                                    :name="service.key"
+                                    :name="service.logoUrl"
                                     size="16"
                                 />
                                 {{ serviceName(service.name) }}
@@ -104,7 +104,10 @@
         </section>
         <aside>
             <article>
-                <h2>{{ $t("bkdevopsTitle") }}</h2>
+                <h2>
+                    {{ $t("bkdevopsTitle") }}
+                    <bk-tag v-if="BK_CI_VERSION" theme="info" type="stroke">{{ BK_CI_VERSION.trim() }}</bk-tag>
+                </h2>
                 <p>
                     {{ $t("bkdevopsDesc") }}
                     <a
@@ -118,11 +121,11 @@
                 <h2>{{ $t("bkdevopsTarget") }}</h2>
                 <p>
                     {{ $t("bkdevopsWay") }}
-                    <a
+                    <!-- <a
                         :href="DOCS_URL_PREFIX"
                         target="_blank"
                         class="more"
-                    >{{ $t("learnMore") }}</a>
+                    >{{ $t("learnMore") }}</a> -->
                 </p>
             </article>
             <article>
@@ -167,6 +170,7 @@
         @Action fetchLinks
         isAllServiceListShow: boolean = false
         DOCS_URL_PREFIX: string = DOCS_URL_PREFIX
+        BK_CI_VERSION: string = window.BK_CI_VERSION
 
         get funcArray (): object[] {
             const funcArray = ['issueLabel', 'developLabel', 'testLabel', 'deployLabel', 'operationLabel']

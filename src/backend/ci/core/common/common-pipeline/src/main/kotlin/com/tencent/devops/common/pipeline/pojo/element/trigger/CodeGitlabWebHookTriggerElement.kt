@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,6 +28,8 @@
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -45,11 +48,45 @@ data class CodeGitlabWebHookTriggerElement(
     @ApiModelProperty("新版的gitlab原子的类型")
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的gitlab代码库名")
-    val repositoryName: String? = null
+    val repositoryName: String? = null,
+    @ApiModelProperty("eventType", required = false)
+    val eventType: CodeEventType? = CodeEventType.PUSH,
+    @ApiModelProperty("excludeBranch", required = false)
+    val excludeBranchName: String?,
+    @ApiModelProperty("includePaths", required = false)
+    val includePaths: String?,
+    @ApiModelProperty("excludePaths", required = false)
+    val excludePaths: String?,
+    @ApiModelProperty("includeUsers", required = false)
+    val includeUsers: List<String>? = null,
+    @ApiModelProperty("excludeUsers", required = false)
+    val excludeUsers: List<String>?,
+    @ApiModelProperty("block", required = false)
+    val block: Boolean?,
+    @ApiModelProperty("tagName", required = false)
+    val tagName: String? = null,
+    @ApiModelProperty("excludeTagName", required = false)
+    val excludeTagName: String? = null,
+    @ApiModelProperty("excludeSourceBranchName", required = false)
+    val excludeSourceBranchName: String? = null,
+    @ApiModelProperty("includeSourceBranchName", required = false)
+    val includeSourceBranchName: String? = null,
+    @ApiModelProperty("includeCommitMsg", required = false)
+    val includeCommitMsg: String? = null,
+    @ApiModelProperty("excludeCommitMsg", required = false)
+    val excludeCommitMsg: String? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitlabWebHookTrigger"
     }
 
     override fun getClassType() = classType
+
+    override fun findFirstTaskIdByStartType(startType: StartType): String {
+        return if (startType.name == StartType.WEB_HOOK.name) {
+            this.id!!
+        } else {
+            super.findFirstTaskIdByStartType(startType)
+        }
+    }
 }

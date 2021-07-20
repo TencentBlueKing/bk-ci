@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,6 +37,7 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
@@ -74,6 +76,7 @@ open class ScriptTask : ITask() {
         val projectId = buildVariables.projectId
 
         ScriptEnvUtils.cleanEnv(buildId, workspace)
+        ScriptEnvUtils.cleanContext(buildId, workspace)
 
         val variables = if (buildTask.buildVariable == null) {
             runtimeVariables
@@ -83,16 +86,18 @@ open class ScriptTask : ITask() {
         try {
             command.execute(
                 buildId = buildId,
+                elementId = buildTask.elementId,
                 script = script,
                 taskParam = taskParams,
                 runtimeVariables = variables,
                 projectId = projectId,
                 dir = workspace,
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
-                continueNoneZero = continueNoneZero.toBoolean()
+                continueNoneZero = continueNoneZero.toBoolean(),
+                errorMessage = "Fail to run the plugin"
             )
-        } catch (t: Throwable) {
-            logger.warn("Fail to run the script task", t)
+        } catch (ignore: Throwable) {
+            logger.warn("Fail to run the script task", ignore)
             if (!archiveFileIfExecFail.isNullOrBlank()) {
                 LoggerService.addRedLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
                 val count = ArchiveUtils.archivePipelineFiles(archiveFileIfExecFail!!, workspace, buildVariables)
@@ -108,13 +113,19 @@ open class ScriptTask : ITask() {
         } finally {
             // 成功失败都写入环境变量
             addEnv(ScriptEnvUtils.getEnv(buildId, workspace))
-        }
+            addEnv(ScriptEnvUtils.getContext(buildId, workspace))
+            addEnv(mapOf("jobs.${buildVariables.containerId}.os" to AgentEnv.getOS().name))
+            ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
 
-        // 设置质量红线指标信息
-        setGatewayValue(workspace)
+            // 设置质量红线指标信息
+            setGatewayValue(workspace)
+        }
     }
 
-    open fun takeBuildEnvs(buildTask: BuildTask, buildVariables: BuildVariables): List<BuildEnv> = buildVariables.buildEnvs
+    open fun takeBuildEnvs(
+        buildTask: BuildTask,
+        buildVariables: BuildVariables
+    ): List<BuildEnv> = buildVariables.buildEnvs
 
     private fun setGatewayValue(workspace: File) {
         try {
@@ -141,9 +152,9 @@ open class ScriptTask : ITask() {
             LoggerService.addNormalLine("save gateway value($elementType): $data")
             gatewayResourceApi.saveScriptHisMetadata(elementType, data)
             gatewayFile.delete()
-        } catch (e: Exception) {
-            LoggerService.addRedLine("save gateway value fail: ${e.message}")
-            logger.error(e.message, e)
+        } catch (ignore: Exception) {
+            LoggerService.addRedLine("save gateway value fail: ${ignore.message}")
+            logger.error("setGatewayValue|${ignore.message}", ignore)
         }
     }
 

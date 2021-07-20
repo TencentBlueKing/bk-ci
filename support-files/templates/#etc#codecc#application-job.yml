@@ -8,4 +8,4 @@ spring:
       uri: mongodb://__MONGODB_USER__:__MONGODB_PASS__@__MONGODB_IP__:__MONGODB_PORT__/db_defect?replicaSet=rs0&slaveOk=true
 
 server:
-  port: __CODECC_JOB_PORT__
+  port: __CODECC_CODECCJOB_PORT__

@@ -39,7 +39,7 @@ function rootCommit (commit, ACTION_CONST, payload) {
 const state = {
     pipelineList: [],
     curPipeline: {},
-    curPipelineAtomParams: {},
+    curPipelineAtomParams: null,
     allPipelineList: [],
     hasCreatePermission: false,
     pipelineSetting: {},
@@ -100,7 +100,7 @@ const mutations = {
         state.allPipelineList.unshift(item)
     },
     /**
-     * 更新 store.pipeline 中的 pipelineList
+     * 更新 store.pipeline 中的 allPipelineList
      *
      * @param {Object} state store state
      * @param {Array} list pipelineList 列表
@@ -235,9 +235,27 @@ const actions = {
     resetPipelineSetting: ({ commit }, payload) => {
         commit(RESET_PIPELINE_SETTING_MUNTATION, payload)
     },
+    setPipelineSetting: ({ commit }, pipelineSetting) => {
+        commit(PIPELINE_SETTING_MUTATION, {
+            pipelineSetting
+        })
+    },
     requestPipelineSetting: async ({ commit }, { projectId, pipelineId }) => {
         try {
             const response = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/setting/get?pipelineId=${pipelineId}&projectId=${projectId}`)
+            commit(PIPELINE_SETTING_MUTATION, {
+                pipelineSetting: response.data
+            })
+        } catch (e) {
+            if (e.code === 403) {
+                e.message = ''
+            }
+            rootCommit(commit, FETCH_ERROR, e)
+        }
+    },
+    requestTemplateSetting: async ({ commit }, { projectId, templateId }) => {
+        try {
+            const response = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/settings`)
             commit(PIPELINE_SETTING_MUTATION, {
                 pipelineSetting: response.data
             })
@@ -254,7 +272,7 @@ const actions = {
     updatePipelineAuthority: ({ commit }, payload) => {
         commit(PIPELINE_AUTHORITY_MUTATION, payload)
     },
-    
+
     requestHasCreatePermission (state, { projectId }) {
         return ajax.get(`${prefix}${projectId}/hasCreatePermission`).then(response => {
             return response.data
@@ -307,22 +325,19 @@ const actions = {
             return response.data
         })
     },
-    // requestAllPipelinesListByFilter ({ commit, state, dispatch }, data) {
-    //     let projectId = data.projectId
-    //     let sortType = data.sortType || ''
-    //     let viewId = data.viewId
-    //     let url = `${prefix}projects/${projectId}/viewPipelines?viewId=${viewId}`
-    //     let str = ''
-    //     for (let obj in data) {
-    //         if (obj !== 'viewId') {
-    //             str += `&${obj}=${data[obj]}`
-    //         }
-    //     }
-    //     url += str
-    //     return ajax.get(url).then(response => {
-    //         return response.data
-    //     })
-    // },
+    searchPipelineList ({ commit, state, dispatch }, { projectId, searchName = '' }) {
+        const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${encodeURIComponent(searchName)}`
+        
+        return ajax.get(url).then(response => {
+            return response.data
+        })
+    },
+    requestPipelineDetail ({ commit, state, dispatch }, { projectId, pipelineId }) {
+        const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/${pipelineId}/detail`
+        return ajax.get(url).then(response => {
+            return response.data
+        })
+    },
     requestAllPipelinesListByFilter ({ commit, state, dispatch }, data) {
         const projectId = data.projectId
         const viewId = data.viewId
@@ -451,7 +466,7 @@ const actions = {
     async fetchRoleList ({ commit, state, dispatch }, { projectId, pipelineId }) {
         try {
             const { data } = await ajax.get(`${backpre}/perm/service/pipeline/mgr_resource/permission/?project_id=${projectId}&resource_type_code=pipeline&resource_code=${pipelineId}`)
-            
+
             commit(PIPELINE_AUTHORITY_MUTATION, {
                 pipelineAuthority: {
                     role: data.role.map(item => {
@@ -478,8 +493,35 @@ const actions = {
         }).then(response => {
             return response.data
         })
-    }
+    },
 
+    // 流水线历史版本列表
+    requestPipelineVersionList (_, { projectId, pipelineId, page = 1, pageSize = 15 }) {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/version`, {
+            params: {
+                page,
+                pageSize
+            }
+        })
+    },
+    // 查询流水线历史版本编排内容
+    requestPipelineByVersion: (_, { projectId, pipelineId, version }) => {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/${version}`)
+    },
+    // 查询流水线历史版本设置内容
+    requestPipelineSettingByVersion: (_, { projectId, pipelineId, version }) => {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/setting/get`, {
+            params: {
+                projectId,
+                pipelineId,
+                version
+            }
+        })
+    },
+    // 删除流水线历史版本
+    deletePipelineVersion (_, { projectId, pipelineId, version }) {
+        return ajax.delete(`${prefix}${projectId}/${pipelineId}/${version}`)
+    }
 }
 
 export default {

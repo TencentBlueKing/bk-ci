@@ -1,0 +1,17 @@
+# 服务配置文件模板
+spring:
+  application:
+    name: openapi${service.suffix.codecc}
+    desc: Openapi Service
+    packageName: com.tencent.bk.codecc.openapi
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  data:
+    mongodb:
+      uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_ADDR__/db_op?readPreference=secondaryPreferred
+
+server:
+  port: __BK_CODECC_OPENAPI_API_PORT__ # 服务端口

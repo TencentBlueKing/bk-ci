@@ -19,13 +19,15 @@
 
 import { mapActions, mapGetters, mapState } from 'vuex'
 import {
-    navConfirm
+    navConfirm,
+    HttpError
 } from '@/utils/util'
-import { PROCESS_API_URL_PREFIX } from '../store/constants'
+import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '../store/constants'
 
 export default {
     computed: {
         ...mapGetters({
+            allPipelineList: 'pipelines/getAllPipelineList',
             pipelineList: 'pipelines/getPipelineList',
             tagGroupList: 'pipelines/getTagGroupList',
             curPipeline: 'pipelines/getCurPipeline',
@@ -49,40 +51,66 @@ export default {
     },
     methods: {
         ...mapActions('pipelines', {
-            requestPipelinesList: 'requestPipelinesList',
             requestExecPipeline: 'requestExecPipeline',
             requestToggleCollect: 'requestToggleCollect',
             removePipeline: 'deletePipeline',
             copyPipelineAction: 'copyPipeline',
-            updatePipelineSetting: 'updatePipelineSetting'
+            updatePipelineSetting: 'updatePipelineSetting',
+            requestTerminatePipeline: 'requestTerminatePipeline',
+            requestRetryPipeline: 'requestRetryPipeline',
+            searchPipelineList: 'searchPipelineList',
+            requestPipelineDetail: 'requestPipelineDetail',
+            setPipelineSetting: 'setPipelineSetting'
         }),
         ...mapActions('atom', [
             'setPipelineEditing',
             'setExecuteStatus',
             'setSaveStatus',
+            'setPipeline',
             'updateContainer'
         ]),
-        async fetchPipelineList () {
+        async fetchPipelineList (searchName) {
             try {
-                const { requestPipelinesList } = this
                 const { projectId, pipelineId } = this.$route.params
-                const res = await requestPipelinesList({
-                    projectId,
-                    tag: 'pipelines',
-                    page: 1,
-                    pageSize: -1
-                })
-                this.$store.commit('pipelines/updatePipelineList', res.records)
-                this.$nextTick(() => {
-                    // 选中下拉列表中的项
-                    this.updateCurPipelineId(pipelineId)
-                })
+                const [list, curPipeline] = await Promise.all([
+                    this.searchPipelineList({
+                        projectId,
+                        searchName
+                    }),
+                    this.updateCurPipeline({
+                        projectId,
+                        pipelineId
+                    })
+                ])
+                
+                this.setBreadCrumbPipelineList(list, curPipeline)
             } catch (err) {
+                console.log(err)
                 this.$showTips({
                     message: err.message || err,
                     theme: 'error'
                 })
             }
+        },
+        async setBreadCrumbPipelineList (list, pipeline) {
+            if (pipeline && list.every(ele => ele.pipelineId !== pipeline.pipelineId)) {
+                list = [
+                    {
+                        pipelineId: pipeline.pipelineId,
+                        pipelineName: pipeline.pipelineName
+                    },
+                    ...list
+                ]
+            }
+            this.$store.commit('pipelines/updatePipelineList', list)
+        },
+        async updateCurPipeline ({ projectId, pipelineId }) {
+            const curPipeline = await this.requestPipelineDetail({
+                projectId,
+                pipelineId
+            })
+            this.$store.commit('pipelines/updateCurPipeline', curPipeline)
+            return curPipeline
         },
         /**
          *  处理收藏和取消收藏
@@ -100,7 +128,7 @@ export default {
                     message: isCollect ? this.$t('collectSuc') : this.$t('uncollectSuc'),
                     theme: 'success'
                 })
-                this.fetchPipelineList()
+                this.updateCurPipelineByKeyValue('hasCollect', isCollect)
             } catch (err) {
                 this.$showTips({
                     message: err.message || err,
@@ -112,7 +140,6 @@ export default {
              *  终止任务
              */
         async terminatePipeline (pipelineId) {
-            const { $store } = this
             const { projectId } = this.$route.params
             const target = this.pipelineList.find(item => item.pipelineId === pipelineId)
             const { feConfig } = target
@@ -122,7 +149,7 @@ export default {
             feConfig.buttonAllow.terminatePipeline = false
 
             try {
-                await $store.dispatch('pipelines/requestTerminatePipeline', {
+                await this.requestTerminatePipeline({
                     projectId,
                     pipelineId,
                     buildId: feConfig.buildId || target.latestBuildId
@@ -132,14 +159,15 @@ export default {
                     status: 'known_error'
                 })
             } catch (err) {
-                if (err.code === 403) { // 没有权限终止
-                    this.setPermissionConfig(`${this.$t('pipeline')}：${target.pipelineName}`, this.$t('exec'), target.pipelineId)
-                } else {
-                    this.$showTips({
-                        message: err.message || err,
-                        theme: 'error'
-                    })
-                }
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.execute,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: target.pipelineId,
+                        name: target.pipelineName
+                    }],
+                    projectId
+                }])
             } finally {
                 feConfig.buttonAllow.terminatePipeline = true
             }
@@ -167,12 +195,15 @@ export default {
                 message = this.$t('deleteSuc')
                 theme = 'success'
             } catch (err) {
-                if (err.code === 403) { // 没有权限删除
-                    this.setPermissionConfig(`${this.$t('pipeline')}：${pipelineName}`, this.$t('delete'), projectId, pipelineId)
-                } else {
-                    message = err.message || err
-                    theme = 'error'
-                }
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.delete,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: pipelineId,
+                        name: pipelineName
+                    }],
+                    projectId
+                }])
             } finally {
                 message && this.$showTips({
                     message,
@@ -207,17 +238,23 @@ export default {
 
                 message = this.$t('copySuc')
                 theme = 'success'
-
-                this.$nextTick(() => {
-                    this.fetchPipelineList()
-                })
             } catch (err) {
-                if (err.code === 403) { // 没有权限复制
-                    this.setPermissionConfig(`${this.$t('pipeline')}：${prePipeline.pipelineName}`, this.$t('edit'), projectId, prePipeline.pipelineId)
-                } else {
-                    message = err.message || err
-                    theme = 'error'
-                }
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.create,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: prePipeline.pipelineId,
+                        name: prePipeline.pipelineName
+                    }]
+                }, {
+                    actionId: this.$permissionActionMap.edit,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: prePipeline.pipelineId,
+                        name: prePipeline.pipelineName
+                    }],
+                    projectId
+                }])
             } finally {
                 message && this.$showTips({
                     message,
@@ -239,7 +276,8 @@ export default {
                     name
                 })
                 this.$nextTick(() => {
-                    this.fetchPipelineList()
+                    this.updateCurPipelineByKeyValue('pipelineName', name)
+                    
                     this.pipelineSetting && Object.keys(this.pipelineSetting).length && this.updatePipelineSetting({
                         container: this.pipelineSetting,
                         param: {
@@ -250,12 +288,15 @@ export default {
                 message = this.$t('updateSuc')
                 theme = 'success'
             } catch (err) {
-                if (err.code === 403) { // 没有权限复制
-                    this.setPermissionConfig(`${this.$t('pipeline')}：${this.curPipeline.pipelineName}`, this.$t('edit'), projectId, this.curPipeline.pipelineId)
-                } else {
-                    message = err.message || err
-                    theme = 'error'
-                }
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.edit,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: this.curPipeline.pipelineId,
+                        name: this.curPipeline.pipelineName
+                    }],
+                    projectId
+                }])
             } finally {
                 message && this.$showTips({
                     message,
@@ -265,12 +306,11 @@ export default {
         },
         async executePipeline (params, goDetail = false) {
             let message, theme
-            const { requestExecPipeline, setExecuteStatus } = this
             const { projectId, pipelineId } = this.$route.params
             try {
-                setExecuteStatus(true)
+                this.setExecuteStatus(true)
                 // 请求执行构建
-                const res = await requestExecPipeline({
+                const res = await this.requestExecPipeline({
                     projectId,
                     params,
                     pipelineId
@@ -279,6 +319,8 @@ export default {
                 if (res && res.id) {
                     message = this.$t('newlist.sucToStartBuild')
                     theme = 'success'
+                    this.$store.commit('pipelines/updateCurAtomPrams', null)
+                    this.setExecuteStatus(false)
                     if (goDetail) {
                         this.$router.push({
                             name: 'pipelinesDetail',
@@ -294,14 +336,18 @@ export default {
                     theme = 'error'
                 }
             } catch (err) {
-                if (err.code === 403) { // 没有权限执行
-                    this.setPermissionConfig(`${this.$t('pipeline')}：${this.curPipeline.pipelineName}`, this.$t('exec'), projectId, pipelineId)
-                } else {
-                    message = err.message || err
-                    theme = 'error'
-                }
+                this.setExecuteStatus(false)
+                this.$store.commit('pipelines/updateCurAtomPrams', null)
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.execute,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: pipelineId,
+                        name: this.curPipeline.pipelineName
+                    }],
+                    projectId
+                }])
             } finally {
-                setExecuteStatus(false)
                 message && this.$showTips({
                     message,
                     theme
@@ -369,7 +415,7 @@ export default {
             const { projectId, pipelineId } = this.$route.params
             try {
                 // 请求执行构建
-                const res = await this.$store.dispatch('pipelines/requestRetryPipeline', {
+                const res = await this.requestRetryPipeline({
                     ...this.$route.params,
                     buildId
                 })
@@ -393,13 +439,15 @@ export default {
                     theme = 'error'
                 }
             } catch (err) {
-                if (err.code === 403) { // 没有权限执行
-                    this.setPermissionConfig(`${this.$t('pipeline')}：${this.curPipeline.pipelineName}`, this.$t('exec'), projectId, pipelineId)
-                    return
-                } else {
-                    message = err.message || err
-                    theme = 'error'
-                }
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.execute,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: pipelineId,
+                        name: this.curPipeline.pipelineName
+                    }],
+                    projectId
+                }])
             } finally {
                 message && this.$showTips({
                     message,
@@ -414,8 +462,7 @@ export default {
             let message, theme
 
             try {
-                const { $store } = this
-                const res = await $store.dispatch('pipelines/requestTerminatePipeline', {
+                const res = await this.requestTerminatePipeline({
                     ...this.$route.params,
                     buildId
                 })
@@ -428,12 +475,15 @@ export default {
                     theme = 'error'
                 }
             } catch (err) {
-                if (err.code === 403) { // 没有权限执行
-                    this.setPermissionConfig(`流水线：${this.curPipeline.pipelineName}`, '执行')
-                } else {
-                    message = err.message || err
-                    theme = 'error'
-                }
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.execute,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: this.curPipeline.pipelineId,
+                        name: this.curPipeline.pipelineName
+                    }],
+                    projectId: this.$route.params.projectId
+                }])
             } finally {
                 message && this.$showTips({
                     message,
@@ -443,7 +493,7 @@ export default {
         },
         async savePipelineAndSetting () {
             const { pipelineSetting, checkPipelineInvalid, pipeline } = this
-            const { inValid, message } = checkPipelineInvalid(pipeline.stages)
+            const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
             const { projectId, pipelineId } = this.$route.params
             if (inValid) {
                 throw new Error(message)
@@ -454,46 +504,70 @@ export default {
                 ...pipelineSetting,
                 projectId: projectId
             })
-            // 请求执行构建
-            return this.$ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveAll`, {
+            const body = {
                 model: {
                     ...pipeline,
                     name: finalSetting.pipelineName,
                     desc: finalSetting.desc
                 },
                 setting: finalSetting
-            })
+            }
+            if (!pipelineId) {
+                return this.importPipelineAndSetting(body)
+            }
+
+            // 请求执行构建
+            return this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveAll`, body)
+        },
+        importPipelineAndSetting (body) {
+            const { projectId } = this.$route.params
+
+            // 请求执行构建
+            return this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectId}/upload`, body)
         },
         async save () {
-            const { projectId, pipelineId } = this.$route.params
+            const { pipelineId, projectId } = this.$route.params
             try {
                 this.setSaveStatus(true)
                 const saveAction = this.isTemplatePipeline ? this.saveSetting : this.savePipelineAndSetting
-                const responses = await Promise.all([
-                    saveAction()
-                ])
+                const responses = await saveAction()
 
-                if (responses.some(res => res.code === 403)) {
-                    this.setPermissionConfig(`${this.$t('pipeline')}：${this.pipeline.name}`, this.$t('edit'), projectId, pipelineId)
-                    return false
+                if (responses.code === 403) {
+                    throw HttpError(403)
                 }
                 this.setPipelineEditing(false)
                 this.$showTips({
                     message: this.$t('saveSuc'),
                     theme: 'success'
                 })
-                this.fetchPipelineList()
-                return true
-            } catch (e) {
-                if (e.code === 403) { // 没有权限编辑
-                    this.setPermissionConfig(`${this.$t('pipeline')}：${this.pipeline.name}`, this.$t('edit'), projectId, pipelineId)
-                } else {
-                    this.$showTips({
-                        message: e.message,
-                        theme: 'error'
-                    })
+                
+                if (!this.isTemplatePipeline && this.pipeline.latestVersion && !isNaN(this.pipeline.latestVersion)) {
+                    ++this.pipeline.latestVersion
+                    this.updateCurPipelineByKeyValue('pipelineVersion', this.pipeline.latestVersion)
                 }
-                return false
+                
+                if (this.pipelineSetting && this.pipelineSetting.pipelineName !== this.curPipeline.pipelineName) {
+                    this.updateCurPipelineByKeyValue('pipelineName', this.pipelineSetting.pipelineName)
+                }
+                
+                return {
+                    code: 0,
+                    data: responses
+                }
+            } catch (e) {
+                this.handleError(e, [{
+                    actionId: this.$permissionActionMap.edit,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: pipelineId,
+                        name: this.pipeline.name
+                    }],
+                    projectId
+                }])
+                return {
+                    code: e.code,
+                    message: e.message
+                }
             } finally {
                 this.setSaveStatus(false)
             }
@@ -514,35 +588,15 @@ export default {
                     theme: 'success'
                 })
             } catch (e) {
-                if (e.code === 403) { // 没有权限编辑
-                    this.setPermissionConfig(`${this.$t('pipeline')}：${this.pipeline.name}`, this.$t('edit'), this.$route.params.projectId, this.$route.params.pipelineId)
-                } else {
-                    this.$showTips({
-                        message: e.message,
-                        theme: 'error'
-                    })
-                }
-            }
-        },
-        /**
-         * 设置权限弹窗的参数
-         */
-        setPermissionConfig (resource, option, projectId, pipelineId) {
-            this.$showAskPermissionDialog({
-                noPermissionList: [{
-                    resource,
-                    option
-                }],
-                applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${projectId}&service_code=pipeline&${option === this.$t('exec') ? 'role_executor' : 'role_manager'}=pipeline:${pipelineId}`
-            })
-        },
-        updateCurPipelineId (pipelineId) {
-            for (let i = 0; i < this.pipelineList.length; i++) {
-                const item = this.pipelineList[i]
-                if (item.pipelineId === pipelineId) {
-                    this.$store.commit('pipelines/updateCurPipeline', item)
-                    return
-                }
+                this.handleError(e, [{
+                    actionId: this.$permissionActionMap.edit,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: pipelineId,
+                        name: this.pipeline ? this.pipeline.name : ''
+                    }],
+                    projectId
+                }])
             }
         },
         updateCurPipelineByKeyValue (key, value) {
@@ -554,10 +608,32 @@ export default {
         changeProject () {
             this.$toggleProjectMenu(true)
         },
-        goToApplyPerm (role = 'role_viewer') {
-            const { projectId, pipelineId } = this.$route.params
-            const url = `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}`
-            window.open(url, '_blank')
+
+        async toApplyPermission (actionId, pipeline) {
+            try {
+                const { projectId } = this.$route.params
+                const redirectUrl = await this.$ajax.post(`${AUTH_URL_PREFIX}/user/auth/permissionUrl`, [{
+                    actionId,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: projectId,
+                        type: this.$permissionResourceTypeMap.PROJECT
+                    }, pipeline]
+                }])
+                console.log('redirectUrl', redirectUrl)
+                window.open(redirectUrl, '_blank')
+                this.$bkInfo({
+                    title: this.$t('permissionRefreshtitle'),
+                    subTitle: this.$t('permissionRefreshSubtitle'),
+                    okText: this.$t('permissionRefreshOkText'),
+                    cancelText: this.$t('close'),
+                    confirmFn: () => {
+                        location.reload()
+                    }
+                })
+            } catch (e) {
+                console.error(e)
+            }
         },
         formatParams (pipeline) {
             const params = pipeline.stages[0].containers[0].params

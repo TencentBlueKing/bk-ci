@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,6 +47,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/market/atom/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceMarketAtomArchiveResource {
 
     @ApiOperation("校验用户上传的插件包是否合法")
@@ -89,6 +91,27 @@ interface ServiceMarketAtomArchiveResource {
         @PathParam("version")
         version: String
     ): Result<GetAtomConfigResult?>
+
+    @ApiOperation("校验插件发布类型是否合法")
+    @GET
+    @Path("/users/{userId}/projects/{projectCode}/atoms/{atomCode}/versions/{version}/releaseType/verify")
+    fun validateReleaseType(
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String,
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("版本号", required = true)
+        @PathParam("version")
+        version: String,
+        @ApiParam("插件字段校验确认标识", required = false)
+        @QueryParam("fieldCheckConfirmFlag")
+        fieldCheckConfirmFlag: Boolean?
+    ): Result<Boolean>
 
     @ApiOperation("更新插件执行包相关信息")
     @PUT

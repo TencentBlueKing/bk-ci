@@ -51,6 +51,7 @@
                         :
                         <span
                             class="row-value"
+                            :title="row.value"
                             :class="!cindex ? config.status : ''"
                         >{{ row.value }}</span>
                     </p>
@@ -219,13 +220,13 @@
     background-color: #333c48;
     z-index: 2;
     opacity: 0.6;
+    border-radius: 3px;
 }
 .apply-button {
     position: absolute;
-    top: calc((100% - 36px) / 2);
-    right: 0;
-    bottom: 0;
-    left: calc((100% - 96px) / 2);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     z-index: 4;
     opacity: 1;
 }
@@ -237,6 +238,7 @@
     border-radius: 3px;
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.04);
     transition: all 0.3s ease;
+    background-color: #fff;
     &:hover {
         box-shadow: 0 3px 8px 0 rgba(0, 0, 0, 0.2),
             0 0 0 1px rgba(0, 0, 0, 0.08);
@@ -246,7 +248,6 @@
         width: 100%;
         height: 60px;
         line-height: 60px;
-        background-color: #fff;
         border-bottom: 1px solid $borderWeightColor;
         .bk-tooltip {
             width: 75%;
@@ -290,14 +291,12 @@
     &-content {
         height: 95px;
         padding-left: 25px;
-        background-color: #fff;
         cursor: pointer;
     }
     &-footer {
         display: flex;
         height: 58px;
         border-top: 1px solid $borderWeightColor;
-        background-color: #fff;
         .footer-item {
             flex: 1;
             &:hover {
@@ -317,7 +316,6 @@
     &-running {
         height: 153px;
         padding: 36px 24px 0;
-        background-color: #fff;
         cursor: pointer;
         .running-detail {
             margin-bottom: 9px;
@@ -347,6 +345,10 @@
     }
     .content-row {
         font-size: 14px;
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         &:first-child {
             padding-top: 25px;
         }
@@ -403,7 +405,6 @@
         width: 23px;
         height: 100%;
         border-left: 1px solid $borderWeightColor;
-        background-color: #fff;
         cursor: pointer;
         &:hover,
         &.active {

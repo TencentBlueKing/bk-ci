@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,22 +27,42 @@
 
 package com.tencent.devops.worker.common.task.market
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.constant.ARTIFACT
+import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
+import com.tencent.devops.common.api.constant.LABEL
+import com.tencent.devops.common.api.constant.PATH
+import com.tencent.devops.common.api.constant.REPORT
+import com.tencent.devops.common.api.constant.REPORT_TYPE
+import com.tencent.devops.common.api.constant.STRING
+import com.tencent.devops.common.api.constant.TYPE
+import com.tencent.devops.common.api.constant.URL
+import com.tencent.devops.common.api.constant.VALUE
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
+import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
+import com.tencent.devops.worker.common.JOB_OS_CONTEXT
+import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
+import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
@@ -54,8 +75,10 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
+import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
+import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
@@ -64,6 +87,7 @@ import java.nio.file.Paths
 /**
  * 构建脚本任务
  */
+@Suppress("ALL")
 open class MarketAtomTask : ITask() {
 
     private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
@@ -73,6 +97,7 @@ open class MarketAtomTask : ITask() {
     private val inputFile = "input.json"
 
     private val sdkFile = ".sdk.json"
+    private val paramFile = ".param.json"
 
     private lateinit var atomExecuteFile: File
 
@@ -80,21 +105,21 @@ open class MarketAtomTask : ITask() {
 
     @Suppress("UNCHECKED_CAST")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
-        logger.info("buildTask is:$buildTask,buildVariables is:$buildVariables,workspacePath is:${workspace.absolutePath}")
         val taskParams = buildTask.params ?: mapOf()
-        val atomName = taskParams["name"] as String
+        val taskName = taskParams["name"] as String
         val atomCode = taskParams["atomCode"] as String
         val atomVersion = taskParams["version"] as String
         val data = taskParams["data"] ?: "{}"
         val map = JsonUtil.toMutableMapSkipEmpty(data)
+        logger.info("${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
+            "|workspace=${workspace.absolutePath}")
 
-        logger.info("Start to execute the plugin task($atomName)($atomCode)")
         // 获取插件基本信息
         val atomEnvResult = atomApi.getAtomEnv(buildVariables.projectId, atomCode, atomVersion)
         logger.info("atomEnvResult is:$atomEnvResult")
         val atomData =
             atomEnvResult.data ?: throw TaskExecuteException(
-                errorMsg = "can not found $atomName: ${atomEnvResult.message}",
+                errorMsg = "can not found $taskName: ${atomEnvResult.message}",
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
@@ -139,11 +164,28 @@ open class MarketAtomTask : ITask() {
         try {
             val inputMap = map["input"] as Map<String, Any>?
             inputMap?.forEach { (name, value) ->
+                var valueStr = JsonUtil.toJson(value)
+                valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
+                    override fun getReplacement(key: String): String? {
+                        return CredentialUtils.getCredentialContextValue(key)
+                    }
+                })
+
                 // 只有构建环境下运行的插件才有workspace变量
                 if (buildTask.containerType == VMBuildContainer.classType) {
-                    atomParams[name] = EnvUtils.parseEnv(JsonUtil.toJson(value), systemVariables)
+                    atomParams[name] = EnvUtils.parseEnv(
+                        command = valueStr,
+                        data = systemVariables,
+                        contextMap = contextMap(buildTask).plus(
+                            mapOf(
+                                WORKSPACE_CONTEXT to workspace.absolutePath,
+                                CI_TOKEN_CONTEXT to (buildVariables.variables[CI_TOKEN_CONTEXT] ?: ""),
+                                JOB_OS_CONTEXT to AgentEnv.getOS().name
+                            )
+                        )
+                    )
                 } else {
-                    atomParams[name] = JsonUtil.toJson(value)
+                    atomParams[name] = valueStr
                 }
             }
         } catch (e: Throwable) {
@@ -170,6 +212,8 @@ open class MarketAtomTask : ITask() {
             "N"
         }
         runtimeVariables = runtimeVariables.plus(Pair("testVersionFlag", testVersionFlag)) // 设置是否是测试版本的标识
+        // 设置插件名称和任务名称变量
+        runtimeVariables = runtimeVariables.plus(mapOf("atomName" to atomData.atomName, "taskName" to taskName))
         val variables = runtimeVariables.plus(atomParams)
         logger.info("atomCode is:$atomCode ,variables is:$variables")
 
@@ -185,7 +229,7 @@ open class MarketAtomTask : ITask() {
 
         printInput(atomData, atomParams, inputTemplate)
 
-        if (atomData.target.isBlank()) {
+        if (atomData.target?.isBlank() == true) {
             throw TaskExecuteException(
                 errorMsg = "can not found any plugin cmd",
                 errorType = ErrorType.SYSTEM,
@@ -205,6 +249,7 @@ open class MarketAtomTask : ITask() {
         writeInputFile(atomTmpSpace, variables.plus(atomSensitiveDataMap))
 
         writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
+        writeParamEnv(atomCode, atomTmpSpace, workspace, buildTask, buildVariables)
 
         val javaFile = getJavaFile()
         val environment = runtimeVariables.plus(
@@ -219,7 +264,7 @@ open class MarketAtomTask : ITask() {
         var error: Throwable? = null
         try {
             // 下载atom执行文件
-            atomExecuteFile = downloadAtomExecuteFile(atomData.pkgPath, atomTmpSpace)
+            atomExecuteFile = downloadAtomExecuteFile(atomData.pkgPath!!, atomTmpSpace)
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
@@ -246,13 +291,23 @@ open class MarketAtomTask : ITask() {
             }
             val atomTargetHandleService = AtomTargetFactory.createAtomTargetHandleService(atomLanguage)
             val buildEnvs = buildVariables.buildEnvs
+            val additionalOptions = taskParams["additionalOptions"]
+            // 获取插件post操作入口参数
+            var postEntryParam: String? = null
+            if (additionalOptions != null) {
+                val additionalOptionMap = JsonUtil.toMutableMapSkipEmpty(additionalOptions)
+                val elementPostInfoMap = additionalOptionMap["elementPostInfo"] as? Map<String, Any>
+                postEntryParam = elementPostInfoMap?.get(ATOM_POST_ENTRY_PARAM)?.toString()
+            }
             val atomTarget = atomTargetHandleService.handleAtomTarget(
-                target = atomData.target,
+                target = atomData.target!!,
                 osType = AgentEnv.getOS(),
                 buildHostType = buildHostType,
                 systemEnvVariables = systemEnvVariables,
-                buildEnvs = buildEnvs
+                buildEnvs = buildEnvs,
+                postEntryParam = postEntryParam
             )
+            val errorMessage = "Fail to run the plugin"
             when {
                 AgentEnv.getOS() == OSType.WINDOWS -> {
                     if (preCmds.isNotEmpty()) {
@@ -266,7 +321,9 @@ open class MarketAtomTask : ITask() {
                         script = command.toString(),
                         runtimeVariables = environment,
                         dir = atomTmpSpace,
-                        systemEnvVariables = systemEnvVariables
+                        workspace = workspace,
+                        errorMessage = errorMessage,
+                        elementId = buildTask.elementId
                     )
                 }
                 AgentEnv.getOS() == OSType.LINUX || AgentEnv.getOS() == OSType.MAC_OS -> {
@@ -280,9 +337,12 @@ open class MarketAtomTask : ITask() {
                         buildId = buildVariables.buildId,
                         script = command.toString(),
                         dir = atomTmpSpace,
+                        workspace = workspace,
                         buildEnvs = buildEnvs,
                         runtimeVariables = environment,
-                        systemEnvVariables = systemEnvVariables
+                        systemEnvVariables = systemEnvVariables,
+                        errorMessage = errorMessage,
+                        elementId = buildTask.elementId
                     )
                 }
             }
@@ -299,8 +359,8 @@ open class MarketAtomTask : ITask() {
                     }
                 }
                 throw TaskExecuteException(
-                    errorType = ErrorType.USER,
-                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
                     errorMsg = defaultMessage.toString()
                 )
             }
@@ -320,7 +380,8 @@ open class MarketAtomTask : ITask() {
         LoggerService.addNormalLine("Version        : ${atomData.version}")
         LoggerService.addNormalLine("Author         : ${atomData.creator}")
         if (!atomData.docsLink.isNullOrBlank()) {
-            LoggerService.addNormalLine("Help           : <a target=\"_blank\" href=\"${atomData.docsLink}\">More Information</a>")
+            LoggerService.addNormalLine(
+                "Help           : <a target=\"_blank\" href=\"${atomData.docsLink}\">More Information</a>")
         }
         LoggerService.addNormalLine("=====================================================================")
 
@@ -331,7 +392,8 @@ open class MarketAtomTask : ITask() {
             )
         } else if (atomStatus == AtomStatusEnum.UNDERCARRIAGING) {
             LoggerService.addYellowLine(
-                "[警告]该插件处于下架过渡期，后续可能无法正常工作！\n[WARNING]The plugin is in the transition period and may not work properly in the future."
+                "[警告]该插件处于下架过渡期，后续可能无法正常工作！\n" +
+                    "[WARNING]The plugin is in the transition period and may not work properly in the future."
             )
         }
 
@@ -380,6 +442,31 @@ open class MarketAtomTask : ITask() {
         inputFileFile.writeText(JsonUtil.toJson(sdkEnv))
     }
 
+    private fun writeParamEnv(
+        atomCode: String,
+        atomTmpSpace: File,
+        workspace: File,
+        buildTask: BuildTask,
+        buildVariables: BuildVariables
+    ) {
+        if (atomCode in PIPELINE_SCRIPT_ATOM_CODE) {
+            try {
+                val param = mapOf(
+                    "workspace" to jacksonObjectMapper().writeValueAsString(workspace),
+                    "buildTask" to jacksonObjectMapper().writeValueAsString(buildTask),
+                    "buildVariables" to jacksonObjectMapper().writeValueAsString(buildVariables)
+                )
+                val paramStr = jacksonObjectMapper().writeValueAsString(param)
+                val inputFileFile = File(atomTmpSpace, paramFile)
+
+                logger.info("paramFile is:$paramFile")
+                inputFileFile.writeText(paramStr)
+            } catch (e: Throwable) {
+                logger.error("Write param exception", e)
+            }
+        }
+    }
+
     data class SdkEnv(
         val buildType: BuildType,
         val projectId: String,
@@ -410,26 +497,27 @@ open class MarketAtomTask : ITask() {
     ) {
         val atomResult = readOutputFile(atomTmpSpace)
         logger.info("the atomResult from Market is :\n$atomResult")
-
+        // 添加插件监控数据
+        val monitorData = atomResult?.monitorData
+        if (monitorData != null) {
+            addMonitorData(monitorData)
+        }
         deletePluginFile(atomTmpSpace)
         val success: Boolean
         if (atomResult == null) {
             LoggerService.addYellowLine("No output")
         } else {
-            when {
-                atomResult.status == "success" -> {
-                    success = true
-                    LoggerService.addNormalLine("success: ${atomResult.message ?: ""}")
-                }
-                else -> {
-                    success = false
-                }
+            if (atomResult.status == "success") {
+                success = true
+                LoggerService.addNormalLine("success: ${atomResult.message ?: ""}")
+            } else {
+                success = false
             }
 
             val outputData = atomResult.data
             val env = mutableMapOf<String, String>()
-            outputData?.forEach { varKey, output ->
-                val type = output["type"]
+            outputData?.forEach { (varKey, output) ->
+                val type = output[TYPE]
                 val key = if (!namespace.isNullOrBlank()) {
                     "${namespace}_$varKey" // 用户前缀_插件输出变量名
                 } else {
@@ -450,14 +538,34 @@ open class MarketAtomTask : ITask() {
                         "label": "",  # 报告别名，用于产出物报告界面标识当前报告
                         "path": "",   # 报告目录所在路径，相对于工作空间
                         "target": "", # 报告入口文件
+                        "enableEmail": true, # 是否开启发送邮件
+                        "emailReceivers": [], # 邮件接收人
+                        "emailTitle": "" # 邮件标题
                     }
                 }
                  */
+                TaskUtil.setTaskId(buildTask.taskId ?: "")
                 when (type) {
-                    "string" -> env[key] = output["value"] as String
-                    "report" -> env[key] = archiveReport(buildTask, output, buildVariables, bkWorkspace)
-                    "artifact" -> env[key] = archiveArtifact(output, bkWorkspace, buildVariables)
+                    STRING -> env[key] = output[VALUE] as String
+                    REPORT -> env[key] = archiveReport(
+                        buildTask = buildTask,
+                        varKey = varKey,
+                        output = output,
+                        buildVariables = buildVariables,
+                        atomWorkspace = bkWorkspace
+                    )
+                    ARTIFACT -> env[key] = archiveArtifact(
+                        varKey = varKey,
+                        output = output,
+                        atomWorkspace = bkWorkspace,
+                        buildVariables = buildVariables
+                    )
                 }
+
+                env["steps.${buildTask.elementId ?: ""}.outputs.$key"] = env[key] ?: ""
+                env["jobs.${buildVariables.containerId}.os"] = AgentEnv.getOS().name
+
+                TaskUtil.removeTaskId()
                 if (outputTemplate.containsKey(varKey)) {
                     val outPutDefine = outputTemplate[varKey]
                     val sensitiveFlag = outPutDefine!!["isSensitive"] as Boolean? ?: false
@@ -499,9 +607,15 @@ open class MarketAtomTask : ITask() {
             // 若插件执行失败返回错误信息
             if (!success) {
                 throw TaskExecuteException(
-                    errorMsg = "MarketAtom failed with ${atomResult.status}: ${atomResult.message}",
-                    errorType = ErrorType.USER,
-                    errorCode = atomResult.errorCode ?: ErrorCode.USER_DEFAULT_ERROR
+                    errorMsg = "[Finish task] status: ${atomResult.status}, errorType: ${atomResult.errorType}, " +
+                        "errorCode: ${atomResult.errorCode}, message: ${atomResult.message}",
+                    errorType = when (atomResult.errorType) {
+                        // 插件上报的错误类型，若非用户业务错误或插件内的第三方服务调用错误，统一设为插件逻辑错误
+                        1 -> ErrorType.USER
+                        2 -> ErrorType.THIRD_PARTY
+                        else -> ErrorType.PLUGIN
+                    },
+                    errorCode = atomResult.errorCode ?: ErrorCode.PLUGIN_DEFAULT_ERROR
                 )
             }
         }
@@ -516,16 +630,28 @@ open class MarketAtomTask : ITask() {
      */
     @Suppress("UNCHECKED_CAST")
     private fun archiveArtifact(
+        varKey: String,
         output: Map<String, Any>,
         atomWorkspace: File,
         buildVariables: BuildVariables
     ): String {
         var oneArtifact = ""
         try {
-            val artifacts = output["value"] as List<String>
+            val artifacts = output[VALUE] as List<String>
+            val artifactoryType = (output[ARTIFACTORY_TYPE] as? String) ?: ArtifactoryType.PIPELINE.name
             artifacts.forEach { artifact ->
                 oneArtifact = artifact
-                ArchiveUtils.archivePipelineFiles(artifact, atomWorkspace, buildVariables)
+                if (artifactoryType == ArtifactoryType.PIPELINE.name) {
+                    ArchiveUtils.archivePipelineFiles(artifact, atomWorkspace, buildVariables)
+                } else if (artifactoryType == ArtifactoryType.CUSTOM_DIR.name) {
+                    output[PATH] ?: throw TaskExecuteException(
+                        errorMsg = "$varKey.$PATH cannot be empty",
+                        errorType = ErrorType.USER,
+                        errorCode = ErrorCode.USER_INPUT_INVAILD
+                    )
+                    val destPath = output[PATH] as String
+                    ArchiveUtils.archiveCustomFiles(artifact, destPath, atomWorkspace, buildVariables)
+                }
             }
         } catch (e: Exception) {
             LoggerService.addRedLine("获取输出构件[artifact]值错误：${e.message}")
@@ -539,40 +665,69 @@ open class MarketAtomTask : ITask() {
      */
     private fun archiveReport(
         buildTask: BuildTask,
+        varKey: String,
         output: Map<String, Any>,
         buildVariables: BuildVariables,
         atomWorkspace: File
     ): String {
+        output[LABEL] ?: throw TaskExecuteException(
+            errorMsg = "$varKey.$LABEL cannot be empty",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_INPUT_INVAILD
+        )
         val params = mutableMapOf<String, String>()
         if (buildTask.params != null) {
             params.putAll(buildTask.params!!)
         }
         val resultData: String
-        val reportType = output["reportType"] ?: ReportTypeEnum.INTERNAL.name // 报告类型，如果用户不传则默认为平台内置类型
-        params["reportType"] = reportType.toString()
+        val reportType = output[REPORT_TYPE] ?: ReportTypeEnum.INTERNAL.name // 报告类型，如果用户不传则默认为平台内置类型
+        params[REPORT_TYPE] = reportType.toString()
         if (reportType == ReportTypeEnum.INTERNAL.name) {
-            params["fileDir"] = output["path"] as String
-            val target = output["target"] as String
+            output[PATH] ?: throw TaskExecuteException(
+                errorMsg = "$varKey.$PATH cannot be empty",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            )
+            output[KEY_TARGET] ?: throw TaskExecuteException(
+                errorMsg = "$varKey.$KEY_TARGET cannot be empty",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            )
+            params["fileDir"] = output[PATH] as String
+            val target = output[KEY_TARGET] as String
             params["indexFile"] = target
             resultData = target
         } else {
-            val url = output["url"] as String
+            output[URL] ?: throw TaskExecuteException(
+                errorMsg = "$varKey.$URL cannot be empty",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            )
+            val url = output[URL] as String
             params["reportUrl"] = url
             resultData = url
         }
-        params["reportName"] = output["label"] as String
+        params["reportName"] = output[LABEL] as String
+        val emailReceivers = output["emailReceivers"] as? String
+        val emailTitle = output["emailTitle"] as? String
+        if (emailReceivers != null && emailTitle != null) {
+            params["enableEmail"] = output["enableEmail"].toString()
+            params["emailReceivers"] = JsonUtil.toJson(emailReceivers)
+            params["emailTitle"] = emailTitle
+        }
         val reportArchTask = BuildTask(
-            buildTask.buildId,
-            buildTask.vmSeqId,
-            buildTask.status,
-            buildTask.taskId,
-            buildTask.elementId,
-            buildTask.elementName,
-            buildTask.type,
-            params,
-            buildTask.buildVariable
+            buildId = buildTask.buildId,
+            vmSeqId = buildTask.vmSeqId,
+            status = buildTask.status,
+            taskId = buildTask.taskId,
+            elementId = buildTask.elementId,
+            elementName = buildTask.elementName,
+            type = buildTask.type,
+            params = params,
+            buildVariable = buildTask.buildVariable,
+            containerType = buildTask.containerType
         )
-        logger.info("reportArchTask is:$reportArchTask,buildVariables is:$buildVariables,atomWorkspacePath is:${atomWorkspace.absolutePath}")
+        logger.info("${buildTask.buildId}|reportArchTask|atomWorkspacePath=${atomWorkspace.absolutePath}")
 
         TaskFactory.create(ReportArchiveElement.classType).run(
             buildTask = reportArchTask,
@@ -641,6 +796,14 @@ open class MarketAtomTask : ITask() {
     }
 
     private fun getJavaFile() = File(System.getProperty("java.home"), "/bin/java")
+
+    private fun contextMap(buildTask: BuildTask): Map<String, String> {
+        return mapOf(
+            "steps.${buildTask.elementId}.name" to (buildTask.elementName ?: ""),
+            "steps.${buildTask.elementId}.id" to (buildTask.elementId ?: ""),
+            "steps.${buildTask.elementId}.status" to BuildStatus.RUNNING.name
+        )
+    }
 
     companion object {
         private const val DIR_ENV = "bk_data_dir"

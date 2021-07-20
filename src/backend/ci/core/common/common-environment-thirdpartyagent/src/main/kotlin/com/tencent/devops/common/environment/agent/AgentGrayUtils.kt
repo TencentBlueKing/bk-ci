@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -48,6 +49,13 @@ class AgentGrayUtils constructor(
         private const val GREY_CAN_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:grey_can_upgrade"
         private const val LOCK_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:lock_upgrade"
         private const val FORCE_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:force_upgrade"
+
+        private const val DEFAULT_GATEWAY_KEY = "environment:thirdparty:default_gateway"
+        private const val DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:default_file_gateway"
+        private const val USE_DEFAULT_GATEWAY_KEY = "environment:thirdparty:use_default_gateway"
+        private const val USE_DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:use_default_file_gateway"
+        private const val PARALLEL_UPGRADE_COUNT = "environment.thirdparty.agent.parallel.upgrade.count"
+        private const val DEFAULT_PARALLEL_UPGRADE_COUNT = 50
     }
 
     fun checkForceUpgrade(agentHashId: String): Boolean {
@@ -69,7 +77,7 @@ class AgentGrayUtils constructor(
 
     fun getAllForceUpgradeAgents(): List<Long> {
         return (redisOperation.getSetMembers(FORCE_UPGRADE_AGENT_SET_KEY)
-            ?: setOf()).filter { !it.isBlank() }.map { it.toLong() }
+            ?: setOf()).filter { it.isNotBlank() }.map { it.toLong() }
     }
 
     fun cleanAllForceUpgradeAgents() {
@@ -82,7 +90,7 @@ class AgentGrayUtils constructor(
     fun checkLockUpgrade(agentHashId: String): Boolean {
         val agentId = HashUtil.decodeIdToLong(agentHashId)
         return (redisOperation.getSetMembers(LOCK_UPGRADE_AGENT_SET_KEY)
-            ?: setOf()).filter { !it.isBlank() }.contains(agentId.toString())
+            ?: setOf()).filter { it.isNotBlank() }.contains(agentId.toString())
     }
 
     fun setLockUpgradeAgents(agentIds: List<Long>) {
@@ -99,7 +107,7 @@ class AgentGrayUtils constructor(
 
     fun getAllLockUpgradeAgents(): List<Long> {
         return (redisOperation.getSetMembers(LOCK_UPGRADE_AGENT_SET_KEY)
-            ?: setOf()).filter { !it.isBlank() }.map { it.toLong() }
+            ?: setOf()).filter { it.isNotBlank() }.map { it.toLong() }
     }
 
     fun cleanAllLockUpgradeAgents() {
@@ -132,7 +140,7 @@ class AgentGrayUtils constructor(
 
     fun getCanUpgradeAgents(): List<Long> {
         return (redisOperation.getSetMembers(getCanUpgradeAgentSetKey())
-            ?: setOf()).filter { !it.isBlank() }.map { it.toLong() }
+            ?: setOf()).filter { it.isNotBlank() }.map { it.toLong() }
     }
 
     fun getAgentMasterVersionKey(): String {
@@ -157,5 +165,29 @@ class AgentGrayUtils constructor(
         } else {
             CURRENT_AGENT_VERSION
         }
+    }
+
+    fun getDefaultGateway(): String? {
+        return redisOperation.get(DEFAULT_GATEWAY_KEY)
+    }
+
+    fun getDefaultFileGateway(): String? {
+        return redisOperation.get(DEFAULT_FILE_GATEWAY_KEY)
+    }
+
+    fun useDefaultGateway(): Boolean {
+        return redisOperation.get(USE_DEFAULT_GATEWAY_KEY) == "true"
+    }
+
+    fun useDefaultFileGateway(): Boolean {
+        return redisOperation.get(USE_DEFAULT_FILE_GATEWAY_KEY) == "true"
+    }
+
+    fun setMaxParallelUpgradeCount(count: Int) {
+        redisOperation.set(PARALLEL_UPGRADE_COUNT, count.toString())
+    }
+
+    fun getMaxParallelUpgradeCount(): Int {
+        return redisOperation.get(PARALLEL_UPGRADE_COUNT)?.toInt() ?: DEFAULT_PARALLEL_UPGRADE_COUNT
     }
 }

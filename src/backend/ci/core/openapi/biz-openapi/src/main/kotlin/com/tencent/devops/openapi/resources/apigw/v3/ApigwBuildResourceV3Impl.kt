@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,6 +30,7 @@ import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwBuildResourceV3
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -36,6 +38,7 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,7 +54,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): Result<BuildManualStartupInfo> {
-        logger.info("get the pipeline($pipelineId) of project($projectId) manual startup info  by user($userId)")
+        logger.info("$pipelineId|manualStartupInfo|user($userId)")
         return client.get(ServiceBuildResource::class).manualStartupInfo(
             userId = userId,
             projectId = projectId,
@@ -68,7 +71,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<ModelDetail> {
-        logger.info("get build detail: the build($buildId) of pipeline($pipelineId) of project($projectId) by user($userId)")
+        logger.info("$buildId|DETAIL|user($userId)")
         return client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = projectId,
@@ -87,7 +90,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
-        logger.info("get the pipeline($pipelineId) of project($projectId) build history  by user($userId)")
+        logger.info("$pipelineId|getHistoryBuild|user($userId)")
         return client.get(ServiceBuildResource::class).getHistoryBuild(
             userId = userId,
             projectId = projectId,
@@ -107,7 +110,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         values: Map<String, String>,
         buildNo: Int?
     ): Result<BuildId> {
-        logger.info("Start the pipeline($pipelineId) of project($projectId) with param($values) by user($userId)")
+        logger.info("$pipelineId|manualStartup|user($userId)")
         return client.get(ServiceBuildResource::class).manualStartup(
             userId = userId,
             projectId = projectId,
@@ -126,12 +129,36 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<Boolean> {
-        logger.info("Stop the build($buildId) of pipeline($pipelineId) of project($projectId) by user($userId)")
+        logger.info("$pipelineId|manualShutdown|user($userId)")
         return client.get(ServiceBuildResource::class).manualShutdown(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
+            channelCode = ChannelCode.BS
+        )
+    }
+
+    override fun retry(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String?,
+        failedContainer: Boolean?,
+        skipFailedTask: Boolean?
+    ): Result<BuildId> {
+        logger.info("$pipelineId|retry|user($userId)")
+        return client.get(ServiceBuildResource::class).retry(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            failedContainer = failedContainer,
+            skipFailedTask = skipFailedTask,
             channelCode = ChannelCode.BS
         )
     }
@@ -144,7 +171,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<BuildHistoryWithVars> {
-        logger.info("Get the build($buildId) status of project($projectId) and pipeline($pipelineId) by user($userId)")
+        logger.info("$pipelineId|getBuildStatus|user($userId)|build($buildId)")
         return client.get(ServiceBuildResource::class).getBuildStatus(
             userId = userId,
             projectId = projectId,
@@ -162,16 +189,54 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         stageId: String,
-        cancel: Boolean?
+        cancel: Boolean?,
+        reviewRequest: StageReviewRequest?
     ): Result<Boolean> {
-        logger.info("get the pipeline($pipelineId) of project($projectId) manual startup info  by user($userId)")
+        logger.info("$pipelineId|manualStartStage|user($userId)|build($buildId)")
         return client.get(ServiceBuildResource::class).manualStartStage(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId,
-            cancel = cancel ?: false
+            cancel = cancel ?: false,
+            reviewRequest = reviewRequest
+        )
+    }
+
+    override fun getVariableValue(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variableNames: List<String>
+    ): Result<Map<String, String>> {
+        logger.info("$pipelineId|getVariableValue|user($userId)|build($buildId)")
+        return client.get(ServiceBuildResource::class).getBuildVariableValue(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            variableNames = variableNames
+        )
+    }
+
+    override fun executionPauseAtom(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskPauseExecute: BuildTaskPauseInfo
+    ): Result<Boolean> {
+        logger.info("$pipelineId| $buildId| $userId |executionPauseAtom $taskPauseExecute")
+        return client.get(ServiceBuildResource::class).executionPauseAtom(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskPauseExecute = taskPauseExecute
         )
     }
 

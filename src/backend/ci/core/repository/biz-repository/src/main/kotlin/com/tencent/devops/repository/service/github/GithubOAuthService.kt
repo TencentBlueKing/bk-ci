@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,6 +47,7 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
 @Service
+@Suppress("ALL")
 class GithubOAuthService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val gitConfig: GitConfig,
@@ -55,7 +57,8 @@ class GithubOAuthService @Autowired constructor(
     fun getGithubOauth(projectId: String, userId: String, repoHashId: String?): GithubOauth {
         val repoId = if (!repoHashId.isNullOrBlank()) HashUtil.decodeOtherIdToLong(repoHashId!!).toString() else ""
         val state = "$userId,$projectId,$repoId,BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)}"
-        val redirectUrl = "$GITHUB_URL/login/oauth/authorize?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubWebhookUrl}&state=$state"
+        val redirectUrl = "$GITHUB_URL/login/oauth/authorize" +
+            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubWebhookUrl}&state=$state"
         return GithubOauth(redirectUrl)
     }
 
@@ -73,12 +76,14 @@ class GithubOAuthService @Autowired constructor(
         val githubToken = getAccessTokenImpl(code)
 
         githubTokenService.createAccessToken(userId, githubToken.accessToken, githubToken.tokenType, githubToken.scope)
-        return Response.temporaryRedirect(UriBuilder.fromUri("${gitConfig.githubRedirectUrl}/$projectId#popupGithub$repoHashId").build())
+        return Response.temporaryRedirect(
+            UriBuilder.fromUri("${gitConfig.githubRedirectUrl}/$projectId#popupGithub$repoHashId").build())
                 .build()
     }
 
     private fun getAccessTokenImpl(code: String): GithubToken {
-        val url = "$GITHUB_URL/login/oauth/access_token?client_id=${gitConfig.githubClientId}&client_secret=${gitConfig.githubClientSecret}&code=$code"
+        val url = "$GITHUB_URL/login/oauth/access_token" +
+            "?client_id=${gitConfig.githubClientId}&client_secret=${gitConfig.githubClientSecret}&code=$code"
 
         val request = Request.Builder()
             .url(url)
@@ -89,7 +94,8 @@ class GithubOAuthService @Autowired constructor(
             val data = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.info("Github get code(${response.code()}) and response($data)")
-                throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "获取Github access_token失败")
+                throw CustomException(Response.Status.fromStatusCode(response.code())
+                    ?: Response.Status.BAD_REQUEST, "获取Github access_token失败: $data")
             }
             return objectMapper.readValue(data)
         }

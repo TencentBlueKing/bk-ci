@@ -36,24 +36,25 @@ interface Window {
     setProjectIdCookie: Function
     JSONP: Function
     GLOBAL_PID: string
+    BK_CI_VERSION: string
     getLoginUrl: Function
     attachEvent(event: string, listener: EventListener): boolean
     detachEvent(event: string, listener: EventListener): void
 }
 interface subService {
-    collected: boolean
-    css_url: string
-    id: string
-    iframe_url: string
-    inject_type: string
-    show_project_list: boolean
-    show_nav: boolean
-    js_url: string
-    link: string
-    name: string
-    status: string
-    link_new: string,
-    project_id_type: string
+    'collected': boolean
+    'css_url': string
+    'id': string
+    'iframe_url': string
+    'inject_type': string
+    'show_project_list': boolean
+    'show_nav': boolean
+    'js_url': string
+    'link': string
+    'name': string
+    'status': string
+    'link_new': string,
+    'project_id_type': string
 }
 
 interface Permission {
@@ -66,11 +67,12 @@ declare module '*.vue' {
     export default Vue
 }
 
-declare var LOGIN_SERVICE_URL: string
-declare var GW_URL_PREFIX: string
-declare var DOCS_URL_PREFIX: string
-declare var DEVOPS_LS_VERSION: string
-declare var ENTERPRISE_VERSION: string
+declare let LOGIN_SERVICE_URL: string
+declare let API_URL_PREFIX: string
+declare let DOCS_URL_PREFIX: string
+declare let DEVOPS_LS_VERSION: string
+declare let ENTERPRISE_VERSION: string
+
 declare module '*.png'
 
 declare const X_DEVOPS_PROJECT_ID: string

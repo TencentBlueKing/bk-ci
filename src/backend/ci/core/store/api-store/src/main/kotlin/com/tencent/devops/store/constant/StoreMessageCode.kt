@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -42,6 +43,7 @@ package com.tencent.devops.store.constant
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
+@Suppress("ALL")
 object StoreMessageCode {
 
     const val MSG_CODE_STORE_CLASSIFY_PREFIX = "MSG_CODE_STORE_CLASSIFY_PREFIX_" // 研发商店插分类国际化前缀
@@ -55,7 +57,7 @@ object StoreMessageCode {
     const val USER_INSTALL_ATOM_CODE_IS_INVALID = "2120004" // 研发商店：安装插件失败
     const val USER_REPOSITORY_PULL_TASK_JSON_FILE_FAIL = "2120005" // 研发商店：拉取插件配置文件[task.json]失败,请确认OAUTH授权、文件是否上传代码库等
     const val USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL = "2120006" // 研发商店：插件配置文件[task.json]{0}字段不能为空
-    const val USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID = "2120007" // 研发商店：插件配置文件[task.json]{0}字段与工作台录入的不一致
+    const val USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_MATCH = "2120007" // 研发商店：插件配置文件[task.json]{0}字段与工作台录入的不一致
     const val USER_ATOM_RELEASE_STEPS_ERROR = "2120008" // 研发商店：插件发布流程状态变更顺序不正确
     const val USER_ATOM_VERSION_IS_NOT_FINISH = "2120009" // 研发商店：插件{0}的{1}版本发布未结束，请稍后再试
     const val USER_ATOM_VERSION_IS_INVALID = "2120010" // 研发商店：插件升级的版本号{0}错误，应为{1}
@@ -71,6 +73,19 @@ object StoreMessageCode {
     const val USER_ATOM_UNINSTALL_REASON_USED = "2120021" // 研发商店：插件卸载原因{0}已被使用，不能删除。建议禁用
     const val USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE = "2120022" // 研发商店：插件{0}已发布到商店，请先下架再删除
     const val USER_ATOM_USED_IS_NOT_ALLOW_DELETE = "2120023" // 研发商店：插件{0}已安装到其他项目下使用，请勿移除
+    const val USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL = "2120024" // 研发商店：插件代码库文件夹[{0}]未创建
+    const val USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT = "2120025" // 你的项目[{0}]不允许使用插件[{1}]，请检查插件是否被正确安装
+    const val USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID = "2120026" // 研发商店：插件配置文件[task.json]{0}格式不正确，请检查
+    const val USER_ATOM_IS_NOT_ALLOW_REPLACE = "2120027" // 研发商店：插件[{0}]的[{1}]版本无法被插件[{2}]的[{3}]版本替换，插件[{2}]的{4}参数无法映射替换
+    const val USER_TO_ATOM_IS_NOT_BE_HIS_ATOM = "2120028" // 研发商店：目标替换插件不能是历史内置老插件
+    // 研发商店：插件当前版本新增了无默认值的必填入参[{0}]，将导致存量流水线执行异常，请修改发布类型进行非兼容式升级
+    const val USER_ATOM_NOT_COMPATIBLE_INPUT_FIELD = "2120029"
+    // 研发商店：插件当前版本新增了入参[{0}]，请确认插件执行逻辑对这些参数不存在或值为空的情况做了兼容处理，否则有可能导致存量流水线执行异常
+    const val USER_ATOM_COMPATIBLE_INPUT_FIELD_CONFIRM = "2120030"
+    // 研发商店：插件当前版本减少了出参[{0}]，请确认插件执行逻辑对这些参数不存在或值为空的情况做了兼容处理，否则有可能导致存量流水线执行异常
+    const val USER_ATOM_COMPATIBLE_OUTPUT_FIELD_CONFIRM = "2120031"
+    const val USER_ATOM_INPUT_NUM_IS_TOO_MANY = "2120032" // 研发商店：插件入参数量太多，系统规定的数量最大为：{0}
+    const val USER_ATOM_OUTPUT_NUM_IS_TOO_MANY = "2120033" // 研发商店：插件出参数量太多，系统规定的数量最大为：{0}
 
     // 模板相关的错误提示
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
@@ -80,6 +95,8 @@ object StoreMessageCode {
     const val USER_TEMPLATE_RELEASED = "2120205" // 研发商店：模版{0}已发布到商店，请先下架再删除
     const val USER_TEMPLATE_USED = "2120206" // 研发商店：模版{0}已安装到其他项目下使用，请勿移除
     const val USER_TEMPLATE_ATOM_IS_INVALID = "2120207" // 研发商店：模版下的插件{0}不可用，请联系模板发布者
+    const val USER_TEMPLATE_IMAGE_VISIBLE_DEPT_IS_INVALID = "2120208" // 研发商店：模板的可见范围不在镜像[{0}]的可见范围之内，如有需要请联系镜像的发布者
+    const val USER_TEMPLATE_IMAGE_IS_INVALID = "2120209" // 研发商店：模版下的镜像{0}不可用，请联系模板发布者
 
     const val USER_IMAGE_VERSION_IS_NOT_FINISH = "2120301" // 研发商店：镜像{0}的{1}版本发布未结束，请稍后再试
     const val USER_IMAGE_VERSION_IS_INVALID = "2120302" // 研发商店：镜像升级的版本号{0}错误，应为{1}
@@ -89,8 +106,9 @@ object StoreMessageCode {
     const val USER_IMAGE_NOT_INSTALLED = "2120306" // 研发商店：项目{0}未安装镜像{1}，无法使用
     const val USER_IMAGE_UNKNOWN_SOURCE_TYPE = "2120307" // 研发商店：镜像原始来源类型未知：{0}
     const val USER_IMAGE_UNKNOWN_IMAGE_CATEGORY = "2120308" // 镜像范畴未知：{0}
-    const val USER_IMAGE_NOT_EXIST = "2120309" // 镜像不存在：{0}
+    const val USER_IMAGE_NOT_EXIST = "2120309" // 镜像[{0}]不存在
     const val USER_IMAGE_VERSION_NOT_EXIST = "2120310" // 标识为{0}版本号为{1}的镜像不存在
+    const val USER_IMAGE_PROJECT_IS_INVALID = "2120311" // 研发商店：容器镜像[{0}]在项目[{1}]下不可用，请联系镜像发布者调整可见范围，调整后手动安装镜像
 
     // 扩展服务相关的错误提示
     const val USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE = "2120401" // 研发商店：扩展服务{0}已发布到商店，请先下架再删除
@@ -112,4 +130,9 @@ object StoreMessageCode {
     const val USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY = "2120905" // 研发商店：你已有处于待审批或审批通过的申请单，请勿重复申请
     const val USER_UPLOAD_PACKAGE_INVALID = "2120906" // 研发商店：请确认上传的包是否正确
     const val USER_SENSITIVE_CONF_EXIST = "2120907" // 研发商店：字段名{0}已存在
+    const val USER_START_CODECC_TASK_FAIL = "2120908" // 研发商店：启动代码扫描任务失败
+    const val USER_CHANGE_TEST_PROJECT_FAIL = "2120909" // 研发商店：用户[{0}]没有项目[{1}]下的流水线新增/修改/执行权限，请先给用户赋权
+    const val SENSITIVE_API_PASSED_IS_NOT_ALLOW_CANCEL = "2120910" // 研发商店：敏感API已经审批通过不能取消
+    const val SENSITIVE_API_APPROVED_IS_NOT_ALLOW_PASS = "2120911" // 研发商店：敏感API已经取消不能审批
+    const val SENSITIVE_API_NOT_EXIST = "2120912" // 研发商店：敏感API[{0}]不存在
 }

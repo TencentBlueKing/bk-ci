@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,11 +34,11 @@ import io.swagger.annotations.ApiModelProperty
 data class GetAtomConfigResult(
     @ApiModelProperty("状态码", required = true)
     val errorCode: String,
-    @ApiModelProperty("参数", required = false)
+    @ApiModelProperty("错误参数", required = false)
     val errorParams: Array<String>,
-    @ApiModelProperty("参数", required = false)
-    val taskDataMap: Map<String, Any>?,
-    @ApiModelProperty("参数", required = false)
+    @ApiModelProperty("插件json文件配置数据", required = false)
+    val taskDataMap: Map<String, Any>,
+    @ApiModelProperty("环境信息", required = false)
     var atomEnvRequest: AtomEnvRequest?
 ) {
     override fun equals(other: Any?): Boolean {
@@ -57,7 +58,7 @@ data class GetAtomConfigResult(
     override fun hashCode(): Int {
         var result = errorCode.hashCode()
         result = 31 * result + errorParams.contentHashCode()
-        result = 31 * result + (taskDataMap?.hashCode() ?: 0)
+        result = 31 * result + (taskDataMap.hashCode() ?: 0)
         result = 31 * result + (atomEnvRequest?.hashCode() ?: 0)
         return result
     }

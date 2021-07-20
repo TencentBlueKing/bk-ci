@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,8 +28,8 @@
 package com.tencent.devops.common.pipeline.container
 
 import com.tencent.devops.common.pipeline.NameAndValue
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -53,8 +54,8 @@ data class NormalContainer(
     @ApiModelProperty("触发条件", required = false)
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see JobControlOption.customVariables"))
     val conditions: List<NameAndValue>? = null,
-    @ApiModelProperty("是否可重试", required = false, hidden = true)
-    override var canRetry: Boolean? = false,
+    @ApiModelProperty("是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储", required = false, hidden = true)
+    override var canRetry: Boolean? = null,
     override var containerId: String? = null,
     @ApiModelProperty("无构建环境-等待运行环境启动的排队最长时间(分钟)", required = false)
     @Deprecated(message = "do not use")
@@ -69,7 +70,9 @@ data class NormalContainer(
     @ApiModelProperty("构建环境启动状态", required = false, hidden = true)
     override var startVMStatus: String? = null,
     @ApiModelProperty("容器运行次数", required = false, hidden = true)
-    override var executeCount: Int? = 0
+    override var executeCount: Int? = 0,
+    @ApiModelProperty("用户自定义ID", required = false, hidden = false)
+    override val jobId: String? = null
 ) : Container {
     companion object {
         const val classType = "normal"

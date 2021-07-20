@@ -24,7 +24,7 @@ function getUser () { // eslint-disable-line
  *
  * @returns {Object}
  */
-function getToolMeta () {
+export function getToolMeta () {
     return store.dispatch('getToolMeta', config)
 }
 
@@ -33,7 +33,7 @@ function getToolMeta () {
  *
  * @returns {Object}
  */
-function getToolList () {
+export function getToolList () {
     return store.dispatch('tool/list', config)
 }
 
@@ -42,7 +42,7 @@ function getToolList () {
  *
  * @returns {Object}
  */
-function getTaskList () {
+export function getTaskList () {
     return store.dispatch('task/basicList', config)
 }
 
@@ -74,12 +74,19 @@ export function getTaskStatus () {
 }
 
 export default function () {
-    if (store.state.task.status === 1) {
+    if (store.state.task.status.status === 1) {
         return false
     }
-    return Promise.all([
-        getToolMeta(),
-        getToolList(),
-        getTaskList()
-    ])
+    return true
+    // if (store.state.task.status.gongfengProjectId) {
+    //     return Promise.all([
+    //         getToolMeta(),
+    //         getToolList()
+    //     ])
+    // }
+    // return Promise.all([
+    //     getToolMeta(),
+    //     getToolList(),
+    //     getTaskList()
+    // ])
 }

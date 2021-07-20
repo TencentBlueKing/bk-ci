@@ -39,6 +39,20 @@ const store = {
                     modelName: 'v1'
                 }
             },
+            MULTI_LINE_PASSWORD: {
+                v1: {
+                    label: 'ticket.credential.password',
+                    component: 'vue-textarea',
+                    rules: 'required',
+                    rule: { required: true },
+                    required: true,
+                    default: '',
+                    placeholder: 'ticket.credential.passwordPlaceholder',
+                    errorMsg: 'ticket.credential.passwordRequired',
+                    type: 'multiLinePassword',
+                    modelName: 'v1'
+                }
+            },
             USERNAME_PASSWORD: {
                 v1: {
                     label: 'ticket.credential.username',
@@ -117,7 +131,7 @@ const store = {
                     label: 'ticket.credential.sshKey',
                     component: 'vue-textarea',
                     rules: 'required',
-                    rule: { regex: /^(-----BEGIN RSA PRIVATE KEY-----){1}[\s\S]*(-----END RSA PRIVATE KEY-----)$/, required: true },
+                    rule: { regex: /^(-----BEGIN (RSA|OPENSSH) PRIVATE KEY-----){1}[\s\S]*(-----END (RSA|OPENSSH) PRIVATE KEY-----)$/, required: true },
                     default: '',
                     placeholder: 'ticket.credential.sshKeyPlaceholder',
                     errorMsg: 'ticket.credential.sshKeyPlaceholder',
@@ -151,7 +165,7 @@ const store = {
                     label: 'ticket.credential.sshKey',
                     component: 'vue-textarea',
                     rules: 'required',
-                    rule: { regex: /^(-----BEGIN RSA PRIVATE KEY-----){1}[\s\S]*(-----END RSA PRIVATE KEY-----)$/, required: true },
+                    rule: { regex: /^(-----BEGIN (RSA|OPENSSH) PRIVATE KEY-----){1}[\s\S]*(-----END (RSA|OPENSSH) PRIVATE KEY-----)$/, required: true },
                     default: '',
                     placeholder: 'ticket.credential.sshKeyPlaceholder',
                     errorMsg: 'ticket.credential.sshKeyPlaceholder',
@@ -209,6 +223,11 @@ const store = {
             {
                 id: 'PASSWORD',
                 name: 'password',
+                desc: 'passwordDesc'
+            },
+            {
+                id: 'MULTI_LINE_PASSWORD',
+                name: 'multiLinePassword',
                 desc: 'passwordDesc'
             },
             {

@@ -15,17 +15,18 @@
 </template>
 
 <script>
+    import Vue from 'vue'
     import { mapActions } from 'vuex'
     import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import validMixins from '@/components/validMixins'
-    import jobOptionConfigMixin from '@/store/modules/soda/jobOptionConfigMixin'
+    import jobOptionConfigMixin from '@/store/modules/common/jobOptionConfigMixin'
     export default {
         name: 'job-config',
         mixins: [atomMixin, validMixins, jobOptionConfigMixin],
         props: {
             jobOption: {
                 type: Object,
-                default: {}
+                default: () => ({})
             },
             disabled: {
                 type: Boolean,
@@ -34,7 +35,13 @@
             updateContainerParams: {
                 type: Function,
                 required: true
-            }
+            },
+            stage: {
+                type: Array,
+                default: () => ({})
+            },
+            stageIndex: Number,
+            containerIndex: Number
         },
         computed: {
             optionModel () {
@@ -59,6 +66,11 @@
             initOptionConfig () {
                 if (this.jobOption === undefined || JSON.stringify(this.jobOption) === '{}') {
                     this.updateContainerParams('jobControlOption', this.getJobOptionDefault())
+                } else {
+                    if (this.jobOption && this.jobOption.dependOnType === undefined) {
+                        Vue.set(this.jobOption, 'dependOnType', 'ID')
+                        this.handleUpdateJobOption('dependOnId', [])
+                    }
                 }
             },
             setKeyValueValidate (addErrors, removeErrors) {

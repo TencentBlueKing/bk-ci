@@ -1,6 +1,6 @@
 <template>
     <div :class="['empty', `empty-${size}`]">
-        <div class="icon"></div>
+        <img src="../../images/empty.png" class="empty-img">
         <div class="title">{{title}}</div>
         <div class="desc" v-if="desc">{{desc}}</div>
         <template v-if="$slots.action">
@@ -65,8 +65,8 @@
                 height: 40px;
             }
             .title {
-                font-size: 14px;
-                margin-top: 8px;
+                font-size: 12px;
+                margin-top: 0;
             }
         }
 
@@ -81,6 +81,10 @@
         }
         .action {
             margin-top: 12px;
+        }
+        .empty-img {
+            width: 60px;
+            /* height: 56px; */
         }
     }
 </style>

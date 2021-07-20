@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,10 +30,11 @@ package com.tencent.devops.store.api.atom
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomVersion
-import com.tencent.devops.store.pojo.atom.AtomVersionListResp
+import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MarketMainItem
@@ -57,7 +59,7 @@ import javax.ws.rs.core.MediaType
 @Api(tags = ["USER_MARKET_ATOM"], description = "插件市场-插件")
 @Path("/user/market/")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface UserMarketAtomResource {
 
     @ApiOperation("获取插件市场首页的数据")
@@ -171,8 +173,14 @@ interface UserMarketAtomResource {
         userId: String,
         @ApiParam("atomCode", required = true)
         @QueryParam("atomCode")
-        atomCode: String
-    ): Result<AtomVersionListResp>
+        atomCode: String,
+        @ApiParam("页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 10
+    ): Result<Page<AtomVersionListItem>>
 
     @ApiOperation("安装插件到项目")
     @POST
@@ -224,6 +232,21 @@ interface UserMarketAtomResource {
     @GET
     @Path("/atoms/{atomCode}/yml/detail")
     fun getAtomYmlInfo(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("atomCode", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("是否展示系统自带的yml信息", required = false)
+        @QueryParam("defaultShowFlag")
+        defaultShowFlag: Boolean?
+    ): Result<String?>
+
+    @ApiOperation("查看插件的yml 2.0信息")
+    @GET
+    @Path("/atoms/{atomCode}/yml/2.0/detail")
+    fun getAtomYmlV2Info(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

@@ -66,7 +66,7 @@
                                 <p class="temp-title" :title="item.name">
                                     {{ item.name }}
                                 </p>
-                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item)" :title="item.name">{{ $t('editPage.install') }}</p>
+                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item, index)" :title="item.name">{{ $t('editPage.install') }}</p>
                                 <p class="permission-tips" v-if="item.isInstall && !item.isFlag" :title="item.name">{{ $t('newlist.noInstallPerm') }}</p>
                                 <p class="permission-tips" v-if="!item.isInstall" :title="item.name">{{ $t('newlist.installed') }}</p>
                             </li>
@@ -77,7 +77,7 @@
                     </div>
                     <div class="right-temp-info">
                         <div class="temp-info-detail">
-                            <template v-if="!isActiveTempEmpty">
+                            <template v-show="!isActiveTempEmpty">
                                 <div class="pipeline-input">
                                     <input type="text" ref="pipelineName" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')" maxlength="40" name="newPipelineName" v-model.trim="newPipelineName" v-validate.initial="&quot;required&quot;" />
                                     <span class="border-effect" v-show="!errors.has(&quot;newPipelineName&quot;)"></span>
@@ -93,21 +93,37 @@
                                             </bk-popover>
                                         </bk-radio-group>
                                     </div>
-                                    <div class="from-group" v-for="(filter, index) in tagGroupList" :key="index">
-                                        <label>{{filter.name}}</label>
-                                        <bk-select
-                                            v-model="filter.labelValue"
-                                            multiple="true">
-                                            <bk-option v-for="(option, oindex) in filter.labels" :key="oindex" :id="option.id" :name="option.name">
-                                            </bk-option>
-                                        </bk-select>
+                                    <section v-if="activeTemp.templateType === 'PUBLIC'">
+                                        <div class="from-group" v-for="(filter, index) in tagGroupList" :key="index">
+                                            <label>{{filter.name}}</label>
+                                            <bk-select
+                                                v-model="filter.labelValue"
+                                                multiple="true">
+                                                <bk-option v-for="(option, oindex) in filter.labels" :key="oindex" :id="option.id" :name="option.name">
+                                                </bk-option>
+                                            </bk-select>
+                                        </div>
+                                    </section>
+                                    <div v-else style="margin-bottom: 15px">
+                                        <label class="bk-form-checkbox template-setting-checkbox">
+                                            <bk-checkbox
+                                                v-model="useTemplateSettings">
+                                                {{ $t('template.applyTemplateSetting') }}
+                                            </bk-checkbox>
+                                            <bk-popover placement="top">
+                                                <i class="bk-icon icon-info-circle"></i>
+                                                <div slot="content" style="white-space: pre-wrap; min-width: 200px">
+                                                    <div>{{ $t('template.applySettingTips') }}</div>
+                                                </div>
+                                            </bk-popover>
+                                        </label>
                                     </div>
                                     <a class="view-pipeline" v-if="showPreview" @click="togglePreview(false)">{{ $t('newlist.closePreview') }}</a>
                                     <a class="view-pipeline" v-if="!showPreview && !activeTemp.isInstall && !isActiveTempEmpty" @click="togglePreview(true)">{{ $t('newlist.tempDetail') }}</a>
                                     <a class="view-pipeline disabled" v-if="!showPreview && (activeTemp.isInstall || isActiveTempEmpty)">{{ $t('newlist.tempDetail') }}</a>
                                 </div></template>
 
-                            <section v-else class="choose-tips">
+                            <section v-show="isActiveTempEmpty" class="choose-tips">
                                 <logo size="20" name="finger-left" style="fill:#3c96ff" />
                                 <span>{{ $t('newlist.tempDetail') }}</span>
                             </section>
@@ -154,6 +170,7 @@
                 activeTempIndex: -1,
                 tempTypeIndex: 0,
                 showPreview: false,
+                useTemplateSettings: false,
                 isLoading: !this.pipelineTemplate,
                 headerHeight: 50,
                 viewHeight: 0,
@@ -171,7 +188,7 @@
         },
 
         computed: {
-            ...mapState('soda', [
+            ...mapState('common', [
                 'pipelineTemplate',
                 'templateCategory'
             ]),
@@ -207,7 +224,9 @@
                             ...item,
                             isInstall: !item.installed,
                             isFlag: item.flag,
-                            stages: (pipelineTemplate[item.code] && pipelineTemplate[item.code].stages) || []
+                            stages: (pipelineTemplate[item.code] && pipelineTemplate[item.code].stages) || [],
+                            templateId: (pipelineTemplate[item.code] && pipelineTemplate[item.code].templateId) || undefined,
+                            version: (pipelineTemplate[item.code] && pipelineTemplate[item.code].version) || undefined
                         }
                     })
                 } else {
@@ -258,20 +277,20 @@
                     this.requestPipelineTemplate({
                         projectId: this.projectId
                     })
-
                     this.computPopupHeight()
                     window.addEventListener('resize', this.computPopupHeight)
-                    this.$nextTick(() => {
+                    this.timer = setTimeout(() => {
                         if (this.$refs.pipelineName) this.$refs.pipelineName.focus()
-                    })
+                    }, 0)
                 } else {
+                    clearTimeout(this.timer)
                     window.removeEventListener('resize', this.computPopupHeight)
                 }
             }
         },
 
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestCategory',
                 'requestPipelineTemplate',
                 'requestStoreTemplate'
@@ -300,15 +319,20 @@
                     this.activeTempIndex = index
                 }
             },
-            installTemplate (temp) {
+            installTemplate (temp, index) {
                 const postData = {
                     projectCodeList: [this.projectId],
                     templateCode: temp.code
                 }
                 this.isLoading = true
                 this.requestInstallTemplate(postData).then((res) => {
-                    const currentStoreItem = this.storeTemplate.find(x => x.code === temp.code)
-                    currentStoreItem.installed = true
+                    return this.requestPipelineTemplate({
+                        projectId: this.projectId
+                    }).then(() => {
+                        const currentStoreItem = this.storeTemplate.find(x => x.code === temp.code)
+                        currentStoreItem.installed = true
+                        this.selectTemp(index)
+                    })
                 }).catch((err) => {
                     this.$showTips({ message: err.message || err, theme: 'error' })
                 }).finally(() => {
@@ -361,7 +385,7 @@
                 const param = {
                     page: this.page,
                     pageSize: this.pageSize,
-                    templateName: this.searchName,
+                    keyword: this.searchName,
                     categoryCode: this.curCategory,
                     projectCode: this.projectId
                 }
@@ -377,11 +401,15 @@
             },
             async createNewPipeline () {
                 const { icon, ...pipeline } = this.activeTemp
-                let labels = []
-                this.tagGroupList.forEach((item) => {
-                    if (item.labelValue) labels = labels.concat(item.labelValue)
-                })
-                Object.assign(pipeline, { name: this.newPipelineName, labels })
+                Object.assign(pipeline, { name: this.newPipelineName })
+
+                if (this.activeTemp.templateType === 'PUBLIC') {
+                    let labels = []
+                    this.tagGroupList.forEach((item) => {
+                        if (item.labelValue) labels = labels.concat(item.labelValue)
+                    })
+                    Object.assign(pipeline, { labels })
+                }
 
                 const keys = Object.keys(this.activeTemp)
                 if (keys.length <= 0) {
@@ -399,6 +427,9 @@
                             templateId: currentTemplate.templateId,
                             curVersionId: currentTemplate.version,
                             pipelineName: pipeline.name
+                        },
+                        query: {
+                            useTemplateSettings: this.useTemplateSettings.toString()
                         }
                     })
                     return
@@ -406,7 +437,8 @@
 
                 try {
                     this.isDisabled = true
-                    const { data: { id } } = await this.$ajax.post(`/process/api/user/pipelines/${this.projectId}`, pipeline)
+                    const queryStr = this.activeTemp.templateType !== 'PUBLIC' ? `?useTemplateSettings=${this.useTemplateSettings}` : ''
+                    const { data: { id } } = await this.$ajax.post(`/process/api/user/pipelines/${this.projectId}${queryStr}`, pipeline)
                     if (id) {
                         this.$showTips({ message: this.$t('addSuc'), theme: 'success' })
 
@@ -423,20 +455,12 @@
                         })
                     }
                 } catch (e) {
-                    if (e.code === 403) { // 没有权限创建
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('create')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.$route.params.projectId}&service_code=pipeline&role_creator=pipeline`
-                        })
-                    } else {
-                        this.$showTips({
-                            message: e.message,
-                            theme: 'error'
-                        })
-                    }
+                    this.handleError(e, [{
+                        actionId: this.$permissionActionMap.create,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [],
+                        projectId: this.$route.params.projectId
+                    }])
                 } finally {
                     this.isDisabled = false
                 }
@@ -719,6 +743,9 @@
                 flex-direction: column;
                 background-color: #fff;
                 .temp-info-detail {
+                    overflow: auto;
+                    padding-right: 30px;
+                    margin-bottom: 30px;
                     flex: 1;
                     .choose-tips {
                         padding: 20px 0;
@@ -806,6 +833,11 @@
                             color: #CCCCCC;
                         }
                     }
+                }
+                .temp-operation-bar {
+                    position: absolute;
+                    padding-top: 20px;
+                    bottom: 10px;
                 }
                 .bk-button.bk-button-small {
                     padding: 0 15px;

@@ -17,8 +17,6 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { UPDATE_CURRENT_ATOM } from './constants'
-
 const prefix = 'store/api'
 const repositoryPrefix = 'repository/api'
 const projectPrefix = 'project/api'
@@ -34,6 +32,13 @@ export const actions = {
         return vue.$ajax.get(`${prefix}/user/market/atoms/${atomCode}/yml/detail`)
     },
 
+    /**
+     * 获取插件 v2 yaml
+     */
+    getAtomYamlV2 ({ commit }, { atomCode }) {
+        return vue.$ajax.get(`${prefix}/user/market/atoms/${atomCode}/yml/2.0/detail`)
+    },
+
     modifyAtomDetail ({ commit }, { atomCode, data }) {
         return vue.$ajax.put(`${prefix}/user/pipeline/atom/baseInfo/atoms/${atomCode}`, data)
     },
@@ -46,14 +51,14 @@ export const actions = {
     /**
      * 审批插件协作
      */
-    approval ({ commit }, { atomCode, approveId, approveMsg, approveStatus }) {
-        return vue.$ajax.put(`${prefix}/user/market/approval/types/ATOM/codes/${atomCode}/ids/${approveId}/approve`, { approveMsg, approveStatus })
+    approval ({ commit }, { type, code, approveId, approveMsg, approveStatus }) {
+        return vue.$ajax.put(`${prefix}/user/market/approval/types/${type}/codes/${code}/ids/${approveId}/approve`, { approveMsg, approveStatus })
     },
     /**
      * 获取协作者列表
      */
-    getApprovalList ({ commit }, { atomCode, limit, current }) {
-        return vue.$ajax.get(`${prefix}/user/market/approval/types/ATOM/codes/${atomCode}/list?page=${current}&pageSize=${limit}`)
+    getApprovalList ({ commit }, { type, code, limit, current }) {
+        return vue.$ajax.get(`${prefix}/user/market/approval/types/${type}/codes/${code}/list?page=${current}&pageSize=${limit}`)
     },
     /**
      * 申请成为协作者
@@ -196,7 +201,7 @@ export const actions = {
     /**
      * 流水线插件详情
      */
-    requestAtom ({ commit }, { atomCode }) {
+    requestAtom ({ commit }, atomCode) {
         return vue.$ajax.get(`${prefix}/user/market/atom/${atomCode}`)
     },
 
@@ -343,8 +348,8 @@ export const actions = {
     /**
      * 流水线插件统计数据
      */
-    requestAtomStatistic ({ commit }, { atomCode }) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/statistic/${atomCode}`)
+    requestAtomStatistic ({ commit }, { storeType, storeCode }) {
+        return vue.$ajax.get(`${prefix}/user/store/statistic/types/${storeType}/codes/${storeCode}`)
     },
 
     /**
@@ -364,15 +369,15 @@ export const actions = {
     /**
      * 流水线插件版本列表
      */
-    requestVersionList ({ commit }, { atomCode }) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/version/list?atomCode=${atomCode}`)
+    requestVersionList ({ commit }, params) {
+        return vue.$ajax.get(`${prefix}/user/market/atom/version/list`, { params })
     },
 
     /**
      * 上传流水线插件logo
      */
     uploadLogo ({ commit }, { formData, config }) {
-        return vue.$ajax.post(`${prefix}/user/store/logo/upload`, formData, config)
+        return vue.$ajax.post(`${prefix}/user/store/logo/upload?compressFlag=true`, formData, config)
     },
 
     /**
@@ -382,35 +387,8 @@ export const actions = {
         return vue.$ajax.get(`${projectPrefix}/user/users/projects/${projectCode}/list`)
     },
 
-    updateCurrentaAtom ({ commit }, { res }) {
-        commit(UPDATE_CURRENT_ATOM, res)
-    },
-
-    updateUserInfo ({ commit }, res) {
-        commit('updateUserInfo', res)
-    },
-
     // 获取开发语言
     getDevelopLanguage () {
         return vue.$ajax.get(`${prefix}/user/market/desk/atom/language`)
-    }
-}
-
-export const getters = {
-    getCurrentAtom: state => Object.assign({}, state.currentAtom),
-    getUserInfo: state => state.userInfo
-}
-
-export const state = {
-    currentAtom: {},
-    userInfo: {}
-}
-
-export const mutations = {
-    [UPDATE_CURRENT_ATOM]: (state, res) => {
-        Vue.set(state, 'currentAtom', res)
-    },
-    updateUserInfo: (state, res) => {
-        Vue.set(state, 'userInfo', res)
     }
 }

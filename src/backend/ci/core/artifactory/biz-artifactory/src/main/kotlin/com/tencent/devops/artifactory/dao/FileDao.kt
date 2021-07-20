@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,6 +39,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
+@Suppress("ALL")
 class FileDao {
 
     fun addFileInfo(
@@ -143,8 +145,8 @@ class FileDao {
             propsCount
         ).from(a).where(setFileByPropsCondition(a, projectId, fileTypeList)).asTable("t")
         val baseStep =
-            dslContext.selectFrom(t).where(t.field("propsCount", Int::class.java).eq(props.keys.size))
-                .orderBy(t.field("createTime").desc())
+            dslContext.selectFrom(t).where(t.field("propsCount", Int::class.java)!!.eq(props.keys.size))
+                .orderBy(t.field("createTime")!!.desc())
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
@@ -201,7 +203,7 @@ class FileDao {
             a.UPDATE_TIME.`as`("updateTime"),
             propsCount
         ).from(a).where(setFileByPropsCondition(a, projectId, fileTypeList)).asTable("t")
-        return dslContext.selectCount().from(t).where(t.field("propsCount", Int::class.java).eq(props.keys.size))
-            .fetchOne(0, Long::class.java)
+        return dslContext.selectCount().from(t).where(t.field("propsCount", Int::class.java)!!.eq(props.keys.size))
+            .fetchOne(0, Long::class.java)!!
     }
 }

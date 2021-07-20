@@ -1,32 +1,59 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.artifactory.service
 
 import com.tencent.devops.artifactory.constant.PushMessageCode
 import com.tencent.devops.artifactory.pojo.EnvSet
 import com.tencent.devops.artifactory.pojo.PushTypeEnum
 import com.tencent.devops.artifactory.pojo.RemoteResourceInfo
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.ArrayList
 
 @Service
+@Suppress("ALL")
 class EnvServiceExt @Autowired constructor(
     private val client: Client
 ) {
     fun parsingAndValidateEnv(remoteResourceInfo: RemoteResourceInfo, userId: String, projectId: String): EnvSet {
         val pushType = remoteResourceInfo.pushType.name
         val targetMachine = remoteResourceInfo.targetMachine
-        logger.info("push file by Job: pushType[$pushType] targetMachine[$targetMachine] userId[$userId] projectId[$projectId]")
+        logger.info("PushJobFile|pushType[$pushType]targetMachine[$targetMachine]userId[$userId]projectId[$projectId]")
         val envSet = when (pushType) {
             PushTypeEnum.ENVId.name -> getRemoteInfoByEnvId(targetMachine)
             PushTypeEnum.NodeId.name -> getRemoteInfoByNodeId(targetMachine)
             PushTypeEnum.ENVName.name -> getRemoteInfoByEnvName(targetMachine, userId, projectId)
-            else -> throw RuntimeException()
+            else -> throw IllegalArgumentException("Bad type: $pushType")
         }
         checkEnvNodeExists(userId, projectId, envSet)
         logger.info("push file by Job: envSet[$envSet]")
@@ -55,7 +82,10 @@ class EnvServiceExt @Autowired constructor(
         val noExistsEnvNames = envNameList.subtract(envNameExistsList)
         if (noExistsEnvNames.isNotEmpty()) {
             logger.warn("The envNames not exists, name:$noExistsEnvNames")
-            throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS, arrayOf(noExistsEnvNames.toString())))
+            throw ErrorCodeException(
+                errorCode = PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS,
+                params = arrayOf(noExistsEnvNames.toString())
+            )
         }
 
         // 校验权限
@@ -68,7 +98,10 @@ class EnvServiceExt @Autowired constructor(
         val noAuthEnvIds = envIdList.subtract(userEnvIdList)
         if (noAuthEnvIds.isNotEmpty()) {
             logger.warn("User does not permit to access the env: $noAuthEnvIds")
-            throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.ENV_MACHINE_NOT_AUTH, arrayOf(noAuthEnvIds.toString())))
+            throw ErrorCodeException(
+                errorCode = PushMessageCode.ENV_MACHINE_NOT_AUTH,
+                params = arrayOf(noAuthEnvIds.toString())
+            )
         }
         val nodeHashIds: List<String> = ArrayList()
 //        val ipLists: List<EnvSet.IpDto> = buildIpDto()
@@ -99,7 +132,10 @@ class EnvServiceExt @Autowired constructor(
             val noExistsEnvIds = envSet.envHashIds.subtract(envIdList)
             if (noExistsEnvIds.isNotEmpty()) {
                 logger.warn("The envIds not exists, id:$noExistsEnvIds")
-                throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS, arrayOf(noExistsEnvIds.toString())))
+                throw ErrorCodeException(
+                    errorCode = PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS,
+                    params = arrayOf(noExistsEnvIds.toString())
+                )
             }
         }
         if (envSet.nodeHashIds.isNotEmpty()) {
@@ -112,7 +148,10 @@ class EnvServiceExt @Autowired constructor(
             val noExistsNodeIds = envSet.nodeHashIds.subtract(nodeIdList)
             if (noExistsNodeIds.isNotEmpty()) {
                 logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
-                throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.NODE_NAME_MACHINE_NOT_EXITS, arrayOf(noExistsNodeIds.toString())))
+                throw ErrorCodeException(
+                    errorCode = PushMessageCode.NODE_NAME_MACHINE_NOT_EXITS,
+                    params = arrayOf(noExistsNodeIds.toString())
+                )
             }
         }
     }
@@ -124,12 +163,12 @@ class EnvServiceExt @Autowired constructor(
 
     private fun checkParams(str: String?): Boolean {
         if (str == null || str.isEmpty()) {
-            throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.FUSH_FILE_REMOTE_MACHINE_EMPTY, null))
+            throw ErrorCodeException(errorCode = PushMessageCode.FUSH_FILE_REMOTE_MACHINE_EMPTY)
         }
         return true
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(EnvServiceExt::class.java)
     }
 }

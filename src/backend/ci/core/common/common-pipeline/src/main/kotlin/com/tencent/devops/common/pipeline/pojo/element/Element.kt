@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -43,10 +44,12 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -73,14 +76,19 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
     JsonSubTypes.Type(value = MarketBuildLessAtomElement::class, name = MarketBuildLessAtomElement.classType),
     JsonSubTypes.Type(value = MarketCheckImageElement::class, name = MarketCheckImageElement.classType),
     JsonSubTypes.Type(value = QualityGateInElement::class, name = QualityGateInElement.classType),
-    JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType)
+    JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType),
+    JsonSubTypes.Type(value = CodeTGitWebHookTriggerElement::class, name = CodeTGitWebHookTriggerElement.classType),
+    JsonSubTypes.Type(value = CodeGitGenericWebHookTriggerElement::class,
+        name = CodeGitGenericWebHookTriggerElement.classType)
 )
+@Suppress("ALL")
 abstract class Element(
     open val name: String,
     open var id: String? = null,
     open var status: String? = null,
     open var executeCount: Int = 1,
-    open var canRetry: Boolean? = false,
+    open var canRetry: Boolean? = null,
+    open var canSkip: Boolean? = null,
     open var elapsed: Long? = null,
     open var startEpoch: Long? = null,
     open var version: String = "1.*",
@@ -111,48 +119,33 @@ abstract class Element(
         return additionalOptions!!.enable
     }
 
-    fun findFirstTaskIdByStartType(startType: StartType): String {
-
-        var firstTaskId = ""
-
-        if (startType.name == StartType.WEB_HOOK.name) {
-            if (this is CodeGitlabWebHookTriggerElement ||
-                this is CodeGitWebHookTriggerElement ||
-                this is CodeSVNWebHookTriggerElement ||
-                this is CodeGithubWebHookTriggerElement
-            ) {
-                firstTaskId = this.id!!
-            }
-        } else if (startType.name == StartType.MANUAL.name || startType.name == StartType.SERVICE.name || startType.name == StartType.PIPELINE.name) {
-            if (this is ManualTriggerElement) {
-                firstTaskId = this.id!!
-            }
-        } else if (startType.name == StartType.TIME_TRIGGER.name) {
-            if (this is TimerTriggerElement) {
-                firstTaskId = this.id!!
-            }
-        } else if (startType.name == StartType.REMOTE.name) {
-            if (this is RemoteTriggerElement) {
-                firstTaskId = this.id!!
-            }
-        }
-
-        return firstTaskId
-    }
+    /**
+     * 根据[startType]类型返回element的id值，如果不符合，则返回空字符串""
+     */
+    open fun findFirstTaskIdByStartType(startType: StartType): String = ""
 
     /**
-     * 根据参数变量检查插件是否跳过
-     * @param params 参数变量值
+     * 除非是本身的[isElementEnable]设置为未启用插件会返回SKIP，或者是设置了失败手动跳过
+     * [rerun]允许对状态进行重置为QUEUE
      */
-    fun takeStatus(params: Map<String, Any>): BuildStatus {
-        return if (params[SkipElementUtils.getSkipElementVariableName(id!!)] == "true") { // 参数中指明要求跳过
+    fun initStatus(rerun: Boolean = false): BuildStatus {
+        return if (!isElementEnable()) { // 插件未启用
             BuildStatus.SKIP // 跳过
-        } else if (!isElementEnable()) { // 插件未启用
-            BuildStatus.SKIP // 跳过
+        } else if (rerun) { // 除以上指定跳过或不启用的以外，在final Stage 下的插件都需要重置状态
+            BuildStatus.QUEUE
         } else if (status == BuildStatus.SKIP.name) { // 原本状态为SKIP，一般为 Rebuild/Fail Retry 的上一次执行标志下来
             BuildStatus.SKIP // 跳过
         } else {
             BuildStatus.QUEUE // 默认为排队状态
+        }
+    }
+
+    fun disableBySkipVar(variables: Map<String, Any>) {
+        if (variables[SkipElementUtils.getSkipElementVariableName(id!!)] == "true") { // 参数中指明要求跳过
+            if (additionalOptions == null) {
+                additionalOptions = ElementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS)
+            }
+            additionalOptions!!.enable = false
         }
     }
 }

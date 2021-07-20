@@ -4,13 +4,17 @@
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
                 <span :class="{ 'not-recommend': detail.recommendFlag === false }" :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''">{{detail.name}}</span>
+                <div class="canvas-contain">
+                    <canvas class="atom-chart" v-if="detail.dailyStatisticList && detail.dailyStatisticList.length" width="64" height="18"></canvas>
+                    <icon v-else class="chart-empty" name="empty" size="16" v-bk-tooltips="{ content: $t('store.最近七天暂无执行') }" />
+                </div>
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5 :title="approveTip" :class="[{ 'not-public': approveMsg !== $t('store.协作') }]" @click="cooperation">
                         <icon class="detail-img" name="cooperation" size="16" />
                         <span class="approve-msg">{{approveMsg}}</span>
                     </h5>
                 </template>
-                <h5 :title="$t('store.点击查看YAML片段')" v-if="detail.yamlFlag && detail.recommendFlag" @click="$emit('update:currentTab', 'YAML')">
+                <h5 :title="$t('store.点击查看YAML片段')" v-if="detail.yamlFlag && detail.recommendFlag" @click="$emit('update:currentTab', 'YAMLV2')">
                     <icon class="detail-img" name="yaml" size="16" />
                     <span class="approve-msg">{{ $t('store.YAML可用') }}</span>
                 </h5>
@@ -42,7 +46,7 @@
                 <span> {{ $t('store.分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('store.热度：') }} </span><span>{{detail.downloads || 0}}</span>
+                <span> {{ $t('store.热度：') }} </span><span>{{detail.recentExecuteNum || 0}}</span>
             </h5>
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>
@@ -68,7 +72,23 @@
                     <bk-input v-model="user" :disabled="true"></bk-input>
                 </bk-form-item>
                 <bk-form-item :label="$t('store.调试项目')" :required="true" :rules="rules" property="testProjectCode" :icon-offset="30">
-                    <big-select class="big-select" v-model="cooperData.testProjectCode" :searchable="true" :options="projectList" setting-key="projectCode" display-key="projectName" :loading="isLoading"></big-select>
+                    <bk-select class="big-select"
+                        v-model="cooperData.testProjectCode"
+                        searchable
+                        :loading="isLoading"
+                        :enable-virtual-scroll="projectList && projectList.length > 3000"
+                        :list="projectList"
+                        id-key="projectCode"
+                        display-key="projectName"
+                    >
+                        <bk-option
+                            v-for="item in projectList"
+                            :key="item.projectCode"
+                            :id="item.projectCode"
+                            :name="item.projectName"
+                        >
+                        </bk-option>
+                    </bk-select>
                 </bk-form-item>
                 <bk-form-item :label="$t('store.申请原因')" :required="true" :rules="rules" property="applyReason">
                     <bk-input type="textarea" v-model="cooperData.applyReason" :placeholder="$t('store.请输入申请原因')"></bk-input>
@@ -80,8 +100,10 @@
 </template>
 
 <script>
+    import BKChart from '@blueking/bkcharts'
     import commentRate from '../comment-rate'
     import formTips from '@/components/common/formTips/index'
+    import api from '@/api'
 
     export default {
         components: {
@@ -165,19 +187,98 @@
             }
         },
 
-        created () {
+        mounted () {
             this.initData()
+            const chartData = this.drawTrend()
+            this.$once('hook:beforeDestroy', () => {
+                if (chartData && chartData.destroy) chartData.destroy()
+            })
         },
 
         methods: {
             initData () {
-                this.$store.dispatch('store/getMemberInfo', this.$route.params.code).then((res = {}) => {
+                const data = {
+                    storeCode: this.$route.params.code,
+                    storeType: 'ATOM'
+                }
+                api.getMemberView(data).then((res = {}) => {
                     this.userInfo = res
+                }).catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
                 })
             },
 
             closeDialog () {
                 this.clearFormData()
+            },
+
+            drawTrend () {
+                const dailyStatisticList = this.detail.dailyStatisticList
+                if (!dailyStatisticList || dailyStatisticList.length <= 0) return
+                const context = document.querySelector('.atom-chart')
+                const chartDatas = []
+                const chartLabels = []
+                const backgroundColors = []
+                dailyStatisticList.map((statis) => {
+                    const val = statis.dailySuccessRate
+                    const isEmpty = [0, undefined, null].includes(val)
+                    const isUndefinedOrNull = [undefined, null].includes(val)
+                    const data = isEmpty ? 2 : val
+                    const lableVal = isUndefinedOrNull ? '--' : val
+                    const color = isEmpty ? '#b4b4b4' : 'rgba(90, 159, 247, 1)'
+                    chartDatas.push(data)
+                    chartLabels.push(`${this.$t('store.执行成功率')}：${lableVal}%`)
+                    backgroundColors.push(color)
+                })
+                return new BKChart(context, {
+                    type: 'bar',
+                    data: {
+                        labels: dailyStatisticList.map(x => x.statisticsTime),
+                        datasets: [
+                            {
+                                barThickness: 6,
+                                label: this.$t('store.执行成功率'),
+                                backgroundColor: backgroundColors,
+                                lineTension: 0,
+                                borderWidth: 0,
+                                pointRadius: 0,
+                                pointHitRadius: 3,
+                                pointHoverRadius: 3,
+                                data: chartDatas
+                            }
+                        ]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                display: false
+                            },
+                            y: {
+                                display: false,
+                                min: 0,
+                                max: 100
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                mode: 'x',
+                                intersect: false,
+                                singleInRange: true,
+                                callbacks: {
+                                    label (context) {
+                                        const index = context.dataIndex
+                                        const label = chartLabels[index]
+                                        return label
+                                    }
+                                }
+                            },
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                })
             },
 
             confirmDialog () {
@@ -291,6 +392,35 @@
         flex: 1;
         margin: 0 32px;
         max-width: calc(100% - 314px);
+        .canvas-contain {
+            height: 20px;
+            width: 64px;
+            margin: 0 12px;
+            padding: 2px 2px 0;
+            background: #F9F9F9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            &:after {
+                content: '';
+                position: absolute;
+                right: -12px;
+                top: 0;
+                width: 1px;
+                height: 100%;
+                background: #eff1f5;
+            }
+            .chart-empty {
+                color: #e2e2e2;
+            }
+            /deep/ div[data-bkcharts-tooltips] {
+                min-width: 140px;
+            }
+            &:last-child:after {
+                display: none;
+            }
+        }
         h3 {
             font-size: 22px;
             line-height: 29px;

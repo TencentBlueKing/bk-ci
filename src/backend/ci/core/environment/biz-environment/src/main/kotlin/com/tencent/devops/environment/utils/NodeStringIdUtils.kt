@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,10 +35,7 @@ import com.tencent.devops.model.environment.tables.records.TNodeRecord
 object NodeStringIdUtils {
     fun getNodeStringId(it: TNodeRecord): String {
         return when (it.nodeType) {
-            NodeType.BCSVM.name -> "BCSVM-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
-            NodeType.CC.name -> "CC-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             NodeType.CMDB.name -> "CMDB-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
-            NodeType.TSTACK.name -> "TSTACK-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             NodeType.OTHER.name -> "OTHER-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             NodeType.THIRDPARTY.name -> "BUILD-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             else -> it.nodeStringId ?: ""
@@ -45,7 +43,7 @@ object NodeStringIdUtils {
     }
 
     fun getRefineDisplayName(nodeStringId: String, displayName: String): String {
-        return if (displayName.isNullOrBlank()) {
+        return if (displayName.isBlank()) {
             nodeStringId
         } else {
             displayName

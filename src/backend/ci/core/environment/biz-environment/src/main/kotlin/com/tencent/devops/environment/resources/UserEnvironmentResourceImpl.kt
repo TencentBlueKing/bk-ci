@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,7 +27,6 @@
 
 package com.tencent.devops.environment.resources
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
@@ -42,10 +42,10 @@ import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.enums.EnvType
-import com.tencent.devops.environment.pojo.enums.NodeSource
 import com.tencent.devops.environment.service.EnvService
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 @RestResource
 class UserEnvironmentResourceImpl @Autowired constructor(
     private val envService: EnvService,
@@ -65,39 +65,6 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         }
         if (environment.name.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_TOO_LONG)
-        }
-
-        if (NodeSource.CREATE == environment.source) {
-            val bcsVmParam = environment.bcsVmParam
-                ?: throw ErrorCodeException(
-                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                    params = arrayOf("bcsVmParam")
-                )
-
-            if (bcsVmParam.clusterId.isBlank()) {
-                throw ErrorCodeException(
-                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                    params = arrayOf("clusterId")
-                )
-            }
-            if (bcsVmParam.imageId.isBlank()) {
-                throw ErrorCodeException(
-                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                    params = arrayOf("imageId")
-                )
-            }
-            if (bcsVmParam.vmModelId.isBlank()) {
-                throw ErrorCodeException(
-                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                    params = arrayOf("vmModelId")
-                )
-            }
-        }
-
-        if (NodeSource.EXISTING == environment.source || NodeSource.CMDB == environment.source) {
-            if (environment.nodeHashIds == null || environment.nodeHashIds!!.isEmpty()) {
-                throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
-            }
         }
 
         return Result(envService.createEnvironment(userId, projectId, environment))

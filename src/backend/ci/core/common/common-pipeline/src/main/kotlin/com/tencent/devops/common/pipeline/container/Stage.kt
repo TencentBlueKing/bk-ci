@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -52,6 +53,10 @@ data class Stage(
     val customBuildEnv: Map<String, String>? = null,
     @ApiModelProperty("是否启用容器失败快速终止阶段", required = false)
     val fastKill: Boolean? = false,
+    @ApiModelProperty("标识是否为FinallyStage，每个Model只能包含一个FinallyStage，并且处于最后位置", required = false)
+    val finally: Boolean = false,
+    @ApiModelProperty("当前Stage是否能重试", required = false)
+    var canRetry: Boolean? = null,
     @ApiModelProperty("流程控制选项", required = true)
     var stageControlOption: StageControlOption? = null // 为了兼容旧数据，所以定义为可空以及var
 )

@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions, mapGetters, mapState } from 'vuex'
 import Accordion from '@/components/atomFormField/Accordion'
 import EnumInput from '@/components/atomFormField/EnumInput'
 import VuexInput from '@/components/atomFormField/VuexInput'
@@ -37,6 +37,8 @@ import CodeModeInput from '@/components/atomFormField/CodeModeInput'
 import ParamsView from '@/components/atomFormField/ParamsView'
 import SvnpathInput from '@/components/atomFormField/SvnpathInput'
 import KeyValue from '@/components/atomFormField/KeyValue'
+import DefineParam from '@/components/AtomFormComponent/DefineParam'
+import NotifyType from '@/components/AtomFormComponent/notifyType'
 import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
 import NameSpaceVar from '@/components/atomFormField/NameSpaceVar'
 import RouteTips from '@/components/atomFormField/RouteTips'
@@ -45,7 +47,7 @@ import FormField from './FormField'
 import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
 import AutoComplete from '@/components/atomFormField/AutoComplete'
-import { urlJoin, hasIntersection } from '../../utils/util'
+import { urlJoin, rely } from '../../utils/util'
 
 const atomMixin = {
     props: {
@@ -82,6 +84,8 @@ const atomMixin = {
         SvnpathInput,
         KeyValue,
         KeyValueNormal,
+        DefineParam,
+        NotifyType,
         NameSpaceVar,
         RouteTips,
         GroupIdSelector,
@@ -91,10 +95,21 @@ const atomMixin = {
     },
     computed: {
         ...mapGetters('atom', [
-            'isThirdPartyContainer'
+            'isThirdPartyContainer',
+            'atomVersionChangedKeys'
+        ]),
+        ...mapState('atom', [
+            'pipelineCommonSetting'
         ]),
         isThirdParty () {
             return this.isThirdPartyContainer(this.container)
+        },
+        atomInputLimit () {
+            try {
+                return this.pipelineCommonSetting.stageCommonSetting.jobCommonSetting.taskCommonSetting.inputComponentCommonSettings || []
+            } catch (error) {
+                return []
+            }
         }
     },
     methods: {
@@ -196,35 +211,15 @@ const atomMixin = {
             }
         },
         rely (obj, element) {
-            try {
-                const { rely: { expression = [], operation = 'AND' } } = obj
-                const cb = item => {
-                    const { key, value, regex } = item
-                    if (Array.isArray(value)) {
-                        if (Array.isArray(element[key])) {
-                            return hasIntersection(value, element[key])
-                        }
-                        return typeof element[key] !== 'undefined' && value.includes(element[key])
-                    } else if (regex) {
-                        const reg = new RegExp(regex, 'i')
-                        return Array.isArray(element[key]) ? element[key].some(item => reg.test(item)) : reg.test(element[key])
-                    } else {
-                        return Array.isArray(element[key]) ? element[key].some(item => item === value) : element[key] === value
-                    }
-                }
-                switch (operation) {
-                    case 'AND':
-                        return expression.every(cb)
-                    case 'OR':
-                        return expression.length > 0 ? expression.some(cb) : true
-                    case 'NOT':
-                        return expression.length > 0 ? !expression.some(cb) : true
-                    default:
-                        return true
-                }
-            } catch (e) {
-                return true
-            }
+            return rely(obj, element)
+        },
+        /**
+         * 获取每种类型最大长度限制
+         */
+        getMaxLengthByType (type) {
+            const defaultLength = 1024
+            const componentItem = this.atomInputLimit.find(item => item.componentType === type) || {}
+            return componentItem.maxSize || defaultLength
         }
     }
 }

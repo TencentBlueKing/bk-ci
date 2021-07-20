@@ -74,7 +74,7 @@ const actions = {
         })
     },
     updateTemplateInstance (_, { projectId, templateId, versionId, useTemplateSettings, params }) {
-        return ajax.put(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}?version=${versionId}&useTemplateSettings=${useTemplateSettings}`, params).then(response => {
+        return ajax.put(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}/async/update?version=${versionId}&useTemplateSettings=${useTemplateSettings}`, params).then(response => {
             return response.data
         })
     },
@@ -110,6 +110,11 @@ const actions = {
     },
     deleteTemplateVersion (_, { projectId, templateId, versionId }) {
         return ajax.delete(`${prefix}/templates/projects/${projectId}/templates/${templateId}/versions/${versionId}`).then(response => {
+            return response.data
+        })
+    },
+    deleteTemplateVersionByName (_, { projectId, templateId, versionName }) {
+        return ajax.delete(`${prefix}/templates/projects/${projectId}/templates/${templateId}/versionNames/${versionName}`).then(response => {
             return response.data
         })
     }
