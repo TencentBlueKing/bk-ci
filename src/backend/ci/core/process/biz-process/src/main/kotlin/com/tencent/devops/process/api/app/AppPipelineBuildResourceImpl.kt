@@ -316,7 +316,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                     buildId = buildId,
                     taskId = taskId,
                     failedContainer = failedContainer,
-                    skipFailedTask = skipFailedTask
+                    skipFailedTask = skipFailedTask,
+                    channelCode = channelCode
                 )
             )
         )
