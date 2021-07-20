@@ -161,16 +161,6 @@ class Client @Autowired constructor(
         }
     }
 
-    fun <T : Any> getByTag(clz: KClass<T>, tag: String): T {
-        ConsulContent.setConsulContent(tag)
-        try {
-            return get(clz)
-        } finally {
-            logger.info("removeConsulContent")// TODO remove
-            ConsulContent.removeConsulContent()
-        }
-    }
-
     fun <T : Any> getWithoutRetry(clz: KClass<T>): T {
         val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
         return Feign.builder()

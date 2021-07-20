@@ -42,4 +42,13 @@ object ConsulContent {
     fun removeConsulContent() {
         consulContent.remove()
     }
+
+    fun <T> invokeByTag(tag: String, action: () -> T): T {
+        try {
+            setConsulContent(tag)
+            return action()
+        } finally {
+            removeConsulContent()
+        }
+    }
 }

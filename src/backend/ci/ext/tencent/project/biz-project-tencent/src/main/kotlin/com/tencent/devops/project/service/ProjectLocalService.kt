@@ -43,6 +43,7 @@ import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -158,9 +159,9 @@ class ProjectLocalService @Autowired constructor(
             }
 
             if (!hasNext) {
-                val gitCIProjectList =
-                    client.getByTag(ServiceGitForAppResource::class, "dev-gitci")//TODO 不能写死
-                        .getGitCIProjectList(userId, 1, 10000, searchName)
+                val gitCIProjectList = ConsulContent.invokeByTag("dev-gitci") {
+                    client.get(ServiceGitForAppResource::class).getGitCIProjectList(userId, 1, 10000, searchName)
+                }
                 gitCIProjectList.data?.records?.let { records.addAll(it) }
             }
 
