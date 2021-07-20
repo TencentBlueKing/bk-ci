@@ -36,8 +36,8 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -49,9 +49,9 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGitForAppResource {
 
-    @ApiOperation("开启，关闭，初始化呢工蜂CI")
-    @POST
-    @Path("/enable")
+    @ApiOperation("获取gitci项目")
+    @GET
+    @Path("/projectList")
     fun getGitCIProjectList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
