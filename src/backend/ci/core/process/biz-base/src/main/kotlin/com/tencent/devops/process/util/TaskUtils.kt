@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 
@@ -70,7 +72,32 @@ object TaskUtils {
         if (postInfo == null) {
             return parentTask to postExecuteFlag
         }
-        parentTask = taskList.filter { it.taskId == postInfo.parentElementId }.getOrNull(0)
+        var parentTaskIndex: Int? = null
+        var buildLogPrinter: BuildLogPrinter? = null
+        for ((index, pipelineTask) in taskList.withIndex()) {
+            if (pipelineTask.taskId == task.taskId) {
+                break
+            }
+            if (pipelineTask.taskId == postInfo.parentElementId) {
+                parentTask = pipelineTask
+                parentTaskIndex = index
+            }
+            // 给post任务和其父任务之间的未执行任务加上日志提示
+            val endTaskFlag = task.taskId == VMUtils.genStopVMTaskId(task.taskSeq) ||
+                task.taskId == VMUtils.genEndPointTaskId(task.taskSeq)
+            if (parentTaskIndex != null && !endTaskFlag && pipelineTask.status == BuildStatus.UNEXEC) {
+                if (buildLogPrinter == null) {
+                    buildLogPrinter = SpringContextUtil.getBean(BuildLogPrinter::class.java)
+                }
+                buildLogPrinter.addLine(
+                    buildId = pipelineTask.buildId,
+                    message = "Do not meet the run conditions, ignored.",
+                    tag = pipelineTask.taskId,
+                    jobId = pipelineTask.containerHashId,
+                    executeCount = pipelineTask.executeCount ?: 1
+                )
+            }
+        }
         val runCondition = additionalOptions.runCondition
         val conditionFlag = if (runCondition == RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT) {
             // 判断父任务是否是取消或者超时状态

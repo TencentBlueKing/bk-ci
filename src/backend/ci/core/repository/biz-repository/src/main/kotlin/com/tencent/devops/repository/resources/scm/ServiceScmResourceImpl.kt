@@ -85,8 +85,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?,
-        full: Boolean?
+        search: String?
     ): Result<List<String>> {
         logger.info("listBranches|(projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
         return Result(
@@ -99,8 +98,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
                 token = token,
                 region = region,
                 userName = userName,
-                search = search,
-                full = full ?: true
+                search = search
             )
         )
     }
@@ -111,8 +109,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         type: ScmType,
         token: String,
         userName: String,
-        search: String?,
-        full: Boolean?
+        search: String?
     ): Result<List<String>> {
         logger.info("listTags|projectName=$projectName, url=$url, type=$type, username=$userName")
         return Result(
@@ -122,8 +119,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
                 type = type,
                 token = token,
                 userName = userName,
-                search = search,
-                full = full ?: true
+                search = search
             )
         )
     }

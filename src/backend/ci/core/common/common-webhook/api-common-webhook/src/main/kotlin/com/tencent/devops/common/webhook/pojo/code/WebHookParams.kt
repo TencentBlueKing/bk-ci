@@ -47,6 +47,8 @@ data class WebHookParams(
     var codeType: CodeType = CodeType.GIT,
     var excludeSourceBranchName: String? = null,
     var includeSourceBranchName: String? = null,
+    var includeCommitMsg: String? = null,
+    var excludeCommitMsg: String? = null,
     var webhookQueue: Boolean = false,
     /**
      * 当代码库有多个域名时,代码库配置url为git.a.com，事件触发的url为git.b.com，但是git.a.com和git.b.com指向同一个仓库

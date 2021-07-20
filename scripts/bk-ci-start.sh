@@ -59,7 +59,7 @@ start_ci__openresty (){
 
 check_port_listen (){
   local patt_port_listen port=$1
-  printf -v patt_port_listen "^ *[0-9]+: [0-9A-F]+:%X 0+:0+ 0A " "$port"
+  printf -v patt_port_listen "^ *[0-9]+: [0-9A-F]+:%04X 0+:0+ 0A " "$port"
   if cat /proc/net/tcp /proc/net/tcp6 | grep -E "$patt_port_listen"; then
     echo "ERROR: port $port is LISTENed by others."
     return 19

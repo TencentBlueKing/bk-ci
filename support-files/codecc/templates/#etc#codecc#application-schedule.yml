@@ -4,14 +4,19 @@ spring:
     name: schedule${service.suffix.codecc}
     desc: Schedule Service
     packageName: com.tencent.bk.codecc.schedule
-  data:
-    mongodb:
-      uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_HOST__:__BK_CODECC_MONGODB_PORT__/db_schedule?readPreference=secondaryPreferred
   http:
     encoding:
       charset: UTF-8
       enabled: true
       force: true
+  data:
+    mongodb:
+      uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_ADDR__/db_schedule?readPreference=secondaryPreferred
+
 server:
   port: __BK_CODECC_SCHEDULE_API_PORT__ # 服务端口
 
+codecc:
+  file:
+    data:
+      path: __BK_CODECC_FILE_DATA_PATH__
