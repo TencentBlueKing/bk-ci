@@ -248,6 +248,9 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         values: Map<String, String>
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
+
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+
         return Result(
             BuildId(
                 pipelineBuildFacadeService.buildManualStartup(
@@ -256,7 +259,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     values = values,
-                    channelCode = ChannelCode.BS
+                    channelCode = channelCode
                 )
             )
         )
@@ -295,15 +298,19 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(BuildId(pipelineBuildFacadeService.retry(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = taskId,
-            failedContainer = failedContainer,
-            skipFailedTask = skipFailedTask
-        )))
+        return Result(
+            BuildId(
+                pipelineBuildFacadeService.retry(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    failedContainer = failedContainer,
+                    skipFailedTask = skipFailedTask
+                )
+            )
+        )
     }
 
     override fun getBuildDetail(
