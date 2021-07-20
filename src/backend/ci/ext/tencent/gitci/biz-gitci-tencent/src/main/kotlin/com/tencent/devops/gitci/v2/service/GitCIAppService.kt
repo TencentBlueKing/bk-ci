@@ -7,6 +7,7 @@ import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.project.pojo.app.AppProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectSourceEnum
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -58,15 +59,16 @@ class GitCIAppService @Autowired constructor(
         pageSize: Int?,
         sortType: PipelineSortType?,
         search: String?
-    ): Pagination<String> {
+    ): Pagination<GitProjectPipeline> {
         val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val gitProjectId = if (projectId.trim().startsWith("git")) {
+            projectId.removePrefix("git_").toLong()
+        } else {
+            projectId.toLong()
+        }
         val pipelines = pipelineResourceDao.getAppDataByGitProjectId(
             dslContext = dslContext,
-            gitProjectId = if (projectId.trim().startsWith("git")) {
-                projectId.removePrefix("git_").toLong()
-            } else {
-                projectId.toLong()
-            },
+            gitProjectId = gitProjectId,
             keyword = search,
             offset = limit.offset,
             limit = limit.limit,
@@ -75,7 +77,19 @@ class GitCIAppService @Autowired constructor(
         if (pipelines.isNullOrEmpty()) {
             return Pagination(false, emptyList())
         }
-        val hasNext = pipelines.size == pageSize
-        return Pagination(hasNext, pipelines.map { it.pipelineId })
+        return Pagination(
+            pipelines.size == pageSize,
+            pipelines.map {
+                GitProjectPipeline(
+                    gitProjectId = gitProjectId,
+                    pipelineId = it.pipelineId,
+                    filePath = it.filePath,
+                    displayName = it.displayName,
+                    enabled = it.enabled,
+                    creator = it.creator,
+                    latestBuildInfo = null
+                )
+            }
+        )
     }
 }
