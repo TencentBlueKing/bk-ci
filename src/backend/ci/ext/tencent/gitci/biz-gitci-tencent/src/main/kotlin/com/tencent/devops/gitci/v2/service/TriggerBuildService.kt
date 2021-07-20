@@ -263,10 +263,10 @@ class TriggerBuildService @Autowired constructor(
         var checkOut: List<RuleCreateResponseV3>? = null
         yaml.stages.forEach { stage ->
             if (stage.checkIn != null) {
-                checkIn = CreateGates(stage, operations, event, ControlPointPosition.BEFORE_POSITION, pipeline)
+                checkIn = createGates(stage, operations, event, ControlPointPosition.BEFORE_POSITION, pipeline)
             }
             if (stage.checkOut != null) {
-                checkOut = CreateGates(stage, operations, event, ControlPointPosition.AFTER_POSITION, pipeline)
+                checkOut = createGates(stage, operations, event, ControlPointPosition.AFTER_POSITION, pipeline)
             }
         }
         return Pair(checkIn, checkOut)
@@ -276,7 +276,7 @@ class TriggerBuildService @Autowired constructor(
      * 根据规则创建红线
      * 规则实例： CodeccCheckAtomDebug.coverity_serious_defect <= 2
      */
-    private fun CreateGates(
+    private fun createGates(
         stage: GitCIV2Stage,
         operations: Set<String>,
         event: GitRequestEvent,
@@ -294,7 +294,7 @@ class TriggerBuildService @Autowired constructor(
                 val (medata, threshold) = mid.split(op.first())
                 RuleCreateRequestV3.CreateRequestIndicator(
                     atomCode = atomCode,
-                    metaDataId = medata.trim(),
+                    enName = medata.trim(),
                     operation = op.first(),
                     threshold = threshold.trim()
                 )
