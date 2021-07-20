@@ -42,7 +42,6 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
-import com.tencent.devops.process.pojo.pipeline.AppModelDetail
 import com.tencent.devops.process.service.app.AppBuildService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
@@ -321,43 +320,6 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                 )
             )
         )
-    }
-
-    override fun getBuildDetail(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): Result<AppModelDetail> {
-        checkParam(userId, projectId, pipelineId)
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        // 对特殊的buildid进行处理。
-        var buildIdReal = when (buildId) {
-            "latest" -> {
-                pipelineRuntimeService.getLatestBuildId(projectId, pipelineId)
-            }
-            "latestSucceeded" -> {
-                pipelineRuntimeService.getLatestSucceededBuildId(projectId, pipelineId)
-            }
-            "latestFailed" -> {
-                pipelineRuntimeService.getLatestFailedBuildId(projectId, pipelineId)
-            }
-            "latestFinished" -> {
-                pipelineRuntimeService.getLatestFinishedBuildId(projectId, pipelineId)
-            }
-            else -> {
-                buildId
-            }
-        }
-        if (buildIdReal == null) {
-            buildIdReal = buildId
-        }
-
-        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
-
-        return Result(appBuildService.getBuildDetail(userId, projectId, pipelineId, buildIdReal, channelCode))
     }
 
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {
