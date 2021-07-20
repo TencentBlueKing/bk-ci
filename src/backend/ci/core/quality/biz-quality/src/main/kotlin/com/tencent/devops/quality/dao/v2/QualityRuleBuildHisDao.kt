@@ -29,14 +29,16 @@ package com.tencent.devops.quality.dao.v2
 
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.model.quality.tables.TQualityRuleBuildHis
+import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository@Suppress("ALL")
 class QualityRuleBuildHisDao {
-    fun create(dslContext: DSLContext, userId: String, projectId: String, pipelineId: String,
+    fun create(dslContext: DSLContext, projectId: String, pipelineId: String,
                ruleId: Long, ruleRequest: RuleCreateRequestV3,
                indicatorIds: List<RuleCreateRequest.CreateRequestIndicator>): Long {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
@@ -77,6 +79,14 @@ class QualityRuleBuildHisDao {
                 .set(RULE_ID, ruleId)
                 .returning(ID)
                 .fetchOne()!!.id
+        }
+    }
+
+    fun list(dslContext: DSLContext, ruleIds: Collection<Long>): Result<TQualityRuleBuildHisRecord> {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            dslContext.selectFrom(this)
+                .where(ID.`in`(ruleIds))
+                .fetch()
         }
     }
 }

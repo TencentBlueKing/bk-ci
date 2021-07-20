@@ -28,13 +28,16 @@
 package com.tencent.devops.quality.api.v3.pojo.request
 
 import io.swagger.annotations.ApiModel
+import java.io.StringReader
 
 @ApiModel("构建检查参数")
 data class BuildCheckParamsV3(
     val projectId: String,
     val pipelineId: String,
+    val buildId: String,
     val position: String,
     val templateId: String?,
+    val interceptName: String?,
     val ruleIds: Set<String>,
     val runtimeVariable: Map<String, String>?
 )
