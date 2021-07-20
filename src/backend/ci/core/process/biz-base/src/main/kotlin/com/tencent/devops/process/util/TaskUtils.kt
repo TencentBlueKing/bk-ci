@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 
@@ -70,17 +72,59 @@ object TaskUtils {
         if (postInfo == null) {
             return parentTask to postExecuteFlag
         }
-
-        val runCondition = additionalOptions.runCondition
-        val conditionFlag = if (isContainerFailed) { // 当前容器有失败的任务
-            runCondition in getContinueConditionListWhenFail() // 需要满足[前置任务失败时才运行]或[除了取消才不运行]条件
-        } else {
-            // 除了[前置任务失败时才运行]的其他条件，或者设置了[前置任务失败时才运行]并且失败并继续的任务
-            runCondition != RunCondition.PRE_TASK_FAILED_ONLY || hasFailedTaskInInSuccessContainer
+        var parentTaskIndex: Int? = null
+        var buildLogPrinter: BuildLogPrinter? = null
+        for ((index, pipelineTask) in taskList.withIndex()) {
+            if (pipelineTask.taskId == task.taskId) {
+                break
+            }
+            if (pipelineTask.taskId == postInfo.parentElementId) {
+                parentTask = pipelineTask
+                parentTaskIndex = index
+            }
+            // 给post任务和其父任务之间的未执行任务加上日志提示
+            val endTaskFlag = task.taskId == VMUtils.genStopVMTaskId(task.taskSeq) ||
+                task.taskId == VMUtils.genEndPointTaskId(task.taskSeq)
+            if (parentTaskIndex != null && !endTaskFlag && pipelineTask.status == BuildStatus.UNEXEC) {
+                if (buildLogPrinter == null) {
+                    buildLogPrinter = SpringContextUtil.getBean(BuildLogPrinter::class.java)
+                }
+                buildLogPrinter.addLine(
+                    buildId = pipelineTask.buildId,
+                    message = "Do not meet the run conditions, ignored.",
+                    tag = pipelineTask.taskId,
+                    jobId = pipelineTask.containerHashId,
+                    executeCount = pipelineTask.executeCount ?: 1
+                )
+            }
         }
-
+        val runCondition = additionalOptions.runCondition
+        val conditionFlag = if (runCondition == RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT) {
+            // 判断父任务是否是取消或者超时状态
+            parentTask?.status == BuildStatus.CANCELED || parentTask?.status == BuildStatus.EXEC_TIMEOUT
+        } else if (runCondition == RunCondition.PRE_TASK_SUCCESS && !hasFailedTaskInInSuccessContainer) {
+            var flag = true
+            val taskSize = taskList.size - 1
+            for (i in 0..taskSize) {
+                val tmpTask = taskList[i]
+                if (tmpTask.taskId == task.taskId) {
+                    break
+                }
+                if (tmpTask.status != BuildStatus.SUCCEED) {
+                    flag = false
+                    break
+                }
+            }
+            flag
+        } else {
+            if (isContainerFailed) { // 当前容器有失败的任务
+                runCondition in getContinueConditionListWhenFail() // 需要满足[前置任务失败时才运行]或[除了取消才不运行]条件
+            } else {
+                // 除了[前置任务失败时才运行]的其他条件，或者设置了[前置任务失败时才运行]并且失败并继续的任务
+                runCondition != RunCondition.PRE_TASK_FAILED_ONLY || hasFailedTaskInInSuccessContainer
+            }
+        }
         if (conditionFlag) {
-            parentTask = taskList.filter { it.taskId == postInfo.parentElementId }.getOrNull(0)
             // 父任务必须是执行过的, 并且在指定的状态下和控制条件
             if (parentTask != null && parentTask.status in realExecuteBuildStatusList) {
                 postExecuteFlag = true
@@ -108,4 +152,9 @@ object TaskUtils {
      * 判断[task]是否为启动构建环境的任务，是返回true
      */
     fun isStartVMTask(task: PipelineBuildTask) = VMUtils.genStartVMTaskId(task.containerId) == task.taskId
+
+    /**
+     * 获取当前构建取消任务ID集合的redis键
+     */
+    fun getCancelTaskIdRedisKey(buildId: String, containerId: String) = "CANCEL_TASK_IDS_${buildId}_$containerId"
 }

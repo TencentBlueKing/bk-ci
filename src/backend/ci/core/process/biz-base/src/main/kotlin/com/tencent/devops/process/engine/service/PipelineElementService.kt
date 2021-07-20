@@ -203,10 +203,16 @@ class PipelineElementService @Autowired constructor(
             else originAtomElement.name
         val postCondition = elementPostInfo.postCondition
         var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
-        if (postCondition == "failed()") {
-            postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
-        } else if (postCondition == "always()") {
-            postAtomRunCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+        when (postCondition) {
+            "failed()" -> {
+                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
+            }
+            "always()" -> {
+                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+            }
+            "canceledOrTimeOut()" -> {
+                postAtomRunCondition = RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT
+            }
         }
         val additionalOptions = ElementAdditionalOptions(
             enable = true,

@@ -166,12 +166,8 @@ open class MarketAtomTask : ITask() {
             inputMap?.forEach { (name, value) ->
                 var valueStr = JsonUtil.toJson(value)
                 valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
-                    override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                        return CredentialUtils.getCredentialContextValue(key) ?: if (doubleCurlyBraces) {
-                                "\${{$key}}"
-                            } else {
-                                "\${$key}"
-                            }
+                    override fun getReplacement(key: String): String? {
+                        return CredentialUtils.getCredentialContextValue(key)
                     }
                 })
 
@@ -277,11 +273,7 @@ open class MarketAtomTask : ITask() {
                 atomLanguage, buildHostType.name, AgentEnv.getOS().name)
             logger.info("atomCode is:$atomCode ,atomDevLanguageEnvVarsResult is:$atomDevLanguageEnvVarsResult")
             val atomDevLanguageEnvVars = atomDevLanguageEnvVarsResult.data
-            val systemEnvVariables = mutableMapOf(
-                "PROJECT_ID" to buildVariables.projectId,
-                "BUILD_ID" to buildVariables.buildId,
-                "VM_SEQ_ID" to buildVariables.vmSeqId
-            )
+            val systemEnvVariables = TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)
             atomDevLanguageEnvVars?.forEach {
                 systemEnvVariables[it.envKey] = it.envValue
             }

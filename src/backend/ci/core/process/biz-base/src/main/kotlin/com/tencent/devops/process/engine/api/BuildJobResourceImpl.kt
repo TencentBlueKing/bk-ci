@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.engine.api.BuildJobResource
+import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -98,9 +99,21 @@ class BuildJobResourceImpl @Autowired constructor(
         )
     }
 
-    override fun jobHeartbeat(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
+    override fun jobHeartbeat(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String
+    ): Result<HeartBeatInfo> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(data = vMBuildService.heartbeat(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(
+            data = vMBuildService.heartbeat(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName
+            )
+        )
     }
 
     companion object {

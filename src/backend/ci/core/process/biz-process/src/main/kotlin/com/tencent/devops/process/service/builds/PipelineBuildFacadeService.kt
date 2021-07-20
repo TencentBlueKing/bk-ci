@@ -606,17 +606,27 @@ class PipelineBuildFacadeService(
              */
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
-            val startParams = mutableMapOf<String, Any>()
-            startParams.putAll(parameters)
+            val startParams = mutableListOf<BuildParameters>()
+            for (it in parameters) {
+                startParams.add(BuildParameters(it.key, it.value))
+            }
+            val paramsKeyList = startParams.map { it.key }
             triggerContainer.params.forEach {
-                if (startParams.containsKey(it.id)) {
+                if (paramsKeyList.contains(it.id)) {
                     return@forEach
                 }
-                startParams[it.id] = it.defaultValue
+                startParams.add(BuildParameters(key = it.id, value = it.defaultValue, readOnly = it.readOnly))
             }
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
-            startParams.forEach { (key, value) -> startParamsWithType.add(BuildParameters(key, value)) }
+            startParams.forEach { (key, value, valueType, readOnly) ->
+                startParamsWithType.add(BuildParameters(
+                    key,
+                    value,
+                    valueType,
+                    readOnly
+                ))
+            }
 
             return pipelineBuildService.startPipeline(
                 userId = userId,
@@ -1636,8 +1646,9 @@ class PipelineBuildFacadeService(
                     errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
                 )
             }
-
-            if (!alreadyCancelUser.isNullOrBlank()) {
+            // 兼容post任务的场景，处于”运行中“的构建可以支持多次取消操作
+            val cancelFlag = redisOperation.get("${BuildStatus.CANCELED.name}_$buildId")?.toBoolean()
+            if (cancelFlag == true) {
                 logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,

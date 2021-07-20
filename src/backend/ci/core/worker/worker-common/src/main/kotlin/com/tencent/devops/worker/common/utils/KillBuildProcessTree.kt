@@ -28,8 +28,10 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.worker.common.env.AgentEnv
-import com.tencent.process.ProcessTree
+import com.tencent.process.BkProcessTree
+import com.tencent.process.EnvVars
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -78,7 +80,13 @@ object KillBuildProcessTree {
         }
     }
 
-    fun killProcessTree(projectId: String, buildId: String, vmSeqId: String): List<Int> {
+    fun killProcessTree(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        taskIds: Set<String>? = null,
+        forceFlag: Boolean = false
+    ): List<Int> {
         val currentProcessId = if (AgentEnv.getOS() == OSType.WINDOWS) {
             getCurrentPID()
         } else {
@@ -89,12 +97,18 @@ object KillBuildProcessTree {
             return listOf()
         }
 
-        val processTree = ProcessTree.get()
+        val processTree = BkProcessTree.get()
         val processTreeIterator = processTree.iterator()
         val killedProcessIds = mutableListOf<Int>()
         while (processTreeIterator.hasNext()) {
             val osProcess = processTreeIterator.next()
-            val envVars = osProcess.environmentVariables
+            var envVars: EnvVars?
+            try {
+                envVars = osProcess.environmentVariables
+            } catch (ignore: Throwable) {
+                logger.warn("read [${osProcess.pid}] environmentVariables fail, skip", ignore)
+                continue
+            }
             if (envVars.isEmpty()) {
                 continue
             }
@@ -112,12 +126,16 @@ object KillBuildProcessTree {
                 val envProjectId = envVars["PROJECT_ID"]
                 val envBuildId = envVars["BUILD_ID"]
                 val envVmSeqId = envVars["VM_SEQ_ID"]
-                if (projectId.equals(envProjectId, ignoreCase = true) &&
+                var flag = projectId.equals(envProjectId, ignoreCase = true) &&
                     buildId.equals(envBuildId, ignoreCase = true) &&
                     vmSeqId.equals(envVmSeqId, ignoreCase = true)
-                ) {
-                    osProcess.killRecursively()
-                    osProcess.kill()
+                if (!taskIds.isNullOrEmpty()) {
+                    val envTaskId = envVars[PIPELINE_ELEMENT_ID]
+                    flag = flag && taskIds.contains(envTaskId)
+                }
+                if (flag) {
+                    osProcess.killRecursively(forceFlag)
+                    osProcess.kill(forceFlag)
                     killedProcessIds.add(osProcess.pid)
                 }
             } catch (e: Exception) {

@@ -150,8 +150,8 @@ class StartContainerStageCmd(
                 fail = BuildStatusSwitcher.stageStatusMaker.forceFinish(container.status)
             } else if (container.status == BuildStatus.SKIP) {
                 commandContext.skipContainerNum++
-            } else if (container.status.isRunning() && !actionType.isTerminate()) {
-                // 已经在运行中的, 只接受强制终止
+            } else if (container.status.isRunning() && !actionType.isEnd()) {
+                // 已经在运行中的, 只接受终止
                 running = BuildStatus.RUNNING
             } else if (!container.status.isFinish()) {
                 running = BuildStatus.RUNNING

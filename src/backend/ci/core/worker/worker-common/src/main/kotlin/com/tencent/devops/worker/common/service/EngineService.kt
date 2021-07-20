@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.service
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -123,7 +124,7 @@ object EngineService {
         }
     }
 
-    fun heartbeat() {
+    fun heartbeat(): HeartBeatInfo {
         var retryCount = 0
         val result = HttpRetryUtils.retryWhenHttpRetryException {
             if (retryCount > 0) {
@@ -135,6 +136,7 @@ object EngineService {
         if (result.isNotOk()) {
             throw RemoteServiceException("Failed to do heartbeat task")
         }
+        return result.data ?: throw RemoteServiceException("Failed to do heartbeat task")
     }
 
     fun timeout() {
