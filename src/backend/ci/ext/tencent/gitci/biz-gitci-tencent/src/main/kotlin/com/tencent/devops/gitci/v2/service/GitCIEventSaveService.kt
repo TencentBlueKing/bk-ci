@@ -38,6 +38,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
+import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
 import com.tencent.devops.gitci.utils.GitCommonUtils
@@ -120,8 +121,10 @@ class GitCIEventSaveService @Autowired constructor(
                 userId = event.userId,
                 block = realBlock,
                 state = GitCICommitCheckState.FAILURE,
-                context = "${pipelineName ?: ""}($filePath): $reason",
-                gitCIBasicSetting = gitBasicSetting
+                context = filePath,
+                description = TriggerReason.getTriggerReason(reason)?.summary ?: reason,
+                gitCIBasicSetting = gitBasicSetting,
+                jumpRequest = true
             )
         }
         return saveNotBuildEvent(

@@ -25,10 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.scm.pojo
 
-const val AGENT_VERSION = 12.39
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+/**
+{
+"file_name": "foo.h",
+"file_path": "src/controller/",
+"size": 15,
+"ref": "master",
+"blob_id": "37c36524713aa8083f787066a9ed0c0d2f82bbb4",
+"commit_id": "b5e3f65af2fd6d2895414a679290cad7664217b3",
+"content": "I2lmbmRlZiBXT1JLVFJFRV9ICiNkZWZpbmUgV09SS1RSRUVfSAoKI2luY2x1ZGUgInJlZnMua",
+"encoding": "base64"
 }
+ */
+
+@ApiModel("工蜂文件信息")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitCodeFileInfo(
+    @JsonProperty("file_name")
+    val fileName: String,
+    @JsonProperty("file_path")
+    val filePath: String,
+    @JsonProperty("size")
+    val size: Int,
+    @JsonProperty("ref")
+    val ref: String,
+    @JsonProperty("blob_id")
+    val blobId: String,
+    @JsonProperty("commit_id")
+    val commitId: String,
+    @JsonProperty("content")
+    val content: String,
+    @JsonProperty("encoding")
+    val encoding: String
+)

@@ -47,6 +47,7 @@ import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.TXUserReportResource
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -206,9 +207,11 @@ class GitCIV2DetailService @Autowired constructor(
             .data!!.toMutableList()
         // 更换域名来支持工蜂的页面
         reportList.forEachIndexed { index, report ->
-            reportList[index] = report.copy(
-                indexFileUrl = reportPrefix + report.indexFileUrl
-            )
+            if (report.type == ReportTypeEnum.INTERNAL.name) {
+                reportList[index] = report.copy(
+                    indexFileUrl = reportPrefix + report.indexFileUrl
+                )
+            }
         }
         return reportList.toList()
     }

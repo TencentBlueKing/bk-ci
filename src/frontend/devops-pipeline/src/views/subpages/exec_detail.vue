@@ -29,7 +29,7 @@
                     </div>
                     <div class="info-item">
                         <span class="item-label">{{ $t('details.executionTime') }}：</span>
-                        <span>{{ execDetail.endTime ? convertMStoStringByRule(execDetail.endTime - execDetail.startTime) : '--' }}</span>
+                        <span>{{ execDetail.executeTime ? convertMStoStringByRule(execDetail.executeTime) : '--' }}</span>
                     </div>
                 </div>
                 <bk-tab-panel
