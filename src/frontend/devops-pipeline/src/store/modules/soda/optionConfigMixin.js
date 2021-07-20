@@ -87,6 +87,11 @@ const optionConfigMixin = {
                         {
                             id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
                             name: this.$t('storeMap.varNotMatch')
+                        },
+                        {
+                            id: 'PARENT_TASK_CANCELED_OR_TIMEOUT',
+                            name: this.$t('storeMap.userCancelExec'),
+                            disabled: true
                         }
                     ]
                 },
