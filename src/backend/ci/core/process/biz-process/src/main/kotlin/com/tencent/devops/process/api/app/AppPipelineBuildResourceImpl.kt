@@ -228,12 +228,15 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         pipelineId: String
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
+
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+
         return Result(
             pipelineBuildFacadeService.buildManualStartupInfo(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                channelCode = ChannelCode.BS
+                channelCode = channelCode
             )
         )
     }
