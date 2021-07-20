@@ -157,6 +157,16 @@ class QualityIndicatorService @Autowired constructor(
         }?.toList() ?: listOf()
     }
 
+    fun serviceList(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
+        return indicatorDao.listByElementType(dslContext, elementType, enNameSet = enNameSet)?.map { indicator ->
+            val metadataIds = convertMetaIds(indicator.metadataIds)
+            val metadata = metadataService.serviceListMetadata(metadataIds).map {
+                QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
+            }
+            convertRecord(indicator, metadata)
+        }?.toList() ?: listOf()
+    }
+
     fun opList(userId: String, page: Int?, pageSize: Int?): Page<IndicatorData> {
         val dataRecords = indicatorDao.listSystemDescByPage(dslContext, page, pageSize)
         val data = indicatorRecordToIndicatorData(dataRecords)

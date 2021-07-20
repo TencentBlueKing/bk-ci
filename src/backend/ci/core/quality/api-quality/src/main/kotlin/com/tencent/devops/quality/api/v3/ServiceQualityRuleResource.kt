@@ -60,7 +60,7 @@ interface ServiceQualityRuleResource {
     ): Result<RuleCheckResult>
 
     @ApiOperation("创建拦截规则")
-    @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/create")
+    @Path("/project/{projectId}/pipeline/{pipelineId}/create")
     @POST
     fun create(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

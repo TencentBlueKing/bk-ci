@@ -75,10 +75,17 @@ class QualityIndicatorDao {
         }
     }
 
-    fun listByElementType(dslContext: DSLContext, elementType: String, type: IndicatorType = IndicatorType.MARKET): Result<TQualityIndicatorRecord>? {
+    fun listByElementType(dslContext: DSLContext,
+                          elementType: String,
+                          type: IndicatorType = IndicatorType.MARKET,
+                          enNameSet: Collection<String>? = null): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
+            val cond = TYPE.eq(type.name).and(ELEMENT_TYPE.eq(elementType))
+            if (!enNameSet.isNullOrEmpty()) {
+                cond.and(EN_NAME.`in`(enNameSet))
+            }
             return dslContext.selectFrom(this)
-                .where(TYPE.eq(type.name).and(ELEMENT_TYPE.eq(elementType)))
+                .where(cond)
                 .fetch()
         }
     }

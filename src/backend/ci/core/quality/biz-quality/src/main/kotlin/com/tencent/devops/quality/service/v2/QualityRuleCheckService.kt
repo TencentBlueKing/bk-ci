@@ -204,7 +204,8 @@ class QualityRuleCheckService @Autowired constructor(
             val ruleList = qualityRuleBuildHisService.list(ruleIds.map { HashUtil.decodeIdToLong(it) })
 
             val filterRuleList = ruleList.filter { rule ->
-                logger.info("validate whether to check rule(${rule.name}) with gatewayId(${rule.gatewayId})")
+                logger.info("validate whether to check rule with gatewayId: " +
+                    "${rule.name}, ${HashUtil.decodeIdToLong(rule.hashId)}, ${rule.gatewayId}")
 
                 val gatewayId = rule.gatewayId ?: ""
                 if (!buildCheckParams.interceptName.isNullOrBlank()

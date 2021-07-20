@@ -83,8 +83,7 @@ class QualityRuleService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val qualityCacheService: QualityCacheService,
-    private val qualityPermissionService: QualityPermissionService,
-    private val metadataService: QualityMetadataService
+    private val qualityPermissionService: QualityPermissionService
 ) {
 
     companion object {
@@ -153,20 +152,23 @@ class QualityRuleService @Autowired constructor(
     }
 
     fun serviceCreate(userId: String, projectId: String, pipelineId: String, ruleRequestList: List<RuleCreateRequestV3>): List<RuleCreateResponseV3> {
+        val size = qualityRuleDao.deleteByPipelineId(dslContext, projectId, pipelineId)
+        logger.info("finish to clean pre rule: $projectId, $pipelineId, $size")
+
         return ruleRequestList.map {  ruleRequest ->
             logger.info("start to create or update rule: $projectId, $pipelineId, ${ruleRequest.name}")
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
-                val indicatorMap = indicators.map { it.metaDataId to  it }.toMap()
-                metadataService.serviceListByDataId(atomCode, indicators.map { it.metaDataId }).forEach {
+                indicatorService.serviceList(atomCode, indicators.map { it.enName }).forEach {
                     indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
                         it.hashId,
-                        indicatorMap[it.dataId]!!.operation,
-                        indicatorMap[it.dataId]!!.threshold
+                        it.operation.name,
+                        it.threshold
                     ))
                 }
             }
+
             val ruleId = serviceCreate(
                 userId,
                 projectId,
@@ -184,12 +186,12 @@ class QualityRuleService @Autowired constructor(
                     notifyUserList = ruleRequest.notifyUserList,
                     auditUserList = ruleRequest.auditUserList,
                     auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes,
-                    gatewayId = ruleRequest.gatewayId
+                    gatewayId = ruleRequest.gatewayId ?: ""
                 ),
                 createAuth = false)
 
             logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
-            val id = qualityRuleBuildHisDao.create(dslContext, projectId, pipelineId,
+            val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId,
                 HashUtil.decodeIdToLong(ruleId), ruleRequest, indicatorIds)
 
             RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, HashUtil.encodeLongId(id))
@@ -206,6 +208,18 @@ class QualityRuleService @Autowired constructor(
             authPermission = AuthPermission.EDIT,
             message = "用户没有拦截规则的编辑权限"
         )
+        serviceUpdate(userId, projectId, ruleHashId, ruleRequest)
+        qualityPermissionService.modifyRuleResource(
+            projectId = projectId,
+            ruleId = ruleId,
+            ruleName = ruleRequest.name
+        )
+        return true
+    }
+
+    fun serviceUpdate(userId: String, projectId: String, ruleHashId: String, ruleRequest: RuleUpdateRequest): Boolean {
+        val ruleId = HashUtil.decodeIdToLong(ruleHashId)
+
         dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             qualityRuleDao.update(context, userId, projectId, ruleId, ruleRequest)
@@ -222,11 +236,6 @@ class QualityRuleService @Autowired constructor(
                     auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes ?: 15
                 )
             }
-            qualityPermissionService.modifyRuleResource(
-                projectId = projectId,
-                ruleId = ruleId,
-                ruleName = ruleRequest.name
-            )
             refreshRedis(projectId, ruleId)
         }
         return true
@@ -649,8 +658,8 @@ class QualityRuleService @Autowired constructor(
                 indicatorIds = ruleData.indicators.map {
                     RuleCreateRequest.CreateRequestIndicator(it.hashId, it.operation.name, it.threshold)
                 }, // indicatorIds
-                controlPoint = ruleData.controlPoint?.name,
-                controlPointPosition = ruleData.controlPoint?.position?.name,
+                controlPoint = ruleData.controlPoint.name,
+                controlPointPosition = ruleData.controlPoint.position.name,
                 range = listOf(),
                 templateRange = listOf(request.targetTemplateId),
                 operation = ruleData.operation,
@@ -699,7 +708,7 @@ class QualityRuleService @Autowired constructor(
                     })
                 }
                 // 生成结果
-                matchTaskList.add(QualityRuleMatchTask(controlPoint?.name, controlPoint?.cnName, position,
+                matchTaskList.add(QualityRuleMatchTask(controlPoint.name, controlPoint.cnName, position,
                     taskRuleList, taskThresholdList, taskAuditUserList))
             }
         }

@@ -41,9 +41,9 @@ data class RuleCreateRequest(
     @ApiModelProperty("指标类型", required = true)
     val indicatorIds: List<CreateRequestIndicator>,
     @ApiModelProperty("控制点", required = true)
-    val controlPoint: String?,
+    val controlPoint: String,
     @ApiModelProperty("控制点位置", required = true)
-    val controlPointPosition: String?,
+    val controlPointPosition: String,
     @ApiModelProperty("生效的流水线id集合", required = true)
     val range: List<String>,
     @ApiModelProperty("生效的流水线模板id集合", required = true)

@@ -29,6 +29,7 @@ package com.tencent.devops.quality.service.v2
 
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
@@ -46,7 +47,7 @@ class QualityRuleBuildHisService constructor(
         val allRule = qualityRuleBuildHisDao.list(dslContext, ruleIds)
         val allIndicatorIds = mutableSetOf<Long>()
         allRule.forEach {
-            allIndicatorIds.addAll(it.indicatorIds.map { it.toLong() })
+            allIndicatorIds.addAll(it.indicatorIds.map { indicatorId -> indicatorId.toLong() })
         }
         val qualityIndicatorMap = qualityIndicatorService.serviceList(allIndicatorIds).map {
             HashUtil.decodeIdToLong(it.hashId).toString() to it
@@ -56,8 +57,10 @@ class QualityRuleBuildHisService constructor(
                 hashId = HashUtil.encodeLongId(it.ruleId),
                 name = it.ruleName,
                 desc = it.ruleDesc,
-                indicators = it.indicatorIds.split(",").map { indicatorId -> qualityIndicatorMap[indicatorId]!! },
-                controlPoint = null,
+                indicators = it.indicatorIds.split(",").map { indicatorId ->
+                    qualityIndicatorMap[indicatorId] ?: throw IllegalArgumentException("indicatorId not found in map: $indicatorId, $qualityIndicatorMap")
+                },
+                controlPoint = QualityRule.RuleControlPoint("", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()),
                 range = listOf(it.pipelineId!!),
                 templateRange = listOf(),
                 operation = RuleOperation.valueOf(it.opType),
