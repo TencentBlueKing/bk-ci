@@ -23,6 +23,8 @@ class TXReportService @Autowired constructor(
                 val indexFile = Paths.get(it.indexFile).normalize().toString()
                 val urlPrefix = getRootUrlNoApiHost(projectId, pipelineId, buildId, it.elementId)
                 reportList.add(Report(it.name, "$urlPrefix$indexFile", it.type))
+            } else {
+                reportList.add(Report(it.name, it.indexFile, it.type))
             }
         }
         return reportList
