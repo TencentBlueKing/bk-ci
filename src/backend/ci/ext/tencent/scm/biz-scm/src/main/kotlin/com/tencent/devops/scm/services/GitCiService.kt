@@ -246,6 +246,8 @@ class GitCiService {
         pageSize: Int,
         query: String?
     ): List<GitMember> {
+        val newPage = if (page == 0) 1 else page
+        val newPageSize = if (pageSize > 1000) 1000 else pageSize
         val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/members/all" +
             "?access_token=$token" +
             if (query != null) {
@@ -253,7 +255,7 @@ class GitCiService {
             } else {
                 ""
             } +
-            "&page=$page" + "&per_page=$pageSize"
+            "&page=$newPage" + "&per_page=$newPageSize"
         logger.info("getGitCIAllMembers request url: $url")
         val request = Request.Builder()
             .url(url)
