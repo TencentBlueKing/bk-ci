@@ -34,7 +34,6 @@ import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.service.config.CommonConfig
