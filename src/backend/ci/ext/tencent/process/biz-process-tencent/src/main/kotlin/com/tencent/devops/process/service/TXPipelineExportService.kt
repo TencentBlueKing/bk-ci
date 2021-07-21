@@ -478,6 +478,8 @@ class TXPipelineExportService @Autowired constructor(
                     val inputMap = if (input != null && !(input as MutableMap<String, Any>).isNullOrEmpty()) {
                         input
                     } else null
+                    logger.info("[$projectId] getV2StepFromJob export MarketBuildAtom " +
+                        "atomCode(${step.getAtomCode()}), inputMap=$inputMap, step=$step")
                     if (output != null && !(output as MutableMap<String, Any>).isNullOrEmpty()) {
                         output.keys.forEach { key ->
                             val outputWithNamespace = if (namespace.isNullOrBlank()) key else "${namespace}_$key"
@@ -874,7 +876,7 @@ class TXPipelineExportService @Autowired constructor(
             )
             return true
         } catch (e: Exception) {
-            logger.error("Failed to convert git atom[$atomCode]: ", e)
+            logger.error("[$projectId] addCheckoutAtom failed to convert atom[$atomCode]: ", e)
         }
         return false
     }
