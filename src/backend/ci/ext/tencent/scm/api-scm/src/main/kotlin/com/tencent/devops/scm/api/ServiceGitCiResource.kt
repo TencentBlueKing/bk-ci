@@ -242,27 +242,6 @@ interface ServiceGitCiResource {
         search: String?
     ): Result<List<GitMember>>
 
-    @ApiOperation("获取用户所有git项目，分页方式获取")
-    @GET
-    @Path("/getProjectList")
-    fun getProjectList(
-        @ApiParam("accessToken", required = true)
-        @QueryParam("accessToken")
-        accessToken: String,
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @ApiParam("第几页", required = true)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数据条数", required = true)
-        @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("搜索条件，模糊匹配path,name")
-        @QueryParam("searchName")
-        search: String?
-    ): Result<List<GitCodeProjectInfo>>
-
     @ApiOperation("文件内容和一些文件信息")
     @GET
     @Path("/getGitFileInfo")
