@@ -234,4 +234,19 @@ class GitCIBasicSettingDao {
                 .execute()
         }
     }
+
+    fun searchProjectByIds(
+        dslContext: DSLContext,
+        projectIds: Set<Long>?
+    ): List<TGitBasicSettingRecord> {
+        if (projectIds.isNullOrEmpty()) {
+            return emptyList()
+        }
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(projectIds))
+                .and(ENABLE_CI.eq(true))
+                .fetch()
+        }
+    }
 }
