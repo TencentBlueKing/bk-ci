@@ -190,7 +190,7 @@ jobs:
           echo "::set-output name=version::$version"
           codecc_pkg_dir=/dev/shm/codecc ./scripts/deploy-codecc/packager-codecc.sh "$version" bkcodecc-slim.tar.gz "$PWD"
 
-    - uses: actions/upload-artifact@v1
-      with:
-        name: codecc
-        path: bkcodecc-slim.tar.gz
+      - uses: actions/upload-artifact@v1
+        with:
+          name: codecc
+          path: bkcodecc-slim.tar.gz
