@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -69,7 +68,6 @@ import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -105,7 +103,8 @@ class TXPipelineExportService @Autowired constructor(
 
     private val checkoutAtomCodeSet = listOf(
         "gitCodeRepo",
-        "gitCodeRepoCommon"
+        "gitCodeRepoCommon",
+        "checkout"
     )
 
     // 导出工蜂CI-2.0的yml
@@ -473,7 +472,6 @@ class TXPipelineExportService @Autowired constructor(
                 }
                 MarketBuildAtomElement.classType -> {
                     val step = element as MarketBuildAtomElement
-                    val atomCode = element.data["atomCode"] as String?
                     val input = element.data["input"]
                     val output = element.data["output"]
                     val namespace = element.data["namespace"] as String?
@@ -496,9 +494,9 @@ class TXPipelineExportService @Autowired constructor(
                     val checkoutAtom = addCheckoutAtom(
                         projectId = projectId,
                         stepList = stepList,
+                        atomCode = step.getAtomCode(),
                         step = step,
                         output2Element = output2Element,
-                        atomCode = atomCode,
                         inputMap = inputMap,
                         timeoutMinutes = timeoutMinutes,
                         continueOnError = continueOnError,
@@ -820,15 +818,16 @@ class TXPipelineExportService @Autowired constructor(
     private fun addCheckoutAtom(
         projectId: String,
         stepList: MutableList<V2Step>,
+        atomCode: String,
         step: MarketBuildAtomElement,
         output2Element: MutableMap<String, MarketBuildAtomElement>,
-        atomCode: String?,
         inputMap: MutableMap<String, Any>?,
         timeoutMinutes: Int?,
         continueOnError: Boolean?,
         retryTimes: Int?
     ): Boolean {
-        if (inputMap == null || atomCode == null || !checkoutAtomCodeSet.contains(atomCode)) return false
+        if (inputMap == null || atomCode.isNotBlank() || !checkoutAtomCodeSet.contains(atomCode)) return false
+        logger.info("[$projectId] addCheckoutAtom export with atomCode($atomCode), inputMap=$inputMap, step=$step")
         try {
             val repositoryUrl = inputMap["repositoryUrl"] as String?
             val url = if (repositoryUrl.isNullOrBlank()) {
