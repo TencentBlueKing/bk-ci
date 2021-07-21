@@ -6,6 +6,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.scm.ScmProxyService
 import org.junit.Assert
 import org.junit.Test
 
@@ -15,20 +16,22 @@ class TXPipelineExportServiceTest {
     private val pipelinePermissionService: PipelinePermissionService = mock()
     private val pipelineRepositoryService: PipelineRepositoryService = mock()
     private val storeImageHelper: StoreImageHelper = mock()
+    private val scmProxyService: ScmProxyService = mock()
 
     private val txPipelineExportService = TXPipelineExportService(
         stageTagService = stageTagService,
         pipelineGroupService = pipelineGroupService,
         pipelinePermissionService = pipelinePermissionService,
         pipelineRepositoryService = pipelineRepositoryService,
-        storeImageHelper = storeImageHelper
+        storeImageHelper = storeImageHelper,
+        scmProxyService = scmProxyService
     )
 
     @Test
     fun testReplaceMapWithDoubleCurlybraces1() {
         val inputMap: MutableMap<String, Any>? = mutableMapOf()
 
-        val resultMap = txPipelineExportService.replaceMapWithDoubleCurlyBraces(inputMap, mutableMapOf())
+        val resultMap = txPipelineExportService.replaceMapWithDoubleCurlyBraces(inputMap, mutableMapOf(), mutableMapOf())
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
         Assert.assertEquals(result, "null")
     }
@@ -44,7 +47,7 @@ class TXPipelineExportServiceTest {
             "\${key}" to "\${123456}aaaaaa\${haha}hijklmn\${aaaa}" as Any
         )
 
-        val resultMap = txPipelineExportService.replaceMapWithDoubleCurlyBraces(inputMap, mutableMapOf())
+        val resultMap = txPipelineExportService.replaceMapWithDoubleCurlyBraces(inputMap, mutableMapOf(), mutableMapOf())
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
         Assert.assertEquals(result, "{\"key1\":\"value\",\"key2\":\"\${{ variables.haha }}\"," +
             "\"key3\":\"abcedf\${{ variables.haha }}hijklmn\",\"key4\":\"aaaaaa\${{ variables.haha }}hijklmn" +
@@ -60,7 +63,7 @@ class TXPipelineExportServiceTest {
             "key2" to listOf("\${haha}", "abcedf\${haha}hijklmn", "\${123456}aaaaaa\${haha}hijklmn\${aaaa}", 123) as Any
         )
 
-        val resultMap = txPipelineExportService.replaceMapWithDoubleCurlyBraces(inputMap, mutableMapOf())
+        val resultMap = txPipelineExportService.replaceMapWithDoubleCurlyBraces(inputMap, mutableMapOf(), mutableMapOf())
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
         Assert.assertEquals(result, "{\"key1\":\"value\",\"key2\":[\"\${{ variables.haha }}\"," +
             "\"abcedf\${{ variables.haha }}hijklmn\",\"\${{ variables.123456 }}aaaaaa" +
