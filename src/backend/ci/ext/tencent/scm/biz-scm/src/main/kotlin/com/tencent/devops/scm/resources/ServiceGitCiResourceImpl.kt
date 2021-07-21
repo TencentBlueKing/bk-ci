@@ -135,6 +135,16 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?
+    ): Result<List<GitCodeProjectInfo>> {
+        return Result(gitCiService.getProjectList(accessToken, userId, page, pageSize, search))
+    }
+
     override fun getGitFileInfo(
         gitProjectId: String,
         filePath: String?,
@@ -149,16 +159,6 @@ class ServiceGitCiResourceImpl @Autowired constructor(
             ref = ref,
             useAccessToken = useAccessToken
         )
-    }
-
-    override fun getProjectList(
-        accessToken: String,
-        userId: String,
-        page: Int?,
-        pageSize: Int?,
-        search: String?
-    ): Result<List<GitCodeProjectInfo>> {
-        return Result(gitCiService.getProjectList(accessToken, userId, page, pageSize, search))
     }
 
     override fun getProjectMembersAll(

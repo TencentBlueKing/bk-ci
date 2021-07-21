@@ -40,8 +40,8 @@ import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
-import com.tencent.devops.scm.pojo.GitCodeFileInfo
-import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeFileInfoGitCodeProjectInfo
+import com.tencent.devops.scm.pojo.
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
