@@ -149,7 +149,7 @@ class TXPipelineExportService @Autowired constructor(
             it.id to it.stageTagName
         }?.toMap() ?: emptyMap()
 
-        val output2Element = mutableMapOf</*outputName*/String, MarketBuildAtomElement>()
+        val output2Elements = mutableMapOf</*outputName*/String, MutableList<MarketBuildAtomElement>>()
 
         val yamlObj = try {
             ExportPreScriptBuildYaml(
@@ -165,7 +165,7 @@ class TXPipelineExportService @Autowired constructor(
                     model = model,
                     comment = yamlSb,
                     stageTagsMap = stageTagsMap,
-                    output2Element = output2Element
+                    output2Elements = output2Elements
                 ),
                 extends = null,
                 resources = null,
@@ -176,7 +176,7 @@ class TXPipelineExportService @Autowired constructor(
                     pipelineId = pipelineId,
                     stage = model.stages.last(),
                     comment = yamlSb,
-                    output2Element = output2Element
+                    output2Elements = output2Elements
                 )
             )
         } catch (t: Throwable) {
@@ -207,7 +207,7 @@ class TXPipelineExportService @Autowired constructor(
         model: Model,
         comment: StringBuilder,
         stageTagsMap: Map<String, String>,
-        output2Element: MutableMap<String, MarketBuildAtomElement>
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>
     ): List<PreStage> {
         val stages = mutableListOf<PreStage>()
         model.stages.drop(1).forEach { stage ->
@@ -220,7 +220,7 @@ class TXPipelineExportService @Autowired constructor(
                 pipelineId = pipelineId,
                 stage = stage,
                 comment = comment,
-                output2Element = output2Element
+                output2Elements = output2Elements
             )
             val tags = mutableListOf<String>()
             stage.tag?.forEach {
@@ -251,7 +251,7 @@ class TXPipelineExportService @Autowired constructor(
         pipelineId: String,
         stage: com.tencent.devops.common.pipeline.container.Stage,
         comment: StringBuilder,
-        output2Element: MutableMap<String, MarketBuildAtomElement>
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>
     ): Map<String, PreJob>? {
         if (stage.finally) {
             return getV2JobFromStage(
@@ -260,7 +260,7 @@ class TXPipelineExportService @Autowired constructor(
                 pipelineId = pipelineId,
                 stage = stage,
                 comment = comment,
-                output2Element = output2Element
+                output2Elements = output2Elements
             )
         }
         return null
@@ -272,7 +272,7 @@ class TXPipelineExportService @Autowired constructor(
         pipelineId: String,
         stage: com.tencent.devops.common.pipeline.container.Stage,
         comment: StringBuilder,
-        output2Element: MutableMap<String, MarketBuildAtomElement>
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>
     ): Map<String, PreJob>? {
         val jobs = mutableMapOf<String, PreJob>()
         stage.containers.forEach {
@@ -302,7 +302,12 @@ class TXPipelineExportService @Autowired constructor(
                         } else {
                             null
                         },
-                        steps = getV2StepFromJob(projectId, job, comment, output2Element),
+                        steps = getV2StepFromJob(
+                            projectId = projectId,
+                            job = job,
+                            comment = comment,
+                            output2Elements = output2Elements
+                        ),
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
                         continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
@@ -391,7 +396,12 @@ class TXPipelineExportService @Autowired constructor(
                         } else {
                             null
                         },
-                        steps = getV2StepFromJob(projectId, job, comment, output2Element),
+                        steps = getV2StepFromJob(
+                            projectId = projectId,
+                            job = job,
+                            comment = comment,
+                            output2Elements = output2Elements
+                        ),
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
                         continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
@@ -413,7 +423,7 @@ class TXPipelineExportService @Autowired constructor(
         projectId: String,
         job: Container,
         comment: StringBuilder,
-        output2Element: MutableMap<String, MarketBuildAtomElement>
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>
     ): List<V2Step> {
         val stepList = mutableListOf<V2Step>()
         job.elements.forEach { element ->
@@ -442,7 +452,7 @@ class TXPipelineExportService @Autowired constructor(
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
                             env = null,
-                            run = formatScriptOutput(step.script, output2Element),
+                            run = formatScriptOutput(step.script, output2Elements),
                             checkout = null
                         )
                     )
@@ -465,7 +475,7 @@ class TXPipelineExportService @Autowired constructor(
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
                             env = null,
-                            run = formatScriptOutput(step.script, output2Element),
+                            run = formatScriptOutput(step.script, output2Elements),
                             checkout = null
                         )
                     )
@@ -483,14 +493,12 @@ class TXPipelineExportService @Autowired constructor(
                     if (output != null && !(output as MutableMap<String, Any>).isNullOrEmpty()) {
                         output.keys.forEach { key ->
                             val outputWithNamespace = if (namespace.isNullOrBlank()) key else "${namespace}_$key"
-                            val conflictElement = output2Element[outputWithNamespace]
-                            if (conflictElement != null) throw ErrorCodeException(
-                                statusCode = Response.Status.BAD_REQUEST.statusCode,
-                                errorCode = ProcessMessageCode.ERROR_EXPORT_OUTPUT_CONFLICT,
-                                defaultMessage = "插件[${element.name}]与[${conflictElement.name}]存在相同输出变量[$outputWithNamespace]",
-                                params = arrayOf(element.name, conflictElement.name, outputWithNamespace)
-                            )
-                            output2Element[outputWithNamespace] = element
+                            val conflictElements = output2Elements[outputWithNamespace]
+                            if (!conflictElements.isNullOrEmpty()) {
+                                conflictElements.add(step)
+                            } else {
+                                output2Elements[outputWithNamespace] = mutableListOf(step)
+                            }
                         }
                     }
                     val checkoutAtom = addCheckoutAtom(
@@ -498,13 +506,12 @@ class TXPipelineExportService @Autowired constructor(
                         stepList = stepList,
                         atomCode = step.getAtomCode(),
                         step = step,
-                        output2Element = output2Element,
+                        output2Elements = output2Elements,
                         inputMap = inputMap,
                         timeoutMinutes = timeoutMinutes,
                         continueOnError = continueOnError,
                         retryTimes = retryTimes
                     )
-
                     if (!checkoutAtom) stepList.add(
                         V2Step(
                             name = step.name,
@@ -516,7 +523,7 @@ class TXPipelineExportService @Autowired constructor(
                                 null
                             },
                             uses = "${step.getAtomCode()}@${step.version}",
-                            with = replaceMapWithDoubleCurlyBraces(inputMap, output2Element),
+                            with = replaceMapWithDoubleCurlyBraces(inputMap, output2Elements),
                             timeoutMinutes = timeoutMinutes,
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
@@ -543,7 +550,7 @@ class TXPipelineExportService @Autowired constructor(
                                 null
                             },
                             uses = "${step.getAtomCode()}@${step.version}",
-                            with = replaceMapWithDoubleCurlyBraces(inputMap, output2Element),
+                            with = replaceMapWithDoubleCurlyBraces(inputMap, output2Elements),
                             timeoutMinutes = timeoutMinutes,
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
@@ -600,30 +607,30 @@ class TXPipelineExportService @Autowired constructor(
 
     fun replaceMapWithDoubleCurlyBraces(
         inputMap: MutableMap<String, Any>?,
-        output2Element: MutableMap<String, MarketBuildAtomElement>
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>
     ): Map<String, Any?>? {
         if (inputMap.isNullOrEmpty()) {
             return null
         }
         val result = mutableMapOf<String, Any>()
         inputMap.forEach { (key, value) ->
-            result[key] = replaceValueWithDoubleCurlyBraces(value, output2Element)
+            result[key] = replaceValueWithDoubleCurlyBraces(value, output2Elements)
         }
         return result
     }
 
     private fun replaceValueWithDoubleCurlyBraces(
         value: Any,
-        output2Element: MutableMap<String, MarketBuildAtomElement>
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>
     ): Any {
         if (value is String) {
-            return replaceStringWithDoubleCurlyBraces(value, output2Element)
+            return replaceStringWithDoubleCurlyBraces(value, output2Elements)
         }
         if (value is List<*>) {
             val result = mutableListOf<Any?>()
             value.forEach {
                 if (it is String) {
-                    result.add(replaceStringWithDoubleCurlyBraces(it, output2Element))
+                    result.add(replaceStringWithDoubleCurlyBraces(it, output2Elements))
                 } else  {
                     result.add(it)
                 }
@@ -636,7 +643,7 @@ class TXPipelineExportService @Autowired constructor(
 
     private fun replaceStringWithDoubleCurlyBraces(
         value: String,
-        output2Element: MutableMap<String, MarketBuildAtomElement>
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>
     ): String {
         val pattern = Pattern.compile("\\\$\\{([^{}]+?)}")
         val matcher = pattern.matcher(value)
@@ -644,9 +651,10 @@ class TXPipelineExportService @Autowired constructor(
         while (matcher.find()) {
             val originKey = matcher.group(1).trim()
             // 假设匹配到了前序插件的output则优先引用，否则引用全局变量
-            val existingOutputElement = output2Element[originKey]
-            val realValue = if (existingOutputElement != null) {
-                "\${{ steps.${existingOutputElement.id}.outputs.$originKey }}"
+            val existingOutputElements = output2Elements[originKey]
+            val realValue = if (!existingOutputElements.isNullOrEmpty()) {
+                checkConflictOutput(originKey, existingOutputElements)
+                "\${{ steps.${existingOutputElements.first().id}.outputs.$originKey }}"
             } else {
                 "\${{ variables.$originKey }}"
             }
@@ -800,7 +808,7 @@ class TXPipelineExportService @Autowired constructor(
 
     private fun formatScriptOutput(
         script: String,
-        output2Element: MutableMap<String, MarketBuildAtomElement>
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>
     ): String {
         val regex = Regex("setEnv\\s+(.*[\\s]+.*)[\\s\\n]")
         val foundMatches = regex.findAll(script)
@@ -814,7 +822,7 @@ class TXPipelineExportService @Autowired constructor(
             formatScript =
                 formatScript.replace(result.value, "echo \"::set-output name=$key::$value\"\n")
         }
-        return replaceStringWithDoubleCurlyBraces(formatScript, output2Element)
+        return replaceStringWithDoubleCurlyBraces(formatScript, output2Elements)
     }
 
     private fun addCheckoutAtom(
@@ -822,7 +830,7 @@ class TXPipelineExportService @Autowired constructor(
         stepList: MutableList<V2Step>,
         atomCode: String,
         step: MarketBuildAtomElement,
-        output2Element: MutableMap<String, MarketBuildAtomElement>,
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
         inputMap: MutableMap<String, Any>?,
         timeoutMinutes: Int?,
         continueOnError: Boolean?,
@@ -865,7 +873,7 @@ class TXPipelineExportService @Autowired constructor(
                         null
                     },
                     uses = null,
-                    with = replaceMapWithDoubleCurlyBraces(inputMap, output2Element),
+                    with = replaceMapWithDoubleCurlyBraces(inputMap, output2Elements),
                     timeoutMinutes = timeoutMinutes,
                     continueOnError = continueOnError,
                     retryTimes = retryTimes,
@@ -879,5 +887,20 @@ class TXPipelineExportService @Autowired constructor(
             logger.error("[$projectId] addCheckoutAtom failed to convert atom[$atomCode]: ", e)
         }
         return false
+    }
+
+    private fun checkConflictOutput(
+        key: String,
+        existingOutputElements: MutableList<MarketBuildAtomElement>
+    ) {
+        if (existingOutputElements.size > 1) {
+            val names = existingOutputElements.map { it.name }
+            throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ProcessMessageCode.ERROR_EXPORT_OUTPUT_CONFLICT,
+                defaultMessage = "变量名[$key]来源不唯一，请修改变量名称或增加插件输出命名空间：$names",
+                params = arrayOf(key, names.toString())
+            )
+        }
     }
 }
