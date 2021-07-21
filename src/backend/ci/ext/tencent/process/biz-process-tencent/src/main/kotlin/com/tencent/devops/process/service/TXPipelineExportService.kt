@@ -644,7 +644,7 @@ class TXPipelineExportService @Autowired constructor(
             value.forEach {
                 if (it is String) {
                     result.add(replaceStringWithDoubleCurlyBraces(it, output2Elements, variables))
-                } else  {
+                } else {
                     result.add(it)
                 }
             }
