@@ -167,7 +167,7 @@ class AuthPipelineService @Autowired constructor(
             pipelineListFacadeService.getByAutoIds(ids.map { it.toString().toInt() })
         } else {
             // 非纯数字按pipelineId获取
-            pipelineListFacadeService.getPipelineByIds(pipelineIds = ids!!.toSet() as Set<String>)
+            pipelineListFacadeService.getByPipelineIds(pipelineIds = ids!!.toSet() as Set<String>)
         }
         val result = FetchInstanceInfo()
 
