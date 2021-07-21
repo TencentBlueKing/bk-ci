@@ -50,8 +50,8 @@ import org.springframework.stereotype.Component
 class AcrossProjectDistributionAtom @Autowired constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter
-)
-    : IAtomTask<AcrossProjectDistributionElement> {
+) :
+    IAtomTask<AcrossProjectDistributionElement> {
 
     override fun getParamElement(task: PipelineBuildTask): AcrossProjectDistributionElement {
         return JsonUtil.mapTo(task.taskParams, AcrossProjectDistributionElement::class.java)

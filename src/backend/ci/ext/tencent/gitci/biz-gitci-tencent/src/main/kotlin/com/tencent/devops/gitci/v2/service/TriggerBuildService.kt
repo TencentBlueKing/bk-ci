@@ -133,6 +133,7 @@ import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
@@ -468,7 +469,9 @@ class TriggerBuildService @Autowired constructor(
             id = stage.id,
             name = stage.name ?: if (finalStage) {
                 "Final"
-            } else { "Stage-$stageIndex" },
+            } else {
+                "Stage-$stageIndex"
+            },
             tag = stage.label,
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
@@ -953,6 +956,9 @@ class TriggerBuildService @Autowired constructor(
         if (!event.commitId.isBlank() && event.commitId.length >= 8) {
             startParams[PIPELINE_GIT_SHA_SHORT] = event.commitId.substring(0, 8)
         }
+
+        // 替换BuildMessage为了展示commit信息
+        startParams[PIPELINE_BUILD_MSG] = event.commitMsg ?: ""
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {
