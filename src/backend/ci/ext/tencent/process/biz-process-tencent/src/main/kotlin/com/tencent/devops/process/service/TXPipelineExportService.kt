@@ -169,6 +169,7 @@ class TXPipelineExportService @Autowired constructor(
             )
         } catch (t: Throwable) {
             logger.error("Export v2 yaml with error, return blank yml", t)
+            if (t is CustomException) throw t
             ExportPreScriptBuildYaml(
                 version = "v2.0",
                 name = model.name,
