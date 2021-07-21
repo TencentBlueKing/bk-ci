@@ -172,4 +172,14 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         repositoryService.userDelete(userId, projectId, repositoryHashId)
         return Result(true)
     }
+
+    override fun edit(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        repository: Repository
+    ): Result<Boolean> {
+        repositoryService.userEdit(userId, projectId, repositoryHashId, repository)
+        return Result(true)
+    }
 }

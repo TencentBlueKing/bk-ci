@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
@@ -710,6 +711,21 @@ class RepositoryService @Autowired constructor(
     }
 
     fun userEdit(userId: String, projectId: String, repositoryHashId: String, repository: Repository) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (repositoryHashId.isBlank()) {
+            throw ParamBlankException("Invalid repositoryHashId")
+        }
+        if (repository.aliasName.isBlank()) {
+            throw ParamBlankException("Invalid repository aliasName")
+        }
+        if (repository.url.isBlank()) {
+            throw ParamBlankException("Invalid repository url")
+        }
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         validatePermission(
             user = userId,
