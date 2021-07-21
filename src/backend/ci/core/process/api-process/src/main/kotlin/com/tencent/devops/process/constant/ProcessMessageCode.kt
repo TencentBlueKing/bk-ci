@@ -127,7 +127,6 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE = "2101069" // 流水线: 流水线下[{0}]的[{1}]数量超限，阈值为[{2}]个，请联系发布者
     const val ERROR_ATOM_PARAM_VALUE_TOO_LARGE = "2101070" // 流水线: 插件[{0}]的参数[{1}]值超限，阈值为[{2}]个字符，请联系发布者
     const val ERROR_FINAL_STAGE_CANNOT_CANCEL = "2101071" // 流水线: final stage 处于运行中不允许被取消
-    const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101072" // 流水线: 插件[{0}]与[{1}]存在相同输出变量[{2}]
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -145,6 +144,9 @@ object ProcessMessageCode {
     const val ERROR_SUBPIPELINE_CYCLE_CALL = "2101102" // 子流水线循环调用
     const val ERROR_NO_STAGE_EXISTS_BY_ID = "2101106" // 构建中Stage[{0}]不存在
     const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待审核
+
+    // 导出数据错误
+    const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 流水线: 插件[{0}]与[{1}]存在相同输出变量[{2}]
 
     // 构建时错误
     const val ERROR_BUILD_TASK_BCS_PARAM_BCSAPPINSTID = "2101111" // bcsAppInstId is not init
