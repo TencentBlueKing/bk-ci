@@ -42,6 +42,7 @@ import com.tencent.devops.process.service.app.AppPipelineService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class AppPipelineResourceImpl @Autowired constructor(
@@ -49,6 +50,9 @@ class AppPipelineResourceImpl @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService
 ) : AppPipelineResource {
+
+    @Value("\${gitCI.tag:#{null}}")
+    private val gitCI: String? = null
 
     override fun listProjects(
         userId: String,
