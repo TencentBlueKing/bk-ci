@@ -474,7 +474,8 @@ class TXPipelineExportService @Autowired constructor(
                             if (conflictElement != null) throw ErrorCodeException(
                                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                                 errorCode = ErrorCode.USER_INPUT_INVAILD.toString(),
-                                defaultMessage = "插件[${element.name}]与[${conflictElement.name}]存在相同输出变量[$outputWithNamespace]"
+                                defaultMessage = "插件[${element.name}]与[${conflictElement.name}]存在相同输出变量[$outputWithNamespace]",
+                                params = arrayOf(element.name, conflictElement.name, outputWithNamespace)
                             )
                             output2Element[outputWithNamespace] = element
                         }
