@@ -32,7 +32,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.ci.v2.Credentials
@@ -65,6 +64,7 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -108,7 +108,7 @@ class TXPipelineExportService @Autowired constructor(
         )
         val model = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
-            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND.toString(),
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
             defaultMessage = "流水线已不存在，请检查"
         )
         val yamlSb = getYamlStringBuilder(
@@ -473,7 +473,7 @@ class TXPipelineExportService @Autowired constructor(
                             val conflictElement = output2Element[outputWithNamespace]
                             if (conflictElement != null) throw ErrorCodeException(
                                 statusCode = Response.Status.BAD_REQUEST.statusCode,
-                                errorCode = ErrorCode.USER_INPUT_INVAILD.toString(),
+                                errorCode = ProcessMessageCode.ERROR_EXPORT_OUTPUT_CONFLICT,
                                 defaultMessage = "插件[${element.name}]与[${conflictElement.name}]存在相同输出变量[$outputWithNamespace]",
                                 params = arrayOf(element.name, conflictElement.name, outputWithNamespace)
                             )
