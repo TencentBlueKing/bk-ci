@@ -72,42 +72,6 @@
 
 
 {
-  "_id":{"$oid":"5f314632f7a4320e60c2304b"},
-  "_class" : "com.tencent.bk.codecc.defect.model.checkerset.CheckerSetEntity",
-  "checker_set_id" : "cloc_dart",
-  "version" : 1,
-  "checker_set_name" : "代码行统计(dart)",
-  "code_lang" : 8192,
-  "checker_set_lang" : "Dart",
-  "scope" : 1,
-  "creator" : "admin",
-  "create_time" : 1597064754583,
-  "last_update_time" : 1597064754583,
-  "checker_props" : [
-    {
-      "tool_name" : "CLOC",
-      "checker_key" : "CodeLineCount",
-      "props" : ""
-    }
-  ],
-  "enable" : 1,
-  "project_id" : "codecc",
-  "description" : "统计代码行、注释行、空白行等信息",
-  "catagories" : [
-    {
-      "en_name" : "FORMAT",
-      "cn_name" : "规范"
-    }
-  ],
-  "base_checker_set_id" : "",
-  "init_checkers" : true,
-  "official" : 2,
-  "task_usage" : 33,
-  "checker_set_source" : "RECOMMEND"
-}
-
-
-{
   "_id":{"$oid":"5f02ef79f7a4321cc01038e4"},
   "_class" : "com.tencent.bk.codecc.defect.model.checkerset.CheckerSetEntity",
   "checker_set_id" : "cloc_java",
