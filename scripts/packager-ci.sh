@@ -49,9 +49,11 @@ collect_backend (){
   shopt -s nullglob
   echo "remove ms wip: $ci_ms_wip."
   for ms in ${ci_ms_wip//,/ }; do
+    echo " remove ms dir: ${ci_pkg_dir:-ci_pkg_dir}/${ms:-ms}/."
     if [ -d "${ci_pkg_dir:-ci_pkg_dir}/${ms:-ms}/" ]; then
-      rm -rvf "${ci_pkg_dir:-ci_pkg_dir}/${ms:-ms}/"
+      rm -rf "${ci_pkg_dir:-ci_pkg_dir}/${ms:-ms}/"
     fi
+    echo " remove conf:"
     for f in "$ci_template_dir/$ms#"* "$ci_template_dir/"*"#$ms#"*; do
       rm -vf "$ci_template_dir/$f"
     done
@@ -65,7 +67,7 @@ collect_dirs (){
     if [ -d "$d" ]; then
       cp -r "$ci_code_dir/$d" "$ci_pkg_dir"
     else
-      echo "WARING: skip dir does not exist: $d."
+      echo "WARING: dir does not exist: $d."
       let ++e
     fi
   done
@@ -88,7 +90,7 @@ packager_ci (){
   collect_dirs "support-files" "scripts" "src/gateway"
   rm -rf "$ci_pkg_dir"/support-files/agent-package
   rm -rf "$ci_pkg_dir"/support-files/codecc
-  collect_dirs "docs" || true  # 可选.
+  collect_dirs "docs" || echo "skip docs."  # 可选.
   collect_agentpackage
   collect_backend
   collect_frontend
