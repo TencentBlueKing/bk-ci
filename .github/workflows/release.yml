@@ -164,7 +164,7 @@ jobs:
         with:
           gradle-version: 4.6
           build-root-directory: src/backend/codecc
-          arguments: -x test clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+          arguments: clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
 
       - name: frontend
         id: codecc-frontend
