@@ -506,7 +506,7 @@ export default {
     },
 
     download (_, { url, name }) {
-        return fetch(url).then((res) => {
+        return fetch(url, { credentials: 'include' }).then((res) => {
             if (res.status >= 200 && res.status < 300) {
                 return res.blob()
             } else {
