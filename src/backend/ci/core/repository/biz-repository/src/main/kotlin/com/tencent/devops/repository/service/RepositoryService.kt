@@ -76,6 +76,7 @@ import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -529,7 +530,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeGitDao.create(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        projectName = repository.projectName,
+                        projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
                         credentialId = repository.credentialId,
                         authType = repository.authType
@@ -548,7 +549,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeGitDao.create(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        projectName = repository.projectName,
+                        projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
                         credentialId = repository.credentialId,
                         authType = repository.authType
@@ -567,7 +568,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeGitLabDao.create(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        projectName = repository.projectName,
+                        projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
                         privateToken = repository.credentialId
                     )
@@ -787,7 +788,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeGitDao.edit(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        projectName = repository.projectName,
+                        projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
                         credentialId = repository.credentialId,
                         authType = repository.authType
@@ -806,7 +807,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeGitDao.edit(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        projectName = repository.projectName,
+                        projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
                         credentialId = repository.credentialId,
                         authType = repository.authType
@@ -847,7 +848,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeGitLabDao.edit(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        projectName = repository.projectName,
+                        projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
                         credentialId = repository.credentialId
                     )
