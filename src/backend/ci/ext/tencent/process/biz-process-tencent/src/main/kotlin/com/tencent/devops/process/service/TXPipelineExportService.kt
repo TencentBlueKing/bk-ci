@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -101,6 +102,11 @@ class TXPipelineExportService @Autowired constructor(
             registerModule(KotlinModule())
         }
     }
+
+    private val checkoutAtomCodeSet = listOf(
+        "gitCodeRepo",
+        "gitCodeRepoCommon"
+    )
 
     // 导出工蜂CI-2.0的yml
     fun exportV2Yaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Response {
@@ -467,7 +473,7 @@ class TXPipelineExportService @Autowired constructor(
                 }
                 MarketBuildAtomElement.classType -> {
                     val step = element as MarketBuildAtomElement
-                    val atomCode = element.data["atomCode"]
+                    val atomCode = element.data["atomCode"] as String?
                     val input = element.data["input"]
                     val output = element.data["output"]
                     val namespace = element.data["namespace"] as String?
@@ -487,69 +493,38 @@ class TXPipelineExportService @Autowired constructor(
                             output2Element[outputWithNamespace] = element
                         }
                     }
-                    if (inputMap != null && atomCode != null && atomCode == "gitCodeRepo") {
-                        try {
-                            val repositoryHashId = inputMap["repositoryHashId"] as String?
-                            val repositoryName = inputMap["repositoryName"] as String?
-                            val repositoryType = inputMap["repositoryType"] as String?
-                            val repositoryConfig = RepositoryConfig(
-                                repositoryHashId = repositoryHashId,
-                                repositoryName = repositoryName,
-                                repositoryType = RepositoryType.parseType(repositoryType)
-                            )
-                            val repo = scmProxyService.getRepo(projectId, repositoryConfig)
-                            inputMap.remove("credentialId")
-                            inputMap.remove("ticketId")
-                            inputMap.remove("username")
-                            inputMap.remove("password")
-                            inputMap.remove("username")
-                            inputMap.remove("accessToken")
-                            inputMap.remove("personalAccessToken")
-                            stepList.add(
-                                V2Step(
-                                    name = step.name,
-                                    id = step.id,
-                                    ifFiled = if (step.additionalOptions?.runCondition ==
-                                        RunCondition.CUSTOM_CONDITION_MATCH) {
-                                        step.additionalOptions?.customCondition
-                                    } else {
-                                        null
-                                    },
-                                    uses = null,
-                                    with = replaceMapWithDoubleCurlyBraces(inputMap, output2Element),
-                                    timeoutMinutes = timeoutMinutes,
-                                    continueOnError = continueOnError,
-                                    retryTimes = retryTimes,
-                                    env = null,
-                                    run = null,
-                                    checkout = repo.url
-                                )
-                            )
-                        } catch (e: Exception) {
-                            logger.error("Failed to convert git atom[$atomCode]: ", e)
-                        }
-                    } else {
-                        stepList.add(
-                            V2Step(
-                                name = step.name,
-                                id = step.id,
-                                ifFiled = if (step.additionalOptions?.runCondition ==
-                                    RunCondition.CUSTOM_CONDITION_MATCH) {
-                                    step.additionalOptions?.customCondition
-                                } else {
-                                    null
-                                },
-                                uses = "${step.getAtomCode()}@${step.version}",
-                                with = replaceMapWithDoubleCurlyBraces(inputMap, output2Element),
-                                timeoutMinutes = timeoutMinutes,
-                                continueOnError = continueOnError,
-                                retryTimes = retryTimes,
-                                env = null,
-                                run = null,
-                                checkout = null
-                            )
+                    val checkoutAtom = addCheckoutAtom(
+                        projectId = projectId,
+                        stepList = stepList,
+                        step = step,
+                        output2Element = output2Element,
+                        atomCode = atomCode,
+                        inputMap = inputMap,
+                        timeoutMinutes = timeoutMinutes,
+                        continueOnError = continueOnError,
+                        retryTimes = retryTimes
+                    )
+
+                    if (!checkoutAtom) stepList.add(
+                        V2Step(
+                            name = step.name,
+                            id = step.id,
+                            ifFiled = if (step.additionalOptions?.runCondition ==
+                                RunCondition.CUSTOM_CONDITION_MATCH) {
+                                step.additionalOptions?.customCondition
+                            } else {
+                                null
+                            },
+                            uses = "${step.getAtomCode()}@${step.version}",
+                            with = replaceMapWithDoubleCurlyBraces(inputMap, output2Element),
+                            timeoutMinutes = timeoutMinutes,
+                            continueOnError = continueOnError,
+                            retryTimes = retryTimes,
+                            env = null,
+                            run = null,
+                            checkout = null
                         )
-                    }
+                    )
                 }
                 MarketBuildLessAtomElement.classType -> {
                     val step = element as MarketBuildLessAtomElement
@@ -840,5 +815,68 @@ class TXPipelineExportService @Autowired constructor(
                 formatScript.replace(result.value, "echo \"::set-output name=$key::$value\"\n")
         }
         return replaceStringWithDoubleCurlyBraces(formatScript, output2Element)
+    }
+
+    private fun addCheckoutAtom(
+        projectId: String,
+        stepList: MutableList<V2Step>,
+        step: MarketBuildAtomElement,
+        output2Element: MutableMap<String, MarketBuildAtomElement>,
+        atomCode: String?,
+        inputMap: MutableMap<String, Any>?,
+        timeoutMinutes: Int?,
+        continueOnError: Boolean?,
+        retryTimes: Int?
+    ): Boolean {
+        if (inputMap == null || atomCode == null || !checkoutAtomCodeSet.contains(atomCode)) return false
+        try {
+            val repositoryUrl = inputMap["repositoryUrl"] as String?
+            val url = if (repositoryUrl.isNullOrBlank()) {
+                val repositoryHashId = inputMap["repositoryHashId"] as String?
+                val repositoryName = inputMap["repositoryName"] as String?
+                val repositoryType = inputMap["repositoryType"] as String?
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = repositoryHashId,
+                    repositoryName = repositoryName,
+                    repositoryType = RepositoryType.parseType(repositoryType)
+                )
+                val repo = scmProxyService.getRepo(projectId, repositoryConfig)
+                repo.url
+            } else {
+                repositoryUrl
+            }
+            // 去掉所有插件上的凭证配置
+            inputMap.remove("credentialId")
+            inputMap.remove("ticketId")
+            inputMap.remove("username")
+            inputMap.remove("password")
+            inputMap.remove("username")
+            inputMap.remove("accessToken")
+            inputMap.remove("personalAccessToken")
+            stepList.add(
+                V2Step(
+                    name = step.name,
+                    id = step.id,
+                    ifFiled = if (step.additionalOptions?.runCondition ==
+                        RunCondition.CUSTOM_CONDITION_MATCH) {
+                        step.additionalOptions?.customCondition
+                    } else {
+                        null
+                    },
+                    uses = null,
+                    with = replaceMapWithDoubleCurlyBraces(inputMap, output2Element),
+                    timeoutMinutes = timeoutMinutes,
+                    continueOnError = continueOnError,
+                    retryTimes = retryTimes,
+                    env = null,
+                    run = null,
+                    checkout = url
+                )
+            )
+            return true
+        } catch (e: Exception) {
+            logger.error("Failed to convert git atom[$atomCode]: ", e)
+        }
+        return false
     }
 }
