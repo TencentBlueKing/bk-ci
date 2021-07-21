@@ -235,7 +235,7 @@ interface UserEnvironmentResource {
 
     @ApiOperation("设置环境共享")
     @POST
-    @Path("/{projectId}/{envHashId}")
+    @Path("/{projectId}/{envHashId}/share")
     fun setShareEnv(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -251,8 +251,8 @@ interface UserEnvironmentResource {
     ): Result<Boolean>
 
     @ApiOperation("删除环境共享")
-    @POST
-    @Path("/{projectId}/{envHashId}")
+    @DELETE
+    @Path("/{projectId}/{envHashId}/share")
     fun deleteShareEnv(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
