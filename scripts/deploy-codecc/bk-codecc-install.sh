@@ -78,7 +78,7 @@ install_codecc__common (){
   id -u "$MS_USER" &>/dev/null || \
     useradd -m -c "BlueKing CE User" --shell /bin/bash "$MS_USER"
 
-  os_pkg_install jq
+  #os_pkg_install jq
   local d
   for d in /etc/blueking/env "$BK_CODECC_HOME" "$BK_CODECC_LOGS_DIR" "${BK_CODECC_DATA_DIR%/?*}"; do
     command install -o "$MS_USER" -g "$MS_USER" -m 755 -d "$d"
