@@ -39,5 +39,3 @@
 {"_id":{"$oid":"5da7e51f97e61739fc203e55"},"_class":"com.tencent.bk.codecc.defect.model.CheckerPackageEntity","tool_name":"DETEKT","pkg_id":"11","pkg_name":"BEST_PRACTICES","pkg_desc":"最佳实践包"}
 {"_id":{"$oid":"5da7e51f97e61739fc203e56"},"_class":"com.tencent.bk.codecc.defect.model.CheckerPackageEntity","tool_name":"DETEKT","pkg_id":"3","pkg_name":"PERFORMANCE","pkg_desc":"性能规则包"}
 {"_id":{"$oid":"5da7e51f97e61739fc203e57"},"_class":"com.tencent.bk.codecc.defect.model.CheckerPackageEntity","tool_name":"DETEKT","pkg_id":"9","pkg_name":"LOGICAL","pkg_desc":"逻辑规则包"}
-{"_id":{"$oid":"5da7e5b697e61721f05f056b"},"_class":"com.tencent.bk.codecc.defect.model.CheckerPackageEntity","tool_name":"OCCHECK","pkg_id":"0","pkg_name":"DEFAULT","pkg_desc":"默认规则包"}
-{"_id":{"$oid":"5da7e5b897e61721f05f056c"},"_class":"com.tencent.bk.codecc.defect.model.CheckerPackageEntity","tool_name":"OCCHECK","pkg_id":"10","pkg_name":"STYLISTIC","pkg_desc":"风格规范包"}
