@@ -92,45 +92,6 @@ class ScmClient @Autowired constructor(
         logger.error("user $userId buildId $buildId pushCommitCheck error.", e)
     }
 
-    // 用来进行锁定提交的CommitCheck
-    // 有流水线前锁定的key为 noPipelineBuildEvent
-    // 有流水线后锁定的key为 pipelineId(buildId)
-    fun pushCommitCheckWithBlock(
-        commitId: String,
-        mergeRequestId: Long,
-        userId: String,
-        context: String,
-        state: GitCICommitCheckState,
-        block: Boolean,
-        gitProjectConf: GitRepositoryConf
-    ) = try {
-        val titleData = mutableListOf<String>()
-        val resultMap = mutableMapOf<String, MutableList<List<String>>>()
-
-        val token = getAccessToken(gitProjectConf.gitProjectId).first
-        val request = CommitCheckRequest(
-            projectName = gitProjectConf.gitProjectId.toString(),
-            url = gitProjectConf.gitHttpUrl,
-            type = ScmType.CODE_GIT,
-            privateKey = null,
-            passPhrase = null,
-            token = token,
-            region = null,
-            commitId = commitId,
-            state = state.value,
-            targetUrl = "",
-            context = context,
-            description = "",
-            block = block,
-            mrRequestId = mergeRequestId,
-            reportData = Pair(titleData, resultMap)
-        )
-        logger.info("user $userId pushCommitCheckWithBlock: $request")
-        client.getScm(ServiceGitResource::class).addCommitCheck(request)
-    } catch (e: Exception) {
-        logger.error("user $userId pushCommitCheckWithBlock error.", e)
-    }
-
     /**
      * V2版本的同名方法，因为表结构发生了改变，所以数据结构变化
      * 有回填信息

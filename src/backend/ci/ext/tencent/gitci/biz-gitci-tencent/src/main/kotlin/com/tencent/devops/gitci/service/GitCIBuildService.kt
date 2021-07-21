@@ -80,7 +80,6 @@ import com.tencent.devops.gitci.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
@@ -168,22 +167,6 @@ class GitCIBuildService @Autowired constructor(
         val model = createPipelineModel(event, gitProjectConf, yaml)
 
         return startBuild(pipeline, event, gitProjectConf, model, gitBuildId)
-    }
-
-    private fun unblockCommitCheck(
-        pipeline: GitProjectPipeline,
-        event: GitRequestEvent,
-        gitProjectConf: GitRepositoryConf
-    ) {
-        scmClient.pushCommitCheckWithBlock(
-            commitId = event.commitId,
-            mergeRequestId = event.mergeRequestId ?: 0L,
-            userId = event.userId,
-            block = false,
-            state = GitCICommitCheckState.FAILURE,
-            context = "${pipeline.displayName}(${pipeline.filePath})",
-            gitProjectConf = gitProjectConf
-        )
     }
 
     private fun deletePipeline(
