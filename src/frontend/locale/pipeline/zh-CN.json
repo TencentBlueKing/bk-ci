@@ -92,6 +92,8 @@
     "buildNumRuleWarn": "超出长度限制的部分会被截断",
     "jobIdTips": "非必填，整个流水线下唯一，由字母、数字、下划线组成",
     "nameInputTips": "请输入名称",
+    "propertyNameInputTips": "请输入属性名",
+    "propertyValueInputTips": "请输入属性值",
     "loadingTips": "数据加载中，请稍候",
     "metaData": "元数据",
     "download": "下载",
