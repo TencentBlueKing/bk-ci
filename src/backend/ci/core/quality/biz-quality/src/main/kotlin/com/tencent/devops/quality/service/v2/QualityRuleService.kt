@@ -155,7 +155,7 @@ class QualityRuleService @Autowired constructor(
         val size = qualityRuleDao.deleteByPipelineId(dslContext, projectId, pipelineId)
         logger.info("finish to clean pre rule: $projectId, $pipelineId, $size")
 
-        return ruleRequestList.map {  ruleRequest ->
+        return ruleRequestList.map { ruleRequest ->
             logger.info("start to create rule: $projectId, $pipelineId, ${ruleRequest.name}")
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
 

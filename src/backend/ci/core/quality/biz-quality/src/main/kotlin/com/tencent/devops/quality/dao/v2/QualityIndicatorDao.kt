@@ -32,6 +32,7 @@ import com.tencent.devops.model.quality.tables.TQualityIndicator
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -80,15 +81,16 @@ class QualityIndicatorDao {
                           type: IndicatorType? = IndicatorType.MARKET,
                           enNameSet: Collection<String>? = null): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
-            val cond = ELEMENT_TYPE.eq(elementType)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ELEMENT_TYPE.eq(elementType))
             if (type != null) {
-                cond.and(TYPE.eq(type.name))
+                conditions.add(TYPE.eq(type.name))
             }
             if (!enNameSet.isNullOrEmpty()) {
-                cond.and(EN_NAME.`in`(enNameSet))
+                conditions.add(EN_NAME.`in`(enNameSet))
             }
             return dslContext.selectFrom(this)
-                .where(cond)
+                .where(conditions)
                 .fetch()
         }
     }
