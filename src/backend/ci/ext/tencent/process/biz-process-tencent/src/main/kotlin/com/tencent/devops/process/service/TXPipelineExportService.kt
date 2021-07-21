@@ -854,6 +854,7 @@ class TXPipelineExportService @Autowired constructor(
             } else {
                 repositoryUrl
             }
+
             // 去掉所有插件上的凭证配置
             inputMap.remove("credentialId")
             inputMap.remove("ticketId")
@@ -862,6 +863,16 @@ class TXPipelineExportService @Autowired constructor(
             inputMap.remove("username")
             inputMap.remove("accessToken")
             inputMap.remove("personalAccessToken")
+
+            // 去掉原来的仓库指定参数
+            inputMap.remove("repositoryType")
+            inputMap.remove("repositoryHashId")
+            inputMap.remove("repositoryName")
+            inputMap.remove("repositoryUrl")
+
+            // 将鉴权类型统一刷成token方式
+            inputMap["authType"] = "ACCESS_TOKEN"
+
             stepList.add(
                 V2Step(
                     name = step.name,
