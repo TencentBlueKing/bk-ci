@@ -162,7 +162,7 @@ jobs:
         id: codecc-backend
         uses: eskatos/gradle-command-action@v1
         with:
-          gradle-version: 4.8.1
+          gradle-version: 4.6
           build-root-directory: src/backend/codecc
           arguments: -x test clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
 
@@ -177,13 +177,7 @@ jobs:
             mv dist/index.html dist/frontend#index.html
           fi
 
-      - name: Create artifact - Step2:get Frontend
-        uses: actions/download-artifact@v1
-        with:
-          name: frontend
-          path: src/frontend/devops-codecc/dist
-
-      - name: Create artifact - Step3:make package
+      - name: Create artifact - make package
         id: create-artifact
         run: |
           version="$(basename $GITHUB_REF)"
