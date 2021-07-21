@@ -158,10 +158,17 @@ class AuthPipelineService @Autowired constructor(
         returnPipelineId: Boolean
     ): FetchInstanceInfoResponseDTO? {
         authTokenApi.checkToken(token)
-//        val pipelineInfos =
-//            client.get(ServiceAuthPipelineResource::class)
-//                .pipelineInfos(ids!!.toSet() as Set<String>).data
-        val pipelineInfos = pipelineListFacadeService.getPipelineByIds(pipelineIds = ids!!.toSet() as Set<String>)
+
+        val pipelineId = ids!!.first().toString()
+        val idNumType = pipelineId.matches("-?\\d+(\\.\\d+)?".toRegex()) // 判断是否为纯数字
+
+        val pipelineInfos = if (idNumType) {
+            // 纯数字按自增id获取
+            pipelineListFacadeService.getByAutoIds(ids.map { it.toString().toInt() })
+        } else {
+            // 非纯数字按pipelineId获取
+            pipelineListFacadeService.getByPipelineIds(pipelineIds = ids!!.toSet() as Set<String>)
+        }
         val result = FetchInstanceInfo()
 
         if (pipelineInfos == null || pipelineInfos.isEmpty()) {
