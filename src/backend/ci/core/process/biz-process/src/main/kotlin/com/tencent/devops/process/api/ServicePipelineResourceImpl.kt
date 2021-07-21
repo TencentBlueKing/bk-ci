@@ -67,13 +67,19 @@ class ServicePipelineResourceImpl @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService
 ) : ServicePipelineResource {
-    override fun status(userId: String, projectId: String, pipelineId: String): Result<Pipeline?> {
+    override fun status(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode?
+    ): Result<Pipeline?> {
         checkParams(userId, projectId)
         return Result(
             data = pipelineListFacadeService.getSinglePipelineStatus(
                 userId = userId,
                 projectId = projectId,
-                pipeline = pipelineId
+                pipeline = pipelineId,
+                channelCode = channelCode
             )
         )
     }

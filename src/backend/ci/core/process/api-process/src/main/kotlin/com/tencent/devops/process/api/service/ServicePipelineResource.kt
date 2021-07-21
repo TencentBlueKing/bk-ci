@@ -296,7 +296,10 @@ interface ServicePipelineResource {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("channel", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<Pipeline?>
 
     @ApiOperation("获取流水线完整状态")
