@@ -2,6 +2,7 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.nhaarman.mockito_kotlin.mock
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -50,19 +51,23 @@ class TXPipelineExportServiceTest {
             "key5" to "\${123456}aaaaaa\${haha}hijklmn\${aaaa}" as Any,
             "\${key}" to "\${123456}aaaaaa\${haha}hijklmn\${aaaa}" as Any
         )
-        val variables = mapOf("key1" to "value")
-
+        val variables = mapOf("haha" to "value")
+        val output2Elements = mutableMapOf("aaaa" to mutableListOf(MarketBuildAtomElement(
+            name = "名称",
+            id = "stepId"
+        )))
         val resultMap = txPipelineExportService.replaceMapWithDoubleCurlyBraces(
             inputMap = inputMap,
-            output2Elements = mutableMapOf(),
+            output2Elements = output2Elements,
             variables = variables
         )
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
-        Assert.assertEquals(result, "{\"key1\":\"variables.value\",\"key2\":\"\${{ haha }}\"," +
-            "\"key3\":\"abcedf\${{ haha }}hijklmn\",\"key4\":\"aaaaaa\${{ haha }}hijklmn" +
-            "\${{ aaaa }}\",\"key5\":\"\${{ 123456 }}aaaaaa\${{ haha }}hijklmn" +
-            "\${{ aaaa }}\",\"\${key}\":\"\${{ 123456 }}aaaaaa\${{ haha }}hijklmn" +
-            "\${{ aaaa }}\"}")
+        println(result)
+        Assert.assertEquals(result, "{\"key1\":\"value\",\"key2\":\"\${{ variables.haha }}\"," +
+            "\"key3\":\"abcedf\${{ variables.haha }}hijklmn\",\"key4\":\"aaaaaa\${{ variables.haha }}hijklmn" +
+            "\${{ steps.stepId.outputs.aaaa }}\",\"key5\":\"\${{ 123456 }}aaaaaa\${{ variables.haha }}hijklmn" +
+            "\${{ steps.stepId.outputs.aaaa }}\",\"\${key}\":\"\${{ 123456 }}aaaaaa\${{ variables.haha }}hijklmn" +
+            "\${{ steps.stepId.outputs.aaaa }}\"}")
     }
 
     @Test
@@ -71,16 +76,20 @@ class TXPipelineExportServiceTest {
             "key1" to "value" as Any,
             "key2" to listOf("\${haha}", "abcedf\${haha}hijklmn", "\${123456}aaaaaa\${haha}hijklmn\${aaaa}", 123) as Any
         )
-        val variables = mapOf("key1" to "value")
-
+        val variables = mapOf("haha" to "value")
+        val output2Elements = mutableMapOf("aaaa" to mutableListOf(MarketBuildAtomElement(
+            name = "名称",
+            id = "stepId"
+        )))
         val resultMap = txPipelineExportService.replaceMapWithDoubleCurlyBraces(
             inputMap = inputMap,
-            output2Elements = mutableMapOf(),
+            output2Elements = output2Elements,
             variables = variables
         )
+        println(resultMap)
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
-        Assert.assertEquals(result, "{\"key1\":\"variables.value\",\"key2\":[\"\${{ haha }}\"," +
-            "\"abcedf\${{ haha }}hijklmn\",\"\${{ 123456 }}aaaaaa" +
-            "\${{ haha }}hijklmn\${{ aaaa }}\",123]}")
+        Assert.assertEquals(result, "{\"key1\":\"value\",\"key2\":[\"\${{ variables.haha }}\"," +
+            "\"abcedf\${{ variables.haha }}hijklmn\",\"\${{ 123456 }}aaaaaa" +
+            "\${{ variables.haha }}hijklmn\${{ steps.stepId.outputs.aaaa }}\",123]}")
     }
 }
