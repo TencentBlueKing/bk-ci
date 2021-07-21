@@ -778,7 +778,6 @@ class TriggerBuildService @Autowired constructor(
             inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl
             inputMap["authType"] = "ACCESS_TOKEN"
 
-
             when (event.objectKind) {
                 OBJECT_KIND_MERGE_REQUEST ->
                     inputMap["pullType"] = "BRANCH"
