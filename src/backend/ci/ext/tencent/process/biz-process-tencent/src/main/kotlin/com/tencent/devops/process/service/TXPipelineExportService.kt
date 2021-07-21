@@ -31,6 +31,8 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -66,9 +68,11 @@ import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.common.ci.v2.Step as V2Step
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -87,7 +91,8 @@ class TXPipelineExportService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val storeImageHelper: StoreImageHelper
+    private val storeImageHelper: StoreImageHelper,
+    private val scmProxyService: ScmProxyService
 ) {
 
     companion object {
@@ -292,7 +297,7 @@ class TXPipelineExportService @Autowired constructor(
                         } else {
                             null
                         },
-                        steps = getV2StepFromJob(job, comment, output2Element),
+                        steps = getV2StepFromJob(projectId, job, comment, output2Element),
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
                         continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
@@ -381,7 +386,7 @@ class TXPipelineExportService @Autowired constructor(
                         } else {
                             null
                         },
-                        steps = getV2StepFromJob(job, comment, output2Element),
+                        steps = getV2StepFromJob(projectId, job, comment, output2Element),
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
                         continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
@@ -400,6 +405,7 @@ class TXPipelineExportService @Autowired constructor(
     }
 
     private fun getV2StepFromJob(
+        projectId: String,
         job: Container,
         comment: StringBuilder,
         output2Element: MutableMap<String, MarketBuildAtomElement>
@@ -461,6 +467,7 @@ class TXPipelineExportService @Autowired constructor(
                 }
                 MarketBuildAtomElement.classType -> {
                     val step = element as MarketBuildAtomElement
+                    val atomCode = element.data["atomCode"]
                     val input = element.data["input"]
                     val output = element.data["output"]
                     val namespace = element.data["namespace"] as String?
@@ -480,26 +487,69 @@ class TXPipelineExportService @Autowired constructor(
                             output2Element[outputWithNamespace] = element
                         }
                     }
-                    stepList.add(
-                        V2Step(
-                            name = step.name,
-                            id = step.id,
-                            ifFiled = if (step.additionalOptions?.runCondition ==
-                                RunCondition.CUSTOM_CONDITION_MATCH) {
-                                step.additionalOptions?.customCondition
-                            } else {
-                                null
-                            },
-                            uses = "${step.getAtomCode()}@${step.version}",
-                            with = replaceMapWithDoubleCurlyBraces(inputMap, output2Element),
-                            timeoutMinutes = timeoutMinutes,
-                            continueOnError = continueOnError,
-                            retryTimes = retryTimes,
-                            env = null,
-                            run = null,
-                            checkout = null
+                    if (inputMap != null && atomCode != null && atomCode == "gitCodeRepo") {
+                        try {
+                            val repositoryHashId = inputMap["repositoryHashId"] as String?
+                            val repositoryName = inputMap["repositoryName"] as String?
+                            val repositoryType = inputMap["repositoryType"] as String?
+                            val repositoryConfig = RepositoryConfig(
+                                repositoryHashId = repositoryHashId,
+                                repositoryName = repositoryName,
+                                repositoryType = RepositoryType.parseType(repositoryType)
+                            )
+                            val repo = scmProxyService.getRepo(projectId, repositoryConfig)
+                            inputMap.remove("credentialId")
+                            inputMap.remove("ticketId")
+                            inputMap.remove("username")
+                            inputMap.remove("password")
+                            inputMap.remove("username")
+                            inputMap.remove("accessToken")
+                            inputMap.remove("personalAccessToken")
+                            stepList.add(
+                                V2Step(
+                                    name = step.name,
+                                    id = step.id,
+                                    ifFiled = if (step.additionalOptions?.runCondition ==
+                                        RunCondition.CUSTOM_CONDITION_MATCH) {
+                                        step.additionalOptions?.customCondition
+                                    } else {
+                                        null
+                                    },
+                                    uses = null,
+                                    with = replaceMapWithDoubleCurlyBraces(inputMap, output2Element),
+                                    timeoutMinutes = timeoutMinutes,
+                                    continueOnError = continueOnError,
+                                    retryTimes = retryTimes,
+                                    env = null,
+                                    run = null,
+                                    checkout = repo.url
+                                )
+                            )
+                        } catch (e: Exception) {
+                            logger.error("Failed to convert git atom[$atomCode]: ", e)
+                        }
+                    } else {
+                        stepList.add(
+                            V2Step(
+                                name = step.name,
+                                id = step.id,
+                                ifFiled = if (step.additionalOptions?.runCondition ==
+                                    RunCondition.CUSTOM_CONDITION_MATCH) {
+                                    step.additionalOptions?.customCondition
+                                } else {
+                                    null
+                                },
+                                uses = "${step.getAtomCode()}@${step.version}",
+                                with = replaceMapWithDoubleCurlyBraces(inputMap, output2Element),
+                                timeoutMinutes = timeoutMinutes,
+                                continueOnError = continueOnError,
+                                retryTimes = retryTimes,
+                                env = null,
+                                run = null,
+                                checkout = null
+                            )
                         )
-                    )
+                    }
                 }
                 MarketBuildLessAtomElement.classType -> {
                     val step = element as MarketBuildLessAtomElement
@@ -773,7 +823,7 @@ class TXPipelineExportService @Autowired constructor(
         }
     }
 
-    fun formatScriptOutput(
+    private fun formatScriptOutput(
         script: String,
         output2Element: MutableMap<String, MarketBuildAtomElement>
     ): String {
