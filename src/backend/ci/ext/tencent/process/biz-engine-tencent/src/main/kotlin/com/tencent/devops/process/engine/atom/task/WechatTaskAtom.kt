@@ -54,8 +54,8 @@ import org.springframework.stereotype.Component
 class WechatTaskAtom @Autowired constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter
-)
-    : IAtomTask<SendWechatNotifyElement> {
+) :
+    IAtomTask<SendWechatNotifyElement> {
     override fun getParamElement(task: PipelineBuildTask): SendWechatNotifyElement {
         return JsonUtil.mapTo(task.taskParams, SendWechatNotifyElement::class.java)
     }

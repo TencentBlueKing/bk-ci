@@ -55,6 +55,7 @@ import javax.ws.rs.core.MediaType
 @Path("/app/pipeline")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@SuppressWarnings("LongParameterList")
 interface AppPipelineResource {
 
     @ApiOperation("列出用户的所有项目")

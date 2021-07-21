@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.dao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.model.gitci.tables.TGitPipelineResource
 import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
+import com.tencent.devops.process.pojo.PipelineSortType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -282,6 +283,37 @@ class GitPipelineResourceDao {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .fetch()
+        }
+    }
+
+    fun getAppDataByGitProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        keyword: String?,
+        offset: Int,
+        limit: Int,
+        orderBy: PipelineSortType
+    ): List<TGitPipelineResourceRecord> {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            val dsl = dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(ENABLED.eq(true))
+            if (!keyword.isNullOrBlank()) {
+                dsl.and(DISPLAY_NAME.like("%$keyword%"))
+            }
+            when (orderBy) {
+                PipelineSortType.NAME -> {
+                    dsl.orderBy(DISPLAY_NAME)
+                }
+                PipelineSortType.UPDATE_TIME -> {
+                    dsl.orderBy(UPDATE_TIME)
+                }
+                PipelineSortType.CREATE_TIME -> {
+                    dsl.orderBy(CREATE_TIME)
+                }
+            }
+            return dsl.limit(limit).offset(offset)
                 .fetch()
         }
     }

@@ -25,21 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.process.api.app
 
-import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.app.AppProjectResource
-import com.tencent.devops.project.pojo.app.AppProjectVO
-import com.tencent.devops.project.service.ProjectLocalService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.process.pojo.pipeline.AppModelDetail
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class AppProjectResourceImpl @Autowired constructor(
-    private val projectLocalService: ProjectLocalService
-) : AppProjectResource {
-    override fun list(userId: String, page: Int, pageSize: Int, searchName: String?): Result<Pagination<AppProjectVO>> {
-        return Result(projectLocalService.listForApp(userId, page, pageSize, searchName))
-    }
+@Api(tags = ["APP_PIPELINE_BUILD"], description = "app流水线相关接口")
+@Path("/app/pipelineBuild")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
+interface AppPipelineBuildTencentResource {
+    @ApiOperation("获取构建详情")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/detail")
+    fun getBuildDetail(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<AppModelDetail>
 }
