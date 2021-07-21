@@ -828,7 +828,7 @@ class TXPipelineExportService @Autowired constructor(
         continueOnError: Boolean?,
         retryTimes: Int?
     ): Boolean {
-        if (inputMap == null || atomCode.isNotBlank() || !checkoutAtomCodeSet.contains(atomCode)) return false
+        if (inputMap == null || atomCode.isBlank() || !checkoutAtomCodeSet.contains(atomCode)) return false
         logger.info("[$projectId] addCheckoutAtom export with atomCode($atomCode), inputMap=$inputMap, step=$step")
         try {
             val repositoryUrl = inputMap["repositoryUrl"] as String?
