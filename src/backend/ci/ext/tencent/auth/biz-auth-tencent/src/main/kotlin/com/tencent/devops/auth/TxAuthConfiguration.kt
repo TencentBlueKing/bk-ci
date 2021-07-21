@@ -75,14 +75,14 @@ class TxAuthConfiguration {
     @Bean
     fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
-    @Bean
-    fun httpService() = DefaultHttpClientServiceImpl(iamConfiguration())
+//    @Bean
+//    fun httpService() = DefaultHttpClientServiceImpl(iamConfiguration())
 
     @Bean
-    fun tokenService() = TokenServiceImpl(iamConfiguration(), httpService())
+    fun tokenService() = TokenServiceImpl(iamConfiguration(), apigwHttpClientServiceImpl())
 
     @Bean
-    fun policyService() = PolicyServiceImpl(iamConfiguration(), httpService())
+    fun policyService() = PolicyServiceImpl(iamConfiguration(), apigwHttpClientServiceImpl())
 
     @Bean
     @ConditionalOnMissingBean
