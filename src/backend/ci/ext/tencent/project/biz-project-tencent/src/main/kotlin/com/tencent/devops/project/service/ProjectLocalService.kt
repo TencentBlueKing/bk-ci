@@ -113,7 +113,7 @@ class ProjectLocalService @Autowired constructor(
         if (page == 1) {
             val gitCIProjectList = ConsulContent.invokeByTag(gitCI) {
                 try {
-                    client.get(ServiceGitForAppResource::class).getGitCIProjectList(userId, 1, 10000, searchName)
+                    client.get(ServiceGitForAppResource::class).getGitCIProjectList(userId, 1, 100, searchName)
                 } catch (e: Exception) {
                     logger.warn("ServiceGitForAppResource is error", e)
                     return@invokeByTag null
