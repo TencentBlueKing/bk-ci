@@ -13,7 +13,7 @@
                 </svg>
                 <h5 class="export-title">{{ exportItem.title }}</h5>
                 <p class="export-tip">{{ exportItem.tips }}<a :href="exportItem.tipsLink" v-if="exportItem.tipsLink" target="_blank">{{ $t('newlist.knowMore') }}</a></p>
-                <bk-button class="export-button" @click="downLoadFromApi(exportItem.exportUrl)" :loading="isDownLoading">{{ $t('newlist.exportPipelineJson') }}</bk-button>
+                <bk-button class="export-button" @click="downLoadFromApi(exportItem.exportUrl, exportItem.name)" :loading="isDownLoading">{{ $t('newlist.exportPipelineJson') }}</bk-button>
             </li>
         </ul>
     </bk-dialog>
@@ -48,6 +48,7 @@
                     {
                         title: 'Pipeline Json',
                         icon: 'export-pipeline',
+                        name: 'export.json',
                         tips: this.$t('newlist.exportJsonTip'),
                         exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/export`
                     }
@@ -62,9 +63,9 @@
                 this.$emit('update:isShow', false)
             },
 
-            downLoadFromApi (url) {
+            downLoadFromApi (url, name) {
                 this.isDownLoading = true
-                this.download({ url }).catch((err) => {
+                this.download({ url, name }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {
                     this.isDownLoading = false
