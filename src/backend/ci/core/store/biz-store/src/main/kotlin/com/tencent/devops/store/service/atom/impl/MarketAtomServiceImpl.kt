@@ -33,6 +33,7 @@ import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT
 import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
+import com.tencent.devops.common.api.constant.NO_LABEL
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.OPTIONS
 import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
@@ -995,14 +996,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val label = paramValueMap["label"]
                 val text = paramValueMap["text"]
                 val desc = paramValueMap["desc"]
-                val description = if (label?.toString().isNullOrBlank()) {
-                    if (text?.toString().isNullOrBlank()) {
-                        desc.toString()
-                    } else {
-                        text.toString()
-                    }
-                } else {
+                val description = if (!label?.toString().isNullOrBlank()) {
                     label.toString()
+                } else if (!text?.toString().isNullOrBlank()) {
+                    text.toString()
+                } else if (!desc?.toString().isNullOrBlank()) {
+                    desc.toString()
+                } else {
+                    MessageCodeUtil.getCodeLanMessage(NO_LABEL)
                 }
                 val type = paramValueMap["type"]
                 val required = null != paramValueMap["required"] &&
@@ -1034,7 +1035,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         defaultName = defaultName
                     )
                     sb.append("\r\n")
-                    sb.append("      $paramKey: ")
+                    sb.append("    $paramKey:\r\n")
                     sb.append("        - string\r\n")
                     sb.append("        - string\r\n")
                 } else {
