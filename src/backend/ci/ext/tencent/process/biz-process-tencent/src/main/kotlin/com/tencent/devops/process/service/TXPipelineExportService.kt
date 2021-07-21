@@ -31,7 +31,8 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.ci.v2.Credentials
@@ -105,9 +106,10 @@ class TXPipelineExportService @Autowired constructor(
             permission = AuthPermission.EDIT,
             message = "用户($userId)无权限在工程($projectId)下导出流水线"
         )
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw CustomException(
-            Response.Status.BAD_REQUEST,
-            "流水线已不存在！"
+        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
+            statusCode = Response.Status.BAD_REQUEST.statusCode,
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND.toString(),
+            defaultMessage = "流水线已不存在，请检查"
         )
         val yamlSb = getYamlStringBuilder(
             projectId = projectId,
@@ -169,7 +171,7 @@ class TXPipelineExportService @Autowired constructor(
             )
         } catch (t: Throwable) {
             logger.error("Export v2 yaml with error, return blank yml", t)
-            if (t is CustomException) throw t
+            if (t is ErrorCodeException) throw t
             ExportPreScriptBuildYaml(
                 version = "v2.0",
                 name = model.name,
@@ -469,9 +471,10 @@ class TXPipelineExportService @Autowired constructor(
                         output.keys.forEach { key ->
                             val outputWithNamespace = if (namespace.isNullOrBlank()) key else "${namespace}_$key"
                             val conflictElement = output2Element[outputWithNamespace]
-                            if (conflictElement != null) throw CustomException(
-                                status = Response.Status.BAD_REQUEST,
-                                message = "插件[${element.name}]与[${conflictElement.name}]存在相同输出变量[$outputWithNamespace]"
+                            if (conflictElement != null) throw ErrorCodeException(
+                                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                                errorCode = ErrorCode.USER_INPUT_INVAILD.toString(),
+                                defaultMessage = "插件[${element.name}]与[${conflictElement.name}]存在相同输出变量[$outputWithNamespace]"
                             )
                             output2Element[outputWithNamespace] = element
                         }
