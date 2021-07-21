@@ -1049,7 +1049,7 @@
     {
       "version_type" : "P",
       "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "swiftlint_scan",
+      "docker_image_url" : "bkcodecc/swiftlint_scan",
       "docker_image_version" : "latest",
       "foreign_docker_image_version" : "latest",
       "docker_image_hash" : "sha256:3f91a8111c79f4ec2bc72d5dd387e9b5224818f8350755b2a6898a58802ab4d2",
@@ -1061,7 +1061,7 @@
     {
       "version_type" : "T",
       "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "swiftlint_scan",
+      "docker_image_url" : "bkcodecc/swiftlint_scan",
       "docker_image_version" : "v-1615274543129",
       "foreign_docker_image_version" : "latest",
       "docker_image_hash" : "sha256:3f91a8111c79f4ec2bc72d5dd387e9b5224818f8350755b2a6898a58802ab4d2",
@@ -1073,7 +1073,7 @@
     {
       "version_type" : "G",
       "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "swiftlint_scan",
+      "docker_image_url" : "bkcodecc/swiftlint_scan",
       "docker_image_version" : "v-1615274543129",
       "foreign_docker_image_version" : "latest",
       "docker_image_hash" : "sha256:3f91a8111c79f4ec2bc72d5dd387e9b5224818f8350755b2a6898a58802ab4d2",
