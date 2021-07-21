@@ -50,8 +50,10 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_INSUFFICIENT_PERMISSIONS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_TYPE_ERROR
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
+import com.tencent.devops.environment.dao.EnvShareProjectDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
@@ -82,7 +84,8 @@ class EnvService @Autowired constructor(
     private val envNodeDao: EnvNodeDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
-    private val environmentPermissionService: EnvironmentPermissionService
+    private val environmentPermissionService: EnvironmentPermissionService,
+    private val envShareProjectDao: EnvShareProjectDao
 ) : IEnvService {
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {
@@ -636,5 +639,46 @@ class EnvService @Autowired constructor(
                     canUse = null
             )
         }
+    }
+
+    fun setShareEnv(userId: String, projectId: String, envHashId: String, sharedProjectId: List<String>) {
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION))
+        }
+
+        val existEnv = envDao.get(dslContext, projectId, envId)
+        if (existEnv.envType != EnvType.BUILD.name) {
+            throw ErrorCodeException(errorCode = ERROR_NODE_SHARE_PROJECT_TYPE_ERROR)
+        }
+
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            envShareProjectDao.deleteByEnvAndMainProj(
+                dslContext = context,
+                envId = envId,
+                mainProjectId = projectId
+            )
+            envShareProjectDao.batchSave(
+                dslContext = context,
+                userId = userId,
+                envId = envId,
+                envName = existEnv.envName,
+                mainProjectId = projectId,
+                sharedProjects = sharedProjectId
+            )
+        }
+    }
+
+    fun deleteShareEnv(userId: String, projectId: String, envHashId: String) {
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        envDao.getOrNull(dslContext, projectId, envId) ?: return
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION))
+        }
+
+        envShareProjectDao.deleteByEnvAndMainProj(dslContext, envId, projectId)
     }
 }

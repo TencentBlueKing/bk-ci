@@ -160,4 +160,35 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         envService.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds)
         return Result(true)
     }
+
+    override fun setShareEnv(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        sharedProjectId: List<String>
+    ): Result<Boolean> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+
+        if (sharedProjectId.isEmpty()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_EMPTY)
+        }
+
+        envService.setShareEnv(userId, projectId, envHashId, sharedProjectId)
+        return Result(true)
+    }
+
+    override fun deleteShareEnv(userId: String, projectId: String, envHashId: String): Result<Boolean> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+
+        if (projectId.isEmpty()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_EMPTY)
+        }
+
+        envService.deleteShareEnv(userId, projectId, envHashId)
+        return Result(true)
+    }
 }

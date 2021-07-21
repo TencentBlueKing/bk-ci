@@ -232,4 +232,36 @@ interface UserEnvironmentResource {
         @PathParam("projectId")
         projectId: String
     ): Result<List<EnvWithPermission>>
+
+    @ApiOperation("设置环境共享")
+    @POST
+    @Path("/{projectId}/{envHashId}")
+    fun setShareEnv(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam(value = "共享的项目列表", required = true)
+        sharedProjectId: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("删除环境共享")
+    @POST
+    @Path("/{projectId}/{envHashId}")
+    fun deleteShareEnv(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String
+    ): Result<Boolean>
 }
