@@ -50,18 +50,19 @@ class TXPipelineExportServiceTest {
             "key5" to "\${123456}aaaaaa\${haha}hijklmn\${aaaa}" as Any,
             "\${key}" to "\${123456}aaaaaa\${haha}hijklmn\${aaaa}" as Any
         )
+        val variables = mapOf("key1" to "value")
 
         val resultMap = txPipelineExportService.replaceMapWithDoubleCurlyBraces(
             inputMap = inputMap,
             output2Elements = mutableMapOf(),
-            variables = mutableMapOf()
+            variables = variables
         )
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
-        Assert.assertEquals(result, "{\"key1\":\"value\",\"key2\":\"\${{ variables.haha }}\"," +
-            "\"key3\":\"abcedf\${{ variables.haha }}hijklmn\",\"key4\":\"aaaaaa\${{ variables.haha }}hijklmn" +
-            "\${{ variables.aaaa }}\",\"key5\":\"\${{ variables.123456 }}aaaaaa\${{ variables.haha }}hijklmn" +
-            "\${{ variables.aaaa }}\",\"\${key}\":\"\${{ variables.123456 }}aaaaaa\${{ variables.haha }}hijklmn" +
-            "\${{ variables.aaaa }}\"}")
+        Assert.assertEquals(result, "{\"key1\":\"variables.value\",\"key2\":\"\${{ haha }}\"," +
+            "\"key3\":\"abcedf\${{ haha }}hijklmn\",\"key4\":\"aaaaaa\${{ haha }}hijklmn" +
+            "\${{ aaaa }}\",\"key5\":\"\${{ 123456 }}aaaaaa\${{ haha }}hijklmn" +
+            "\${{ aaaa }}\",\"\${key}\":\"\${{ 123456 }}aaaaaa\${{ haha }}hijklmn" +
+            "\${{ aaaa }}\"}")
     }
 
     @Test
@@ -70,15 +71,16 @@ class TXPipelineExportServiceTest {
             "key1" to "value" as Any,
             "key2" to listOf("\${haha}", "abcedf\${haha}hijklmn", "\${123456}aaaaaa\${haha}hijklmn\${aaaa}", 123) as Any
         )
+        val variables = mapOf("key1" to "value")
 
         val resultMap = txPipelineExportService.replaceMapWithDoubleCurlyBraces(
             inputMap = inputMap,
             output2Elements = mutableMapOf(),
-            variables = mutableMapOf()
+            variables = variables
         )
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
-        Assert.assertEquals(result, "{\"key1\":\"value\",\"key2\":[\"\${{ variables.haha }}\"," +
-            "\"abcedf\${{ variables.haha }}hijklmn\",\"\${{ variables.123456 }}aaaaaa" +
-            "\${{ variables.haha }}hijklmn\${{ variables.aaaa }}\",123]}")
+        Assert.assertEquals(result, "{\"key1\":\"variables.value\",\"key2\":[\"\${{ haha }}\"," +
+            "\"abcedf\${{ haha }}hijklmn\",\"\${{ 123456 }}aaaaaa" +
+            "\${{ haha }}hijklmn\${{ aaaa }}\",123]}")
     }
 }
