@@ -1035,7 +1035,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         defaultName = defaultName
                     )
                     sb.append("\r\n")
-                    sb.append("      $paramKey: ")
+                    sb.append("    $paramKey:\r\n")
                     sb.append("        - string\r\n")
                     sb.append("        - string\r\n")
                 } else {
