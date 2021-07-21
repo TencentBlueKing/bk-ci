@@ -61,7 +61,7 @@ data class AppModelDetail(
     @ApiModelProperty("流水线版本", required = false)
     val pipelineVersion: Int,
     @ApiModelProperty("流水线名字", required = false)
-    val pipelineName: String,
+    var pipelineName: String,
     @ApiModelProperty("项目Id", required = false)
     val projectId: String,
     @ApiModelProperty("是否收藏", required = false)
