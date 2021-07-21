@@ -76,6 +76,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
+import com.tencent.devops.gitci.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
@@ -113,6 +114,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
@@ -143,6 +145,12 @@ class GitCIBuildService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitCIBuildService::class.java)
         const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
     }
+
+    @Value("\${gitci.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
+
+    @Value("\${devopsGateway.host:#{null}}")
+    private val gateway: String? = null
 
     private val channelCode = ChannelCode.GIT
 
@@ -715,5 +723,13 @@ class GitCIBuildService @Autowired constructor(
             buildConf.devCloudToken,
             buildConf.devCloudUrl
         )
+    }
+
+    fun getCIUrl(projectId: String): String? {
+        return if (projectId.startsWith(DEVOPS_PROJECT_PREFIX)) {
+            v2GitUrl
+        } else {
+            gateway
+        }
     }
 }
