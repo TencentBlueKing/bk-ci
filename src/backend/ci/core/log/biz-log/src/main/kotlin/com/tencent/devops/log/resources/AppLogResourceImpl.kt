@@ -30,16 +30,15 @@ package com.tencent.devops.log.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.log.api.AppLogResource
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.log.api.AppLogResource
 import com.tencent.devops.log.service.BuildLogQueryService
+import com.tencent.devops.log.service.LogPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -50,7 +49,7 @@ import javax.ws.rs.core.Response
 @RestResource
 class AppLogResourceImpl @Autowired constructor(
     private val buildLogQuery: BuildLogQueryService,
-    private val authPermissionApi: AuthPermissionApi,
+    private val authPermissionApi: LogPermissionService,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : AppLogResource {
 
@@ -264,12 +263,10 @@ class AppLogResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
 
-        if (!authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+        if (!authPermissionApi.verifyUserLogPermission(
+                userId = userId,
+                pipelineId = pipelineId,
                 projectCode = projectId,
-                resourceCode = pipelineId,
                 permission = AuthPermission.VIEW
             )
         ) {

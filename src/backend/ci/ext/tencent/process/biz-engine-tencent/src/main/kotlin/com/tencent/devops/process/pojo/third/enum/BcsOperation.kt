@@ -47,7 +47,7 @@ enum class BcsOperation(private val operation: String) {
     companion object {
         fun parse(value: String?): BcsOperation {
             values().forEach { operation ->
-                if (operation.getValue() .equals(value, false)) {
+                if (operation.getValue().equals(value, false)) {
                     return operation
                 }
             }

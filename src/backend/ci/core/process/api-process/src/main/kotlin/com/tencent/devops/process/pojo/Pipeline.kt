@@ -39,7 +39,7 @@ data class Pipeline(
     @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,
     @ApiModelProperty("流水线名称", required = true)
-    val pipelineName: String,
+    var pipelineName: String,
     @ApiModelProperty("流水线描述", required = false)
     val pipelineDesc: String?,
     @ApiModelProperty("流水线任务数量", required = true)
