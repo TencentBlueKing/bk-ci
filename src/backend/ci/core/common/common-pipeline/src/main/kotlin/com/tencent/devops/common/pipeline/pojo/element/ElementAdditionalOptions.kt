@@ -53,7 +53,7 @@ data class ElementAdditionalOptions(
 enum class RunCondition {
     PRE_TASK_SUCCESS, // 所有前置插件运行成功时
     PRE_TASK_FAILED_BUT_CANCEL, // 即使前面有插件运行失败也运行，除非被取消才不运行
-    PRE_TASK_FAILED_EVEN_CANCEL, // 即使前面有插件运行失败也运行，即使被取消也运行 [未实现]
+    PRE_TASK_FAILED_EVEN_CANCEL, // 即使前面有插件运行失败也运行，即使被取消也运行
     PRE_TASK_FAILED_ONLY, // 只有前面有插件运行失败时才运行
     OTHER_TASK_RUNNING, // 指定插件开始运行时 [未实现]
     CUSTOM_VARIABLE_MATCH, // 自定义变量全部满足时运行

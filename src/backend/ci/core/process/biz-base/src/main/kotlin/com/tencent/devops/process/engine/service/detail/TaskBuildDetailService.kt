@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
@@ -294,7 +295,7 @@ class TaskBuildDetailService(
                 val startIndex = endElementIndex + 1
                 val endIndex = elements.size - 1
                 if (endIndex >= startIndex) {
-                    addUpdateTaskStatusInfo(
+                    addCancelTaskStatusInfo(
                         startIndex = startIndex,
                         endIndex = endIndex,
                         elements = elements,
@@ -322,7 +323,7 @@ class TaskBuildDetailService(
             val parentElement = elements[parentElementJobIndex]
             val taskStatus = BuildStatus.parse(parentElement.status)
             if (!(taskStatus.isFinish() || parentElement.id == endElement.id)) {
-                handleUpdateTaskStatusInfo(
+                handleCancelTaskStatusInfo(
                     tmpElementIndex = tmpElementIndex,
                     elements = elements,
                     endElementIndex = endElementIndex,
@@ -336,7 +337,7 @@ class TaskBuildDetailService(
             if (endIndex < startIndex) {
                 return true
             }
-            addUpdateTaskStatusInfo(
+            addCancelTaskStatusInfo(
                 startIndex = startIndex,
                 endIndex = endIndex,
                 elements = elements,
@@ -347,7 +348,7 @@ class TaskBuildDetailService(
         return false
     }
 
-    private fun handleUpdateTaskStatusInfo(
+    private fun handleCancelTaskStatusInfo(
         tmpElementIndex: Int,
         elements: List<Element>,
         endElementIndex: Int,
@@ -357,7 +358,7 @@ class TaskBuildDetailService(
             val startIndex = endElementIndex + 1
             val endIndex = elements.size - 1
             if (endIndex > startIndex) {
-                addUpdateTaskStatusInfo(
+                addCancelTaskStatusInfo(
                     startIndex = startIndex,
                     endIndex = endIndex,
                     elements = elements,
@@ -367,21 +368,23 @@ class TaskBuildDetailService(
         }
     }
 
-    private fun addUpdateTaskStatusInfo(
+    private fun addCancelTaskStatusInfo(
         startIndex: Int,
         endIndex: Int,
         elements: List<Element>,
         updateTaskStatusInfos: MutableList<Map<String, Any>>?
     ) {
         for (i in startIndex..endIndex) {
-            val unExecElement = elements[i]
-            val unExecTaskId = unExecElement.id
-            val unExecBuildStatus = BuildStatus.UNEXEC
-            unExecElement.status = unExecBuildStatus.name
-            if (unExecTaskId != null) {
+            val element = elements[i]
+            val taskId = element.id
+            val runCondition = element.additionalOptions?.runCondition
+            if (taskId != null && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
+                // 把runCondition不为PRE_TASK_FAILED_EVEN_CANCEL的任务的状态置为UNEXEC
+                val unExecBuildStatus = BuildStatus.UNEXEC
+                element.status = unExecBuildStatus.name
                 updateTaskStatusInfos?.add(
                     mapOf(
-                        PIPELINE_ELEMENT_ID to unExecTaskId,
+                        PIPELINE_ELEMENT_ID to taskId,
                         BUILD_STATUS to unExecBuildStatus
                     )
                 )
