@@ -176,33 +176,32 @@ class GitCIBasicSettingService @Autowired constructor(
     }
 
     fun fixProjectInfo(): Int {
-        val limitCount = 5
         var count = 0
-        var startId = 0L
-        var currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, limitCount)
+        var currProjects = gitCIBasicSettingDao.getProjectNoHttpUrl(dslContext)
         while (currProjects.isNotEmpty()) {
             currProjects.forEach {
                 try {
-                    val projectResult =
-                        client.get(ServiceTxUserResource::class).get(it.enableUserId)
-                    val userInfo = projectResult.data!!
-                    count += gitCIBasicSettingDao.fixProjectInfo(
-                        dslContext = dslContext,
-                        gitProjectId = it.id,
-                        creatorBgName = userInfo.bgName,
-                        creatorDeptName = userInfo.deptName,
-                        creatorCenterName = userInfo.centerName
-                    )
+                    val projectResult = requestGitProjectInfo(it.id)
+                    if (projectResult != null) {
+                        val httpUrl = if (!projectResult.gitHttpsUrl.isNullOrBlank()) {
+                            projectResult.gitHttpsUrl!!
+                        } else {
+                            projectResult.gitHttpUrl
+                        }
+                        count += gitCIBasicSettingDao.fixProjectInfo(
+                            dslContext = dslContext,
+                            gitProjectId = it.id,
+                            httpUrl = httpUrl
+                        )
+                    }
                 } catch (t: Throwable) {
                     logger.error("Update git ci project in devops failed, msg: ${t.message}")
                     return@forEach
-                } finally {
-                    startId = it.id
                 }
             }
             logger.info("fixProjectInfo project ${currProjects.map { it.id }.toList()}, fixed count: $count")
             Thread.sleep(100)
-            currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, limitCount)
+            currProjects = gitCIBasicSettingDao.getProjectNoHttpUrl(dslContext)
         }
         logger.info("fixProjectInfo finished count: $count")
         return count
