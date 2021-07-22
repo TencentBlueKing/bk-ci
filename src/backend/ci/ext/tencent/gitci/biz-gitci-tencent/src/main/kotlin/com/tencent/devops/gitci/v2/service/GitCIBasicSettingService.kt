@@ -33,6 +33,7 @@ import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.gitci.v2.exception.GitCINoEnableException
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -105,6 +106,21 @@ class GitCIBasicSettingService @Autowired constructor(
         enabled: Boolean,
         projectInfo: GitCIProjectInfo
     ): Boolean {
+        val httpUrl = if (projectInfo.gitHttpUrl.startsWith("https://")) {
+            projectInfo.gitHttpUrl
+        } else {
+            val projectResult = requestGitProjectInfo(gitProjectId)
+            if (projectResult != null) {
+                if (projectResult.gitHttpsUrl?.startsWith("https://") == true) {
+                    projectResult.gitHttpsUrl
+                } else {
+                    projectInfo.gitHttpUrl
+                }
+            } else {
+                projectInfo.gitHttpUrl
+            }
+        } ?: projectInfo.gitHttpUrl
+
         return saveGitCIConf(
             userId,
             GitCIBasicSetting(
@@ -112,7 +128,7 @@ class GitCIBasicSettingService @Autowired constructor(
                 name = projectInfo.name,
                 url = projectInfo.gitSshUrl ?: "",
                 homepage = projectInfo.homepage ?: "",
-                gitHttpUrl = projectInfo.gitHttpsUrl ?: "",
+                gitHttpUrl = httpUrl,
                 gitSshUrl = projectInfo.gitSshUrl ?: "",
                 enableCi = enabled,
                 enableUserId = userId,
@@ -190,5 +206,11 @@ class GitCIBasicSettingService @Autowired constructor(
         }
         logger.info("fixProjectInfo finished count: $count")
         return count
+    }
+
+    private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
+        val serviceGitResource = client.getScm(ServiceGitResource::class)
+        val accessToken = serviceGitResource.getToken(gitProjectId).data?.accessToken ?: return null
+        return serviceGitResource.getProjectInfo(accessToken, gitProjectId).data
     }
 }
