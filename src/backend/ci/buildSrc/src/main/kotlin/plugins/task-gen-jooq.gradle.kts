@@ -25,7 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import nu.studer.gradle.jooq.JooqGenerate
-import org.gradle.api.tasks.compile.AbstractCompile
 
 plugins {
     id("nu.studer.jooq")
@@ -95,9 +94,9 @@ jooq {
 
                         if (mysqlURL == null) {
                             println("use default env.")
-                            mysqlURL = System.getProperty("mysqlURL")
-                            mysqlUser = System.getProperty("mysqlUser")
-                            mysqlPasswd = System.getProperty("mysqlPasswd")
+                            mysqlURL = System.getProperty("mysqlURL") ?: System.getenv("mysqlURL")
+                            mysqlUser = System.getProperty("mysqlUser") ?: System.getenv("mysqlUser")
+                            mysqlPasswd = System.getProperty("mysqlPasswd") ?: System.getenv("mysqlPasswd")
                         }
 
                         if (mysqlURL == null) {
