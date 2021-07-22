@@ -223,7 +223,6 @@ subprojects {
             dependency "commons-io:commons-io:$commonsIOVersion"
             dependency "org.apache.xmlrpc:xmlrpc-client:$xmlrpcVersion"
             dependency "commons-httpclient:commons-httpclient:$commonsHttpclientVersion"
-            dependency "com.github.ulisesbocchio:jasypt-spring-boot-starter:$jasyptVersion"
             dependencySet(group: "org.springframework.cloud", version: "$springConsulVersion") {
                 entry "spring-cloud-starter-consul-discovery"
                 entry "spring-cloud-starter-consul-core"
