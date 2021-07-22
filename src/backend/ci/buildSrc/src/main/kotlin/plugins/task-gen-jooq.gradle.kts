@@ -95,9 +95,9 @@ jooq {
 
                         if (mysqlURL == null) {
                             println("use default env.")
-                            mysqlURL = System.getenv("mysqlURL")
-                            mysqlUser = System.getenv("mysqlUser")
-                            mysqlPasswd = System.getenv("mysqlPasswd")
+                            mysqlURL = System.getProperty("mysqlURL")
+                            mysqlUser = System.getProperty("mysqlUser")
+                            mysqlPasswd = System.getProperty("mysqlPasswd")
                         }
 
                         if (mysqlURL == null) {
