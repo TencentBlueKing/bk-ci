@@ -151,25 +151,38 @@ object ControlUtils {
         buildLogPrinter: BuildLogPrinter? = null
     ): Boolean {
         var skip = false
+        val runCondition = additionalOptions?.runCondition
         if (!isEnable(additionalOptions)) {
             skip = true
         } else when {
             // [只有前面有任务失败时才运行]，容器状态必须是失败 && 之前存在失败的任务
-            additionalOptions?.runCondition == RunCondition.PRE_TASK_FAILED_ONLY -> {
+            runCondition == RunCondition.PRE_TASK_FAILED_ONLY -> {
                 skip = containerFinalStatus.isSuccess() && !hasFailedTaskInSuccessContainer
             }
             // [即使前面有插件运行失败也运行，除非被取消才不运行]，不会跳过
-            additionalOptions?.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
+            runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
                 skip = containerFinalStatus.isCancel()
             }
             //  即使前面有插件运行失败也运行，即使被取消也运行 [未实现] 永远不跳过
-            additionalOptions?.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL -> skip = false
-            // 如果容器是失败状态，[其他条件] 都要跳过不执行
-            containerFinalStatus.isFailure() -> skip = true
+            runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL -> skip = false
+            // 如果容器是失败或者取消状态，[其他条件] 都要跳过不执行
+            containerFinalStatus.isFailure() || containerFinalStatus.isCancel() -> skip = true
         }
-
-        return skip || checkCustomVariableSkip(buildId, additionalOptions, variables) ||
-            checkCustomConditionSkip(buildId, additionalOptions, variables, buildLogPrinter)
+        val customConditions = listOf(
+            RunCondition.CUSTOM_VARIABLE_MATCH,
+            RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
+            RunCondition.CUSTOM_CONDITION_MATCH
+        )
+        return if (runCondition in customConditions) skip || checkCustomVariableSkip(
+            buildId = buildId,
+            additionalOptions = additionalOptions,
+            variables = variables
+        ) || checkCustomConditionSkip(
+            buildId = buildId,
+            additionalOptions = additionalOptions,
+            variables = variables,
+            buildLogPrinter = buildLogPrinter
+        ) else skip
     }
 
     private fun checkCustomConditionSkip(

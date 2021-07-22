@@ -41,6 +41,7 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
@@ -111,7 +112,7 @@ class StartActionTaskContainerCmd(
         var needTerminate = isTerminate(containerContext) // 是否终止类型
         var breakFlag = false
 
-        for (t in containerContext.containerTasks) {
+        for ((index, t) in containerContext.containerTasks.withIndex()) {
             // 此处pause状态由构建机[PipelineVMBuildService.claim]认领任务遇到需要暂停任务时更新为PAUSE。
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
                 toDoTask = findNextTaskAfterPause(containerContext, currentTask = t)
@@ -135,6 +136,7 @@ class StartActionTaskContainerCmd(
             } else if (t.status.isReadyToRun()) {
                 // 拿到按序号排列的第一个必须要执行的插件
                 toDoTask = t.findNeedToRunTask(
+                    index = index,
                     hasFailedTaskInSuccessContainer = continueWhenFailure,
                     containerContext = containerContext,
                     needTerminate = needTerminate
@@ -201,6 +203,7 @@ class StartActionTaskContainerCmd(
     }
 
     private fun PipelineBuildTask.findNeedToRunTask(
+        index: Int,
         hasFailedTaskInSuccessContainer: Boolean,
         containerContext: ContainerContext,
         needTerminate: Boolean
@@ -208,10 +211,14 @@ class StartActionTaskContainerCmd(
         val source = containerContext.event.source
         var toDoTask: PipelineBuildTask? = null
         val contextMap = pipelineContextService.buildContext(buildId, containerId, containerContext.variables)
+        if (containerContext.event.actionType == ActionType.END) {
+            containerContext.buildStatus = BuildStatus.CANCELED
+        }
+        val containerTasks = containerContext.containerTasks
         when { // [post action] 包含对应的关机任务，优先开机失败startVMFail=true
             additionalOptions?.elementPostInfo != null -> { // 如果是[post task], elementPostInfo必不为空
                 toDoTask = additionalOptions?.elementPostInfo?.findPostActionTask(
-                    containerTasks = containerContext.containerTasks,
+                    containerTasks = containerTasks,
                     currentTask = this,
                     isTerminate = needTerminate,
                     isContainerFailed = containerContext.buildStatus.isFailure(),
@@ -241,14 +248,16 @@ class StartActionTaskContainerCmd(
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
                 buildLogPrinter = buildLogPrinter
             ) -> { // 检查条件跳过
-                val taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus.isFailure())
+                val taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus)
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
                 // 更新任务状态
                 pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
-                // 只更新SKIP编排模型
-                if (taskStatus == BuildStatus.SKIP) {
-                    taskBuildDetailService.taskEnd(buildId, taskId = taskId, buildStatus = taskStatus)
-                }
+                val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
+                    buildId = buildId,
+                    taskId = taskId,
+                    buildStatus = taskStatus
+                )
+                refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
                 // 打印构建日志
                 buildLogPrinter.addYellowLine(executeCount = containerContext.executeCount, tag = taskId,
                     buildId = buildId, message = "Skip Plugin [$taskName]: ${containerContext.latestSummary}",
@@ -267,6 +276,30 @@ class StartActionTaskContainerCmd(
             containerContext.event.actionType = ActionType.START // 未开始的需要开始
         }
         return toDoTask
+    }
+
+    private fun refreshTaskStatus(
+        updateTaskStatusInfos: List<PipelineTaskStatusInfo>,
+        index: Int,
+        containerTasks: List<PipelineBuildTask>
+    ) {
+        if (updateTaskStatusInfos.isEmpty()) {
+            return
+        }
+        // 更新task列表状态
+        val startIndex = index + 1
+        val endIndex = containerTasks.size - 1
+        for (i in startIndex..endIndex) {
+            val task = containerTasks[i]
+            for (updateTaskStatusInfo in updateTaskStatusInfos) {
+                val taskId = updateTaskStatusInfo.taskId
+                val buildStatus = updateTaskStatusInfo.buildStatus
+                if (taskId == task.taskId) {
+                    task.status = buildStatus
+                    break
+                }
+            }
+        }
     }
 
     /**
