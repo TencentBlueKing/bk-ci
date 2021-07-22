@@ -31,6 +31,65 @@ import org.junit.Assert
 import org.junit.Test
 
 class EnvUtilTest {
+
+    @Test
+    fun parseEnvTwice() {
+        val map = mutableMapOf<String, String>()
+        map["GDP"] = "10000000"
+        map["People"] = "1400000000"
+        map["Country"] = "中华人民共和国"
+        map["twice"] = "\${Country}" // twice 二次解析
+
+        parseAndEquals(
+            data = map,
+            template = "{\"GDP\": \"\${{GDP}}亿\", \"People\": \${{People}} \"Country\": \"\${twice}\"}",
+            expect = "{\"GDP\": \"${map["GDP"]}亿\", \"People\": ${map["People"]} \"Country\": \"${map["Country"]}\"}"
+        )
+
+        val data = HashMap<String, String>()
+        data["ab3c"] = "123"
+        data["ab.cd"] = "5678"
+        data["t.cd"] = "\${ab.cd}"
+
+        val template2 = "abcd_\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
+        val buff = EnvUtils.parseEnv(template2, data)
+        Assert.assertEquals(template2, buff)
+
+        parseAndEquals(
+            data = data,
+            template = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end",
+            expect = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
+        )
+
+        parseAndEquals(
+            data = data,
+            template = "abcd_\${abc}_ffs_\${{ce}}_\${{t.cd}}_ end结束%\n # 这是注释行a1\$ab_^%!#@",
+            expect = "abcd_\${abc}_ffs_twice_${data["ab.cd"]}_ end结束%\n # 这是注释行a1\$ab_^%!#@",
+            contextMap = mapOf("ce" to "twice")
+        )
+
+        data["c_e"] = "\${none}"
+        parseAndEquals(
+            data = data,
+            template = "abcd_\${abc}_ffs_\${{c_e}}_\${{t.cd}}_ end",
+            expect = "abcd_\${abc}_ffs_\${none}_${data["ab.cd"]}_ end"
+        )
+
+        data["center中"] = "中国"
+        parseAndEquals(data = data, template = "abcd_\${center中}_ffs", expect = "abcd_中国_ffs")
+    }
+
+    private fun parseAndEquals(
+        data: Map<String, String>,
+        template: String,
+        expect: String,
+        contextMap: Map<String, String> = emptyMap()
+    ) {
+        val buff = EnvUtils.parseEnv(template, data, contextMap = contextMap)
+        println("template=$template\nreplaced=$buff\n")
+        Assert.assertEquals(expect, buff)
+    }
+
     @Test
     fun parseEnvTest() {
         val map = mutableMapOf<String, String>()
@@ -57,6 +116,9 @@ class EnvUtilTest {
             "variables.hello" to "hahahahaha"
         )
 
+        Assert.assertEquals("", EnvUtils.parseEnv(null, emptyMap(), contextMap = data))
+        Assert.assertEquals("", EnvUtils.parseEnv("", emptyMap(), contextMap = data))
+
         Assert.assertEquals("hello variables.value world",
             EnvUtils.parseEnv(command1, emptyMap(), contextMap = data))
         Assert.assertEquals("variables.valueworld",
@@ -77,8 +139,8 @@ class EnvUtilTest {
             EnvUtils.parseEnv(
                 command = command9,
                 data = map,
-                replaceWithEmpty = false,
-                isEscape = false,
+                replaceWithEmpty = true,
+                isEscape = true,
                 contextMap = mapOf("ci.workspace" to "/data/landun/workspace")
             ))
     }
@@ -106,7 +168,8 @@ class EnvUtilTest {
 
         val data = mapOf(
             "variables.abc" to "variables.value",
-            "variables.hello" to "hahahahaha"
+            "variables.hello" to "hahahahaha",
+            "{variables.abc" to "jacky"
         )
 
         Assert.assertEquals("hello variables.value world", EnvUtils.parseEnv(command1, data))

@@ -22,14 +22,9 @@ import store from './store'
 import './assets/scss/index.scss'
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
-import { bkMessage } from 'bk-magic-vue'
+
 const Vue = window.Vue
 Vue.use(mavonEditor)
-
-Vue.prototype.$bkMessage = function (config) {
-    config.ellipsisLine = config.ellipsisLine || 3
-    bkMessage(config)
-}
 
 window.Pages = window.Pages || {}
 window.Pages['store'] = {

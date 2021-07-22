@@ -77,5 +77,6 @@ allprojects {
         it.exclude("org.slf4j", "log4j-over-slf4j")
         it.exclude("org.slf4j", "slf4j-log4j12")
         it.exclude("org.slf4j", "slf4j-nop")
+        it.exclude("javax.ws.rs", "jsr311-api")
     }
 }
