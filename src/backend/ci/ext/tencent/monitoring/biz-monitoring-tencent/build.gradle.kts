@@ -31,7 +31,6 @@ dependencies {
     api(project(":core:notify:api-notify"))
     api(project(":core:monitoring:api-monitoring"))
     api(project(":core:monitoring:biz-monitoring"))
-    api(project(":ext:tencent:notify:biz-notify-tencent"))
     api(project(":ext:tencent:monitoring:model-monitoring-tencent"))
     api(project(":ext:tencent:common:common-notify-tencent"))
     api(project(":core:common:common-db"))

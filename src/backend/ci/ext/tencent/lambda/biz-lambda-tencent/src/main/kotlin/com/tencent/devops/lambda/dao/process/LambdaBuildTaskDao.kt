@@ -24,58 +24,38 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.dao
+package com.tencent.devops.lambda.dao.process
 
-import com.tencent.devops.model.lambda.tables.TLambdaBuildIndices
-import com.tencent.devops.model.lambda.tables.records.TLambdaBuildIndicesRecord
+import com.tencent.devops.model.process.tables.TPipelineBuildTask
+import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
 
 @Repository
-class LambdaBuildIndexDao {
+class LambdaBuildTaskDao {
 
-    fun create(
+    fun getTask(
         dslContext: DSLContext,
         buildId: String,
-        indexName: String
-    ) {
-        with(TLambdaBuildIndices.T_LAMBDA_BUILD_INDICES) {
-            dslContext.insertInto(this,
-                BUILD_ID,
-                INDEX_NAME)
-                .values(
-                    buildId,
-                    indexName
-                )
-                .onDuplicateKeyIgnore()
-                .execute()
-        }
-    }
-
-    fun update(
-        dslContext: DSLContext,
-        buildId: String,
-        startTime: Long,
-        endTime: Long
-    ) {
-        with(TLambdaBuildIndices.T_LAMBDA_BUILD_INDICES) {
-            dslContext.update(this)
-                .set(START_TIME, Timestamp(startTime).toLocalDateTime())
-                .set(END_TIME, Timestamp(endTime).toLocalDateTime())
-                .where(BUILD_ID.eq(buildId))
-                .execute()
-        }
-    }
-
-    fun get(
-        dslContext: DSLContext,
-        buildId: String
-    ): TLambdaBuildIndicesRecord? {
-        with(TLambdaBuildIndices.T_LAMBDA_BUILD_INDICES) {
+        taskId: String
+    ): TPipelineBuildTaskRecord? {
+        with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
+                .and(TASK_ID.eq(taskId))
                 .fetchOne()
+        }
+    }
+
+    fun getTaskByBuildId(
+        dslContext: DSLContext,
+        buildId: String
+    ): Result<TPipelineBuildTaskRecord> {
+        with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .fetch()
         }
     }
 }

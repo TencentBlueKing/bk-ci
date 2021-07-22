@@ -92,6 +92,7 @@ import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_REF
 import com.tencent.devops.scm.pojo.BK_CI_REPOSITORY
@@ -625,6 +626,9 @@ class GitCIBuildService @Autowired constructor(
         startParams[BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE] = event.commitMsg.toString()
         if (!event.commitId.isBlank() && event.commitId.length >= 8)
             startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT] = event.commitId.substring(0, 8)
+
+        // 替换BuildMessage为了展示commit信息
+        startParams[PIPELINE_BUILD_MSG] = event.commitMsg ?: ""
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {
