@@ -280,19 +280,20 @@ class StartActionTaskContainerCmd(
         index: Int,
         containerTasks: List<PipelineBuildTask>
     ) {
-        if (updateTaskStatusInfos.isNotEmpty()) {
-            // 更新task列表状态
-            val startIndex = index + 1
-            val endIndex = containerTasks.size - 1
-            for (i in startIndex..endIndex) {
-                val task = containerTasks[i]
-                for (updateTaskStatusInfo in updateTaskStatusInfos) {
-                    val taskId = updateTaskStatusInfo.taskId
-                    val buildStatus = updateTaskStatusInfo.buildStatus
-                    if (taskId == task.taskId) {
-                        task.status = buildStatus
-                        break
-                    }
+        if (updateTaskStatusInfos.isEmpty()) {
+            return
+        }
+        // 更新task列表状态
+        val startIndex = index + 1
+        val endIndex = containerTasks.size - 1
+        for (i in startIndex..endIndex) {
+            val task = containerTasks[i]
+            for (updateTaskStatusInfo in updateTaskStatusInfos) {
+                val taskId = updateTaskStatusInfo.taskId
+                val buildStatus = updateTaskStatusInfo.buildStatus
+                if (taskId == task.taskId) {
+                    task.status = buildStatus
+                    break
                 }
             }
         }
