@@ -105,6 +105,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
+import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
@@ -167,7 +168,8 @@ class TriggerBuildService @Autowired constructor(
     private val oauthService: OauthService,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitCIEventSaveService: GitCIEventSaveService,
-    private val websocketService: GitCIV2WebsocketService
+    private val websocketService: GitCIV2WebsocketService,
+    private val gitCISettingDao: GitCISettingDao
 ) : V2BaseBuildService<ScriptBuildYaml>(
     client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
     gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService, websocketService
@@ -778,7 +780,11 @@ class TriggerBuildService @Autowired constructor(
         if (step.checkout == "self") {
             inputMap["accessToken"] =
                 oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
-            inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl
+            inputMap["repositoryUrl"] = if (gitBasicSetting.gitHttpUrl.isBlank()) {
+                gitCISettingDao.getSetting(dslContext, gitBasicSetting.gitProjectId)?.gitHttpUrl
+            } else {
+                gitBasicSetting.gitHttpUrl
+            }
             inputMap["authType"] = "ACCESS_TOKEN"
 
             if (event.mergeRequestId != null) {
