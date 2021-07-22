@@ -48,9 +48,9 @@ class GlobalProxyConfiguration(
         LOG.info("proxy configuration proxyServerHost: $proxyServerHost")
         LOG.info("proxy configuration proxyServerPort: $proxyServerPort")
         val port = proxyServerPort.toIntOrNull()
-        if (!(!enableProxy.toBoolean() || proxyHosts.isBlank() ||
-                proxyServerType.isBlank() || proxyServerHost.isBlank() || port == null)
-        ) {
+        val enableFlag = enableProxy.toBoolean() && proxyHosts.isNotBlank() &&
+            proxyServerType.isNotBlank() && proxyServerHost.isNotBlank()
+        if (enableFlag && port != null) {
             Proxy.Type.values().firstOrNull { it.name == proxyServerType }?.also { type ->
                 val proxyHostsRegex = spliterator.split(proxyHosts).toSet().map { Regex(it.trim()) }
                 val socketAddress = InetSocketAddress.createUnresolved(proxyServerHost, port)
