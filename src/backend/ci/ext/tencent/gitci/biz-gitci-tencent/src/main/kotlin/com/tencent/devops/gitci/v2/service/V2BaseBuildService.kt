@@ -118,6 +118,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 version = ymlVersion
             )
         } else if (pipeline.pipelineId.isNotBlank()) {
+            // 编辑流水线model
+            processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipeline.pipelineId, model, channelCode)
             // 已有的流水线需要更新下工蜂CI这里的状态
             logger.info("update gitPipeline pipeline: $pipeline")
             gitPipelineResourceDao.updatePipeline(
