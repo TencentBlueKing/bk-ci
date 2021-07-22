@@ -86,7 +86,7 @@ jooq {
                             mysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
                         }
 
-                        driver = "com.mysql.jdbc.Driver"
+                        driver = "com.mysql.cj.jdbc.Driver"
                         url = "jdbc:mysql://$mysqlURL/$databaseName?useSSL=false"
                         user = mysqlUser
                         password = mysqlPasswd

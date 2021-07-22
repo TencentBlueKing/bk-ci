@@ -11,21 +11,10 @@ allprojects {
     // 版本
     version = (System.getProperty("ci_version") ?: "1.6.0") +
             if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
-    // 仓库
-    repositories {
-        mavenLocal()
-        maven(
-            url = System.getProperty("mavenRepoUrl")
-                ?: System.getenv("mavenRepoUrl")
-                ?: extra["MAVEN_REPO_URL"]?.toString()
-                ?: "https://repo.spring.io/libs-milestone"
-        )
-        mavenCentral()
-        jcenter()
-    }
 
     // 版本管理
     dependencyManagement {
+        setApplyMavenExclusions(false)
         dependencies {
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
             dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")
@@ -42,27 +31,36 @@ allprojects {
             dependency("org.apache.commons:commons-collections4:${Versions.CommonCollections4}")
             dependency("net.coobird:thumbnailator:${Versions.Thumbnailator}")
             dependency("com.vmware:vijava:${Versions.Vmware}")
-            dependency("com.tencent.devops.ci-plugins:sigar:${Versions.Sigar}")
+            dependency("com.tencent.devops.ci-plugins:sigar:${Versions.SigarPlugin}")
             dependency("net.sf.json-lib:json-lib:${Versions.JsonLib}")
             dependency("com.googlecode.plist:dd-plist:${Versions.DdPlist}")
             dependency("com.github.oshi:oshi-core:${Versions.OshiCore}")
             dependency("net.dongliu:apk-parser:${Versions.ApkParser}")
             dependency("dom4j:dom4j:${Versions.Dom4j}")
-
+            dependency("org.apache.ant:ant:${Versions.Ant}")
+            dependency("cglib:cglib:${Versions.Cglib}")
+            dependency("org.fusesource:sigar:${Versions.Sigar}")
+            dependency("com.floragunn:search-guard-ssl:${Versions.SearchGuardSsl}")
+            dependency("org.asynchttpclient:async-http-client:${Versions.AsyncHttpClient}")
+            dependency("me.cassiano:ktlint-html-reporter:${Versions.KtlintHtmlReport}")
+            dependency("com.github.shyiko:ktlint:${Versions.Ktlint}")
+            dependency("log4j:log4j:1.2.17")
             dependencySet("io.swagger:${Versions.Swagger}") {
                 entry("swagger-annotations")
                 entry("swagger-jersey2-jaxrs")
                 entry("swagger-models")
             }
-
             dependencySet("com.github.docker-java:${Versions.DockerJava}") {
                 entry("docker-java")
                 entry("docker-java-transport-okhttp")
             }
-
             dependencySet("com.tencent.bkrepo:${Versions.TencentBkRepo}") {
                 entry("api-generic")
                 entry("api-repository")
+            }
+            dependencySet("org.apache.poi:${Versions.Poi}") {
+                entry("poi")
+                entry("poi-ooxml")
             }
         }
     }
