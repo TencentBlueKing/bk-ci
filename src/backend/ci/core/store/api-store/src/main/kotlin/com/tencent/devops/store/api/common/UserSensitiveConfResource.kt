@@ -138,6 +138,9 @@ interface UserSensitiveConfResource {
         storeType: StoreTypeEnum,
         @ApiParam("组件标识", required = true)
         @PathParam("storeCode")
-        storeCode: String
+        storeCode: String,
+        @ApiParam("字段类型集合，用\",\"分隔进行拼接（如BACKEND,FRONTEND,ALL）", required = false)
+        @QueryParam("types")
+        types: String?
     ): Result<List<SensitiveConfResp>?>
 }

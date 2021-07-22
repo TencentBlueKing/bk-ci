@@ -82,6 +82,7 @@ interface UserSensitiveConfService {
         userId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
-        isDecrypt: Boolean
+        isDecrypt: Boolean,
+        types: String? = null
     ): Result<List<SensitiveConfResp>?>
 }

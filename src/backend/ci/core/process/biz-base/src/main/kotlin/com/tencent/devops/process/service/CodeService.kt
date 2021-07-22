@@ -102,8 +102,8 @@ class CodeService @Autowired constructor(
     fun getGitRefs(projectId: String, repoHashId: String?): List<String> {
         val repositoryConfig = getRepositoryConfig(repoHashId, null)
         val result = mutableListOf<String>()
-        val branches = scmProxyService.listBranches(projectId, repositoryConfig, full = false).data ?: listOf()
-        val tags = scmProxyService.listTags(projectId, repositoryConfig, full = false).data ?: listOf()
+        val branches = scmProxyService.listBranches(projectId, repositoryConfig).data ?: listOf()
+        val tags = scmProxyService.listTags(projectId, repositoryConfig).data ?: listOf()
         // 取前100
         result.addAll(branches)
         result.addAll(tags)
