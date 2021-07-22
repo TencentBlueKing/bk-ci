@@ -104,5 +104,25 @@ class WebAutoConfiguration {
         return factory
     }
 
+    @Bean
+    fun globalProxyConfiguration(
+        @Value("\${net.proxy.enable:false}")
+        enableProxy: String,
+        @Value("\${net.proxy.hosts:}")
+        proxyHosts: String,
+        @Value("\${net.proxy.server.type:}")
+        proxyServerType: String,
+        @Value("\${net.proxy.server.host:}")
+        proxyServerHost: String,
+        @Value("\${net.proxy.server.port:}")
+        proxyServerPort: String
+    ) = GlobalProxyConfiguration(
+        enableProxy = enableProxy,
+        proxyHosts = proxyHosts,
+        proxyServerType = proxyServerType,
+        proxyServerHost = proxyServerHost,
+        proxyServerPort = proxyServerPort
+    )
+
     private val logger = LoggerFactory.getLogger(WebAutoConfiguration::class.java)
 }
