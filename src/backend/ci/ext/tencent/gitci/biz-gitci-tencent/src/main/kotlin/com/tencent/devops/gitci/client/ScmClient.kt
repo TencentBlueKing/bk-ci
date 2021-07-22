@@ -204,7 +204,14 @@ class ScmClient @Autowired constructor(
 
     private fun getProjectName(conf: GitCIBasicSetting): String {
         return try {
-            GitCommonUtils.getRepoName(conf.gitHttpUrl, conf.name)
+            GitCommonUtils.getRepoName(
+                httpUrl = if (conf.gitHttpUrl.isBlank()) {
+                    conf.homepage
+                } else {
+                    conf.gitHttpUrl
+                },
+                name = conf.name
+            )
         } catch (e: java.lang.Exception) {
             conf.name
         }
