@@ -93,11 +93,6 @@ jooq {
                             mysqlPasswd = System.getenv(mysqlPasswordKey)
                         }
 
-                        println("moduleName : $moduleName")
-                        println("mysqlURL : $mysqlURL")
-                        println("mysqlUser : $mysqlUser")
-                        println("mysqlPasswd : ${mysqlPasswd?.substring(0, 3)}****")
-
                         if (mysqlURL == null) {
                             println("use default env.")
                             mysqlURL = System.getenv("mysqlURL")
@@ -111,6 +106,11 @@ jooq {
                             mysqlUser = project.extra["DB_USERNAME"]?.toString()
                             mysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
                         }
+
+                        println("moduleName : $moduleName")
+                        println("mysqlURL : $mysqlURL")
+                        println("mysqlUser : $mysqlUser")
+                        println("mysqlPasswd : ${mysqlPasswd?.substring(0, 3)}****")
 
                         driver = "com.mysql.cj.jdbc.Driver"
                         url = "jdbc:mysql://$mysqlURL/$databaseName?useSSL=false"
