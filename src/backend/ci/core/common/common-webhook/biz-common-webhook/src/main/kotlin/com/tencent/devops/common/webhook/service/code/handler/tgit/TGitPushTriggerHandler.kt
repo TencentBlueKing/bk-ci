@@ -29,9 +29,10 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.service.code.filter.PathPrefixFilter
+import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
@@ -131,13 +132,16 @@ class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
                 commits.first().message,
                 pipelineId
             )
-            val pathPrefixFilter = PathPrefixFilter(
-                pipelineId = pipelineId,
-                triggerOnPath = eventPaths.toList(),
-                includedPaths = convert(includePaths),
-                excludedPaths = convert(excludePaths)
+            val pathFilter = PathFilterFactory.newPathFilter(
+                PathFilterConfig(
+                    pathFilterType = pathFilterType,
+                    pipelineId = pipelineId,
+                    triggerOnPath = eventPaths.toList(),
+                    includedPaths = convert(includePaths),
+                    excludedPaths = convert(excludePaths)
+                )
             )
-            return listOf(skipCiFilter, pathPrefixFilter, commitMessageFilter)
+            return listOf(skipCiFilter, pathFilter, commitMessageFilter)
         }
     }
 

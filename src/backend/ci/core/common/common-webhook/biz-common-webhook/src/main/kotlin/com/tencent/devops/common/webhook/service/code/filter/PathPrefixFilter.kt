@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
+import com.tencent.devops.scm.pojo.MATCH_PATHS
 import org.slf4j.LoggerFactory
 
 class PathPrefixFilter(
@@ -38,13 +39,12 @@ class PathPrefixFilter(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PathPrefixFilter::class.java)
-        private const val MATCH_PATHS = "matchPaths"
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info(
             "$pipelineId|triggerOnPath:$triggerOnPath|includedPaths:$includedPaths" +
-                "|excludedPaths:$excludedPaths|path filter"
+                "|excludedPaths:$excludedPaths|path prefix filter"
         )
         return hasNoPathSpecs() || (isPathNotExcluded() && isPathIncluded(response))
     }

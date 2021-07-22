@@ -29,9 +29,10 @@ package com.tencent.devops.common.webhook.service.code.handler.svn
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
-import com.tencent.devops.common.webhook.service.code.filter.PathPrefixFilter
+import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.ProjectNameFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -96,30 +97,33 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                 excludedUsers = WebhookUtils.convert(excludeUsers)
             )
             val projectRelativePath = WebhookUtils.getRelativePath(repository.url)
-            val pathFilter = PathPrefixFilter(
-                pipelineId = pipelineId,
-                triggerOnPath = event.files.map { it.file },
-                excludedPaths = WebhookUtils.convert(excludePaths).map { path ->
-                    WebhookUtils.getFullPath(
-                        projectRelativePath = projectRelativePath,
-                        relativeSubPath = path
-                    )
-                },
-                includedPaths = if (relativePath.isNullOrBlank()) {
-                    listOf(
-                        WebhookUtils.getFullPath(
-                            projectRelativePath = projectRelativePath,
-                            relativeSubPath = ""
-                        )
-                    )
-                } else {
-                    WebhookUtils.convert(relativePath).map { path ->
+            val pathFilter = PathFilterFactory.newPathFilter(
+                PathFilterConfig(
+                    pathFilterType = pathFilterType,
+                    pipelineId = pipelineId,
+                    triggerOnPath = event.files.map { it.file },
+                    excludedPaths = WebhookUtils.convert(excludePaths).map { path ->
                         WebhookUtils.getFullPath(
                             projectRelativePath = projectRelativePath,
                             relativeSubPath = path
                         )
+                    },
+                    includedPaths = if (relativePath.isNullOrBlank()) {
+                        listOf(
+                            WebhookUtils.getFullPath(
+                                projectRelativePath = projectRelativePath,
+                                relativeSubPath = ""
+                            )
+                        )
+                    } else {
+                        WebhookUtils.convert(relativePath).map { path ->
+                            WebhookUtils.getFullPath(
+                                projectRelativePath = projectRelativePath,
+                                relativeSubPath = path
+                            )
+                        }
                     }
-                }
+                )
             )
             return listOf(projectNameFilter, userFilter, pathFilter)
         }
