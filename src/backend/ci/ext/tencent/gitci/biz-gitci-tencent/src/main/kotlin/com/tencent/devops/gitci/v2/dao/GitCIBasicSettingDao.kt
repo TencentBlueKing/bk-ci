@@ -226,6 +226,7 @@ class GitCIBasicSettingDao {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             return dslContext.update(this)
                 .set(GIT_HTTP_URL, httpUrl)
+                .where(ID.eq(gitProjectId))
                 .execute()
         }
     }
