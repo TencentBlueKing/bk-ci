@@ -47,6 +47,12 @@ object TaskUtils {
         BuildStatus.EXEC_TIMEOUT
     )
 
+    val customConditionList = listOf(
+        RunCondition.CUSTOM_VARIABLE_MATCH,
+        RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
+        RunCondition.CUSTOM_CONDITION_MATCH
+    )
+
     private val failToRunBuildStatusList = listOf(
         RunCondition.PRE_TASK_FAILED_EVEN_CANCEL, // 不管同一Job下前面任务成功/失败/取消都执行
         RunCondition.PRE_TASK_FAILED_BUT_CANCEL, // 不管同一Job下前面任务成功/失败都执行，除了取消不执行
@@ -59,6 +65,7 @@ object TaskUtils {
      * 如果没有关联的父任务则返回null（异常情况），并一同返回是否允许执行该post[task]标识postExecuteFlag，
      * 非post[task]的postExecuteFlag永远false
      */
+    @Suppress("ComplexMethod")
     fun getPostTaskAndExecuteFlag(
         taskList: List<PipelineBuildTask>,
         task: PipelineBuildTask,
@@ -103,19 +110,7 @@ object TaskUtils {
             // 判断父任务是否是取消或者超时状态
             parentTask?.status == BuildStatus.CANCELED || parentTask?.status == BuildStatus.EXEC_TIMEOUT
         } else if (runCondition == RunCondition.PRE_TASK_SUCCESS && !hasFailedTaskInInSuccessContainer) {
-            var flag = true
-            val taskSize = taskList.size - 1
-            for (i in 0..taskSize) {
-                val tmpTask = taskList[i]
-                if (tmpTask.taskId == task.taskId) {
-                    break
-                }
-                if (tmpTask.status != BuildStatus.SUCCEED) {
-                    flag = false
-                    break
-                }
-            }
-            flag
+            getPreTaskSuccessFlag(taskList, task)
         } else {
             if (isContainerFailed) { // 当前容器有失败的任务
                 runCondition in getContinueConditionListWhenFail() // 需要满足[前置任务失败时才运行]或[除了取消才不运行]条件
@@ -131,6 +126,26 @@ object TaskUtils {
             }
         }
         return parentTask to postExecuteFlag
+    }
+
+    private fun getPreTaskSuccessFlag(
+        taskList: List<PipelineBuildTask>,
+        task: PipelineBuildTask
+    ): Boolean {
+        var flag = true
+        val taskSize = taskList.size - 1
+        for (i in 0..taskSize) {
+            val tmpTask = taskList[i]
+            if (tmpTask.taskId == task.taskId) {
+                return flag
+            }
+            // 当前插件前面的插件存在失败的情况则返回false
+            if (tmpTask.status != BuildStatus.SUCCEED) {
+                flag = false
+                break
+            }
+        }
+        return flag
     }
 
     /**

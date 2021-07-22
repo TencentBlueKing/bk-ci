@@ -53,6 +53,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
+@Suppress("TooManyFunctions")
 @Service
 class StartActionTaskContainerCmd(
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -199,6 +200,7 @@ class StartActionTaskContainerCmd(
         return toDoTask
     }
 
+    @Suppress("LongMethod")
     private fun PipelineBuildTask.findNeedToRunTask(
         index: Int,
         hasFailedTaskInSuccessContainer: Boolean,
@@ -363,14 +365,18 @@ class StartActionTaskContainerCmd(
         if (parentTask != null && !postExecuteFlag) {
             val parentTaskSkipFlag = parentTask.status == BuildStatus.SKIP
             // 如果post任务的主体任务状态是SKIP，则该post任务的状态也应该置为SKIP
-            val buildStatus = if (parentTaskSkipFlag) BuildStatus.SKIP else BuildStatus.UNEXEC
+            val taskStatus = if (parentTaskSkipFlag) BuildStatus.SKIP else BuildStatus.UNEXEC
             val message = if (parentTaskSkipFlag) "Plugin [${currentTask.taskName}] was skipped"
             else "Post action execution conditions (expectation: $postCondition), not executed"
             // 更新排队中的post任务的构建状态
-            pipelineRuntimeService.updateTaskStatus(currentTask, currentTask.starter, buildStatus = buildStatus)
-            if (buildStatus == BuildStatus.SKIP) { // 更新跳过状态
-                taskBuildDetailService.taskSkip(buildId = currentTask.buildId, taskId = currentTask.taskId)
-            }
+            pipelineRuntimeService.updateTaskStatus(currentTask, currentTask.starter, taskStatus)
+            taskBuildDetailService.updateTaskStatus(
+                buildId = currentTask.buildId,
+                taskId = currentTask.taskId,
+                taskStatus = taskStatus,
+                buildStatus = BuildStatus.RUNNING,
+                operation = if (parentTaskSkipFlag) "taskSkip" else "taskUnExec"
+            )
             buildLogPrinter.addYellowLine(
                 buildId = currentTask.buildId,
                 message = message,
