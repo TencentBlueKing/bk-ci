@@ -130,7 +130,7 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: codecc
-          path: bkcodecc-slim.tar.gz
+          path: ./
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
