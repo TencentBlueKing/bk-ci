@@ -44,15 +44,14 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
+import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.utils.BUILD_STATUS
-import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Suppress("LongParameterList", "MagicNumber")
+@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions")
 @Service
 class TaskBuildDetailService(
     private val client: Client,
@@ -96,7 +95,13 @@ class TaskBuildDetailService(
         )
     }
 
-    fun taskSkip(buildId: String, taskId: String) {
+    fun updateTaskStatus(
+        buildId: String,
+        taskId: String,
+        taskStatus: BuildStatus,
+        buildStatus: BuildStatus,
+        operation: String
+    ) {
         update(
             buildId = buildId,
             modelInterface = object : ModelInterface {
@@ -104,7 +109,7 @@ class TaskBuildDetailService(
                 override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                     if (e.id == taskId) {
                         update = true
-                        e.status = BuildStatus.SKIP.name
+                        e.status = taskStatus.name
                         return Traverse.BREAK
                     }
                     return Traverse.CONTINUE
@@ -114,8 +119,8 @@ class TaskBuildDetailService(
                     return update
                 }
             },
-            buildStatus = BuildStatus.RUNNING,
-            operation = "taskSkip"
+            buildStatus = buildStatus,
+            operation = operation
         )
     }
 
@@ -202,8 +207,8 @@ class TaskBuildDetailService(
         errorType: ErrorType? = null,
         errorCode: Int? = null,
         errorMsg: String? = null
-    ) {
-        val updateTaskStatusInfos = mutableListOf<Map<String, Any>>()
+    ): List<PipelineTaskStatusInfo> {
+        val updateTaskStatusInfos = mutableListOf<PipelineTaskStatusInfo>()
         update(buildId, object : ModelInterface {
 
             var update = false
@@ -262,10 +267,11 @@ class TaskBuildDetailService(
             pipelineBuildTaskDao.updateStatus(
                 dslContext = dslContext,
                 buildId = buildId,
-                taskId = updateTaskStatusInfo[PIPELINE_ELEMENT_ID] as String,
-                buildStatus = updateTaskStatusInfo[BUILD_STATUS] as BuildStatus
+                taskId = updateTaskStatusInfo.taskId,
+                buildStatus = updateTaskStatusInfo.buildStatus
             )
         }
+        return updateTaskStatusInfos
     }
 
     private fun handleUpdateTaskStatusInfos(
@@ -276,7 +282,7 @@ class TaskBuildDetailService(
         tmpElement: Element,
         tmpElementIndex: Int,
         elements: List<Element>,
-        updateTaskStatusInfos: MutableList<Map<String, Any>>?
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
     ): Boolean {
         if (cancelTaskPostFlag) {
             return handleCancelTaskPost(
@@ -314,7 +320,7 @@ class TaskBuildDetailService(
         tmpElement: Element,
         tmpElementIndex: Int,
         elements: List<Element>,
-        updateTaskStatusInfos: MutableList<Map<String, Any>>?
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
     ): Boolean {
         val elementPostInfo = tmpElement.additionalOptions?.elementPostInfo
         if (elementPostInfo != null) {
@@ -352,7 +358,7 @@ class TaskBuildDetailService(
         tmpElementIndex: Int,
         elements: List<Element>,
         endElementIndex: Int,
-        updateTaskStatusInfos: MutableList<Map<String, Any>>?
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
     ) {
         if (tmpElementIndex == elements.size - 1) {
             val startIndex = endElementIndex + 1
@@ -372,20 +378,21 @@ class TaskBuildDetailService(
         startIndex: Int,
         endIndex: Int,
         elements: List<Element>,
-        updateTaskStatusInfos: MutableList<Map<String, Any>>?
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
     ) {
         for (i in startIndex..endIndex) {
             val element = elements[i]
             val taskId = element.id
             val runCondition = element.additionalOptions?.runCondition
-            if (taskId != null && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
-                // 把runCondition不为PRE_TASK_FAILED_EVEN_CANCEL的任务的状态置为UNEXEC
+            // 排除构建状态为结束态的构建任务和runCondition不为PRE_TASK_FAILED_EVEN_CANCEL的任务
+            if (taskId != null && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL &&
+                !BuildStatus.parse(element.status).isFinish()) {
                 val unExecBuildStatus = BuildStatus.UNEXEC
                 element.status = unExecBuildStatus.name
                 updateTaskStatusInfos?.add(
-                    mapOf(
-                        PIPELINE_ELEMENT_ID to taskId,
-                        BUILD_STATUS to unExecBuildStatus
+                    PipelineTaskStatusInfo(
+                        taskId = taskId,
+                        buildStatus = unExecBuildStatus
                     )
                 )
             }

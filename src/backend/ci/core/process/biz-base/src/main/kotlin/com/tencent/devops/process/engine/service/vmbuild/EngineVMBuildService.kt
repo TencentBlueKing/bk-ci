@@ -51,7 +51,7 @@ import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMill
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.control.ControlUtils
-import com.tencent.devops.process.engine.control.lock.TaskIdLock
+import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
@@ -276,27 +276,32 @@ class EngineVMBuildService @Autowired(required = false) constructor(
      * 构建机请求执行任务
      */
     fun buildClaimTask(buildId: String, vmSeqId: String, vmName: String): BuildTask {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
-        if (buildInfo == null || buildInfo.status.isFinish()) {
-            LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId|$vmName|buildInfo ${buildInfo?.status}")
-            return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+        val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
+        try {
+            val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+            if (buildInfo == null || buildInfo.status.isFinish()) {
+                LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId|$vmName|buildInfo ${buildInfo?.status}")
+                return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+            }
+            val container = pipelineRuntimeService.getContainer(buildId, stageId = null, containerId = vmSeqId)
+            if (container == null || container.status.isFinish()) {
+                LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|container ${container?.status}")
+                return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+            }
+
+            val allTasks = pipelineRuntimeService.listContainerBuildTasks(
+                buildId = buildId,
+                containerId = vmSeqId,
+                buildStatusSet = setOf(BuildStatus.QUEUE_CACHE, BuildStatus.RUNNING)
+            )
+
+            val task = allTasks.firstOrNull()
+                ?: return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
+
+            return claim(task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId)
+        } finally {
+            containerIdLock.unlock()
         }
-        val container = pipelineRuntimeService.getContainer(buildId, stageId = null, containerId = vmSeqId)
-        if (container == null || container.status.isFinish()) {
-            LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|container ${container?.status}")
-            return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
-        }
-
-        val allTasks = pipelineRuntimeService.listContainerBuildTasks(
-            buildId = buildId,
-            containerId = vmSeqId,
-            buildStatusSet = setOf(BuildStatus.QUEUE_CACHE, BuildStatus.RUNNING)
-        )
-
-        val task = allTasks.firstOrNull()
-            ?: return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
-
-        return claim(task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId)
     }
 
     private fun claim(task: PipelineBuildTask, buildId: String, userId: String, vmSeqId: String): BuildTask {
@@ -380,13 +385,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
      * 构建机完成任务请求
      */
     fun buildCompleteTask(buildId: String, vmSeqId: String, vmName: String, result: BuildTaskResult) {
-        val taskIdLock = TaskIdLock(redisOperation, buildId, result.taskId)
+        val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
             // 加锁防止和引擎并发改task状态的情况
-            taskIdLock.lock()
+            containerIdLock.lock()
             executeCompleteTaskBus(buildId, result, vmName, vmSeqId)
         } finally {
-            taskIdLock.unlock()
+            containerIdLock.unlock()
         }
     }
 
@@ -502,27 +507,31 @@ class EngineVMBuildService @Autowired(required = false) constructor(
      * 构建机结束当前Job
      */
     fun buildEndTask(buildId: String, vmSeqId: String, vmName: String): Boolean {
+        val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
+        try {
+            val task = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
+                .firstOrNull { it.taskId == VMUtils.genEndPointTaskId(it.taskSeq) }
 
-        val task = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
-            .firstOrNull { it.taskId == VMUtils.genEndPointTaskId(it.taskSeq) }
-
-        return if (task == null || task.status.isFinish()) {
-            LOG.info("ENGINE|$buildId|Agent|$vmName|END_JOB|j($vmSeqId)|Task[${task?.taskName}] ${task?.status}")
-            false
-        } else {
-            buildingHeartBeatUtils.dropHeartbeat(buildId = buildId, vmSeqId = vmSeqId)
-            pipelineRuntimeService.completeClaimBuildTask(
-                completeTask = CompleteTask(
-                    buildId = buildId,
-                    taskId = task.taskId,
-                    userId = task.starter,
-                    buildStatus = BuildStatus.SUCCEED
-                ),
-                endBuild = true
-            )
-            LOG.info("ENGINE|$buildId|Agent|END_JOB|${task.stageId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
-            buildExtService.endBuild(task)
-            true
+            return if (task == null || task.status.isFinish()) {
+                LOG.info("ENGINE|$buildId|Agent|$vmName|END_JOB|j($vmSeqId)|Task[${task?.taskName}] ${task?.status}")
+                false
+            } else {
+                buildingHeartBeatUtils.dropHeartbeat(buildId = buildId, vmSeqId = vmSeqId)
+                pipelineRuntimeService.completeClaimBuildTask(
+                    completeTask = CompleteTask(
+                        buildId = buildId,
+                        taskId = task.taskId,
+                        userId = task.starter,
+                        buildStatus = BuildStatus.SUCCEED
+                    ),
+                    endBuild = true
+                )
+                LOG.info("ENGINE|$buildId|Agent|END_JOB|${task.stageId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
+                buildExtService.endBuild(task)
+                true
+            }
+        } finally {
+            containerIdLock.unlock()
         }
     }
 

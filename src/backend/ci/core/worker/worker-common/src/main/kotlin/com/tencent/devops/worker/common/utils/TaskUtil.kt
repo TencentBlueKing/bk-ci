@@ -55,7 +55,9 @@ object TaskUtil {
         if (params != null && null != params["additionalOptions"]) {
             val additionalOptionsStr = params["additionalOptions"]
             val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
-            return additionalOptions?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN.toLong()
+            val timeOut = additionalOptions?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN.toLong()
+            // 如果task的超时时间配置成0，则超时时间为job的最大超时时间
+            return if (timeOut == 0L) Timeout.MAX_JOB_RUN_DAYS else timeOut
         }
         return Timeout.MAX_JOB_RUN_DAYS
     }
