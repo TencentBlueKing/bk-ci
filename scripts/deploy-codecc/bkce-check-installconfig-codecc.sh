@@ -109,9 +109,9 @@ install_config_exist "${BK_CODECC_ES_REST_ADDR:-${BK_ES7_IP:-}}" \
 install_config_exist "${BK_CODECC_REDIS_HOST:-${BK_REDIS_IP:-}}" \
   "redis" \
   "或在 $codecc_env_03 中定义 BK_CODECC_REDIS_HOST"
-install_config_exist "${BK_CODECC_MONGODB_HOST:-${BK_MONGODB_IP:-}}" \
+install_config_exist "${BK_CODECC_MONGODB_ADDR:-${BK_MONGODB_IP:-}}" \
   "mongodb" \
-  "或在 $codecc_env_03 中定义 BK_CODECC_MONGODB_HOST"
+  "或在 $codecc_env_03 中定义 BK_CODECC_MONGODB_ADDR"
 
 # codecc旧组件名称提示
 if install_config_exist "${BK_CODECC_WEB_IP:-}" "codecc(web)" &>/dev/null
