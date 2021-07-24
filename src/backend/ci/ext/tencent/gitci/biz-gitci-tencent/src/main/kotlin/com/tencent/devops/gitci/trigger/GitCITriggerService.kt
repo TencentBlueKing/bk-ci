@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service
+package com.tencent.devops.gitci.trigger
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -68,12 +68,11 @@ import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
-import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
+import com.tencent.devops.gitci.trigger.v1.YamlBuild
+import com.tencent.devops.gitci.trigger.v2.builds.YamlBuildV2
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
-import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
-import com.tencent.devops.gitci.v2.service.TriggerBuildService
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -107,12 +106,12 @@ class GitCITriggerService @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val rabbitTemplate: RabbitTemplate,
-    private val requestTriggerFactory: RequestTriggerFactory,
+    private val yamlTriggerFactory: YamlTriggerFactory,
     private val oauthService: OauthService,
     private val gitCIEventSaveService: GitCIEventSaveService,
     private val scmService: ScmService,
-    private val triggerBuildService: TriggerBuildService,
-    private val gitCIBuildService: GitCIBuildService
+    private val yamlBuild: YamlBuild,
+    private val yamlBuildV2: YamlBuildV2
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
@@ -200,7 +199,7 @@ class GitCITriggerService @Autowired constructor(
                 sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
                 buildStatus = BuildStatus.RUNNING
             )
-            gitCIBuildService.gitStartBuild(
+            yamlBuild.gitStartBuild(
                 pipeline = buildPipeline,
                 event = gitRequestEvent,
                 yaml = yamlObject,
@@ -211,7 +210,7 @@ class GitCITriggerService @Autowired constructor(
             // v2 先做OAuth校验
             val triggerUser = gitRequestEvent.userId
             val token = oauthService.getAndCheckOauthToken(userId)
-            val objects = requestTriggerFactory.v2RequestTrigger.prepareCIBuildYaml(
+            val objects = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
                 gitToken = token,
                 forkGitToken = null,
                 gitRequestEvent = gitRequestEvent,
@@ -237,7 +236,7 @@ class GitCITriggerService @Autowired constructor(
                 buildStatus = BuildStatus.RUNNING,
                 version = "v2.0"
             )
-            triggerBuildService.gitStartBuild(
+            yamlBuildV2.gitStartBuild(
                 pipeline = buildPipeline,
                 event = gitRequestEvent,
                 yaml = objects.normalYaml,
@@ -504,7 +503,7 @@ class GitCITriggerService @Autowired constructor(
 
                 // 检查yml版本，根据yml版本选择不同的实现
                 val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)
-                val triggerInterface = requestTriggerFactory.getGitCIRequestTrigger(ymlVersion)
+                val triggerInterface = yamlTriggerFactory.getGitCIRequestTrigger(ymlVersion)
                 if (!triggerInterface.triggerBuild(
                         gitToken = gitToken,
                         forkGitToken = forkGitToken,

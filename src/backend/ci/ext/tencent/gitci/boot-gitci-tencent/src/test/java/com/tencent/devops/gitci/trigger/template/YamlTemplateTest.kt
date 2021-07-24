@@ -25,13 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.template
+package com.tencent.devops.gitci.trigger.template
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
+import com.tencent.devops.gitci.trigger.template.pojo.TemplateGraph
 import org.junit.Test
 
 import org.springframework.core.io.ClassPathResource

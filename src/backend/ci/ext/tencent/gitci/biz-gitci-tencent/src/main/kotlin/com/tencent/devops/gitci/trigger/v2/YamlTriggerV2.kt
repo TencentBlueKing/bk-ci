@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.service.trigger
+package com.tencent.devops.gitci.trigger.v2
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
@@ -43,14 +43,14 @@ import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.v2.YamlObjects
 import com.tencent.devops.gitci.service.GitRepositoryConfService
-import com.tencent.devops.gitci.service.trigger.RequestTriggerInterface
+import com.tencent.devops.gitci.trigger.YamlTriggerInterface
+import com.tencent.devops.gitci.trigger.v2.builds.YamlBuildV2
 import com.tencent.devops.gitci.v2.common.CommonConst
-import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
+import com.tencent.devops.gitci.trigger.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.ScmService
-import com.tencent.devops.gitci.v2.service.TriggerBuildService
-import com.tencent.devops.gitci.v2.template.YamlTemplate
-import com.tencent.devops.gitci.v2.template.YamlTemplateService
-import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
+import com.tencent.devops.gitci.trigger.template.YamlTemplate
+import com.tencent.devops.gitci.trigger.template.YamlTemplateService
+import com.tencent.devops.gitci.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.gitci.v2.utils.V2WebHookMatcher
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
@@ -60,7 +60,7 @@ import org.springframework.stereotype.Component
 import javax.ws.rs.core.Response
 
 @Component
-class V2RequestTrigger @Autowired constructor(
+class YamlTriggerV2 @Autowired constructor(
     private val dslContext: DSLContext,
     private val scmService: ScmService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
@@ -69,11 +69,11 @@ class V2RequestTrigger @Autowired constructor(
     private val yamlTemplateService: YamlTemplateService,
     private val v2WebHookMatcher: V2WebHookMatcher,
     private val redisOperation: RedisOperation,
-    private val triggerBuildService: TriggerBuildService
-) : RequestTriggerInterface<YamlObjects> {
+    private val yamlBuildV2: YamlBuildV2
+) : YamlTriggerInterface<YamlObjects> {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(V2RequestTrigger::class.java)
+        private val logger = LoggerFactory.getLogger(YamlTriggerV2::class.java)
         private const val ymlVersion = "v2.0"
 
         // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
@@ -131,7 +131,7 @@ class V2RequestTrigger @Autowired constructor(
                 buildStatus = BuildStatus.RUNNING,
                 version = ymlVersion
             )
-            triggerBuildService.gitStartBuild(
+            yamlBuildV2.gitStartBuild(
                 pipeline = gitProjectPipeline,
                 event = gitRequestEvent,
                 yaml = yamlObject,
@@ -145,7 +145,7 @@ class V2RequestTrigger @Autowired constructor(
             // 只有定时任务的保存任务
             logger.warn("Only schedules matched, only save the pipeline, " +
                 "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
-            triggerBuildService.gitStartBuild(
+            yamlBuildV2.gitStartBuild(
                 pipeline = gitProjectPipeline,
                 event = gitRequestEvent,
                 yaml = yamlObject,
