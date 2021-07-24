@@ -108,6 +108,12 @@ jooq {
                         }
 
                         if (mysqlURL == null) {
+                            mysqlURL = System.getProperty("mysqlURL")
+                            mysqlUser = System.getProperty("mysqlUser")
+                            mysqlPasswd = System.getProperty("mysqlPasswd")
+                        }
+
+                        if (mysqlURL == null) {
                             println("use default mysql database.")
                             mysqlURL = project.extra["DB_HOST"]?.toString()
                             mysqlUser = project.extra["DB_USERNAME"]?.toString()
