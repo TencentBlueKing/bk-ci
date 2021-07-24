@@ -110,8 +110,10 @@ import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.BuildConfig
+import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
@@ -230,6 +232,61 @@ class TriggerBuildService @Autowired constructor(
     }
 
     override fun gitStartBuild(
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        yaml: ScriptBuildYaml,
+        originYaml: String,
+        parsedYaml: String?,
+        normalizedYaml: String,
+        gitBuildId: Long?
+    ): BuildId? {
+        val triggerLock = GitCITriggerLock(
+            redisOperation = redisOperation,
+            gitProjectId = event.gitProjectId,
+            pipelineId = pipeline.pipelineId
+        )
+        try {
+            triggerLock.lock()
+            // 如果事件未传gitBuildId说明是不做触发只做流水线保存
+            return if (gitBuildId != null) {
+                startBuild(
+                    pipeline = pipeline,
+                    event = event,
+                    yaml = yaml,
+                    gitBuildId = gitBuildId
+                )
+            } else {
+                savePipelineModel(
+                    pipeline = pipeline,
+                    event = event,
+                    yaml = yaml
+                )
+                null
+            }
+        } catch (e: Throwable) {
+            logger.error("Fail to start the git ci build($event)", e)
+            gitCIEventSaveService.saveRunNotBuildEvent(
+                userId = event.userId,
+                eventId = event.id!!,
+                originYaml = originYaml,
+                parsedYaml = parsedYaml,
+                normalizedYaml = normalizedYaml,
+                reason = TriggerReason.PIPELINE_PREPARE_ERROR.name,
+                reasonDetail = TriggerReason.PIPELINE_PREPARE_ERROR.detail.format(e.message),
+                pipelineId = pipeline.pipelineId,
+                pipelineName = pipeline.displayName,
+                filePath = pipeline.filePath,
+                gitProjectId = event.gitProjectId,
+                sendCommitCheck = true,
+                commitCheckBlock = (event.objectKind == OBJECT_KIND_MERGE_REQUEST)
+            )
+            return null
+        } finally {
+            triggerLock.unlock()
+        }
+    }
+
+    fun startBuild(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         yaml: ScriptBuildYaml,
