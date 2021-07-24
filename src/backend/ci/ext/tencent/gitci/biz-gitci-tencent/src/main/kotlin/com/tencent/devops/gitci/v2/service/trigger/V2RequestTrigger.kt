@@ -45,10 +45,9 @@ import com.tencent.devops.gitci.pojo.v2.YamlObjects
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.service.trigger.RequestTriggerInterface
 import com.tencent.devops.gitci.v2.common.CommonConst
-import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
-import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.ScmService
+import com.tencent.devops.gitci.v2.service.TriggerBuildService
 import com.tencent.devops.gitci.v2.template.YamlTemplate
 import com.tencent.devops.gitci.v2.template.YamlTemplateService
 import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
@@ -56,7 +55,6 @@ import com.tencent.devops.gitci.v2.utils.V2WebHookMatcher
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import javax.ws.rs.core.Response
@@ -67,11 +65,11 @@ class V2RequestTrigger @Autowired constructor(
     private val scmService: ScmService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitBasicSettingService: GitRepositoryConfService,
-    private val rabbitTemplate: RabbitTemplate,
     private val gitCIEventSaveService: GitCIEventSaveService,
     private val yamlTemplateService: YamlTemplateService,
     private val v2WebHookMatcher: V2WebHookMatcher,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val triggerBuildService: TriggerBuildService
 ) : RequestTriggerInterface<YamlObjects> {
 
     companion object {
@@ -133,34 +131,28 @@ class V2RequestTrigger @Autowired constructor(
                 buildStatus = BuildStatus.RUNNING,
                 version = ymlVersion
             )
-            V2GitCIRequestDispatcher.dispatch(
-                rabbitTemplate,
-                V2GitCIRequestTriggerEvent(
-                    pipeline = gitProjectPipeline,
-                    event = gitRequestEvent,
-                    yaml = yamlObject,
-                    parsedYaml = parsedYaml,
-                    originYaml = originYaml,
-                    normalizedYaml = normalizedYaml,
-                    gitBuildId = gitBuildId
-                )
+            triggerBuildService.gitStartBuild(
+                pipeline = gitProjectPipeline,
+                event = gitRequestEvent,
+                yaml = yamlObject,
+                parsedYaml = parsedYaml,
+                originYaml = originYaml,
+                normalizedYaml = normalizedYaml,
+                gitBuildId = gitBuildId
             )
             gitBasicSettingService.updateGitCISetting(gitRequestEvent.gitProjectId)
         } else if (matchResult.second) {
             // 只有定时任务的保存任务
             logger.warn("Only schedules matched, only save the pipeline, " +
                 "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
-            V2GitCIRequestDispatcher.dispatch(
-                rabbitTemplate,
-                V2GitCIRequestTriggerEvent(
-                    pipeline = gitProjectPipeline,
-                    event = gitRequestEvent,
-                    yaml = yamlObject,
-                    parsedYaml = parsedYaml,
-                    originYaml = originYaml!!,
-                    normalizedYaml = normalizedYaml,
-                    gitBuildId = null
-                )
+            triggerBuildService.gitStartBuild(
+                pipeline = gitProjectPipeline,
+                event = gitRequestEvent,
+                yaml = yamlObject,
+                parsedYaml = parsedYaml,
+                originYaml = originYaml!!,
+                normalizedYaml = normalizedYaml,
+                gitBuildId = null
             )
         } else {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
@@ -182,7 +174,6 @@ class V2RequestTrigger @Autowired constructor(
                 version = ymlVersion
             )
         }
-
         return true
     }
 

@@ -29,6 +29,7 @@ package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
+import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -76,8 +77,11 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
     abstract fun gitStartBuild(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
-        yaml: T,
-        gitBuildId: Long
+        yaml: ScriptBuildYaml,
+        originYaml: String,
+        parsedYaml: String?,
+        normalizedYaml: String,
+        gitBuildId: Long?
     ): BuildId?
 
     fun savePipeline(
