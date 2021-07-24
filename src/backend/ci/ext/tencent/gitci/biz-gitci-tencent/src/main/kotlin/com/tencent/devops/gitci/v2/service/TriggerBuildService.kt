@@ -249,7 +249,7 @@ class TriggerBuildService @Autowired constructor(
             triggerLock.lock()
             // 如果事件未传gitBuildId说明是不做触发只做流水线保存
             return if (gitBuildId != null) {
-                startBuild(
+                startBuildPipeline(
                     pipeline = pipeline,
                     event = event,
                     yaml = yaml,
@@ -286,7 +286,7 @@ class TriggerBuildService @Autowired constructor(
         }
     }
 
-    fun startBuild(
+    fun startBuildPipeline(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         yaml: ScriptBuildYaml,
