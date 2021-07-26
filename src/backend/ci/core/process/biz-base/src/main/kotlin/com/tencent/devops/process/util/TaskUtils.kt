@@ -27,10 +27,8 @@
 
 package com.tencent.devops.process.util
 
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
