@@ -154,7 +154,7 @@ class StartActionTaskContainerCmd(
             }
 
             if (toDoTask != null || breakFlag) {
-                if (toDoTask != null) {
+                if (toDoTask != null && toDoTask.status.isReadyToRun()) {
                     // 当前任务前面不是post任务的未执行任务打印日志（未执行的post任务日志打印单独处理）
                     addUnExecTaskTipLog(index, containerTasks)
                 }
