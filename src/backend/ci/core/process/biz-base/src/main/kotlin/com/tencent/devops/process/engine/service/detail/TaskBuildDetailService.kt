@@ -50,7 +50,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Suppress("LongParameterList", "MagicNumber")
+@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions")
 @Service
 class TaskBuildDetailService(
     private val client: Client,
@@ -94,7 +94,13 @@ class TaskBuildDetailService(
         )
     }
 
-    fun taskSkip(buildId: String, taskId: String) {
+    fun updateTaskStatus(
+        buildId: String,
+        taskId: String,
+        taskStatus: BuildStatus,
+        buildStatus: BuildStatus,
+        operation: String
+    ) {
         update(
             buildId = buildId,
             modelInterface = object : ModelInterface {
@@ -102,7 +108,7 @@ class TaskBuildDetailService(
                 override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                     if (e.id == taskId) {
                         update = true
-                        e.status = BuildStatus.SKIP.name
+                        e.status = taskStatus.name
                         return Traverse.BREAK
                     }
                     return Traverse.CONTINUE
@@ -112,8 +118,8 @@ class TaskBuildDetailService(
                     return update
                 }
             },
-            buildStatus = BuildStatus.RUNNING,
-            operation = "taskSkip"
+            buildStatus = buildStatus,
+            operation = operation
         )
     }
 
@@ -374,14 +380,15 @@ class TaskBuildDetailService(
         updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
     ) {
         for (i in startIndex..endIndex) {
-            val unExecElement = elements[i]
-            val unExecTaskId = unExecElement.id
-            val unExecBuildStatus = BuildStatus.UNEXEC
-            unExecElement.status = unExecBuildStatus.name
-            if (unExecTaskId != null) {
+            val element = elements[i]
+            val taskId = element.id
+            // 排除构建状态为结束态的构建任务
+            if (taskId != null && !BuildStatus.parse(element.status).isFinish()) {
+                val unExecBuildStatus = BuildStatus.UNEXEC
+                element.status = unExecBuildStatus.name
                 updateTaskStatusInfos?.add(
                     PipelineTaskStatusInfo(
-                        taskId = unExecTaskId,
+                        taskId = taskId,
                         buildStatus = unExecBuildStatus
                     )
                 )

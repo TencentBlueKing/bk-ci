@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.slf4j.LoggerFactory
@@ -168,12 +169,7 @@ object ControlUtils {
             // 如果容器是失败或者取消状态，[其他条件] 都要跳过不执行
             containerFinalStatus.isFailure() || containerFinalStatus.isCancel() -> skip = true
         }
-        val customConditions = listOf(
-            RunCondition.CUSTOM_VARIABLE_MATCH,
-            RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
-            RunCondition.CUSTOM_CONDITION_MATCH
-        )
-        return if (runCondition in customConditions) skip || checkCustomVariableSkip(
+        return if (runCondition in TaskUtils.customConditionList) skip || checkCustomVariableSkip(
             buildId = buildId,
             additionalOptions = additionalOptions,
             variables = variables

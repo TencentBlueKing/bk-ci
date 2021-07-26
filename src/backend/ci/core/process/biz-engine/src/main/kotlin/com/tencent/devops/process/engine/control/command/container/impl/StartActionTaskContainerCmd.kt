@@ -53,6 +53,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
+@Suppress("TooManyFunctions")
 @Service
 class StartActionTaskContainerCmd(
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -111,8 +112,8 @@ class StartActionTaskContainerCmd(
         var continueWhenFailure = false // 失败继续
         var needTerminate = isTerminate(containerContext) // 是否终止类型
         var breakFlag = false
-
-        for ((index, t) in containerContext.containerTasks.withIndex()) {
+        val containerTasks = containerContext.containerTasks
+        for ((index, t) in containerTasks.withIndex()) {
             // 此处pause状态由构建机[PipelineVMBuildService.claim]认领任务遇到需要暂停任务时更新为PAUSE。
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
                 toDoTask = findNextTaskAfterPause(containerContext, currentTask = t)
@@ -153,6 +154,10 @@ class StartActionTaskContainerCmd(
             }
 
             if (toDoTask != null || breakFlag) {
+                if (toDoTask != null) {
+                    // 当前任务前面不是post任务的未执行任务打印日志（未执行的post任务日志打印单独处理）
+                    addUnExecTaskTipLog(index, containerTasks)
+                }
                 break
             }
         }
@@ -179,6 +184,30 @@ class StartActionTaskContainerCmd(
         return toDoTask
     }
 
+    private fun addUnExecTaskTipLog(
+        index: Int,
+        containerTasks: List<PipelineBuildTask>
+    ) {
+        for (i in (index - 1) downTo 0) {
+            val pipelineTask = containerTasks[i]
+            if (pipelineTask.status != BuildStatus.UNEXEC && pipelineTask.status != BuildStatus.SKIP) {
+                break
+            }
+            if (pipelineTask.status == BuildStatus.UNEXEC &&
+                pipelineTask.additionalOptions?.elementPostInfo == null
+            ) {
+                // 不是post任务的未执行任务打印日志（未执行的post任务日志打印单独处理）
+                buildLogPrinter.addLine(
+                    buildId = pipelineTask.buildId,
+                    message = "Do not meet the run conditions, ignored.",
+                    tag = pipelineTask.taskId,
+                    jobId = pipelineTask.containerHashId,
+                    executeCount = pipelineTask.executeCount ?: 1
+                )
+            }
+        }
+    }
+
     private fun isTerminate(containerContext: ContainerContext): Boolean {
         return containerContext.event.actionType.isTerminate() ||
             FastKillUtils.isTerminateCode(containerContext.event.errorCode)
@@ -202,6 +231,7 @@ class StartActionTaskContainerCmd(
         return toDoTask
     }
 
+    @Suppress("LongMethod")
     private fun PipelineBuildTask.findNeedToRunTask(
         index: Int,
         hasFailedTaskInSuccessContainer: Boolean,
@@ -366,14 +396,18 @@ class StartActionTaskContainerCmd(
         if (parentTask != null && !postExecuteFlag) {
             val parentTaskSkipFlag = parentTask.status == BuildStatus.SKIP
             // 如果post任务的主体任务状态是SKIP，则该post任务的状态也应该置为SKIP
-            val buildStatus = if (parentTaskSkipFlag) BuildStatus.SKIP else BuildStatus.UNEXEC
+            val taskStatus = if (parentTaskSkipFlag) BuildStatus.SKIP else BuildStatus.UNEXEC
             val message = if (parentTaskSkipFlag) "Plugin [${currentTask.taskName}] was skipped"
             else "Post action execution conditions (expectation: $postCondition), not executed"
             // 更新排队中的post任务的构建状态
-            pipelineRuntimeService.updateTaskStatus(currentTask, currentTask.starter, buildStatus = buildStatus)
-            if (buildStatus == BuildStatus.SKIP) { // 更新跳过状态
-                taskBuildDetailService.taskSkip(buildId = currentTask.buildId, taskId = currentTask.taskId)
-            }
+            pipelineRuntimeService.updateTaskStatus(currentTask, currentTask.starter, taskStatus)
+            taskBuildDetailService.updateTaskStatus(
+                buildId = currentTask.buildId,
+                taskId = currentTask.taskId,
+                taskStatus = taskStatus,
+                buildStatus = BuildStatus.RUNNING,
+                operation = if (parentTaskSkipFlag) "taskSkip" else "taskUnExec"
+            )
             buildLogPrinter.addYellowLine(
                 buildId = currentTask.buildId,
                 message = message,
