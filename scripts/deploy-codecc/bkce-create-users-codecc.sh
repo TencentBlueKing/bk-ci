@@ -34,6 +34,8 @@ echo "导入 IAMv3 权限模板."
 
 echo "MongoDB"
 echo "create mongodb db:"
+BK_CODECC_MONGODB_HOST=${BK_CODECC_MONGODB_ADDR%:*}
+BK_CODECC_MONGODB_PORT=${BK_CODECC_MONGODB_ADDR#*:}
 for db in db_task db_defect db_schedule db_op db_quartz; do
   # DELETE DB! use with caution.
   # mongo --host ${BK_CODECC_MONGODB_HOST} --port ${BK_CODECC_MONGODB_PORT} -u ${BK_MONGODB_ADMIN_USER} -p ${BK_MONGODB_ADMIN_PASSWORD} --authenticationDatabase admin "$db" <<< "db.dropDatabase()"
