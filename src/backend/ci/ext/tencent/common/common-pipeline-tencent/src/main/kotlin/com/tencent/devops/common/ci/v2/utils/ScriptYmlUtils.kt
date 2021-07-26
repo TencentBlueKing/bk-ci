@@ -489,24 +489,7 @@ object ScriptYmlUtils {
             preScriptBuildYaml
         )
 
-        var thisTriggerOn = TriggerOn(
-            push = PushRule(
-                branches = listOf("*")
-            ),
-            tag = TagRule(
-                tags = listOf("*")
-            ),
-            mr = MrRule(
-                targetBranches = listOf("*")
-            )
-        )
-
-        if (preScriptBuildYaml.triggerOn != null) {
-            thisTriggerOn =
-                formatTriggerOn(
-                    preScriptBuildYaml.triggerOn!!
-                )
-        }
+        val thisTriggerOn = formatTriggerOn(preScriptBuildYaml.triggerOn)
 
         return ScriptBuildYaml(
             name = if (!preScriptBuildYaml.name.isNullOrBlank()) {
@@ -526,7 +509,22 @@ object ScriptYmlUtils {
         )
     }
 
-    private fun formatTriggerOn(preTriggerOn: PreTriggerOn): TriggerOn {
+    fun formatTriggerOn(preTriggerOn: PreTriggerOn?): TriggerOn {
+
+        if (preTriggerOn == null) {
+            return TriggerOn(
+                push = PushRule(
+                    branches = listOf("*")
+                ),
+                tag = TagRule(
+                    tags = listOf("*")
+                ),
+                mr = MrRule(
+                    targetBranches = listOf("*")
+                )
+            )
+        }
+
         var pushRule: PushRule? = null
         var tagRule: TagRule? = null
         var mrRule: MrRule? = null
