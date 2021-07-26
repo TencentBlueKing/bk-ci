@@ -471,8 +471,8 @@ class BuildStatusSwitcherTest {
     fun readyToSkipWhen() {
 
         BuildStatus.values().forEach { currentBuildStatus ->
-            if (currentBuildStatus.isFinish()) {
-                Assert.assertEquals(currentBuildStatus, BuildStatusSwitcher.readyToSkipWhen(currentBuildStatus))
+            if (currentBuildStatus.isFailure() || currentBuildStatus.isCancel()) {
+                Assert.assertEquals(BuildStatus.UNEXEC, BuildStatusSwitcher.readyToSkipWhen(currentBuildStatus))
             } else {
                 Assert.assertEquals(BuildStatus.SKIP, BuildStatusSwitcher.readyToSkipWhen(currentBuildStatus))
             }

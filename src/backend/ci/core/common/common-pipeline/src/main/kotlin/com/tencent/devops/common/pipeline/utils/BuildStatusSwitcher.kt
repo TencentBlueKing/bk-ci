@@ -37,13 +37,13 @@ object BuildStatusSwitcher {
 
     /**
      * 如果 buildStatus 为结束态：
-     *  则返回buildStatus自身状态
+     *  则返回[BuildStatus.UNEXEC]
      * 否则
      *  返回[BuildStatus.SKIP] 切换成为跳过
      */
     fun readyToSkipWhen(buildStatus: BuildStatus): BuildStatus {
-        return if (buildStatus.isFinish()) {
-            buildStatus
+        return if (buildStatus.isFailure() || buildStatus.isCancel()) {
+            BuildStatus.UNEXEC
         } else {
             BuildStatus.SKIP
         }
