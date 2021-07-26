@@ -25,20 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.ws
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.common.ci.yaml.CIBuildYaml
-import com.tencent.devops.gitci.constant.MQ
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-@Event(MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT, MQ.ROUTE_GITCI_REQUEST_TRIGGER_EVENT)
-data class GitCIRequestTriggerEvent(
-    val pipeline: GitProjectPipeline,
-    val event: GitRequestEvent,
-    val yaml: CIBuildYaml,
-    val originYaml: String,
-    val normalizedYaml: String,
-    val gitBuildId: Long
-)
+@Configuration
+class GitCIWebSocketConfig {
+
+    @Bean
+    fun webSocketDispatcher(rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
+}
