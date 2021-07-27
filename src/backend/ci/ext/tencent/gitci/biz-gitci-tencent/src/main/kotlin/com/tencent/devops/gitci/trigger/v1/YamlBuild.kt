@@ -388,7 +388,8 @@ class YamlBuild @Autowired constructor(
                     hookEventType = CodeEventType.MERGE_REQUEST.name,
                     hookSourceBranch = event.branch,
                     hookTargetBranch = event.targetBranch,
-                    hookSourceUrl = if (event.sourceGitProjectId != null && event.sourceGitProjectId != event.gitProjectId) {
+                    hookSourceUrl = if (event.sourceGitProjectId != null &&
+                        event.sourceGitProjectId != event.gitProjectId) {
                         gitEvent.object_attributes.source.http_url
                     } else {
                         gitProjectConf.gitHttpUrl
@@ -506,8 +507,9 @@ class YamlBuild @Autowired constructor(
         startParams[BK_REPO_WEBHOOK_REPO_NAME] = gitProjectConf.name
         startParams[BK_REPO_WEBHOOK_REPO_URL] = gitProjectConf.url
         startParams[BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE] = event.commitMsg.toString()
-        if (!event.commitId.isBlank() && event.commitId.length >= 8)
+        if (event.commitId.isNotBlank() && event.commitId.length >= 8) {
             startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT] = event.commitId.substring(0, 8)
+        }
 
         // 替换BuildMessage为了展示commit信息
         startParams[PIPELINE_BUILD_MSG] = event.commitMsg ?: ""
