@@ -31,7 +31,6 @@ import org.springframework.data.redis.core.Cursor
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.ScanOptions
-import java.lang.NullPointerException
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
@@ -170,8 +169,16 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         redisTemplate.expire(key, expiredInSecond, TimeUnit.SECONDS)
     }
 
-    fun <T> execute(action: RedisCallback<T>): T {
-        return redisTemplate.execute(action) ?: throw NullPointerException()
+    fun <T> execute(action: RedisCallback<T>): T? {
+        return redisTemplate.execute(action)
+    }
+
+    fun leftPush(key: String, value: String): Long? {
+        return redisTemplate.opsForList().leftPush(key, value)
+    }
+
+    fun rightPop(key: String): String? {
+        return redisTemplate.opsForList().rightPop(key)
     }
 
     fun getRedisName(): String? {
