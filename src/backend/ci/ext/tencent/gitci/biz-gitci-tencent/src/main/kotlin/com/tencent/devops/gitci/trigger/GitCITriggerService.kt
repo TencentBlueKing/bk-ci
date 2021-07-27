@@ -69,7 +69,7 @@ import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.trigger.v1.YamlBuild
-import com.tencent.devops.gitci.trigger.v2.builds.YamlBuildV2
+import com.tencent.devops.gitci.trigger.v2.YamlBuildV2
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService

@@ -44,7 +44,6 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.v2.YamlObjects
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.trigger.YamlTriggerInterface
-import com.tencent.devops.gitci.trigger.v2.builds.YamlBuildV2
 import com.tencent.devops.gitci.v2.common.CommonConst
 import com.tencent.devops.gitci.trigger.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.ScmService

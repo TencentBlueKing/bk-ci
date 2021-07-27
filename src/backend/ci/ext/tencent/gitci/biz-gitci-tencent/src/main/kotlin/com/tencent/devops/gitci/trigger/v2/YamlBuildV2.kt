@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.trigger.v2.builds
+package com.tencent.devops.gitci.trigger.v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -108,7 +108,6 @@ import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
-import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
@@ -119,7 +118,6 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.gitci.trigger.v2.YamlBaseBuildV2
 import com.tencent.devops.common.ci.v2.Stage as GitCIV2Stage
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
