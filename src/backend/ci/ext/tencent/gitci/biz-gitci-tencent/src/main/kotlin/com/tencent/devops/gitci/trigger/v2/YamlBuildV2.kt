@@ -168,13 +168,12 @@ class YamlBuildV2 @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val oauthService: OauthService,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitCIEventSaveService: GitCIEventSaveService,
     private val websocketService: GitCIV2WebsocketService,
     private val gitCISettingDao: GitCISettingDao
 ) : YamlBaseBuildV2<ScriptBuildYaml>(
-    client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService, websocketService
+    client, scmClient, dslContext, gitPipelineResourceDao,
+    gitRequestEventBuildDao, gitCIEventSaveService, websocketService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -207,7 +206,7 @@ class YamlBuildV2 @Autowired constructor(
             triggerLock.lock()
             // 如果事件未传gitBuildId说明是不做触发只做流水线保存
             return if (gitBuildId != null) {
-                startBuild(
+                startBuildPipeline(
                     pipeline = pipeline,
                     event = event,
                     yaml = yaml,
@@ -244,7 +243,7 @@ class YamlBuildV2 @Autowired constructor(
         }
     }
 
-    fun startBuild(
+    fun startBuildPipeline(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         yaml: ScriptBuildYaml,
