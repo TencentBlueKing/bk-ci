@@ -186,7 +186,7 @@ open class RedisLock(
                     }
                 locked = result == 0L
                 result == 1L
-            })
+            }) ?: false
         } else {
             logger.info("It's already unlock")
         }
