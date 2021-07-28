@@ -14,6 +14,7 @@ package com.tencent.bk.codecc.task.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.common.math.IntMath;
 import com.tencent.bk.codecc.defect.api.ServiceDefectTreeResource;
 import com.tencent.bk.codecc.defect.api.ServiceTaskLogOverviewResource;
@@ -67,7 +68,6 @@ import com.tencent.devops.common.api.enums.RepositoryType;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.api.util.UUIDUtil;
-import com.tencent.devops.common.auth.api.GongfengAuthApi;
 import com.tencent.devops.common.auth.api.pojo.external.OwnerInfo;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
@@ -83,7 +83,6 @@ import net.sf.json.JSONObject;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Sets;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -133,9 +132,6 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
 
     @Autowired
     private TaskDao taskDao;
-
-    @Autowired
-    private GongfengAuthApi gongfengAuthApi;
 
     @Autowired
     private TaskRepository taskRepository;
@@ -1084,7 +1080,7 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
         }
 
         Integer gongfengProjectId = taskInfoEntity.getGongfengProjectId();
-        List<OwnerInfo> gitOwnerList = gongfengAuthApi.getOwnersByProject(gongfengProjectId);
+        List<OwnerInfo> gitOwnerList = getOwnersByProject(gongfengProjectId);
         if (CollectionUtils.isEmpty(gitOwnerList)) {
             log.info("gitOwnerList list is empty, task id: {}, gong feng project id: {}", taskId, gongfengProjectId);
             return Collections.emptySet();
@@ -1101,6 +1097,10 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
                 StringUtils.join(intersection, ", "));
 
         return intersection;
+    }
+
+    public List<OwnerInfo> getOwnersByProject(Integer gongfengProjectId) {
+        return new ArrayList<>();
     }
 
     /**

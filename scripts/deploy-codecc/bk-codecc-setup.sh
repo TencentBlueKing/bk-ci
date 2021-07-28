@@ -180,6 +180,22 @@ setup_codecc_assembly (){
   return 1
 }
 
+# schedule 需要额外的数据文件.
+setup_codecc_schedule (){
+  local proj=$1
+  setup_codecc__ms_common "$proj" || return 11
+  check_empty_var BK_CODECC_FILE_DATA_PATH || return 15
+  # 判断节点数量.
+  if [ "${BK_CODECC_SCHEDULE_IP_COMMA//,/}" != "${BK_CODECC_SCHEDULE_IP_COMMA}" ]; then
+    echo >&2 "multiple codecc-schedule instances configured. dir should be a shared filesystem: $script_download_dir."
+    echo ""
+  fi
+  # 刷新script_download数据.
+  local script_download_dir="$BK_CODECC_FILE_DATA_PATH/download/script_download/"
+  mkdir -p "$script_download_dir"
+  rsync -rav "$BK_CODECC_SRC_DIR/support-files/script_download/" "$script_download_dir"
+}
+
 # CodeCC网关即为CI网关, 这里创建符号链接指向ci网关.
 setup_codecc_gateway (){
   check_empty_var BK_CI_HOME BK_CODECC_DATA_DIR BK_CODECC_HOME BK_CODECC_LOGS_DIR || return 15
@@ -208,6 +224,10 @@ setup_codecc_gateway (){
     chown "$MS_USER:$MS_USER" "$gateway_data_dir/$temp_dir" || return 5
     update_link_to_target "$gateway_dir/$temp_dir" "$gateway_data_dir/$temp_dir" || return 3
   done
+  # 尝试规避codecc复用ci-gateway时devops.server.conf不存在的问题.
+  if grep -Fwq "devops.server.conf" "$gateway_dir/core/nginx.conf"; then
+    touch "$gateway_dir/core/devops.server.conf"
+  fi
   # 在全部 codecc-gateway 节点上注册主入口域名: bk-codecc.service.consul, 用于在集群内提供web服务.
   if [ -x $CTRL_DIR/bin/reg_consul_svc ]; then
     check_empty_var LAN_IP || return 15
