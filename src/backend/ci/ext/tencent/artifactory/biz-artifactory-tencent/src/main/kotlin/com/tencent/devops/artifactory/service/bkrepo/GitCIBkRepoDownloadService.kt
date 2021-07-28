@@ -36,19 +36,23 @@ import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.config.CommonConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
 class GitCIBkRepoDownloadService @Autowired constructor(
     private val pipelineService: PipelineService,
-    private val bkRepoService: BkRepoService,
-    private val client: Client,
-    private val bkRepoClient: BkRepoClient,
-    private val commonConfig: CommonConfig,
-    private val shortUrlService: ShortUrlService
-) : BkRepoDownloadService(pipelineService, bkRepoService, client, bkRepoClient, commonConfig, shortUrlService) {
+    bkRepoService: BkRepoService,
+    client: Client,
+    bkRepoClient: BkRepoClient,
+    shortUrlService: ShortUrlService
+) : BkRepoDownloadService(
+    pipelineService = pipelineService,
+    bkRepoService = bkRepoService,
+    client = client,
+    bkRepoClient = bkRepoClient,
+    shortUrlService = shortUrlService
+) {
 
     @Value("\${gitci.v2GitUrl:#{null}}")
     private val v2GitUrl: String? = null
