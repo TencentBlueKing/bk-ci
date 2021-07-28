@@ -56,7 +56,13 @@ class AuthPipelineService @Autowired constructor(
         val projectId = callBackInfo.filter.parent?.id ?: "" // FETCH_INSTANCE_INFO场景下iam不会传parentId
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return getPipeline(projectId, page.offset.toInt(), page.limit.toInt(), token, returnPipelineId!!)
+                return getPipeline(
+                    projectId = projectId,
+                    offset = page.offset.toInt(),
+                    limit = page.limit.toInt(),
+                    token = token,
+                    returnPipelineId = returnPipelineId!!
+                )
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }

@@ -974,14 +974,18 @@ class PipelineListFacadeService @Autowired constructor(
         return buildInfo != null && buildInfo.status.isRunning()
     }
 
-    fun getPipelineStatus(userId: String, projectId: String, pipelines: Set<String>): List<Pipeline> {
+    fun getPipelineStatus(
+        userId: String,
+        projectId: String,
+        pipelines: Set<String>,
+        channelCode: ChannelCode? = ChannelCode.BS
+    ): List<Pipeline> {
         val watcher = Watcher(id = "getPipelineStatus|$projectId|$userId|${pipelines.size}")
-        val channelCode = ChannelCode.BS
         try {
             watcher.start("s_r_summary")
             val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(
                 projectId = projectId,
-                channelCode = channelCode,
+                channelCode = channelCode ?: ChannelCode.BS,
                 pipelineIds = pipelines
             )
             watcher.start("perm_r_perm")
@@ -1001,9 +1005,14 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     // 获取单条流水线的运行状态
-    fun getSinglePipelineStatus(userId: String, projectId: String, pipeline: String): Pipeline? {
+    fun getSinglePipelineStatus(
+        userId: String,
+        projectId: String,
+        pipeline: String,
+        channelCode: ChannelCode?
+    ): Pipeline? {
         val pipelines = setOf(pipeline)
-        val pipelineList = getPipelineStatus(userId, projectId, pipelines)
+        val pipelineList = getPipelineStatus(userId, projectId, pipelines, channelCode)
         return if (pipelineList.isEmpty()) {
             null
         } else {

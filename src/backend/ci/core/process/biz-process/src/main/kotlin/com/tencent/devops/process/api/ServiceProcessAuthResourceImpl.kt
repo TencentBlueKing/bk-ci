@@ -46,18 +46,18 @@ class ServiceProcessAuthResourceImpl @Autowired constructor(
         return authPipelineService.pipelineInfo(
             callBackInfo = callBackInfo,
             token = token,
-            returnPipelineId = false
+            returnPipelineId = true
         )
     }
 
-    override fun pipelineInfoByPipelineId(
+    override fun pipelineInfoByAutoId(
         callBackInfo: CallbackRequestDTO,
         token: String
     ): CallbackBaseResponseDTO? {
         return authPipelineService.pipelineInfo(
             callBackInfo = callBackInfo,
             token = token,
-            returnPipelineId = true
+            returnPipelineId = false
         )
     }
 
