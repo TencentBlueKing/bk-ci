@@ -60,6 +60,4 @@ class ServiceProcessAuthResourceImpl @Autowired constructor(
             returnPipelineId = false
         )
     }
-
-
 }
