@@ -101,7 +101,7 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<Url> {
-        return client.get(ServiceArtifactoryResource::class).downloadUrl(
+        return client.get(ServiceArtifactoryResource::class).downloadUrlForOpenApi(
             userId = userId,
             projectId = projectId,
             artifactoryType = artifactoryType,
