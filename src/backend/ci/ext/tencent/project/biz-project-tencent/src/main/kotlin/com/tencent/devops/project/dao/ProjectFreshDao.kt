@@ -28,7 +28,9 @@
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TProject
+import com.tencent.devops.model.project.tables.TUser
 import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.model.project.tables.records.TUserRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -36,14 +38,21 @@ import org.springframework.stereotype.Repository
 @Repository
 class ProjectFreshDao {
 
-    fun getProjectAfterIdWithoutDept(dslContext: DSLContext, startId: Long, limit: Int): List<TProjectRecord> {
+    fun getProjectAfterId(dslContext: DSLContext, startId: Long, limit: Int): List<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(ID.gt(startId))
                 .and(ENGLISH_NAME.like("git_%"))
-                .and(BG_NAME.eq(""))
                 .limit(limit)
                 .fetch()
+        }
+    }
+
+    fun getDevopsUserInfo(dslContext: DSLContext, userId: String): TUserRecord? {
+        with(TUser.T_USER) {
+            return dslContext.selectFrom(this)
+                .where(USER_ID.eq(userId))
+                .fetchAny()
         }
     }
 
