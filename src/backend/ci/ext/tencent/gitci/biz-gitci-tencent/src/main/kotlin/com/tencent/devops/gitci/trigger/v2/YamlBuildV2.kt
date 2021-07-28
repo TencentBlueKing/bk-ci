@@ -233,7 +233,8 @@ class YamlBuildV2 @Autowired constructor(
                 filePath = pipeline.filePath,
                 gitProjectId = event.gitProjectId,
                 sendCommitCheck = true,
-                commitCheckBlock = (event.objectKind == OBJECT_KIND_MERGE_REQUEST)
+                commitCheckBlock = (event.objectKind == OBJECT_KIND_MERGE_REQUEST),
+                version = ymlVersion
             )
             return null
         } finally {

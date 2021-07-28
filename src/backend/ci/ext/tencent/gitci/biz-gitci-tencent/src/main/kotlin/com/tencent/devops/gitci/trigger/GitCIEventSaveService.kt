@@ -71,7 +71,7 @@ class GitCIEventSaveService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitCIEventSaveService::class.java)
     }
 
-    // 触发检查错误
+    // 触发检查错误,未涉及版本解析
     fun saveTriggerNotBuildEvent(
         gitProjectId: Long,
         userId: String,
@@ -89,7 +89,8 @@ class GitCIEventSaveService @Autowired constructor(
             parsedYaml = null,
             normalizedYaml = null,
             pipelineId = null,
-            filePath = null
+            filePath = null,
+            version = null
         )
     }
 
@@ -108,7 +109,7 @@ class GitCIEventSaveService @Autowired constructor(
         gitProjectId: Long,
         sendCommitCheck: Boolean,
         commitCheckBlock: Boolean,
-        version: String? = null
+        version: String?
     ): Long {
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
@@ -159,7 +160,8 @@ class GitCIEventSaveService @Autowired constructor(
         filePath: String,
         gitProjectId: Long,
         sendCommitCheck: Boolean,
-        commitCheckBlock: Boolean
+        commitCheckBlock: Boolean,
+        version: String?
     ): Long {
         return saveBuildNotBuildEvent(
             userId = userId,
@@ -174,7 +176,8 @@ class GitCIEventSaveService @Autowired constructor(
             filePath = filePath,
             gitProjectId = gitProjectId,
             sendCommitCheck = sendCommitCheck,
-            commitCheckBlock = commitCheckBlock
+            commitCheckBlock = commitCheckBlock,
+            version = version
         )
     }
 
@@ -190,7 +193,7 @@ class GitCIEventSaveService @Autowired constructor(
         filePath: String?,
         gitProjectId: Long,
         gitEvent: GitRequestEvent? = null,
-        version: String? = null
+        version: String?
     ): Long {
         var messageId = -1L
         val event = gitEvent ?: (gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)

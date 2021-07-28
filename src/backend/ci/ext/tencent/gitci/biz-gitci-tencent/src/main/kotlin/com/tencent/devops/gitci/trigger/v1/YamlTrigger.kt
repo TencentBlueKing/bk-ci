@@ -108,7 +108,8 @@ class YamlTrigger @Autowired constructor(
                 description = gitRequestEvent.commitMsg,
                 triggerUser = gitRequestEvent.userId,
                 sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
-                buildStatus = BuildStatus.RUNNING
+                buildStatus = BuildStatus.RUNNING,
+                version = null
             )
             try {
                 yamlBuild.gitStartBuild(
@@ -136,7 +137,8 @@ class YamlTrigger @Autowired constructor(
                 reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = false,
-                commitCheckBlock = false
+                commitCheckBlock = false,
+                version = null
             )
         }
 
@@ -184,7 +186,8 @@ class YamlTrigger @Autowired constructor(
                 gitProjectId = gitRequestEvent.gitProjectId,
                 // V1不发送通知
                 sendCommitCheck = false,
-                commitCheckBlock = false
+                commitCheckBlock = false,
+                version = null
             )
             return null
         }

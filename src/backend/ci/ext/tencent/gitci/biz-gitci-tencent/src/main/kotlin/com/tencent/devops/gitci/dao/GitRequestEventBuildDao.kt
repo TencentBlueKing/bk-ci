@@ -54,7 +54,7 @@ class GitRequestEventBuildDao {
         description: String?,
         sourceGitProjectId: Long?,
         buildStatus: BuildStatus,
-        version: String? = null
+        version: String?
     ): Long {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val record = dslContext.insertInto(
@@ -107,7 +107,7 @@ class GitRequestEventBuildDao {
         pipelineId: String,
         buildId: String,
         buildStatus: BuildStatus,
-        version: String? = null
+        version: String?
     ) {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             dslContext.insertInto(
@@ -177,7 +177,7 @@ class GitRequestEventBuildDao {
         gitBuildId: Long,
         pipelineId: String,
         buildId: String,
-        version: String? = null
+        version: String?
     ) {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             dslContext.update(this)
