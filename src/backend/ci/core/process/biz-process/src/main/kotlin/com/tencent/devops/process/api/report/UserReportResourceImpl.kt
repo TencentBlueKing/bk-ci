@@ -42,7 +42,7 @@ class UserReportResourceImpl @Autowired constructor(
     private val reportService: ReportService
 ) : UserReportResource {
 
-    private val regex = Regex("(http[s]?://)([-.a-z0-9A-Z]+)/(.*)")
+    private val regex = Regex("(http[s]?://[-.a-z0-9A-Z]+)(/.*)")
 
     override fun get(
         userId: String,
@@ -69,7 +69,7 @@ class UserReportResourceImpl @Autowired constructor(
             if (it.type == ReportTypeEnum.INTERNAL.name) {
                 val groups = regex.find(it.indexFileUrl)?.groups // 用户界面只保留contentPath
                 if (groups != null) {
-                    decorateResult.add(it.copy(indexFileUrl = groups[3]!!.value))
+                    decorateResult.add(it.copy(indexFileUrl = groups[2]!!.value))
                 } else {
                     decorateResult.add(it)
                 }
