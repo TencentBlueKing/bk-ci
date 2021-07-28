@@ -111,7 +111,11 @@ class BkPermissionUrlService @Autowired constructor(
 
     override fun getRolePermissionUrl(projectId: String, groupId: String?): String? {
         val projectRelationId = bkPermissionProjectService.getProjectId(projectId)
-        val rolePermissionUrl = "user-group-detail/$groupId?current_role_id=$projectRelationId&tab=group_perm"
+        val rolePermissionUrl = if (!groupId.isNullOrEmpty()) {
+            "user-group-detail/$groupId?current_role_id=$projectRelationId&tab=group_perm"
+        } else {
+            "/user-group?current_role_id=$projectRelationId"
+        }
         return if (permissionCenterHost.isNullOrEmpty()) {
             null
         } else if (permissionCenterHost!!.endsWith("/")) {
