@@ -30,7 +30,6 @@ package com.tencent.devops.auth.service.permission.iam
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.RelatedResourceTypes
 import com.tencent.bk.sdk.iam.dto.RelationResourceInstance
-import com.tencent.bk.sdk.iam.dto.RelationResourceInstances
 import com.tencent.bk.sdk.iam.dto.action.UrlAction
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.PermissionUrlDTO
