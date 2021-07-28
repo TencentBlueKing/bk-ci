@@ -39,6 +39,7 @@ import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -232,6 +233,23 @@ class ScmService @Autowired constructor(
             token = getOauthToken(userId, true, gitProjectId),
             gitProjectId = gitProjectId,
             mrId = mrId
+        ).data
+    }
+
+    fun getProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?
+    ): List<GitCodeProjectInfo>? {
+        logger.info("getProjectList: [$accessToken|$userId|$page|$pageSize|$search]")
+        return client.getScm(ServiceGitCiResource::class).getProjectList(
+            accessToken = accessToken,
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            search = search
         ).data
     }
 

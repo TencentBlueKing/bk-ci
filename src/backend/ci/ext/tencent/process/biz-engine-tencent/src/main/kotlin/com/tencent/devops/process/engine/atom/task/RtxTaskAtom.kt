@@ -62,8 +62,8 @@ class RtxTaskAtom @Autowired constructor(
     private val client: Client,
     private val wechatWorkService: WechatWorkService,
     private val buildLogPrinter: BuildLogPrinter
-)
-    : IAtomTask<SendRTXNotifyElement> {
+) :
+    IAtomTask<SendRTXNotifyElement> {
     override fun getParamElement(task: PipelineBuildTask): SendRTXNotifyElement {
         return JsonUtil.mapTo(task.taskParams, SendRTXNotifyElement::class.java)
     }

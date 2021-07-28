@@ -31,16 +31,38 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.lambda.api.user.UserLambdaResource
 import com.tencent.devops.lambda.pojo.MakeUpBuildVO
-import com.tencent.devops.lambda.service.LambdaDataService
+import com.tencent.devops.lambda.pojo.MakeUpPipelineListVO
+import com.tencent.devops.lambda.pojo.MakeUpProjectListVO
+import com.tencent.devops.lambda.service.process.LambdaDataService
+import com.tencent.devops.lambda.service.process.LambdaPipelineModelService
+import com.tencent.devops.lambda.service.project.LambdaProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserLambdaResourceImpl @Autowired constructor(private val lambdaDataService: LambdaDataService) : UserLambdaResource {
+class UserLambdaResourceImpl @Autowired constructor(
+    private val lambdaDataService: LambdaDataService,
+    private val lambdaPipelineModelService: LambdaPipelineModelService,
+    private val lambdaProjectService: LambdaProjectService
+) : UserLambdaResource {
     override fun manualMakeUpBuildHistory(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Result<Boolean> {
         return Result(lambdaDataService.makeUpBuildHistory(userId, makeUpBuildVOs))
     }
 
     override fun manualMakeUpBuildTasks(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Result<Boolean> {
         return Result(lambdaDataService.makeUpBuildTasks(userId, makeUpBuildVOs))
+    }
+
+    override fun manualMakeUpAllProjects(userId: String, makeUpProjectListVO: MakeUpProjectListVO): Result<Boolean> {
+        return Result(lambdaProjectService.syncProjectInfo(
+            minId = makeUpProjectListVO.minId,
+            maxId = makeUpProjectListVO.maxId
+        ))
+    }
+
+    override fun manualMakeUpAllPipelines(userId: String, makeUpPipelineListVO: MakeUpPipelineListVO): Result<Boolean> {
+        return Result(lambdaPipelineModelService.syncPipelineInfo(
+            minId = makeUpPipelineListVO.minId,
+            maxId = makeUpPipelineListVO.maxId
+        ))
     }
 }

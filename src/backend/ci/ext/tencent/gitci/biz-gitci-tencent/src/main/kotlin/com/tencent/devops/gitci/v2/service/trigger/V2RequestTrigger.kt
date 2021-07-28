@@ -77,6 +77,7 @@ class V2RequestTrigger @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(V2RequestTrigger::class.java)
         private const val ymlVersion = "v2.0"
+
         // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
         private const val GIT_CI_TEMPLATE_ROOT_FILE = "GIT_CI_TEMPLATE_ROOT_FILE"
     }
@@ -110,7 +111,7 @@ class V2RequestTrigger @Autowired constructor(
         gitProjectPipeline.displayName =
             if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
 
-        val matchResult = isMatch(event, yamlObjects)
+        val matchResult = isMatch(event, gitRequestEvent, yamlObjects)
         if (matchResult.first) {
             // 正常匹配仓库操作触发
             logger.info(
@@ -185,8 +186,12 @@ class V2RequestTrigger @Autowired constructor(
         return true
     }
 
-    override fun isMatch(event: GitEvent, ymlObject: YamlObjects): Pair<Boolean, Boolean> {
-        return v2WebHookMatcher.isMatch(ymlObject.normalYaml.triggerOn!!, event)
+    override fun isMatch(
+        event: GitEvent,
+        gitRequestEvent: GitRequestEvent,
+        ymlObject: YamlObjects
+    ): Pair<Boolean, Boolean> {
+        return v2WebHookMatcher.isMatch(ymlObject.normalYaml.triggerOn!!, event, gitRequestEvent)
     }
 
     override fun prepareCIBuildYaml(
