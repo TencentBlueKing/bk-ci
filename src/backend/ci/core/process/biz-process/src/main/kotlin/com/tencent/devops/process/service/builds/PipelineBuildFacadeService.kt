@@ -62,7 +62,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
@@ -1014,11 +1013,9 @@ class PipelineBuildFacadeService(
                 message = "用户（$userId) 无权限获取流水线($pipelineId)详情"
             )
         }
-        val buildId = pipelineRuntimeService.getLatestFinishedBuildId(projectId, pipelineId)
-        val apiDomain = HomeHostUtil.innerServerHost()
-        val redirectURL = when (buildId) {
-            null -> "$apiDomain/console/pipeline/$projectId/$pipelineId/history"
-            else -> "$apiDomain/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+        val redirectURL = when (val buildId = pipelineRuntimeService.getLatestFinishedBuildId(projectId, pipelineId)) {
+            null -> "/console/pipeline/$projectId/$pipelineId/history"
+            else -> "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
         }
         val uri = UriBuilder.fromUri(redirectURL).build()
         return Response.temporaryRedirect(uri).build()
