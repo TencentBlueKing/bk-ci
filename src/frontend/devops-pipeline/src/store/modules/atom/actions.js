@@ -509,5 +509,23 @@ export default {
 
     pausePlugin ({ commit }, { projectId, pipelineId, buildId, taskId, isContinue, stageId, containerId, element }) {
         return request.post(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/taskIds/${taskId}/execution/pause?isContinue=${isContinue}&stageId=${stageId}&containerId=${containerId}`, element)
+    },
+
+    download (_, { url, name }) {
+        return fetch(url, { credentials: 'include' }).then((res) => {
+            if (res.status >= 200 && res.status < 300) {
+                return res.blob()
+            } else {
+                return res.json().then((result) => Promise.reject(result))
+            }
+        }).then((blob) => {
+            const a = document.createElement('a')
+            const url = window.URL || window.webkitURL || window.moxURL
+            a.href = url.createObjectURL(blob)
+            if (name) a.download = name
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+        })
     }
 }

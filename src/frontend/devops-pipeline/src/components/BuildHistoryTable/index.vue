@@ -254,7 +254,7 @@
                         startTime: item.startTime ? convertMiniTime(item.startTime) : '--',
                         endTime: item.endTime ? convertMiniTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertMiniTime(item.queueTime) : '--',
-                        totalTime: item.totalTime ? convertMStoStringByRule(item.totalTime) : '--',
+                        executeTime: item.executeTime ? convertMStoStringByRule(item.executeTime) : '--',
                         material: !active && Array.isArray(item.material) && item.material.length > 1 ? item.material.slice(0, 1) : item.material,
                         sumSize: convertFileSize(sumSize, 'B'),
                         artifactories: needShowAll ? artifactories.slice(0, 11) : artifactories,
