@@ -56,6 +56,19 @@ class ProjectFreshDao {
         }
     }
 
+    fun resetProjectDeptInfo(dslContext: DSLContext): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(BG_ID, 0)
+                .set(BG_NAME, "")
+                .set(DEPT_ID, 0)
+                .set(DEPT_NAME, "")
+                .set(CENTER_ID, 0)
+                .set(CENTER_NAME, "")
+                .execute()
+        }
+    }
+
     fun fixProjectInfo(
         dslContext: DSLContext,
         id: Long,

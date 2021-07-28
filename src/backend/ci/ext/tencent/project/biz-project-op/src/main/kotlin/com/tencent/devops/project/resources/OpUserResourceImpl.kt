@@ -47,6 +47,10 @@ class OpUserResourceImpl @Autowired constructor(
         return Result(projectUserRefreshService.refreshAllUser())
     }
 
+    override fun resetProjectInfo(): Result<Int> {
+        return Result(projectUserRefreshService.resetProjectInfo())
+    }
+
     override fun fixGitCIProjectInfo(): Result<Int> {
         return Result(projectUserRefreshService.fixGitCIProjectInfo())
     }

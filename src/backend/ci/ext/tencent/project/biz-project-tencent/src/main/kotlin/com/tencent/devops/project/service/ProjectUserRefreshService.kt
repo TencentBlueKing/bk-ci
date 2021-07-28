@@ -178,6 +178,10 @@ class ProjectUserRefreshService @Autowired constructor(
         return null
     }
 
+    fun resetProjectInfo(): Int {
+        return projectFreshDao.resetProjectDeptInfo(dslContext)
+    }
+
     fun fixGitCIProjectInfo(): Int {
         val limitCount = 5
         var count = 0
