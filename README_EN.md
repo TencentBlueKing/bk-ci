@@ -49,7 +49,7 @@ bk-ci provides five core services, namely Process, Repository, Ticket, Environme
 
 ## Support
 1. [GitHub Discussions](https://github.com/Tencent/bk-ci/discussions)
-2. QQ Group: 744672165
+2. QQ Group: 495299374
 
 ## BlueKing Community
 

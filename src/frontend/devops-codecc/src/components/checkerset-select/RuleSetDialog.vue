@@ -345,7 +345,7 @@
 </script>
 <style lang="postcss">
     .install-more-dialog {
-        border: 1px solid #ebf0f5;
+        /* border: 1px solid #ebf0f5; */
         p {
             margin: 0;
             padding: 0;

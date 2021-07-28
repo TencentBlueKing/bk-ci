@@ -34,6 +34,8 @@ echo "导入 IAMv3 权限模板."
 
 echo "MongoDB"
 echo "create mongodb db:"
+BK_CODECC_MONGODB_HOST=${BK_CODECC_MONGODB_ADDR%:*}
+BK_CODECC_MONGODB_PORT=${BK_CODECC_MONGODB_ADDR#*:}
 for db in db_task db_defect db_schedule db_op db_quartz; do
   # DELETE DB! use with caution.
   # mongo --host ${BK_CODECC_MONGODB_HOST} --port ${BK_CODECC_MONGODB_PORT} -u ${BK_MONGODB_ADMIN_USER} -p ${BK_MONGODB_ADMIN_PASSWORD} --authenticationDatabase admin "$db" <<< "db.dropDatabase()"
@@ -41,7 +43,7 @@ for db in db_task db_defect db_schedule db_op db_quartz; do
 done
 echo "import mongodb json:"
 patt_mongo_json_filename="^[0-9]{4,4}_codecc_(db_[a-z0-9]+)_(t_[a-z0-9_]+)_mongo.json$"
-for mongo_json in "$BK_CODECC_SRC_DIR"/support-files/nosql/*/*.json; do
+for mongo_json in "$BK_CODECC_SRC_DIR"/support-files/nosql/*.json; do
   read mongo_json_db mongo_json_coll < <(
     sed -nr "s/$patt_mongo_json_filename/\1 \2/p" <<< "${mongo_json##*/}"
   ) || true

@@ -88,6 +88,24 @@ env_line_set (){
   env_line_append "$@" || env_line_update "$@"
 }
 
+sysctl_set (){
+  SYSCTL_PATH="${SYSCTL_PATH:-/etc/sysctl.conf}"
+  local kv k v effect_v
+  for kv in "$@"; do
+    k="${kv%%=*}"
+    v="${kv#*=}"
+    env_line_set "$SYSCTL_PATH" "$k " " $v"  # re-use env.
+    sysctl -p >/dev/null  # 使之生效. 暂不使用--system
+    effect_v=$(sysctl -n "$k")
+    if test "$v" = "$effect_v"; then
+      echo "sysctl_set: $k is set to $v."
+    else
+      echo "sysctl_set: failed set $k to $v."
+      return 1
+    fi
+  done
+}
+
 # 负责渲染ci.
 render_ci (){
   local proj=$1
@@ -225,6 +243,8 @@ setup_ci_dockerhost (){
   # 在当前目录创建docker及构建相关的链接. 方便排查问题.
   update_link_to_target "$BK_CI_HOME/$proj/build-logs" "$BK_CI_LOGS_DIR/docker" || return 3
   update_link_to_target "$BK_CI_HOME/$proj/build-data" "$BK_CI_DATA_DIR/docker" || return 3
+  # 设置ipv4转发
+  sysctl_set net.ipv4.ip_forward=1
   # 配置docker.
   ci_docker_data_root=$(readlink -f "$BK_CI_DATA_DIR/../docker-bkci")
   update_link_to_target "$BK_CI_HOME/$proj/docker-bkci" "$ci_docker_data_root" || return 3

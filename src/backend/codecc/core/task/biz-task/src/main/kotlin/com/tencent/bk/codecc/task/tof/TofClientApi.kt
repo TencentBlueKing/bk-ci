@@ -26,7 +26,7 @@ class TofClientApi @Autowired constructor(
     @Value("\${tof.rootpath:#{null}}")
     private val rootPath: String? = null
 
-    private val operator: String = "austinshen"
+    private val operator: String = "admin"
 
     /**
      * 根据名字获取员工信息
