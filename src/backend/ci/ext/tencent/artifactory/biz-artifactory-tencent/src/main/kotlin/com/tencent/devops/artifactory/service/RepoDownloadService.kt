@@ -31,16 +31,51 @@ import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 
+@Suppress("LongParameterList")
 interface RepoDownloadService {
-    fun serviceGetExternalDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean = false): Url
 
-    fun serviceGetInnerDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean = false): Url
+    fun serviceGetExternalDownloadUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        directed: Boolean = false
+    ): Url
 
-    fun getDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, channelCode: ChannelCode? = ChannelCode.BS): Url
+    fun serviceGetInnerDownloadUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        directed: Boolean = false
+    ): Url
 
-    fun getExternalUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url
+    fun getDownloadUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        channelCode: ChannelCode? = ChannelCode.BS,
+        fullUrl: Boolean = true /*是否返回全路径（包含域名）*/
+    ): Url
 
-    fun shareUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, downloadUsers: String)
+    fun getExternalUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String
+    ): Url
+
+    fun shareUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        downloadUsers: String
+    )
 
     fun getThirdPartyDownloadUrl(
         projectId: String,

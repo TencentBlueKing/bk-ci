@@ -63,12 +63,14 @@ class TencentServiceConfig {
         bkRepoService: BkRepoService,
         client: Client,
         bkRepoClient: BkRepoClient,
+        commonConfig: CommonConfig,
         shortUrlService: ShortUrlService
     ) = GitCIBkRepoDownloadService(
         pipelineService = pipelineService,
         bkRepoService = bkRepoService,
         client = client,
         bkRepoClient = bkRepoClient,
+        commonConfig = commonConfig,
         shortUrlService = shortUrlService
     )
 
@@ -80,12 +82,14 @@ class TencentServiceConfig {
         bkRepoService: BkRepoService,
         client: Client,
         bkRepoClient: BkRepoClient,
+        commonConfig: CommonConfig,
         shortUrlService: ShortUrlService
     ) = BkRepoDownloadService(
         pipelineService = pipelineService,
         bkRepoService = bkRepoService,
         client = client,
         bkRepoClient = bkRepoClient,
+        commonConfig = commonConfig,
         shortUrlService = shortUrlService
     )
 

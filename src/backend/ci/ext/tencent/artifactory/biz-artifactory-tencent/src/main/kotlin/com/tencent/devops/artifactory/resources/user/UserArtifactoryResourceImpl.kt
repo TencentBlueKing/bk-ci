@@ -144,7 +144,7 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
+        return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path, fullUrl = false))
     }
 
     override fun ioaUrl(
@@ -154,7 +154,7 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
+        return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path, fullUrl = false))
     }
 
     override fun shareUrl(

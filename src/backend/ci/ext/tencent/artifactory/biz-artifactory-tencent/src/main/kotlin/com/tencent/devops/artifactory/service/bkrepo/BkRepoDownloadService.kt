@@ -47,6 +47,8 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -63,6 +65,7 @@ open class BkRepoDownloadService @Autowired constructor(
     private val bkRepoService: BkRepoService,
     private val client: Client,
     private val bkRepoClient: BkRepoClient,
+    private val commonConfig: CommonConfig,
     private val shortUrlService: ShortUrlService
 ) : RepoDownloadService {
     override fun serviceGetExternalDownloadUrl(
@@ -132,13 +135,18 @@ open class BkRepoDownloadService @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
-        channelCode: ChannelCode?
+        channelCode: ChannelCode?,
+        fullUrl: Boolean
     ): Url {
         logger.info("getDownloadUrl|userId=$userId|projectId=$projectId|type=$artifactoryType|argPath=$argPath")
         pipelineService.validatePermission(userId, projectId)
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val repo = RepoUtils.getRepoByType(artifactoryType)
-        val url = "/bkrepo/api/user/generic/$projectId/$repo$normalizedPath?download=true"
+        val urlBuilder = StringBuilder()
+        if (fullUrl) {
+            urlBuilder.append(HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!))
+        }
+        val url = urlBuilder.append("/bkrepo/api/user/generic/$projectId/$repo$normalizedPath?download=true").toString()
         return Url(url, url)
     }
 

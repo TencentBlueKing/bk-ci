@@ -36,6 +36,7 @@ import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.config.CommonConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -45,12 +46,14 @@ class GitCIBkRepoDownloadService @Autowired constructor(
     bkRepoService: BkRepoService,
     client: Client,
     bkRepoClient: BkRepoClient,
+    commonConfig: CommonConfig,
     shortUrlService: ShortUrlService
 ) : BkRepoDownloadService(
     pipelineService = pipelineService,
     bkRepoService = bkRepoService,
     client = client,
     bkRepoClient = bkRepoClient,
+    commonConfig = commonConfig,
     shortUrlService = shortUrlService
 ) {
 
@@ -62,7 +65,8 @@ class GitCIBkRepoDownloadService @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
-        channelCode: ChannelCode?
+        channelCode: ChannelCode?,
+        fullUrl: Boolean
     ): Url {
         logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
             "argPath: $argPath")
