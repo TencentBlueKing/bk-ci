@@ -174,7 +174,7 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
 
     override fun getRolePermissionUrl(projectId: String, groupId: String?): String? {
         val projectRelationId = permissionProjectService.getProjectId(projectId)
-        val rolePermissionUrl = if (groupId.isNullOrEmpty()) {
+        val rolePermissionUrl = if (!groupId.isNullOrEmpty()) {
             "user-group-detail/$groupId?current_role_id=$projectRelationId&tab=group_perm"
         } else {
             "user-group?current_role_id=$projectRelationId"
