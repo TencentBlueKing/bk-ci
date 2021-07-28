@@ -25,21 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.trigger
 
-import com.tencent.devops.common.event.annotation.Event
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import com.tencent.devops.common.ci.v2.YmlVersion
+import com.tencent.devops.gitci.trigger.v1.YamlTrigger
+import com.tencent.devops.gitci.trigger.v2.YamlTriggerV2
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-object GitCIRequestDispatcher {
-    private val logger = LoggerFactory.getLogger(GitCIRequestDispatcher::class.java)
+@Component
+class YamlTriggerFactory @Autowired constructor(
+    val requestTrigger: YamlTrigger,
+    val requestTriggerV2: YamlTriggerV2
+) {
 
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: GitCIRequestEvent) {
-        try {
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
-        } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
+    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): YamlTriggerInterface<*> {
+        if (ymlVersion == null) {
+            return requestTrigger
+        }
+
+        return when (ymlVersion.version) {
+            "v2.0" -> {
+                requestTriggerV2
+            }
+            else -> {
+                requestTrigger
+            }
         }
     }
 }

@@ -25,21 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.trigger.template.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-object GitCIRequestDispatcher {
-    private val logger = LoggerFactory.getLogger(GitCIRequestDispatcher::class.java)
+data class ParametersTemplate(
+    val parameters: List<Parameters>
+)
 
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: GitCIRequestEvent) {
-        try {
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
-        } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
-        }
-    }
-}
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ParametersTemplateNull(
+    val parameters: List<Parameters>?
+)

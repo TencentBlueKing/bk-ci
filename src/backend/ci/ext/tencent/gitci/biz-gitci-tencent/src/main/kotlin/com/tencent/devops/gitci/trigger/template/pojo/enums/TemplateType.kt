@@ -25,21 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.trigger.template.pojo.enums
 
-import com.tencent.devops.common.event.annotation.Event
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-
-object GitCIRequestDispatcher {
-    private val logger = LoggerFactory.getLogger(GitCIRequestDispatcher::class.java)
-
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: GitCIRequestEvent) {
-        try {
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
-        } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
-        }
-    }
+/**
+ * 模板类型，text为展示内容，content为模板在Yaml中的关键字
+ */
+enum class TemplateType(val text: String, val content: String) {
+    VARIABLE("variable", "variables"),
+    STAGE("stage", "stages"),
+    JOB("job", "jobs"),
+    STEP("step", "steps"),
+    FINALLY("finally", "finally"),
+    EXTEND("extend", "extend")
 }

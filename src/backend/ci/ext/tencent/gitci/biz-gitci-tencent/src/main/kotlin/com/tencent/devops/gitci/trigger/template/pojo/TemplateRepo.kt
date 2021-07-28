@@ -25,21 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.trigger.template.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-
-object GitCIRequestDispatcher {
-    private val logger = LoggerFactory.getLogger(GitCIRequestDispatcher::class.java)
-
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: GitCIRequestEvent) {
-        try {
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
-        } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
-        }
-    }
-}
+/**
+ * 模板替换中的模板库
+ * 用来保存库信息和库中的模板，供模板替换使用
+ */
+data class TemplateRepo(
+    // 代码库的命名空间
+    var repo: String,
+    // 代码库在模板中的名称
+    var repoName: String,
+    // 代码库的分支
+    var repoRef: String? = "master",
+    // 是否使用OAUTH拉取模板
+    var useOauth: Boolean,
+    // 用户自己的private.key
+    var privateKey: String?,
+    // 代码库中的模板
+    var templates: MutableMap<String, String>
+)

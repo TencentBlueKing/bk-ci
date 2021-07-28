@@ -25,21 +25,64 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.trigger.template.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+class TemplateGraph<T>(
+    private val adj: MutableMap<String, MutableList<String>> = mutableMapOf()
+) {
 
-object GitCIRequestDispatcher {
-    private val logger = LoggerFactory.getLogger(GitCIRequestDispatcher::class.java)
-
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: GitCIRequestEvent) {
-        try {
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
-        } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
+    fun addEdge(fromPath: String, toPath: String) {
+        if (adj[fromPath] != null) {
+            adj[fromPath]!!.add(toPath)
+        } else {
+            adj[fromPath] = mutableListOf(toPath)
         }
+    }
+
+    fun hasCyclic(): Boolean {
+        val visited = adj.map { it.key to false }.toMap().toMutableMap()
+        val recStack = adj.map { it.key to false }.toMap().toMutableMap()
+
+        for (i in adj.keys) {
+            if (hasCyclicUtil(i, visited, recStack)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun hasCyclicUtil(
+        i: String,
+        visited: MutableMap<String, Boolean>,
+        recStack: MutableMap<String, Boolean>
+    ): Boolean {
+
+        if (recStack[i] == null || visited[i] == null) {
+            return false
+        }
+
+        if (recStack[i]!!) {
+            return true
+        }
+
+        if (visited[i]!!) {
+            return false
+        }
+
+        visited[i] = true
+
+        recStack[i] = true
+
+        val children = adj[i]!!
+
+        for (c in children) {
+            if (hasCyclicUtil(c, visited, recStack)) {
+                return true
+            }
+        }
+
+        recStack[i] = false
+
+        return false
     }
 }

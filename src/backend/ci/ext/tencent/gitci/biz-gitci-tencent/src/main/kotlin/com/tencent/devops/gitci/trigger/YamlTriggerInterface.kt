@@ -25,21 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.trigger
 
-import com.tencent.devops.common.event.annotation.Event
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.repository.pojo.oauth.GitToken
 
-object GitCIRequestDispatcher {
-    private val logger = LoggerFactory.getLogger(GitCIRequestDispatcher::class.java)
+interface YamlTriggerInterface<T> {
 
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: GitCIRequestEvent) {
-        try {
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
-        } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
-        }
-    }
+    fun triggerBuild(
+        gitToken: GitToken,
+        forkGitToken: GitToken?,
+        gitRequestEvent: GitRequestEvent,
+        gitProjectPipeline: GitProjectPipeline,
+        event: GitEvent,
+        originYaml: String?,
+        filePath: String
+    ): Boolean
+
+    fun isMatch(
+        event: GitEvent,
+        gitRequestEvent: GitRequestEvent,
+        ymlObject: T
+    ): Pair</*isMatch*/Boolean, /*onlySchedule*/Boolean>
+
+    fun prepareCIBuildYaml(
+        gitToken: GitToken,
+        forkGitToken: GitToken?,
+        gitRequestEvent: GitRequestEvent,
+        isMr: Boolean,
+        originYaml: String?,
+        filePath: String,
+        pipelineId: String?,
+        pipelineName: String?
+    ): T?
+
+    fun checkYamlSchema(userId: String, yaml: String): Result<String>
 }
