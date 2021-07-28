@@ -222,8 +222,8 @@ class DockerHostBuildService(
                     .withMemorySwap(dockerHostConfig.memory)
                     .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
                     .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
-                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
-                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))
+/*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
                     .withBinds(binds)
                     .withNetworkMode("bridge"))
                 .exec()
@@ -552,8 +552,8 @@ class DockerHostBuildService(
                         .withMemorySwap(dockerHostConfig.memory)
                         .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
                         .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
-                        .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
-                        .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))
+/*                        .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                        .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
                         .withNetworkMode("bridge")
                         .withPortBindings(portBindings)
                     )
