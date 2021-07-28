@@ -36,11 +36,14 @@ import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.report.service.ReportService
 import org.springframework.beans.factory.annotation.Autowired
 
-@Suppress("ALL")
+@Suppress("UNUSED")
 @RestResource
 class UserReportResourceImpl @Autowired constructor(
     private val reportService: ReportService
 ) : UserReportResource {
+
+    private val regex = Regex("(http[s]?://)([-.a-z0-9A-Z]+)/(.*)")
+
     override fun get(
         userId: String,
         projectId: String,
@@ -62,17 +65,18 @@ class UserReportResourceImpl @Autowired constructor(
         }
         val result = reportService.list(userId, projectId, pipelineId, buildId, taskId)
         val decorateResult = mutableListOf<Report>()
-        val regex = Regex("(http[s]?://)([-.a-z0-9A-Z]+)/(.*)")
         result.forEach {
             if (it.type == ReportTypeEnum.INTERNAL.name) {
                 val groups = regex.find(it.indexFileUrl)?.groups // 用户界面只保留contentPath
                 if (groups != null) {
                     decorateResult.add(it.copy(indexFileUrl = groups[3]!!.value))
+                } else {
+                    decorateResult.add(it)
                 }
             } else {
                 decorateResult.add(it)
             }
         }
-        return Result(result)
+        return Result(decorateResult)
     }
 }
