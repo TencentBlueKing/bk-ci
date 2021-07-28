@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
@@ -45,6 +46,7 @@ import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
+import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
@@ -140,6 +142,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -442,7 +445,14 @@ class TriggerBuildService @Autowired constructor(
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
                 addNormalContainer(job, elementList, containerList, jobIndex, finalStage)
             } else {
-                addVmBuildContainer(job, elementList, containerList, jobIndex, finalStage)
+                addVmBuildContainer(
+                    job = job,
+                    elementList = elementList,
+                    containerList = containerList,
+                    jobIndex = jobIndex,
+                    projectCode = gitBasicSetting.projectCode!!,
+                    finalStage = finalStage
+                )
             }
         }
 
@@ -475,32 +485,9 @@ class TriggerBuildService @Autowired constructor(
         elementList: List<Element>,
         containerList: MutableList<Container>,
         jobIndex: Int,
+        projectCode: String,
         finalStage: Boolean = false
     ) {
-
-/*        val listPreAgentResult =
-            client.get(ServicePreBuildAgentResource::class).listPreBuildAgent(userId, getUserProjectId(userId), os)
-        if (listPreAgentResult.isNotOk()) {
-            logger.error("list prebuild agent failed")
-            throw OperationException("list prebuild agent failed")
-        }
-        val preAgents = listPreAgentResult.data!!
-
-        val dispatchType = getDispatchType(job, startUpReq, agentInfo)
-
-        val vmBaseOS = if (vmType == ResourceType.REMOTE) {
-            when (dispatchType) {
-                is ThirdPartyAgentIDDispatchType -> {
-                    job.job.pool?.os ?: VMBaseOS.LINUX
-                }
-                is ThirdPartyAgentEnvDispatchType -> {
-                    job.job.pool?.os ?: VMBaseOS.LINUX
-                }
-                is MacOSDispatchType -> VMBaseOS.MACOS
-                else -> VMBaseOS.LINUX
-            }
-        } else VMBaseOS.valueOf(agentInfo.os)*/
-
         val vmContainer = VMBuildContainer(
             jobId = job.id,
             name = job.name ?: "Job-${jobIndex + 1}",
@@ -521,7 +508,7 @@ class TriggerBuildService @Autowired constructor(
             dockerBuildVersion = null,
             tstackAgentId = null,
             jobControlOption = getJobControlOption(job, finalStage),
-            dispatchType = getDispatchType(job)
+            dispatchType = getDispatchType(job, projectCode)
         )
         containerList.add(vmContainer)
     }
@@ -542,7 +529,7 @@ class TriggerBuildService @Autowired constructor(
         }
     }
 
-    fun getDispatchType(job: Job): DispatchType {
+    fun getDispatchType(job: Job, projectCode: String): DispatchType {
         // macos构建机
         if (job.runsOn.poolName.startsWith("macos")) {
             return MacOSDispatchType(
@@ -563,17 +550,68 @@ class TriggerBuildService @Autowired constructor(
 
         // 公共docker构建机
         if (job.runsOn.poolName == "docker") {
-            val containerPool = Pool(
-                container = job.runsOn.container?.image,
+            var containerPool = Pool(
+                container = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
                 credential = Credential(
-                    user = job.runsOn.container?.credentials?.username ?: "",
-                    password = job.runsOn.container?.credentials?.password ?: ""
+                    user = "",
+                    password = ""
                 ),
                 macOS = null,
                 third = null,
                 env = job.env,
                 buildType = BuildType.DOCKER_VM
             )
+
+            if (job.runsOn.container != null) {
+                try {
+                    val container = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(job.runsOn.container!!),
+                        com.tencent.devops.common.ci.v2.Container::class.java
+                    )
+
+                    containerPool = Pool(
+                        container = container.image,
+                        credential = Credential(
+                            user = container.credentials?.username ?: "",
+                            password = container.credentials?.password ?: ""
+                        ),
+                        macOS = null,
+                        third = null,
+                        env = job.env,
+                        buildType = BuildType.DOCKER_VM
+                    )
+                } catch (e: Exception) {
+                    val container = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(job.runsOn.container!!),
+                        Container2::class.java
+                    )
+
+                    var user = ""
+                    var password = ""
+                    if (!container.credentials.isNullOrEmpty()) {
+                        val ticketsMap = GitCommonUtils.getCredential(
+                            client = client,
+                            projectId = projectCode,
+                            credentialId = container.credentials ?: "",
+                            type = CredentialType.USERNAME_PASSWORD
+                        )
+                        user = ticketsMap["v1"] as String
+                        password = ticketsMap["v2"] as String
+                    }
+
+                    containerPool = Pool(
+                        container = container.image,
+                        credential = Credential(
+                            user = user,
+                            password = password
+                        ),
+                        macOS = null,
+                        third = null,
+                        env = job.env,
+                        buildType = BuildType.DOCKER_VM
+                    )
+                }
+            }
 
             return GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
         }

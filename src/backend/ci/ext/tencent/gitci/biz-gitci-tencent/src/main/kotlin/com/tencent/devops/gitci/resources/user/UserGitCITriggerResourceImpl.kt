@@ -89,26 +89,32 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
     override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
-        if (ymlVersion!!.version != "v2.0") {
-            try {
-                val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
-                logger.debug("yaml str : $yamlStr")
-
-                val (validate, message) = gitCITriggerService.validateCIBuildYaml(yamlStr)
-                if (!validate) {
-                    logger.error("Check yaml failed, error: $message")
-                    return Result(1, "Invalid yaml: $message", message)
-                }
-                gitCITriggerService.createCIBuildYaml(yaml.yaml)
-
-                return Result("OK")
-            } catch (e: Throwable) {
-                logger.error("Check yaml failed, error: ${e.message}, yaml: $yaml")
-                return Result(1, "Invalid yaml", e.message)
+        when {
+            ymlVersion == null -> {
+                return Result(1, "Invalid yaml")
             }
-        } else {
-            val triggerInterface = requestTriggerFactory.getGitCIRequestTrigger(ymlVersion)
-            return triggerInterface.checkYamlSchema(userId, yaml.yaml)
+            ymlVersion.version != "v2.0" -> {
+                try {
+                    val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
+                    logger.debug("yaml str : $yamlStr")
+
+                    val (validate, message) = gitCITriggerService.validateCIBuildYaml(yamlStr)
+                    if (!validate) {
+                        logger.error("Check yaml failed, error: $message")
+                        return Result(1, "Invalid yaml: $message", message)
+                    }
+                    gitCITriggerService.createCIBuildYaml(yaml.yaml)
+
+                    return Result("OK")
+                } catch (e: Throwable) {
+                    logger.error("Check yaml failed, error: ${e.message}, yaml: $yaml")
+                    return Result(1, "Invalid yaml", e.message)
+                }
+            }
+            else -> {
+                val triggerInterface = requestTriggerFactory.getGitCIRequestTrigger(ymlVersion)
+                return triggerInterface.checkYamlSchema(userId, yaml.yaml)
+            }
         }
     }
 

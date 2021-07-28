@@ -45,6 +45,12 @@ object PathUtils {
     }
 
     fun buildArchiveLink(projectId: String, pipelineId: String, buildId: String): String {
-        return "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
+        return "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive" +
+                "&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
+    }
+
+    fun buildDetailLink(projectId: String, artifactoryType: String, path: String): String {
+        return "${HomeHostUtil.outerServerHost()}/share/artifactoryDetail/?flag=artifactoryDetail" +
+                "&projectId=$projectId&artifactoryType=$artifactoryType&artifactoryPath=$path"
     }
 }

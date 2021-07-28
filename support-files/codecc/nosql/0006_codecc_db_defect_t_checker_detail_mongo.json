@@ -1,0 +1,4562 @@
+
+{
+"_id" : {"$oid":"60783cef0b669738ca6683d1"},
+"_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+"tool_name" : "CSSLINT",
+"checker_key" : "declaration-bang-space-before",
+"checker_name" : "declaration-bang-space-before",
+"checker_desc" : "在感叹号之前要求有一个空格或禁止有空白。",
+"severity" : 1,
+"language" : 65536,
+"status" : 0,
+"standard" : 0,
+"editable" : true,
+"cov_property" : 0,
+"native_checker" : true,
+"checker_language" : [
+"CSS"
+],
+"checker_category" : "CODE_FORMAT",
+"checker_tag" : [
+"系统推荐"
+],
+"checker_recommend" : "SYSTEM_DEFAULT",
+
+"create_date" : 1618492655914,
+"created_by" : "admin"
+}
+
+
+{
+"_id" : {"$oid":"60783cef0b669738ca6683c9"},
+"_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+"tool_name" : "CSSLINT",
+"checker_key" : "block-closing-brace-newline-after",
+"checker_name" : "block-closing-brace-newline-after",
+"checker_desc" : "在闭括号之后要求有一个换行符或禁止有空白 。",
+"severity" : 1,
+"language" : 65536,
+"status" : 0,
+"standard" : 0,
+"editable" : true,
+"cov_property" : 0,
+"native_checker" : true,
+"checker_language" : [
+"CSS"
+],
+"checker_category" : "CODE_FORMAT",
+"checker_tag" : [
+"系统推荐"
+],
+"checker_recommend" : "SYSTEM_DEFAULT",
+"create_date" : 1618492655914,
+"created_by" : "admin"
+}
+
+
+{
+"_id" : {"$oid":"60783cef0b669738ca6683cc"},
+"_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+"tool_name" : "CSSLINT",
+"checker_key" : "block-opening-brace-newline-after",
+"checker_name" : "block-opening-brace-newline-after",
+"checker_desc" : "在开括号之后要求有一个换行符 。",
+"severity" : 1,
+"language" : 65536,
+"status" : 0,
+"standard" : 0,
+"editable" : true,
+"cov_property" : 0,
+"native_checker" : true,
+"checker_language" : [
+"CSS"
+],
+"checker_category" : "CODE_FORMAT",
+"checker_tag" : [
+"系统推荐"
+],
+"checker_recommend" : "SYSTEM_DEFAULT",
+
+"create_date" : 1618492655914,
+"created_by" : "admin"
+}
+
+
+{
+"_id" : {"$oid":"60783cef0b669738ca6683c8"},
+"_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+"tool_name" : "CSSLINT",
+"checker_key" : "block-closing-brace-empty-line-before",
+"checker_name" : "block-closing-brace-empty-line-before",
+"checker_desc" : "要求或禁止在闭括号之前有空行。",
+"severity" : 1,
+"language" : 65536,
+"status" : 0,
+"standard" : 0,
+"editable" : true,
+"cov_property" : 0,
+"native_checker" : true,
+"checker_language" : [
+"CSS"
+],
+"checker_category" : "CODE_FORMAT",
+"checker_tag" : [
+"系统推荐"
+],
+"checker_recommend" : "SYSTEM_DEFAULT",
+
+"create_date" : 1618492655914,
+"created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683ce"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "comment-whitespace-inside",
+  "checker_name" : "comment-whitespace-inside",
+  "checker_desc" : "要求或禁止在注释标签内有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655914,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683d3"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-block-semicolon-space-after",
+  "checker_name" : "declaration-block-semicolon-space-after",
+  "checker_desc" : "在声明块的分号之后要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655914,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683c7"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "at-rule-semicolon-newline-after",
+  "checker_name" : "at-rule-semicolon-newline-after",
+  "checker_desc" : "要求在 at 规则的分号之后有一个换行符 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655914,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683c5"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "at-rule-name-case",
+  "checker_name" : "at-rule-name-case",
+  "checker_desc" : "指定 at 规则名称的大小写。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "create_date" : 1618492655909,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683cd"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "block-opening-brace-space-after",
+  "checker_name" : "block-opening-brace-space-after",
+  "checker_desc" : "在开括号之后要求有一个空格或禁止有空白 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655914,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668404"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "color-no-invalid-hex",
+  "checker_name" : "color-no-invalid-hex",
+  "checker_desc" : "禁止无效的十六进制颜色",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683d0"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-bang-space-after",
+  "checker_name" : "declaration-bang-space-after",
+  "checker_desc" : "在感叹号之后要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655914,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683ea"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "media-query-list-comma-space-before",
+  "checker_name" : "media-query-list-comma-space-before",
+  "checker_desc" : "在媒体查询的逗号之前要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683d8"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "function-comma-newline-after",
+  "checker_name" : "function-comma-newline-after",
+  "checker_desc" : "在函数的逗号之后要求有一个换行符或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683dc"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "function-name-case",
+  "checker_name" : "function-name-case",
+  "checker_desc" : "指定函数名称的大小写。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683c6"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "at-rule-name-space-after",
+  "checker_name" : "at-rule-name-space-after",
+  "checker_desc" : "要求在 at 规则之后有一个空格。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655914,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683ca"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "block-closing-brace-newline-before",
+  "checker_name" : "block-closing-brace-newline-before",
+  "checker_desc" : "在闭括号之前要求有一个换行符或禁止有空白 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655914,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683e0"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "length-zero-no-unit",
+  "checker_name" : "length-zero-no-unit",
+  "checker_desc" : " Disallow units for zero lengths (Autofixable).",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683ec"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "no-missing-end-of-source-newline",
+  "checker_name" : "no-missing-end-of-source-newline",
+  "checker_desc" : "禁止缺少文件末尾的换行符。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683f2"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-combinator-space-after",
+  "checker_name" : "selector-combinator-space-after",
+  "checker_desc" : "在关系选择符之后要求有一个空格或禁止有空白 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683dd"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "function-parentheses-newline-inside",
+  "checker_name" : "function-parentheses-newline-inside",
+  "checker_desc" : "在函数的括号内要求有一个换行符或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683df"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "function-whitespace-after",
+  "checker_name" : "function-whitespace-after",
+  "checker_desc" : "要求或禁止在函数之后有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683f8"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-pseudo-class-parentheses-space-inside",
+  "checker_name" : "selector-pseudo-class-parentheses-space-inside",
+  "checker_desc" : "在伪类选择器的括号内要求使用一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683d5"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-block-trailing-semicolon",
+  "checker_name" : "declaration-block-trailing-semicolon",
+  "checker_desc" : "要求或禁止在声明块中使用拖尾分号。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683da"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "function-comma-space-before",
+  "checker_name" : "function-comma-space-before",
+  "checker_desc" : "在函数的逗号之前要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683e7"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "media-feature-range-operator-space-before",
+  "checker_name" : "media-feature-range-operator-space-before",
+  "checker_desc" : "在 media 特性的范围操作符之前要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683ef"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-attribute-brackets-space-inside",
+  "checker_name" : "selector-attribute-brackets-space-inside",
+  "checker_desc" : "在特性选择器的方括号内要求有空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683fe"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "value-list-comma-newline-after",
+  "checker_name" : "value-list-comma-newline-after",
+  "checker_desc" : "在值列表的逗号之后要求有一个换行符或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683e8"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "media-query-list-comma-newline-after",
+  "checker_name" : "media-query-list-comma-newline-after",
+  "checker_desc" : "在媒体查询的逗号之后要求有一个换行符或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683f1"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-attribute-operator-space-before",
+  "checker_name" : "selector-attribute-operator-space-before",
+  "checker_desc" : "在特性选择器的操作符之前要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683ff"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "value-list-comma-space-after",
+  "checker_name" : "value-list-comma-space-after",
+  "checker_desc" : "在值列表的逗号之后要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683d2"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-block-semicolon-newline-after",
+  "checker_name" : "declaration-block-semicolon-newline-after",
+  "checker_desc" : "在声明块的分号之后要求有一个换行符或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655914,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683d9"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "function-comma-space-after",
+  "checker_name" : "function-comma-space-after",
+  "checker_desc" : "在函数的逗号之后要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683e6"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "media-feature-range-operator-space-after",
+  "checker_name" : "media-feature-range-operator-space-after",
+  "checker_desc" : "在 media 特性的范围操作符之后要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683ee"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "property-case",
+  "checker_name" : "property-case",
+  "checker_desc" : "指定属性的大小写。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683f0"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-attribute-operator-space-after",
+  "checker_name" : "selector-attribute-operator-space-after",
+  "checker_desc" : "在特性选择器的操作符之后要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683fb"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-type-case",
+  "checker_name" : "selector-type-case",
+  "checker_desc" : "指定类型选择器的大小写。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683fc"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "unit-case",
+  "checker_name" : "unit-case",
+  "checker_desc" : "指定单位的大小写。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683f5"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-list-comma-space-before",
+  "checker_name" : "selector-list-comma-space-before",
+  "checker_desc" : "要求在选择器列表的逗号之前有一个空格，或禁止有空白 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683fa"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-pseudo-element-colon-notation",
+  "checker_name" : "selector-pseudo-element-colon-notation",
+  "checker_desc" : " Specify single or double colon notation for applicable pseudo-elements (Autofixable).",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668401"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "value-list-max-empty-lines",
+  "checker_name" : "value-list-max-empty-lines",
+  "checker_desc" : "限制值列表中相邻空行数量。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683db"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "function-max-empty-lines",
+  "checker_name" : "function-max-empty-lines",
+  "checker_desc" : "限制函数中相邻的空行数量。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683f4"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-descendant-combinator-no-non-space",
+  "checker_name" : "selector-descendant-combinator-no-non-space",
+  "checker_desc" : "禁止包含选择符出现非空格字符。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683eb"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "no-eol-whitespace",
+  "checker_name" : "no-eol-whitespace",
+  "checker_desc" : "禁止行尾空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668403"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "block-no-empty",
+  "checker_name" : "block-no-empty",
+  "checker_desc" : "禁止出现空块。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683cb"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "block-closing-brace-space-before",
+  "checker_name" : "block-closing-brace-space-before",
+  "checker_desc" : "在闭括号之前要求有一个空格或禁止有空格。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655914,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683f7"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-pseudo-class-case",
+  "checker_name" : "selector-pseudo-class-case",
+  "checker_desc" : "指定伪类选择器的大小写。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683e5"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "media-feature-parentheses-space-inside",
+  "checker_name" : "media-feature-parentheses-space-inside",
+  "checker_desc" : "在media 特性的括号内要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683f6"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-max-empty-lines",
+  "checker_name" : "selector-max-empty-lines",
+  "checker_desc" : "限制选择器中相邻空行数量。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683f9"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-pseudo-element-case",
+  "checker_name" : "selector-pseudo-element-case",
+  "checker_desc" : "指定伪元素的大小写。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668400"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "value-list-comma-space-before",
+  "checker_name" : "value-list-comma-space-before",
+  "checker_desc" : "在值列表的逗号之前要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683cf"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "custom-property-empty-line-before",
+  "checker_name" : "custom-property-empty-line-before",
+  "checker_desc" : "要求或禁止在自定义属性之前有一行空行。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655914,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683d7"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-empty-line-before",
+  "checker_name" : "declaration-empty-line-before",
+  "checker_desc" : "要求或禁止在声明语句之前有空行。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683e1"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "max-empty-lines",
+  "checker_name" : "max-empty-lines",
+  "checker_desc" : "限制相邻空行的数量。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683e2"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "media-feature-colon-space-after",
+  "checker_name" : "media-feature-colon-space-after",
+  "checker_desc" : "在 media 特性中的冒号之后要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683e3"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "media-feature-colon-space-before",
+  "checker_name" : "media-feature-colon-space-before",
+  "checker_desc" : "在 media 特性中的冒号之前要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683e9"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "media-query-list-comma-space-after",
+  "checker_name" : "media-query-list-comma-space-after",
+  "checker_desc" : "在媒体查询的逗号之后要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683ed"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "number-no-trailing-zeros",
+  "checker_name" : "number-no-trailing-zeros",
+  "checker_desc" : "禁止数字中的拖尾 0 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683f3"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-combinator-space-before",
+  "checker_name" : "selector-combinator-space-before",
+  "checker_desc" : "在关系选择符之前要求有一个空格或禁止有空白 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683d4"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-block-semicolon-space-before",
+  "checker_name" : "declaration-block-semicolon-space-before",
+  "checker_desc" : "在声明块的分号之后前要求有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655914,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683d6"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-colon-newline-after",
+  "checker_name" : "declaration-colon-newline-after",
+  "checker_desc" : "在冒号之后要求有一个换行符或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683de"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "function-parentheses-space-inside",
+  "checker_name" : "function-parentheses-space-inside",
+  "checker_desc" : "在函数的括号内要有一个空格或禁止有空白。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683e4"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "media-feature-name-case",
+  "checker_name" : "media-feature-name-case",
+  "checker_desc" : "指定 media 特性名称的大小写。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655915,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca6683fd"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "value-keyword-case",
+  "checker_name" : "value-keyword-case",
+  "checker_desc" : "指定关键字的值的大小写。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668402"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "at-rule-no-unknown",
+  "checker_name" : "at-rule-no-unknown",
+  "checker_desc" : "禁止使用未知的 at 规则。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66840a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "function-calc-no-invalid",
+  "checker_name" : "function-calc-no-invalid",
+  "checker_desc" : " Disallow an invalid expression within calc functions.",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668408"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "font-family-no-duplicate-names",
+  "checker_name" : "font-family-no-duplicate-names",
+  "checker_desc" : "禁止重复的字体名称",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66840c"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "function-linear-gradient-no-nonstandard-direction",
+  "checker_name" : "function-linear-gradient-no-nonstandard-direction",
+  "checker_desc" : "根据标准语法，禁止 linear-gradient() 中无效的方向值。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668405"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "comment-no-empty",
+  "checker_name" : "comment-no-empty",
+  "checker_desc" : "禁止空注释。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66840b"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "function-calc-no-unspaced-operator",
+  "checker_name" : "function-calc-no-unspaced-operator",
+  "checker_desc" : "禁止在 calc 函数内使用不加空格的操作符。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668426"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "max-nesting-depth",
+  "checker_name" : "max-nesting-depth",
+  "checker_desc" : "限制允许嵌套的深度。",
+  "severity" : 2,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66840f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "no-descending-specificity",
+  "checker_name" : "no-descending-specificity",
+  "checker_desc" : "禁止低优先级的选择器出现在高优先级的选择器之后。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668409"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "font-family-no-missing-generic-family-keyword",
+  "checker_name" : "font-family-no-missing-generic-family-keyword",
+  "checker_desc" : " Disallow missing generic families in lists of font family names.",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668417"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-pseudo-element-no-unknown",
+  "checker_name" : "selector-pseudo-element-no-unknown",
+  "checker_desc" : "禁止使用未知的伪元素。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668414"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "no-invalid-double-slash-comments",
+  "checker_name" : "no-invalid-double-slash-comments",
+  "checker_desc" : "禁用 CSS 不支持的双斜线注释 (//...)。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668410"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "no-duplicate-at-import-rules",
+  "checker_name" : "no-duplicate-at-import-rules",
+  "checker_desc" : "不允许在一个style标签内包含重复的@import规则",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668412"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "no-empty-source",
+  "checker_name" : "no-empty-source",
+  "checker_desc" : "禁止空源。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668411"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "no-duplicate-selectors",
+  "checker_name" : "no-duplicate-selectors",
+  "checker_desc" : "在一个样式表中禁止出现重复的选择器。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66840d"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "keyframe-declaration-no-important",
+  "checker_name" : "keyframe-declaration-no-important",
+  "checker_desc" : "禁止在 keyframe 声明中使用 !important。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668406"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-block-no-duplicate-properties",
+  "checker_name" : "declaration-block-no-duplicate-properties",
+  "checker_desc" : "在声明的块中中禁止出现重复的属性。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668420"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "comment-empty-line-before",
+  "checker_name" : "comment-empty-line-before",
+  "checker_desc" : "要求或禁止在注释之前有空行。",
+  "severity" : 2,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66840e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "media-feature-name-no-unknown",
+  "checker_name" : "media-feature-name-no-unknown",
+  "checker_desc" : "禁止使用未知的 media 特性名称。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668428"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "scss/at-extend-no-missing-placeholder",
+  "checker_name" : "scss/at-extend-no-missing-placeholder",
+  "checker_desc" : " 禁止在@extend后缺失占位符 [tencent standards/css 3.1.5]",
+  "checker_desc_model" : " 禁止在@extend后缺失占位符",
+  "severity" : 2,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668433"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "at-rule-empty-line-before",
+  "checker_name" : "at-rule-empty-line-before",
+  "checker_desc" : "要求或禁止在 at 规则之前有空行 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66841f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-list-comma-newline-after",
+  "checker_name" : "selector-list-comma-newline-after",
+  "checker_desc" : " Require a newline or disallow whitespace after the commas of selector lists (Autofixable). [tencent standards/css 2.1.4]",
+  "checker_desc_model" : " Require a newline or disallow whitespace after the commas of selector lists (Autofixable).",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668427"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "scss/dollar-variable-pattern",
+  "checker_name" : "scss/dollar-variable-pattern",
+  "checker_desc" : " 指定sass变量指定模式 [tencent standards/css 3.1.4]",
+  "checker_desc_model" : " 指定sass变量指定模式",
+  "severity" : 2,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66841e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-max-id",
+  "checker_name" : "selector-max-id",
+  "checker_desc" : " Limit the number of ID selectors in a selector. [tencent standards/css 2.1.3]",
+  "checker_desc_model" : " Limit the number of ID selectors in a selector.",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668421"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "block-opening-brace-space-before",
+  "checker_name" : "block-opening-brace-space-before",
+  "checker_desc" : "在开括号之前要求有一个空格或禁止有空白 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668424"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-block-single-line-max-declarations",
+  "checker_name" : "declaration-block-single-line-max-declarations",
+  "checker_desc" : "限制单行声明块中声明的数量。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668418"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-type-no-unknown",
+  "checker_name" : "selector-type-no-unknown",
+  "checker_desc" : "禁用未知的类型选择器。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66841a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "unit-no-unknown",
+  "checker_name" : "unit-no-unknown",
+  "checker_desc" : "禁止使用未知单位。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66842d"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "property-no-vendor-prefix",
+  "checker_name" : "property-no-vendor-prefix",
+  "checker_desc" : "禁止属性使用浏览器引擎前缀。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668416"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-pseudo-class-no-unknown",
+  "checker_name" : "selector-pseudo-class-no-unknown",
+  "checker_desc" : "禁止使用未知的伪类选择器。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66841d"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "string-quotes",
+  "checker_name" : "string-quotes",
+  "checker_desc" : "指定字符串使用单引号还是双引号 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66842a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "media-feature-name-no-vendor-prefix",
+  "checker_name" : "media-feature-name-no-vendor-prefix",
+  "checker_desc" : "禁止 media 特性名称带有浏览器引擎前缀。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668431"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-no-important",
+  "checker_name" : "declaration-no-important",
+  "checker_desc" : "禁止在声明中使用 !important。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668419"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "string-no-newline",
+  "checker_name" : "string-no-newline",
+  "checker_desc" : "禁止在字符串中使用（非转义的）换行符。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668430"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "color-hex-length",
+  "checker_name" : "color-hex-length",
+  "checker_desc" : "颜色值能用三个字来表示，则推荐用三个字来表示",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668413"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "no-extra-semicolons",
+  "checker_name" : "no-extra-semicolons",
+  "checker_desc" : "禁止多余的分号。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668407"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-block-no-shorthand-property-overrides",
+  "checker_name" : "declaration-block-no-shorthand-property-overrides",
+  "checker_desc" : "禁止缩写属性覆盖相关普通写法属性。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668415"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "property-no-unknown",
+  "checker_name" : "property-no-unknown",
+  "checker_desc" : "禁止使用未知属性。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66841b"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "indentation",
+  "checker_name" : "indentation",
+  "checker_desc" : "指定缩进 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66841c"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "number-leading-zero",
+  "checker_name" : "number-leading-zero",
+  "checker_desc" : "要求或禁止小于 1 的小数的前导 0 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668425"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-property-value-disallowed-list",
+  "checker_name" : "declaration-property-value-disallowed-list",
+  "checker_desc" : " Specify a list of disallowed property and value pairs within declarations. [tencent standards/css 2.1.10]",
+  "checker_desc_model" : " Specify a list of disallowed property and value pairs within declarations.",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66842b"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "at-rule-no-vendor-prefix",
+  "checker_name" : "at-rule-no-vendor-prefix",
+  "checker_desc" : "禁止 at 规则使用浏览器引擎前缀。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668423"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-colon-space-before",
+  "checker_name" : "declaration-colon-space-before",
+  "checker_desc" : "在冒号之前要求有一个空格或禁止有空白 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66842c"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "selector-no-vendor-prefix",
+  "checker_name" : "selector-no-vendor-prefix",
+  "checker_desc" : "禁止使用浏览器引擎前缀。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66842e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "value-no-vendor-prefix",
+  "checker_name" : "value-no-vendor-prefix",
+  "checker_desc" : "禁止给值添加浏览器引擎前缀。",
+  "severity" : 2,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca66842f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "color-hex-case",
+  "checker_name" : "color-hex-case",
+  "checker_desc" : "颜色值用小写. [tencent standards/css 2.1.8]",
+  "checker_desc_model" : "颜色值用小写.",
+  "severity" : 2,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668432"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "rule-empty-line-before",
+  "checker_name" : "rule-empty-line-before",
+  "checker_desc" : " Require or disallow an empty line before rules (Autofixable).",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668422"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "declaration-colon-space-after",
+  "checker_name" : "declaration-colon-space-after",
+  "checker_desc" : "在冒号之后要求有一个空格或禁止有空白 。",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60783cef0b669738ca668429"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CSSLINT",
+  "checker_key" : "order/order",
+  "checker_name" : "order/order",
+  "checker_desc" : "",
+  "severity" : 1,
+  "language" : 65536,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "CSS"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "系统推荐"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+
+  "create_date" : 1618492655916,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1343"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "anyobject_protocol",
+  "checker_name" : "anyobject_protocol",
+  "checker_desc" : "Prefer using AnyObject over class for class-only protocols.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1344"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "array_init",
+  "checker_name" : "array_init",
+  "checker_desc" : "Prefer using Array(seq) over seq.map { $0 } to convert a sequence into an Array.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "API使用"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1346"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "block_based_kvo",
+  "checker_name" : "block_based_kvo",
+  "checker_desc" : "Prefer the new block based KVO API with keypaths when using Swift 3.2 or later.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1348"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "closing_brace",
+  "checker_name" : "closing_brace",
+  "checker_desc" : "Closing brace with closing parenthesis should not have any whitespaces in the middle.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1345"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "attributes",
+  "checker_name" : "attributes",
+  "checker_desc" : "Attributes should be on their own lines in functions and types, but on the same line as variables and imports.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d134e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "colon",
+  "checker_name" : "colon",
+  "checker_desc" : "Colons should be next to the identifier when specifying a type and next to the key in dictionary literals.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1357"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "convenience_type",
+  "checker_name" : "convenience_type",
+  "checker_desc" : "Types used for hosting only static members should be implemented as a caseless enum to avoid instantiation.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1362"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "empty_collection_literal",
+  "checker_name" : "empty_collection_literal",
+  "checker_desc" : "Prefer checking isEmpty over comparing collection to an empty array or dictionary literal.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1349"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "closure_body_length",
+  "checker_name" : "closure_body_length",
+  "checker_desc" : "Closure bodies should not span too many lines.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1354"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "contains_over_first_not_nil",
+  "checker_name" : "contains_over_first_not_nil",
+  "checker_desc" : "Prefer contains over first(where:) != nil and firstIndex(where:) != nil.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1353"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "contains_over_filter_is_empty",
+  "checker_name" : "contains_over_filter_is_empty",
+  "checker_desc" : "Prefer contains over using filter(where:).isEmpty",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d135f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "duplicate_enum_cases",
+  "checker_name" : "duplicate_enum_cases",
+  "checker_desc" : "Enum can’t contain multiple cases with the same name.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1347"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "class_delegate_protocol",
+  "checker_name" : "class_delegate_protocol",
+  "checker_desc" : "Delegate protocols should be class-only so they can be weakly referenced.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1366"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "empty_parentheses_with_trailing_closure",
+  "checker_name" : "empty_parentheses_with_trailing_closure",
+  "checker_desc" : "When using trailing closures, empty parentheses should be avoided after the method call.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d134a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "closure_end_indentation",
+  "checker_name" : "closure_end_indentation",
+  "checker_desc" : "Closure end should have the same indentation as the line that started it.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d135a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "discarded_notification_center_observer",
+  "checker_name" : "discarded_notification_center_observer",
+  "checker_desc" : "When registering for a notification using a block, the opaque observer that is returned should be stored so it can be removed later.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "代码可维护性"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d135e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "discouraged_optional_collection",
+  "checker_name" : "discouraged_optional_collection",
+  "checker_desc" : "Prefer empty collection over optional collection.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d136d"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "explicit_init",
+  "checker_name" : "explicit_init",
+  "checker_desc" : "Explicitly calling .init() should be avoided.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1361"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "dynamic_inline",
+  "checker_name" : "dynamic_inline",
+  "checker_desc" : "Avoid using ‘dynamic’ and ‘@inline(__always)’ together.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1381"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "function_parameter_count",
+  "checker_name" : "function_parameter_count",
+  "checker_desc" : "Number of function parameters should be low.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d136a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "expiring_todo",
+  "checker_name" : "expiring_todo",
+  "checker_desc" : "TODOs and FIXMEs should be resolved prior to their expiry date.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d137d"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "force_try",
+  "checker_name" : "force_try",
+  "checker_desc" : "Force tries should be avoided.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1356"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "control_statement",
+  "checker_name" : "control_statement",
+  "checker_desc" : "if, for, guard, switch, while, and catch statements shouldn’t unnecessarily wrap their conditionals or arguments in parentheses.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1359"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "deployment_target",
+  "checker_name" : "deployment_target",
+  "checker_desc" : "Availability checks or attributes shouldn’t be using older versions that are satisfied by the deployment target.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1369"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "enum_case_associated_values_count",
+  "checker_name" : "enum_case_associated_values_count",
+  "checker_desc" : "Number of associated values in an enum case should be low",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1379"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "first_where",
+  "checker_name" : "first_where",
+  "checker_desc" : "Prefer using .first(where:) over .filter { }.first in collections.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d137b"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "for_where",
+  "checker_name" : "for_where",
+  "checker_desc" : "where clauses are preferred over a single if inside a for.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d134d"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "collection_alignment",
+  "checker_name" : "collection_alignment",
+  "checker_desc" : "All elements in a collection literal should be vertically aligned",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d135c"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "discouraged_object_literal",
+  "checker_name" : "discouraged_object_literal",
+  "checker_desc" : "Prefer initializers over object literals.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1365"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "empty_parameters",
+  "checker_name" : "empty_parameters",
+  "checker_desc" : "Prefer () -> over Void ->.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1382"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "generic_type_name",
+  "checker_name" : "generic_type_name",
+  "checker_desc" : "Generic type name should only contain alphanumeric characters, start with an uppercase character and span between 1 and 20 characters in length.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1355"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "contains_over_range_nil_comparison",
+  "checker_name" : "contains_over_range_nil_comparison",
+  "checker_desc" : "Prefer contains over range(of:) != nil and range(of:) == nil.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d137a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "flatmap_over_map_reduce",
+  "checker_name" : "flatmap_over_map_reduce",
+  "checker_desc" : "Prefer flatMap over map followed by reduce([], +).",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d134b"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "closure_parameter_position",
+  "checker_name" : "closure_parameter_position",
+  "checker_desc" : "Closure parameters should be on the same line as opening brace.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d134c"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "closure_spacing",
+  "checker_name" : "closure_spacing",
+  "checker_desc" : "Closure expressions should have a single space inside each brace.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d134f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "comma",
+  "checker_name" : "comma",
+  "checker_desc" : "There should be no space before and one after any comma.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1351"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "conditional_returns_on_newline",
+  "checker_name" : "conditional_returns_on_newline",
+  "checker_desc" : "Conditional statements should always return on the next line",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1358"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "cyclomatic_complexity",
+  "checker_name" : "cyclomatic_complexity",
+  "checker_desc" : "Complexity of function bodies should be limited.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d136f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "explicit_top_level_acl",
+  "checker_name" : "explicit_top_level_acl",
+  "checker_desc" : "Top-level declarations should specify Access Control Level keywords explicitly.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d137e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "force_unwrapping",
+  "checker_name" : "force_unwrapping",
+  "checker_desc" : "Force unwrapping should be avoided.",
+  "severity" : 1,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1370"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "explicit_type_interface",
+  "checker_name" : "explicit_type_interface",
+  "checker_desc" : "Properties should have a type interface",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1377"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "file_name_no_space",
+  "checker_name" : "file_name_no_space",
+  "checker_desc" : "File name should not contain any whitespace.",
+  "severity" : 1,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d135b"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "discouraged_direct_init",
+  "checker_name" : "discouraged_direct_init",
+  "checker_desc" : "Discouraged direct initialization of types that can be harmful.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1360"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "duplicate_imports",
+  "checker_name" : "duplicate_imports",
+  "checker_desc" : "Imports should be unique.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1367"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "empty_string",
+  "checker_name" : "empty_string",
+  "checker_desc" : "Prefer checking isEmpty over comparing string to an empty string literal.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1374"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "file_header",
+  "checker_name" : "file_header",
+  "checker_desc" : "Header comments should be consistent with project patterns. The SWIFTLINT_CURRENT_FILENAME placeholder can optionally be used in the required and forbidden patterns. It will be replaced by the real file name.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1375"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "file_length",
+  "checker_name" : "file_length",
+  "checker_desc" : "Files should not span too many lines.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "props" : "[{\"propName\":\"warning\",\"propValue\":\"500\",\"displayValue\":\"500\"}]",
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1376"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "file_name",
+  "checker_name" : "file_name",
+  "checker_desc" : "File name should match a type or extension declared in the file (if any).",
+  "severity" : 1,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d137f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "function_body_length",
+  "checker_name" : "function_body_length",
+  "checker_desc" : "Functions bodies should not span too many lines.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1350"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "compiler_protocol_init",
+  "checker_name" : "compiler_protocol_init",
+  "checker_desc" : "The initializers declared in compiler protocols such as ExpressibleByArrayLiteral shouldn’t be called directly.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}

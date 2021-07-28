@@ -12,7 +12,7 @@
             <cruve-line class="first-connect-line connect-line right" :width="60" :direction="false" :height="60"></cruve-line>
         </template>
 
-        <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [container.status]: container.status }" @click.stop="showContainerPanel">
+        <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [containerCls]: true }" @click.stop="showContainerPanel">
             <status-icon type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status" :depend-on-value="dependOnValue">
                 {{ containerSerialNum }}
             </status-icon>
@@ -98,6 +98,13 @@
 
                 'getAllContainers'
             ]),
+            containerCls () {
+                if (this.container.jobControlOption && this.container.jobControlOption.enable === false) {
+                    return 'DISABLED'
+                }
+                
+                return this.container && this.container.status ? this.container.status : ''
+            },
             showCheckedToatal () {
                 const { isTriggerContainer, container, $route } = this
                 return $route.path.indexOf('preview') > 0 && !isTriggerContainer(container)

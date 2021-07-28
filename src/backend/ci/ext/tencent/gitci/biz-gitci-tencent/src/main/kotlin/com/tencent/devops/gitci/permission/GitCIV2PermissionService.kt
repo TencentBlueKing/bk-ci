@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.permission
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
@@ -59,7 +60,7 @@ class GitCIV2PermissionService @Autowired constructor(
         projectId: String,
         permission: AuthPermission = AuthPermission.VIEW
     ) {
-        checkPermission(userId, projectId, permission)
+        checkPermissionAndOauth(userId, projectId, permission)
     }
 
     // 校验只需要OAuth的
@@ -68,7 +69,23 @@ class GitCIV2PermissionService @Autowired constructor(
         projectId: String,
         permission: AuthPermission = AuthPermission.EDIT
     ) {
-        checkPermission(userId, projectId, permission)
+        checkPermissionAndOauth(userId, projectId, permission)
+    }
+
+    fun checkWebPermission(userId: String, projectId: String): Boolean {
+        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId ")
+
+        val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            userId = userId,
+            token = tokenCheckService.getSystemToken(null) ?: "",
+            action = WEB_CHECK,
+            projectCode = projectId,
+            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
+        ).data ?: false
+        if (!result) {
+            logger.warn("$projectId $userId checkWebPermission fail")
+        }
+        return result
     }
 
     fun checkGitCIAndOAuthAndEnable(
@@ -77,7 +94,7 @@ class GitCIV2PermissionService @Autowired constructor(
         gitProjectId: Long,
         permission: AuthPermission = AuthPermission.EDIT
     ) {
-        checkPermission(userId, projectId, permission)
+        checkPermissionAndOauth(userId, projectId, permission)
         checkEnableGitCI(gitProjectId)
     }
 
@@ -90,7 +107,7 @@ class GitCIV2PermissionService @Autowired constructor(
         }
     }
 
-    private fun checkPermission(userId: String, projectId: String, permission: AuthPermission) {
+    private fun checkPermissionAndOauth(userId: String, projectId: String, permission: AuthPermission) {
         logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId ")
         val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
@@ -110,5 +127,6 @@ class GitCIV2PermissionService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIV2PermissionService::class.java)
+        const val WEB_CHECK = "webcheck"
     }
 }

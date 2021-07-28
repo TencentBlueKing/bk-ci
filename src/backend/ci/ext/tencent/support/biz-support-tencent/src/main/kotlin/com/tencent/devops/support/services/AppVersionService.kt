@@ -27,26 +27,34 @@
 
 package com.tencent.devops.support.services
 
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.support.tables.records.TAppVersionRecord
+import com.tencent.devops.support.constant.UpdateTypeEnum
 import com.tencent.devops.support.dao.AppVersionDao
 import com.tencent.devops.support.model.app.AppVersionRequest
 import com.tencent.devops.support.model.app.pojo.AppVersion
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class AppVersionService @Autowired constructor(
     private val dslContext: DSLContext,
     private val appVersionDao: AppVersionDao
 ) {
-    private val logger = LoggerFactory.getLogger(AppVersionService::class.java)
+    companion object {
+        private val allVersionCache = Caffeine.newBuilder()
+            .maximumSize(8)
+            .expireAfterWrite(1, TimeUnit.MINUTES)
+            .build<String/*platform_lastDate*/, List<TAppVersionRecord>>()
+    }
 
     fun getAllAppVersion(): List<AppVersion> {
         val appVersionResult = mutableListOf<AppVersion>()
-        var appVersionRecords = appVersionDao.getAllAppVersion(dslContext)
+        val appVersionRecords = appVersionDao.getAllAppVersion(dslContext)
         appVersionRecords?.forEach {
             appVersionResult.add(
                 AppVersion(
@@ -64,7 +72,7 @@ class AppVersionService @Autowired constructor(
 
     fun getAllAppVersionByChannelType(channelType: Byte): List<AppVersion> {
         val appVersionResult = mutableListOf<AppVersion>()
-        var appVersionRecords = appVersionDao.getAllAppVersionByChannelType(dslContext, channelType)
+        val appVersionRecords = appVersionDao.getAllAppVersionByChannelType(dslContext, channelType)
         appVersionRecords?.forEach {
             appVersionResult.add(
                 AppVersion(
@@ -80,11 +88,11 @@ class AppVersionService @Autowired constructor(
     }
 
     fun getAppVersion(appVersionId: Long): AppVersion? {
-        var appVersionRecord = appVersionDao.getAppVersion(dslContext, appVersionId)
+        val appVersionRecord = appVersionDao.getAppVersion(dslContext, appVersionId)
         return if (appVersionRecord == null) {
             null
         } else {
-            convertAppVersion(appVersionRecord)
+            convertAppVersion(appVersionRecord, null)
         }
     }
 
@@ -96,23 +104,37 @@ class AppVersionService @Autowired constructor(
         return appVersionDao.deleteAppVersion(dslContext, appVersionId)
     }
 
-    fun getLastAppVersion(channelType: Byte): AppVersion? {
+    fun getLastAppVersion(channelType: Byte, appVersion: String): AppVersion? {
         val appVersionRecord = appVersionDao.getLastAppVersion(dslContext, channelType)
         return if (appVersionRecord == null) {
             null
         } else {
-            convertAppVersion(appVersionRecord)
+            convertAppVersion(appVersionRecord, appVersion)
         }
     }
 
-    fun convertAppVersion(appVersionRecord: TAppVersionRecord): AppVersion {
+    fun convertAppVersion(appVersionRecord: TAppVersionRecord, appVersion: String?): AppVersion {
+        val updateType = if (appVersionRecord.updateType == UpdateTypeEnum.SOFT.id && null != appVersion) {
+            val allVersion = allVersionCache.get(
+                "${appVersionRecord.channelType}_${appVersionRecord.releaseDate.timestampmilli()}"
+            ) {
+                appVersionDao.listByChannelType(dslContext, appVersionRecord.channelType).toList()
+            }
+            val forceUpdateCount = allVersion?.filter {
+                VersionUtil.compare(it.versionId, appVersion) == 1 && it.updateType == UpdateTypeEnum.FORCE.id
+            }?.count() ?: 0
+            if (forceUpdateCount > 0) UpdateTypeEnum.FORCE.id else appVersionRecord.updateType
+        } else {
+            appVersionRecord.updateType
+        }
+
         return AppVersion(
             appVersionRecord.id,
             appVersionRecord.versionId,
             appVersionRecord.releaseDate.timestampmilli(),
             appVersionRecord.releaseContent,
             appVersionRecord.channelType,
-            appVersionRecord.updateType
+            updateType
         )
     }
 }

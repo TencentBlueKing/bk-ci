@@ -35,6 +35,7 @@ import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.AuthConfigurations
 import com.github.dockerjava.api.model.BuildResponseItem
+import com.github.dockerjava.api.model.Capability
 import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.Frame
 import com.github.dockerjava.api.model.HostConfig
@@ -209,7 +210,10 @@ class DockerHostBuildService(
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge"))
+                .withHostConfig(HostConfig()
+                    .withBinds(binds)
+                    .withCapAdd(Capability.SYS_PTRACE)
+                    .withNetworkMode("bridge"))
                 .exec()
 
             logger.info("Created container $container")
@@ -524,7 +528,11 @@ class DockerHostBuildService(
                     .withEnv(env)
                     .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                     .withHostConfig(HostConfig()
-                        .withBinds(binds).withNetworkMode("bridge").withPortBindings(portBindings))
+                        .withCapAdd(Capability.SYS_PTRACE)
+                        .withBinds(binds)
+                        .withNetworkMode("bridge")
+                        .withPortBindings(portBindings)
+                    )
                     .withWorkingDir(dockerHostConfig.volumeWorkspace)
                     .exec()
             } else {
@@ -534,7 +542,10 @@ class DockerHostBuildService(
                     .withEnv(env)
                     .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                     .withHostConfig(HostConfig()
-                        .withBinds(binds).withNetworkMode("bridge").withPortBindings(portBindings))
+                        .withCapAdd(Capability.SYS_PTRACE)
+                        .withBinds(binds)
+                        .withNetworkMode("bridge")
+                        .withPortBindings(portBindings))
                     .withWorkingDir(dockerHostConfig.volumeWorkspace)
                     .exec()
             }

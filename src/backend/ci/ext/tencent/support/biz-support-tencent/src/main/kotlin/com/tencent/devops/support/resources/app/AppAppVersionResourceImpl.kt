@@ -69,7 +69,7 @@ class AppAppVersionResourceImpl @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("kafka $BK_CI_APP_LOGIN_TOPIC error", e)
         }
-        return Result(data = appVersionService.getLastAppVersion(channelType))
+        return Result(data = appVersionService.getLastAppVersion(channelType, appVersion ?: "1.0.0"))
     }
 
     companion object {

@@ -78,8 +78,7 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?,
-        full: Boolean
+        search: String?
     ): List<String> {
         return client.getScm(ServiceScmOauthResource::class).listBranches(
             projectName = projectName,
@@ -90,8 +89,7 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
             token = token,
             region = region,
             userName = userName,
-            search = search,
-            full = full
+            search = search
         ).data!!
     }
 
@@ -101,8 +99,7 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
         type: ScmType,
         token: String,
         userName: String,
-        search: String?,
-        full: Boolean
+        search: String?
     ): List<String> {
         return client.getScm(ServiceScmOauthResource::class).listTags(
             projectName = projectName,
@@ -110,8 +107,7 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
             type = type,
             token = token,
             userName = userName,
-            search = search,
-            full = full
+            search = search
         ).data!!
     }
 

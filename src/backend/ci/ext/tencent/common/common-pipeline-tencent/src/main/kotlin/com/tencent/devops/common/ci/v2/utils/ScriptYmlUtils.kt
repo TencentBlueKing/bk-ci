@@ -49,6 +49,8 @@ import com.tencent.devops.common.ci.v2.YmlVersion
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.ci.v2.Container
+import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
@@ -103,19 +105,29 @@ object ScriptYmlUtils {
             return null
         }
 
-        val yaml = Yaml()
-        val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
-        return YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
+        return try {
+            val yaml = Yaml()
+            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
+        } catch (e: Exception) {
+            logger.error("Check yaml version failed. return null")
+            null
+        }
     }
 
     fun isV2Version(yamlStr: String?): Boolean {
         if (yamlStr == null) {
             return false
         }
-        val yaml = Yaml()
-        val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
-        val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
-        return version != null && version.version == "v2.0"
+        return try {
+            val yaml = Yaml()
+            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
+            version != null && version.version == "v2.0"
+        } catch (e: Exception) {
+            logger.error("Check yaml version failed. Set default v2.0")
+            true
+        }
     }
 
     fun parseVariableValue(value: String?, settingMap: Map<String, String?>): String? {
@@ -342,10 +354,21 @@ object ScriptYmlUtils {
             return RunsOn()
         }
 
-        return try {
-            YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(preRunsOn), RunsOn::class.java)
+        try {
+            val runsOn = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(preRunsOn), RunsOn::class.java)
+            return if (runsOn.container != null) {
+                try {
+                    val container = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container::class.java)
+                    runsOn.copy(container = container)
+                } catch (e: Exception) {
+                    val container = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container2::class.java)
+                    runsOn.copy(container = container)
+                }
+            } else {
+                runsOn
+            }
         } catch (e: Exception) {
-            RunsOn(
+            return RunsOn(
                 poolName = preRunsOn.toString()
             )
         }

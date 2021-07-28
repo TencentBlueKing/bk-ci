@@ -416,6 +416,7 @@ include(":ext:tencent:config-server")
 include(":ext:tencent:log:api-log-tencent")
 
 include(":ext:tencent:auth")
+include(":ext:tencent:auth:api-auth-tencent")
 include(":ext:tencent:auth:biz-auth-tencent")
 include(":ext:tencent:auth:sdk-auth-tencent")
 include(":ext:tencent:auth:boot-auth-tencent")

@@ -121,4 +121,12 @@ class AppVersionDao {
             return if (records.size > 0) records[0] else null
         }
     }
+
+    fun listByChannelType(dslContext: DSLContext, channelType: Byte): Result<TAppVersionRecord> {
+        with(TAppVersion.T_APP_VERSION) {
+            return dslContext.selectFrom(this)
+                .where(CHANNEL_TYPE.eq(channelType))
+                .fetch()
+        }
+    }
 }
