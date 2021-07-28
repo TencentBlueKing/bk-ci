@@ -101,7 +101,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             ttl, isDirected))
     }
 
-    override fun downloadUrl(
+    override fun downloadUrlForOpenApi(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
