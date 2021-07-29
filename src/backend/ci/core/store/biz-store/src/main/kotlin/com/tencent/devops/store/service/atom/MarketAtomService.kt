@@ -52,7 +52,8 @@ interface MarketAtomService {
     fun mainPageList(
         userId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        urlProtocolTrim: Boolean = false
     ): Result<List<MarketMainItem>>
 
     /**
@@ -69,7 +70,8 @@ interface MarketAtomService {
         recommendFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        urlProtocolTrim: Boolean = false
     ): MarketAtomResp
 
     /**

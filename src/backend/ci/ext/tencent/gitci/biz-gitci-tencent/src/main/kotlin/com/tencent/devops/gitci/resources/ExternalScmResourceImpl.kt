@@ -30,12 +30,29 @@ package com.tencent.devops.gitci.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.ExternalScmResource
-import com.tencent.devops.gitci.service.GitCITriggerService
+import com.tencent.devops.gitci.listener.GitCIRequestDispatcher
+import com.tencent.devops.gitci.listener.GitCIRequestEvent
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ExternalScmResourceImpl @Autowired constructor(private val gitCITriggerService: GitCITriggerService) : ExternalScmResource {
+class ExternalScmResourceImpl @Autowired constructor(
+    private val rabbitTemplate: RabbitTemplate
+) : ExternalScmResource {
 
-    override fun webHookCodeGitCommit(token: String, event: String) =
-            Result(gitCITriggerService.externalCodeGitBuild(token, event))
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExternalScmResourceImpl::class.java)
+    }
+
+    override fun webHookCodeGitCommit(token: String, event: String): Result<Boolean> {
+        logger.info("webHook event: $event")
+        GitCIRequestDispatcher.dispatch(
+            rabbitTemplate = rabbitTemplate,
+            event = GitCIRequestEvent(
+                event = event
+            )
+        )
+        return Result(true)
+    }
 }

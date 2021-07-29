@@ -36,9 +36,11 @@ import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
+import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import org.slf4j.LoggerFactory
@@ -224,13 +226,18 @@ class ScmService @Autowired constructor(
     }
 
     fun getMergeRequestChangeInfo(
-        userId: String,
+        userId: String?,
+        token: String?,
         gitProjectId: Long,
         mrId: Long
     ): GitMrChangeInfo? {
         logger.info("getMergeRequestChangeInfo: [$gitProjectId|$mrId]")
         return client.getScm(ServiceGitCiResource::class).getMergeRequestChangeInfo(
-            token = getOauthToken(userId, true, gitProjectId),
+            token = if (userId == null) {
+                token!!
+            } else {
+                getOauthToken(userId, true, gitProjectId)
+            },
             gitProjectId = gitProjectId,
             mrId = mrId
         ).data
@@ -250,6 +257,36 @@ class ScmService @Autowired constructor(
             page = page,
             pageSize = pageSize,
             search = search
+        ).data
+    }
+
+    fun getFileInfo(
+        token: String,
+        gitProjectId: String,
+        filePath: String?,
+        ref: String?,
+        useAccessToken: Boolean
+    ): GitCodeFileInfo? {
+        logger.info("getFileInfo: [$gitProjectId|$filePath][$ref]")
+        return client.getScm(ServiceGitCiResource::class).getGitFileInfo(
+            gitProjectId = gitProjectId,
+            filePath = filePath,
+            ref = ref,
+            token = token,
+            useAccessToken = useAccessToken
+        ).data
+    }
+
+    fun getMergeInfo(
+        gitProjectId: Long,
+        mergeRequestId: Long,
+        token: String
+    ): GitCIMrInfo? {
+        logger.info("getMergeInfo: [$gitProjectId|$mergeRequestId][$token]")
+        return client.getScm(ServiceGitResource::class).getGitCIMrInfo(
+            gitProjectId = gitProjectId,
+            mergeRequestId = mergeRequestId,
+            token = token
         ).data
     }
 
