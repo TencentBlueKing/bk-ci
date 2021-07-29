@@ -171,7 +171,8 @@ class GitCITriggerService @Autowired constructor(
                 reasonDetail = TriggerReason.CI_YAML_CONTENT_NULL.detail,
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = false,
-                commitCheckBlock = false
+                commitCheckBlock = false,
+                version = null
             )
         }
 
@@ -197,7 +198,8 @@ class GitCITriggerService @Autowired constructor(
                 description = triggerBuildReq.customCommitMsg,
                 triggerUser = gitRequestEvent.userId,
                 sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
-                buildStatus = BuildStatus.RUNNING
+                buildStatus = BuildStatus.RUNNING,
+                version = null
             )
             yamlBuild.gitStartBuild(
                 pipeline = buildPipeline,
@@ -431,7 +433,8 @@ class GitCITriggerService @Autowired constructor(
                     reasonDetail = TriggerReason.PIPELINE_DISABLE.detail,
                     gitProjectId = gitRequestEvent.gitProjectId,
                     sendCommitCheck = false,
-                    commitCheckBlock = false
+                    commitCheckBlock = false,
+                    version = null
                 )
                 return@forEach
             }
@@ -460,7 +463,8 @@ class GitCITriggerService @Autowired constructor(
                         reasonDetail = TriggerReason.CI_YAML_NEED_MERGE_OR_REBASE.detail,
                         gitProjectId = gitRequestEvent.gitProjectId,
                         sendCommitCheck = true,
-                        commitCheckBlock = mrEvent
+                        commitCheckBlock = mrEvent,
+                        version = null
                     )
                     return@forEach
                 }
@@ -496,7 +500,8 @@ class GitCITriggerService @Autowired constructor(
                         reasonDetail = TriggerReason.CI_YAML_CONTENT_NULL.detail,
                         gitProjectId = gitRequestEvent.gitProjectId,
                         sendCommitCheck = true,
-                        commitCheckBlock = mrEvent
+                        commitCheckBlock = mrEvent,
+                        version = null
                     )
                     return@forEach
                 }
@@ -533,7 +538,8 @@ class GitCITriggerService @Autowired constructor(
                     reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message),
                     gitProjectId = gitRequestEvent.gitProjectId,
                     sendCommitCheck = true,
-                    commitCheckBlock = mrEvent
+                    commitCheckBlock = mrEvent,
+                    version = null
                 )
                 return@forEach
             }
@@ -608,7 +614,8 @@ class GitCITriggerService @Autowired constructor(
                 reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message),
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = false,
-                commitCheckBlock = false
+                commitCheckBlock = false,
+                version = null
             )
             return null
         }

@@ -96,7 +96,8 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
             gitPipelineResourceDao.createPipeline(
                 dslContext = dslContext,
                 gitProjectId = gitProjectConf.gitProjectId,
-                pipeline = pipeline
+                pipeline = pipeline,
+                version = null
             )
         } else if (needReCreate(processClient, event, gitProjectConf, pipeline)) {
             // 先删除已有数据
@@ -117,7 +118,8 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
             gitPipelineResourceDao.createPipeline(
                 dslContext = dslContext,
                 gitProjectId = gitProjectConf.gitProjectId,
-                pipeline = pipeline
+                pipeline = pipeline,
+                version = null
             )
         } else if (pipeline.pipelineId.isNotBlank()) {
             // 已有的流水线需要更新下工蜂CI这里的状态
@@ -126,7 +128,8 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
                 dslContext = dslContext,
                 gitProjectId = gitProjectConf.gitProjectId,
                 pipelineId = pipeline.pipelineId,
-                displayName = pipeline.displayName
+                displayName = pipeline.displayName,
+                version = null
             )
         }
 
@@ -144,8 +147,8 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
             )
             logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
-            gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
-            gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
+            gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, null)
+            gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId, null)
             // 推送启动构建消息,当人工触发时不推送构建消息
             if (event.objectKind != OBJECT_KIND_MANUAL) {
                 scmClient.pushCommitCheck(
@@ -177,7 +180,8 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
                 gitProjectId = event.gitProjectId,
                 // V1不发送通知
                 sendCommitCheck = false,
-                commitCheckBlock = false
+                commitCheckBlock = false,
+                version = null
             )
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
         }

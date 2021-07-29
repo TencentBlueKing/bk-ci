@@ -39,7 +39,6 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
-import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -131,6 +130,12 @@ class GitCIBuildFinishListener @Autowired constructor(
 
                 val objectKind = record["OBJECT_KIND"] as String
                 val buildStatus = BuildStatus.valueOf(buildFinishEvent.status)
+                // 更新流水线执行状态
+                gitRequestEventBuildDao.updateBuildStatusById(
+                    dslContext = dslContext,
+                    id = record["ID"] as Long,
+                    buildStatus = buildStatus
+                )
                 // 检测状态
                 val state = if (buildStatus.isSuccess()) {
                     GitCICommitCheckState.SUCCESS
@@ -162,13 +167,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     ?: throw OperationException("git ci buildEvent not exist")
 
                 // 检查yml版本，根据yml版本选择不同的实现
-                // TODO: 目前V1的yaml转换会因为!-< 报错，后续订最终方案
-                val isV2 = try {
-                    ScriptYmlUtils.isV2Version(event.normalizedYaml)
-                } catch (e: Exception) {
-                    logger.error("$buildFinishEvent.buildId ，${e.message}")
-                    false
-                }
+                val isV2 = (!event.version.isNullOrBlank() && event.version == "v2.0")
 
                 if (isV2) {
                     if (v2GitSetting == null) {
@@ -284,12 +283,6 @@ class GitCIBuildFinishListener @Autowired constructor(
                         build = build
                     )
                 }
-                // 更新流水线执行状态
-                gitRequestEventBuildDao.updateBuildStatusById(
-                    dslContext = dslContext,
-                    id = record["ID"] as Long,
-                    buildStatus = buildStatus
-                )
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)

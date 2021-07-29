@@ -156,7 +156,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
             logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)
-            gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
+            gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId, ymlVersion)
             // 推送启动构建消息,当人工触发时不推送构建消息
             if (event.objectKind != OBJECT_KIND_MANUAL) {
                 scmClient.pushCommitCheck(
@@ -196,7 +196,8 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                 reasonDetail = e.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
                 gitProjectId = event.gitProjectId,
                 sendCommitCheck = true,
-                commitCheckBlock = (event.objectKind == OBJECT_KIND_MERGE_REQUEST)
+                commitCheckBlock = (event.objectKind == OBJECT_KIND_MERGE_REQUEST),
+                version = ymlVersion
             )
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
         }
