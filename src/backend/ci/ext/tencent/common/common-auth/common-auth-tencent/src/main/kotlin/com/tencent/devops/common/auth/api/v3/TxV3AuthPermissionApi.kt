@@ -149,7 +149,18 @@ class TxV3AuthPermissionApi @Autowired constructor(
         systemId: AuthServiceCode,
         supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
-        TODO("Not yet implemented")
+        val actions = mutableListOf<String>()
+        val resourceTypeStr = TActionUtils.extResourceType(resourceType)
+        permissions.forEach {
+            actions.add(buildAction(resourceTypeStr, it))
+        }
+        return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            resourceType = resourceType.value,
+            projectCode = scopeId,
+            action = actions
+        ).data ?: emptyMap()
     }
 
     override fun addResourcePermissionForUsers(

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_B
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
@@ -58,7 +59,7 @@ import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ServiceTxProjectResourceImpl @Autowired constructor(
-    private val bsAuthPermissionApi: BSAuthPermissionApi,
+    private val bsAuthPermissionApi: AuthPermissionApi,
     private val projectPermissionService: TxProjectPermissionService,
     private val projectLocalService: ProjectLocalService,
     private val projectService: ProjectService,
