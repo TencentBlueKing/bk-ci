@@ -228,7 +228,7 @@ class ProjectUserRefreshService @Autowired constructor(
                             )
                         )
                     } else {
-                        logger.info("[${it.creator}] fixGitCIProjectInfo getDevopsUserInfo: ${devopsUser.toJsonString()}")
+                        logger.info("[${it.creator}] fixGitCIProjectInfo getDevopsUserInfo")
                         count += projectFreshDao.fixProjectInfo(
                             dslContext = dslContext,
                             id = it.id,
