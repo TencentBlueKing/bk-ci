@@ -36,6 +36,7 @@ import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.AuthConfigurations
 import com.github.dockerjava.api.model.BlkioRateDevice
 import com.github.dockerjava.api.model.BuildResponseItem
+import com.github.dockerjava.api.model.Capability
 import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.Frame
 import com.github.dockerjava.api.model.HostConfig
@@ -204,11 +205,11 @@ class DockerHostBuildService(
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
             val blkioRateDeviceWirte = BlkioRateDevice()
-                .withPath("/data")
-                .withRate(dockerHostConfig.blkioDeviceWriteBps)
+                .withPath("/dev/sda")
+                .withRate(dockerBuildInfo.dockerResource.blkioDeviceWriteBps)
             val blkioRateDeviceRead = BlkioRateDevice()
-                .withPath("/data")
-                .withRate(dockerHostConfig.blkioDeviceReadBps)
+                .withPath("/dev/sda")
+                .withRate(dockerBuildInfo.dockerResource.blkioDeviceReadBps)
 
             val containerName =
                 "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
@@ -218,10 +219,11 @@ class DockerHostBuildService(
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                 .withHostConfig(HostConfig()
-                    .withMemory(dockerHostConfig.memory)
-                    .withMemorySwap(dockerHostConfig.memory)
-                    .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
-                    .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
+                    .withCapAdd(Capability.SYS_PTRACE)
+                    .withMemory(dockerBuildInfo.dockerResource.memoryLimitBytes)
+                    .withMemorySwap(dockerBuildInfo.dockerResource.memoryLimitBytes)
+                    .withCpuQuota(dockerBuildInfo.dockerResource.cpuQuota.toLong())
+                    .withCpuPeriod(dockerBuildInfo.dockerResource.cpuPeriod.toLong())
 /*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
                     .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
                     .withBinds(binds)
@@ -547,6 +549,7 @@ class DockerHostBuildService(
                     .withEnv(env)
                     .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                     .withHostConfig(HostConfig()
+                        .withCapAdd(Capability.SYS_PTRACE)
                         .withBinds(binds)
                         .withMemory(dockerHostConfig.memory)
                         .withMemorySwap(dockerHostConfig.memory)
@@ -566,7 +569,10 @@ class DockerHostBuildService(
                     .withEnv(env)
                     .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                     .withHostConfig(HostConfig()
-                        .withBinds(binds).withNetworkMode("bridge").withPortBindings(portBindings))
+                        .withCapAdd(Capability.SYS_PTRACE)
+                        .withBinds(binds)
+                        .withNetworkMode("bridge")
+                        .withPortBindings(portBindings))
                     .withWorkingDir(dockerHostConfig.volumeWorkspace)
                     .exec()
             }
