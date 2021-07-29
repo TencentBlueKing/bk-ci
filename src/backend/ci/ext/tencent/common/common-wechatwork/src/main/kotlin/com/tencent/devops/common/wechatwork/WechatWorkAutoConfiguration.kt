@@ -58,7 +58,7 @@ class WechatWorkAutoConfiguration {
     )
 
     @Bean
-    @Profile("prod")
+    @Profile("prod", "prod-v3")
     fun wechatWorkConfigurationProd(wechatWorkProperties: WechatWorkProperties) = WechatWorkConfiguration(
         wechatWorkProperties.prodCorpId,
         wechatWorkProperties.prodServiceId,
