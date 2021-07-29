@@ -29,6 +29,7 @@ package com.tencent.devops.process.api.report
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserReportResource
 import com.tencent.devops.process.pojo.Report
@@ -41,8 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserReportResourceImpl @Autowired constructor(
     private val reportService: ReportService
 ) : UserReportResource {
-
-    private val regex = Regex("(http[s]?://[-.a-z0-9A-Z]+)(/.*)")
 
     override fun get(
         userId: String,
@@ -67,9 +66,9 @@ class UserReportResourceImpl @Autowired constructor(
         val decorateResult = mutableListOf<Report>()
         result.forEach {
             if (it.type == ReportTypeEnum.INTERNAL.name) {
-                val groups = regex.find(it.indexFileUrl)?.groups // 用户界面只保留contentPath
-                if (groups != null) {
-                    decorateResult.add(it.copy(indexFileUrl = groups[2]!!.value))
+                val httpContextPath = RegexUtils.splitDomainContextPath(it.indexFileUrl) // #4796 用户界面只保留contextPath
+                if (httpContextPath != null) {
+                    decorateResult.add(it.copy(indexFileUrl = httpContextPath.second))
                 } else {
                     decorateResult.add(it)
                 }
