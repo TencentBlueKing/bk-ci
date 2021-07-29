@@ -29,10 +29,8 @@ package com.tencent.devops.ticket
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
 
 @MicroService
-@ComponentScan("com.tencent.devops.common", "com.tencent.devops.ticket")
 class Application
 
 fun main(args: Array<String>) {
