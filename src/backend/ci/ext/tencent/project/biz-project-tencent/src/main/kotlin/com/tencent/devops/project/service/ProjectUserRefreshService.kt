@@ -193,6 +193,7 @@ class ProjectUserRefreshService @Autowired constructor(
                     val devopsUser = projectFreshDao.getDevopsUserInfo(dslContext, it.creator)
                     if (devopsUser == null) {
                         val userInfo = tofService.getUserDeptDetail(it.creator)
+                        logger.info("[${it.creator}] fixGitCIProjectInfo tofService: $userInfo")
                         count += projectFreshDao.fixProjectInfo(
                             dslContext = dslContext,
                             id = it.id,
@@ -226,6 +227,7 @@ class ProjectUserRefreshService @Autowired constructor(
                             )
                         )
                     } else {
+                        logger.info("[${it.creator}] fixGitCIProjectInfo getDevopsUserInfo: $devopsUser")
                         count += projectFreshDao.fixProjectInfo(
                             dslContext = dslContext,
                             id = it.id,
