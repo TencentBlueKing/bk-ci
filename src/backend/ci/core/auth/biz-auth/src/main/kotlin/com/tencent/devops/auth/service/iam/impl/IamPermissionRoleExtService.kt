@@ -45,7 +45,6 @@ import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
