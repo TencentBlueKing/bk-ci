@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.gitci.trigger.v1
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
@@ -42,14 +42,13 @@ import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
-import com.tencent.devops.gitci.service.GitCIBuildService
 import com.tencent.devops.gitci.service.GitRepositoryConfService
+import com.tencent.devops.gitci.trigger.YamlTriggerInterface
 import com.tencent.devops.gitci.utils.GitCIWebHookMatcher
-import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
+import com.tencent.devops.gitci.trigger.GitCIEventSaveService
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.io.BufferedReader
@@ -57,16 +56,15 @@ import java.io.StringReader
 import javax.ws.rs.core.Response
 
 @Component
-class RequestTrigger @Autowired constructor(
+class YamlTrigger @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitCISettingDao: GitCISettingDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val repositoryConfService: GitRepositoryConfService,
-    private val rabbitTemplate: RabbitTemplate,
     private val gitCIEventSaveService: GitCIEventSaveService,
-    private val gitCIBuildService: GitCIBuildService
-) : RequestTriggerInterface<CIBuildYaml> {
+    private val yamlBuild: YamlBuild
+) : YamlTriggerInterface<CIBuildYaml> {
 
     override fun triggerBuild(
         gitToken: GitToken,
@@ -113,7 +111,7 @@ class RequestTrigger @Autowired constructor(
                 buildStatus = BuildStatus.RUNNING
             )
             try {
-                gitCIBuildService.gitStartBuild(
+                yamlBuild.gitStartBuild(
                     pipeline = gitProjectPipeline,
                     event = gitRequestEvent,
                     yaml = yamlObject,
@@ -269,6 +267,6 @@ class RequestTrigger @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RequestTrigger::class.java)
+        private val logger = LoggerFactory.getLogger(YamlTrigger::class.java)
     }
 }

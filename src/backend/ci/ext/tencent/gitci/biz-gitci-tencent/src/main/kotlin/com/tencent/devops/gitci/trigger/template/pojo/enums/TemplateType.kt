@@ -25,21 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.template.pojo
+package com.tencent.devops.gitci.trigger.template.pojo.enums
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-
-// 不用被模板替换的Stage中的变量，直接通过Yaml生成Object
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class NoReplaceStagTemplate(
-    val name: String?,
-    val id: String?,
-    val label: String? = null,
-    @JsonProperty("if")
-    val ifField: String? = null,
-    @JsonProperty("fast-kill")
-    val fastKill: Boolean? = false
-)
+/**
+ * 模板类型，text为展示内容，content为模板在Yaml中的关键字
+ */
+enum class TemplateType(val text: String, val content: String) {
+    VARIABLE("variable", "variables"),
+    STAGE("stage", "stages"),
+    JOB("job", "jobs"),
+    STEP("step", "steps"),
+    FINALLY("finally", "finally"),
+    EXTEND("extend", "extend")
+}

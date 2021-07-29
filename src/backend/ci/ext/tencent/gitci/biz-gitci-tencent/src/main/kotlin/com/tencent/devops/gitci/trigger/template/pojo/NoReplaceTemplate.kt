@@ -25,36 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.gitci.trigger.template.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.gitci.pojo.git.GitEvent
-import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.common.ci.v2.Extends
+import com.tencent.devops.common.ci.v2.Notices
+import com.tencent.devops.common.ci.v2.PreTriggerOn
+import com.tencent.devops.common.ci.v2.Resources
 
-interface RequestTriggerInterface<T> {
-
-    fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        gitProjectPipeline: GitProjectPipeline,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String
-    ): Boolean
-
-    fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        isMr: Boolean,
-        originYaml: String?,
-        filePath: String,
-        pipelineId: String?,
-        pipelineName: String?
-    ): T?
-
-    fun checkYamlSchema(userId: String, yaml: String): Result<String>
-}
+// 不用被模板替换的流水线变量，直接通过Yaml生成Object
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class NoReplaceTemplate(
+    var version: String?,
+    var name: String?,
+    var label: List<String>? = null,
+    var triggerOn: PreTriggerOn?,
+    var extends: Extends?,
+    var resources: Resources?,
+    var notices: List<Notices>?
+)

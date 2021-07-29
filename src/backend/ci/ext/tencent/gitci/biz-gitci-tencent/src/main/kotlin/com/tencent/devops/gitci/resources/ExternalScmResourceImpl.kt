@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.ExternalScmResource
 import com.tencent.devops.gitci.listener.GitCIRequestDispatcher
 import com.tencent.devops.gitci.listener.GitCIRequestEvent
+import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -40,7 +41,12 @@ class ExternalScmResourceImpl @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate
 ) : ExternalScmResource {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExternalScmResourceImpl::class.java)
+    }
+
     override fun webHookCodeGitCommit(token: String, event: String): Result<Boolean> {
+        logger.info("webHook event: $event")
         GitCIRequestDispatcher.dispatch(
             rabbitTemplate = rabbitTemplate,
             event = GitCIRequestEvent(

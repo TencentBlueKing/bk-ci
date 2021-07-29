@@ -25,64 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.template.pojo
+package com.tencent.devops.gitci.trigger.template.pojo
 
-class TemplateGraph<T>(
-    private val adj: MutableMap<String, MutableList<String>> = mutableMapOf()
-) {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 
-    fun addEdge(fromPath: String, toPath: String) {
-        if (adj[fromPath] != null) {
-            adj[fromPath]!!.add(toPath)
-        } else {
-            adj[fromPath] = mutableListOf(toPath)
-        }
-    }
-
-    fun hasCyclic(): Boolean {
-        val visited = adj.map { it.key to false }.toMap().toMutableMap()
-        val recStack = adj.map { it.key to false }.toMap().toMutableMap()
-
-        for (i in adj.keys) {
-            if (hasCyclicUtil(i, visited, recStack)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    private fun hasCyclicUtil(
-        i: String,
-        visited: MutableMap<String, Boolean>,
-        recStack: MutableMap<String, Boolean>
-    ): Boolean {
-
-        if (recStack[i] == null || visited[i] == null) {
-            return false
-        }
-
-        if (recStack[i]!!) {
-            return true
-        }
-
-        if (visited[i]!!) {
-            return false
-        }
-
-        visited[i] = true
-
-        recStack[i] = true
-
-        val children = adj[i]!!
-
-        for (c in children) {
-            if (hasCyclicUtil(c, visited, recStack)) {
-                return true
-            }
-        }
-
-        recStack[i] = false
-
-        return false
-    }
-}
+// 不用被模板替换的Stage中的变量，直接通过Yaml生成Object
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class NoReplaceStagTemplate(
+    val name: String?,
+    val id: String?,
+    val label: String? = null,
+    @JsonProperty("if")
+    val ifField: String? = null,
+    @JsonProperty("fast-kill")
+    val fastKill: Boolean? = false
+)

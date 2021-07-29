@@ -35,7 +35,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.GitCITriggerResource
 import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
-import com.tencent.devops.gitci.service.GitCITriggerService
+import com.tencent.devops.gitci.trigger.GitCITriggerService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 

@@ -25,24 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.template.pojo
+package com.tencent.devops.gitci.trigger
 
-data class Parameters(
-    val name: String,
-    val type: String,
-    val default: Any?,
-    val values: List<Any>?
-)
+import com.tencent.devops.common.ci.v2.YmlVersion
+import com.tencent.devops.gitci.trigger.v1.YamlTrigger
+import com.tencent.devops.gitci.trigger.v2.YamlTriggerV2
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-enum class ParametersType(val value: String) {
-    STRING("string"),
-    NUMBER("number"),
-    BOOLEAN("boolean"),
-//    OBJECT("object"),
-//    TASK("task"),
-//    TASKLIST("taskList"),
-//    JOB("job"),
-//    JOBLIST("jobList"),
-//    STAGE("stage"),
-//    STAGELIST("stageList")
+@Component
+class YamlTriggerFactory @Autowired constructor(
+    val requestTrigger: YamlTrigger,
+    val requestTriggerV2: YamlTriggerV2
+) {
+
+    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): YamlTriggerInterface<*> {
+        if (ymlVersion == null) {
+            return requestTrigger
+        }
+
+        return when (ymlVersion.version) {
+            "v2.0" -> {
+                requestTriggerV2
+            }
+            else -> {
+                requestTrigger
+            }
+        }
+    }
 }

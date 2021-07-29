@@ -25,31 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.gitci.trigger
 
-import com.tencent.devops.common.ci.v2.YmlVersion
-import com.tencent.devops.gitci.v2.service.trigger.V2RequestTrigger
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.repository.pojo.oauth.GitToken
 
-@Component
-class RequestTriggerFactory @Autowired constructor(
-    val requestTrigger: RequestTrigger,
-    val v2RequestTrigger: V2RequestTrigger
-) {
+interface YamlTriggerInterface<T> {
 
-    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): RequestTriggerInterface<*> {
-        if (ymlVersion == null) {
-            return requestTrigger
-        }
+    fun triggerBuild(
+        gitToken: GitToken,
+        forkGitToken: GitToken?,
+        gitRequestEvent: GitRequestEvent,
+        gitProjectPipeline: GitProjectPipeline,
+        event: GitEvent,
+        originYaml: String?,
+        filePath: String
+    ): Boolean
 
-        return when (ymlVersion.version) {
-            "v2.0" -> {
-                v2RequestTrigger
-            }
-            else -> {
-                requestTrigger
-            }
-        }
-    }
+    fun prepareCIBuildYaml(
+        gitToken: GitToken,
+        forkGitToken: GitToken?,
+        gitRequestEvent: GitRequestEvent,
+        isMr: Boolean,
+        originYaml: String?,
+        filePath: String,
+        pipelineId: String?,
+        pipelineName: String?
+    ): T?
+
+    fun checkYamlSchema(userId: String, yaml: String): Result<String>
 }
