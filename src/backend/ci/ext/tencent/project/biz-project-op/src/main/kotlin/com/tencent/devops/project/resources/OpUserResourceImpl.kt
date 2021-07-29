@@ -51,7 +51,7 @@ class OpUserResourceImpl @Autowired constructor(
         return Result(projectUserRefreshService.resetProjectInfo())
     }
 
-    override fun fixGitCIProjectInfo(start: Long?, limit: Int?, sleep: Int?): Result<Int> {
+    override fun fixGitCIProjectInfo(start: Long?, limit: Int?, sleep: Long?): Result<Int> {
         return Result(projectUserRefreshService.fixGitCIProjectInfo(
             start = start ?: 0L,
             limitCount = limit ?: 5,

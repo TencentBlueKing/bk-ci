@@ -78,6 +78,6 @@ interface OpUserResource {
         limit: Int?,
         @ApiParam("间隔时间", required = false)
         @QueryParam("sleep")
-        sleep: Int?
+        sleep: Long?
     ): Result<Int>
 }

@@ -183,7 +183,7 @@ class ProjectUserRefreshService @Autowired constructor(
         return projectFreshDao.resetProjectDeptInfo(dslContext)
     }
 
-    fun fixGitCIProjectInfo(start: Long, limitCount: Int, sleepTime: Int): Int {
+    fun fixGitCIProjectInfo(start: Long, limitCount: Int, sleepTime: Long): Int {
         var startId = start
         var count = 0
         var currProjects = projectFreshDao.getProjectAfterId(dslContext, startId, limitCount)
@@ -192,7 +192,7 @@ class ProjectUserRefreshService @Autowired constructor(
                 try {
                     val devopsUser = projectFreshDao.getDevopsUserInfo(dslContext, it.creator)
                     if (devopsUser == null) {
-                        Thread.sleep(500)
+                        Thread.sleep(sleepTime)
                         val userInfo = tofService.getUserDeptDetail(it.creator)
                         logger.info("[${it.creator}] fixGitCIProjectInfo tofService: $userInfo")
                         count += projectFreshDao.fixProjectInfo(
