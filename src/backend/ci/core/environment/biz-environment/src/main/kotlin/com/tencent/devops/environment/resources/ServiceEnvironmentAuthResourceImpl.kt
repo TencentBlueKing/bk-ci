@@ -45,9 +45,9 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
     override fun environmentInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
-        val projectId = callBackInfo.filter.parent.id
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
+                val projectId = callBackInfo.filter.parent.id
                 return authEnvService.getEnv(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
@@ -55,6 +55,7 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
                 return authEnvService.getEnvInfo(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
+                val projectId = callBackInfo.filter.parent.id
                 return authEnvService.searchEnv(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
@@ -70,9 +71,9 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
     override fun nodeInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
-        val projectId = callBackInfo.filter.parent.id
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
+                val projectId = callBackInfo.filter.parent.id
                 return authNodeService.getNode(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
@@ -80,6 +81,7 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
                 return authNodeService.getNodeInfo(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
+                val projectId = callBackInfo.filter.parent.id
                 return authNodeService.searchNode(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
