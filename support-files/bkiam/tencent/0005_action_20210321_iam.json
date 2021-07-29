@@ -311,8 +311,7 @@
           }
         ],
         "related_actions": [
-          "project_view",
-          "repertory_view"
+          "project_view"
         ],
         "version": 1
       }
@@ -568,8 +567,7 @@
           }
         ],
         "related_actions": [
-          "project_view",
-          "environment_view"
+          "project_view"
         ],
         "version": 1
       }
@@ -697,8 +695,7 @@
           }
         ],
         "related_actions": [
-          "project_view",
-          "env_node_view"
+          "project_view"
         ],
         "version": 1
       }
