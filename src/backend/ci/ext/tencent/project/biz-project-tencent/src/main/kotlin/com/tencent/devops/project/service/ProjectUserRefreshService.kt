@@ -228,7 +228,10 @@ class ProjectUserRefreshService @Autowired constructor(
                             )
                         )
                     } else {
-                        logger.info("[${it.creator}] fixGitCIProjectInfo getDevopsUserInfo")
+                        logger.info("[${it.creator}] fixGitCIProjectInfo getDevopsUserInfo: " +
+                            "creatorBgId=${devopsUser.bgId}, creatorBgName=${devopsUser.bgName}" +
+                            "creatorDeptId=${devopsUser.deptId}, creatorDeptName=${devopsUser.deptName}" +
+                            "creatorCenterId=${devopsUser.centerId}, creatorCenterName=${devopsUser.centerName}")
                         count += projectFreshDao.fixProjectInfo(
                             dslContext = dslContext,
                             id = it.id,
