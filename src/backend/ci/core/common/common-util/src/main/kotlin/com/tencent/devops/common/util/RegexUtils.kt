@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.util
 
-@Suppress("MagicNumber")
+@Suppress("MagicNumber", "ReturnCount")
 object RegexUtils {
 
     private val httpContextPathRegex = Regex("(http[s]?:)(//)([-.a-z0-9A-Z]+)(/.*)")
