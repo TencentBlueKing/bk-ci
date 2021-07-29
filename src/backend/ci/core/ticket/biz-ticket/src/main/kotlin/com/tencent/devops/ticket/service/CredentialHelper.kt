@@ -40,8 +40,10 @@ import java.util.Base64
 @Component
 class CredentialHelper {
     companion object {
-        private const val SSH_PRIVATE_PREFIX = "-----BEGIN RSA PRIVATE KEY-----"
-        private const val SSH_PRIVATE_SUFFIX = "-----END RSA PRIVATE KEY-----"
+        private const val SSH_RSA_PRIVATE_PREFIX = "-----BEGIN RSA PRIVATE KEY-----"
+        private const val SSH_RSA_PRIVATE_SUFFIX = "-----END RSA PRIVATE KEY-----"
+        private const val SSH_ED25519_PRIVATE_PREFIX = "-----BEGIN OPENSSH PRIVATE KEY-----"
+        private const val SSH_ED25519_PRIVATE_SUFFIX = "-----END OPENSSH PRIVATE KEY-----"
     }
 
     @Value("\${credential.mixer}")
@@ -86,7 +88,9 @@ class CredentialHelper {
                 true
             }
             CredentialType.SSH_PRIVATEKEY -> {
-                if (!(v1.startsWith(SSH_PRIVATE_PREFIX) && v1.endsWith(SSH_PRIVATE_SUFFIX))) {
+                if (!((v1.startsWith(SSH_RSA_PRIVATE_PREFIX) && v1.endsWith(SSH_RSA_PRIVATE_SUFFIX))) ||
+                    (v1.startsWith(SSH_ED25519_PRIVATE_PREFIX) && v1.endsWith(SSH_ED25519_PRIVATE_SUFFIX))
+                ) {
                     update && v1 == credentialMixer
                 } else {
                     true
@@ -94,7 +98,9 @@ class CredentialHelper {
             }
             CredentialType.TOKEN_SSH_PRIVATEKEY -> {
                 v2 ?: return false
-                if (!(v2.startsWith(SSH_PRIVATE_PREFIX) && v2.endsWith(SSH_PRIVATE_SUFFIX))) {
+                if (!((v2.startsWith(SSH_RSA_PRIVATE_PREFIX) && v2.endsWith(SSH_RSA_PRIVATE_SUFFIX)) ||
+                        (v2.startsWith(SSH_ED25519_PRIVATE_PREFIX) && v2.endsWith(SSH_ED25519_PRIVATE_SUFFIX)))
+                ) {
                     update && v2 == credentialMixer
                 } else {
                     true
