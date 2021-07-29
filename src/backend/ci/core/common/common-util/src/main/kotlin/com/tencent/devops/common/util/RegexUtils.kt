@@ -46,13 +46,13 @@ object RegexUtils {
     }
 
     /**
-     * 解析[url] 将协议头去掉， 比如 https://xx.xx.xx 返回 //xx.xx.xx 表示遵守当前主站的协议
+     * 解析[url] 将协议头去掉， 比如 https://xx.xx.xx/a/b/c 返回 //xx.xx.xx/a/b/c 表示遵守当前主站的协议
      */
     fun trimProtocol(url: String?): String? {
         if (url.isNullOrBlank()) {
             return url
         }
         val groups = httpContextPathRegex.find(url)?.groups ?: return url
-        return groups[2]!!.value + groups[3]!!.value
+        return groups[2]!!.value + groups[3]!!.value + groups[4]!!.value
     }
 }

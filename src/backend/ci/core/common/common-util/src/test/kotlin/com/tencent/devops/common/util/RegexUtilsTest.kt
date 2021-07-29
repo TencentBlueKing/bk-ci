@@ -54,9 +54,13 @@ class RegexUtilsTest {
     @Test
     fun trimProtocol() {
         val contextPath = "/a/b/c.txt"
+
         val noSubDomain = "donothavewww.com"
-        Assert.assertEquals("//$noSubDomain", RegexUtils.trimProtocol("http://$noSubDomain$contextPath"))
+        Assert.assertEquals("//$noSubDomain$contextPath",
+            RegexUtils.trimProtocol("http://$noSubDomain$contextPath"))
+
         val httpsDomain = "www.tencent-inc123.com"
-        Assert.assertEquals("//$httpsDomain", RegexUtils.trimProtocol("https://$httpsDomain$contextPath"))
+        Assert.assertEquals("//$httpsDomain$contextPath",
+            RegexUtils.trimProtocol("https://$httpsDomain$contextPath"))
     }
 }
