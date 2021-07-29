@@ -662,15 +662,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 defaultMessage = "流水线不存在"
             )
 
-        if (pipelineInfo.channelCode != channelCode) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                defaultMessage = "指定要复制的流水线渠道来源${pipelineInfo.channelCode}不符合$channelCode",
-                params = arrayOf(pipelineInfo.channelCode.name)
-            )
-        }
-
         val model = pipelineRepositoryService.getModel(pipelineId, version)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
