@@ -34,7 +34,6 @@ pluginManagement {
     }
     repositories {
         mavenLocal()
-        maven(url = "https://oss.sonatype.org/content/repositories/snapshots/")// TODO SNAPSHOT版本
         mavenCentral()
         gradlePluginPortal()
     }

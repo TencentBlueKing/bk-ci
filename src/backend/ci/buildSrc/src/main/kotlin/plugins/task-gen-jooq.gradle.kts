@@ -146,7 +146,6 @@ jooq {
     tasks.getByName<AbstractCompile>("compileKotlin") {
         destinationDir = File("build/generated-src")
         tasks.matching { it is JooqGenerate }.forEach {
-            println("#task: ${it.name} , group: ${it.group}")
             dependsOn(it.name)
         }
     }
