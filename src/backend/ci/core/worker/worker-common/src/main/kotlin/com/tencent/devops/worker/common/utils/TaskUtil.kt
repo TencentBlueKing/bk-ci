@@ -34,6 +34,7 @@ import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
+import java.util.concurrent.TimeUnit
 
 object TaskUtil {
 
@@ -57,9 +58,9 @@ object TaskUtil {
             val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
             val timeOut = additionalOptions?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN.toLong()
             // 如果task的超时时间配置成0，则超时时间为job的最大超时时间
-            return if (timeOut == 0L) Timeout.MAX_JOB_RUN_DAYS else timeOut
+            return if (timeOut == 0L) TimeUnit.DAYS.toMinutes(Timeout.MAX_JOB_RUN_DAYS) else timeOut
         }
-        return Timeout.MAX_JOB_RUN_DAYS
+        return TimeUnit.DAYS.toMinutes(Timeout.MAX_JOB_RUN_DAYS)
     }
 
     fun setTaskId(taskId: String) {
