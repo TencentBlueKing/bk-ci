@@ -25,42 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.gitci.trigger.template.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.gitci.pojo.git.GitEvent
-import com.tencent.devops.repository.pojo.oauth.GitToken
+data class Parameters(
+    val name: String,
+    val type: String,
+    val default: Any?,
+    val values: List<Any>?
+)
 
-interface RequestTriggerInterface<T> {
-
-    fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        gitProjectPipeline: GitProjectPipeline,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String
-    ): Boolean
-
-    fun isMatch(
-        event: GitEvent,
-        gitRequestEvent: GitRequestEvent,
-        ymlObject: T
-    ): Pair</*isMatch*/Boolean, /*onlySchedule*/Boolean>
-
-    fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        isMr: Boolean,
-        originYaml: String?,
-        filePath: String,
-        pipelineId: String?,
-        pipelineName: String?
-    ): T?
-
-    fun checkYamlSchema(userId: String, yaml: String): Result<String>
+enum class ParametersType(val value: String) {
+    STRING("string"),
+    NUMBER("number"),
+    BOOLEAN("boolean"),
+//    OBJECT("object"),
+//    TASK("task"),
+//    TASKLIST("taskList"),
+//    JOB("job"),
+//    JOBLIST("jobList"),
+//    STAGE("stage"),
+//    STAGELIST("stageList")
 }

@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.template.pojo
+package com.tencent.devops.gitci.trigger.template.pojo
 
 /**
  * 模板替换中的模板库

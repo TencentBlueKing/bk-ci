@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.template
+package com.tencent.devops.gitci.trigger.template
 
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Extends
@@ -36,11 +36,11 @@ import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Repositories
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Variable
-import com.tencent.devops.gitci.v2.template.pojo.ParametersTemplateNull
-import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
-import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
+import com.tencent.devops.gitci.trigger.template.pojo.ParametersTemplateNull
+import com.tencent.devops.gitci.trigger.template.pojo.TemplateGraph
+import com.tencent.devops.gitci.trigger.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.gitci.v2.template.pojo.NoReplaceTemplate
+import com.tencent.devops.gitci.trigger.template.pojo.NoReplaceTemplate
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")

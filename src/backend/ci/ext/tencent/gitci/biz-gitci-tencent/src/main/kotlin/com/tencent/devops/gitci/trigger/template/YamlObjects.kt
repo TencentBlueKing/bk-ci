@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.template
+package com.tencent.devops.gitci.trigger.template
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.YamlUtil
@@ -36,7 +36,7 @@ import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.Variable
-import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
+import com.tencent.devops.gitci.trigger.template.pojo.enums.TemplateType
 
 object YamlObjects {
 
