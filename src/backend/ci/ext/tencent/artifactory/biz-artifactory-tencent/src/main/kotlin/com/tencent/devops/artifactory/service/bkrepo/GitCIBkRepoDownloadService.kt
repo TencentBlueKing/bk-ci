@@ -43,12 +43,19 @@ import org.springframework.beans.factory.annotation.Value
 
 class GitCIBkRepoDownloadService @Autowired constructor(
     private val pipelineService: PipelineService,
-    private val bkRepoService: BkRepoService,
-    private val client: Client,
-    private val bkRepoClient: BkRepoClient,
-    private val commonConfig: CommonConfig,
-    private val shortUrlService: ShortUrlService
-) : BkRepoDownloadService(pipelineService, bkRepoService, client, bkRepoClient, commonConfig, shortUrlService) {
+    bkRepoService: BkRepoService,
+    client: Client,
+    bkRepoClient: BkRepoClient,
+    commonConfig: CommonConfig,
+    shortUrlService: ShortUrlService
+) : BkRepoDownloadService(
+    pipelineService = pipelineService,
+    bkRepoService = bkRepoService,
+    client = client,
+    bkRepoClient = bkRepoClient,
+    commonConfig = commonConfig,
+    shortUrlService = shortUrlService
+) {
 
     @Value("\${gitci.v2GitUrl:#{null}}")
     private val v2GitUrl: String? = null
@@ -58,7 +65,8 @@ class GitCIBkRepoDownloadService @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
-        channelCode: ChannelCode?
+        channelCode: ChannelCode?,
+        fullUrl: Boolean
     ): Url {
         logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
             "argPath: $argPath")

@@ -101,6 +101,16 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             ttl, isDirected))
     }
 
+    override fun downloadUrlForOpenApi(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Url> {
+        checkParameters(userId, projectId, path)
+        return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
+    }
+
     override fun downloadUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -255,6 +265,18 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         }
     }
 
+    private fun checkParameters(userId: String, projectId: String, path: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (path.isBlank()) {
+            throw ParamBlankException("Invalid path")
+        }
+    }
+
     override fun getReportRootUrl(
         projectId: String,
         pipelineId: String,
@@ -273,20 +295,11 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         pageSize: Int?,
         searchProps: SearchProps
     ): Result<Page<FileInfo>> {
+
         checkParam(projectId)
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: -1
-        val offset = if (pageSizeNotNull == -1) 0 else (pageNotNull - 1) * pageSizeNotNull
-        val bkProps = mutableListOf<Property>()
-        searchProps.props.forEach { (k, v) ->
-            bkProps.add(Property(k, v))
-        }
-        val result = artifactorySearchService.serviceSearch(
-            projectId = projectId,
-            searchProps = bkProps,
-            offset = offset,
-            limit = pageSizeNotNull
-        )
+        val pageSizeNotNull = pageSize ?: 500
+        val result = bkRepoSearchService.search(userId, projectId, searchProps, pageNotNull, pageSizeNotNull)
         return Result(
             Page(
                 count = result.first,

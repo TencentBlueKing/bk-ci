@@ -799,14 +799,26 @@ class YamlBuildV2 @Autowired constructor(
             }
             inputMap["authType"] = "ACCESS_TOKEN"
 
-            if (event.mergeRequestId != null) {
-                inputMap["pullType"] = "BRANCH"
-            } else if (event.objectKind == OBJECT_KIND_TAG_PUSH) {
-                inputMap["pullType"] = "TAG"
-                inputMap["refName"] = event.branch
-            } else {
-                inputMap["pullType"] = "COMMIT_ID"
-                inputMap["refName"] = event.commitId
+            when (event.objectKind) {
+                OBJECT_KIND_MERGE_REQUEST ->
+                    inputMap["pullType"] = "BRANCH"
+                OBJECT_KIND_TAG_PUSH -> {
+                    inputMap["pullType"] = "TAG"
+                    inputMap["refName"] = event.branch
+                }
+                OBJECT_KIND_MANUAL -> {
+                    if (event.commitId.isNotBlank()) {
+                        inputMap["pullType"] = "COMMIT_ID"
+                        inputMap["refName"] = event.commitId
+                    } else {
+                        inputMap["pullType"] = "BRANCH"
+                        inputMap["refName"] = event.branch
+                    }
+                }
+                else -> {
+                    inputMap["pullType"] = "COMMIT_ID"
+                    inputMap["refName"] = event.commitId
+                }
             }
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
