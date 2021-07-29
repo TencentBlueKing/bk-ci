@@ -144,7 +144,7 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
+        return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path, fullUrl = false))
     }
 
     override fun ioaUrl(
@@ -154,7 +154,7 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
+        return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path, fullUrl = false))
     }
 
     override fun shareUrl(
@@ -186,7 +186,12 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
             throw BadRequestException("Path must end with ipa or apk")
         }
-        return Result(bkRepoDownloadService.getExternalUrl(userId, projectId, artifactoryType, path))
+        return Result(bkRepoDownloadService.getExternalUrl(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            argPath = path)
+        )
     }
 
     override fun getFilePipelineInfo(

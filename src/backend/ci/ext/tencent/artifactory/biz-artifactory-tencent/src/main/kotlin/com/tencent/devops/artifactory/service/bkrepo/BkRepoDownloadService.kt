@@ -59,6 +59,7 @@ import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 
+@Suppress("LongParameterList", "ComplexMethod", "LongMethod", "MagicNumber")
 open class BkRepoDownloadService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val bkRepoService: BkRepoService,
@@ -75,7 +76,8 @@ open class BkRepoDownloadService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("serviceGetExternalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
+        logger.info("serviceGetExternalDownloadUrl, userId: $userId, projectId: $projectId, " +
+            "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val url = bkRepoService.externalDownloadUrl(
             userId = userId,
@@ -95,7 +97,8 @@ open class BkRepoDownloadService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
+        logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, " +
+            "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val url = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, normalizedPath, ttl)
         return Url(url)
@@ -110,7 +113,8 @@ open class BkRepoDownloadService @Autowired constructor(
         ttl: Int,
         permits: Int?
     ): List<Url> {
-        logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPathSet: $argPathSet, ttl: $ttl, permits: $permits")
+        logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId," +
+            " artifactoryType: $artifactoryType, argPathSet: $argPathSet, ttl: $ttl, permits: $permits")
         val normalizedPaths = mutableSetOf<String>()
         argPathSet.forEach { path ->
             normalizedPaths.add(PathUtils.checkAndNormalizeAbsPath(path))
@@ -131,14 +135,18 @@ open class BkRepoDownloadService @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
-        channelCode: ChannelCode?
+        channelCode: ChannelCode?,
+        fullUrl: Boolean
     ): Url {
-        logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath")
+        logger.info("getDownloadUrl|userId=$userId|projectId=$projectId|type=$artifactoryType|argPath=$argPath")
         pipelineService.validatePermission(userId, projectId)
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val repo = RepoUtils.getRepoByType(artifactoryType)
-        val url = "${HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)}" +
-                "/bkrepo/api/user/generic/$projectId/$repo$normalizedPath?download=true"
+        val urlBuilder = StringBuilder()
+        if (fullUrl) {
+            urlBuilder.append(HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!))
+        }
+        val url = urlBuilder.append("/bkrepo/api/user/generic/$projectId/$repo$normalizedPath?download=true").toString()
         return Url(url, url)
     }
 
@@ -146,22 +154,23 @@ open class BkRepoDownloadService @Autowired constructor(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String
+        argPath: String
     ): Url {
-        logger.info("getExternalUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
+        logger.info("getExternalUrl|userId=$userId|projectId=$projectId|type=$artifactoryType|argPath=$argPath")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val fileInfo =
             bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
-                ?: throw NotFoundException("文件($path)不存在")
+                ?: throw NotFoundException("文件($argPath)不存在")
         val properties = fileInfo.metadata
-        val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw RuntimeException("元数据(pipelineId)不存在")
-        val buildId = properties[ARCHIVE_PROPS_BUILD_ID] ?: throw RuntimeException("元数据(buildId)不存在")
+        properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw BadRequestException("元数据(pipelineId)不存在")
+        properties[ARCHIVE_PROPS_BUILD_ID] ?: throw BadRequestException("元数据(buildId)不存在")
         val shortUrl = shortUrlService.createShortUrl(
-            PathUtils.buildDetailLink(
-                projectId,
-                artifactoryType.name,
-                fileInfo.fullPath
-            ), 24 * 3600 * 30
+            url = PathUtils.buildDetailLink(
+                projectId = projectId,
+                artifactoryType = artifactoryType.name,
+                path = fileInfo.fullPath
+            ),
+            ttl = 24 * 3600 * 30
         )
         return Url(shortUrl)
     }
@@ -174,7 +183,8 @@ open class BkRepoDownloadService @Autowired constructor(
         ttl: Int,
         downloadUsers: String
     ) {
-        logger.info("shareUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers")
+        logger.info("shareUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+            "argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers")
         val path = PathUtils.checkAndNormalizeAbsPath(argPath)
 
         when (artifactoryType) {
@@ -256,9 +266,9 @@ open class BkRepoDownloadService @Autowired constructor(
             }
         }
 
-        var accessUserId = when {
+        val accessUserId = when {
             !userId.isNullOrBlank() -> {
-                userId!!
+                userId
             }
             !crossProjectId.isNullOrBlank() -> {
                 client.get(ServicePipelineResource::class)
