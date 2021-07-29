@@ -1,6 +1,6 @@
 <template>
     <div style="text-align: left">
-        <form class="bk-form" action="http://localhost" target="previewHiddenIframe" ref="previewParamsForm" onsubmit="return false;">
+        <form class="bk-form" action="//localhost" target="previewHiddenIframe" ref="previewParamsForm" onsubmit="return false;">
             <form-field v-for="(param, index) in paramList"
                 :key="param.id" :required="param.required"
                 :is-error="errors.has('devops' + param.name)"
