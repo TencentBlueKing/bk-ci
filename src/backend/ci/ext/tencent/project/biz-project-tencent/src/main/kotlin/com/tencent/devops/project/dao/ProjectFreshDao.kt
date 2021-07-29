@@ -43,6 +43,7 @@ class ProjectFreshDao {
             return dslContext.selectFrom(this)
                 .where(ID.gt(startId))
                 .and(ENGLISH_NAME.like("git_%"))
+                .and(BG_ID.eq(0))
                 .limit(limit)
                 .fetch()
         }
