@@ -31,7 +31,7 @@ import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -101,7 +101,7 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
     private val wechatWorkService: WechatWorkService,
     @Autowired(required = false)
     private val measureService: MeasureService?,
-    private val bsAuthProjectApi: BSAuthProjectApi,
+    private val bsAuthProjectApi: AuthProjectApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val client: Client
 ) {

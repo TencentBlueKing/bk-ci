@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
@@ -87,7 +86,6 @@ class ProjectLocalService @Autowired constructor(
     private val projectDao: ProjectDao,
     private val objectMapper: ObjectMapper,
     private val redisOperation: RedisOperation,
-    private val bkAuthProjectApi: BSAuthProjectApi,
     private val authProjectApi: AuthProjectApi,
     private val bkAuthProperties: BkAuthProperties,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,

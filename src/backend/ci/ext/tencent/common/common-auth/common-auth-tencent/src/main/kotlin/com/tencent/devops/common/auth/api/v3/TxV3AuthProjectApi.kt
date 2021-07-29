@@ -80,8 +80,12 @@ class TxV3AuthProjectApi @Autowired constructor(
         userId: String,
         supplier: (() -> List<String>)?
     ): Map<String, String> {
-        // TODO:
-        return emptyMap()
+        val projectList = getUserProjects(serviceCode, userId, supplier)
+        val projectMap = mutableMapOf<String, String>()
+        projectList.map {
+            projectMap[it] = it
+        }
+        return projectMap
     }
 
     override fun isProjectUser(
