@@ -115,6 +115,7 @@ class YamlTriggerV2 @Autowired constructor(
                 commitCheckBlock = false,
                 version = ymlVersion
             )
+            return false
         }
 
         val yamlObjects = prepareCIBuildYaml(
