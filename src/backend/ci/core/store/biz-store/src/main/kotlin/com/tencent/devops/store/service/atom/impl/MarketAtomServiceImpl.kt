@@ -358,7 +358,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 sortType = MarketAtomSortTypeEnum.UPDATE_TIME,
                 desc = true,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                urlProtocolTrim = urlProtocolTrim
             )
         )
         labelInfoList.add(MarketMainItemLabel(HOTTEST, MessageCodeUtil.getCodeLanMessage(HOTTEST)))
@@ -376,7 +377,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
                 desc = true,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                urlProtocolTrim = urlProtocolTrim
             )
         )
 
@@ -404,7 +406,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
                         desc = true,
                         page = page,
-                        pageSize = pageSize
+                        pageSize = pageSize,
+                        urlProtocolTrim = urlProtocolTrim
                     )
                 )
             }
