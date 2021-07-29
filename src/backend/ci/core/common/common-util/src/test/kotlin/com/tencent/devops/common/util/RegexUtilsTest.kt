@@ -35,15 +35,28 @@ class RegexUtilsTest {
 
     @Test
     fun splitDomainContextPath() {
-        val noSubDomain = "http://donothavewww.com"
-        Assert.assertNull(RegexUtils.splitDomainContextPath(noSubDomain)) // no context path
+        var protocol = "http://"
+        val noSubDomain = "donothavewww123.com"
+        Assert.assertNull(RegexUtils.splitDomainContextPath(protocol + noSubDomain)) // no context path
 
         var contextPath = "/a/b/c.txt"
-        Assert.assertEquals(contextPath, RegexUtils.splitDomainContextPath(noSubDomain + contextPath)!!.second)
-
-        val httpsDomain = "https://www.tencent.com"
+        Assert.assertEquals(contextPath,
+            RegexUtils.splitDomainContextPath(protocol + noSubDomain + contextPath)!!.second)
+        protocol = "https://"
+        val httpsDomain = "www.tencent-inc.com"
         contextPath = "/"
-        Assert.assertEquals(httpsDomain, RegexUtils.splitDomainContextPath(httpsDomain + contextPath)!!.first)
-        Assert.assertEquals(contextPath, RegexUtils.splitDomainContextPath(httpsDomain + contextPath)!!.second)
+        Assert.assertEquals(httpsDomain,
+            RegexUtils.splitDomainContextPath(protocol + httpsDomain + contextPath)!!.first)
+        Assert.assertEquals(contextPath,
+            RegexUtils.splitDomainContextPath(protocol + httpsDomain + contextPath)!!.second)
+    }
+
+    @Test
+    fun trimProtocol() {
+        val contextPath = "/a/b/c.txt"
+        val noSubDomain = "donothavewww.com"
+        Assert.assertEquals("//$noSubDomain", RegexUtils.trimProtocol("http://$noSubDomain$contextPath"))
+        val httpsDomain = "www.tencent-inc123.com"
+        Assert.assertEquals("//$httpsDomain", RegexUtils.trimProtocol("https://$httpsDomain$contextPath"))
     }
 }

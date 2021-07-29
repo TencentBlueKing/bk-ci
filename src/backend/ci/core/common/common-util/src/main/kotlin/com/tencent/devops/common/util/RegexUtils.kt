@@ -27,21 +27,32 @@
 
 package com.tencent.devops.common.util
 
+@Suppress("MagicNumber")
 object RegexUtils {
 
-    private val httpContextPathRegex = Regex("(http[s]?://[-.a-z0-9A-Z]+)(/.*)")
+    private val httpContextPathRegex = Regex("(http[s]?:)(//)([-.a-z0-9A-Z]+)(/.*)")
 
     /**
-     * 解析 [url], 并且返回 协议和域名(http//xx.xx.xx or https//xx.xx.xx) 以及 ContextPath绝对路径(/ or /xx/yy...)
+     * 解析 [url], 并且返回 域名(xx.xx.xx or xx.xx.xx) 以及 ContextPath绝对路径(/ or /xx/yy...)
      * 不合法的 [url] 将会返回 null
-     * eg: url = https://xx.xx.xx/a/b/c.txt return https://xx.xx.xx and /a/b/c.txt
+     * eg: url = https://xx.xx.xx/a/b/c.txt return xx.xx.xx and /a/b/c.txt
      */
-    @Suppress("MagicNumber")
     fun splitDomainContextPath(url: String): Pair<String/*http domain*/, String/*context path*/>? {
         val groups = httpContextPathRegex.find(url)?.groups
-        if (groups != null && groups.size == 3) {
-            return groups[1]!!.value to groups[2]!!.value
+        if (groups != null && groups.size == 5) {
+            return groups[3]!!.value to groups[4]!!.value
         }
         return null
+    }
+
+    /**
+     * 解析[url] 将协议头去掉， 比如 https://xx.xx.xx 返回 //xx.xx.xx 表示遵守当前主站的协议
+     */
+    fun trimProtocol(url: String?): String? {
+        if (url.isNullOrBlank()) {
+            return url
+        }
+        val groups = httpContextPathRegex.find(url)?.groups ?: return url
+        return groups[2]!!.value + groups[3]!!.value
     }
 }
