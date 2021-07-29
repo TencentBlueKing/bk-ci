@@ -89,7 +89,7 @@ function _M:get_tag(ns_config)
             --- 将redis连接放回pool中
             red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         end
-        _M:set_header(tag)
+        self:set_header(tag)
     else
         tag = header_tag
     end
