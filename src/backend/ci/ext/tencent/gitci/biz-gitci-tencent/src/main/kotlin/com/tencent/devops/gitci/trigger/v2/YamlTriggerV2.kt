@@ -50,8 +50,8 @@ import com.tencent.devops.gitci.trigger.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.trigger.template.YamlTemplate
 import com.tencent.devops.gitci.trigger.template.YamlTemplateService
+import com.tencent.devops.gitci.trigger.template.pojo.NoReplaceTemplate
 import com.tencent.devops.gitci.trigger.template.pojo.TemplateGraph
-import com.tencent.devops.gitci.v2.service.TriggerBuildService
 import com.tencent.devops.gitci.v2.utils.V2WebHookMatcher
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
