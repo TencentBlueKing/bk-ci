@@ -28,7 +28,7 @@
 package com.tencent.devops.gitci.listener
 
 import com.tencent.devops.gitci.constant.MQ
-import com.tencent.devops.gitci.service.GitCIBuildService
+import com.tencent.devops.gitci.service.GitCITriggerService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
 import org.springframework.amqp.rabbit.annotation.Exchange
@@ -39,35 +39,32 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class GitCIRequestTriggerListener @Autowired
-constructor(private val gitCIBuildService: GitCIBuildService) {
-
+class GitCIRequestListener @Autowired constructor(
+    private val gitCITriggerService: GitCITriggerService
+) {
     @RabbitListener(
         bindings = [(QueueBinding(
-            key = [MQ.ROUTE_GITCI_REQUEST_TRIGGER_EVENT],
-            value = Queue(value = MQ.QUEUE_GITCI_REQUEST_TRIGGER_EVENT, durable = "true"),
+            key = [MQ.ROUTE_GITCI_REQUEST_EVENT],
+            value = Queue(value = MQ.QUEUE_GITCI_REQUEST_EVENT, durable = "true"),
             exchange = Exchange(
-                value = MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT,
+                value = MQ.EXCHANGE_GITCI_REQUEST_EVENT,
                 durable = "true",
                 delayed = "true",
                 type = ExchangeTypes.DIRECT
             )
         ))]
     )
-    fun listenGitCIRequestTriggerEvent(gitCIRequestTriggerEvent: GitCIRequestTriggerEvent) {
+    fun listenGitCIRequestEvent(gitCIRequestEvent: GitCIRequestEvent) {
         try {
-            gitCIBuildService.gitStartBuild(
-                pipeline = gitCIRequestTriggerEvent.pipeline,
-                event = gitCIRequestTriggerEvent.event,
-                yaml = gitCIRequestTriggerEvent.yaml,
-                gitBuildId = gitCIRequestTriggerEvent.gitBuildId
+            gitCITriggerService.externalCodeGitBuild(
+                event = gitCIRequestEvent.event
             )
         } catch (e: Throwable) {
-            logger.error("Fail to start the git ci build(${gitCIRequestTriggerEvent.event})", e)
+            logger.error("Fail to start the git ci build($gitCIRequestEvent)", e)
         }
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCIRequestTriggerListener::class.java)
+        private val logger = LoggerFactory.getLogger(GitCIRequestListener::class.java)
     }
 }

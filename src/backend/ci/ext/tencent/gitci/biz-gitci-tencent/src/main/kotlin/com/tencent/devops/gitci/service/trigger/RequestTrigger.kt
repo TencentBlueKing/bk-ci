@@ -36,14 +36,13 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
-import com.tencent.devops.gitci.listener.GitCIRequestDispatcher
-import com.tencent.devops.gitci.listener.GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.gitci.service.GitCIBuildService
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.utils.GitCIWebHookMatcher
 import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
@@ -65,7 +64,8 @@ class RequestTrigger @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val repositoryConfService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val gitCIBuildService: GitCIBuildService
 ) : RequestTriggerInterface<CIBuildYaml> {
 
     override fun triggerBuild(
@@ -112,16 +112,16 @@ class RequestTrigger @Autowired constructor(
                 sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
                 buildStatus = BuildStatus.RUNNING
             )
-            dispatchEvent(
-                GitCIRequestTriggerEvent(
+            try {
+                gitCIBuildService.gitStartBuild(
                     pipeline = gitProjectPipeline,
                     event = gitRequestEvent,
                     yaml = yamlObject,
-                    originYaml = originYaml,
-                    normalizedYaml = normalizedYaml,
                     gitBuildId = gitBuildId
                 )
-            )
+            } catch (e: Throwable) {
+                logger.error("Fail to start the git ci build($gitRequestEvent)", e)
+            }
             repositoryConfService.updateGitCISetting(gitRequestEvent.gitProjectId)
         } else {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
@@ -266,10 +266,6 @@ class RequestTrigger @Autowired constructor(
             }
         }
         return null
-    }
-
-    private fun dispatchEvent(event: GitCIRequestTriggerEvent) {
-        GitCIRequestDispatcher.dispatch(rabbitTemplate, event)
     }
 
     companion object {

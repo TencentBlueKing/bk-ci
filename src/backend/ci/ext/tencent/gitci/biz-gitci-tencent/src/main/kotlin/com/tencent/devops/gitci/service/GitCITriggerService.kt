@@ -54,8 +54,6 @@ import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.listener.GitCIMrConflictCheckDispatcher
 import com.tencent.devops.gitci.listener.GitCIMrConflictCheckEvent
-import com.tencent.devops.gitci.listener.GitCIRequestDispatcher
-import com.tencent.devops.gitci.listener.GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
@@ -72,11 +70,10 @@ import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
-import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
-import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
+import com.tencent.devops.gitci.v2.service.TriggerBuildService
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -113,7 +110,9 @@ class GitCITriggerService @Autowired constructor(
     private val requestTriggerFactory: RequestTriggerFactory,
     private val oauthService: OauthService,
     private val gitCIEventSaveService: GitCIEventSaveService,
-    private val scmService: ScmService
+    private val scmService: ScmService,
+    private val triggerBuildService: TriggerBuildService,
+    private val gitCIBuildService: GitCIBuildService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
@@ -201,15 +200,11 @@ class GitCITriggerService @Autowired constructor(
                 sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
                 buildStatus = BuildStatus.RUNNING
             )
-            dispatchEvent(
-                GitCIRequestTriggerEvent(
-                    pipeline = buildPipeline,
-                    event = gitRequestEvent,
-                    yaml = yamlObject,
-                    originYaml = originYaml,
-                    normalizedYaml = normalizedYaml,
-                    gitBuildId = gitBuildId
-                )
+            gitCIBuildService.gitStartBuild(
+                pipeline = buildPipeline,
+                event = gitRequestEvent,
+                yaml = yamlObject,
+                gitBuildId = gitBuildId
             )
             return true
         } else {
@@ -242,34 +237,31 @@ class GitCITriggerService @Autowired constructor(
                 buildStatus = BuildStatus.RUNNING,
                 version = "v2.0"
             )
-            V2GitCIRequestDispatcher.dispatch(
-                rabbitTemplate,
-                V2GitCIRequestTriggerEvent(
-                    pipeline = buildPipeline,
-                    event = gitRequestEvent,
-                    yaml = objects.normalYaml,
-                    parsedYaml = parsedYaml,
-                    originYaml = originYaml,
-                    normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
-                    gitBuildId = gitBuildId
-                )
+            triggerBuildService.gitStartBuild(
+                pipeline = buildPipeline,
+                event = gitRequestEvent,
+                yaml = objects.normalYaml,
+                parsedYaml = parsedYaml,
+                originYaml = originYaml,
+                normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
+                gitBuildId = gitBuildId
             )
             return true
         }
     }
 
-    fun externalCodeGitBuild(token: String, e: String): Boolean {
-        logger.info("Trigger code git build($e)")
+    fun externalCodeGitBuild(event: String): Boolean {
+        logger.info("Trigger code git build($event)")
 
-        val event = try {
-            objectMapper.readValue<GitEvent>(e)
+        val eventObject = try {
+            objectMapper.readValue<GitEvent>(event)
         } catch (e: Exception) {
             logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
             return false
         }
 
-        val gitRequestEvent = saveGitRequestEvent(event, e) ?: return true
-        return checkRequest(gitRequestEvent, event)
+        val gitRequestEvent = saveGitRequestEvent(eventObject, event) ?: return true
+        return checkRequest(gitRequestEvent, eventObject)
     }
 
     private fun checkRequest(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
@@ -979,10 +971,6 @@ class GitCITriggerService @Autowired constructor(
             }
         }
         return null
-    }
-
-    private fun dispatchEvent(event: GitCIRequestTriggerEvent) {
-        GitCIRequestDispatcher.dispatch(rabbitTemplate, event)
     }
 
     private fun dispatchMrConflictCheck(event: GitCIMrConflictCheckEvent) {
