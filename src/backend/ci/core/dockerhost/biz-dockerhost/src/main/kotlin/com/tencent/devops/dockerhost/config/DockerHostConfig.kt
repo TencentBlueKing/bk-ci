@@ -190,6 +190,9 @@ class DockerHostConfig {
     @Value("\${dockerhost.dispatch.urlPrefix:ms/dispatch-docker}")
     var dispatchUrlPrefix: String? = "ms/dispatch-docker"
 
+    @Value("\${dockerhost.gatewayHeaderProject:#{null}}")
+    var gatewayHeaderProject: String? = null
+
     @Value("\${dockerhost.localIp:#{null}}")
     var dockerhostLocalIp: String? = null
 

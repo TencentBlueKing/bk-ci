@@ -184,7 +184,7 @@ setup_codecc_assembly (){
 setup_codecc_schedule (){
   local proj=$1
   setup_codecc__ms_common "$proj" || return 11
-  check_empty_var BK_CODECC_FILE_DATA_PATH || return 15
+  check_empty_var BK_CODECC_FILE_DATA_PATH MS_USER || return 15
   # 判断节点数量.
   if [ "${BK_CODECC_SCHEDULE_IP_COMMA//,/}" != "${BK_CODECC_SCHEDULE_IP_COMMA}" ]; then
     echo >&2 "multiple codecc-schedule instances configured. dir should be a shared filesystem: $script_download_dir."
@@ -193,7 +193,9 @@ setup_codecc_schedule (){
   # 刷新script_download数据.
   local script_download_dir="$BK_CODECC_FILE_DATA_PATH/download/script_download/"
   mkdir -p "$script_download_dir"
+  chown "$MS_USER:$MS_USER" "$BK_CODECC_FILE_DATA_PATH"
   rsync -rav "$BK_CODECC_SRC_DIR/support-files/script_download/" "$script_download_dir"
+  chown "$MS_USER:$MS_USER" "$BK_CODECC_FILE_DATA_PATH/download" -R
 }
 
 # CodeCC网关即为CI网关, 这里创建符号链接指向ci网关.
