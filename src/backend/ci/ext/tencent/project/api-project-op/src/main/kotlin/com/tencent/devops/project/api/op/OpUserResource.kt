@@ -38,6 +38,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.PathParam
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_PROJECT_USER"], description = "OP_用户")
@@ -60,8 +61,23 @@ interface OpUserResource {
     @Path("/refresh/all")
     fun refreshAllUserGroup(): Result<Boolean>
 
+    @ApiOperation("重置所有用户tof组织信息")
+    @GET
+    @Path("/ext/gitci/reset")
+    fun resetProjectInfo(): Result<Int>
+
     @ApiOperation("刷新工蜂CI项目的组织架构")
     @GET
     @Path("/ext/gitci/fixProjectInfo")
-    fun fixGitCIProjectInfo(): Result<Int>
+    fun fixGitCIProjectInfo(
+        @ApiParam("起始ID", required = false)
+        @QueryParam("start")
+        start: Long?,
+        @ApiParam("单次数量", required = false)
+        @QueryParam("limit")
+        limit: Int?,
+        @ApiParam("间隔时间", required = false)
+        @QueryParam("sleep")
+        sleep: Long?
+    ): Result<Int>
 }

@@ -39,7 +39,11 @@ BK_CODECC_MONGODB_PORT=${BK_CODECC_MONGODB_ADDR#*:}
 for db in db_task db_defect db_schedule db_op db_quartz; do
   # DELETE DB! use with caution.
   # mongo --host ${BK_CODECC_MONGODB_HOST} --port ${BK_CODECC_MONGODB_PORT} -u ${BK_MONGODB_ADMIN_USER} -p ${BK_MONGODB_ADMIN_PASSWORD} --authenticationDatabase admin "$db" <<< "db.dropDatabase()"
-  pcmd -H $BK_MONGODB_IP0 "${CTRL_DIR}/bin/add_mongodb_user.sh -d '${db}' -i mongodb://$BK_MONGODB_ADMIN_USER:$(urlencode $BK_MONGODB_ADMIN_PASSWORD)@\$LAN_IP:27017/admin -u '$BK_CODECC_MONGODB_USER' -p '$BK_CODECC_MONGODB_PASSWORD'; true"
+  # 尝试创建用户并强制修改密码.
+  pcmd -H $BK_MONGODB_IP0 "${CTRL_DIR}/bin/add_mongodb_user.sh -d '${db}' -i mongodb://$BK_MONGODB_ADMIN_USER:$(urlencode $BK_MONGODB_ADMIN_PASSWORD)@\$LAN_IP:27017/admin -u '$BK_CODECC_MONGODB_USER' -p '$BK_CODECC_MONGODB_PASSWORD'; mongo mongodb://$BK_MONGODB_ADMIN_USER:$(urlencode $BK_MONGODB_ADMIN_PASSWORD)@\$LAN_IP:27017/admin <<EOF
+use $db;
+db.changeUserPassword('$BK_CODECC_MONGODB_USER', '$BK_CODECC_MONGODB_PASSWORD');
+EOF"
 done
 echo "import mongodb json:"
 patt_mongo_json_filename="^[0-9]{4,4}_codecc_(db_[a-z0-9]+)_(t_[a-z0-9_]+)_mongo.json$"

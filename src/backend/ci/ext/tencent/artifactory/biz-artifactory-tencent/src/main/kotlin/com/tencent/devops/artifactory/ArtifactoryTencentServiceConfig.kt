@@ -49,6 +49,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 
+@Suppress("ALL")
 @Configuration
 class ArtifactoryTencentServiceConfig {
 
@@ -66,12 +67,12 @@ class ArtifactoryTencentServiceConfig {
         commonConfig: CommonConfig,
         shortUrlService: ShortUrlService
     ) = GitCIBkRepoDownloadService(
-        pipelineService,
-        bkRepoService,
-        client,
-        bkRepoClient,
-        commonConfig,
-        shortUrlService
+        pipelineService = pipelineService,
+        bkRepoService = bkRepoService,
+        client = client,
+        bkRepoClient = bkRepoClient,
+        commonConfig = commonConfig,
+        shortUrlService = shortUrlService
     )
 
     @Bean
@@ -85,12 +86,12 @@ class ArtifactoryTencentServiceConfig {
         commonConfig: CommonConfig,
         shortUrlService: ShortUrlService
     ) = BkRepoDownloadService(
-        pipelineService,
-        bkRepoService,
-        client,
-        bkRepoClient,
-        commonConfig,
-        shortUrlService
+        pipelineService = pipelineService,
+        bkRepoService = bkRepoService,
+        client = client,
+        bkRepoClient = bkRepoClient,
+        commonConfig = commonConfig,
+        shortUrlService = shortUrlService
     )
 
     @Bean
