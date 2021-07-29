@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.model.project.tables.records.TUserRecord
@@ -227,7 +228,7 @@ class ProjectUserRefreshService @Autowired constructor(
                             )
                         )
                     } else {
-                        logger.info("[${it.creator}] fixGitCIProjectInfo getDevopsUserInfo: $devopsUser")
+                        logger.info("[${it.creator}] fixGitCIProjectInfo getDevopsUserInfo: ${devopsUser.toJsonString()}")
                         count += projectFreshDao.fixProjectInfo(
                             dslContext = dslContext,
                             id = it.id,
