@@ -61,7 +61,7 @@ interface OpUserResource {
     @Path("/refresh/all")
     fun refreshAllUserGroup(): Result<Boolean>
 
-    @ApiOperation("同步所有用户tof组织信息")
+    @ApiOperation("重置所有用户tof组织信息")
     @GET
     @Path("/ext/gitci/reset")
     fun resetProjectInfo(): Result<Int>

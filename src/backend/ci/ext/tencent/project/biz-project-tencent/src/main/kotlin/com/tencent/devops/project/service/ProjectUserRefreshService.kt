@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.model.project.tables.records.TUserRecord
