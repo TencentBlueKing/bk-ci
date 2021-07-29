@@ -68,5 +68,15 @@ interface OpUserResource {
     @ApiOperation("刷新工蜂CI项目的组织架构")
     @GET
     @Path("/ext/gitci/fixProjectInfo")
-    fun fixGitCIProjectInfo(): Result<Int>
+    fun fixGitCIProjectInfo(
+        @ApiParam("起始ID", required = false)
+        @QueryParam("start")
+        start: Long?,
+        @ApiParam("单次数量", required = false)
+        @QueryParam("limit")
+        limit: Int?,
+        @ApiParam("间隔时间", required = false)
+        @QueryParam("sleep")
+        sleep: Int?
+    ): Result<Int>
 }

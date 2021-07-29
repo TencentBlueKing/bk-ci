@@ -183,10 +183,9 @@ class ProjectUserRefreshService @Autowired constructor(
         return projectFreshDao.resetProjectDeptInfo(dslContext)
     }
 
-    fun fixGitCIProjectInfo(): Int {
-        val limitCount = 5
+    fun fixGitCIProjectInfo(start: Long, limitCount: Int, sleepTime: Int): Int {
+        var startId = start
         var count = 0
-        var startId = 0L
         var currProjects = projectFreshDao.getProjectAfterId(dslContext, startId, limitCount)
         while (currProjects.isNotEmpty()) {
             currProjects.forEach {
