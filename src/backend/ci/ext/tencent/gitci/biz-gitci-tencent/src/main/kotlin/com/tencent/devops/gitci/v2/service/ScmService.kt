@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.v2.service
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
@@ -42,6 +43,7 @@ import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -248,7 +250,11 @@ class ScmService @Autowired constructor(
         userId: String,
         page: Int?,
         pageSize: Int?,
-        search: String?
+        search: String?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
     ): List<GitCodeProjectInfo>? {
         logger.info("getProjectList: [$accessToken|$userId|$page|$pageSize|$search]")
         return client.getScm(ServiceGitCiResource::class).getProjectList(
@@ -256,7 +262,8 @@ class ScmService @Autowired constructor(
             userId = userId,
             page = page,
             pageSize = pageSize,
-            search = search
+            search = search,
+            orderBy = orderBy, sort = sort, owned = owned, minAccessLevel = minAccessLevel
         ).data
     }
 

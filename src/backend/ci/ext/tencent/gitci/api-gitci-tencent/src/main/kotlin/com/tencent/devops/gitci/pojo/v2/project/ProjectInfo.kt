@@ -25,32 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.gitci.pojo.v2.project
 
-import com.google.gson.annotations.SerializedName
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-enum class GitCodeFileEncoding {
-    @SerializedName("text")
-    TEXT,
-    @SerializedName("base64")
-    BASE64
-}
+@ApiModel("工蜂和GTICI项目详细信息")
+data class ProjectCIInfo(
+    @ApiModelProperty("工蜂项目ID")
+    val id: Long,
+    @ApiModelProperty("蓝盾项目id")
+    val projectCode: String?,
+    @ApiModelProperty("是否为工蜂公共项目")
+    val public: Boolean?,
+    @ApiModelProperty("工蜂项目名称")
+    val name: String?,
+    @ApiModelProperty("工蜂项目名称带有路径")
+    val nameWithNamespace: String?,
+    @ApiModelProperty("https-git链接")
+    val httpsUrlToRepo: String?,
+    @ApiModelProperty("项目网页链接")
+    val webUrl: String?,
+    @ApiModelProperty("项目头像")
+    val avatarUrl: String?,
+    @ApiModelProperty("项目描述")
+    val description: String?,
+    @ApiModelProperty("CI相关信息")
+    val ciInfo: CIInfo
+)
 
-enum class GitCodeBranchesOrder(val value: String) {
-    NAME("name"),
-    UPDATE("update")
-}
-
-enum class GitCodeBranchesSort(val value: String) {
-    ASC("asc"),
-    DESC("desc")
-}
-
-enum class GitCodeProjectsOrder(val value: String) {
-    ID("id"),
-    NAME("name"),
-    PATH("path"),
-    CREATED("created_at"),
-    UPDATE("updated_at"),
-    ACTIVITY("activity")
-}
+@ApiModel("CI相关信息")
+data class CIInfo(
+    @ApiModelProperty("是否开启GITCI")
+    val enableCI: Boolean,
+    @ApiModelProperty("最后一次构建信息")
+    val lastBuildMessage: String?,
+    @ApiModelProperty("最后一次构建状态")
+    val lastBuildStatus: BuildStatus?
+)

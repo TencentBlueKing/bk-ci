@@ -25,32 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.gitci.resources.user
 
-import com.google.gson.annotations.SerializedName
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.gitci.api.user.UserGitCIProjectResource
+import com.tencent.devops.gitci.pojo.enums.GitCIProjectType
+import org.springframework.beans.factory.annotation.Autowired
 
-enum class GitCodeFileEncoding {
-    @SerializedName("text")
-    TEXT,
-    @SerializedName("base64")
-    BASE64
-}
-
-enum class GitCodeBranchesOrder(val value: String) {
-    NAME("name"),
-    UPDATE("update")
-}
-
-enum class GitCodeBranchesSort(val value: String) {
-    ASC("asc"),
-    DESC("desc")
-}
-
-enum class GitCodeProjectsOrder(val value: String) {
-    ID("id"),
-    NAME("name"),
-    PATH("path"),
-    CREATED("created_at"),
-    UPDATE("updated_at"),
-    ACTIVITY("activity")
+@RestResource
+class UserGitCIProjectResourceImpl @Autowired constructor() : UserGitCIProjectResource {
+    override fun getProjects(
+        userId: String,
+        type: GitCIProjectType?,
+        search: String?,
+        page: Int?,
+        pageSize: Int?
+    ) {
+        TODO("Not yet implemented")
+    }
 }
