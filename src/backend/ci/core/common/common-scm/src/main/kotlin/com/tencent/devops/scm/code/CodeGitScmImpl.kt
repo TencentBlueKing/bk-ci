@@ -74,22 +74,20 @@ class CodeGitScmImpl constructor(
         )
     }
 
-    override fun getBranches(search: String?, full: Boolean) =
+    override fun getBranches(search: String?) =
         gitApi.listBranches(
             host = apiUrl,
             token = token,
             projectName = projectName,
-            search = search,
-            full = full
+            search = search
         )
 
-    override fun getTags(search: String?, full: Boolean) =
+    override fun getTags(search: String?) =
         gitApi.listTags(
             host = apiUrl,
             token = token,
             projectName = projectName,
-            search = search,
-            full = full
+            search = search
         )
 
     override fun checkTokenAndPrivateKey() {
@@ -135,7 +133,7 @@ class CodeGitScmImpl constructor(
 
         // Check if token legal
         try {
-            getBranches(full = false)
+            getBranches()
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(

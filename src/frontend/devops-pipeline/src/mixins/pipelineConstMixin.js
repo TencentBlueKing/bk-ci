@@ -44,9 +44,9 @@ const pipelineConstMixin = {
                     label: this.$t('history.tableMap.endTime'),
                     width: 120
                 },
-                totalTime: {
+                executeTime: {
                     index: 7,
-                    prop: 'totalTime',
+                    prop: 'executeTime',
                     label: this.$t('history.tableMap.totalTime')
                 },
                 artifactList: {

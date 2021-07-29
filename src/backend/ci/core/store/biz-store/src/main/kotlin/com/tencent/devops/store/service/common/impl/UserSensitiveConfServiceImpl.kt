@@ -37,6 +37,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.SensitiveConfDao
 import com.tencent.devops.store.pojo.common.SensitiveConfReq
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
+import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.UserSensitiveConfService
 import org.jooq.DSLContext
@@ -98,9 +99,13 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                 data = false
             )
         }
-        // 对字段值进行加密
-        val fieldValueEncrypted = AESUtil.encrypt(aesKey, fieldValue)
-        logger.info("fieldValue: $fieldValueEncrypted")
+        val fieldType = sensitiveConfReq.fieldType
+        val finalFieldValue = if (fieldType == FieldTypeEnum.BACKEND.name) {
+            // 字段如果只是给后端使用需要对字段值进行加密
+            AESUtil.encrypt(aesKey, fieldValue)
+        } else {
+            fieldValue
+        }
         sensitiveConfDao.create(
             dslContext = dslContext,
             userId = userId,
@@ -108,7 +113,8 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             storeCode = storeCode,
             storeType = storeType.type.toByte(),
             fieldName = fieldName,
-            fieldValue = fieldValueEncrypted,
+            fieldType = fieldType,
+            fieldValue = finalFieldValue,
             fieldDesc = sensitiveConfReq.fieldDesc
         )
         return Result(true)
@@ -125,25 +131,22 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         sensitiveConfReq: SensitiveConfReq
     ): Result<Boolean> {
         logger.info("update: $storeType | $storeCode | $id | $sensitiveConfReq")
+        val sensitiveConfRecord = sensitiveConfDao.getById(dslContext, id)
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(id),
+                data = false
+            )
         val fieldName = sensitiveConfReq.fieldName
-        if (fieldName.isEmpty()) {
-            return MessageCodeUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_NULL,
-                params = arrayOf(fieldName),
-                data = false
-            )
-        }
         val fieldValue = sensitiveConfReq.fieldValue
-        if (fieldValue.isEmpty()) {
-            return MessageCodeUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_NULL,
-                params = arrayOf(fieldValue),
-                data = false
-            )
-        }
         // 判断同名
-        val isNameExist = sensitiveConfDao.check(dslContext, storeCode, storeType.type.toByte(), fieldName, id)
-        logger.info("fieldName: $fieldName, isNameExist: $isNameExist")
+        val isNameExist = sensitiveConfDao.check(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            fieldName = fieldName,
+            id = id
+        )
         if (isNameExist) {
             return MessageCodeUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
@@ -151,19 +154,29 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                 data = false
             )
         }
-        // 对字段值进行加密
-        val fieldValueEncrypted = if (fieldValue == aesMock) {
-            null
+        val fieldType = sensitiveConfReq.fieldType
+        val finalFieldValue = if (fieldValue == aesMock) {
+            val dbFieldType = sensitiveConfRecord.fieldType
+            if (dbFieldType == FieldTypeEnum.BACKEND.name && dbFieldType != fieldType) {
+                // 如果字段类型由BACKEND改为其它，需把数据库里字段内容解密存储
+                AESUtil.decrypt(aesKey, sensitiveConfRecord.fieldValue)
+            } else {
+                null
+            }
         } else {
-            AESUtil.encrypt(aesKey, fieldValue)
+            if (fieldType == FieldTypeEnum.BACKEND.name) {
+                AESUtil.encrypt(aesKey, fieldValue)
+            } else {
+                fieldValue
+            }
         }
-        logger.info("fieldValue: $fieldValueEncrypted")
         sensitiveConfDao.update(
             dslContext = dslContext,
             userId = userId,
             id = id,
             fieldName = fieldName,
-            fieldValue = fieldValueEncrypted,
+            fieldType = fieldType,
+            fieldValue = finalFieldValue,
             fieldDesc = sensitiveConfReq.fieldDesc
         )
         return Result(true)
@@ -193,12 +206,13 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         id: String
     ): Result<SensitiveConfResp?> {
         val record = sensitiveConfDao.getById(dslContext, id)
-        logger.info("the record is :$record")
         return Result(if (null != record) {
+            val fieldType = record.fieldType
             SensitiveConfResp(
                 fieldId = record.id,
                 fieldName = record.fieldName,
-                fieldValue = aesMock,
+                fieldType = fieldType,
+                fieldValue = if (fieldType == FieldTypeEnum.BACKEND.name) aesMock else record.fieldValue,
                 fieldDesc = record.fieldDesc,
                 creator = record.creator,
                 modifier = record.modifier,
@@ -217,16 +231,24 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         userId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
-        isDecrypt: Boolean
+        isDecrypt: Boolean,
+        types: String?
     ): Result<List<SensitiveConfResp>?> {
-        val records = sensitiveConfDao.list(dslContext, storeType.type.toByte(), storeCode)
+        val filedTypeList = if (!types.isNullOrBlank()) types.split(",") else null
+        val records = sensitiveConfDao.list(dslContext, storeType.type.toByte(), storeCode, filedTypeList)
         val sensitiveConfRespList = mutableListOf<SensitiveConfResp>()
         records?.forEach {
-            val fieldValue = if (isDecrypt) AESUtil.decrypt(aesKey, it.fieldValue) else aesMock
+            val fieldType = it.fieldType
+            val fieldValue = if (fieldType == FieldTypeEnum.BACKEND.name) {
+                if (isDecrypt) AESUtil.decrypt(aesKey, it.fieldValue) else aesMock
+            } else {
+                it.fieldValue
+            }
             sensitiveConfRespList.add(
                 SensitiveConfResp(
                     fieldId = it.id,
                     fieldName = it.fieldName,
+                    fieldType = fieldType,
                     fieldValue = fieldValue,
                     fieldDesc = it.fieldDesc,
                     creator = it.creator,

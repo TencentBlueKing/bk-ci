@@ -39,6 +39,7 @@ import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -73,13 +74,13 @@ class GitCiService {
         search: String?
     ): List<GitMember> {
         val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/members" +
-                "?access_token=$token" +
-                if (search != null) {
-                    "&query=$search"
-                } else {
-                    ""
-                } +
-                "&page=$page" + "&per_page=$pageSize"
+            "?access_token=$token" +
+            if (search != null) {
+                "&query=$search"
+            } else {
+                ""
+            } +
+            "&page=$page" + "&per_page=$pageSize"
         logger.info("request url: $url")
         val request = Request.Builder()
             .url(url)
@@ -102,22 +103,22 @@ class GitCiService {
         sort: GitCodeBranchesSort?
     ): List<String> {
         val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "utf-8")}" +
-                "/repository/branches?access_token=$token&page=$page&per_page=$pageSize" +
-                if (search != null) {
-                    "&search=$search"
-                } else {
-                    ""
-                } +
-                if (orderBy != null) {
-                    "&order_by=${orderBy.value}"
-                } else {
-                    ""
-                } +
-                if (sort != null) {
-                    "&sort=${sort.value}"
-                } else {
-                    ""
-                }
+            "/repository/branches?access_token=$token&page=$page&per_page=$pageSize" +
+            if (search != null) {
+                "&search=$search"
+            } else {
+                ""
+            } +
+            if (orderBy != null) {
+                "&order_by=${orderBy.value}"
+            } else {
+                ""
+            } +
+            if (sort != null) {
+                "&sort=${sort.value}"
+            } else {
+                ""
+            }
         val res = mutableListOf<String>()
         val request = Request.Builder()
             .url(url)
@@ -151,12 +152,12 @@ class GitCiService {
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/blobs/" +
-                    "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
-                    if (useAccessToken) {
-                        "&access_token=$token"
-                    } else {
-                        "&private_token=$token"
-                    }
+                "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
+                if (useAccessToken) {
+                    "&access_token=$token"
+                } else {
+                    "&private_token=$token"
+                }
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -225,7 +226,7 @@ class GitCiService {
     fun getMergeRequestChangeInfo(gitProjectId: Long, token: String?, mrId: Long): Result<GitMrChangeInfo?> {
         logger.info("[gitProjectId=$gitProjectId]|getGitCodeProjectInfo")
         val url = "$gitCIUrl/api/v3/projects/$gitProjectId/merge_request/$mrId/changes?" +
-                "access_token=$token"
+            "access_token=$token"
         val request = Request.Builder()
             .url(url)
             .get()
@@ -235,6 +236,107 @@ class GitCiService {
             logger.info("[url=$url]|getMergeRequestChangeInfo with response=$response")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             return Result(JsonUtil.to(response, GitMrChangeInfo::class.java))
+        }
+    }
+
+    fun getProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?
+    ): List<GitCodeProjectInfo> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        val url = "$gitCIUrl/api/v3/projects?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull" +
+            if (search != null) {
+                "&search=$search"
+            } else {
+                ""
+            }
+        val res = mutableListOf<GitCodeProjectInfo>()
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val data = response.body()?.string() ?: return@use
+            val repoList = JsonParser().parse(data).asJsonArray
+            if (!repoList.isJsonNull) {
+                return JsonUtil.to(data, object : TypeReference<List<GitCodeProjectInfo>>() {})
+            }
+        }
+        return res
+    }
+
+    fun getGitCIAllMembers(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        query: String?
+    ): List<GitMember> {
+        val newPage = if (page == 0) 1 else page
+        val newPageSize = if (pageSize > 1000) 1000 else pageSize
+        val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/members/all" +
+            "?access_token=$token" +
+            if (query != null) {
+                "&query=$query"
+            } else {
+                ""
+            } +
+            "&page=$newPage" + "&per_page=$newPageSize"
+        logger.info("getGitCIAllMembers request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            if (!it.isSuccessful) throw RuntimeException("fail to getGitCIAllMembers with: $url($data)")
+            return JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
+        }
+    }
+
+    fun getFileInfo(
+        gitProjectId: String,
+        token: String?,
+        ref: String?,
+        filePath: String?,
+        useAccessToken: Boolean
+    ): Result<GitCodeFileInfo> {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val encodeId = URLEncoder.encode(gitProjectId, "utf-8")
+            val url = "$gitCIUrl/api/v3/projects/$encodeId/repository/files" +
+                if (useAccessToken) {
+                    "?access_token=$token"
+                } else {
+                    "?private_token=$token"
+                } +
+                if (ref != null) {
+                    "&ref=${URLEncoder.encode(ref, "UTF-8")}"
+                } else {
+                    ""
+                } +
+                if (filePath != null) {
+                    "&file_path=${URLEncoder.encode(filePath, "UTF-8")}"
+                } else {
+                    ""
+                }
+            logger.info("getFileInfo request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val response = it.body()!!.string()
+                if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                return Result(JsonUtil.to(response, GitCodeFileInfo::class.java))
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
         }
     }
 }

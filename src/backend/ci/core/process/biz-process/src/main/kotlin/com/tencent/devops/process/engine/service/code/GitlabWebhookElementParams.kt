@@ -46,6 +46,11 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
                 variables = variables
             )
         )
+        params.includeUsers = if (element.includeUsers == null || element.includeUsers!!.isEmpty()) {
+            ""
+        } else {
+            EnvUtils.parseEnv(element.includeUsers!!.joinToString(","), variables)
+        }
         params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
             ""
         } else {
@@ -58,7 +63,6 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
         params.codeType = CodeType.GITLAB
         params.eventType = element.eventType
         params.block = element.block ?: false
-        params.eventType = element.eventType
         params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
         params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
         params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
@@ -66,6 +70,8 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
         params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
         params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
         params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
+        params.includeCommitMsg = EnvUtils.parseEnv(element.includeCommitMsg ?: "", variables)
+        params.excludeCommitMsg = EnvUtils.parseEnv(element.excludeCommitMsg ?: "", variables)
         return params
     }
 }

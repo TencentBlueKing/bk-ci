@@ -38,6 +38,7 @@ import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHand
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
+import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND
@@ -124,13 +125,19 @@ class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
                 eventPaths.addAll(commit.removed ?: listOf())
                 eventPaths.addAll(commit.modified ?: listOf())
             }
+            val commitMessageFilter = CommitMessageFilter(
+                includeCommitMsg,
+                excludeCommitMsg,
+                commits.first().message,
+                pipelineId
+            )
             val pathPrefixFilter = PathPrefixFilter(
                 pipelineId = pipelineId,
                 triggerOnPath = eventPaths.toList(),
                 includedPaths = convert(includePaths),
                 excludedPaths = convert(excludePaths)
             )
-            return listOf(skipCiFilter, pathPrefixFilter)
+            return listOf(skipCiFilter, pathPrefixFilter, commitMessageFilter)
         }
     }
 
