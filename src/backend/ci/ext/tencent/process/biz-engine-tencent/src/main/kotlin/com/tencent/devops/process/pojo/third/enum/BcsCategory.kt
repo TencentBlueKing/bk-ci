@@ -45,7 +45,7 @@ enum class BcsCategory(private val category: String) {
     companion object {
         fun parse(value: String?): BcsCategory {
             values().forEach { category ->
-                if (category.getValue() .equals(value, false)) {
+                if (category.getValue().equals(value, false)) {
                     return category
                 }
             }

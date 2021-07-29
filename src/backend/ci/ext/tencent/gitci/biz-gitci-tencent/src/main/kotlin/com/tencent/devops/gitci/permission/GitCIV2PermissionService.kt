@@ -29,7 +29,6 @@ package com.tencent.devops.gitci.permission
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -73,37 +72,20 @@ class GitCIV2PermissionService @Autowired constructor(
         checkPermissionAndOauth(userId, projectId, permission)
     }
 
-    fun checkEditPermissionAndIgnoreOauth(userId: String, projectId: String): Boolean {
+    fun checkWebPermission(userId: String, projectId: String): Boolean {
         logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId ")
 
-        val result = try {
-            client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-                userId = userId,
-                token = tokenCheckService.getSystemToken(null) ?: "",
-                action = AuthPermission.EDIT.value,
-                projectCode = projectId,
-                resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
-            ).data ?: false
-        } catch (e: RemoteServiceException) {
-            if (e.httpStatus == 418) {
-                return true
-            }
-
-            throw CustomException(
-                Response.Status.FORBIDDEN,
-                e.errorMessage
-            )
-        }
-
-        // 说明用户没有工蜂权限
+        val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            userId = userId,
+            token = tokenCheckService.getSystemToken(null) ?: "",
+            action = WEB_CHECK,
+            projectCode = projectId,
+            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
+        ).data ?: false
         if (!result) {
-            throw CustomException(
-                Response.Status.FORBIDDEN,
-                "用户不具备当前工蜂项目下开发者或更高权限"
-            )
-        } else {
-            return result
+            logger.warn("$projectId $userId checkWebPermission fail")
         }
+        return result
     }
 
     fun checkGitCIAndOAuthAndEnable(
@@ -145,5 +127,6 @@ class GitCIV2PermissionService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIV2PermissionService::class.java)
+        const val WEB_CHECK = "webcheck"
     }
 }

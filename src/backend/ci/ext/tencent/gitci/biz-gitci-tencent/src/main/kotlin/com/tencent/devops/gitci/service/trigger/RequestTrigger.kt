@@ -95,7 +95,7 @@ class RequestTrigger @Autowired constructor(
         gitProjectPipeline.displayName =
             if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
 
-        if (isMatch(event, yamlObject).first) {
+        if (isMatch(event, gitRequestEvent, yamlObject).first) {
             logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                 "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline")
             val gitBuildId = gitRequestEventBuildDao.save(
@@ -145,7 +145,11 @@ class RequestTrigger @Autowired constructor(
         return true
     }
 
-    override fun isMatch(event: GitEvent, ymlObject: CIBuildYaml): Pair<Boolean, Boolean> {
+    override fun isMatch(
+        event: GitEvent,
+        gitRequestEvent: GitRequestEvent,
+        ymlObject: CIBuildYaml
+    ): Pair<Boolean, Boolean> {
         val matcher = GitCIWebHookMatcher(event)
         return Pair(matcher.isMatch(ymlObject.trigger!!, ymlObject.mr!!), false)
     }

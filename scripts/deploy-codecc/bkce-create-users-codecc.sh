@@ -41,7 +41,7 @@ for db in db_task db_defect db_schedule db_op db_quartz; do
 done
 echo "import mongodb json:"
 patt_mongo_json_filename="^[0-9]{4,4}_codecc_(db_[a-z0-9]+)_(t_[a-z0-9_]+)_mongo.json$"
-for mongo_json in "$BK_CODECC_SRC_DIR"/support-files/nosql/*/*.json; do
+for mongo_json in "$BK_CODECC_SRC_DIR"/support-files/nosql/*.json; do
   read mongo_json_db mongo_json_coll < <(
     sed -nr "s/$patt_mongo_json_filename/\1 \2/p" <<< "${mongo_json##*/}"
   ) || true

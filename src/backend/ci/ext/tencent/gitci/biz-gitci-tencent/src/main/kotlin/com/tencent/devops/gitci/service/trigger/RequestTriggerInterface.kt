@@ -45,7 +45,11 @@ interface RequestTriggerInterface<T> {
         filePath: String
     ): Boolean
 
-    fun isMatch(event: GitEvent, ymlObject: T): Pair</*isMatch*/Boolean, /*onlySchedule*/Boolean>
+    fun isMatch(
+        event: GitEvent,
+        gitRequestEvent: GitRequestEvent,
+        ymlObject: T
+    ): Pair</*isMatch*/Boolean, /*onlySchedule*/Boolean>
 
     fun prepareCIBuildYaml(
         gitToken: GitToken,
