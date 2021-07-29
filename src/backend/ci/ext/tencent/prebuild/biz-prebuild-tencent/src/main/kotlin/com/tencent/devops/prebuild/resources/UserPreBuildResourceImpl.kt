@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
+import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
@@ -46,6 +47,7 @@ import com.tencent.devops.prebuild.pojo.HistoryResponse
 import com.tencent.devops.prebuild.pojo.PrePluginVersion
 import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.prebuild.service.PreBuildService
+import com.tencent.devops.prebuild.v2.service.PreBuildV2Service
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import org.slf4j.LoggerFactory
@@ -53,7 +55,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPreBuildResourceImpl @Autowired constructor(
-    private val preBuildService: PreBuildService
+    private val preBuildService: PreBuildService,
+    private val preBuildV2Service: PreBuildV2Service
 ) : UserPreBuildResource {
     override fun getUserProject(userId: String, accessToken: String): Result<UserProject> {
         return Result(preBuildService.getOrCreateUserProject(userId, accessToken))
@@ -158,20 +161,34 @@ class UserPreBuildResourceImpl @Autowired constructor(
 
     override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
         try {
-            val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
-            logger.debug("yaml str : $yamlStr")
+            val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
+            when {
+                ymlVersion == null -> {
+                    return Result(1, "Invalid yaml")
+                }
 
-            val (validate, message) = preBuildService.validateCIBuildYaml(yamlStr)
-            if (!validate) {
-                logger.error("Validate yaml failed, message: $message")
-                return Result(1, "Invalid yaml: $message", message)
+                ymlVersion.version == "v2.0" -> {
+                    val (validate, message) = preBuildV2Service.checkYaml(yaml.yaml)
+                    if (!validate) {
+                        return Result(1, "Invalid yaml: $message", message)
+                    }
+                }
+
+                else -> {
+                    val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
+                    val (validate, message) = preBuildService.validateCIBuildYaml(yamlStr)
+                    if (!validate) {
+                        logger.error("Validate yaml failed, message: $message")
+                        return Result(1, "Invalid yaml: $message", message)
+                    }
+                    preBuildService.checkYml(yamlStr)
+                }
             }
-            preBuildService.checkYml(yamlStr)
+            return Result("OK")
         } catch (e: Throwable) {
             logger.error("check yaml failed, error: ${e.message}, yaml: $yaml")
             return Result(1, "Invalid yaml", e.message)
         }
-        return Result("OK")
     }
 
     override fun getPluginVersion(userId: String, pluginType: PreBuildPluginType): Result<PrePluginVersion?> {
