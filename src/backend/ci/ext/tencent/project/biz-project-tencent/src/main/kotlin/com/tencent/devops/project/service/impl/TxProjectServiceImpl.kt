@@ -329,14 +329,18 @@ class TxProjectServiceImpl @Autowired constructor(
         }
         logger.info("getV3userProject tag: $v3Tag")
         try {
-            ConsulContent.setConsulContent(v3Tag)
-            // 请求V3的项目,流量必须指向到v3,需指定项目头
-            val iamV3List = client.get(ServiceProjectAuthResource::class).getUserProjects(
-                userId = userId,
-                token = tokenService.getSystemToken(null)!!
-            ).data
-            ConsulContent.removeConsulContent()
-            return iamV3List
+            return ConsulContent.invokeByTag(v3Tag) {
+                try {
+                    // 请求V3的项目,流量必须指向到v3,需指定项目头
+                    client.get(ServiceProjectAuthResource::class).getUserProjects(
+                        userId = userId,
+                        token = tokenService.getSystemToken(null)!!
+                    ).data
+                } catch (e: Exception) {
+                    logger.warn("ServiceGitForAppResource is error", e)
+                    return@invokeByTag null
+                }
+            }
         } catch (e: Exception) {
             // 为防止V0,V3发布存在时间差,导致项目列表拉取异常
             logger.warn("getV3Project fail $userId $e")

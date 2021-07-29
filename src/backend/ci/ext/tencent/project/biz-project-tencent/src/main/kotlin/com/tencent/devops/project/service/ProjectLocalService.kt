@@ -133,8 +133,6 @@ class ProjectLocalService @Autowired constructor(
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val offset = sqlLimit.offset
         val limit = sqlLimit.limit
-//        val projectIds = bkAuthProjectApi.getUserProjects(bsPipelineAuthServiceCode, userId, null)
-//        val projectIds = authProjectApi.getUserProjects(bsPipelineAuthServiceCode, userId, null)
         val projectIds = txProjectServiceImpl.getProjectFromAuth(userId, null)
         // 如果使用搜索 且 总数量少于1000 , 则全量获取
         if (searchName != null &&
