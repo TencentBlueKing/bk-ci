@@ -25,15 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.common
+package com.tencent.devops.common.util
 
-enum class EnvEnum(
-    val value: String
-) {
-    DEV_ENV("dev"),
-    TEST_ENV("test"),
-    GRAY_ENV("gray"),
-    PROD_ENV("prod"),
-    AUTO_ENV("auto"),
-    GITCI_PROD_ENV("gitci-prod")
+import org.junit.Assert
+import org.junit.Test
+
+@Suppress("ALL")
+class RegexUtilsTest {
+
+    @Test
+    fun splitDomainContextPath() {
+        val noSubDomain = "http://donothavewww.com"
+        Assert.assertNull(RegexUtils.splitDomainContextPath(noSubDomain)) // no context path
+
+        var contextPath = "/a/b/c.txt"
+        Assert.assertEquals(contextPath, RegexUtils.splitDomainContextPath(noSubDomain + contextPath)!!.second)
+
+        val httpsDomain = "https://www.tencent.com"
+        contextPath = "/"
+        Assert.assertEquals(httpsDomain, RegexUtils.splitDomainContextPath(httpsDomain + contextPath)!!.first)
+        Assert.assertEquals(contextPath, RegexUtils.splitDomainContextPath(httpsDomain + contextPath)!!.second)
+    }
 }
