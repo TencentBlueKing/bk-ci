@@ -101,6 +101,19 @@ jooq {
                         println("mysqlPasswd : ${mysqlPasswd?.substring(0, 3)}****")
 
                         if (mysqlURL == null) {
+                            println("use default env.")
+                            mysqlURL = System.getenv("mysqlURL")
+                            mysqlUser = System.getenv("mysqlUser")
+                            mysqlPasswd = System.getenv("mysqlPasswd")
+                        }
+
+                        if (mysqlURL == null) {
+                            mysqlURL = System.getProperty("mysqlURL")
+                            mysqlUser = System.getProperty("mysqlUser")
+                            mysqlPasswd = System.getProperty("mysqlPasswd")
+                        }
+
+                        if (mysqlURL == null) {
                             println("use default mysql database.")
                             mysqlURL = project.extra["DB_HOST"]?.toString()
                             mysqlUser = project.extra["DB_USERNAME"]?.toString()

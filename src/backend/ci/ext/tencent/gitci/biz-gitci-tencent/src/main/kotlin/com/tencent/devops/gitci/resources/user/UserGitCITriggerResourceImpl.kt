@@ -40,8 +40,8 @@ import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.pojo.V2TriggerBuildReq
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
-import com.tencent.devops.gitci.service.GitCITriggerService
-import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
+import com.tencent.devops.gitci.trigger.GitCITriggerService
+import com.tencent.devops.gitci.trigger.YamlTriggerFactory
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.common.CommonConst
 import com.tencent.devops.gitci.v2.service.GitCIV2PipelineService
@@ -53,7 +53,7 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
     private val gitCITriggerService: GitCITriggerService,
     private val gitCIV2PipelineService: GitCIV2PipelineService,
     private val permissionService: GitCIV2PermissionService,
-    private val requestTriggerFactory: RequestTriggerFactory,
+    private val yamlTriggerFactory: YamlTriggerFactory,
     private val redisOperation: RedisOperation
 ) : UserGitCITriggerResource {
     companion object {
@@ -112,7 +112,7 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
                 }
             }
             else -> {
-                val triggerInterface = requestTriggerFactory.getGitCIRequestTrigger(ymlVersion)
+                val triggerInterface = yamlTriggerFactory.getGitCIRequestTrigger(ymlVersion)
                 return triggerInterface.checkYamlSchema(userId, yaml.yaml)
             }
         }

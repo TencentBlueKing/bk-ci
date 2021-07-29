@@ -36,7 +36,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.api.builds.BuildSubPipelineResource
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NULL
@@ -49,7 +48,6 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
 @Suppress("UNUSED")
@@ -199,14 +197,10 @@ class SubPipelineCallAtom constructor(
 
         buildLogPrinter.addLine(
             buildId = task.buildId,
-            message = "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/pipeline/${task.projectId}/" +
+            message = "<a target='_blank' href='/console/pipeline/${task.projectId}/" +
                 "$subPipelineId/detail/$subBuildId'>Click Link[${pipelineInfo.pipelineName}]</a>",
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         return AtomResponse(if (param.asynchronous) BuildStatus.SUCCEED else BuildStatus.CALL_WAITING)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(SubPipelineCallAtom::class.java)
     }
 }

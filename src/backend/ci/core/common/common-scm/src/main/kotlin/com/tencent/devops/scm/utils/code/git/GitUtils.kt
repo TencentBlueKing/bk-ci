@@ -95,4 +95,12 @@ object GitUtils {
         }
         return branchName.startsWith(PRE_PUSH_BRANCH_NAME_PREFIX)
     }
+
+    fun isLegalHttpUrl(url: String): Boolean {
+        return Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*).git").matches(url)
+    }
+
+    fun isLegalSshUrl(url: String): Boolean {
+        return Regex("git@([-.a-z0-9A-Z]+):(.*).git").matches(url)
+    }
 }
