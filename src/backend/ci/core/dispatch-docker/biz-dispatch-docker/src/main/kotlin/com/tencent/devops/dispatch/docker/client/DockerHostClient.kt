@@ -43,12 +43,14 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.config.DefaultImageConfig
+import com.tencent.devops.dispatch.docker.dao.DockerResourceOptionsDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
@@ -72,6 +74,7 @@ class DockerHostClient @Autowired constructor(
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
+    private val dockerResourceOptionsDao: DockerResourceOptionsDao,
     private val dockerHostUtils: DockerHostUtils,
     private val client: Client,
     private val dslContext: DSLContext,
@@ -148,6 +151,8 @@ class DockerHostClient @Autowired constructor(
             }
         }
 
+
+
         val requestBody = DockerHostBuildInfo(
             projectId = dispatchMessage.projectId,
             agentId = dispatchMessage.id,
@@ -170,7 +175,8 @@ class DockerHostClient @Autowired constructor(
                 ImageRDTypeEnum.getImageRDTypeByName(dispatchType.imageRDType!!).name
             },
             containerHashId = dispatchMessage.containerHashId,
-            customBuildEnv = dispatchMessage.customBuildEnv
+            customBuildEnv = dispatchMessage.customBuildEnv,
+            dockerResource = getDockerResource(dispatchType)
         )
 
         pipelineDockerTaskSimpleDao.createOrUpdate(
@@ -488,6 +494,47 @@ class DockerHostClient @Autowired constructor(
                 errorType = ErrorCodeEnum.START_VM_FAIL.errorType,
                 errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
                 errorMsg = "Start build Docker VM failed, msg: $errorMessage."
+            )
+        }
+    }
+
+    private fun getDockerResource(dockerDispatchType: DockerDispatchType): DockerResourceOptionsVO {
+        if (dockerDispatchType.dockerResourceOptionId != 0L) {
+            val dockerResourceOptionRecord = dockerResourceOptionsDao.get(
+                dslContext = dslContext,
+                id = dockerDispatchType.dockerResourceOptionId
+            )
+
+            if (dockerResourceOptionRecord != null) {
+                return DockerResourceOptionsVO(
+                    memoryLimitBytes = dockerResourceOptionRecord.memoryLimitBytes,
+                    cpuPeriod = dockerResourceOptionRecord.cpuPeriod,
+                    cpuQuota = dockerResourceOptionRecord.cpuQuota,
+                    blkioDeviceReadBps = dockerResourceOptionRecord.blkioDeviceReadBps,
+                    blkioDeviceWriteBps = dockerResourceOptionRecord.blkioDeviceWriteBps,
+                    disk = dockerResourceOptionRecord.disk,
+                    description = ""
+                )
+            } else {
+                return DockerResourceOptionsVO(
+                    memoryLimitBytes = 34359738368L,
+                    cpuPeriod = 10000,
+                    cpuQuota = 160000,
+                    blkioDeviceReadBps = 125829120,
+                    blkioDeviceWriteBps = 125829120,
+                    disk = 100,
+                    description = ""
+                )
+            }
+        } else {
+            return DockerResourceOptionsVO(
+                memoryLimitBytes = 34359738368L,
+                cpuPeriod = 10000,
+                cpuQuota = 160000,
+                blkioDeviceReadBps = 125829120,
+                blkioDeviceWriteBps = 125829120,
+                disk = 100,
+                description = ""
             )
         }
     }

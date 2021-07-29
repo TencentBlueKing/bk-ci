@@ -32,6 +32,7 @@ import com.tencent.devops.model.dispatch.tables.TDockerResourceOptions
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record7
+import org.jooq.Record8
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -81,10 +82,10 @@ class DockerResourceConfigDao {
         dslContext: DSLContext,
         page: Int,
         pageSize: Int
-    ): Result<Record7<String, Int, Int, Long, Long, Int, String>>? {
+    ): Result<Record8<String, Long, Int, Int, Long, Long, Int, String>>? {
         val t1 = TDockerResourceConfig.T_DOCKER_RESOURCE_CONFIG.`as`("t1")
         val t2 = TDockerResourceOptions.T_DOCKER_RESOURCE_OPTIONS.`as`("t2")
-        return dslContext.select(t1.PROJECT_ID, t2.CPU_PERIOD, t2.CPU_QUOTA, t2.BLKIO_DEVICE_WRITE_BPS,
+        return dslContext.select(t1.PROJECT_ID, t2.MEMORY_LIMIT_BYTES, t2.CPU_PERIOD, t2.CPU_QUOTA, t2.BLKIO_DEVICE_WRITE_BPS,
             t2.BLKIO_DEVICE_READ_BPS, t2.DISK, t2.DESCRIPTION)
             .from(t1).leftJoin(t2).on(t1.OPTION_ID.eq(t2.ID))
             .limit(pageSize).offset((page - 1) * pageSize)

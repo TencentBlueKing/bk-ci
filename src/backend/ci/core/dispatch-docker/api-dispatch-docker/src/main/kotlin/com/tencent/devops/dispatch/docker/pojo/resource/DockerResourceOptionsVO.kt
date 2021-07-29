@@ -30,16 +30,26 @@ package com.tencent.devops.dispatch.docker.pojo.resource
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("资源配置")
-data class ResourceConfigVO(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
-    @ApiModelProperty("CPU")
-    val cpu: Int,
+@ApiModel("性能基础选项配置")
+data class DockerResourceOptionsVO(
     @ApiModelProperty("内存")
-    val memory: String,
-    @ApiModelProperty("磁盘")
-    val disk: String,
+    val memoryLimitBytes: Long,
+
+    @ApiModelProperty("CPU")
+    val cpuPeriod: Int,
+
+    @ApiModelProperty("CPU")
+    val cpuQuota: Int,
+
+    @ApiModelProperty("磁盘写速率")
+    val blkioDeviceWriteBps: Long,
+
+    @ApiModelProperty("磁盘读速率")
+    val blkioDeviceReadBps: Long,
+
+    @ApiModelProperty("磁盘大小: 单位GB")
+    val disk: Int,
+
     @ApiModelProperty("描述")
     val description: String
 )

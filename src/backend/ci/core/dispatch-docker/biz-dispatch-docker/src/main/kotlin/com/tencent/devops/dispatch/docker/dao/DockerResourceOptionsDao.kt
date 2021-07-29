@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dispatch.docker.dao
 
-import com.tencent.devops.dispatch.docker.pojo.resource.ResourceOptionsVO
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.model.dispatch.tables.TDockerResourceOptions
 import com.tencent.devops.model.dispatch.tables.records.TDockerResourceOptionsRecord
 import org.jooq.DSLContext
@@ -77,16 +77,16 @@ class DockerResourceOptionsDao {
     fun update(
         dslContext: DSLContext,
         id: Long,
-        resourceOptionsVO: ResourceOptionsVO
+        dockerResourceOptionsVO: DockerResourceOptionsVO
     ) {
         with(TDockerResourceOptions.T_DOCKER_RESOURCE_OPTIONS) {
             dslContext.update(this)
-                .set(CPU_QUOTA, resourceOptionsVO.cpuQuota)
-                .set(CPU_PERIOD, resourceOptionsVO.cpuPeriod)
-                .set(MEMORY_LIMIT_BYTES, resourceOptionsVO.memoryLimitBytes)
-                .set(BLKIO_DEVICE_READ_BPS, resourceOptionsVO.blkioDeviceReadBps)
-                .set(BLKIO_DEVICE_WRITE_BPS, resourceOptionsVO.blkioDeviceWriteBps)
-                .set(DESCRIPTION, resourceOptionsVO.description)
+                .set(CPU_QUOTA, dockerResourceOptionsVO.cpuQuota)
+                .set(CPU_PERIOD, dockerResourceOptionsVO.cpuPeriod)
+                .set(MEMORY_LIMIT_BYTES, dockerResourceOptionsVO.memoryLimitBytes)
+                .set(BLKIO_DEVICE_READ_BPS, dockerResourceOptionsVO.blkioDeviceReadBps)
+                .set(BLKIO_DEVICE_WRITE_BPS, dockerResourceOptionsVO.blkioDeviceWriteBps)
+                .set(DESCRIPTION, dockerResourceOptionsVO.description)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()

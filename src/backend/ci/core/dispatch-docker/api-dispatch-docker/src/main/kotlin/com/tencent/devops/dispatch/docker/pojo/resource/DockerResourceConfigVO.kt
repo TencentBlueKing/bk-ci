@@ -25,37 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.controller
+package com.tencent.devops.dispatch.docker.pojo.resource
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.docker.api.op.OPResourceOptionsResource
-import com.tencent.devops.dispatch.docker.pojo.resource.ResourceOptionsVO
-import com.tencent.devops.dispatch.docker.service.DockerHostZoneTaskService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class OpResourceOptionResourceImpl @Autowired constructor(
-    private val dockerHostZoneTaskService: DockerHostZoneTaskService
-) : OPResourceOptionsResource {
-    override fun listPerformanceOptions(userId: String): Result<List<ResourceOptionsVO>> {
-        TODO("Not yet implemented")
-    }
+@ApiModel("资源配置")
+data class DockerResourceConfigVO(
+    @ApiModelProperty("蓝盾项目ID")
+    val projectId: String,
 
-    override fun createPerformanceOptions(userId: String, resourceOptionsVO: ResourceOptionsVO): Result<Boolean> {
-        TODO("Not yet implemented")
-    }
+    @ApiModelProperty("内存")
+    val memoryLimitBytes: Long,
 
-    override fun updatePerformanceOptions(
-        userId: String,
-        id: Long,
-        resourceOptionsVO: ResourceOptionsVO
-    ): Result<Boolean> {
-        TODO("Not yet implemented")
-    }
+    @ApiModelProperty("CPU")
+    val cpuPeriod: Int,
 
-    override fun deletePerformanceOptions(userId: String, projectId: Long): Result<Boolean> {
-        TODO("Not yet implemented")
-    }
+    @ApiModelProperty("CPU")
+    val cpuQuota: Int,
 
-}
+    @ApiModelProperty("磁盘写速率")
+    val blkioDeviceWriteBps: Long,
+
+    @ApiModelProperty("磁盘读速率")
+    val blkioDeviceReadBps: Long,
+
+    @ApiModelProperty("磁盘大小: 单位GB")
+    val disk: String,
+
+    @ApiModelProperty("描述")
+    val description: String
+)

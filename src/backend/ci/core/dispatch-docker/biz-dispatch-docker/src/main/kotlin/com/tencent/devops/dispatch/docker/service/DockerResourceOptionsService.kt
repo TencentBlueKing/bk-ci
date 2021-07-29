@@ -28,22 +28,22 @@
 package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.dispatch.docker.dao.DockerResourceOptionsDao
-import com.tencent.devops.dispatch.docker.pojo.resource.ResourceOptionsVO
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class DcPerformanceOptionsService constructor(
+class DockerResourceOptionsService constructor(
     private val dslContext: DSLContext,
     private val dockerResourceOptionsDao: DockerResourceOptionsDao
 ) {
-    private val logger = LoggerFactory.getLogger(DcPerformanceOptionsService::class.java)
+    private val logger = LoggerFactory.getLogger(DockerResourceOptionsService::class.java)
 
-    fun listDcPerformanceConfig(
+    fun listDockerResourceConfig(
         userId: String
-    ): List<ResourceOptionsVO> {
-        logger.info("$userId list listDcPerformanceConfig.")
+    ): List<DockerResourceOptionsVO> {
+        logger.info("$userId list dockerResourceConfig.")
         try {
             val list = dockerResourceOptionsDao.getList(dslContext)
 
@@ -51,59 +51,65 @@ class DcPerformanceOptionsService constructor(
                 return emptyList()
             }
 
-            val performanceOptionsVOList = mutableListOf<ResourceOptionsVO>()
+            val optionsVOList = mutableListOf<DockerResourceOptionsVO>()
             list.forEach {
-                /*performanceOptionsVOList.add(
-                    ResourceOptionsVO(
-                        cpu = it.cpu,
-                        memory = it.memory,
+                optionsVOList.add(
+                    DockerResourceOptionsVO(
+                        memoryLimitBytes = it.memoryLimitBytes,
+                        cpuPeriod = it.cpuPeriod,
+                        cpuQuota = it.cpuQuota,
+                        blkioDeviceWriteBps = it.blkioDeviceWriteBps,
+                        blkioDeviceReadBps = it.blkioDeviceReadBps,
                         disk = it.disk,
                         description = it.description
                     )
-                )*/
+                )
             }
 
-            return performanceOptionsVOList
+            return optionsVOList
         } catch (e: Exception) {
-            logger.error("$userId list listDcPerformanceConfig error.", e)
-            throw RuntimeException("list listDcPerformanceConfig error.")
+            logger.error("$userId list dockerResourceConfig error.", e)
+            throw RuntimeException("list dockerResourceConfig error.")
         }
     }
 
-    fun createDcPerformanceOptions(userId: String, resourceOptionsVO: ResourceOptionsVO): Boolean {
-        logger.info("$userId create performanceOptionsVO: $resourceOptionsVO")
+    fun createDockerResourceOptions(userId: String, dockerResourceOptionsVO: DockerResourceOptionsVO): Boolean {
+        logger.info("$userId create dockerResourceOptions. resourceOptionsVO: $dockerResourceOptionsVO")
 
         try {
-            /*dockerResourceOptionsDao.create(
+            dockerResourceOptionsDao.create(
                 dslContext = dslContext,
-                cpu = resourceOptionsVO.cpu,
-                memory = resourceOptionsVO.memory,
-                disk = resourceOptionsVO.disk,
-                description = resourceOptionsVO.description
-            )*/
+                memoryLimitBytes = dockerResourceOptionsVO.memoryLimitBytes,
+                cpuPeriod = dockerResourceOptionsVO.cpuPeriod,
+                cpuQuota = dockerResourceOptionsVO.cpuQuota,
+                blkioDeviceWriteBps = dockerResourceOptionsVO.blkioDeviceWriteBps,
+                blkioDeviceReadBps = dockerResourceOptionsVO.blkioDeviceReadBps,
+                disk = dockerResourceOptionsVO.disk,
+                description = dockerResourceOptionsVO.description
+            )
         } catch (e: Exception) {
-            logger.error("$userId add performanceOptionsVO error.", e)
-            throw RuntimeException("add performanceOptionsVO error.")
+            logger.error("$userId create dockerResourceOptions error.", e)
+            throw RuntimeException("$userId create dockerResourceOptions error.")
         }
 
         return true
     }
 
-    fun updateDcPerformanceOptions(userId: String, id: Long, resourceOptionsVO: ResourceOptionsVO): Boolean {
-        logger.info("$userId update performanceOptionsVO: $resourceOptionsVO")
+    fun updateDockerResourceOptions(userId: String, id: Long, dockerResourceOptionsVO: DockerResourceOptionsVO): Boolean {
+        logger.info("$userId update resourceOptionsVO: $dockerResourceOptionsVO")
 
         try {
-            dockerResourceOptionsDao.update(dslContext, id, resourceOptionsVO)
+            dockerResourceOptionsDao.update(dslContext, id, dockerResourceOptionsVO)
         } catch (e: Exception) {
-            logger.error("$userId update performanceOptionsVO error.", e)
-            throw RuntimeException("update performanceOptionsVO error.")
+            logger.error("$userId update resourceOptionsVO error.", e)
+            throw RuntimeException("update resourceOptionsVO error.")
         }
 
         return true
     }
 
-    fun deleteDcPerformanceOptions(userId: String, id: Long): Boolean {
-        logger.info("$userId delete performanceOptions id: $id")
+    fun deleteDockerResourceOptions(userId: String, id: Long): Boolean {
+        logger.info("$userId delete dockerResourceOptions id: $id")
         checkParameter(userId, id.toString())
         val result = dockerResourceOptionsDao.delete(dslContext, id)
         return result == 1

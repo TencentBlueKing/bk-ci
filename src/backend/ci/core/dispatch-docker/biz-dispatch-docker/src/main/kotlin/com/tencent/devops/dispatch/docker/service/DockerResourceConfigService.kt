@@ -30,24 +30,24 @@ package com.tencent.devops.dispatch.docker.service
 import com.tencent.devops.dispatch.docker.dao.DockerResourceConfigDao
 import com.tencent.devops.dispatch.docker.pojo.resource.CreateResourceConfigVO
 import com.tencent.devops.dispatch.docker.pojo.resource.ListPage
-import com.tencent.devops.dispatch.docker.pojo.resource.ResourceConfigVO
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceConfigVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class DcPerformanceConfigService constructor(
+class DockerResourceConfigService constructor(
     private val dslContext: DSLContext,
     private val dockerResourceConfigDao: DockerResourceConfigDao
 ) {
-    private val logger = LoggerFactory.getLogger(DcPerformanceConfigService::class.java)
+    private val logger = LoggerFactory.getLogger(DockerResourceConfigService::class.java)
 
-    fun listDcPerformanceConfig(
+    fun listDockerResourceConfig(
         userId: String,
         page: Int?,
         pageSize: Int?
-    ): ListPage<ResourceConfigVO> {
-        logger.info("$userId list performanceConfigList.")
+    ): ListPage<DockerResourceConfigVO> {
+        logger.info("$userId list dockerResourceConfig.")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         try {
@@ -58,13 +58,16 @@ class DcPerformanceConfigService constructor(
                 return ListPage(pageNotNull, pageSizeNotNull, count ?: 0, emptyList())
             }
 
-            val performanceConfigVOList = mutableListOf<ResourceConfigVO>()
+            val performanceConfigVOList = mutableListOf<DockerResourceConfigVO>()
             list.forEach {
                 performanceConfigVOList.add(
-                    ResourceConfigVO(
+                    DockerResourceConfigVO(
                         projectId = it["PROJECT_ID"] as String,
-                        cpu = it["CPU"] as Int,
-                        memory = (it["MEMORY"] as Int).toString() + "M",
+                        cpuPeriod = it["CPU_PERIOD"] as Int,
+                        cpuQuota = it["CPU_QUOTA"] as Int,
+                        memoryLimitBytes = it["MEMORY_LIMIT_BYTES"] as Long,
+                        blkioDeviceReadBps = it["BLKIO_DEVICE_READ_BPS"] as Long,
+                        blkioDeviceWriteBps = it["BLKIO_DEVICE_WRITE_BPS"] as Long,
                         disk = (it["DISK"] as Int).toString() + "G",
                         description = it["DESCRIPTION"] as String
                     )
@@ -73,13 +76,13 @@ class DcPerformanceConfigService constructor(
 
             return ListPage(pageNotNull, pageSizeNotNull, count ?: 0, performanceConfigVOList)
         } catch (e: Exception) {
-            logger.error("$userId list performanceConfigList error.", e)
-            throw RuntimeException("list performanceConfigList error.")
+            logger.error("$userId list dockerResourceConfig error.", e)
+            throw RuntimeException("list dockerResourceConfig error.")
         }
     }
 
-    fun createDcPerformanceConfig(userId: String, createResourceConfigVO: CreateResourceConfigVO): Boolean {
-        logger.info("$userId create opPerformanceConfigVO: $createResourceConfigVO")
+    fun createDockerResourceConfig(userId: String, createResourceConfigVO: CreateResourceConfigVO): Boolean {
+        logger.info("$userId createDockerResourceConfig createResourceConfigVO: $createResourceConfigVO")
         checkParameter(userId, createResourceConfigVO.projectId)
 
         try {
@@ -89,19 +92,19 @@ class DcPerformanceConfigService constructor(
                 optionId = createResourceConfigVO.optionId
             )
         } catch (e: Exception) {
-            logger.error("$userId add performanceConfig error.", e)
-            throw RuntimeException("add performanceConfig error.")
+            logger.error("$userId createDockerResourceConfig error.", e)
+            throw RuntimeException("$userId createDockerResourceConfig error.")
         }
 
         return true
     }
 
-    fun updateDcPerformanceConfig(
+    fun updateDockerResourceConfig(
         userId: String,
         projectId: String,
         createResourceConfigVO: CreateResourceConfigVO
     ): Boolean {
-        logger.info("$userId update performanceConfig: $createResourceConfigVO")
+        logger.info("$userId update createResourceConfigVO: $createResourceConfigVO")
         checkParameter(userId, projectId)
 
         try {
@@ -113,13 +116,13 @@ class DcPerformanceConfigService constructor(
 
             return true
         } catch (e: Exception) {
-            logger.error("$userId update performanceConfig error.", e)
-            throw RuntimeException("update performanceConfig error")
+            logger.error("$userId update createResourceConfigVO error.", e)
+            throw RuntimeException("update createResourceConfigVO error")
         }
     }
 
-    fun deleteDcPerformanceConfig(userId: String, projectId: String): Boolean {
-        logger.info("$userId delete performanceConfig projectId: $projectId")
+    fun deleteDockerResourceConfig(userId: String, projectId: String): Boolean {
+        logger.info("$userId delete dockerResourceConfig projectId: $projectId")
         checkParameter(userId, projectId)
         val result = dockerResourceConfigDao.delete(dslContext, projectId)
         return result == 1

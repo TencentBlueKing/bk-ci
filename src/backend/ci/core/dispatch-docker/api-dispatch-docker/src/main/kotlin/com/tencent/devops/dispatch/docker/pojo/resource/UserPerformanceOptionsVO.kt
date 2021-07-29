@@ -42,5 +42,5 @@ data class UserPerformanceOptionsVO(
 
 data class PerformanceMap(
     val id: String,
-    val resourceConfigVO: ResourceConfigVO
+    val dockerResourceConfigVO: DockerResourceConfigVO
 )
