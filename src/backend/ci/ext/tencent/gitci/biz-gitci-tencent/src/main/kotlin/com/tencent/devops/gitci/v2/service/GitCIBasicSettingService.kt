@@ -34,6 +34,7 @@ import com.tencent.devops.gitci.v2.exception.GitCINoEnableException
 import com.tencent.devops.model.gitci.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -44,8 +45,7 @@ import org.springframework.stereotype.Service
 class GitCIBasicSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
-    private val scmService: ScmService
+    private val gitCIBasicSettingDao: GitCIBasicSettingDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIBasicSettingService::class.java)
@@ -214,10 +214,11 @@ class GitCIBasicSettingService @Autowired constructor(
 
     private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
         val accessToken = try {
-            scmService.getToken(gitProjectId.toString()).accessToken
+            client.getScm(ServiceGitCiResource::class).getToken(gitProjectId.toString()).data!!.accessToken
         } catch (e: Exception) {
             return null
         }
-        return scmService.getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true)
+        return client.getScm(ServiceGitCiResource::class)
+            .getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true).data
     }
 }
