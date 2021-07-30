@@ -30,6 +30,7 @@ package com.tencent.devops.scm.services
 import com.fasterxml.jackson.core.type.TypeReference
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -46,6 +47,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import javax.ws.rs.core.Response
 
 @Service
 class GitCiService {
@@ -190,11 +192,16 @@ class GitCiService {
             .url(url.toString())
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use {
-            val response = it.body()!!.string()
-            logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
-            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-            return Result(JsonUtil.to(response, GitCIProjectInfo::class.java))
+        OkhttpUtils.doHttp(request).use { response ->
+            logger.info("[url=$url]|getGitCIProjectInfo($gitProjectId) with response=$response")
+            if (!response.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "Fail to get the git project info with: $url(${response.code()}): ${response.message()}"
+                )
+            }
+            val data = response.body()!!.string()
+            return Result(JsonUtil.to(data, GitCIProjectInfo::class.java))
         }
     }
 

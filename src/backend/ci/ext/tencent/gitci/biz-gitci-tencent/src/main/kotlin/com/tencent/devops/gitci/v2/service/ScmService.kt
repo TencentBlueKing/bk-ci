@@ -27,11 +27,14 @@
 
 package com.tencent.devops.gitci.v2.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.enums.GitCodeApiStatus
 import com.tencent.devops.gitci.utils.RetryUtils
+import com.tencent.devops.gitci.v2.exception.ErrorCodeEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
@@ -106,22 +109,31 @@ class ScmService @Autowired constructor(
         useAccessToken: Boolean
     ): GitCIProjectInfo? {
         logger.info("GitCIProjectInfo: [$gitProjectId|$token|$useAccessToken]")
-        return try {
+        try {
             val result = client.getScm(ServiceGitCiResource::class).getProjectInfo(
                 accessToken = token,
                 gitProjectId = gitProjectId,
                 useAccessToken = useAccessToken
             )
-            if (result.status.toString() == CommonMessageCode.SYSTEM_ERROR) {
-                logger.error("getProjectInfo error [$gitProjectId|$token|$useAccessToken]")
-                null
-            } else {
-                result.data
+            return result.data
+        } catch (e: RemoteServiceException) {
+            logger.error("getProjectInfo RemoteServiceException|" +
+                "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}")
+            if (e.httpStatus == GitCodeApiStatus.NOT_FOUND.status) {
+                error("getProjectInfo error ${e.errorMessage}", ErrorCodeEnum.PROJECT_NOT_FOUND)
+            }
+            if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status) {
+                error(
+                    "getProjectInfo error ${e.errorMessage}",
+                    ErrorCodeEnum.GET_PROJECT_INFO_FORBIDDEN,
+                    PROJECT_PERMISSION_ERROR.format(gitProjectId)
+                )
             }
         } catch (e: Exception) {
-            logger.error("getProjectInfo error [$gitProjectId|$token|$useAccessToken]", e)
-            null
+            logger.error("getProjectInfo Exception: $e")
+            error(" getProjectInfo error ${e.message}", ErrorCodeEnum.GET_PROJECT_INFO_ERROR)
         }
+        return null
     }
 
     fun getCommits(
@@ -344,5 +356,15 @@ class ScmService @Autowired constructor(
             logger.error("$log: ${e.message} ")
             throw RuntimeException("$log ${e.message}")
         }
+    }
+
+    // 返回给前端错误码异常
+    private fun error(logMessage: String, errorCode: ErrorCodeEnum, exceptionMessage: String? = null) {
+        logger.error(logMessage)
+        throw ErrorCodeException(
+            statusCode = 200,
+            errorCode = errorCode.errorCode.toString(),
+            defaultMessage = exceptionMessage ?: errorCode.formatErrorMessage
+        )
     }
 }
