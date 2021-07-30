@@ -43,9 +43,9 @@ class ServiceRepositoryAuthResourceImpl @Autowired constructor(
     override fun repositoryInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
-        val projectId = callBackInfo.filter.parent.id
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
+                val projectId = callBackInfo.filter.parent.id
                 return repositoryAuthService.getRepository(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
@@ -53,6 +53,7 @@ class ServiceRepositoryAuthResourceImpl @Autowired constructor(
                 return repositoryAuthService.getRepositoryInfo(hashIds, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
+                val projectId = callBackInfo.filter.parent.id
                 return repositoryAuthService.searchRepositoryInstances(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,

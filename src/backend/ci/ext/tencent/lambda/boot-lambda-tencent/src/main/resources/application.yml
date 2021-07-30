@@ -4,10 +4,6 @@ spring:
     desc: Devops Lambda Service
     version: 4.0
     packageName: com.tencent.devops.lambda
-  datasource:
-    url: jdbc:mysql://10.125.48.80:3306/devops_lambda?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
-    username: tig4php
-    password: tig4php
   redis:
     database: 2
     host: 10.125.48.80

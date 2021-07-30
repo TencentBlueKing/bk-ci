@@ -53,8 +53,8 @@ class TcmTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter
-)
-    : IAtomTask<TcmElement> {
+) :
+    IAtomTask<TcmElement> {
     private val logger = LoggerFactory.getLogger(TcmTaskAtom::class.java)
 
     override fun getParamElement(task: PipelineBuildTask): TcmElement {

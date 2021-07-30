@@ -53,7 +53,7 @@ class GitRequestEventDao {
                 BRANCH,
                 TARGET_BRANCH,
                 COMMIT_ID,
-                COMMIT_MSG,
+                COMMIT_MESSAGE,
                 COMMIT_TIMESTAMP,
                 USER_NAME,
                 TOTAL_COMMIT_COUNT,
@@ -94,8 +94,8 @@ class GitRequestEventDao {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             val dsl = dslContext.selectFrom(this)
                 .where(ID.eq(id))
-            if (commitMsg != null) {
-                dsl.and(COMMIT_MSG.like("%$commitMsg%"))
+            if (!commitMsg.isNullOrBlank()) {
+                dsl.and(COMMIT_MESSAGE.like("%$commitMsg%"))
             }
             val record = dsl.fetchAny()
             return if (record == null) {
@@ -111,7 +111,7 @@ class GitRequestEventDao {
                     branch = record.branch,
                     targetBranch = record.targetBranch,
                     commitId = record.commitId,
-                    commitMsg = record.commitMsg,
+                    commitMsg = record.commitMessage,
                     commitTimeStamp = record.commitTimestamp,
                     userId = record.userName,
                     totalCommitCount = record.totalCommitCount,
@@ -133,7 +133,7 @@ class GitRequestEventDao {
             val dsl = dslContext.selectFrom(this)
                 .where(ID.eq(id))
             if (commitMsg != null) {
-                dsl.and(COMMIT_MSG.like("%$commitMsg%"))
+                dsl.and(COMMIT_MESSAGE.like("%$commitMsg%"))
             }
             val record = dsl.fetchAny()
             return if (record == null) {
@@ -149,7 +149,7 @@ class GitRequestEventDao {
                     branch = record.branch,
                     targetBranch = record.targetBranch,
                     commitId = record.commitId,
-                    commitMsg = record.commitMsg,
+                    commitMsg = record.commitMessage,
                     commitTimeStamp = record.commitTimestamp,
                     userId = record.userName,
                     totalCommitCount = record.totalCommitCount,
@@ -187,7 +187,7 @@ class GitRequestEventDao {
                         branch = it.branch,
                         targetBranch = it.targetBranch,
                         commitId = it.commitId,
-                        commitMsg = it.commitMsg,
+                        commitMsg = it.commitMessage,
                         commitTimeStamp = it.commitTimestamp,
                         userId = it.userName,
                         totalCommitCount = it.totalCommitCount,
@@ -228,7 +228,7 @@ class GitRequestEventDao {
                         branch = it.branch,
                         targetBranch = it.targetBranch,
                         commitId = it.commitId,
-                        commitMsg = it.commitMsg,
+                        commitMsg = it.commitMessage,
                         commitTimeStamp = it.commitTimestamp,
                         userId = it.userName,
                         totalCommitCount = it.totalCommitCount,
@@ -324,7 +324,7 @@ class GitRequestEventDao {
                         branch = it.branch,
                         targetBranch = it.targetBranch,
                         commitId = it.commitId,
-                        commitMsg = it.commitMsg,
+                        commitMsg = it.commitMessage,
                         commitTimeStamp = it.commitTimestamp,
                         userId = it.userName,
                         totalCommitCount = it.totalCommitCount,

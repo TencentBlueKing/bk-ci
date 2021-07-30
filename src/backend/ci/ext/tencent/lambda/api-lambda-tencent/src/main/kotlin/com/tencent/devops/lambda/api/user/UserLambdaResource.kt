@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.lambda.pojo.MakeUpBuildVO
+import com.tencent.devops.lambda.pojo.MakeUpPipelineListVO
+import com.tencent.devops.lambda.pojo.MakeUpProjectListVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -67,5 +69,27 @@ interface UserLambdaResource {
         userId: String,
         @ApiParam("补录列表", required = true)
         makeUpBuildVOs: List<MakeUpBuildVO>
+    ): Result<Boolean>
+
+    @ApiOperation("补录流水线项目信息")
+    @POST
+    @Path("/makeup-projects")
+    fun manualMakeUpAllProjects(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("补录列表", required = true)
+        makeUpProjectListVO: MakeUpProjectListVO
+    ): Result<Boolean>
+
+    @ApiOperation("补录流水线信息")
+    @POST
+    @Path("/makeup-pipelines")
+    fun manualMakeUpAllPipelines(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("补录列表", required = true)
+        makeUpPipelineListVO: MakeUpPipelineListVO
     ): Result<Boolean>
 }

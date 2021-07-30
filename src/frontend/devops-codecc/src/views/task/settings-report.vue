@@ -348,7 +348,7 @@
                 return week
             },
             robotDesc () {
-                return `到企业微信群添加群机器人，复制Webhook地址到这里。更多详细说明<a target='_blank' href='${window.ROBOT_DESC}'>请点击&gt;&gt;</a>`
+                return `到企业微信群添加群机器人，复制Webhook地址到这里。`
             }
         },
         watch: {

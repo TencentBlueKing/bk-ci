@@ -2,7 +2,9 @@ dependencies {
     compile project(":core:common:common-util")
 
     compile "javax.ws.rs:javax.ws.rs-api"
-    compile "io.swagger:swagger-annotations"
+    compile ("io.swagger:swagger-annotations") {
+        exclude group: 'org.json', module: 'json'
+    }
     compile "org.hashids:hashids"
     compile "com.fasterxml.jackson.module:jackson-module-kotlin"
     compile "com.fasterxml.jackson.core:jackson-databind"

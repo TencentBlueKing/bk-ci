@@ -30,6 +30,7 @@ package com.tencent.devops.common.ci.yaml.v2.utils
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
+import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import org.junit.Assert
 import org.junit.Test
@@ -44,7 +45,7 @@ class ScriptYmlUtilsTest {
 
     @Test
     fun formatYaml() {
-        val classPathResource = ClassPathResource("Sample1.yml")
+        val classPathResource = ClassPathResource("test.yml")
         val inputStream: InputStream = classPathResource.inputStream
         val isReader = InputStreamReader(inputStream)
 
@@ -55,11 +56,11 @@ class ScriptYmlUtilsTest {
             sb.append(str).append("\n")
         }
         val formatStr = ScriptYmlUtils.formatYaml(sb.toString())
-        val obj = YamlUtil.getObjectMapper().readValue(
-            formatStr,
-            PreScriptBuildYaml::class.java
-        )
-        val normalize = ScriptYmlUtils.normalizeGitCiYaml(obj, ".ci.yml")
+        val preTemplateYamlObject =
+            YamlUtil.getObjectMapper().readValue(formatStr, PreTemplateScriptBuildYaml::class.java)
+
+        println("dasdasd")
+        // val normalize = ScriptYmlUtils.normalizeGitCiYaml(obj, ".ci.yml")
     }
 
     @Test
@@ -106,9 +107,9 @@ class ScriptYmlUtilsTest {
     @Test
     fun validateYamlTest() {
         val yamlJsonStr = try {
-            ScriptYmlUtils.convertYamlToJson(ScriptYmlUtils.formatYaml(getFileStr("Sample1.yml")))
+            ScriptYmlUtils.convertYamlToJson(ScriptYmlUtils.formatYaml(getFileStr("test.yml")))
         } catch (e: Throwable) {
-            throw CustomException(Response.Status.BAD_REQUEST, "${e.cause}")
+            throw CustomException(Response.Status.BAD_REQUEST, "${e.message}")
         }
 
         val schema = getFileStr("gitciv2-schema.json")

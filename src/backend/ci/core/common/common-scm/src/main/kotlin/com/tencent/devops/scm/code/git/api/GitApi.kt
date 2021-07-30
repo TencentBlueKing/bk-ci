@@ -74,15 +74,11 @@ open class GitApi {
         private const val OPERATION_MR_REVIEW = "查询项目合并请求"
     }
 
-    /**
-     * @param full 是否全部获取分支,默认全量拉
-     */
     fun listBranches(
         host: String,
         token: String,
         projectName: String,
-        search: String? = null,
-        full: Boolean = true
+        search: String? = null
     ): List<String> {
         logger.info("Start to list branches of host $host by project $projectName")
         var searchReq = "page=1&per_page=100"
@@ -99,26 +95,16 @@ open class GitApi {
         host: String,
         token: String,
         projectName: String,
-        search: String? = null,
-        full: Boolean = true
+        search: String? = null
     ): List<String> {
-        var page = 1
-        val result = mutableListOf<GitTag>()
-        while (true) {
-            var searchReq = "page=$page&per_page=100&order_by=updated&sort=desc"
-            if (!search.isNullOrBlank()) {
-                searchReq = "$searchReq&search=$search"
-            }
-            val request =
-                get(host, token, "projects/${urlEncode(projectName)}/repository/tags", searchReq)
-            page++
-            val pageResult: List<GitTag> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAG, request))
-            result.addAll(pageResult)
-            if (pageResult.size < 100 || !full) {
-                if (result.size >= TAG_LIMIT) logger.error("there are ${result.size} tags in project $projectName")
-                return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
-            }
+        var searchReq = "page=1&per_page=100&order_by=updated&sort=desc"
+        if (!search.isNullOrBlank()) {
+            searchReq = "$searchReq&search=$search"
         }
+        val request =
+            get(host, token, "projects/${urlEncode(projectName)}/repository/tags", searchReq)
+        val result: List<GitTag> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAG, request))
+        return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
     }
 
     fun getBranch(host: String, token: String, projectName: String, branchName: String): GitBranch {
