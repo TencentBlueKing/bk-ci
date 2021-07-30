@@ -27,20 +27,37 @@
 
 package com.tencent.devops.gitci.resources.user
 
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIProjectResource
 import com.tencent.devops.gitci.pojo.enums.GitCIProjectType
+import com.tencent.devops.gitci.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.gitci.v2.service.GitCIProjectService
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserGitCIProjectResourceImpl @Autowired constructor() : UserGitCIProjectResource {
+class UserGitCIProjectResourceImpl @Autowired constructor(
+    private val gitCIProjectService: GitCIProjectService
+) : UserGitCIProjectResource {
     override fun getProjects(
         userId: String,
         type: GitCIProjectType?,
         search: String?,
         page: Int?,
-        pageSize: Int?
-    ) {
-        TODO("Not yet implemented")
+        pageSize: Int?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?
+    ): Pagination<ProjectCIInfo> {
+        return gitCIProjectService.getProjectList(
+            userId = userId,
+            type = type,
+            search = search,
+            page = page,
+            pageSize = pageSize,
+            orderBy = orderBy,
+            sort = sort
+        )
     }
 }

@@ -29,7 +29,11 @@ package com.tencent.devops.gitci.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.gitci.pojo.enums.GitCIProjectType
+import com.tencent.devops.gitci.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -58,7 +62,7 @@ interface UserGitCIProjectResource {
         @ApiParam("项目列表类型", required = false)
         @PathParam("type")
         type: GitCIProjectType?,
-        @ApiParam("搜索条件，模糊匹配path,name")
+        @ApiParam("搜索条件，模糊匹配path,name", required = false)
         @QueryParam("search")
         search: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
@@ -66,6 +70,12 @@ interface UserGitCIProjectResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "10")
         @QueryParam("pageSize")
-        pageSize: Int?
-    )
+        pageSize: Int?,
+        @ApiParam("排序条件", required = false)
+        @QueryParam("orderBy")
+        orderBy: GitCodeProjectsOrder?,
+        @ApiParam("排序类型", required = false)
+        @QueryParam("sort")
+        sort: GitCodeBranchesSort?
+    ): Pagination<ProjectCIInfo>
 }

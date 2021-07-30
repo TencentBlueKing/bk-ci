@@ -94,8 +94,8 @@ class GitCIProjectService @Autowired constructor(
             page = realPage,
             pageSize = realPageSize,
             search = search,
-            orderBy = orderBy,
-            sort = sort,
+            orderBy = orderBy ?: GitCodeProjectsOrder.UPDATE,
+            sort = sort ?: GitCodeBranchesSort.DESC,
             owned = null,
             minAccessLevel = if (type == GitCIProjectType.MY_PROJECT) {
                 GitAccessLevelEnum.DEVELOPER
