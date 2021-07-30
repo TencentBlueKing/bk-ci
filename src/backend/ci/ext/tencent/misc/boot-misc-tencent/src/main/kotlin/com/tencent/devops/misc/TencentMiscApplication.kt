@@ -37,10 +37,12 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Primary
 import javax.sql.DataSource
 
 @MicroService
+@ComponentScan("com.tencent.devops.common", "com.tencent.devops.misc")
 class TencentMiscApplication {
 
     @ConditionalOnMissingBean(name = ["dataSource"])

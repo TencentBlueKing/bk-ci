@@ -62,8 +62,8 @@ object AgentEnv {
     private var gateway: String? = null
     private var os: OSType? = null
     private var env: Env? = null
-    private var macOSWorkspace: String? = null
     private var logStorageMode: LogStorageMode? = null
+    private var macOSWorkspace: String? = null
 
     private var property: Properties? = null
 
