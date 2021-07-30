@@ -82,8 +82,10 @@ object TaskUtils {
         val conditionFlag = if (runCondition == RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT) {
             // 判断父任务是否是取消或者超时状态
             parentTask?.status == BuildStatus.CANCELED || parentTask?.status == BuildStatus.EXEC_TIMEOUT
-        } else if (runCondition == RunCondition.PRE_TASK_SUCCESS) {
-            getPreTaskSuccessFlag(taskList)
+        } else if (runCondition == RunCondition.PRE_TASK_SUCCESS ||
+            runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+        ) {
+            getPreTaskExecuteFlag(taskList, runCondition)
         } else {
             if (isContainerFailed) { // 当前容器有失败的任务
                 runCondition in getContinueConditionListWhenFail() // 需要满足[前置任务失败时才运行]或[除了取消才不运行]条件
@@ -101,18 +103,30 @@ object TaskUtils {
         return parentTask to postExecuteFlag
     }
 
-    private fun getPreTaskSuccessFlag(taskList: List<PipelineBuildTask>): Boolean {
+    private fun getPreTaskExecuteFlag(taskList: List<PipelineBuildTask>, runCondition: RunCondition): Boolean {
         var flag = true
         val taskSize = taskList.size - 1
         for (i in 0..taskSize) {
             val tmpTask = taskList[i]
-            // 只需判断post任务之前的任务是否运行成功
+            // 只需判断post任务之前的任务状态
             if (tmpTask.additionalOptions?.elementPostInfo != null) {
                 return flag
             }
-            // 当前插件前面的插件存在失败的情况则返回false
-            if (!tmpTask.status.isSuccess() && tmpTask.status != BuildStatus.UNEXEC &&
-                !ControlUtils.continueWhenFailure(tmpTask.additionalOptions)) {
+            val breakFlag = when (runCondition) {
+                RunCondition.PRE_TASK_SUCCESS -> {
+                    // 当前插件前面的插件存在失败的情况则返回false
+                    tmpTask.status.isSuccess() && tmpTask.status != BuildStatus.UNEXEC &&
+                        !ControlUtils.continueWhenFailure(tmpTask.additionalOptions)
+                }
+                RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
+                    // 当前插件前面的插件存在取消的情况则返回false
+                    tmpTask.status == BuildStatus.CANCELED
+                }
+                else -> {
+                    false
+                }
+            }
+            if (breakFlag) {
                 flag = false
                 break
             }
