@@ -15,7 +15,7 @@ bk-ci removes all the tedious tasks in R&D process and enables you to focus on c
 - Running test cases to find bugs in time
 - Deployment and release
 
-bk-ci provides five core services, namely Process, Repository, Ticket, Environment and Store. They can be combined in multiple ways to meet business needs in different scenarios.
+bk-ci provides six core services, namely Process, CodeCheck, Repository, Ticket, Environment and Store. They can be combined in multiple ways to meet business needs in different scenarios.
 
 - **Process**: It visualizes current R&D process of the team. One pipeline can handle compilation, testing and deployment.
 - **Repository**: It links current source code hosting service of the enterprise to bk-ci.
