@@ -1,0 +1,132 @@
+<template>
+    <section class="param-edit-home">
+        <bk-button text title="primary" @click="toggleShowParamForm()" :disabled="disabled" class="params-opt">
+            <i class="bk-icon icon-plus-circle"></i>添加参数
+        </bk-button>
+
+        <bk-table :data="copyReviewParams">
+            <bk-table-column label="变量名称" prop="key" show-overflow-tooltip></bk-table-column>
+            <bk-table-column label="中文名" prop="chineseName" show-overflow-tooltip></bk-table-column>
+            <bk-table-column label="类型" prop="valueType" :formatter="typeFormatter"></bk-table-column>
+            <bk-table-column label="默认值" prop="value" show-overflow-tooltip :formatter="jsonFormatter"></bk-table-column>
+            <bk-table-column label="是否必填" prop="required" :formatter="requireFormatter"></bk-table-column>
+            <bk-table-column label="可选项" prop="options" show-overflow-tooltip :formatter="jsonFormatter"></bk-table-column>
+            <bk-table-column label="操作" width="120">
+                <template slot-scope="props">
+                    <bk-button class="mr10" theme="primary" text @click="toggleShowParamForm(props.row, props.$index)">编辑</bk-button>
+                    <bk-button class="mr10" theme="primary" text @click="removeParam(props.$index)">删除</bk-button>
+                </template>
+            </bk-table-column>
+        </bk-table>
+
+        <param-form
+            :show="paramFormData.isShow"
+            :param="paramFormData.form"
+            @confirm="confirm"
+            @cancel="cancel"
+        ></param-form>
+    </section>
+</template>
+
+<script>
+    import ParamForm from './form'
+    import { CHECK_PARAM_LIST } from '@/store/modules/atom/paramsConfig'
+
+    const paramsMap = CHECK_PARAM_LIST.reduce((acc, cur) => {
+        acc[cur.id] = global.pipelineVue.$t(`storeMap.${cur.name}`)
+        return acc
+    }, {})
+
+    export default {
+        components: {
+            ParamForm
+        },
+
+        props: {
+            disabled: Boolean,
+            reviewParams: Array
+        },
+
+        data () {
+            return {
+                copyReviewParams: JSON.parse(JSON.stringify(this.reviewParams)),
+                paramFormData: {
+                    isShow: false,
+                    form: {}
+                }
+            }
+        },
+
+        methods: {
+            confirm (row) {
+                if (this.paramFormData.index >= 0) {
+                    this.copyReviewParams.splice(this.paramFormData.index, 1, row)
+                } else {
+                    this.copyReviewParams.push(row)
+                }
+
+                this.toggleShowParamForm()
+                this.triggleChange()
+            },
+
+            cancel () {
+                this.toggleShowParamForm()
+            },
+
+            toggleShowParamForm (row = {}, index = -1) {
+                this.paramFormData.isShow = !this.paramFormData.isShow
+                this.paramFormData.form = row
+                this.paramFormData.index = index
+            },
+
+            removeParam (index) {
+                const confirmFn = () => {
+                    this.copyReviewParams.splice(index, 1)
+                    this.triggleChange()
+                }
+                this.$bkInfo({
+                    theme: 'danger',
+                    title: '确认删除该参数吗？',
+                    confirmFn
+                })
+            },
+
+            triggleChange () {
+                this.$emit('change', 'reviewParams', this.copyReviewParams)
+            },
+
+            typeFormatter (row, column, cellValue, index) {
+                return paramsMap[cellValue]
+            },
+
+            requireFormatter (row, column, cellValue, index) {
+                const valMap = {
+                    true: '是',
+                    false: '否'
+                }
+                return valMap[cellValue]
+            },
+
+            jsonFormatter (row, column, cellValue, index) {
+                return JSON.stringify(cellValue)
+            }
+        }
+    }
+</script>
+
+<style lang="scss" scoped>
+    .param-edit-home {
+        position: relative;
+    }
+
+    .params-opt {
+        position: absolute;
+        left: 85px;
+        top: -30px;
+        font-size: 12px;
+        /deep/ .bk-icon {
+            top: 0;
+            margin-right: 1px;
+        }
+    }
+</style>

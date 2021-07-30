@@ -65,7 +65,7 @@
                 <stage @close="showLog = false" />
             </template>
             <template v-else-if="showStageReviewPanel">
-                <stage-review @close="showLog = false" />
+                <stage-review-panel :stage="stage" />
             </template>
         </template>
         <template v-if="execDetail && showCompleteLog">
@@ -88,7 +88,7 @@
     import plugin from '@/components/ExecDetail/plugin'
     import job from '@/components/ExecDetail/job'
     import stage from '@/components/ExecDetail/stage'
-    import stageReview from '@/components/ExecDetail/stageReview'
+    import stageReviewPanel from '@/components/StageReviewPanel'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
@@ -108,7 +108,7 @@
             completeLog,
             job,
             stage,
-            stageReview,
+            stageReviewPanel,
             Logo,
             MiniMap,
             AtomPropertyPanel

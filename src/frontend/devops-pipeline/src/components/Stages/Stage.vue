@@ -199,7 +199,7 @@
                 try {
                     const stageControlOption = this.stage.stageControlOption || {}
                     const reviewGroups = stageControlOption.reviewGroups || []
-                    const curReviewGroup = reviewGroups.find((review) => (review.status === 'REVIEWING'))
+                    const curReviewGroup = reviewGroups.find((review) => (review.status === undefined))
                     return curReviewGroup.reviewers.includes(this.$userInfo.username)
                 } catch (e) {
                     return false
@@ -338,7 +338,6 @@
                 'setPipelineEditing',
                 'updateStage',
                 'deleteStage',
-                'toggleReviewDialog',
                 'toggleStageReviewPanel'
             ]),
             confirmRetry () {
@@ -474,19 +473,12 @@
             },
 
             startNextStage () {
-                if (this.canTriggerStage && this.isStagePause) {
-                    this.toggleReviewDialog({
-                        isShow: true,
-                        reviewInfo: this.stage
-                    })
-                } else {
-                    this.toggleStageReviewPanel({
-                        isShow: true,
-                        editingElementPos: {
-                            stageIndex: this.stageIndex
-                        }
-                    })
-                }
+                this.toggleStageReviewPanel({
+                    isShow: true,
+                    editingElementPos: {
+                        stageIndex: this.stageIndex
+                    }
+                })
             },
             updateHeight () {
                 const parentEle = this.$refs.stageRef

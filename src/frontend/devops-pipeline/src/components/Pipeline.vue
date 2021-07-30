@@ -55,6 +55,7 @@
             </template>
             <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined' && showStageReviewPanel">
                 <stage-review-panel
+                    editable
                     :stage="stage"
                     :stage-index="editingElementPos.stageIndex"
                     :disabled="!pipelineEditable"
@@ -77,7 +78,7 @@
     import AtomPropertyPanel from './AtomPropertyPanel'
     import ContainerPropertyPanel from './ContainerPropertyPanel'
     import StagePropertyPanel from './StagePropertyPanel'
-    import StageReviewPanel from './StagePropertyPanel/StageReviewPanel'
+    import StageReviewPanel from './StageReviewPanel'
     import AtomSelector from './AtomSelector'
     import { isObject } from '../utils/util'
 

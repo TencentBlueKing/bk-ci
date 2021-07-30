@@ -1,26 +1,24 @@
 <template>
     <div class="pipeline-stage-review-control bk-form bk-form-vertical">
-        <form-field>
+        <form-field label="准入规则">
             <bk-radio-group class="stage-review-radio-group" v-model="manualTrigger">
                 <bk-radio :disabled="disabled" :value="false">{{ $t('disableStageReviewRadioLabel') }}</bk-radio>
-                <bk-radio :disabled="disabled" :value="true">{{ $t('enableStageReviewRadioLabel') }}</bk-radio>
+                <bk-radio :disabled="disabled" :value="true" style="marginLeft:82px">{{ $t('enableStageReviewRadioLabel') }}</bk-radio>
             </bk-radio-group>
         </form-field>
         <template v-if="manualTrigger">
-            <form-field :label="$t('stageUserTriggers')" :is-error="!hasTriggerMember" :desc="$t('stageTriggerDesc')" :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')">
-                <stage-review-flow
+            <bk-divider></bk-divider>
+
+            <form-field required label="审核流" :is-error="!hasTriggerMember" :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')">
+                <edit-review-flow
                     :review-groups="reviewGroups"
                     :disabled="disabled"
                     @change="handleUpdateStageControl"
-                ></stage-review-flow>
+                ></edit-review-flow>
             </form-field>
 
             <form-field :disabled="disabled" :label="$t('stageReviewInputDesc')">
                 <vuex-textarea :placeholder="$t('stageReviewInputDescTip')" name="reviewDesc" clearable :disabled="disabled" :handle-change="handleUpdateStageControl" :value="reviewDesc"></vuex-textarea>
-            </form-field>
-
-            <form-field :disabled="disabled" :label="$t('stageReviewParams')">
-                <define-param :disabled="disabled" name="reviewParams" :handle-change="handleUpdateStageControl" :value="reviewParams"></define-param>
             </form-field>
 
             <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
@@ -29,6 +27,14 @@
                         <div class="group-text">{{ $t('timeMap.hours') }}</div>
                     </template>
                 </bk-input>
+            </form-field>
+
+            <form-field :disabled="disabled" :label="$t('stageReviewParams')">
+                <edit-params
+                    :disabled="disabled"
+                    :review-params="reviewParams"
+                    @change="handleUpdateStageControl"
+                ></edit-params>
             </form-field>
         </template>
     </div>
@@ -39,16 +45,16 @@
     import { mapActions } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import DefineParam from '@/components/AtomFormComponent/DefineParam'
-    import StageReviewFlow from './StageReviewFlow'
+    import EditParams from './components/params/edit'
+    import EditReviewFlow from './components/reviewFlow/edit'
 
     export default {
         name: 'stage-review-control',
         components: {
             FormField,
             VuexTextarea,
-            DefineParam,
-            StageReviewFlow
+            EditParams,
+            EditReviewFlow
         },
         props: {
             stage: {
@@ -58,15 +64,13 @@
             disabled: {
                 type: Boolean,
                 default: false
+            },
+            stageControl: {
+                type: Object,
+                default: () => ({})
             }
         },
         computed: {
-            stageControl () {
-                if (this.stage && this.stage.stageControlOption) {
-                    return this.stage.stageControlOption
-                }
-                return {}
-            },
             manualTrigger: {
                 get () {
                     return !!this.stageControl.manualTrigger
