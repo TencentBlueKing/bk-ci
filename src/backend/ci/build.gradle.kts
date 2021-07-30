@@ -44,7 +44,12 @@ allprojects {
             dependency("org.asynchttpclient:async-http-client:${Versions.AsyncHttpClient}")
             dependency("me.cassiano:ktlint-html-reporter:${Versions.KtlintHtmlReport}")
             dependency("com.github.shyiko:ktlint:${Versions.Ktlint}")
-            dependency("log4j:log4j:1.2.17")
+            dependencySet("io.github.openfeign:${Versions.Feign}") {
+                entry("feign-core")
+                entry("feign-jackson")
+                entry("feign-jaxrs")
+                entry("feign-okhttp")
+            }
             dependencySet("io.swagger:${Versions.Swagger}") {
                 entry("swagger-annotations")
                 entry("swagger-jersey2-jaxrs")
