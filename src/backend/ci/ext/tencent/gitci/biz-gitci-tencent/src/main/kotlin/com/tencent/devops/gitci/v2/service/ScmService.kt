@@ -28,8 +28,10 @@
 package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.utils.RetryUtils
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
@@ -42,6 +44,7 @@ import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,37 +66,38 @@ class ScmService @Autowired constructor(
     fun getToken(
         gitProjectId: String
     ): GitToken {
-        try {
-            return client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!
-        } catch (e: Exception) {
-            throw RuntimeException("项目${gitProjectId}获取Token失败")
-        }
+        return retryFun(
+            log = "$gitProjectId get token fail",
+            action = {
+                client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!
+            }
+        )
     }
 
     fun getYamlFromGit(
         token: String,
-        gitProjectId: Long,
+        gitProjectId: String,
         fileName: String,
         ref: String,
         useAccessToken: Boolean
     ): String {
         logger.info("getYamlFromGit: [$gitProjectId|$fileName|$token|$ref|$useAccessToken]")
-        return try {
-            val result = client.getScm(ServiceGitCiResource::class).getGitCIFileContent(
-                gitProjectId = gitProjectId,
-                filePath = fileName,
-                token = token,
-                ref = getTriggerBranch(ref),
-                useAccessToken = useAccessToken
-            )
-            if (result.data == null) {
-                throw RuntimeException("yaml $fileName is null")
+        val result = retryFun(
+            log = "$gitProjectId get yaml $fileName fail",
+            action = {
+                client.getScm(ServiceGitCiResource::class).getGitCIFileContent(
+                    gitProjectId = gitProjectId,
+                    filePath = fileName,
+                    token = token,
+                    ref = getTriggerBranch(ref),
+                    useAccessToken = useAccessToken
+                )
             }
-            result.data!!
-        } catch (e: Throwable) {
-            logger.error("Get yaml from git failed", e)
-            throw RuntimeException("Get yaml $fileName from git failed")
+        )
+        if (result.data == null) {
+            throw RuntimeException("yaml $fileName is null")
         }
+        return result.data!!
     }
 
     fun getProjectInfo(
@@ -118,25 +122,6 @@ class ScmService @Autowired constructor(
             logger.error("getProjectInfo error [$gitProjectId|$token|$useAccessToken]", e)
             null
         }
-    }
-
-    // 针对需要抛出异常做处理的场景
-    fun getProjectInfoThrow(
-        token: String,
-        gitProjectId: String,
-        useAccessToken: Boolean
-    ): GitCIProjectInfo? {
-        logger.info("getProjectInfoThrow: [$gitProjectId|$token|$useAccessToken]")
-        val result = client.getScm(ServiceGitCiResource::class).getProjectInfo(
-            accessToken = token,
-            gitProjectId = gitProjectId,
-            useAccessToken = useAccessToken
-        )
-        // 针对模板请求失败只有可能是无权限和系统问题，系统问题不考虑一律按无权限
-        if (result.status.toString() == CommonMessageCode.SYSTEM_ERROR) {
-            throw RuntimeException(PROJECT_PERMISSION_ERROR.format(gitProjectId))
-        }
-        return result.data
     }
 
     fun getCommits(
@@ -232,15 +217,20 @@ class ScmService @Autowired constructor(
         mrId: Long
     ): GitMrChangeInfo? {
         logger.info("getMergeRequestChangeInfo: [$gitProjectId|$mrId]")
-        return client.getScm(ServiceGitCiResource::class).getMergeRequestChangeInfo(
-            token = if (userId == null) {
-                token!!
-            } else {
-                getOauthToken(userId, true, gitProjectId)
-            },
-            gitProjectId = gitProjectId,
-            mrId = mrId
-        ).data
+        return retryFun(
+            log = "$gitProjectId get mr $mrId changeInfo error",
+            action = {
+                client.getScm(ServiceGitCiResource::class).getMergeRequestChangeInfo(
+                    token = if (userId == null) {
+                        token!!
+                    } else {
+                        getOauthToken(userId, true, gitProjectId)
+                    },
+                    gitProjectId = gitProjectId,
+                    mrId = mrId
+                ).data
+            }
+        )
     }
 
     fun getProjectList(
@@ -268,13 +258,18 @@ class ScmService @Autowired constructor(
         useAccessToken: Boolean
     ): GitCodeFileInfo? {
         logger.info("getFileInfo: [$gitProjectId|$filePath][$ref]")
-        return client.getScm(ServiceGitCiResource::class).getGitFileInfo(
-            gitProjectId = gitProjectId,
-            filePath = filePath,
-            ref = ref,
-            token = token,
-            useAccessToken = useAccessToken
-        ).data
+        return retryFun(
+            log = "getFileInfo: [$gitProjectId|$filePath][$ref] error",
+            action = {
+                client.getScm(ServiceGitCiResource::class).getGitFileInfo(
+                    gitProjectId = gitProjectId,
+                    filePath = filePath,
+                    ref = ref,
+                    token = token,
+                    useAccessToken = useAccessToken
+                ).data
+            }
+        )
     }
 
     fun getMergeInfo(
@@ -283,11 +278,40 @@ class ScmService @Autowired constructor(
         token: String
     ): GitCIMrInfo? {
         logger.info("getMergeInfo: [$gitProjectId|$mergeRequestId][$token]")
-        return client.getScm(ServiceGitResource::class).getGitCIMrInfo(
-            gitProjectId = gitProjectId,
-            mergeRequestId = mergeRequestId,
-            token = token
-        ).data
+        return retryFun(log = "$gitProjectId get mr $mergeRequestId info error",
+            action = {
+                client.getScm(ServiceGitResource::class).getGitCIMrInfo(
+                    gitProjectId = gitProjectId,
+                    mergeRequestId = mergeRequestId,
+                    token = token
+                ).data
+            }
+        )
+    }
+
+    fun getFileTreeFromGit(
+        gitToken: GitToken,
+        gitRequestEvent: GitRequestEvent,
+        filePath: String,
+        isMrEvent: Boolean = false
+    ): List<GitFileInfo> {
+        val gitProjectId = getProjectId(isMrEvent, gitRequestEvent)
+        return try {
+            val result = retryFun(log = "$gitProjectId get $filePath file tree error",
+                action = {
+                    client.getScm(ServiceGitResource::class).getGitCIFileTree(
+                        gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
+                        path = filePath,
+                        token = gitToken.accessToken,
+                        ref = getTriggerBranch(gitRequestEvent.branch)
+                    )
+                }
+            )
+            result.data!!
+        } catch (e: Throwable) {
+            logger.error("$gitProjectId get $filePath file tree error", e)
+            emptyList()
+        }
     }
 
     private fun getTriggerBranch(branch: String): String {
@@ -304,6 +328,21 @@ class ScmService @Autowired constructor(
             oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
         } else {
             return oauthService.getAndCheckOauthToken(userId).accessToken
+        }
+    }
+
+    @Throws(RuntimeException::class)
+    fun <T> retryFun(log: String, action: () -> T): T {
+        return try {
+            return RetryUtils.clientRetry {
+                action()
+            }
+        } catch (e: ClientException) {
+            logger.error("retry 10 times $log: ${e.message} ")
+            throw RuntimeException("$log | timeout ${e.message}")
+        } catch (e: Exception) {
+            logger.error("$log: ${e.message} ")
+            throw RuntimeException("$log ${e.message}")
         }
     }
 }

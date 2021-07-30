@@ -70,7 +70,7 @@ class YamlTemplateService @Autowired constructor(
         if (token != null) {
             return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
                 token = token,
-                gitProjectId = gitProjectId,
+                gitProjectId = gitProjectId.toString(),
                 ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
@@ -78,15 +78,9 @@ class YamlTemplateService @Autowired constructor(
         }
         if (personalAccessToken.isNullOrBlank()) {
             val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
-            // TODO: 通过项目路径直接获取文件，去掉获取项目数字ID这一步
-            val targetProjectId = scmService.getProjectInfoThrow(
-                token = oAuthToken,
-                gitProjectId = targetRepo!!,
-                useAccessToken = true
-            )?.gitProjectId ?: throw RuntimeException(NOT_FIND_REPO.format(targetRepo))
             return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
                 token = oAuthToken,
-                gitProjectId = targetProjectId.toLong(),
+                gitProjectId = targetRepo!!,
                 ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
@@ -105,14 +99,9 @@ class YamlTemplateService @Autowired constructor(
             } else {
                 key
             }
-            val targetProjectId = scmService.getProjectInfoThrow(
-                token = personToken,
-                gitProjectId = targetRepo!!,
-                useAccessToken = false
-            )?.gitProjectId ?: throw RuntimeException(NOT_FIND_REPO.format(targetRepo))
             return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
                 token = personToken,
-                gitProjectId = targetProjectId.toLong(),
+                gitProjectId = targetRepo!!,
                 ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = false

@@ -142,7 +142,7 @@ class GitCiService {
     }
 
     fun getGitCIFileContent(
-        gitProjectId: Long,
+        gitProjectId: String,
         filePath: String,
         token: String,
         ref: String,
@@ -151,7 +151,7 @@ class GitCiService {
         logger.info("[$gitProjectId|$filePath|$ref] Start to get the git file content")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/blobs/" +
+            val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "utf-8")}/repository/blobs/" +
                 "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
                 if (useAccessToken) {
                     "&access_token=$token"
