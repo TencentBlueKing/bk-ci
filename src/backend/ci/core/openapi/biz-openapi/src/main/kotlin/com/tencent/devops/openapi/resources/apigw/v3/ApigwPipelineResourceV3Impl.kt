@@ -135,14 +135,15 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        channelCode: ChannelCode?
     ): Result<Model> {
         logger.info("Get a pipeline at project:$projectId, pipelineId:$pipelineId")
         return client.get(ServicePipelineResource::class).getWithPermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode ?: ChannelCode.BS,
             checkPermission = true
         )
     }
@@ -152,6 +153,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         apigwType: String?,
         userId: String,
         projectId: String,
+        channelCode: ChannelCode?,
         pipelineIds: List<String>
     ): Result<List<PipelineWithModel>> {
         logger.info("Get batch pipelines at project:$projectId, pipelineIds:$pipelineIds")
@@ -159,7 +161,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             userId = userId,
             projectId = projectId,
             pipelineIds = pipelineIds,
-            channelCode = ChannelCode.BS
+            channelCode = channelCode ?: ChannelCode.BS
         )
     }
 
