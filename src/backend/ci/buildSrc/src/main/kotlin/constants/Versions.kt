@@ -31,4 +31,5 @@ object Versions {
     const val AsyncHttpClient = "2.1.0"
     const val KtlintHtmlReport = "0.1.2"
     const val Ktlint = "0.29.0"
+    const val Feign = "11.6" //TODO 修复这个BUG:https://github.com/OpenFeign/feign/pull/1347 , 后续SpringCloud升级后可以去掉
 }
