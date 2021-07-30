@@ -114,12 +114,12 @@ object TaskUtils {
             }
             val breakFlag = when (runCondition) {
                 RunCondition.PRE_TASK_SUCCESS -> {
-                    // 当前插件前面的插件存在失败的情况则返回false
+                    // 当前插件前面的插件存在失败的情况则返回true
                     !tmpTask.status.isSuccess() && tmpTask.status != BuildStatus.UNEXEC &&
                         !ControlUtils.continueWhenFailure(tmpTask.additionalOptions)
                 }
                 RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
-                    // 当前插件前面的插件存在取消的情况则返回false
+                    // 当前插件前面的插件存在取消的情况则返回true
                     tmpTask.status == BuildStatus.CANCELED
                 }
                 else -> {
