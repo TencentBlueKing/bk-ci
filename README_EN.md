@@ -22,6 +22,8 @@ bk-ci provides five core services, namely Process, Repository, Ticket, Environme
 - **Ticket**: It provides the management of various kinds of tickets and certificates for services like Repository and Process.
 - **Environment**: It can host the internal agents of the enterprise on bk-ci.
 - **Store**: It consists of pipeline plugins and pipeline templates. Plugins are used to integrate with various third-party services of the enterprise and templates help to standardize its internal R&D process.
+- **CodeCheck**：Provide professional code-check solutions to check multiple dimensions of code issues such as defects, security vulnerabilities, code styles, etc., to promote product quality.
+
 
 ## Overview
 
@@ -37,6 +39,7 @@ bk-ci provides five core services, namely Process, Repository, Ticket, Environme
 - Distributed system: bk-ci can manage multiple agents easily to help you perform cross-platform build, testing and deployment in a faster manner.
 - Pipeline plugins: bk-ci has a complete plugin development system with properties like low barrier to entry and scalability.
 - Pipeline templates: It promotes the standardization of R&D within the enterprise.
+- CodeCheck rule set：accumulate the team's code requirements, and can be shared and upgraded across projects or teams.
 
 ## Experience
 
