@@ -42,7 +42,7 @@
             <i class="devops-icon icon-right-shape connector-angle"></i>
         </span>
         <template v-if="editable">
-            <span v-bk-clickoutside="toggleAddMenu" v-if="!isFirstStage" class="add-menu" @click.stop="toggleAddMenu(!isAddMenuShow)">
+            <span v-if="!isFirstStage" class="add-menu" @click.stop="toggleAddMenu(!isAddMenuShow)">
                 <i :class="{ [iconCls]: true, 'active': isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
                     <cruve-line class="add-connector connect-line left" :width="60" :height="cruveHeight"></cruve-line>
@@ -66,7 +66,7 @@
                     </div>
                 </template>
             </span>
-            <span v-bk-clickoutside="toggleLastMenu" v-if="isLastStage && !isFinallyStage && editable" @click.stop="toggleLastMenu(!lastAddMenuShow)" class="append-stage pointer">
+            <span v-if="isLastStage && !isFinallyStage && editable" @click.stop="toggleLastMenu(!lastAddMenuShow)" class="append-stage pointer">
                 <i class="add-plus-icon" />
                 <template v-if="lastAddMenuShow">
                     <span class="insert-stage direction">
@@ -316,6 +316,10 @@
             if (this.showCheckedToatal) {
                 Vue.set(this.stage, 'runStage', !this.stageDisabled)
             }
+            document.addEventListener('click', this.hideAddStage)
+        },
+        beforeDestroyed () {
+            window.removeEventListener('click', this.hideAddStage)
         },
         updated () {
             this.updateHeight()
@@ -450,9 +454,20 @@
                 }
             },
 
-            toggleLastMenu (isAddMenuShow) {
+            toggleLastMenu (isLastMenuShow) {
                 if (!this.editable) return
-                this.lastAddMenuShow = typeof isAddMenuShow === 'boolean' ? isAddMenuShow : false
+                const { stageIndex, setInertStageIndex } = this
+                this.lastAddMenuShow = typeof isLastMenuShow === 'boolean' ? isLastMenuShow : false
+                if (this.lastAddMenuShow) {
+                    setInertStageIndex({
+                        insertStageIndex: stageIndex
+                    })
+                }
+            },
+
+            hideAddStage () {
+                this.lastAddMenuShow = false
+                this.isAddMenuShow = false
             },
 
             startNextStage () {

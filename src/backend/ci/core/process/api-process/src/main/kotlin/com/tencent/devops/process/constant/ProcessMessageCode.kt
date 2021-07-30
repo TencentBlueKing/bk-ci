@@ -147,6 +147,9 @@ object ProcessMessageCode {
     const val ERROR_NO_STAGE_EXISTS_BY_ID = "2101106" // 构建中Stage[{0}]不存在
     const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待审核
 
+    // 导出数据错误
+    const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}
+
     // 构建时错误
     const val ERROR_BUILD_TASK_BCS_PARAM_BCSAPPINSTID = "2101111" // bcsAppInstId is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_CATEGORY = "2101112" // category is not init

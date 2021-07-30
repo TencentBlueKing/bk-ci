@@ -1888,6 +1888,9 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
                     needDeleteCheckerSets.stream().collect(Collectors.groupingBy(CheckerSetEntity::getCheckerSetId));
             checkerSetMap.forEach((checkerSetId, checkerSetEntities) -> {
                 CheckerSetEntity selectCheckerSet = null;
+                if (projInstallCheckerSetMap.get(checkerSetId) == null) {
+                    log.info("projInstallCheckerSetMap get checkerSetId is null: {}", checkerSetId);
+                }
                 if (projInstallCheckerSetMap.get(checkerSetId).getUselatestVersion()) {
                     selectCheckerSet = checkerSetEntities.stream()
                             .max(Comparator.comparing(CheckerSetEntity::getVersion)).orElse(new CheckerSetEntity());

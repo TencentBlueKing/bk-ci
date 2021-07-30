@@ -83,7 +83,7 @@ class PipelineBuildVarDao @Autowired constructor() {
                 baseStep.set(VAR_TYPE, valueType)
             }
             return baseStep.set(VALUE, value.toString())
-                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)))
+                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)).and(READ_ONLY.notEqual(true)))
                 .execute()
         }
     }
@@ -186,6 +186,7 @@ class PipelineBuildVarDao @Autowired constructor() {
                         .set(KEY, v.key)
                         .set(VALUE, v.value.toString())
                         .set(VAR_TYPE, v.valueType!!.name)
+                        .set(READ_ONLY, v.readOnly)
                         .onDuplicateKeyUpdate()
                         .set(VALUE, v.value.toString())
                         .set(VAR_TYPE, v.valueType!!.name)
@@ -196,6 +197,7 @@ class PipelineBuildVarDao @Autowired constructor() {
                         .set(BUILD_ID, buildId)
                         .set(KEY, v.key)
                         .set(VALUE, v.value.toString())
+                        .set(READ_ONLY, v.readOnly)
                         .onDuplicateKeyUpdate()
                         .set(VALUE, v.value.toString())
                 }
@@ -227,7 +229,9 @@ class PipelineBuildVarDao @Autowired constructor() {
                 if (valueType != null) {
                     baseStep.set(VAR_TYPE, valueType.name)
                 }
-                baseStep.set(VALUE, v.value.toString()).where(BUILD_ID.eq(buildId).and(KEY.eq(v.key)))
+                baseStep.set(VALUE, v.value.toString()).where(
+                        BUILD_ID.eq(buildId).and(KEY.eq(v.key)).and(READ_ONLY.notEqual(true))
+                )
                 list.add(baseStep)
             }
             dslContext.batch(list).execute()

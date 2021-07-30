@@ -105,11 +105,20 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                         relativeSubPath = path
                     )
                 },
-                includedPaths = WebhookUtils.convert(relativePath).map { path ->
-                    WebhookUtils.getFullPath(
-                        projectRelativePath = projectRelativePath,
-                        relativeSubPath = path
+                includedPaths = if (relativePath.isNullOrBlank()) {
+                    listOf(
+                        WebhookUtils.getFullPath(
+                            projectRelativePath = projectRelativePath,
+                            relativeSubPath = ""
+                        )
                     )
+                } else {
+                    WebhookUtils.convert(relativePath).map { path ->
+                        WebhookUtils.getFullPath(
+                            projectRelativePath = projectRelativePath,
+                            relativeSubPath = path
+                        )
+                    }
                 }
             )
             return listOf(projectNameFilter, userFilter, pathFilter)

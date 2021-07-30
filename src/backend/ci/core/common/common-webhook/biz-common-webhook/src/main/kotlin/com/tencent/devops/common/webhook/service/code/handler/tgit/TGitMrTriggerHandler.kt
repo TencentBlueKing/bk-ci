@@ -42,6 +42,7 @@ import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHand
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
+import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
@@ -204,7 +205,13 @@ class TGitMrTriggerHandler(
                     ).doFilter(response)
                 }
             }
-            return listOf(sourceBranchFilter, skipCiFilter, pathFilter)
+            val commitMessageFilter = CommitMessageFilter(
+                includeCommitMsg,
+                excludeCommitMsg,
+                event.object_attributes.last_commit.message,
+                pipelineId
+            )
+            return listOf(sourceBranchFilter, skipCiFilter, pathFilter, commitMessageFilter)
         }
     }
 
