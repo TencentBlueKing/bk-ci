@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     kotlin("jvm")
     detektCheck
@@ -143,7 +141,6 @@ subprojects {
             dependency("com.github.ulisesbocchio:jasypt-spring-boot-starter:${Versions.Jasypt}")
             dependency("org.jolokia:jolokia-core:${Versions.Jolokia}")
             dependency("org.apache.commons:commons-lang3:${Versions.CommonLang3}")
-            dependency("org.apache.commons:commons-collections4:${Versions.Collection4}")
             dependency("commons-codec:commons-codec:${Versions.CommonCodec}")
             dependency("org.jooq:jooq:${Versions.Jooq}")
             dependency("org.apache.lucene:lucene-core:${Versions.Lucene}")
@@ -211,18 +208,4 @@ subprojects {
             }
         }
     }
-}
-dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-}
-repositories {
-    mavenCentral()
-}
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "1.8"
-}
-val compileTestKotlin: KotlinCompile by tasks
-compileTestKotlin.kotlinOptions {
-    jvmTarget = "1.8"
 }
