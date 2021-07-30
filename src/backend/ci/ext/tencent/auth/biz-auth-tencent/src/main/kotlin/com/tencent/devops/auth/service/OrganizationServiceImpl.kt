@@ -82,7 +82,7 @@ class OrganizationServiceImpl @Autowired constructor(
             return cacheData
         }
         val deptInfo = client.get(ServiceProjectOrganizationResource::class).getDeptInfo(
-            userId = "admin",
+            userId = null,
             id = organizationId.toInt()).data
         logger.info("getOrganizationInfo $organizationId | $level | $deptInfo")
 
