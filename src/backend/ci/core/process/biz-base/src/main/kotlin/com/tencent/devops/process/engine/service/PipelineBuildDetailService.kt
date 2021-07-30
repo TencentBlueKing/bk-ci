@@ -62,6 +62,7 @@ import java.util.concurrent.TimeUnit
 class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val stageTagService: StageTagService,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
@@ -323,7 +324,10 @@ class PipelineBuildDetailService @Autowired constructor(
                 name = it.name ?: it.id!!,
                 status = it.status,
                 startEpoch = it.startEpoch,
-                elapsed = it.elapsed
+                elapsed = it.elapsed,
+                tag = it.tag?.map { _it ->
+                    stageTagService.getStageTag(_it!!).data!!.stageTagName
+                }
             )
         }
     }
