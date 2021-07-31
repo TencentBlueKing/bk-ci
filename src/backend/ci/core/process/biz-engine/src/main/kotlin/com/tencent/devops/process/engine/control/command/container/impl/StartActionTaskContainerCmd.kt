@@ -155,10 +155,6 @@ class StartActionTaskContainerCmd(
             }
 
             if (toDoTask != null || breakFlag) {
-                if (toDoTask != null && toDoTask.status.isReadyToRun()) {
-                    // 为未执行任务打印日志
-                    addUnExecTaskTipLog(index, containerTasks)
-                }
                 break
             }
         }
@@ -173,28 +169,6 @@ class StartActionTaskContainerCmd(
             containerContext.cmdFlowState = CmdFlowState.BREAK
         }
         return toDoTask
-    }
-
-    private fun addUnExecTaskTipLog(
-        index: Int,
-        containerTasks: List<PipelineBuildTask>
-    ) {
-        for (i in (index - 1) downTo 0) {
-            val pipelineTask = containerTasks[i]
-            if (pipelineTask.status != BuildStatus.UNEXEC && pipelineTask.status != BuildStatus.SKIP) {
-                break
-            }
-            if (pipelineTask.status == BuildStatus.UNEXEC) {
-                // 为未执行任务打印日志
-                buildLogPrinter.addLine(
-                    buildId = pipelineTask.buildId,
-                    message = "Do not meet the run conditions, ignored.",
-                    tag = pipelineTask.taskId,
-                    jobId = pipelineTask.containerHashId,
-                    executeCount = pipelineTask.executeCount ?: 1
-                )
-            }
-        }
     }
 
     private fun isTerminate(containerContext: ContainerContext): Boolean {

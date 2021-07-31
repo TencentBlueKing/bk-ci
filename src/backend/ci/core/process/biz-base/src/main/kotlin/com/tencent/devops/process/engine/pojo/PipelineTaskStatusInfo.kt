@@ -31,5 +31,8 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 
 data class PipelineTaskStatusInfo(
     val taskId: String, // 任务ID
-    val buildStatus: BuildStatus // 构建状态
+    val containerHashId: String, // 容器哈希ID
+    val buildStatus: BuildStatus, // 构建状态
+    val executeCount: Int, // 执行次数
+    val message: String? = null // 提示信息
 )
