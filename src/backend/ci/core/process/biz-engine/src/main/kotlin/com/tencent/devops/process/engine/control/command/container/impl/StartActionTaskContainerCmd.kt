@@ -155,22 +155,12 @@ class StartActionTaskContainerCmd(
             }
 
             if (toDoTask != null || breakFlag) {
-                if (toDoTask != null && toDoTask.status.isReadyToRun() && actionType.isStartOrRefresh()) {
-                    // 当前任务前面不是post任务的未执行任务打印日志（未执行的post任务日志打印单独处理）
+                if (toDoTask != null && toDoTask.status.isReadyToRun()) {
+                    // 为未执行任务打印日志
                     addUnExecTaskTipLog(index, containerTasks)
                 }
                 break
             }
-        }
-
-        if (needTerminate && toDoTask != null && toDoTask.status.isRunning()) { // 运行中的插件需要Log为什么要被终止
-            buildLogPrinter.addRedLine(
-                buildId = toDoTask.buildId,
-                message = "Terminate Plugin[${toDoTask.taskName}]: ${containerContext.event.reason ?: "unknown"}",
-                tag = toDoTask.taskId,
-                jobId = toDoTask.containerHashId,
-                executeCount = toDoTask.executeCount ?: 1
-            )
         }
 
         LOG.info("ENGINE|${containerContext.event.buildId}|${containerContext.event.source}|CONTAINER_FIND_TASK|" +
@@ -194,10 +184,8 @@ class StartActionTaskContainerCmd(
             if (pipelineTask.status != BuildStatus.UNEXEC && pipelineTask.status != BuildStatus.SKIP) {
                 break
             }
-            if (pipelineTask.status == BuildStatus.UNEXEC &&
-                pipelineTask.additionalOptions?.elementPostInfo == null
-            ) {
-                // 不是post任务的未执行任务打印日志（未执行的post任务日志打印单独处理）
+            if (pipelineTask.status == BuildStatus.UNEXEC) {
+                // 为未执行任务打印日志
                 buildLogPrinter.addLine(
                     buildId = pipelineTask.buildId,
                     message = "Do not meet the run conditions, ignored.",
@@ -223,6 +211,13 @@ class StartActionTaskContainerCmd(
             containerContext.event.actionType.isTerminate() -> { // 终止命令，需要设置失败，并返回
                 containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask // 将当前任务传给TaskControl做终止
+                buildLogPrinter.addRedLine(
+                    buildId = toDoTask.buildId,
+                    message = "Terminate Plugin[${toDoTask.taskName}]: ${containerContext.event.reason ?: "unknown"}",
+                    tag = toDoTask.taskId,
+                    jobId = toDoTask.containerHashId,
+                    executeCount = toDoTask.executeCount ?: 1
+                )
             }
             containerContext.event.actionType.isEnd() -> { // 将当前正在运行的任务传给TaskControl做结束
                 containerContext.buildStatus = BuildStatus.RUNNING
