@@ -112,15 +112,16 @@ class StartActionTaskContainerCmd(
         var continueWhenFailure = false // 失败继续
         var needTerminate = isTerminate(containerContext) // 是否终止类型
         var breakFlag = false
-
-        for ((index, t) in containerContext.containerTasks.withIndex()) {
+        val containerTasks = containerContext.containerTasks
+        val actionType = containerContext.event.actionType
+        for ((index, t) in containerTasks.withIndex()) {
             // 此处pause状态由构建机[PipelineVMBuildService.claim]认领任务遇到需要暂停任务时更新为PAUSE。
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
                 toDoTask = findNextTaskAfterPause(containerContext, currentTask = t)
                 breakFlag = toDoTask == null
             } else if (t.status.isRunning()) { // 当前有运行中任务
                 // 如果是要启动或者刷新, 当前已经有运行中任务，则需要break
-                breakFlag = containerContext.event.actionType.isStartOrRefresh()
+                breakFlag = actionType.isStartOrRefresh()
                 // 如果是要终止，则需要拿出当前任务进行终止
                 toDoTask = findRunningTask(containerContext, currentTask = t)
             } else if (t.status.isFailure() || t.status.isCancel()) {
@@ -154,6 +155,10 @@ class StartActionTaskContainerCmd(
             }
 
             if (toDoTask != null || breakFlag) {
+                if (toDoTask != null && toDoTask.status.isReadyToRun()) {
+                    // 为未执行任务打印日志
+                    addUnExecTaskTipLog(index, containerTasks)
+                }
                 break
             }
         }
@@ -164,10 +169,32 @@ class StartActionTaskContainerCmd(
 
         if (!needTerminate && breakFlag) {
             // #3400 暂停场景下，Job超时引起的终止，以及FastKill 等对于要求终止的，未必有后续执行，需要结束而不是中断
-            containerContext.latestSummary = "action=${containerContext.event.actionType}"
+            containerContext.latestSummary = "action=$actionType"
             containerContext.cmdFlowState = CmdFlowState.BREAK
         }
         return toDoTask
+    }
+
+    private fun addUnExecTaskTipLog(
+        index: Int,
+        containerTasks: List<PipelineBuildTask>
+    ) {
+        for (i in (index - 1) downTo 0) {
+            val pipelineTask = containerTasks[i]
+            if (pipelineTask.status != BuildStatus.UNEXEC && pipelineTask.status != BuildStatus.SKIP) {
+                break
+            }
+            if (pipelineTask.status == BuildStatus.UNEXEC) {
+                // 为未执行任务打印日志
+                buildLogPrinter.addLine(
+                    buildId = pipelineTask.buildId,
+                    message = "Do not meet the run conditions, ignored.",
+                    tag = pipelineTask.taskId,
+                    jobId = pipelineTask.containerHashId,
+                    executeCount = pipelineTask.executeCount ?: 1
+                )
+            }
+        }
     }
 
     private fun isTerminate(containerContext: ContainerContext): Boolean {

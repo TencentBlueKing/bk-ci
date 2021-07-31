@@ -95,7 +95,10 @@ class VmOperateTaskGenerator {
             taskName = "Prepare_Job#${container.id!!}(N)"
             taskAtom = START_NORMAL_TASK_ATOM
         }
-
+        val additionalOptions = ElementAdditionalOptions(
+            timeout = 5, // 5分钟超时
+            runCondition = RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+        )
         return PipelineBuildTask(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -115,7 +118,7 @@ class VmOperateTaskGenerator {
             starter = userId,
             approver = null,
             subBuildId = null,
-            additionalOptions = null,
+            additionalOptions = additionalOptions,
             atomCode = atomCode
         )
     }

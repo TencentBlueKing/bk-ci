@@ -27,11 +27,10 @@
 
 package com.tencent.devops.process.util
 
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 
 object TaskUtils {
@@ -65,7 +64,6 @@ object TaskUtils {
      * 如果没有关联的父任务则返回null（异常情况），并一同返回是否允许执行该post[task]标识postExecuteFlag，
      * 非post[task]的postExecuteFlag永远false
      */
-    @Suppress("ComplexMethod")
     fun getPostTaskAndExecuteFlag(
         taskList: List<PipelineBuildTask>,
         task: PipelineBuildTask,
@@ -79,38 +77,15 @@ object TaskUtils {
         if (postInfo == null) {
             return parentTask to postExecuteFlag
         }
-        var parentTaskIndex: Int? = null
-        var buildLogPrinter: BuildLogPrinter? = null
-        for ((index, pipelineTask) in taskList.withIndex()) {
-            if (pipelineTask.taskId == task.taskId) {
-                break
-            }
-            if (pipelineTask.taskId == postInfo.parentElementId) {
-                parentTask = pipelineTask
-                parentTaskIndex = index
-            }
-            // 给post任务和其父任务之间的未执行任务加上日志提示
-            val endTaskFlag = task.taskId == VMUtils.genStopVMTaskId(task.taskSeq) ||
-                task.taskId == VMUtils.genEndPointTaskId(task.taskSeq)
-            if (parentTaskIndex != null && !endTaskFlag && pipelineTask.status == BuildStatus.UNEXEC) {
-                if (buildLogPrinter == null) {
-                    buildLogPrinter = SpringContextUtil.getBean(BuildLogPrinter::class.java)
-                }
-                buildLogPrinter.addLine(
-                    buildId = pipelineTask.buildId,
-                    message = "Do not meet the run conditions, ignored.",
-                    tag = pipelineTask.taskId,
-                    jobId = pipelineTask.containerHashId,
-                    executeCount = pipelineTask.executeCount ?: 1
-                )
-            }
-        }
         val runCondition = additionalOptions.runCondition
+        parentTask = taskList.filter { it.taskId == postInfo.parentElementId }.getOrNull(0)
         val conditionFlag = if (runCondition == RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT) {
             // 判断父任务是否是取消或者超时状态
             parentTask?.status == BuildStatus.CANCELED || parentTask?.status == BuildStatus.EXEC_TIMEOUT
-        } else if (runCondition == RunCondition.PRE_TASK_SUCCESS && !hasFailedTaskInInSuccessContainer) {
-            getPreTaskSuccessFlag(taskList, task)
+        } else if (runCondition == RunCondition.PRE_TASK_SUCCESS ||
+            runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+        ) {
+            getPreTaskExecuteFlag(taskList, runCondition)
         } else {
             if (isContainerFailed) { // 当前容器有失败的任务
                 runCondition in getContinueConditionListWhenFail() // 需要满足[前置任务失败时才运行]或[除了取消才不运行]条件
@@ -128,19 +103,30 @@ object TaskUtils {
         return parentTask to postExecuteFlag
     }
 
-    private fun getPreTaskSuccessFlag(
-        taskList: List<PipelineBuildTask>,
-        task: PipelineBuildTask
-    ): Boolean {
+    private fun getPreTaskExecuteFlag(taskList: List<PipelineBuildTask>, runCondition: RunCondition): Boolean {
         var flag = true
         val taskSize = taskList.size - 1
         for (i in 0..taskSize) {
             val tmpTask = taskList[i]
-            if (tmpTask.taskId == task.taskId) {
+            // 只需判断post任务之前的任务状态
+            if (tmpTask.additionalOptions?.elementPostInfo != null) {
                 return flag
             }
-            // 当前插件前面的插件存在失败的情况则返回false
-            if (tmpTask.status != BuildStatus.SUCCEED) {
+            val breakFlag = when (runCondition) {
+                RunCondition.PRE_TASK_SUCCESS -> {
+                    // 当前插件前面的插件存在失败的情况则返回true
+                    !tmpTask.status.isSuccess() && tmpTask.status != BuildStatus.UNEXEC &&
+                        !ControlUtils.continueWhenFailure(tmpTask.additionalOptions)
+                }
+                RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
+                    // 当前插件前面的插件存在取消的情况则返回true
+                    tmpTask.status == BuildStatus.CANCELED
+                }
+                else -> {
+                    false
+                }
+            }
+            if (breakFlag) {
                 flag = false
                 break
             }
