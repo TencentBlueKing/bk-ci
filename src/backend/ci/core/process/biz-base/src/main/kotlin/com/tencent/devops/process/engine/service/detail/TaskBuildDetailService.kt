@@ -31,6 +31,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -57,6 +58,7 @@ class TaskBuildDetailService(
     private val client: Client,
     private val buildVariableService: BuildVariableService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
+    private val buildLogPrinter: BuildLogPrinter,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
@@ -237,6 +239,7 @@ class TaskBuildDetailService(
                                 elementElapsed += elapsed
                             }
                             if (handleUpdateTaskStatusInfos(
+                                    containerId = c.containerId ?: "",
                                     buildStatus = buildStatus,
                                     cancelTaskPostFlag = cancelTaskPostFlag,
                                     tmpElement = it,
@@ -270,11 +273,21 @@ class TaskBuildDetailService(
                 taskId = updateTaskStatusInfo.taskId,
                 buildStatus = updateTaskStatusInfo.buildStatus
             )
+            if (!updateTaskStatusInfo.message.isNullOrBlank()) {
+                buildLogPrinter.addLine(
+                    buildId = buildId,
+                    message = updateTaskStatusInfo.message,
+                    tag = updateTaskStatusInfo.taskId,
+                    jobId = updateTaskStatusInfo.containerHashId,
+                    executeCount = updateTaskStatusInfo.executeCount
+                )
+            }
         }
         return updateTaskStatusInfos
     }
 
     private fun handleUpdateTaskStatusInfos(
+        containerId: String,
         buildStatus: BuildStatus,
         cancelTaskPostFlag: Boolean,
         endElement: Element,
@@ -286,6 +299,7 @@ class TaskBuildDetailService(
     ): Boolean {
         if (cancelTaskPostFlag) {
             return handleCancelTaskPost(
+                containerId = containerId,
                 endElement = endElement,
                 endElementIndex = endElementIndex,
                 tmpElement = tmpElement,
@@ -302,6 +316,7 @@ class TaskBuildDetailService(
                 val endIndex = elements.size - 1
                 if (endIndex >= startIndex) {
                     addCancelTaskStatusInfo(
+                        containerId = containerId,
                         startIndex = startIndex,
                         endIndex = endIndex,
                         elements = elements,
@@ -315,6 +330,7 @@ class TaskBuildDetailService(
     }
 
     private fun handleCancelTaskPost(
+        containerId: String,
         endElement: Element,
         endElementIndex: Int,
         tmpElement: Element,
@@ -330,6 +346,7 @@ class TaskBuildDetailService(
             val taskStatus = BuildStatus.parse(parentElement.status)
             if (!(taskStatus.isFinish() || parentElement.id == endElement.id)) {
                 handleCancelTaskStatusInfo(
+                    containerId = containerId,
                     tmpElementIndex = tmpElementIndex,
                     elements = elements,
                     endElementIndex = endElementIndex,
@@ -344,6 +361,7 @@ class TaskBuildDetailService(
                 return true
             }
             addCancelTaskStatusInfo(
+                containerId = containerId,
                 startIndex = startIndex,
                 endIndex = endIndex,
                 elements = elements,
@@ -355,6 +373,7 @@ class TaskBuildDetailService(
     }
 
     private fun handleCancelTaskStatusInfo(
+        containerId: String,
         tmpElementIndex: Int,
         elements: List<Element>,
         endElementIndex: Int,
@@ -365,6 +384,7 @@ class TaskBuildDetailService(
             val endIndex = elements.size - 1
             if (endIndex > startIndex) {
                 addCancelTaskStatusInfo(
+                    containerId = containerId,
                     startIndex = startIndex,
                     endIndex = endIndex,
                     elements = elements,
@@ -375,6 +395,7 @@ class TaskBuildDetailService(
     }
 
     private fun addCancelTaskStatusInfo(
+        containerId: String,
         startIndex: Int,
         endIndex: Int,
         elements: List<Element>,
@@ -393,7 +414,10 @@ class TaskBuildDetailService(
                 updateTaskStatusInfos?.add(
                     PipelineTaskStatusInfo(
                         taskId = taskId,
-                        buildStatus = unExecBuildStatus
+                        containerHashId = containerId,
+                        buildStatus = unExecBuildStatus,
+                        executeCount = element.executeCount,
+                        message = "Do not meet the run conditions, ignored."
                     )
                 )
             }
