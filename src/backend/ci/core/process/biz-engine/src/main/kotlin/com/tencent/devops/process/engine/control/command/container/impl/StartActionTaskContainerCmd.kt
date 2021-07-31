@@ -32,8 +32,11 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.FastKillUtils
@@ -45,6 +48,7 @@ import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
+import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskService
@@ -53,9 +57,10 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 @Service
 class StartActionTaskContainerCmd(
+    private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val taskBuildDetailService: TaskBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -85,9 +90,12 @@ class StartActionTaskContainerCmd(
                     val fastKill = FastKillUtils.isFastKillCode(commandContext.event.errorCode)
                     if (!fastKill && actionType.isTerminate() && !commandContext.buildStatus.isFailure()) {
                         commandContext.buildStatus = BuildStatus.FAILED
+                    } else {
+                        setContextBuildStatus(commandContext)
                     }
                     commandContext.latestSummary += "| status=${commandContext.buildStatus}"
                 } else {
+                    doWaitToDoTaskBus(waitToDoTask, actionType, commandContext)
                     sendTask(event = commandContext.event, task = waitToDoTask)
                 }
             }
@@ -95,6 +103,48 @@ class StartActionTaskContainerCmd(
                 commandContext.buildStatus = BuildStatus.UNKNOWN
                 commandContext.latestSummary = "j(${commandContext.container.containerId}) unknown action: $actionType"
             }
+        }
+    }
+
+    private fun setContextBuildStatus(commandContext: ContainerContext) {
+        val container = commandContext.container
+        val runEvenCancelTaskIdKey = ContainerUtils.getContainerRunEvenCancelTaskKey(
+            pipelineId = container.pipelineId,
+            buildId = container.buildId,
+            containerId = container.containerId
+        )
+        if (redisOperation.get(runEvenCancelTaskIdKey) != null) {
+            /**
+             * 当前的job如果包含runCondition为PRE_TASK_FAILED_EVEN_CANCEL的task，运行到最后如果状态为SUCCEED，
+             * 则需要置为CANCELED
+             */
+            if (commandContext.buildStatus == BuildStatus.SUCCEED) {
+                commandContext.buildStatus = BuildStatus.CANCELED
+            }
+            redisOperation.delete(runEvenCancelTaskIdKey)
+        }
+    }
+
+    private fun doWaitToDoTaskBus(
+        waitToDoTask: PipelineBuildTask,
+        actionType: ActionType,
+        commandContext: ContainerContext
+    ) {
+        // 当task的runCondition为PRE_TASK_FAILED_EVEN_CANCEL且task被用户取消时则写入标志到redis中
+        val runCondition = waitToDoTask.additionalOptions?.runCondition
+        val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+        if (actionType == ActionType.END && failedEvenCancelFlag) {
+            val container = commandContext.container
+            val timeOut = container.controlOption?.jobControlOption?.timeout ?: Timeout.MAX_MINUTES
+            redisOperation.set(
+                key = ContainerUtils.getContainerRunEvenCancelTaskKey(
+                    pipelineId = waitToDoTask.pipelineId,
+                    buildId = waitToDoTask.buildId,
+                    containerId = waitToDoTask.containerId
+                ),
+                value = waitToDoTask.taskId,
+                expiredInSecond = timeOut * 60L
+            )
         }
     }
 

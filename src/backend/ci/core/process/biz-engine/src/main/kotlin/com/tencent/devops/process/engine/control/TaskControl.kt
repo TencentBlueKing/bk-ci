@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -124,7 +125,11 @@ class TaskControl @Autowired constructor(
         // 构建机的任务不在此运行
         if (taskAtomService.runByVmTask(buildTask!!)) {
             // 构建机上运行中任务目前无法直接后台干预，便在此处设置状态，使流程继续
-            if (actionType.isEnd()) {
+            val additionalOptions = buildTask.additionalOptions
+            val runCondition = additionalOptions?.runCondition
+            val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+            if (actionType.isTerminate() ||
+                (actionType == ActionType.END && !failedEvenCancelFlag)) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|code=$errorCode")
                 val buildStatus = if (actionType.isTerminate()) { // 区分系统终止还是用户手动终止
                     BuildStatus.TERMINATE
@@ -171,7 +176,11 @@ class TaskControl @Autowired constructor(
      */
     private fun runTask(userId: String, actionType: ActionType, buildTask: PipelineBuildTask) = when {
         buildTask.status.isReadyToRun() -> { // 准备启动执行
-            if (actionType.isEnd()) { // #2400 因任务终止&结束的事件命令而未执行的原子设置为UNEXEC，而不是SKIP
+            val runCondition = buildTask.additionalOptions?.runCondition
+            if (actionType.isTerminate() ||
+                (actionType == ActionType.END && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL)
+            ) {
+                // #2400 因任务终止&结束的事件命令而未执行的原子设置为UNEXEC，而不是SKIP
                 pipelineRuntimeService.updateTaskStatus(
                     task = buildTask, userId = userId, buildStatus = BuildStatus.UNEXEC
                 )

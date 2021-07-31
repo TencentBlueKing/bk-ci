@@ -383,10 +383,11 @@ class TaskBuildDetailService(
         for (i in startIndex..endIndex) {
             val element = elements[i]
             val taskId = element.id
-            val runCondition = element.additionalOptions?.runCondition
-            // 排除构建状态为结束态的构建任务和runCondition不为PRE_TASK_FAILED_EVEN_CANCEL的任务
-            if (taskId != null && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL &&
-                !BuildStatus.parse(element.status).isFinish()) {
+            val additionalOptions = element.additionalOptions
+            // 排除构建状态为结束态的构建任务
+            if (taskId != null && !BuildStatus.parse(element.status).isFinish() &&
+                additionalOptions?.elementPostInfo == null
+            ) {
                 val unExecBuildStatus = BuildStatus.UNEXEC
                 element.status = unExecBuildStatus.name
                 updateTaskStatusInfos?.add(
