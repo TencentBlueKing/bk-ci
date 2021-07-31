@@ -156,7 +156,7 @@ class StartActionTaskContainerCmd(
 
             if (toDoTask != null || breakFlag) {
                 if (toDoTask != null && toDoTask.status.isReadyToRun()) {
-                    // 当前任务前面不是post任务的未执行任务打印日志（未执行的post任务日志打印单独处理）
+                    // 为未执行任务打印日志
                     addUnExecTaskTipLog(index, containerTasks)
                 }
                 break
@@ -184,10 +184,8 @@ class StartActionTaskContainerCmd(
             if (pipelineTask.status != BuildStatus.UNEXEC && pipelineTask.status != BuildStatus.SKIP) {
                 break
             }
-            if (pipelineTask.status == BuildStatus.UNEXEC &&
-                pipelineTask.additionalOptions?.elementPostInfo == null
-            ) {
-                // 不是post任务的未执行任务打印日志（未执行的post任务日志打印单独处理）
+            if (pipelineTask.status == BuildStatus.UNEXEC) {
+                // 为未执行任务打印日志
                 buildLogPrinter.addLine(
                     buildId = pipelineTask.buildId,
                     message = "Do not meet the run conditions, ignored.",
