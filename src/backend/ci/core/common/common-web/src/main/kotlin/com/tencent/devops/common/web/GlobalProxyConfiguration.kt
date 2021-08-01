@@ -53,8 +53,10 @@ class GlobalProxyConfiguration(
         if (enableFlag && port != null) {
             Proxy.Type.values().firstOrNull { it.name == proxyServerType }?.also { type ->
                 val proxyHostsRegex = spliterator.split(proxyHosts).toSet().map { Regex(it.trim()) }
-                val socketAddress = InetSocketAddress.createUnresolved(proxyServerHost, port)
-                val proxySelector = CustomProxySelector(type, socketAddress, proxyHostsRegex)
+                val socketAddress = InetSocketAddress(proxyServerHost, port)
+                val proxy = Proxy(type, socketAddress)
+                val proxySelector = CustomProxySelector(proxy, proxyHostsRegex)
+                LOG.info("$proxySelector will use $proxy to proxy request")
                 ProxySelector.setDefault(proxySelector)
             }
         }
