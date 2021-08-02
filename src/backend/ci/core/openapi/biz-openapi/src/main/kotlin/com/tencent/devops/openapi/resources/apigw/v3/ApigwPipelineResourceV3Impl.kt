@@ -185,7 +185,8 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         userId: String,
         projectId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        channelCode: ChannelCode?
     ): Result<Page<Pipeline>> {
         logger.info("get pipelines by user, userId:$userId")
         return client.get(ServicePipelineResource::class).list(
@@ -193,7 +194,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             projectId = projectId,
             page = page,
             pageSize = pageSize,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode ?: ChannelCode.BS,
             checkPermission = true
         )
     }
