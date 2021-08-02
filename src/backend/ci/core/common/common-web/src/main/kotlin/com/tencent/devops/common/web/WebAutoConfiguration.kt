@@ -43,6 +43,7 @@ import org.springframework.boot.web.embedded.undertow.UndertowBuilderCustomizer
 import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.DependsOn
 import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Profile
 import org.springframework.context.annotation.PropertySource
@@ -60,6 +61,7 @@ import org.springframework.core.env.Environment
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(JerseyAutoConfiguration::class)
 @EnableConfigurationProperties(SwaggerProperties::class)
+@DependsOn("globalProxyConfiguration")
 class WebAutoConfiguration {
 
     @Bean
@@ -103,26 +105,6 @@ class WebAutoConfiguration {
         }
         return factory
     }
-
-    @Bean
-    fun globalProxyConfiguration(
-        @Value("\${net.proxy.enable:false}")
-        enableProxy: String,
-        @Value("\${net.proxy.hosts:}")
-        proxyHosts: String,
-        @Value("\${net.proxy.server.type:}")
-        proxyServerType: String,
-        @Value("\${net.proxy.server.host:}")
-        proxyServerHost: String,
-        @Value("\${net.proxy.server.port:}")
-        proxyServerPort: String
-    ) = GlobalProxyConfiguration(
-        enableProxy = enableProxy,
-        proxyHosts = proxyHosts,
-        proxyServerType = proxyServerType,
-        proxyServerHost = proxyServerHost,
-        proxyServerPort = proxyServerPort
-    )
 
     private val logger = LoggerFactory.getLogger(WebAutoConfiguration::class.java)
 }
