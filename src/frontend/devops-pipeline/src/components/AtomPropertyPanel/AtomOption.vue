@@ -61,6 +61,13 @@
                     model['failControl'].list.push(failControlManualRetryOption)
                 }
 
+                // 编辑状态
+                if (!this.disabled) {
+                    model['runCondition'].list = model['runCondition'].list.filter(item => {
+                        return item.id !== 'PARENT_TASK_CANCELED_OR_TIMEOUT'
+                    })
+                }
+
                 return model
             }
         },

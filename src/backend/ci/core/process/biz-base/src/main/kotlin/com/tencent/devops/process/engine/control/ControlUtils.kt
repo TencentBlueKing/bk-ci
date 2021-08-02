@@ -164,7 +164,7 @@ object ControlUtils {
             runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
                 skip = containerFinalStatus.isCancel()
             }
-            //  即使前面有插件运行失败也运行，即使被取消也运行 [未实现] 永远不跳过
+            //  即使前面有插件运行失败也运行，即使被取消也运行， 永远不跳过
             runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL -> skip = false
             // 如果容器是失败或者取消状态，[其他条件] 都要跳过不执行
             containerFinalStatus.isFailure() || containerFinalStatus.isCancel() -> skip = true

@@ -30,6 +30,7 @@ package com.tencent.devops.common.webhook.pojo.code
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 
 data class WebHookParams(
     val repositoryConfig: RepositoryConfig,
@@ -37,6 +38,7 @@ data class WebHookParams(
     var excludeBranchName: String? = null,
     var tagName: String? = null,
     var excludeTagName: String? = null,
+    var pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
     var includePaths: String? = null,
     var excludePaths: String? = null,
     var eventType: CodeEventType? = null,

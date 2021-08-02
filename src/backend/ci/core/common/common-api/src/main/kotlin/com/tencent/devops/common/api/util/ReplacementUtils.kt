@@ -86,7 +86,7 @@ object ReplacementUtils {
             matcher.appendReplacement(buff, Matcher.quoteReplacement(value))
         }
         matcher.appendTail(buff)
-        return if (buff.isNotEmpty()) buff.toString() else command
+        return buff.toString()
     }
 
     private val tPattern = Pattern.compile("(\\$[{](?<single>[^$^{}]+)})|(\\$[{]{2}(?<double>[^$^{}]+)[}]{2})")

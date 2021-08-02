@@ -403,8 +403,11 @@ class TaskBuildDetailService(
         for (i in startIndex..endIndex) {
             val element = elements[i]
             val taskId = element.id
+            val additionalOptions = element.additionalOptions
             // 排除构建状态为结束态的构建任务
-            if (taskId != null && !BuildStatus.parse(element.status).isFinish()) {
+            if (taskId != null && !BuildStatus.parse(element.status).isFinish() &&
+                additionalOptions?.elementPostInfo == null
+            ) {
                 val unExecBuildStatus = BuildStatus.UNEXEC
                 element.status = unExecBuildStatus.name
                 updateTaskStatusInfos?.add(

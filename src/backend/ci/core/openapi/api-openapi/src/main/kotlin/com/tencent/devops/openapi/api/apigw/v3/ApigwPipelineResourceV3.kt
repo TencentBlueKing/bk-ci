@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
@@ -173,7 +174,10 @@ interface ApigwPipelineResourceV3 {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("channel", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<Model>
 
     @ApiOperation("批量获取流水线编排与配置")
@@ -192,6 +196,9 @@ interface ApigwPipelineResourceV3 {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("channel", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS,
         @ApiParam("流水线ID列表", required = true)
         pipelineIds: List<String>
     ): Result<List<PipelineWithModel>>

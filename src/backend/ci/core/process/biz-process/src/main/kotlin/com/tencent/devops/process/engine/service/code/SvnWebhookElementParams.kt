@@ -45,6 +45,7 @@ class SvnWebhookElementParams : ScmWebhookElementParams<CodeSVNWebHookTriggerEle
                 variables = variables
             )
         )
+        params.pathFilterType = element.pathFilterType
         params.relativePath = EnvUtils.parseEnv(element.relativePath ?: "", variables)
         params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
             ""

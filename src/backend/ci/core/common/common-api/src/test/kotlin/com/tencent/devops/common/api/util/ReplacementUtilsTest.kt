@@ -82,6 +82,9 @@ class ReplacementUtilsTest {
 
         data["center中"] = "中国"
         parseAndEquals(data = data, template = "abcd_\${center中}_ffs", expect = "abcd_中国_ffs")
+
+        data["blank"] = ""
+        parseAndEquals(data = data, template = "\${blank}", expect = "")
     }
 
     private fun parseAndEquals(
