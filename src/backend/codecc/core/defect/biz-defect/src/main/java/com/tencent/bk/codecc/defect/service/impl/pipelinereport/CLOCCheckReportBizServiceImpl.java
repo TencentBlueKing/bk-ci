@@ -99,10 +99,10 @@ public class CLOCCheckReportBizServiceImpl implements ICheckReportBizService {
         clocSnapShotEntity.setToolNameEn(toolName);
         if (StringUtils.isNotEmpty(projectId))
         {
-            String defectDetailUrl = String.format("http://%s/console/codecc/%s/task/%s/defect/cloc/language",
+            String defectDetailUrl = String.format("%s/console/codecc/%s/task/%s/defect/cloc/language",
                     devopsHost, projectId, taskId);
             clocSnapShotEntity.setDefectDetailUrl(defectDetailUrl);
-            String defectReportUrl = String.format("http://%s/console/codecc/%s/task/%s/defect/cloc/language",
+            String defectReportUrl = String.format("%s/console/codecc/%s/task/%s/defect/cloc/language",
                     devopsHost, projectId, taskId);
             clocSnapShotEntity.setDefectReportUrl(defectReportUrl);
         }

@@ -56,7 +56,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
-        return buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, listOf(logMessage)))
+        buildLogPrintService.dispatchEvent(LogEvent(buildId, listOf(logMessage)))
+        return Result(true)
     }
 
     override fun addRedLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
@@ -64,10 +65,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
-        return buildLogPrintService.asyncDispatchEvent(LogEvent(
+        buildLogPrintService.dispatchEvent(LogEvent(
             buildId = buildId,
             logs = listOf(logMessage.copy(message = Ansi().bold().fgRed().a(logMessage.message).reset().toString()))
         ))
+        return Result(true)
     }
 
     override fun addYellowLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
@@ -75,10 +77,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
-        return buildLogPrintService.asyncDispatchEvent(LogEvent(
+        buildLogPrintService.dispatchEvent(LogEvent(
             buildId = buildId,
             logs = listOf(logMessage.copy(message = Ansi().bold().fgYellow().a(logMessage.message).reset().toString()))
         ))
+        return Result(true)
     }
 
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
@@ -86,7 +89,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
-        return buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, logMessages))
+        buildLogPrintService.dispatchEvent(LogEvent(buildId, logMessages))
+        return Result(true)
     }
 
     override fun addLogStatus(

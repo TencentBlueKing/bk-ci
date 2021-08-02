@@ -29,6 +29,7 @@ package com.tencent.devops.gitci.v2.utils
 
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitCommit
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
@@ -54,7 +55,8 @@ class V2WebHookMatcher @Autowired constructor(
 
     fun isMatch(
         triggerOn: TriggerOn,
-        event: GitEvent
+        event: GitEvent,
+        gitRequestEvent: GitRequestEvent
     ): Pair<Boolean, Boolean> {
         val eventBranch = getBranch(event)
         val eventTag = getTag(event)
@@ -69,7 +71,14 @@ class V2WebHookMatcher @Autowired constructor(
                     if (isTagPushMatch(triggerOn, eventTag, event)) return Pair(first = true, second = false)
                 }
                 CodeEventType.MERGE_REQUEST -> {
-                    if (isMrMatch(triggerOn, eventBranch, event)) return Pair(first = true, second = false)
+                    if (
+                        isMrMatch(
+                            triggerOn = triggerOn,
+                            eventBranch = eventBranch,
+                            event = event,
+                            gitRequestEvent = gitRequestEvent
+                        )
+                    ) return Pair(first = true, second = false)
                 }
                 else -> {
                     return Pair(first = false, second = false)
@@ -147,7 +156,12 @@ class V2WebHookMatcher @Autowired constructor(
         return false
     }
 
-    private fun isMrMatch(triggerOn: TriggerOn, eventBranch: String, event: GitEvent): Boolean {
+    private fun isMrMatch(
+        triggerOn: TriggerOn,
+        eventBranch: String,
+        event: GitEvent,
+        gitRequestEvent: GitRequestEvent
+    ): Boolean {
         if (triggerOn.mr == null) {
             return false
         }
@@ -180,7 +194,7 @@ class V2WebHookMatcher @Autowired constructor(
         }
 
         if (targetBranchMatch &&
-            isMrIncludePathMatch(triggerOn.mr!!.paths, event) &&
+            isMrIncludePathMatch(triggerOn.mr!!.paths, event, gitRequestEvent) &&
             isUserMatch(triggerOn.mr!!.users, event) &&
             isMrActionMatch(triggerOn.mr!!.action, event)) {
             return true
@@ -317,13 +331,22 @@ class V2WebHookMatcher @Autowired constructor(
         return pathIncluded
     }
 
-    private fun isMrIncludePathMatch(pathList: List<String>?, event: GitEvent): Boolean {
+    private fun isMrIncludePathMatch(
+        pathList: List<String>?,
+        event: GitEvent,
+        gitRequestEvent: GitRequestEvent
+    ): Boolean {
         var mrPathIncluded = false
         if (pathList != null && pathList.isNotEmpty()) {
             logger.info("Mr Include path set($pathList)")
             val mrId = (event as GitMergeRequestEvent).object_attributes.id
             val gitProjectId = event.object_attributes.source_project_id
-            val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(event.user.name, gitProjectId, mrId)
+            val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(
+                userId = event.user.name,
+                token = null,
+                gitProjectId = gitProjectId,
+                mrId = mrId
+            )
 
             if (gitMrChangeInfo != null) {
                 val mrChangeFiles = gitMrChangeInfo.files.map {

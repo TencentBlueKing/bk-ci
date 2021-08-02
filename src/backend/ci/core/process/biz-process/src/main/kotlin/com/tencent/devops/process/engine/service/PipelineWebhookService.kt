@@ -88,16 +88,20 @@ class PipelineWebhookService @Autowired constructor(
         pipelineId: String,
         version: Int?
     ) {
-        val model = getModel(pipelineId, version) ?: return
+        val model = getModel(pipelineId, version)
+        if (model == null) {
+            logger.info("$pipelineId|$version|model is null")
+            return
+        }
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val params = triggerContainer.params.associate { param ->
             param.id to param.defaultValue.toString()
         }
         val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
-        elements.parallelStream().forEach { element ->
+        elements.forEach { element ->
             val (repositoryConfig, scmType, eventType) = getElementRepositoryConfig(element, variable = params)
                 ?: return@forEach
-            logger.info("[$pipelineId| Trying to add the $scmType web hook for repo($repositoryConfig)")
+            logger.info("$pipelineId| Trying to add the $scmType web hook for repo($repositoryConfig)")
             try {
                 saveWebhook(
                     pipelineWebhook = PipelineWebhook(

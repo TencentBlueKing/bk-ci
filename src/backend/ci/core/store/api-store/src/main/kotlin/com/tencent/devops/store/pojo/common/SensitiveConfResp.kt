@@ -38,6 +38,8 @@ data class SensitiveConfResp(
     val fieldName: String,
     @ApiModelProperty("字段值", required = true)
     val fieldValue: String,
+    @ApiModelProperty("字段类型 BACKEND:后端使用，FRONTEND:前端使用，ALL:前后端使用", required = true)
+    val fieldType: String,
     @ApiModelProperty("字段描述", required = false)
     val fieldDesc: String?,
     @ApiModelProperty("创建人")

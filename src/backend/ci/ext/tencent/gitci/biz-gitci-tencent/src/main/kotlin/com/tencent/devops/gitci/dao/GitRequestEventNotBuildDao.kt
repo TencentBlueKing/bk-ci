@@ -47,7 +47,7 @@ class GitRequestEventNotBuildDao {
         pipelineId: String?,
         filePath: String?,
         gitProjectId: Long,
-        version: String? = null
+        version: String?
     ): Long {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
             val record = dslContext.insertInto(this,

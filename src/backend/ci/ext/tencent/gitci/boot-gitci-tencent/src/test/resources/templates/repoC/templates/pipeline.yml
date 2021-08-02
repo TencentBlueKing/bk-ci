@@ -24,7 +24,6 @@ variables:
 stages:
   - name: "root_stage_id_1"
     id: root_stage_id_1
-    label: "${{ varivable.approve }}"
     if: [ envs.BK_CI_EVENT == 'push' || varivable.approve ]
     jobs:
       root_job_id_1:

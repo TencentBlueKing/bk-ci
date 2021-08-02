@@ -177,7 +177,7 @@ class CodeScoringConsumer @Autowired constructor(
 
                         authorSet = authorSet.stream().filter { author -> StringUtils.isNotBlank(author) }.collect(Collectors.toSet())
 
-                        authorSet.add("warmli")
+                        authorSet.add("admin")
                         val repoMap = getLastAnalyzeRepoInfo(taskId)
                         val repoInfo = repoMap[repoMap.keys.stream().findFirst().get()]
                         logger.info("scoring send email {} | {} | {} | {} | {} | {}", taskId, codeStyleScore, codeSecurityScore, codeMeasureScore, rdIndicatorsScore, authorSet.size)

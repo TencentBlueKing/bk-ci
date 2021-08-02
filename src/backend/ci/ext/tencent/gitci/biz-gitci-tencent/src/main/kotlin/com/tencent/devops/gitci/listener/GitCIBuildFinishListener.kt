@@ -36,9 +36,9 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
+import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
-import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -103,6 +103,10 @@ class GitCIBuildFinishListener @Autowired constructor(
     @Value("\${rtx.v2GitUrl:#{null}}")
     private val v2GitUrl: String? = null
 
+    private val buildSuccessDesc = "Your pipeline「%s」 is succeed."
+    private val buildCancelDesc = "Your pipeline「%s」 was cancelled."
+    private val buildFailedDesc = "Your pipeline「%s」 is failed."
+
     @RabbitListener(
         bindings = [(QueueBinding(
             value = Queue(value = MQ.QUEUE_PIPELINE_BUILD_FINISH_GITCI, durable = "true"),
@@ -126,6 +130,12 @@ class GitCIBuildFinishListener @Autowired constructor(
 
                 val objectKind = record["OBJECT_KIND"] as String
                 val buildStatus = BuildStatus.valueOf(buildFinishEvent.status)
+                // 更新流水线执行状态
+                gitRequestEventBuildDao.updateBuildStatusById(
+                    dslContext = dslContext,
+                    id = record["ID"] as Long,
+                    buildStatus = buildStatus
+                )
                 // 检测状态
                 val state = if (buildStatus.isSuccess()) {
                     GitCICommitCheckState.SUCCESS
@@ -157,13 +167,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     ?: throw OperationException("git ci buildEvent not exist")
 
                 // 检查yml版本，根据yml版本选择不同的实现
-                // TODO: 目前V1的yaml转换会因为!-< 报错，后续订最终方案
-                val isV2 = try {
-                    ScriptYmlUtils.isV2Version(event.normalizedYaml)
-                } catch (e: Exception) {
-                    logger.error("$buildFinishEvent.buildId ，${e.message}")
-                    false
-                }
+                val isV2 = (!event.version.isNullOrBlank() && event.version == "v2.0")
 
                 if (isV2) {
                     if (v2GitSetting == null) {
@@ -180,15 +184,15 @@ class GitCIBuildFinishListener @Autowired constructor(
                     if (isV2) {
                         scmClient.pushCommitCheck(
                             commitId = commitId,
-                            description = description,
+                            description = getDescByBuildStatus(description, buildStatus, pipeline.displayName),
                             mergeRequestId = mergeRequestId,
                             buildId = buildFinishEvent.buildId,
                             userId = buildFinishEvent.userId,
                             status = state,
-                            context = "${pipeline.displayName}(${pipeline.filePath})",
+                            context = pipeline.filePath,
                             gitCIBasicSetting = v2GitSetting!!,
                             pipelineId = buildFinishEvent.pipelineId,
-                            block = false
+                            block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess())
                         )
                     } else {
                         scmClient.pushCommitCheck(
@@ -279,15 +283,27 @@ class GitCIBuildFinishListener @Autowired constructor(
                         build = build
                     )
                 }
-                // 更新流水线执行状态
-                gitRequestEventBuildDao.updateBuildStatusById(
-                    dslContext = dslContext,
-                    id = record["ID"] as Long,
-                    buildStatus = buildStatus
-                )
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)
+        }
+    }
+
+    // 根据状态切换描述
+    private fun getDescByBuildStatus(oldDesc: String?, buildStatus: BuildStatus, pipelineName: String): String {
+        return when {
+            !oldDesc.isNullOrBlank() -> {
+                oldDesc
+            }
+            buildStatus.isSuccess() -> {
+                buildSuccessDesc.format(pipelineName)
+            }
+            buildStatus.isCancel() -> {
+                buildCancelDesc.format(pipelineName)
+            }
+            else -> {
+                buildFailedDesc.format(pipelineName)
+            }
         }
     }
 

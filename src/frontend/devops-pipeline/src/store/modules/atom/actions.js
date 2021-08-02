@@ -428,6 +428,12 @@ export default {
         return request.post(`${STORE_API_URL_PREFIX}/user/market/atom/install`, param).then(() => dispatch('fetchAtoms', { projectCode: param.projectCode[0] }))
     },
 
+    getAtomEnvConfig ({ commit }, atomCode) {
+        return request.get(`${STORE_API_URL_PREFIX}/user/market/ATOM/component/${atomCode}/sensitiveConf/list/?types=FRONTEND,ALL`).then((res) => {
+            return res.data || []
+        })
+    },
+
     // 获取项目下已安装的插件列表
     getInstallAtomList ({ commit }, projectCode) {
         return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=2000`)
@@ -503,5 +509,23 @@ export default {
 
     pausePlugin ({ commit }, { projectId, pipelineId, buildId, taskId, isContinue, stageId, containerId, element }) {
         return request.post(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/taskIds/${taskId}/execution/pause?isContinue=${isContinue}&stageId=${stageId}&containerId=${containerId}`, element)
+    },
+
+    download (_, { url, name }) {
+        return fetch(url, { credentials: 'include' }).then((res) => {
+            if (res.status >= 200 && res.status < 300) {
+                return res.blob()
+            } else {
+                return res.json().then((result) => Promise.reject(result))
+            }
+        }).then((blob) => {
+            const a = document.createElement('a')
+            const url = window.URL || window.webkitURL || window.moxURL
+            a.href = url.createObjectURL(blob)
+            if (name) a.download = name
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+        })
     }
 }

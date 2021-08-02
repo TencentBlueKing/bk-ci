@@ -36,6 +36,7 @@ import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.services.GitCiService
 import com.tencent.devops.scm.services.GitService
@@ -131,6 +132,49 @@ class ServiceGitCiResourceImpl @Autowired constructor(
     ): Result<GitMrChangeInfo?> {
         return gitCiService.getMergeRequestChangeInfo(
             gitProjectId, token, mrId
+        )
+    }
+
+    override fun getProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?
+    ): Result<List<GitCodeProjectInfo>> {
+        return Result(gitCiService.getProjectList(accessToken, userId, page, pageSize, search))
+    }
+
+    override fun getGitFileInfo(
+        gitProjectId: String,
+        filePath: String?,
+        token: String,
+        ref: String?,
+        useAccessToken: Boolean
+    ): Result<GitCodeFileInfo> {
+        return gitCiService.getFileInfo(
+            gitProjectId = gitProjectId,
+            filePath = filePath,
+            token = token,
+            ref = ref,
+            useAccessToken = useAccessToken
+        )
+    }
+
+    override fun getProjectMembersAll(
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        query: String?
+    ): Result<List<GitMember>> {
+        return Result(
+            gitCiService.getGitCIAllMembers(
+                token = gitService.getToken(gitProjectId).accessToken,
+                gitProjectId = gitProjectId,
+                page = page,
+                pageSize = pageSize,
+                query = query
+            )
         )
     }
 }

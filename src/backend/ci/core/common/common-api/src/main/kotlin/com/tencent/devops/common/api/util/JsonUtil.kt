@@ -29,7 +29,7 @@ package com.tencent.devops.common.api.util
 
 import com.fasterxml.jackson.annotation.JsonFilter
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.json.JsonReadFeature
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.Module
@@ -49,6 +49,7 @@ import java.util.HashSet
  *
  * Powered By Tencent
  */
+@Suppress("TooManyFunctions")
 object JsonUtil {
 
     private const val MAX_CLAZZ = 50000L
@@ -64,7 +65,7 @@ object JsonUtil {
     fun <T : Any> skipLogFields(bean: T): String? {
         return try {
             beanMapperCache.get(bean.javaClass).writeValueAsString(bean)
-        } catch (e: Throwable) {
+        } catch (ignored: Throwable) {
             loadMapper(bean.javaClass).writeValueAsString(bean)
         }
     }
@@ -115,12 +116,12 @@ object JsonUtil {
     private fun objectMapper(): ObjectMapper {
         return ObjectMapper().apply {
             registerModule(KotlinModule())
-            configure(SerializationFeature.INDENT_OUTPUT, true)
-            configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
-            configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true)
+            enable(SerializationFeature.INDENT_OUTPUT)
+            enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
+            enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
             setSerializationInclusion(JsonInclude.Include.NON_NULL)
             disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+            disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
             jsonModules.forEach { jsonModule ->
                 registerModule(jsonModule)
             }
@@ -129,12 +130,12 @@ object JsonUtil {
 
     private val skipEmptyObjectMapper = ObjectMapper().apply {
         registerModule(KotlinModule())
-        configure(SerializationFeature.INDENT_OUTPUT, true)
-        configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
-        configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true)
+        enable(SerializationFeature.INDENT_OUTPUT)
+        enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
+        enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
         setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
         disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+        disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
         jsonModules.forEach { jsonModule ->
             registerModule(jsonModule)
         }
@@ -178,14 +179,15 @@ object JsonUtil {
         if (ReflectUtil.isNativeType(bean)) {
             return mutableMapOf()
         }
-        return if (bean is String)
+        return if (bean is String) {
             skipEmptyObjectMapper.readValue<MutableMap<String, Any>>(
                 bean.toString(),
                 object : TypeReference<MutableMap<String, Any>>() {})
-        else
+        } else {
             skipEmptyObjectMapper.readValue<MutableMap<String, Any>>(
                 skipEmptyObjectMapper.writeValueAsString(bean),
                 object : TypeReference<MutableMap<String, Any>>() {})
+        }
     }
 
     /**

@@ -48,6 +48,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 
+@Suppress("ALL")
 @Configuration
 class TencentServiceConfig {
 
@@ -65,12 +66,12 @@ class TencentServiceConfig {
         commonConfig: CommonConfig,
         shortUrlService: ShortUrlService
     ) = GitCIBkRepoDownloadService(
-        pipelineService,
-        bkRepoService,
-        client,
-        bkRepoClient,
-        commonConfig,
-        shortUrlService
+        pipelineService = pipelineService,
+        bkRepoService = bkRepoService,
+        client = client,
+        bkRepoClient = bkRepoClient,
+        commonConfig = commonConfig,
+        shortUrlService = shortUrlService
     )
 
     @Bean
@@ -84,12 +85,12 @@ class TencentServiceConfig {
         commonConfig: CommonConfig,
         shortUrlService: ShortUrlService
     ) = BkRepoDownloadService(
-        pipelineService,
-        bkRepoService,
-        client,
-        bkRepoClient,
-        commonConfig,
-        shortUrlService
+        pipelineService = pipelineService,
+        bkRepoService = bkRepoService,
+        client = client,
+        bkRepoClient = bkRepoClient,
+        commonConfig = commonConfig,
+        shortUrlService = shortUrlService
     )
 
     @Bean
@@ -105,7 +106,11 @@ class TencentServiceConfig {
         authProjectApi: BSAuthProjectApi,
         artifactoryAuthServiceCode: BSRepoAuthServiceCode
     ) = DefaultPipelineService(
-        client, pipelineAuthServiceCode, bkAuthPermissionApi, authProjectApi, artifactoryAuthServiceCode
+        client = client,
+        pipelineAuthServiceCode = pipelineAuthServiceCode,
+        bkAuthPermissionApi = bkAuthPermissionApi,
+        authProjectApi = authProjectApi,
+        artifactoryAuthServiceCode = artifactoryAuthServiceCode
     )
 
     @Bean

@@ -51,7 +51,7 @@ data class GitRequestEvent(
     val targetBranch: String?,
     @ApiModelProperty("COMMIT_ID")
     val commitId: String,
-    @ApiModelProperty("COMMIT_MSG")
+    @ApiModelProperty(value = "COMMIT_MESSAGE", name = "数据库由原COMMIT_MSG改为COMMIT_MESSAGE")
     val commitMsg: String?,
     @ApiModelProperty("COMMIT_TIMESTAMP")
     val commitTimeStamp: String?,

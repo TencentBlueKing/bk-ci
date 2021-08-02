@@ -120,10 +120,7 @@ interface ServiceScmOauthResource {
         userName: String?,
         @ApiParam("搜索条件", required = false)
         @QueryParam("search")
-        search: String? = null,
-        @ApiParam("是否拉取全部分支", required = false)
-        @QueryParam("full")
-        full: Boolean? = true
+        search: String? = null
     ): Result<List<String>>
 
     @ApiOperation("List all the branches of repo")
@@ -147,10 +144,7 @@ interface ServiceScmOauthResource {
         userName: String,
         @ApiParam("搜索条件", required = false)
         @QueryParam("search")
-        search: String? = null,
-        @ApiParam("是否拉取全部分支", required = false)
-        @QueryParam("full")
-        full: Boolean? = true
+        search: String? = null
     ): Result<List<String>>
 
     @ApiOperation("Check if the svn private key and passphrase legal")
