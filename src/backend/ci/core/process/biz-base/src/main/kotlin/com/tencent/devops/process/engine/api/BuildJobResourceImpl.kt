@@ -116,6 +116,23 @@ class BuildJobResourceImpl @Autowired constructor(
         )
     }
 
+    override fun jobHeartbeatV1(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String
+    ): Result<HeartBeatInfo> {
+        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
+        return Result(
+            data = vMBuildService.heartbeat(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName
+            )
+        )
+    }
+
     companion object {
         private fun checkParam(buildId: String, vmSeqId: String, vmName: String, retryCount: String? = null) {
             if (buildId.isBlank()) {

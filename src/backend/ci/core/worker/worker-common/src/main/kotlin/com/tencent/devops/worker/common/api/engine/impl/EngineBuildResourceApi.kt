@@ -108,7 +108,7 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     }
 
     override fun heartbeat(): Result<HeartBeatInfo> {
-        val path = getRequestUrl(path = "api/build/worker/heartbeat")
+        val path = getRequestUrl(path = "api/build/worker/heartbeat/v1")
         val request = buildPost(path)
         val errorMessage = "心跳失败"
         val responseContent = request(
