@@ -43,6 +43,7 @@ import org.springframework.boot.web.embedded.undertow.UndertowBuilderCustomizer
 import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.DependsOn
 import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Profile
 import org.springframework.context.annotation.PropertySource
@@ -60,6 +61,7 @@ import org.springframework.core.env.Environment
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(JerseyAutoConfiguration::class)
 @EnableConfigurationProperties(SwaggerProperties::class)
+@DependsOn("globalProxyConfiguration")
 class WebAutoConfiguration {
 
     @Bean
