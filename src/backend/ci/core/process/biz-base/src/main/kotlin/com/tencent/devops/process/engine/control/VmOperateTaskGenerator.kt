@@ -96,7 +96,6 @@ class VmOperateTaskGenerator {
             taskAtom = START_NORMAL_TASK_ATOM
         }
         val additionalOptions = ElementAdditionalOptions(
-            timeout = 5, // 5分钟超时
             runCondition = RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
         )
         return PipelineBuildTask(

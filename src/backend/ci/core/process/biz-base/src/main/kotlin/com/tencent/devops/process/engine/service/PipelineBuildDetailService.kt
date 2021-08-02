@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
@@ -202,7 +203,8 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                 }
                 // #3138 状态实时刷新
-                if (status.isRunning() && container.containPostTaskFlag != true) {
+                if (status.isRunning() && container.elements[0].status.isNullOrBlank() &&
+                    container.containPostTaskFlag != true) {
                     container.status = buildStatus.name
                 }
                 return Traverse.CONTINUE
@@ -211,28 +213,34 @@ class PipelineBuildDetailService @Autowired constructor(
             override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (e.status == BuildStatus.RUNNING.name || e.status == BuildStatus.REVIEWING.name) {
                     val status = if (e.status == BuildStatus.RUNNING.name) {
-                        BuildStatus.CANCELED.name
+                        val runCondition = e.additionalOptions?.runCondition
+                        // 当task的runCondition为PRE_TASK_FAILED_EVEN_CANCEL，点击取消还需要运行
+                        if (runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
+                            BuildStatus.RUNNING.name
+                        } else {
+                            BuildStatus.CANCELED.name
+                        }
                     } else buildStatus.name
                     e.status = status
-                    if (e.status != BuildStatus.RUNNING.name && c.containPostTaskFlag != true) {
+                    if (c.containPostTaskFlag != true) {
                         c.status = status
                     }
-
-                    if (e.startEpoch != null) {
-                        e.elapsed = System.currentTimeMillis() - e.startEpoch!!
-                    }
-
-                    var elementElapsed = 0L
-                    run lit@{
-                        c.elements.forEach {
-                            elementElapsed += it.elapsed ?: 0
-                            if (it == e) {
-                                return@lit
+                    if (BuildStatus.parse(status).isFinish()) {
+                        if (e.startEpoch != null) {
+                            e.elapsed = System.currentTimeMillis() - e.startEpoch!!
+                        }
+                        var elementElapsed = 0L
+                        run lit@{
+                            c.elements.forEach {
+                                elementElapsed += it.elapsed ?: 0
+                                if (it == e) {
+                                    return@lit
+                                }
                             }
                         }
-                    }
 
-                    c.elementElapsed = elementElapsed
+                        c.elementElapsed = elementElapsed
+                    }
 
                     update = true
                 }
