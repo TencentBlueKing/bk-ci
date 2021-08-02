@@ -284,11 +284,7 @@ open class MarketAtomTask : ITask() {
                 atomLanguage, buildHostType.name, AgentEnv.getOS().name)
             logger.info("atomCode is:$atomCode ,atomDevLanguageEnvVarsResult is:$atomDevLanguageEnvVarsResult")
             val atomDevLanguageEnvVars = atomDevLanguageEnvVarsResult.data
-            val systemEnvVariables = mutableMapOf(
-                "PROJECT_ID" to buildVariables.projectId,
-                "BUILD_ID" to buildVariables.buildId,
-                "VM_SEQ_ID" to buildVariables.vmSeqId
-            )
+            val systemEnvVariables = TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)
             atomDevLanguageEnvVars?.forEach {
                 systemEnvVariables[it.envKey] = it.envValue
             }

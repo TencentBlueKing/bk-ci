@@ -25,18 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.process;
 
-import com.tencent.devops.common.pipeline.container.MutexGroup
-import com.tencent.devops.common.pipeline.option.JobControlOption
+import java.util.List;
+import java.util.Map;
 
-/**
- *
- * @version 1.0
- */
-data class PipelineBuildContainerControlOption(
-    val jobControlOption: JobControlOption,
-    val inFinallyStage: Boolean = false,
-    val mutexGroup: MutexGroup? = null,
-    var containPostTaskFlag: Boolean? = null // 是否包含post任务
-)
+public class ProcessTreeRemoting {
+    public ProcessTreeRemoting() {
+    }
+
+    public interface IOSProcess {
+        int getPid();
+
+        ProcessTreeRemoting.IOSProcess getParent();
+
+        void kill(boolean forceFlag) throws InterruptedException;
+
+        void killRecursively(boolean forceFlag) throws InterruptedException;
+
+        List<String> getArguments();
+
+        EnvVars getEnvironmentVariables();
+    }
+
+    public interface IProcessTree {
+        void killAll(Map<String, String> var1, boolean forceFlag) throws InterruptedException;
+    }
+}

@@ -25,18 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.worker.common.task
 
-import com.tencent.devops.common.pipeline.container.MutexGroup
-import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.process.engine.common.Timeout
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.TimeUnit
 
-/**
- *
- * @version 1.0
- */
-data class PipelineBuildContainerControlOption(
-    val jobControlOption: JobControlOption,
-    val inFinallyStage: Boolean = false,
-    val mutexGroup: MutexGroup? = null,
-    var containPostTaskFlag: Boolean? = null // 是否包含post任务
-)
+object TaskExecutorCache {
+
+    private val taskExecutorCache = Caffeine.newBuilder()
+        .maximumSize(50)
+        .expireAfterWrite(Timeout.MAX_JOB_RUN_DAYS, TimeUnit.DAYS)
+        .build<String, ExecutorService>()
+
+    fun invalidate(taskId: String) {
+        taskExecutorCache.invalidate(taskId)
+    }
+
+    fun put(taskId: String, executor: ExecutorService) {
+        taskExecutorCache.put(taskId, executor)
+    }
+
+    fun getIfPresent(taskId: String): ExecutorService? {
+        return taskExecutorCache.getIfPresent(taskId)
+    }
+
+    fun getAllPresent(taskIds: Set<String>): Map<String, ExecutorService>? {
+        return taskExecutorCache.getAllPresent(taskIds)
+    }
+}

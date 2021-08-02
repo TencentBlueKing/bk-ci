@@ -45,6 +45,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineTaskService
+import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -101,6 +102,22 @@ class TaskControl @Autowired constructor(
         if (buildInfo?.status?.isFinish() == true || buildTask?.status?.isFinish() == true) {
             LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)" +
                 "|status=${buildTask?.status ?: "not exists"}")
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildContainerEvent(
+                    source = "from_t($taskId)",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId,
+                    containerType = containerType,
+                    actionType = actionType,
+                    errorCode = errorCode,
+                    errorTypeName = errorTypeName,
+                    reason = reason
+                )
+            )
             return
         }
 
@@ -195,6 +212,12 @@ class TaskControl @Autowired constructor(
      * 1. 需要失败重试，将[buildTask]的构建状态设置为RETRY
      */
     private fun PipelineBuildAtomTaskEvent.finishTask(buildTask: PipelineBuildTask, buildStatus: BuildStatus) {
+        if (buildStatus == BuildStatus.CANCELED) {
+            // 删除redis中取消构建标识
+            redisOperation.delete("${BuildStatus.CANCELED.name}_$buildId")
+            // 当task任务是取消状态时，把taskId存入redis供心跳接口获取
+            redisOperation.leftPush(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId), taskId)
+        }
         if (buildStatus.isFailure() && !FastKillUtils.isTerminateCode(errorCode)) { // 失败的任务 并且不是需要终止的错误码
             // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
             if (pipelineTaskService.isRetryWhenFail(taskId, buildId)) {

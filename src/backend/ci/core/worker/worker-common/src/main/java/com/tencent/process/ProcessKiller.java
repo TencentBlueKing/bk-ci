@@ -25,18 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.process;
 
-import com.tencent.devops.common.pipeline.container.MutexGroup
-import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.process.BkProcessTree.OSProcess;
 
-/**
- *
- * @version 1.0
- */
-data class PipelineBuildContainerControlOption(
-    val jobControlOption: JobControlOption,
-    val inFinallyStage: Boolean = false,
-    val mutexGroup: MutexGroup? = null,
-    var containPostTaskFlag: Boolean? = null // 是否包含post任务
-)
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class ProcessKiller implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    public ProcessKiller() {
+    }
+
+    public static List<ProcessKiller> all() {
+        return new ArrayList<>();
+    }
+
+    public abstract boolean kill(OSProcess var1) throws IOException, InterruptedException;
+}

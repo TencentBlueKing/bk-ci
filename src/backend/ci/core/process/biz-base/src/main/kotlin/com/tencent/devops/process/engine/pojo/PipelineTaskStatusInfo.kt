@@ -27,16 +27,12 @@
 
 package com.tencent.devops.process.engine.pojo
 
-import com.tencent.devops.common.pipeline.container.MutexGroup
-import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 
-/**
- *
- * @version 1.0
- */
-data class PipelineBuildContainerControlOption(
-    val jobControlOption: JobControlOption,
-    val inFinallyStage: Boolean = false,
-    val mutexGroup: MutexGroup? = null,
-    var containPostTaskFlag: Boolean? = null // 是否包含post任务
+data class PipelineTaskStatusInfo(
+    val taskId: String, // 任务ID
+    val containerHashId: String, // 容器哈希ID
+    val buildStatus: BuildStatus, // 构建状态
+    val executeCount: Int, // 执行次数
+    val message: String? = null // 提示信息
 )

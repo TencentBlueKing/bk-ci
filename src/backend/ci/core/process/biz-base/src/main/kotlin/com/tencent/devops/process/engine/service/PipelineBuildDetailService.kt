@@ -202,19 +202,21 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                 }
                 // #3138 状态实时刷新
-                if (status.isRunning()) {
+                if (status.isRunning() && container.containPostTaskFlag != true) {
                     container.status = buildStatus.name
                 }
                 return Traverse.CONTINUE
             }
 
-            override fun onFindElement(e: Element, c: Container): Traverse {
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (e.status == BuildStatus.RUNNING.name || e.status == BuildStatus.REVIEWING.name) {
                     val status = if (e.status == BuildStatus.RUNNING.name) {
-                        BuildStatus.TERMINATE.name
+                        BuildStatus.CANCELED.name
                     } else buildStatus.name
                     e.status = status
-                    c.status = status
+                    if (e.status != BuildStatus.RUNNING.name && c.containPostTaskFlag != true) {
+                        c.status = status
+                    }
 
                     if (e.startEpoch != null) {
                         e.elapsed = System.currentTimeMillis() - e.startEpoch!!
@@ -281,7 +283,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 return Traverse.CONTINUE
             }
 
-            override fun onFindElement(e: Element, c: Container): Traverse {
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (!e.status.isNullOrBlank() && BuildStatus.valueOf(e.status!!).isRunning()) {
                     e.status = buildStatus.name
                     update = true

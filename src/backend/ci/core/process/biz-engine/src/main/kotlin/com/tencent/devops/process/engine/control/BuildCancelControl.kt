@@ -73,6 +73,7 @@ class BuildCancelControl @Autowired constructor(
 
     companion object {
         private val LOG = LoggerFactory.getLogger(BuildCancelControl::class.java)
+        private const val BUILD_CANCEL_TIME_OUT = 5L
     }
 
     fun handle(event: PipelineBuildCancelEvent) {
@@ -93,23 +94,24 @@ class BuildCancelControl @Autowired constructor(
     }
 
     private fun execute(event: PipelineBuildCancelEvent): Boolean {
-
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId = event.buildId)
+        val buildId = event.buildId
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId = buildId)
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || buildInfo.status.isFinish()) {
-            LOG.info("[$${event.buildId}|${event.source}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
+            LOG.info("[$$buildId|${event.source}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
             return false
         }
 
-        val model = pipelineBuildDetailService.getBuildModel(buildId = event.buildId)
+        val model = pipelineBuildDetailService.getBuildModel(buildId = buildId)
         return if (model != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
-
+            // 往redis中设置取消构建标识以防止重复提交
+            setBuildCancelRedisFlag(buildId)
             cancelAllPendingTask(event = event, model = model)
             // 修改detail model
             pipelineBuildDetailService.buildCancel(buildId = event.buildId, buildStatus = event.status)
 
-            val pendingStage = pipelineStageService.getPendingStage(event.buildId)
+            val pendingStage = pipelineStageService.getPendingStage(buildId)
             if (pendingStage != null) {
                 pendingStage.dispatchEvent(event)
             } else {
@@ -119,7 +121,7 @@ class BuildCancelControl @Autowired constructor(
             measureService?.postCancelData(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
-                buildId = event.buildId,
+                buildId = buildId,
                 userId = event.userId
             )
             true
@@ -127,6 +129,9 @@ class BuildCancelControl @Autowired constructor(
             false
         }
     }
+
+    private fun setBuildCancelRedisFlag(buildId: String) =
+        redisOperation.set("${BuildStatus.CANCELED.name}_$buildId", "true", BUILD_CANCEL_TIME_OUT)
 
     private fun sendBuildFinishEvent(event: PipelineBuildCancelEvent) {
         pipelineMQEventDispatcher.dispatch(
@@ -166,13 +171,19 @@ class BuildCancelControl @Autowired constructor(
             if (stage.finally) {
                 return@forEach
             }
+            val stageStatus = BuildStatus.parse(stage.status)
             stage.containers.forEach C@{ container ->
                 unlockMutexGroup(variables = variables, container = container,
                     buildId = event.buildId, projectId = event.projectId, stageId = stage.id!!
                 )
                 // 调整Container状态位
                 val containerBuildStatus = BuildStatus.parse(container.status)
-                if (!containerBuildStatus.isFinish()) {
+                // 获取当前job第一个插件
+                val firstElement = container.elements[0]
+                // 取消构建,当前运行的stage及当前stage下的job不能马上置为取消状态
+                if ((!containerBuildStatus.isFinish() && stageStatus != BuildStatus.RUNNING &&
+                        containerBuildStatus != BuildStatus.RUNNING) || firstElement.status.isNullOrBlank()
+                ) {
                     pipelineRuntimeService.updateContainerStatus(
                         buildId = event.buildId,
                         stageId = stage.id ?: "",

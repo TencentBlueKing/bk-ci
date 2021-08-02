@@ -31,6 +31,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -42,17 +43,21 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
+import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Suppress("LongParameterList", "MagicNumber")
+@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions")
 @Service
 class TaskBuildDetailService(
     private val client: Client,
     private val buildVariableService: BuildVariableService,
+    private val pipelineBuildTaskDao: PipelineBuildTaskDao,
+    private val buildLogPrinter: BuildLogPrinter,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
@@ -70,7 +75,7 @@ class TaskBuildDetailService(
         update(buildId = buildId, modelInterface = object : ModelInterface {
             var update = false
 
-            override fun onFindElement(e: Element, c: Container): Traverse {
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (c.id.equals(containerId)) {
                     if (e.id.equals(taskId)) {
                         logger.info("ENGINE|$buildId|pauseTask|$stageId|j($containerId)|t($taskId)|${buildStatus.name}")
@@ -91,15 +96,21 @@ class TaskBuildDetailService(
         )
     }
 
-    fun taskSkip(buildId: String, taskId: String) {
+    fun updateTaskStatus(
+        buildId: String,
+        taskId: String,
+        taskStatus: BuildStatus,
+        buildStatus: BuildStatus,
+        operation: String
+    ) {
         update(
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
-                override fun onFindElement(e: Element, c: Container): Traverse {
+                override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                     if (e.id == taskId) {
                         update = true
-                        e.status = BuildStatus.SKIP.name
+                        e.status = taskStatus.name
                         return Traverse.BREAK
                     }
                     return Traverse.CONTINUE
@@ -109,8 +120,8 @@ class TaskBuildDetailService(
                     return update
                 }
             },
-            buildStatus = BuildStatus.RUNNING,
-            operation = "taskSkip"
+            buildStatus = buildStatus,
+            operation = operation
         )
     }
 
@@ -120,7 +131,7 @@ class TaskBuildDetailService(
             modelInterface = object : ModelInterface {
                 var update = false
                 val delimiters = ","
-                override fun onFindElement(e: Element, c: Container): Traverse {
+                override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                     if (e.id == taskId) {
                         if (e is ManualReviewUserTaskElement) {
                             e.status = BuildStatus.REVIEWING.name
@@ -168,7 +179,7 @@ class TaskBuildDetailService(
             modelInterface = object : ModelInterface {
                 var update = false
 
-                override fun onFindElement(e: Element, c: Container): Traverse {
+                override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                     if (c.id.equals(containerId)) {
                         if (e.id.equals(taskId)) {
                             c.status = BuildStatus.CANCELED.name
@@ -197,52 +208,216 @@ class TaskBuildDetailService(
         errorType: ErrorType? = null,
         errorCode: Int? = null,
         errorMsg: String? = null
-    ) {
-        update(
-            buildId = buildId,
-            modelInterface = object : ModelInterface {
+    ): List<PipelineTaskStatusInfo> {
+        val updateTaskStatusInfos = mutableListOf<PipelineTaskStatusInfo>()
+        update(buildId, object : ModelInterface {
 
-                var update = false
-                override fun onFindElement(e: Element, c: Container): Traverse {
-                    if (e.id == taskId) {
-                        e.status = buildStatus.name
-                        if (e.startEpoch == null) {
-                            e.elapsed = 0
-                        } else {
-                            e.elapsed = System.currentTimeMillis() - e.startEpoch!!
-                        }
-                        if (errorType != null) {
-                            e.errorType = errorType.name
-                            e.errorCode = errorCode
-                            e.errorMsg = errorMsg
-                        }
-
-                        var elementElapsed = 0L
-                        @Suppress("LoopWithTooManyJumpStatements")
-                        for (it in c.elements) {
-                            if (it.elapsed == null) {
-                                continue
-                            }
-                            elementElapsed += it.elapsed!!
-                            if (it == e) {
-                                break
-                            }
-                        }
-
-                        c.elementElapsed = elementElapsed
-                        update = true
-                        return Traverse.BREAK
+            var update = false
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
+                // 判断取消的task任务对应的container是否包含post任务
+                val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && c.containPostTaskFlag == true
+                if (e.id == taskId) {
+                    e.status = buildStatus.name
+                    if (e.startEpoch == null) {
+                        e.elapsed = 0
+                    } else {
+                        e.elapsed = System.currentTimeMillis() - e.startEpoch!!
                     }
-                    return Traverse.CONTINUE
-                }
+                    if (errorType != null) {
+                        e.errorType = errorType.name
+                        e.errorCode = errorCode
+                        e.errorMsg = errorMsg
+                    }
 
-                override fun needUpdate(): Boolean {
-                    return update
+                    var elementElapsed = 0L
+                    run lit@{
+                        val elements = c.elements
+                        elements.forEachIndexed { tmpIndex, it ->
+                            val elapsed = it.elapsed
+                            if (elapsed != null) {
+                                elementElapsed += elapsed
+                            }
+                            if (handleUpdateTaskStatusInfos(
+                                    containerId = c.containerId ?: "",
+                                    buildStatus = buildStatus,
+                                    cancelTaskPostFlag = cancelTaskPostFlag,
+                                    tmpElement = it,
+                                    tmpElementIndex = tmpIndex,
+                                    elements = elements,
+                                    endElementIndex = index,
+                                    updateTaskStatusInfos = updateTaskStatusInfos,
+                                    endElement = e
+                                )
+                            ) return@lit
+                        }
+                    }
+                    c.elementElapsed = elementElapsed
+                    update = true
+                    return Traverse.BREAK
                 }
-            },
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        },
             buildStatus = BuildStatus.RUNNING,
             operation = "taskEnd"
         )
+        updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
+            pipelineBuildTaskDao.updateStatus(
+                dslContext = dslContext,
+                buildId = buildId,
+                taskId = updateTaskStatusInfo.taskId,
+                buildStatus = updateTaskStatusInfo.buildStatus
+            )
+            if (!updateTaskStatusInfo.message.isNullOrBlank()) {
+                buildLogPrinter.addLine(
+                    buildId = buildId,
+                    message = updateTaskStatusInfo.message,
+                    tag = updateTaskStatusInfo.taskId,
+                    jobId = updateTaskStatusInfo.containerHashId,
+                    executeCount = updateTaskStatusInfo.executeCount
+                )
+            }
+        }
+        return updateTaskStatusInfos
+    }
+
+    private fun handleUpdateTaskStatusInfos(
+        containerId: String,
+        buildStatus: BuildStatus,
+        cancelTaskPostFlag: Boolean,
+        endElement: Element,
+        endElementIndex: Int,
+        tmpElement: Element,
+        tmpElementIndex: Int,
+        elements: List<Element>,
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
+    ): Boolean {
+        if (cancelTaskPostFlag) {
+            return handleCancelTaskPost(
+                containerId = containerId,
+                endElement = endElement,
+                endElementIndex = endElementIndex,
+                tmpElement = tmpElement,
+                tmpElementIndex = tmpElementIndex,
+                elements = elements,
+                updateTaskStatusInfos = updateTaskStatusInfos
+            )
+        } else {
+            if (tmpElement == endElement) {
+                if (buildStatus != BuildStatus.CANCELED) {
+                    return true
+                }
+                val startIndex = endElementIndex + 1
+                val endIndex = elements.size - 1
+                if (endIndex >= startIndex) {
+                    addCancelTaskStatusInfo(
+                        containerId = containerId,
+                        startIndex = startIndex,
+                        endIndex = endIndex,
+                        elements = elements,
+                        updateTaskStatusInfos = updateTaskStatusInfos
+                    )
+                }
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun handleCancelTaskPost(
+        containerId: String,
+        endElement: Element,
+        endElementIndex: Int,
+        tmpElement: Element,
+        tmpElementIndex: Int,
+        elements: List<Element>,
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
+    ): Boolean {
+        val elementPostInfo = tmpElement.additionalOptions?.elementPostInfo
+        if (elementPostInfo != null) {
+            // 判断post任务的父任务是否执行过
+            val parentElementJobIndex = elementPostInfo.parentElementJobIndex
+            val parentElement = elements[parentElementJobIndex]
+            val taskStatus = BuildStatus.parse(parentElement.status)
+            if (!(taskStatus.isFinish() || parentElement.id == endElement.id)) {
+                handleCancelTaskStatusInfo(
+                    containerId = containerId,
+                    tmpElementIndex = tmpElementIndex,
+                    elements = elements,
+                    endElementIndex = endElementIndex,
+                    updateTaskStatusInfos = updateTaskStatusInfos
+                )
+                return false
+            }
+            // 把post任务和取消任务之间的任务置为UNEXEC状态
+            val startIndex = endElementIndex + 1
+            val endIndex = tmpElementIndex - 1
+            if (endIndex < startIndex) {
+                return true
+            }
+            addCancelTaskStatusInfo(
+                containerId = containerId,
+                startIndex = startIndex,
+                endIndex = endIndex,
+                elements = elements,
+                updateTaskStatusInfos = updateTaskStatusInfos
+            )
+            return true
+        }
+        return false
+    }
+
+    private fun handleCancelTaskStatusInfo(
+        containerId: String,
+        tmpElementIndex: Int,
+        elements: List<Element>,
+        endElementIndex: Int,
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
+    ) {
+        if (tmpElementIndex == elements.size - 1) {
+            val startIndex = endElementIndex + 1
+            val endIndex = elements.size - 1
+            if (endIndex > startIndex) {
+                addCancelTaskStatusInfo(
+                    containerId = containerId,
+                    startIndex = startIndex,
+                    endIndex = endIndex,
+                    elements = elements,
+                    updateTaskStatusInfos = updateTaskStatusInfos
+                )
+            }
+        }
+    }
+
+    private fun addCancelTaskStatusInfo(
+        containerId: String,
+        startIndex: Int,
+        endIndex: Int,
+        elements: List<Element>,
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
+    ) {
+        for (i in startIndex..endIndex) {
+            val element = elements[i]
+            val taskId = element.id
+            // 排除构建状态为结束态的构建任务
+            if (taskId != null && !BuildStatus.parse(element.status).isFinish()) {
+                val unExecBuildStatus = BuildStatus.UNEXEC
+                element.status = unExecBuildStatus.name
+                updateTaskStatusInfos?.add(
+                    PipelineTaskStatusInfo(
+                        taskId = taskId,
+                        containerHashId = containerId,
+                        buildStatus = unExecBuildStatus,
+                        executeCount = element.executeCount,
+                        message = "Do not meet the run conditions, ignored."
+                    )
+                )
+            }
+        }
     }
 
     @Suppress("NestedBlockDepth")
