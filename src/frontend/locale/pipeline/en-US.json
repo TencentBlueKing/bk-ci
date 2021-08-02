@@ -863,6 +863,7 @@
         "atomRunCondition": "Run this task",
         "atomPreSuc": "Run when all pre-plugins run successfully (including continue when failed)",
         "atomEvenFail": "Even if a previous task has failed, unless the build was canceled",
+        "userCancelExec": "The plugin is executing, but the user canceled it manually or has timed out",
         "atomEvenCancel": "Run even if a previous plugin failed, and run even if it was cancelled",
         "atomOnlyFail": "Only when a previous task has failed",
         "varMatch": "run it when all the custom variables are macthed",
