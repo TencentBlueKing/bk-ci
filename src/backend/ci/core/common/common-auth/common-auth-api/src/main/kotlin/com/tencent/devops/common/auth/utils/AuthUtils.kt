@@ -37,8 +37,8 @@ object AuthUtils {
 
     fun getProjects(content: ExpressionDTO): List<String> {
         if (content.field != "project.id") {
-            if (content.operator != ExpressionOperationEnum.ANY
-                && content.operator != ExpressionOperationEnum.OR) {
+            if (content.operator != ExpressionOperationEnum.ANY &&
+                content.operator != ExpressionOperationEnum.OR) {
                 return emptyList()
             }
         }
