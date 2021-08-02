@@ -2,6 +2,8 @@ package com.tencent.devops.common.web
 
 import com.tencent.devops.common.web.proxy.CustomProxySelector
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import java.net.InetSocketAddress
@@ -9,26 +11,32 @@ import java.net.Proxy
 import java.net.ProxySelector
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
+@Configuration("globalProxyConfiguration")
 class GlobalProxyConfiguration(
     /**
      * 是否开启，设置为 true 才生效
      */
+    @Value("\${net.proxy.enable:false}")
     private val enableProxy: String,
     /**
      *  需要代理的hosts，多个使用","隔开，支持正则表达式
      */
+    @Value("\${net.proxy.hosts:}")
     private val proxyHosts: String,
     /**
      *  代理服务器类型，可 HTTP, SOCKS
      */
+    @Value("\${net.proxy.server.type:}")
     private val proxyServerType: String,
     /**
      *  代理服务器主机，host 或者 ip
      */
+    @Value("\${net.proxy.server.host:}")
     private val proxyServerHost: String,
     /**
      *  代理服务器端口
      */
+    @Value("\${net.proxy.server.port:}")
     private val proxyServerPort: String
 ) {
 
