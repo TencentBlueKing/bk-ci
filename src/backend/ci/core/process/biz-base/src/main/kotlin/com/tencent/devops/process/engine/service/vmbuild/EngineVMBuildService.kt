@@ -535,7 +535,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         }
     }
 
-    fun heartbeat(projectId: String, buildId: String, vmSeqId: String, vmName: String): HeartBeatInfo {
+    fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Boolean {
+        LOG.info("ENGINE|$buildId|Agent|HEART_BEAT|j($vmSeqId)|$vmName")
+        buildingHeartBeatUtils.addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
+        return true
+    }
+
+    fun heartbeatV1(projectId: String, buildId: String, vmSeqId: String, vmName: String): HeartBeatInfo {
         LOG.info("ENGINE|$projectId|$buildId|Agent|HEART_BEAT|j($vmSeqId)|$vmName")
         buildingHeartBeatUtils.addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
         var cancelTaskIds: MutableSet<String>? = null
