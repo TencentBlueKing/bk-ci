@@ -84,7 +84,10 @@ interface ApigwPipelineResourceV3 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "流水线模型", required = true)
-        pipeline: Model
+        pipeline: Model,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<PipelineId>
 
     @Deprecated("Replace with editPipeline")
@@ -108,7 +111,10 @@ interface ApigwPipelineResourceV3 {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam(value = "流水线模型", required = true)
-        pipeline: Model
+        pipeline: Model,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<Boolean>
 
     @ApiOperation("导入新流水线, 包含流水线编排和设置")
@@ -129,7 +135,10 @@ interface ApigwPipelineResourceV3 {
         projectId: String,
         @ApiParam(value = "流水线模型与设置", required = true)
         @Valid
-        modelAndSetting: PipelineModelAndSetting
+        modelAndSetting: PipelineModelAndSetting,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<PipelineId>
 
     @ApiOperation("更新流水线编排和设置")
@@ -153,7 +162,10 @@ interface ApigwPipelineResourceV3 {
         pipelineId: String,
         @ApiParam(value = "流水线模型与设置", required = true)
         @Valid
-        modelAndSetting: PipelineModelAndSetting
+        modelAndSetting: PipelineModelAndSetting,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<DeployPipelineResult>
 
     @ApiOperation("获取流水线编排")
@@ -221,7 +233,10 @@ interface ApigwPipelineResourceV3 {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<Boolean>
 
     @ApiOperation("获取项目的流水线列表")
@@ -245,7 +260,10 @@ interface ApigwPipelineResourceV3 {
         page: Int? = null,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int? = null
+        pageSize: Int? = null,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<Page<Pipeline>>
 
     @ApiOperation("获取流水线状态")
