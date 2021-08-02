@@ -25,34 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.process;
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import com.tencent.devops.common.web.jmx.exception.JmxExceptions
-import org.slf4j.LoggerFactory
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
+import com.tencent.process.BkProcessTree.OSProcess;
 
-@BkExceptionMapper
-class RuntimeExceptionMapper : ExceptionMapper<RuntimeException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(RuntimeExceptionMapper::class.java)!!
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class ProcessKiller implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    public ProcessKiller() {
     }
 
-    override fun toResponse(exception: RuntimeException): Response {
-        logger.error("Failed with runtime exception", exception)
-        val status = Response.Status.INTERNAL_SERVER_ERROR
-        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
-            exception.message
-        } else {
-            "访问后台数据失败，已通知产品、开发，请稍后重试"
-        }
-        JmxExceptions.encounter(exception)
-        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
+    public static List<ProcessKiller> all() {
+        return new ArrayList<>();
     }
+
+    public abstract boolean kill(OSProcess var1) throws IOException, InterruptedException;
 }

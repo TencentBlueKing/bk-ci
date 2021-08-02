@@ -25,34 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.worker.common.task
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import com.tencent.devops.common.web.jmx.exception.JmxExceptions
-import org.slf4j.LoggerFactory
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.process.engine.common.Timeout
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.TimeUnit
 
-@BkExceptionMapper
-class RuntimeExceptionMapper : ExceptionMapper<RuntimeException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(RuntimeExceptionMapper::class.java)!!
+object TaskExecutorCache {
+
+    private val taskExecutorCache = Caffeine.newBuilder()
+        .maximumSize(50)
+        .expireAfterWrite(Timeout.MAX_JOB_RUN_DAYS, TimeUnit.DAYS)
+        .build<String, ExecutorService>()
+
+    fun invalidate(taskId: String) {
+        taskExecutorCache.invalidate(taskId)
     }
 
-    override fun toResponse(exception: RuntimeException): Response {
-        logger.error("Failed with runtime exception", exception)
-        val status = Response.Status.INTERNAL_SERVER_ERROR
-        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
-            exception.message
-        } else {
-            "访问后台数据失败，已通知产品、开发，请稍后重试"
-        }
-        JmxExceptions.encounter(exception)
-        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
+    fun put(taskId: String, executor: ExecutorService) {
+        taskExecutorCache.put(taskId, executor)
+    }
+
+    fun getIfPresent(taskId: String): ExecutorService? {
+        return taskExecutorCache.getIfPresent(taskId)
+    }
+
+    fun getAllPresent(taskIds: Set<String>): Map<String, ExecutorService>? {
+        return taskExecutorCache.getAllPresent(taskIds)
     }
 }
