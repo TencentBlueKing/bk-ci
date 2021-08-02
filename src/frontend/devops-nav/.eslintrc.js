@@ -44,8 +44,7 @@ module.exports = {
     globals: {
         'LOGOUT_SERVICE_URL': false,
         'DEVOPS_LS_VERSION': false,
-        'BK_CI_VERSION': false,
-        'BK_CI_IAM_SAAS_URL': false
+        'BK_CI_VERSION': false
     },
     overrides: [
         {
