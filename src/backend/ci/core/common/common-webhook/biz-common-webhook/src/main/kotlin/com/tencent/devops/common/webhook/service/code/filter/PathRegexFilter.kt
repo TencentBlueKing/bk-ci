@@ -27,56 +27,70 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import com.tencent.devops.scm.pojo.MATCH_BRANCH
+import com.tencent.devops.scm.pojo.MATCH_PATHS
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 
-class BranchFilter(
+class PathRegexFilter(
     private val pipelineId: String,
-    private val triggerOnBranchName: String,
-    private val includedBranches: List<String>,
-    private val excludedBranches: List<String>
+    private val triggerOnPath: List<String>,
+    private val includedPaths: List<String>,
+    private val excludedPaths: List<String>
 ) : WebhookFilter {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BranchFilter::class.java)
+        private val logger = LoggerFactory.getLogger(PathRegexFilter::class.java)
     }
     private val matcher = AntPathMatcher()
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info(
-            "$pipelineId|triggerOnBranchName:$triggerOnBranchName|includedBranches:$includedBranches" +
-                "|excludedBranches:$excludedBranches|branch filter"
+            "$pipelineId|triggerOnPath:$triggerOnPath|includedPaths:$includedPaths" +
+                "|excludedPaths:$excludedPaths|path regex filter"
         )
-        return hasNoBranchSpecs() || (isBranchNotExcluded() && isBranchIncluded(response))
+        return hasNoPathSpecs() || (isPathNotExcluded() && isPathIncluded(response))
     }
 
-    private fun hasNoBranchSpecs(): Boolean {
-        return includedBranches.isEmpty() && excludedBranches.isEmpty()
+    private fun hasNoPathSpecs(): Boolean {
+        return includedPaths.isEmpty() && excludedPaths.isEmpty()
     }
 
-    private fun isBranchNotExcluded(): Boolean {
-        excludedBranches.forEach { excludePattern ->
-            if (matcher.match(excludePattern, triggerOnBranchName)) {
-                logger.warn(
-                    "$pipelineId|the excluded branch match the git event branch $excludePattern"
-                )
-                return false
+    /**
+     * 路径过滤:触发的路径需要满足所有配置的路径
+     */
+    @Suppress("ReturnCount")
+    private fun isPathNotExcluded(): Boolean {
+        triggerOnPath.forEach eventPath@{ eventPath ->
+            excludedPaths.forEach userPath@{ userPath ->
+                if (matcher.match(userPath, eventPath)) {
+                    return@eventPath
+                }
+            }
+            return true
+        }
+        return false
+    }
+
+    /**
+     * 路径包含: 触发的路径只要有一个满足配置的路径
+     */
+    private fun isPathIncluded(response: WebhookFilterResponse): Boolean {
+        if (includedPaths.isEmpty()) {
+            return true
+        }
+        val matchPaths = mutableSetOf<String>()
+        triggerOnPath.forEach eventPath@{ eventPath ->
+            includedPaths.forEach userPath@{ userPath ->
+                if (matcher.match(userPath, eventPath)) {
+                    matchPaths.add(userPath)
+                }
             }
         }
-        return true
-    }
-
-    private fun isBranchIncluded(response: WebhookFilterResponse): Boolean {
-        includedBranches.forEach { includePattern ->
-            if (matcher.match(includePattern, triggerOnBranchName)) {
-                response.addParam(MATCH_BRANCH, includePattern)
-                logger.warn(
-                    "$pipelineId|the included branch match the git event branch $includePattern"
-                )
-                return true
-            }
+        return if (matchPaths.isNotEmpty()) {
+            response.addParam(MATCH_PATHS, matchPaths.joinToString(","))
+            true
+        } else {
+            false
         }
-        return includedBranches.isEmpty()
     }
 }
