@@ -37,7 +37,8 @@ object AuthUtils {
 
     fun getProjects(content: ExpressionDTO): List<String> {
         if (content.field != "project.id") {
-            if (content.operator != ExpressionOperationEnum.ANY) {
+            if (content.operator != ExpressionOperationEnum.ANY
+                && content.operator != ExpressionOperationEnum.OR) {
                 return emptyList()
             }
         }
@@ -46,7 +47,11 @@ object AuthUtils {
             ExpressionOperationEnum.ANY -> projectList.add("*")
             ExpressionOperationEnum.EQUAL -> projectList.add(content.value.toString())
             ExpressionOperationEnum.IN -> projectList.addAll(StringUtils.obj2List(content.value.toString()))
-            else -> {}
+            ExpressionOperationEnum.OR -> content.content.forEach {
+                projectList.addAll(getProjects(it))
+            }
+            else -> {
+            }
         }
         return projectList
     }
@@ -148,7 +153,8 @@ object AuthUtils {
                     parentExpression.operator
                 )
             )
-            else -> {}
+            else -> {
+            }
         }
         return instantList
     }
@@ -259,7 +265,8 @@ object AuthUtils {
             ExpressionOperationEnum.START_WITH -> {
                 instanceList.addAll(checkProject(projectId, expression).second)
             }
-            else -> { }
+            else -> {
+            }
         }
 
         return instanceList
