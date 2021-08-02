@@ -61,7 +61,11 @@ object YamlObjects {
             timeoutMinutes = getNullValue("timeout-minutes", step)?.toInt(),
             continueOnError = getNullValue("continue-on-error", step)?.toBoolean(),
             retryTimes = getNullValue("retry-times", step)?.toInt(),
-            env = step["env"],
+            env = if (step["env"] == null) {
+                null
+            } else {
+                transValue<Map<String, String>>(fromPath, "env", step["env"])
+            },
             run = step["run"]?.toString(),
             checkout = step["checkout"]?.toString()
         )
