@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.ClientException
 object RetryUtils {
 
     @Throws(ClientException::class)
-    fun <T> clientRetry(retryTime: Int = 10, retryPeriodMills: Long = 500, action: () -> T): T {
+    fun <T> clientRetry(retryTime: Int = 5, retryPeriodMills: Long = 500, action: () -> T): T {
         return try {
             action()
         } catch (re: ClientException) {
