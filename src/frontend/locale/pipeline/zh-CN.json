@@ -866,6 +866,7 @@
         "atomRunCondition": "何时运行本插件",
         "atomPreSuc": "所有前置插件运行成功时运行（包括失败时继续）",
         "atomEvenFail": "即使前面有插件运行失败也运行，除非被取消才不运行",
+        "userCancelExec": "插件正在执行，但用户手动取消或已执行超时",
         "atomEvenCancel": "即使前面有插件运行失败也运行，即使被取消也运行",
         "atomOnlyFail": "只有前面有插件运行失败时才运行",
         "varMatch": "自定义变量全部满足时才运行",
