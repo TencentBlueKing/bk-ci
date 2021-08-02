@@ -45,16 +45,21 @@ function _M:get_tag(ns_config)
     -- 根据service路由
     local useServiceTag = false
     if devops_service ~= nil and devops_service ~= '' then
-        local service_local_cache_key = 'tag_local_cache_key'
+        local service_local_cache_key = 'tag_local_cache_key_' .. devops_service
         local service_local_cache_value = tag_cache:get(service_local_cache_key)
-        if service_local_cache_value ~= nil then
-            tag = service_local_cache_value
-        else
-            local service_redis_cache_value = red:get("project:setting:service:tag:" .. devops_service)
-            if service_redis_cache_value and service_redis_cache_value ~= ngx.null then
-                tag_cache:set(service_local_cache_key, service_redis_cache_value, 30)
-                tag = service_redis_cache_value
+        if service_local_cache_value ~= '-1' then
+            if service_local_cache_value ~= nil then
+                tag = service_local_cache_value
                 useServiceTag = true
+            else
+                local service_redis_cache_value = red:get("project:setting:service:tag:" .. devops_service)
+                if service_redis_cache_value and service_redis_cache_value ~= ngx.null then
+                    tag_cache:set(service_local_cache_key, service_redis_cache_value, 60)
+                    tag = service_redis_cache_value
+                    useServiceTag = true
+                else
+                    tag_cache:set(service_local_cache_key, '-1', 60)
+                end
             end
         end
     end
