@@ -1049,7 +1049,7 @@
     {
       "version_type" : "P",
       "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "swiftlint_scan",
+      "docker_image_url" : "bkcodecc/swiftlint_scan",
       "docker_image_version" : "latest",
       "foreign_docker_image_version" : "latest",
       "docker_image_hash" : "sha256:3f91a8111c79f4ec2bc72d5dd387e9b5224818f8350755b2a6898a58802ab4d2",
@@ -1061,7 +1061,7 @@
     {
       "version_type" : "T",
       "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "swiftlint_scan",
+      "docker_image_url" : "bkcodecc/swiftlint_scan",
       "docker_image_version" : "v-1615274543129",
       "foreign_docker_image_version" : "latest",
       "docker_image_hash" : "sha256:3f91a8111c79f4ec2bc72d5dd387e9b5224818f8350755b2a6898a58802ab4d2",
@@ -1073,7 +1073,7 @@
     {
       "version_type" : "G",
       "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "swiftlint_scan",
+      "docker_image_url" : "bkcodecc/swiftlint_scan",
       "docker_image_version" : "v-1615274543129",
       "foreign_docker_image_version" : "latest",
       "docker_image_hash" : "sha256:3f91a8111c79f4ec2bc72d5dd387e9b5224818f8350755b2a6898a58802ab4d2",
@@ -1156,41 +1156,6 @@
   ],
   "tool_image_revision" : "sha256:e4d458a060d90dad2cf552c1e80068d39c7d2059cea551d55613657b50572c54",
   "create_date" : 1592880736325,
-  "created_by" : "admin"
-}
-
-
-{
-  "_id" : {"$oid": "60783ce90b66973b80f2940b"},
-  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
-  "name" : "CSSLINT",
-  "pattern" : "LINT",
-  "display_name" : "CSSLINT",
-  "status" : "P",
-  "type" : "STANDARD",
-  "lang" : 65536,
-  "brief_introduction" : "基于stylelint的样式规范，支持检测.css,.scss,.less,.wxss,.vue",
-  "privated" : false,
-  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  node ./sdk/scan.js --input={input.json} --output={output.json}\"",
-  "docker_image_url" : "bkcodecc/csslint_scan",
-  "docker_image_version" : "v-1618492593623",
-  "debug_pipeline_id" : "p-a1270c94f5ee462fb1c17337c2d52c00",
-  "tool_scan_command" : "/bin/bash##-c##\"node ./sdk/scan.js --input={input.json} --output={output.json}\"",
-  "tool_versions" : [
-    {
-      "version_type" : "P",
-      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  node ./sdk/scan.js --input={input.json} --output={output.json}\"",
-      "docker_image_url" : "bkcodecc/csslint_scan",
-      "docker_image_version" : "latest",
-      "foreign_docker_image_version" : "latest",
-      "docker_image_hash" : "sha256:4c19045132696dc140beac1d107a4e001a37dc30d8ea206b47afc4db61cc9ceb",
-      "create_date" : 1618544846506,
-      "created_by" : "admin",
-      "updated_date" : 1618544846506,
-      "updated_by" : "admin"
-    }
-  ],
-  "create_date" : 1618492636017,
   "created_by" : "admin"
 }
 
