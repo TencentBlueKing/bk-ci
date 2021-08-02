@@ -100,15 +100,13 @@ class BuildJobResourceImpl @Autowired constructor(
     }
 
     override fun jobHeartbeat(
-        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String
-    ): Result<HeartBeatInfo> {
+    ): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(
             data = vMBuildService.heartbeat(
-                projectId = projectId,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 vmName = vmName
@@ -124,7 +122,7 @@ class BuildJobResourceImpl @Autowired constructor(
     ): Result<HeartBeatInfo> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(
-            data = vMBuildService.heartbeat(
+            data = vMBuildService.heartbeatV1(
                 projectId = projectId,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
