@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.service.code.handler.svn
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
@@ -44,6 +45,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_REVERSION
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_USERNAME
 
 @CodeWebhookHandler
+@SuppressWarnings("TooManyFunctions")
 class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
     override fun eventClass(): Class<SvnCommitEvent> {
         return SvnCommitEvent::class.java
@@ -108,26 +110,40 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                             relativeSubPath = path
                         )
                     },
-                    includedPaths = if (relativePath.isNullOrBlank()) {
-                        listOf(
-                            WebhookUtils.getFullPath(
-                                projectRelativePath = projectRelativePath,
-                                relativeSubPath = ""
-                            )
-                        )
-                    } else {
-                        WebhookUtils.convert(relativePath).map { path ->
-                            WebhookUtils.getFullPath(
-                                projectRelativePath = projectRelativePath,
-                                relativeSubPath = path
-                            )
-                        }
-                    }
+                    includedPaths = getIncludePaths(projectRelativePath)
                 )
             )
             return listOf(projectNameFilter, userFilter, pathFilter)
         }
     }
+
+    private fun WebHookParams.getIncludePaths(projectRelativePath: String) =
+        // 如果没有配置包含路径，则需要跟代码库url做对比
+        if (relativePath.isNullOrBlank()) {
+            // 模糊匹配需要包含整个路径
+            if (pathFilterType == PathFilterType.NamePrefixFilter) {
+                listOf(
+                    WebhookUtils.getFullPath(
+                        projectRelativePath = projectRelativePath,
+                        relativeSubPath = ""
+                    )
+                )
+            } else {
+                listOf(
+                    WebhookUtils.getFullPath(
+                        projectRelativePath = projectRelativePath,
+                        relativeSubPath = "**"
+                    )
+                )
+            }
+        } else {
+            WebhookUtils.convert(relativePath).map { path ->
+                WebhookUtils.getFullPath(
+                    projectRelativePath = projectRelativePath,
+                    relativeSubPath = path
+                )
+            }
+        }
 
     override fun retrieveParams(
         event: SvnCommitEvent,
