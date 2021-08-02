@@ -53,6 +53,10 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
+import com.tencent.devops.process.utils.PIPELINE_ATOM_CODE
+import com.tencent.devops.process.utils.PIPELINE_ATOM_NAME
+import com.tencent.devops.process.utils.PIPELINE_ATOM_VERSION
+import com.tencent.devops.process.utils.PIPELINE_TASK_NAME
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
@@ -213,7 +217,14 @@ open class MarketAtomTask : ITask() {
         }
         runtimeVariables = runtimeVariables.plus(Pair("testVersionFlag", testVersionFlag)) // 设置是否是测试版本的标识
         // 设置插件名称和任务名称变量
-        runtimeVariables = runtimeVariables.plus(mapOf("atomName" to atomData.atomName, "taskName" to taskName))
+        runtimeVariables = runtimeVariables.plus(
+            mapOf(
+                PIPELINE_ATOM_NAME to atomData.atomName,
+                PIPELINE_ATOM_CODE to atomData.atomCode,
+                PIPELINE_ATOM_VERSION to atomData.version,
+                PIPELINE_TASK_NAME to taskName
+            )
+        )
         val variables = runtimeVariables.plus(atomParams)
         logger.info("atomCode is:$atomCode ,variables is:$variables")
 
@@ -273,11 +284,7 @@ open class MarketAtomTask : ITask() {
                 atomLanguage, buildHostType.name, AgentEnv.getOS().name)
             logger.info("atomCode is:$atomCode ,atomDevLanguageEnvVarsResult is:$atomDevLanguageEnvVarsResult")
             val atomDevLanguageEnvVars = atomDevLanguageEnvVarsResult.data
-            val systemEnvVariables = mutableMapOf(
-                "PROJECT_ID" to buildVariables.projectId,
-                "BUILD_ID" to buildVariables.buildId,
-                "VM_SEQ_ID" to buildVariables.vmSeqId
-            )
+            val systemEnvVariables = TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)
             atomDevLanguageEnvVars?.forEach {
                 systemEnvVariables[it.envKey] = it.envValue
             }
