@@ -119,15 +119,24 @@ class ScmService @Autowired constructor(
         } catch (e: RemoteServiceException) {
             logger.error("getProjectInfo RemoteServiceException|" +
                 "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}")
-            if (e.httpStatus == GitCodeApiStatus.NOT_FOUND.status) {
-                error("getProjectInfo error ${e.errorMessage}", ErrorCodeEnum.PROJECT_NOT_FOUND)
-            }
-            if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status) {
-                error(
-                    "getProjectInfo error ${e.errorMessage}",
-                    ErrorCodeEnum.GET_PROJECT_INFO_FORBIDDEN,
-                    PROJECT_PERMISSION_ERROR.format(gitProjectId)
-                )
+            when (e.httpStatus) {
+                GitCodeApiStatus.NOT_FOUND.status -> {
+                    error("getProjectInfo error ${e.errorMessage}", ErrorCodeEnum.PROJECT_NOT_FOUND)
+                }
+                GitCodeApiStatus.FORBIDDEN.status -> {
+                    error(
+                        logMessage = "getProjectInfo error ${e.errorMessage}",
+                        errorCode = ErrorCodeEnum.GET_PROJECT_INFO_FORBIDDEN,
+                        exceptionMessage = PROJECT_PERMISSION_ERROR.format(gitProjectId)
+                    )
+                }
+                else -> {
+                    error(
+                        logMessage = "getProjectInfo error ${e.errorMessage}",
+                        errorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR,
+                        exceptionMessage = e.errorMessage
+                    )
+                }
             }
         } catch (e: Exception) {
             logger.error("getProjectInfo Exception: $e")
@@ -165,11 +174,32 @@ class ScmService @Autowired constructor(
         gitCICreateFile: GitCICreateFile
     ): Boolean {
         logger.info("createNewFile: [$gitProjectId|$token|$gitCICreateFile]")
-        return client.getScm(ServiceGitResource::class).gitCICreateFile(
-            gitProjectId = gitProjectId,
-            token = token,
-            gitCICreateFile = gitCICreateFile
-        ).data!!
+        try {
+            return client.getScm(ServiceGitResource::class).gitCICreateFile(
+                gitProjectId = gitProjectId,
+                token = token,
+                gitCICreateFile = gitCICreateFile
+            ).data!!
+        } catch (e: RemoteServiceException) {
+            logger.error("createNewFile RemoteServiceException|" +
+                "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}")
+            if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status) {
+                error(
+                    "getProjectInfo error ${e.errorMessage}",
+                    ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN
+                )
+            } else {
+                error(
+                    "getProjectInfo error ${e.errorMessage}",
+                    ErrorCodeEnum.CREATE_NEW_FILE_ERROR,
+                    e.errorMessage
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("getProjectInfo Exception: $e")
+            error(" getProjectInfo error ${e.message}", ErrorCodeEnum.GET_PROJECT_INFO_ERROR)
+        }
+        return false
     }
 
     fun getProjectMembers(

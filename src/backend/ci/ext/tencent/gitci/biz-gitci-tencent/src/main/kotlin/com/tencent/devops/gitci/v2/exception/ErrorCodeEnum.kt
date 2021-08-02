@@ -54,7 +54,12 @@ enum class ErrorCodeEnum(
     GET_PROJECT_INFO_ERROR(ErrorType.THIRD_PARTY, 2129006, "获取工蜂项目信息失败"),
     GET_PROJECT_INFO_FORBIDDEN(ErrorType.USER, 2129007, "无权获取工蜂项目信息"),
     GET_PROJECT_COMMITS_ERROR(ErrorType.THIRD_PARTY, 2129008, "获取仓库提交记录失败"),
-    CREATE_NEW_FILE_ERROR(ErrorType.THIRD_PARTY, 2129009, "创建新文件失败"),
+    CREATE_NEW_FILE_ERROR(ErrorType.THIRD_PARTY, 2129009, "创建新流水线"),
+    CREATE_NEW_FILE_ERROR_FORBIDDEN(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = 21290015,
+        formatErrorMessage = "创建新流水线失败,用户无当前分支的操作权限"
+    ),
     GET_PROJECT_MEMBERS_ERROR(ErrorType.THIRD_PARTY, 2129010, "获取项目成员失败"),
     GET_PROJECT_BRANCHES_ERROR(ErrorType.THIRD_PARTY, 2129011, "获取仓库分支列表失败"),
     GET_GIT_MERGE_CHANGE_INFO(ErrorType.THIRD_PARTY, 2129012, "获取MERGE变更文件列表失败"),
