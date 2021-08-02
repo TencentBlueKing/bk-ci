@@ -64,7 +64,7 @@ object YamlObjects {
             env = if (step["env"] == null) {
                 null
             } else {
-                transValue<Map<String, String>>(fromPath, "env", step["env"])
+                transValue<Map<String, Any?>>(fromPath, "env", step["env"])
             },
             run = step["run"]?.toString(),
             checkout = step["checkout"]?.toString()
