@@ -209,11 +209,11 @@ class GitCIBasicSettingDao {
         }
     }
 
-    fun getProjectAfterId(dslContext: DSLContext, startId: Long, limit: Int): List<TGitBasicSettingRecord> {
+    fun getProjectNoHttpUrl(dslContext: DSLContext): List<TGitBasicSettingRecord> {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             return dslContext.selectFrom(this)
-                .where(ID.gt(startId))
-                .limit(limit)
+                .where(GIT_HTTP_URL.eq(""))
+                .limit(100)
                 .fetch()
         }
     }
@@ -221,17 +221,28 @@ class GitCIBasicSettingDao {
     fun fixProjectInfo(
         dslContext: DSLContext,
         gitProjectId: Long,
-        creatorBgName: String,
-        creatorDeptName: String,
-        creatorCenterName: String
+        httpUrl: String
     ): Int {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             return dslContext.update(this)
-                .set(CREATOR_BG_NAME, creatorBgName)
-                .set(CREATOR_DEPT_NAME, creatorDeptName)
-                .set(CREATOR_CENTER_NAME, creatorCenterName)
+                .set(GIT_HTTP_URL, httpUrl)
                 .where(ID.eq(gitProjectId))
                 .execute()
+        }
+    }
+
+    fun searchProjectByIds(
+        dslContext: DSLContext,
+        projectIds: Set<Long>?
+    ): List<TGitBasicSettingRecord> {
+        if (projectIds.isNullOrEmpty()) {
+            return emptyList()
+        }
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(projectIds))
+                .and(ENABLE_CI.eq(true))
+                .fetch()
         }
     }
 }

@@ -165,15 +165,16 @@ class TxProjectServiceImpl @Autowired constructor(
                 accessToken = accessToken!!,
                 projectCreateInfo = projectCreateInfo
             )
-
-            projectDispatcher.dispatch(
-                ProjectCreateBroadCastEvent(
-                    userId = userId,
-                    projectId = projectId,
-                    projectInfo = projectCreateInfo
-                )
-            )
         }
+
+        // 工蜂CI项目不会添加paas项目，但也需要广播
+        projectDispatcher.dispatch(
+            ProjectCreateBroadCastEvent(
+                userId = userId,
+                projectId = projectId,
+                projectInfo = projectCreateInfo
+            )
+        )
     }
 
     override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {

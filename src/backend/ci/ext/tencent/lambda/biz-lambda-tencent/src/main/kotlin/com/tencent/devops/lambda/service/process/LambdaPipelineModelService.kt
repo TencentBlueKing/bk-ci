@@ -32,6 +32,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.lambda.dao.process.LambdaPipelineInfoDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.pojo.DataPlatPipelineInfo
@@ -60,7 +61,8 @@ class LambdaPipelineModelService @Autowired constructor(
         pushPipelineInfo2Kafka(
             pipelineId = event.pipelineId,
             userId = event.userId,
-            projectId = event.projectId
+            projectId = event.projectId,
+            channelCode = event.channelCode
         )
     }
 
@@ -74,7 +76,7 @@ class LambdaPipelineModelService @Autowired constructor(
         val forkJoinPool = ForkJoinPool(10)
         forkJoinPool.submit {
             pipelineInfoList.parallelStream().forEach {
-                pushPipelineInfo2Kafka(it.pipelineId, it.lastModifyUser, it.projectId)
+                pushPipelineInfo2Kafka(it.pipelineId, it.lastModifyUser, it.projectId, it.channel)
                 pushPipelineResource2Kafka(it.pipelineId, it.version)
             }
         }
@@ -108,14 +110,16 @@ class LambdaPipelineModelService @Autowired constructor(
     private fun pushPipelineInfo2Kafka(
         pipelineId: String,
         userId: String,
-        projectId: String
+        projectId: String,
+        channelCode: String
     ) {
         try {
-            logger.info("onModelExchange sync pipelineInfo, pipelineId: $pipelineId")
+            logger.info("onModelExchange sync pipelineInfo, pipelineId: $pipelineId, channelCode: $channelCode")
             val pipelineInfo = client.get(ServicePipelineResource::class).status(
                 userId = userId,
                 projectId = projectId,
-                pipelineId = pipelineId
+                pipelineId = pipelineId,
+                channelCode = ChannelCode.valueOf(channelCode)
             ).data
             if (pipelineInfo != null) {
                 kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_INFO_TOPIC, JsonUtil.toJson(DataPlatPipelineInfo(
