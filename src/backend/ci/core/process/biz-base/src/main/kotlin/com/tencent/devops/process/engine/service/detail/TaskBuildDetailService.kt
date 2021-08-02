@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
@@ -308,7 +309,8 @@ class TaskBuildDetailService(
             )
         } else {
             if (tmpElement == endElement) {
-                if (buildStatus != BuildStatus.CANCELED) {
+                if (buildStatus != BuildStatus.CANCELED &&
+                    endElement.additionalOptions?.runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
                     return true
                 }
                 val startIndex = endElementIndex + 1
