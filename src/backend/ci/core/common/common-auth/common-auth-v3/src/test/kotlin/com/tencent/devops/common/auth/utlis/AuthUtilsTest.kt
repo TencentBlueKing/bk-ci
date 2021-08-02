@@ -72,6 +72,29 @@ class AuthUtilsTest {
         actionPolicy2.condition = expression2
         actionPolicys.add(actionPolicy2)
 
+        val actionPolicy3 = ActionPolicyDTO()
+        val expression3 = ExpressionDTO()
+        expression3.field = null
+        expression3.operator = ExpressionOperationEnum.OR
+        expression3.value = null
+        expression3.content = mutableListOf()
+        val expression31 = ExpressionDTO()
+        val expression32 = ExpressionDTO()
+        expression31.operator = ExpressionOperationEnum.ANY
+        expression31.field = "project.id"
+        expression31.value = "[]"
+        expression31.content = null
+
+        expression32.operator = ExpressionOperationEnum.IN
+        expression32.field = "project.id"
+        expression32.value = "[w1, dgm]"
+        expression32.content = null
+        expression3.content.add(expression31)
+        expression3.content.add(expression32)
+        actionPolicy3.actionId = null
+        actionPolicy3.condition = expression3
+        actionPolicys.add(actionPolicy3)
+
         buildExpression()
         buildNewExpression()
     }
@@ -220,6 +243,12 @@ class AuthUtilsTest {
     @Test
     fun getProjects2() {
         val projectList = AuthUtils.getProjects(actionPolicys[2].condition)
+        print(projectList)
+    }
+
+    @Test
+    fun getProjects3() {
+        val projectList = AuthUtils.getProjects(actionPolicys[3].condition)
         print(projectList)
     }
 
