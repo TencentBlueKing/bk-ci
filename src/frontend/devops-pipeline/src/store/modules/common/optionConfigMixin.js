@@ -141,6 +141,10 @@ const optionConfigMixin = {
                             name: this.$t('storeMap.atomEvenFail')
                         },
                         {
+                            id: 'PRE_TASK_FAILED_EVEN_CANCEL',
+                            name: this.$t('storeMap.atomEvenCancel')
+                        },
+                        {
                             id: 'PRE_TASK_FAILED_ONLY',
                             name: this.$t('storeMap.atomOnlyFail')
                         },

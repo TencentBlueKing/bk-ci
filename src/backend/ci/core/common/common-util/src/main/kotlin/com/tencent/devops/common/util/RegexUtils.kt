@@ -25,15 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.common
+package com.tencent.devops.common.util
 
-enum class EnvEnum(
-    val value: String
-) {
-    DEV_ENV("dev"),
-    TEST_ENV("test"),
-    GRAY_ENV("gray"),
-    PROD_ENV("prod"),
-    AUTO_ENV("auto"),
-    GITCI_PROD_ENV("gitci-prod")
+@Suppress("MagicNumber", "ReturnCount")
+object RegexUtils {
+
+    private val httpContextPathRegex = Regex("(http[s]?:)(//)([-.a-z0-9A-Z]+)(/.*)")
+
+    /**
+     * 解析 [url], 并且返回 域名(xx.xx.xx or xx.xx.xx) 以及 ContextPath绝对路径(/ or /xx/yy...)
+     * 不合法的 [url] 将会返回 null
+     * eg: url = https://xx.xx.xx/a/b/c.txt return xx.xx.xx and /a/b/c.txt
+     */
+    fun splitDomainContextPath(url: String): Pair<String/*http domain*/, String/*context path*/>? {
+        val groups = httpContextPathRegex.find(url)?.groups
+        if (groups != null && groups.size == 5) {
+            return groups[3]!!.value to groups[4]!!.value
+        }
+        return null
+    }
+
+    /**
+     * 解析[url] 将协议头去掉， 比如 https://xx.xx.xx/a/b/c 返回 //xx.xx.xx/a/b/c 表示遵守当前主站的协议
+     */
+    fun trimProtocol(url: String?): String? {
+        if (url.isNullOrBlank()) {
+            return url
+        }
+        val groups = httpContextPathRegex.find(url)?.groups ?: return url
+        return groups[2]!!.value + groups[3]!!.value + groups[4]!!.value
+    }
 }

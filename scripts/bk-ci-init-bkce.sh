@@ -8,13 +8,31 @@ on_ERR (){
   echo >&2 "ERROR $fn exit with $ret at line $lineno: $(sed -n ${lineno}p $0)."
 }
 
+patt_api_success='"status" *: *0 *,'
+# USAGE: api_helper CURL_ARGS...
+api_helper (){
+  local resp
+  echo "execute on $TARGET_HOST: curl -sSf $*."
+  resp=$(ssh -o ConnectTimeout=3 "${TARGET_HOST}" -- curl -sSf "$@")
+  echo "resp=$resp."
+  if grep -Eq "$patt_api_success" <<< "$resp"; then
+    echo "request succeed."
+  else
+    echo "ERROR: failed to request, abort."
+    return 1
+  fi
+}
+
 # 注册ci-auth的回调.
 echo "reg ci-auth callback."
-iam_callback="support-files/ms-init/auth/iam-callback-resource-registere.conf"
-./pcmd.sh -H "$BK_CI_AUTH_IP0" curl -vsX POST "http://localhost:$BK_CI_AUTH_API_PORT/api/op/auth/iam/callback/" -H "Content-Type:application/json" -d @${BK_PKG_SRC_PATH:-/data/src}/ci/support-files/ms-init/auth/iam-callback-resource-registere.conf
+iam_api_url="http://127.0.0.1:$BK_CI_AUTH_API_PORT/api/op/auth/iam/callback/"
+iam_json_file="${BK_PKG_SRC_PATH:-/data/src}/ci/support-files/ms-init/auth/iam-callback-resource-registere.conf"
+TARGET_HOST="$BK_CI_AUTH_IP0" api_helper -m 5 -X POST -H "Content-Type:application/json" -d "@$iam_json_file" "$iam_api_url"
+
 echo ""
 echo "reg store image for bkci."
 # 注册初始镜像到研发商店.
-./pcmd.sh -H "$BK_CI_STORE_IP0" curl -vsX POST "http://127.0.0.1:${BK_CI_STORE_API_PORT:-21918}/api/op/market/image/init"
+store_api_url="http://127.0.0.1:$BK_CI_STORE_API_PORT/api/op/market/image/init"
+TARGET_HOST="$BK_CI_STORE_IP0" api_helper -m 5 -X POST "$store_api_url"
 echo ""
 

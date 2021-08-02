@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.pojo
 
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -65,10 +66,11 @@ data class CodeGitRepository(
     }
 
     override fun isLegal(): Boolean {
-        if (authType == RepoAuthType.HTTP) {
-            return url.startsWith("http://") ||
-                url.startsWith("https://")
+        return when (authType) {
+            RepoAuthType.HTTP, RepoAuthType.OAUTH, RepoAuthType.HTTPS ->
+                GitUtils.isLegalHttpUrl(url)
+            else ->
+                GitUtils.isLegalSshUrl(url)
         }
-        return url.startsWith(getStartPrefix())
     }
 }

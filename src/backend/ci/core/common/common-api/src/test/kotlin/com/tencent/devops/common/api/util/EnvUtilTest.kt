@@ -77,6 +77,12 @@ class EnvUtilTest {
 
         data["center中"] = "中国"
         parseAndEquals(data = data, template = "abcd_\${center中}_ffs", expect = "abcd_中国_ffs")
+
+        data["blank"] = ""
+        parseAndEquals(data = data, template = "\${blank}", expect = "")
+
+        data["all"] = "hello"
+        parseAndEquals(data = data, template = "\${all}", expect = "hello")
     }
 
     private fun parseAndEquals(
@@ -91,14 +97,10 @@ class EnvUtilTest {
     }
 
     @Test
-    fun parseEnvTest() {
+    fun parseEnvTestContextMap() {
         val map = mutableMapOf<String, String>()
         map["age"] = "1"
         map["name"] = "jacky"
-        val command = "{\"age\": \${age} , \"sex\": \"boy\", \"name\": \${name}}"
-        println(command)
-        val parseEnv = EnvUtils.parseEnv(command, map)
-        println(parseEnv)
 
         val command1 = "hello \${{variables.abc}} world"
         val command2 = "\${{variables.abc}}world"
@@ -146,14 +148,16 @@ class EnvUtilTest {
     }
 
     @Test
-    fun parseEnvTest1() {
+    fun parseEnvTestData() {
         val map = mutableMapOf<String, String>()
-        map["age"] = "1"
+        map["age"] = ""
         map["name"] = "jacky"
         val command = "{\"age\": \${age} , \"sex\": \"boy\", \"name\": \${name}}"
-        println(command)
-        val parseEnv = EnvUtils.parseEnv(command, map)
-        println(parseEnv)
+        println("parseEnvTestData $command")
+        Assert.assertEquals(
+            "{\"age\": ${map["age"]} , \"sex\": \"boy\", \"name\": ${map["name"]}}",
+            EnvUtils.parseEnv(command, map)
+        )
 
         val command1 = "hello \${{variables.abc}} world"
         val command2 = "\${{variables.abc}}world"
