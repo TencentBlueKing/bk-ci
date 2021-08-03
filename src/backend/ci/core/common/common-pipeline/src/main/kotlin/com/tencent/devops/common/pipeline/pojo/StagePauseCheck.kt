@@ -107,7 +107,7 @@ data class StagePauseCheck (
     /**
      * 填充审核组ID
      */
-    private fun fixReviewGroups() {
+    fun fixReviewGroups() {
         reviewGroups?.forEach { group ->
             if (group.id.isNullOrBlank()) group.id = UUIDUtil.generate()
         }
