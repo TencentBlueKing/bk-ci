@@ -211,11 +211,11 @@ class BuildMonitorControl @Autowired constructor(
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Long {
         var interval: Long = 0
 
-        if (controlOption?.stageControlOption?.manualTrigger != true) {
+        if (checkIn?.manualTrigger != true) {
             return interval
         }
 
-        var hours = controlOption?.stageControlOption?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
+        var hours = checkIn?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
         if (hours <= 0 || hours > Timeout.MAX_HOURS) {
             hours = Timeout.MAX_HOURS.toInt()
         }
