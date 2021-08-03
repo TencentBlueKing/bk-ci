@@ -132,7 +132,7 @@ tip_file_exist "$nginx_ci_conf"
 patt_ssl_config_commented='/^ *# *### ssl config begin ###/,/^ *# *### ssl config end ###/'
 patt_ssl_config_nocomment='/^ *### ssl config begin ###/,/^ *### ssl config end ###/'
 if [ "$target_schema" = https ]; then
-  sed -i "${patt_ssl_config_commented:-^#####}s/^#//" "$nginx_ci_conf"  # 移除注释
+  sed -ri "${patt_ssl_config_commented:-^#####}s/^( *)#/\\1/" "$nginx_ci_conf"  # 移除注释
   nginx_ci_ssl="$BK_CI_SRC_DIR/support-files/templates/gateway#core#devops.ssl"
   sed -e "s@^ssl_certificate .*@ssl_certificate $ci_gateway_cert;@" \
       -e "s@^ssl_certificate_key .*@ssl_certificate_key $ci_gateway_certkey;@" \
