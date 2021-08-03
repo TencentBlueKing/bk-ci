@@ -167,10 +167,14 @@ class BuildCancelControl @Autowired constructor(
 
         val variables: Map<String, String> by lazy { buildVariableService.getAllVariable(event.buildId) }
         val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(buildId = event.buildId) }
-
-        model.stages.forEach { stage ->
-            if (stage.finally) {
-                return@forEach
+        val stages = model.stages
+        stages.forEachIndexed forEach@{ index, stage ->
+            if (stage.finally && index > 1) {
+                // 当前stage为finallyStage且它前一个stage也已经运行过了，则finallyStage也能取消
+                val preStageStatus = BuildStatus.parse(stages[index - 1].status)
+                if (!preStageStatus.isFinish() && preStageStatus != BuildStatus.UNEXEC) {
+                    return@forEach
+                }
             }
             val stageStatus = BuildStatus.parse(stage.status)
             stage.containers.forEach C@{ container ->
