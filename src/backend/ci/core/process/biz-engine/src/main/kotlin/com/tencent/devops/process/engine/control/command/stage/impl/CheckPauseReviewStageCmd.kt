@@ -125,7 +125,7 @@ class CheckPauseReviewStageCmd(
      */
     private fun pauseStageNotify(commandContext: StageContext) {
         val stage = commandContext.stage
-        val option = stage.controlOption!!.stageControlOption
+        val checkIn = stage.checkIn ?: return
         val group = stage.checkIn?.groupToReview() ?: return
         val notifyUsers = mutableListOf<String>()
 
@@ -139,9 +139,9 @@ class CheckPauseReviewStageCmd(
 
         val pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId
         val buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1"
-        var reviewDesc = stage.reviewDesc
+        var reviewDesc = checkIn.reviewDesc
         reviewDesc = EnvUtils.parseEnv(reviewDesc, commandContext.variables)
-        stage.reviewDesc = reviewDesc // 替换变量 #3395
+        checkIn.reviewDesc = reviewDesc // 替换变量 #3395
 
         pipelineEventDispatcher.dispatch(
             PipelineBuildNotifyEvent(
