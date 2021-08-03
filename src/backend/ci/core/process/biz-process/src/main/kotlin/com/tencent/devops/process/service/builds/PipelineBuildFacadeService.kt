@@ -844,7 +844,7 @@ class PipelineBuildFacadeService(
                     groupId = reviewRequest?.id
                 )
             } else {
-                buildStage.controlOption!!.stageControlOption.reviewParams = reviewRequest?.reviewParams
+                buildStage.checkIn?.reviewParams = reviewRequest?.reviewParams
                 pipelineStageService.startStage(
                     userId = userId,
                     buildStage = buildStage,

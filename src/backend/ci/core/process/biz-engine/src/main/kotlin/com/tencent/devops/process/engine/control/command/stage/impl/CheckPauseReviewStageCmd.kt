@@ -99,7 +99,7 @@ class CheckPauseReviewStageCmd(
                 reviewVariables[it.key] = it.value.toString()
             }
         }
-        if (stage.controlOption?.stageControlOption?.reviewParams?.isNotEmpty() == true) {
+        if (stage.checkIn?.reviewParams?.isNotEmpty() == true) {
             buildVariableService.batchUpdateVariable(
                 projectId = stage.projectId,
                 pipelineId = stage.pipelineId,
