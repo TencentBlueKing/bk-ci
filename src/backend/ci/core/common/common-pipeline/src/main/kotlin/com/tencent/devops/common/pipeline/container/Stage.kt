@@ -69,7 +69,7 @@ data class Stage(
     var checkOut: StagePauseCheck? = null // stage准出配置
 ) {
     /**
-     * 兼容性逻辑 - 将原有的审核配置刷新到审核流中
+     * 兼容性逻辑 - 将原有的审核配置刷新到审核流中，并且补充审核组ID
      */
     fun refreshReviewOption() {
         if (stageControlOption?.manualTrigger != true) {
@@ -83,6 +83,7 @@ data class Stage(
         }
         val newReviewGroups = mutableListOf<StageReviewGroup>()
         if (checkIn?.reviewGroups?.isNotEmpty() == true) {
+            checkIn?.fixReviewGroups()
             newReviewGroups.addAll(checkIn?.reviewGroups!!)
         } else if (stageControlOption?.triggerUsers?.isNotEmpty() == true) {
             // 将原有审核参数填充到第一个审核组

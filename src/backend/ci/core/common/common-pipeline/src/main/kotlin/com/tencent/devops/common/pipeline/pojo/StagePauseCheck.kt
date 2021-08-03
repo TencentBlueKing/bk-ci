@@ -36,6 +36,7 @@ import java.time.LocalDateTime
 data class StagePauseCheck (
     val manualTrigger: Boolean? = false,
     var reviewStatus: String? = null,
+    var reviewDesc: String? = null,
     var reviewGroups: MutableList<StageReviewGroup>? = null, // 审核流配置
     val timeout: Int? = null, // 等待审核的超时时间
     var ruleIds: List<String>? = null // 质量红线规则ID集合

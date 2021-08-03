@@ -117,7 +117,7 @@ class CheckPauseReviewStageCmd(
         }
         // TODO 下次发布去掉对triggered的判断
         return stage.checkIn?.groupToReview() != null ||
-            stage.controlOption?.stageControlOption?.triggered == null
+            stage.controlOption?.stageControlOption?.triggered != true
     }
 
     /**
@@ -139,9 +139,9 @@ class CheckPauseReviewStageCmd(
 
         val pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId
         val buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1"
-        var reviewDesc = group.suggest
+        var reviewDesc = stage.reviewDesc
         reviewDesc = EnvUtils.parseEnv(reviewDesc, commandContext.variables)
-        group.suggest = reviewDesc // 替换变量 #3395
+        stage.reviewDesc = reviewDesc // 替换变量 #3395
 
         pipelineEventDispatcher.dispatch(
             PipelineBuildNotifyEvent(
