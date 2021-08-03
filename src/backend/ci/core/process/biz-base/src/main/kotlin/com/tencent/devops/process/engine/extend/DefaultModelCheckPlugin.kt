@@ -174,6 +174,7 @@ open class DefaultModelCheckPlugin constructor(
         }
         stage.checkIn?.reviewGroups?.forEach { group ->
             if (group.reviewers.isNullOrEmpty()) throw ErrorCodeException(
+                defaultMessage = "手动触发的Stage未配置审核组",
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER,
                 params = arrayOf(stage.name!!, group.name)
             )
