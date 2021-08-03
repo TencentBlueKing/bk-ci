@@ -73,13 +73,12 @@ data class Stage(
      */
     fun refreshReviewOption() {
         if (stageControlOption?.manualTrigger != true) {
-            checkIn = null
+            checkIn = StagePauseCheck(manualTrigger = stageControlOption?.manualTrigger)
             checkOut = null
             stageControlOption?.triggerUsers = null
             stageControlOption?.triggered = null
             stageControlOption?.reviewParams = null
             stageControlOption?.reviewDesc = null
-            return
         }
         val newReviewGroups = mutableListOf<StageReviewGroup>()
         if (checkIn?.reviewGroups?.isNotEmpty() == true) {
