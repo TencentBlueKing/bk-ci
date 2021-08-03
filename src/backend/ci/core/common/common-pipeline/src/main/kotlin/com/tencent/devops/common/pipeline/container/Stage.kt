@@ -27,7 +27,11 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.option.StageControlOption
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
+import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -58,5 +62,47 @@ data class Stage(
     @ApiModelProperty("当前Stage是否能重试", required = false)
     var canRetry: Boolean? = null,
     @ApiModelProperty("流程控制选项", required = true)
-    var stageControlOption: StageControlOption? = null // 为了兼容旧数据，所以定义为可空以及var
-)
+    var stageControlOption: StageControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
+    @ApiModelProperty("当前Stage是否能重试", required = false)
+    var checkIn: StagePauseCheck? = null, // stage准入配置
+    @ApiModelProperty("当前Stage是否能重试", required = false)
+    var checkOut: StagePauseCheck? = null // stage准出配置
+) {
+    /**
+     * 兼容性逻辑 - 将原有的审核配置刷新到审核流中
+     */
+    fun refreshReviewOption() {
+        if (stageControlOption?.manualTrigger != true) {
+            checkIn = null
+            checkOut = null
+            stageControlOption?.triggerUsers = null
+            stageControlOption?.triggered = null
+            stageControlOption?.reviewParams = null
+            stageControlOption?.reviewDesc = null
+            return
+        }
+        val newReviewGroups = mutableListOf<StageReviewGroup>()
+        if (checkIn?.reviewGroups?.isNotEmpty() == true) {
+            newReviewGroups.addAll(checkIn?.reviewGroups!!)
+        } else if (stageControlOption?.triggerUsers?.isNotEmpty() == true) {
+            // 将原有审核参数填充到第一个审核组
+            val group = if (stageControlOption?.triggered == true) StageReviewGroup(
+                id = UUIDUtil.generate(),
+                reviewers = stageControlOption?.triggerUsers!!,
+                status = ManualReviewAction.PROCESS.name,
+                params = stageControlOption?.reviewParams?.toMutableList(),
+                suggest = stageControlOption?.reviewDesc
+            ) else StageReviewGroup(
+                id = UUIDUtil.generate(),
+                reviewers = stageControlOption?.triggerUsers!!
+            )
+            newReviewGroups.add(group)
+            // TODO 在下一次发布中增加抹除旧数据逻辑
+//            stageControlOption?.triggerUsers = null
+//            stageControlOption?.triggered = null
+//            stageControlOption?.reviewParams = null
+//            stageControlOption?.reviewDesc = null
+        }
+        checkIn?.reviewGroups = newReviewGroups
+    }
+}

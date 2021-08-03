@@ -43,6 +43,8 @@ data class StageReviewGroup(
     var status: String? = null,
     @ApiModelProperty("审核操作人", required = false)
     var operator: String? = null,
+    @ApiModelProperty("审核操作时间", required = false)
+    var reviewTime: Long? = null,
     @ApiModelProperty("审核建议", required = false)
     var suggest: String? = "",
     @ApiModelProperty("审核传入变量", required = false)

@@ -239,7 +239,7 @@ class BuildMonitorControl @Autowired constructor(
             pipelineStageService.cancelStage(
                 userId = userId,
                 buildStage = this,
-                groupId = controlOption?.stageControlOption?.groupToReview()?.id
+                groupId = checkIn?.groupToReview()?.id
             )
         }
 
