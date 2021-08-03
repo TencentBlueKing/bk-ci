@@ -57,7 +57,7 @@ interface OPDockerResourceConfigResource {
     @GET
     @Path("/resource-config/list")
     @ApiOperation("获取docker性能配置列表")
-    fun listPerformanceConfig(
+    fun listResourceConfig(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -71,7 +71,7 @@ interface OPDockerResourceConfigResource {
     @POST
     @Path("/resource-config/add")
     @ApiOperation("新增性能配置")
-    fun createPerformanceConfig(
+    fun createResourceConfig(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -80,9 +80,9 @@ interface OPDockerResourceConfigResource {
     ): Result<Boolean>
 
     @PUT
-    @Path("/resource-config/{projectId}/update")
+    @Path("/resource-config/projectId/{projectId}/update")
     @ApiOperation("更新docker性能配置")
-    fun updatePerformanceConfig(
+    fun updateResourceConfig(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -94,9 +94,9 @@ interface OPDockerResourceConfigResource {
     ): Result<Boolean>
 
     @DELETE
-    @Path("/resource-config/delete/{projectId}")
+    @Path("/resource-config/projectId/{projectId}/delete")
     @ApiOperation("删除docker性能配置")
-    fun deletePerformanceConfig(
+    fun deleteResourceConfig(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,

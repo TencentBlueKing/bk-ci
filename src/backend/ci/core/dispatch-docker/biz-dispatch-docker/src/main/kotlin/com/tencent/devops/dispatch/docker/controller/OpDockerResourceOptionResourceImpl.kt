@@ -39,15 +39,15 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpDockerResourceOptionResourceImpl @Autowired constructor(
     private val dockerResourceOptionsService: DockerResourceOptionsService
 ) : OPDockerResourceOptionsResource {
-    override fun listPerformanceOptions(userId: String): Result<List<DockerResourceOptionsVO>> {
+    override fun listResourceOptions(userId: String): Result<List<DockerResourceOptionsVO>> {
         return Result(dockerResourceOptionsService.listDockerResourceConfig(userId))
     }
 
-    override fun createPerformanceOptions(userId: String, dockerResourceOptionsVO: DockerResourceOptionsVO): Result<Boolean> {
+    override fun createResourceOptions(userId: String, dockerResourceOptionsVO: DockerResourceOptionsVO): Result<Boolean> {
         return Result(dockerResourceOptionsService.createDockerResourceOptions(userId, dockerResourceOptionsVO))
     }
 
-    override fun updatePerformanceOptions(
+    override fun updateResourceOptions(
         userId: String,
         id: Long,
         dockerResourceOptionsVO: DockerResourceOptionsVO
@@ -55,7 +55,7 @@ class OpDockerResourceOptionResourceImpl @Autowired constructor(
         return Result(dockerResourceOptionsService.updateDockerResourceOptions(userId, id, dockerResourceOptionsVO))
     }
 
-    override fun deletePerformanceOptions(userId: String, projectId: Long): Result<Boolean> {
+    override fun deleteResourceOptions(userId: String, projectId: Long): Result<Boolean> {
         return Result(dockerResourceOptionsService.deleteDockerResourceOptions(userId, projectId))
     }
 

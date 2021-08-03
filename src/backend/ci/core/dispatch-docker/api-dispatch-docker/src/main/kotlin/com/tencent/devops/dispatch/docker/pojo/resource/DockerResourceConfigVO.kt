@@ -51,7 +51,7 @@ data class DockerResourceConfigVO(
     val blkioDeviceReadBps: Long,
 
     @ApiModelProperty("磁盘大小: 单位GB")
-    val disk: String,
+    val disk: Int,
 
     @ApiModelProperty("描述")
     val description: String

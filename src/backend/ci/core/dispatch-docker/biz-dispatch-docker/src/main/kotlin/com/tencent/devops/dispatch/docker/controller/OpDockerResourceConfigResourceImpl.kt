@@ -40,18 +40,18 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpDockerResourceConfigResourceImpl @Autowired constructor(
     private val dockerResourceConfigService: DockerResourceConfigService
 ) : OPDockerResourceConfigResource {
-    override fun listPerformanceConfig(userId: String, page: Int?, pageSize: Int?): Result<ListPage<DockerResourceConfigVO>> {
+    override fun listResourceConfig(userId: String, page: Int?, pageSize: Int?): Result<ListPage<DockerResourceConfigVO>> {
         return Result(dockerResourceConfigService.listDockerResourceConfig(userId, page, pageSize))
     }
 
-    override fun createPerformanceConfig(
+    override fun createResourceConfig(
         userId: String,
         createResourceConfigVO: CreateResourceConfigVO
     ): Result<Boolean> {
         return Result(dockerResourceConfigService.createDockerResourceConfig(userId, createResourceConfigVO))
     }
 
-    override fun updatePerformanceConfig(
+    override fun updateResourceConfig(
         userId: String,
         projectId: String,
         createResourceConfigVO: CreateResourceConfigVO
@@ -59,7 +59,7 @@ class OpDockerResourceConfigResourceImpl @Autowired constructor(
         return Result(dockerResourceConfigService.updateDockerResourceConfig(userId, projectId, createResourceConfigVO))
     }
 
-    override fun deletePerformanceConfig(userId: String, projectId: String): Result<Boolean> {
+    override fun deleteResourceConfig(userId: String, projectId: String): Result<Boolean> {
         return Result(dockerResourceConfigService.deleteDockerResourceConfig(userId, projectId))
     }
 

@@ -68,7 +68,7 @@ class DockerResourceConfigService constructor(
                         memoryLimitBytes = it["MEMORY_LIMIT_BYTES"] as Long,
                         blkioDeviceReadBps = it["BLKIO_DEVICE_READ_BPS"] as Long,
                         blkioDeviceWriteBps = it["BLKIO_DEVICE_WRITE_BPS"] as Long,
-                        disk = (it["DISK"] as Int).toString() + "G",
+                        disk = it["DISK"] as Int,
                         description = it["DESCRIPTION"] as String
                     )
                 )
@@ -78,6 +78,33 @@ class DockerResourceConfigService constructor(
         } catch (e: Exception) {
             logger.error("$userId list dockerResourceConfig error.", e)
             throw RuntimeException("list dockerResourceConfig error.")
+        }
+    }
+
+    fun getDockerResourceConfig(projectId: String): DockerResourceConfigVO {
+        val dockerResourceRecord = dockerResourceConfigDao.getByProjectId(dslContext, projectId)
+        if (dockerResourceRecord != null) {
+            return DockerResourceConfigVO(
+                projectId = dockerResourceRecord["PROJECT_ID"] as String,
+                cpuPeriod = dockerResourceRecord["CPU_PERIOD"] as Int,
+                cpuQuota = dockerResourceRecord["CPU_QUOTA"] as Int,
+                memoryLimitBytes = dockerResourceRecord["MEMORY_LIMIT_BYTES"] as Long,
+                blkioDeviceReadBps = dockerResourceRecord["BLKIO_DEVICE_READ_BPS"] as Long,
+                blkioDeviceWriteBps = dockerResourceRecord["BLKIO_DEVICE_WRITE_BPS"] as Long,
+                disk = dockerResourceRecord["DISK"] as Int,
+                description = dockerResourceRecord["DESCRIPTION"] as String
+            )
+        } else {
+            return DockerResourceConfigVO(
+                projectId = projectId,
+                memoryLimitBytes = 34359738368L,
+                cpuPeriod = 10000,
+                cpuQuota = 160000,
+                blkioDeviceReadBps = 125829120,
+                blkioDeviceWriteBps = 125829120,
+                disk = 100,
+                description = ""
+            )
         }
     }
 
