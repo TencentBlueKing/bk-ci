@@ -393,9 +393,9 @@ class ExperienceService @Autowired constructor(
         }
 
         val endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault())
-            .withHour(0)
-            .withMinute(0)
-            .withSecond(0)
+            .withHour(23)
+            .withMinute(59)
+            .withSecond(00)
 
         val experienceId = experienceDao.create(
             dslContext = dslContext,
