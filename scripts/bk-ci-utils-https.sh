@@ -169,6 +169,6 @@ if [ "$target_schema" = https ]; then
 fi
 
 echo "刷新 PaaS 工作台的注册信息."
-$CTRL_DIR/bin/bk-ci-reg-paas-app.sh
+$BK_CI_SRC_DIR/scripts/bk-ci-reg-paas-app.sh
 
 echo "配置 $target_schema 成功. 请检查更新其他env文件中相应的变量."
