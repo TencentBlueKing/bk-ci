@@ -43,6 +43,8 @@
         padding-left: 7px;
         position: relative;
         display: block;
+        font-size: 14px;
+        font-weight: bold;
         &:before {
             content: '';
             position: absolute;
@@ -52,6 +54,9 @@
             left: 0;
             top: 2px;
         }
+    }
+    span.review-subtitle {
+        margin-top: 16px;
     }
     .review-desc {
         display: -webkit-box;

@@ -6,14 +6,11 @@
 </template>
 
 <script>
+    import { convertTime } from '@/utils/util'
+
     export default {
         props: {
             reviewGroups: Array
-        },
-
-        data () {
-            return {
-            }
         },
 
         computed: {
@@ -24,7 +21,6 @@
 
         methods: {
             getReviewItem (item, index) {
-                console.log(item)
                 const typeMap = {
                     PROCESS: 'success',
                     ABORT: 'danger',
@@ -48,7 +44,7 @@
                                 </p>
                                 <p v-show={paramStr}>变更参数：{paramStr}</p>
                                 <p>审批意见：{item.suggest || '无'}</p>
-                                <p>2021-12-13</p>
+                                <p>审批时间：{convertTime(item.reviewTime)}</p>
                             </section>
                         )
                         break
@@ -61,7 +57,7 @@
                                     <span class="review-abort"> 驳回（取消执行，立即标记为Stage成功状态） </span>
                                 </p>
                                 <p>审批意见：{item.suggest || '无'}</p>
-                                <p>2021-12-13</p>
+                                <p>审批时间：{convertTime(item.reviewTime)}</p>
                             </section>
                         )
                         break
@@ -90,6 +86,7 @@
     /deep/ .bk-timeline {
         margin-left: 5px;
         margin-top: 24px;
+        margin-bottom: -24px;
         .bk-timeline-dot {
             padding-bottom: 0;
             .bk-timeline-section {
@@ -102,7 +99,7 @@
     }
     .stage-review-content {
         line-height: 20px;
-        font-size: 14px;
+        font-size: 12px;
         color: #777981;
         p {
             margin-bottom: 4px;

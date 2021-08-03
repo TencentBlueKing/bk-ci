@@ -8,13 +8,13 @@
             <bk-table-column label="变量名称" prop="key" show-overflow-tooltip></bk-table-column>
             <bk-table-column label="中文名" prop="chineseName" show-overflow-tooltip></bk-table-column>
             <bk-table-column label="类型" prop="valueType" :formatter="typeFormatter"></bk-table-column>
-            <bk-table-column label="默认值" prop="value" show-overflow-tooltip :formatter="jsonFormatter"></bk-table-column>
+            <bk-table-column label="默认值" prop="value" show-overflow-tooltip :formatter="valFormatter"></bk-table-column>
             <bk-table-column label="是否必填" prop="required" :formatter="requireFormatter"></bk-table-column>
             <bk-table-column label="可选项" prop="options" show-overflow-tooltip :formatter="jsonFormatter"></bk-table-column>
             <bk-table-column label="操作" width="120">
                 <template slot-scope="props">
-                    <bk-button class="mr10" theme="primary" text @click="toggleShowParamForm(props.row, props.$index)">编辑</bk-button>
-                    <bk-button class="mr10" theme="primary" text @click="removeParam(props.$index)">删除</bk-button>
+                    <bk-button class="mr10" theme="primary" text @click="toggleShowParamForm(props.row, props.$index)" :disabled="disabled">编辑</bk-button>
+                    <bk-button class="mr10" theme="primary" text @click="removeParam(props.$index)" :disabled="disabled">删除</bk-button>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -108,7 +108,16 @@
             },
 
             jsonFormatter (row, column, cellValue, index) {
-                return JSON.stringify(cellValue)
+                const valJson = JSON.stringify(cellValue) || '--'
+                return valJson.replace(/"([^"]+)":/g, '$1:')
+            },
+
+            valFormatter (row, column, cellValue, index) {
+                let res = cellValue || '--'
+                if (Array.isArray(cellValue)) {
+                    res = `[${cellValue.join(', ')}]`
+                }
+                return res
             }
         }
     }
@@ -122,11 +131,15 @@
     .params-opt {
         position: absolute;
         left: 85px;
-        top: -30px;
+        top: -31px;
         font-size: 12px;
         /deep/ .bk-icon {
             top: 0;
             margin-right: 1px;
         }
+    }
+
+    /deep/ .bk-table .cell {
+        overflow: hidden;
     }
 </style>

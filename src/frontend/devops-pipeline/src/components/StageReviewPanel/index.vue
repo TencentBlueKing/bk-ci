@@ -8,6 +8,8 @@
             v-bind="$props"
             :is="reviewComponent"
             :stage-control="stageControl"
+            :stage-review-type="stageReviewType"
+            :disabled="stageReviewDisabled"
             slot="content"
             class="stage-review-content"
         ></component>
@@ -32,10 +34,6 @@
                 type: Object,
                 default: () => ({})
             },
-            disabled: {
-                type: Boolean,
-                default: false
-            },
             editable: {
                 type: Boolean,
                 default: false
@@ -48,20 +46,25 @@
             stageTitle () {
                 return `${this.$t('stageInTitle')}${typeof this.stage !== 'undefined' ? this.stage.name : 'stage'}`
             },
+            stageReviewType () {
+                return this.showStageReviewPanel.type
+            },
             visible: {
                 get () {
-                    return this.showStageReviewPanel
+                    return this.showStageReviewPanel.isShow
                 },
                 set (value) {
                     this.toggleStageReviewPanel({
-                        isShow: value
+                        showStageReviewPanel: {
+                            isShow: value
+                        }
                     })
                 }
             },
             reviewComponent () {
                 let reviewComponent = 'reviewShow'
-                if (this.editable) reviewComponent = 'reviewEdit'
                 if (this.canTriggerStage && this.isStagePause) reviewComponent = 'reviewApprove'
+                if (this.editable || !this.isStagePause) reviewComponent = 'reviewEdit'
                 return reviewComponent
             },
             canTriggerStage () {
@@ -73,18 +76,18 @@
                     return false
                 }
             },
+            stageReviewDisabled () {
+                return !this.editable && !this.isStagePause
+            },
             isStagePause () {
                 try {
-                    return this.stage.reviewStatus === 'REVIEWING'
+                    return this.stageControl.reviewStatus === 'REVIEWING'
                 } catch (error) {
                     return false
                 }
             },
             stageControl () {
-                if (this.stage && this.stage.stageControlOption) {
-                    return this.stage.stageControlOption
-                }
-                return {}
+                return this.stage[this.stageReviewType] || {}
             }
         },
         methods: {

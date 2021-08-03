@@ -19,20 +19,7 @@
         },
 
         props: {
-            stage: Object,
             stageControl: Object
-        },
-
-        data () {
-            return {
-            }
-        },
-
-        methods: {
         }
     }
 </script>
-
-<style lang="scss" scoped>
-
-</style>

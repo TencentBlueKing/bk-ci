@@ -6,16 +6,17 @@
         :mask-close="false"
         :value="show"
         :title="computedTitle"
+        :auto-close="false"
         @confirm="confirm"
         @cancel="cancel">
-        <bk-form form-type="vertical">
-            <bk-form-item label="参数名称" :required="true">
+        <bk-form form-type="vertical" :model="copyForm" ref="paramForm">
+            <bk-form-item label="参数名称" :rules="[requireRule('参数名称')]" property="key" :required="true" error-display-type="normal">
                 <bk-input v-model="copyForm.key"></bk-input>
             </bk-form-item>
             <bk-form-item label="中文名">
                 <bk-input v-model="copyForm.chineseName"></bk-input>
             </bk-form-item>
-            <bk-form-item label="参数类型" :required="true">
+            <bk-form-item label="参数类型" :rules="[requireRule('参数类型')]" property="valueType" :required="true" error-display-type="normal">
                 <bk-select v-model="copyForm.valueType" @selected="changeValueType" searchable>
                     <bk-option v-for="option in paramTypeList"
                         :key="option.id"
@@ -23,6 +24,9 @@
                         :name="option.name">
                     </bk-option>
                 </bk-select>
+            </bk-form-item>
+            <bk-form-item label="下拉选项" v-if="isSelectorParam(copyForm.valueType)" :desc="$t('editPage.optionsDesc')">
+                <bk-input type="textarea" :value="getTextAreaValue()" @blur="changeOption" :placeholder="$t('editPage.optionTips')"></bk-input>
             </bk-form-item>
             <bk-form-item label="默认值" v-if="copyForm.valueType" :key="copyForm.valueType">
                 <param-value :form="copyForm"></param-value>
@@ -36,9 +40,6 @@
                         否
                     </bk-radio>
                 </bk-radio-group>
-            </bk-form-item>
-            <bk-form-item label="下拉选项" v-if="isSelectorParam(copyForm.valueType)">
-                <bk-input type="textarea" :value="getTextAreaValue()" @blur="changeOption" :placeholder="$t('editPage.optionTips')"></bk-input>
             </bk-form-item>
             <bk-form-item label="描述">
                 <bk-input type="textarea" v-model="copyForm.desc"></bk-input>
@@ -95,6 +96,7 @@
             show (val) {
                 if (val) {
                     this.copyForm = JSON.parse(JSON.stringify({ ...defaultValue, ...this.param }))
+                    this.$refs.paramForm.clearError()
                 }
             }
         },
@@ -111,6 +113,16 @@
                 return (this.copyForm.options || []).map(x => x.key).join('\n')
             },
 
+            requireRule (label) {
+                return {
+                    validator (val) {
+                        return val.length
+                    },
+                    message: label + '必填项',
+                    trigger: 'blur'
+                }
+            },
+
             changeValueType (type) {
                 this.copyForm.value = ''
                 this.copyForm.options = []
@@ -121,12 +133,28 @@
             },
 
             changeOption (val) {
-                this.copyForm.options = (val || '').split('\n').filter(v => v).map(x => ({ key: x, value: x }))
+                let opts = []
+                if (val && typeof val === 'string') {
+                    opts = val.split('\n').map(opt => {
+                        const v = opt.trim()
+                        const res = v.match(/^([\w\.\\\/]+)=(\S+)$/) || [v, v, v]
+                        const [, key, value] = res
+                        return {
+                            key,
+                            value
+                        }
+                    })
+                }
+                this.copyForm.options = opts
                 this.copyForm.value = isMultipleParam(this.copyForm.valueType) ? [] : ''
             },
 
             confirm () {
-                this.$emit('confirm', this.copyForm)
+                return this.$refs.paramForm.validate(() => {
+                    this.$emit('confirm', this.copyForm)
+                }).catch((err) => {
+                    this.$bkMessage({ message: err.content, theme: 'error' })
+                })
             },
 
             cancel () {

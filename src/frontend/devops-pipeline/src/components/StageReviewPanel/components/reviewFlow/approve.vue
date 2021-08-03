@@ -2,7 +2,10 @@
     <section>
         <span class="review-subtitle">
             审核流
-            <i class="bk-icon icon-clock"></i>
+            <span class="review-clock" v-bk-tooltips="{ content: '请在本时间之前完成审核操作，逾期将取消执行，自动标记流水线为Stage成功状态' }">
+                <i class="bk-icon icon-clock"></i>
+                {{ computedTime }}
+            </span>
         </span>
 
         <bk-steps
@@ -14,8 +17,8 @@
         ></bk-steps>
         <bk-divider></bk-divider>
 
-        <span class="review-subtitle">
-            当前状态<span class="gray-color ml20">审批中，处理人：xuzhan</span>
+        <span class="review-subtitle mt12">
+            当前状态<span class="gray-color ml20">{{ computedStatusTxt }}</span>
         </span>
         <bk-radio-group v-model="isCancel" class="review-result">
             <bk-radio :value="false" :disabled="disabled">
@@ -40,11 +43,15 @@
 </template>
 
 <script>
+    import { convertTime } from '@/utils/util'
+
     export default {
         props: {
             reviewGroups: Array,
             showReviewGroup: Object,
-            disabled: Boolean
+            disabled: Boolean,
+            stage: Object,
+            timeout: Number
         },
 
         data () {
@@ -58,12 +65,46 @@
 
         computed: {
             computedReviewSteps () {
+                const getStatus = (item, index) => {
+                    const statusMap = {
+                        'ABORT': 'error',
+                        'PROCESS': 'done'
+                    }
+                    let status = statusMap[item.status]
+
+                    const curExecIndex = this.reviewGroups.findIndex(x => x.status === undefined)
+                    if (curExecIndex === index) status = 'loading'
+
+                    return status
+                }
+
                 return this.reviewGroups.map((item, index) => {
                     return {
                         title: item.name,
-                        icon: index + 1
+                        icon: `${index + 1}`,
+                        status: getStatus(item, index)
                     }
                 })
+            },
+
+            computedTime () {
+                try {
+                    const hour2Ms = 60 * 60 * 1000
+                    return convertTime(this.stage.startEpoch + this.timeout * hour2Ms)
+                } catch (e) {
+                    return 'unknow'
+                }
+            },
+
+            computedStatusTxt () {
+                const curExecIndex = this.reviewGroups.findIndex(x => x.status === undefined) + 1
+                const { reviewers, operator } = this.showReviewGroup
+
+                let statusTxt = `已审批，处理人：${operator}`
+                if (curExecIndex < this.curStep) statusTxt = `待审批，处理人：${reviewers.join(', ')}`
+                if (curExecIndex === this.curStep) statusTxt = `审批中，处理人：${reviewers.join(', ')}`
+
+                return statusTxt
             }
         },
 
@@ -105,7 +146,10 @@
 
 <style lang="scss" scoped>
     .review-steps {
-        margin: 25px 0;
+        margin: 25px 0 32px;
+        /deep/ .bk-step {
+            max-width: 367.56px;
+        }
     }
     .review-result {
         margin-top: 2px;
@@ -116,9 +160,21 @@
     .ml135 {
         margin-left: 135px;
     }
+    .mt12 {
+        margin-top: 12px !important;
+    }
     .error-message {
         font-size: 12px;
         color: #ea3636;
         line-height: 18px;
+    }
+    .review-clock {
+        color: #3a84ff;
+        margin-left: 24px;
+        display: inline-flex;
+        align-items: center;
+        .bk-icon {
+            margin-right: 3px;
+        }
     }
 </style>

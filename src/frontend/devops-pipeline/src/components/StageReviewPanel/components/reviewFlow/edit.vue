@@ -1,26 +1,35 @@
 <template>
     <section>
-        <ul>
-            <li v-for="(reviewGroup, index) in reviewGroups" :key="index" class="review-group">
-                <bk-input
-                    class="review-name"
-                    :disabled="disabled"
-                    :value="reviewGroup.name"
-                    @change="modifyReviewName(reviewGroup, ...arguments)"
-                ></bk-input>
+        <bk-form>
+            <bk-form-item
+                v-for="(reviewGroup, index) in reviewGroups"
+                :key="index"
+                :class="{ 'is-error': errorIndexs.includes(index), 'review-form': true }"
+            >
+                <section class="review-group">
+                    <bk-input
+                        class="review-name"
+                        :placeholder="'Flow ' + (index + 1)"
+                        :disabled="disabled"
+                        :value="reviewGroup.name"
+                        @change="modifyReviewName(reviewGroup, ...arguments)"
+                    ></bk-input>
 
-                <user-input
-                    clearable
-                    class="review-user"
-                    :value="reviewGroup.reviewers"
-                    :disabled="disabled"
-                    :handle-change="(name, value) => addReviewUser(reviewGroup, name, value)"
-                ></user-input>
+                    <user-input
+                        clearable
+                        class="review-user"
+                        placeholder="请输入一个或多个审核人，支持输入变量"
+                        :value="reviewGroup.reviewers"
+                        :disabled="disabled"
+                        :handle-change="(name, value) => addReviewUser(reviewGroup, name, value)"
+                    ></user-input>
 
-                <bk-button text title="primary" @click="deleteReviewGroup(index)" :disabled="disabled" class="review-opt">删除</bk-button>
-            </li>
-        </ul>
-        <bk-button text title="primary" @click="addReviewGroup" :disabled="disabled" class="review-opt">
+                    <bk-button text title="primary" @click="deleteReviewGroup(index)" :disabled="disabled" class="review-opt">删除</bk-button>
+                </section>
+                <span v-if="errorIndexs.includes(index)" class="bk-form-tip is-danger">审核名称和审核人必填</span>
+            </bk-form-item>
+        </bk-form>
+        <bk-button text title="primary" @click="addReviewGroup" :disabled="disabled || reviewGroups.length >= 5" class="review-opt mt3">
             <i class="bk-icon icon-plus-circle"></i>添加审批步骤
         </bk-button>
     </section>
@@ -41,8 +50,20 @@
 
         data () {
             return {
-                copyReviewGroups: JSON.parse(JSON.stringify(this.reviewGroups))
+                copyReviewGroups: JSON.parse(JSON.stringify(this.reviewGroups)),
+                errorIndexs: []
             }
+        },
+
+        watch: {
+            errorIndexs (val) {
+                const isReviewError = val.length > 0
+                this.$emit('change', 'isReviewError', isReviewError)
+            }
+        },
+
+        created () {
+            this.valideReviewGroups()
         },
 
         methods: {
@@ -68,7 +89,17 @@
             },
 
             triggleChange () {
+                this.valideReviewGroups()
                 this.$emit('change', 'reviewGroups', this.copyReviewGroups)
+            },
+
+            valideReviewGroups () {
+                this.errorIndexs = []
+                this.copyReviewGroups.forEach((reviewGroup, index) => {
+                    if (reviewGroup.name === '' || !reviewGroup.reviewers || reviewGroup.reviewers.length <= 0) {
+                        this.errorIndexs.push(index)
+                    }
+                })
             }
         }
     }
@@ -78,13 +109,24 @@
     .review-group {
         display: flex;
         align-items: center;
-        margin-bottom: 10px;
         .review-name {
             width: 270px;
         }
         .review-user {
             width: 487px;
             margin: 0 8px 0 10px;
+        }
+    }
+    .review-form {
+        margin-bottom: 10px;
+        &:last-child, &.is-error {
+            margin-bottom: 0px;
+        }
+    }
+    .is-error {
+        /deep/ .devops-staff-input {
+            border-color: #ff5656;
+            color: #ff5656;
         }
     }
     .review-opt {
@@ -95,5 +137,8 @@
             top: -1px;
             margin-right: 3px;
         }
+    }
+    .mt3 {
+        margin-top: 3px;
     }
 </style>

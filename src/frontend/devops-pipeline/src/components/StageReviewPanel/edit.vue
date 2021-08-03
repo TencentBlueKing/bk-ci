@@ -1,13 +1,13 @@
 <template>
     <div class="pipeline-stage-review-control bk-form bk-form-vertical">
-        <form-field label="准入规则">
+        <form-field label="准入规则" class="stage-rule">
             <bk-radio-group class="stage-review-radio-group" v-model="manualTrigger">
                 <bk-radio :disabled="disabled" :value="false">{{ $t('disableStageReviewRadioLabel') }}</bk-radio>
                 <bk-radio :disabled="disabled" :value="true" style="marginLeft:82px">{{ $t('enableStageReviewRadioLabel') }}</bk-radio>
             </bk-radio-group>
         </form-field>
         <template v-if="manualTrigger">
-            <bk-divider></bk-divider>
+            <bk-divider class="stage-divider"></bk-divider>
 
             <form-field required label="审核流" :is-error="!hasTriggerMember" :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')">
                 <edit-review-flow
@@ -17,11 +17,11 @@
                 ></edit-review-flow>
             </form-field>
 
-            <form-field :disabled="disabled" :label="$t('stageReviewInputDesc')">
+            <form-field :disabled="disabled" :label="$t('stageReviewInputDesc')" class="mt14">
                 <vuex-textarea :placeholder="$t('stageReviewInputDescTip')" name="reviewDesc" clearable :disabled="disabled" :handle-change="handleUpdateStageControl" :value="reviewDesc"></vuex-textarea>
             </form-field>
 
-            <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
+            <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" class="mt14" :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
                 <bk-input type="number" :disabled="disabled" v-model="timeout" :min="1" :max="720">
                     <template slot="append">
                         <div class="group-text">{{ $t('timeMap.hours') }}</div>
@@ -29,7 +29,7 @@
                 </bk-input>
             </form-field>
 
-            <form-field :disabled="disabled" :label="$t('stageReviewParams')">
+            <form-field :disabled="disabled" :label="$t('stageReviewParams')" class="mt14">
                 <edit-params
                     :disabled="disabled"
                     :review-params="reviewParams"
@@ -68,6 +68,9 @@
             stageControl: {
                 type: Object,
                 default: () => ({})
+            },
+            stageReviewType: {
+                type: String
             }
         },
         computed: {
@@ -144,17 +147,14 @@
             },
             handleUpdateStageControl (name, value) {
                 this.setPipelineEditing(true)
-                this.handleStageChange('stageControlOption', {
+                this.handleStageChange(this.stageReviewType, {
                     ...(this.stageControl || {}),
                     [name]: value
                 })
             },
             initStageReview () {
                 if (this.stageControl === undefined || JSON.stringify(this.stageControl) === '{}') {
-                    this.handleStageChange('stageControlOption', {
-                        enable: true,
-                        runCondition: 'AFTER_LAST_FINISHED',
-                        customVariables: [{ key: 'param1', value: '' }],
+                    this.handleStageChange(this.stageReviewType, {
                         manualTrigger: false,
                         reviewGroups: [],
                         timeout: 24
@@ -173,5 +173,17 @@
         .bk-form-radio {
             margin-right: 16px;
         }
+    }
+    .stage-rule {
+        /deep/ .bk-form-content {
+            min-height: auto;
+            line-height: 20px;
+        }
+    }
+    .stage-divider {
+        margin: 24px 0 2px !important;
+    }
+    .mt14 {
+        margin-top: 14px !important;
     }
 </style>

@@ -64,7 +64,7 @@
             <template v-else-if="showStagePanel">
                 <stage @close="showLog = false" />
             </template>
-            <template v-else-if="showStageReviewPanel">
+            <template v-else-if="showStageReviewPanel.isShow">
                 <stage-review-panel :stage="stage" />
             </template>
         </template>

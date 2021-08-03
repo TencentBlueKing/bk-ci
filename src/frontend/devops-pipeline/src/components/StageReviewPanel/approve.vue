@@ -7,6 +7,8 @@
             :show-review-group.sync="showReviewGroup"
             :disabled="!isShowExecGroup"
             :review-groups="stageControl.reviewGroups"
+            :timeout="stageControl.timeout"
+            :stage="stage"
         ></review-flow-approve>
 
         <params-approve
@@ -17,7 +19,7 @@
         ></params-approve>
 
         <section class="approve-footer">
-            <bk-button theme="primary" class="approve-button" @click="confirmApprove" :loading="isApproving">确定</bk-button>
+            <bk-button theme="primary" class="approve-button" @click="confirmApprove" :loading="isApproving" :disabled="!isShowExecGroup">确定</bk-button>
             <bk-button @click="cancelApprove" :disabled="isApproving">取消</bk-button>
         </section>
     </section>
@@ -91,7 +93,9 @@
 
             cancelApprove () {
                 this.toggleStageReviewPanel({
-                    isShow: false
+                    showStageReviewPanel: {
+                        isShow: false
+                    }
                 })
             }
         }
