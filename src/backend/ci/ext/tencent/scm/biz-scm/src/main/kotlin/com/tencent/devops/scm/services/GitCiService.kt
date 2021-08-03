@@ -180,7 +180,6 @@ class GitCiService {
         token: String,
         useAccessToken: Boolean = true
     ): Result<GitCIProjectInfo?> {
-        logger.info("[gitProjectId=$gitProjectId]|getGitCIProjectInfo")
         val encodeId = URLEncoder.encode(gitProjectId, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
         val str = "$gitCIUrl/api/v3/projects/$encodeId?" + if (useAccessToken) {
             "access_token=$token"
@@ -197,7 +196,7 @@ class GitCiService {
             if (!response.isSuccessful) {
                 throw CustomException(
                     status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "Fail to get the git project info with: $url(${response.code()}): ${response.message()}"
+                    message = "(${response.code()})${response.message()}"
                 )
             }
             val data = response.body()!!.string()

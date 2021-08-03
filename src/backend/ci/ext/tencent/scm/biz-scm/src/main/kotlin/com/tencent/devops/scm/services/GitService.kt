@@ -630,11 +630,10 @@ class GitService @Autowired constructor(
             .build()
         logger.info("request: $request Start to create file")
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
             if (!it.isSuccessful) {
                 throw CustomException(
                     status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "fail to create file with: $url(${it.code()}): ${it.message()}"
+                    message = "(${it.code()})${it.message()}"
                 )
             }
             return true
