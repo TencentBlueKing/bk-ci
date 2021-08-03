@@ -1086,7 +1086,9 @@ class PipelineRuntimeService @Autowired constructor(
                         stageId = stage.id!!,
                         seq = index,
                         status = BuildStatus.QUEUE,
-                        controlOption = stageOption
+                        controlOption = stageOption,
+                        checkIn = stage.checkIn,
+                        checkOut = stage.checkOut
                     )
                 )
             }

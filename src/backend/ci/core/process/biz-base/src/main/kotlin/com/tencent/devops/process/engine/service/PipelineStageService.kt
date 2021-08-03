@@ -112,8 +112,13 @@ class PipelineStageService @Autowired constructor(
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 pipelineBuildStageDao.updateStatus(
-                    dslContext = context, buildId = buildId, stageId = stageId,
-                    buildStatus = BuildStatus.SKIP, controlOption = controlOption
+                    dslContext = context,
+                    buildId = buildId,
+                    stageId = stageId,
+                    buildStatus = BuildStatus.SKIP,
+                    controlOption = controlOption,
+                    checkIn = checkIn,
+                    checkOut = checkOut
                 )
 
                 pipelineBuildDao.updateBuildStageStatus(
@@ -135,13 +140,20 @@ class PipelineStageService @Autowired constructor(
             val allStageStatus = stageBuildDetailService.stagePause(
                 buildId = buildId,
                 stageId = stageId,
-                controlOption = controlOption!!
+                controlOption = controlOption!!,
+                checkIn = checkIn,
+                checkOut = checkOut
             )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 pipelineBuildStageDao.updateStatus(
-                    dslContext = context, buildId = buildId, stageId = stageId,
-                    buildStatus = BuildStatus.PAUSE, controlOption = controlOption
+                    dslContext = context,
+                    buildId = buildId,
+                    stageId = stageId,
+                    buildStatus = BuildStatus.PAUSE,
+                    controlOption = controlOption,
+                    checkIn = checkIn,
+                    checkOut = checkOut
                 )
 
                 pipelineBuildDao.updateStatus(
@@ -179,7 +191,9 @@ class PipelineStageService @Autowired constructor(
             stageBuildDetailService.stageReview(
                 buildId = buildId,
                 stageId = stageId,
-                controlOption = buildStage.controlOption!!
+                controlOption = buildStage.controlOption!!,
+                checkIn = checkIn,
+                checkOut = checkOut
             )
             // #4531 如果没有其他需要审核的审核组则可以启动stage，否则直接返回
             if (buildStage.checkIn?.groupToReview() != null) return true
@@ -187,13 +201,20 @@ class PipelineStageService @Autowired constructor(
             val allStageStatus = stageBuildDetailService.stageStart(
                 buildId = buildId,
                 stageId = stageId,
-                controlOption = buildStage.controlOption!!
+                controlOption = buildStage.controlOption!!,
+                checkIn = checkIn,
+                checkOut = checkOut
             )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 pipelineBuildStageDao.updateStatus(
-                    dslContext = context, buildId = buildId, stageId = stageId,
-                    buildStatus = BuildStatus.QUEUE, controlOption = controlOption
+                    dslContext = context,
+                    buildId = buildId,
+                    stageId = stageId,
+                    buildStatus = BuildStatus.QUEUE,
+                    controlOption = controlOption,
+                    checkIn = checkIn,
+                    checkOut = checkOut
                 )
 
                 pipelineBuildDao.updateStatus(
@@ -231,53 +252,59 @@ class PipelineStageService @Autowired constructor(
         buildStage: PipelineBuildStage,
         groupId: String?
     ): Boolean {
-        buildStage.checkIn?.reviewGroup(
-            userId = userId,
-            groupId = groupId,
-            action = ManualReviewAction.ABORT
-        )
-        stageBuildDetailService.stageCancel(
-            buildId = buildStage.buildId,
-            stageId = buildStage.stageId,
-            controlOption = buildStage.controlOption!!
-        )
-
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            pipelineBuildStageDao.updateStatus(
-                dslContext = context,
-                buildId = buildStage.buildId,
-                stageId = buildStage.stageId,
-                buildStatus = BuildStatus.STAGE_SUCCESS
-            )
-
-            pipelineBuildDao.updateStatus(
-                dslContext = context, buildId = buildStage.buildId,
-                oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
-            )
-
-            // #4255 stage审核超时恢复运行状态需要将运行状态+1，即使直接结束也会在finish阶段减回来
-            pipelineBuildSummaryDao.updateRunningCount(
-                dslContext = context,
-                pipelineId = buildStage.pipelineId,
-                buildId = buildStage.buildId,
-                runningIncrement = 1
-            )
-        }
-        // #3138 Stage Cancel 需要走finally Stage流程
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildStageEvent(
-                source = BS_STAGE_CANCELED_END_SOURCE,
-                projectId = buildStage.projectId,
-                pipelineId = buildStage.pipelineId,
+        with(buildStage) {
+            checkIn?.reviewGroup(
                 userId = userId,
-                buildId = buildStage.buildId,
-                stageId = buildStage.stageId,
-                actionType = ActionType.END
+                groupId = groupId,
+                action = ManualReviewAction.ABORT
             )
-            // #3400 FinishEvent会刷新HISTORY列表的Stage状态
-        )
-        return true
+            stageBuildDetailService.stageCancel(
+                buildId = buildId,
+                stageId = stageId,
+                controlOption = controlOption!!,
+                checkIn = checkIn,
+                checkOut = checkOut
+            )
+
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                pipelineBuildStageDao.updateStatus(
+                    dslContext = context,
+                    buildId = buildId,
+                    stageId = stageId,
+                    buildStatus = BuildStatus.STAGE_SUCCESS,
+                    checkIn = checkIn,
+                    checkOut = checkOut
+                )
+
+                pipelineBuildDao.updateStatus(
+                    dslContext = context, buildId = buildId,
+                    oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
+                )
+
+                // #4255 stage审核超时恢复运行状态需要将运行状态+1，即使直接结束也会在finish阶段减回来
+                pipelineBuildSummaryDao.updateRunningCount(
+                    dslContext = context,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    runningIncrement = 1
+                )
+            }
+            // #3138 Stage Cancel 需要走finally Stage流程
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildStageEvent(
+                    source = BS_STAGE_CANCELED_END_SOURCE,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    actionType = ActionType.END
+                )
+                // #3400 FinishEvent会刷新HISTORY列表的Stage状态
+            )
+            return true
+        }
     }
 
     fun getLastStage(buildId: String): PipelineBuildStage? {
