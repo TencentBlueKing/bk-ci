@@ -492,12 +492,17 @@ class ExperienceService @Autowired constructor(
         val experienceRecord = getExperienceId4Update(experienceHashId, userId, projectId)
         val isPublic = isPublicGroupAndCheck(experience.experienceGroups)
 
+        val endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault())
+            .withHour(23)
+            .withMinute(59)
+            .withSecond(0)
+
         experienceDao.update(
             dslContext = dslContext,
             id = experienceRecord.id,
             name = experience.name,
             remark = experience.remark,
-            endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
+            endDate = endDate,
             experienceGroups = "[]",
             innerUsers = "[]",
             notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
