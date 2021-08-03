@@ -121,20 +121,24 @@ class ScmService @Autowired constructor(
                 "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}")
             when (e.httpStatus) {
                 GitCodeApiStatus.NOT_FOUND.status -> {
-                    error("getProjectInfo error ${e.errorMessage}", ErrorCodeEnum.PROJECT_NOT_FOUND)
+                    error(
+                        "getProjectInfo error ${e.errorMessage}",
+                        ErrorCodeEnum.PROJECT_NOT_FOUND,
+                        ErrorCodeEnum.PROJECT_NOT_FOUND.formatErrorMessage.format(gitProjectId)
+                    )
                 }
                 GitCodeApiStatus.FORBIDDEN.status -> {
                     error(
                         logMessage = "getProjectInfo error ${e.errorMessage}",
-                        errorCode = ErrorCodeEnum.GET_PROJECT_INFO_FORBIDDEN,
-                        exceptionMessage = PROJECT_PERMISSION_ERROR.format(gitProjectId)
+                        errorCode = ErrorCodeEnum.GET_PROJECT_INFO_FORBIDDEN
                     )
                 }
                 else -> {
                     error(
                         logMessage = "getProjectInfo error ${e.errorMessage}",
                         errorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR,
-                        exceptionMessage = e.errorMessage
+                        exceptionMessage = ErrorCodeEnum.GET_PROJECT_INFO_ERROR.formatErrorMessage
+                            .format(gitProjectId, e.errorMessage)
                     )
                 }
             }
@@ -169,6 +173,7 @@ class ScmService @Autowired constructor(
     }
 
     fun createNewFile(
+        userId: String,
         token: String,
         gitProjectId: String,
         gitCICreateFile: GitCICreateFile
@@ -185,14 +190,16 @@ class ScmService @Autowired constructor(
                 "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}")
             if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status) {
                 error(
-                    "getProjectInfo error ${e.errorMessage}",
-                    ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN
+                    logMessage = "getProjectInfo error ${e.errorMessage}",
+                    errorCode = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN,
+                    exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN.formatErrorMessage
+                        .format(userId, gitCICreateFile.branch)
                 )
             } else {
                 error(
-                    "getProjectInfo error ${e.errorMessage}",
-                    ErrorCodeEnum.CREATE_NEW_FILE_ERROR,
-                    e.errorMessage
+                    logMessage = "getProjectInfo error ${e.errorMessage}",
+                    errorCode = ErrorCodeEnum.CREATE_NEW_FILE_ERROR,
+                    exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR.formatErrorMessage.format(e.errorMessage)
                 )
             }
         } catch (e: Exception) {
