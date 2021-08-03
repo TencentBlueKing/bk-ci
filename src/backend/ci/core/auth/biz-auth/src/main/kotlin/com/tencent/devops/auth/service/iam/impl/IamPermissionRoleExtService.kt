@@ -143,20 +143,15 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId, pageInfoDTO)
         val iamIds = groupInfos.results.map { it.id }
         val localGroupInfo = groupDao.getGroupByRelationIds(dslContext, iamIds)
-        val localGroupMap = mutableMapOf<String, TAuthGroupInfoRecord>()
-        localGroupInfo.forEach {
-            localGroupMap[it!!.relationId] = it
-        }
         val resultList = mutableListOf<GroupInfoVo>()
-        groupInfos.results.forEach {
-            val groupInfo = localGroupMap[it.id.toString()]
+        localGroupInfo.forEach {
             resultList.add(
                 GroupInfoVo(
-                    id = groupInfo?.id ?: 0,
-                    name = groupInfo?.groupName ?: it.name,
-                    displayName = groupInfo?.displayName ?: it.name,
-                    code = groupInfo?.groupCode ?: "",
-                    defaultRole = groupInfo?.groupType ?: true,
+                    id = it?.id ?: 0,
+                    name = it?.groupName ?: "",
+                    displayName = it?.displayName ?: "",
+                    code = it?.groupCode ?: "",
+                    defaultRole = it?.groupType ?: true,
                     userCount = 0
                 )
             )
