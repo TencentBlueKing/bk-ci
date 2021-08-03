@@ -335,7 +335,7 @@ class QualityIndicatorService @Autowired constructor(
                     availableOperation = indicator.operationAvailable.split(",").map { QualityOperation.valueOf(it) },
                     dataType = QualityDataType.valueOf(indicator.thresholdType.toUpperCase()),
                     threshold = indicator.threshold,
-                    desc = indicator.desc,
+                    desc = indicator.desc ?: "",
                     range = indicator.indicatorRange // 脚本指标需要加上可见范围
                 )
 
