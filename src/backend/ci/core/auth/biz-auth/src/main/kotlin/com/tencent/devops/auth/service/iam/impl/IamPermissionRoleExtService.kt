@@ -152,9 +152,9 @@ open class IamPermissionRoleExtService @Autowired constructor(
             val groupInfo = localGroupMap[it.id.toString()]
             resultList.add(
                 GroupInfoVo(
-                    id = groupInfo?.id!!,
-                    name = groupInfo?.groupName ?: "",
-                    displayName = groupInfo?.displayName ?: "",
+                    id = groupInfo?.id ?: 0,
+                    name = groupInfo?.groupName ?: it.name,
+                    displayName = groupInfo?.displayName ?: it.name,
                     code = groupInfo?.groupCode ?: "",
                     defaultRole = groupInfo?.groupType ?: true,
                     userCount = 0
