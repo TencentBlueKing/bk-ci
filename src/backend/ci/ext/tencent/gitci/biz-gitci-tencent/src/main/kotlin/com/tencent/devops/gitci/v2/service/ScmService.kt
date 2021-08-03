@@ -188,7 +188,8 @@ class ScmService @Autowired constructor(
         } catch (e: RemoteServiceException) {
             logger.error("createNewFile RemoteServiceException|" +
                 "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}")
-            if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status) {
+            if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status ||
+                e.httpStatus == GitCodeApiStatus.UNAUTHORIZED.status) {
                 error(
                     logMessage = "getProjectInfo error ${e.errorMessage}",
                     errorCode = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN,
