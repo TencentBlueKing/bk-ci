@@ -137,6 +137,8 @@ class PipelineStageService @Autowired constructor(
 
     fun pauseStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
+            // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
+            checkIn?.reviewStatus = BuildStatus.REVIEWING.name
             val allStageStatus = stageBuildDetailService.stagePause(
                 buildId = buildId,
                 stageId = stageId,
@@ -195,16 +197,6 @@ class PipelineStageService @Autowired constructor(
                 checkIn = checkIn,
                 checkOut = checkOut
             )
-            // #4531 如果没有其他需要审核的审核组则可以启动stage，否则直接返回
-            if (buildStage.checkIn?.groupToReview() != null) return true
-
-            val allStageStatus = stageBuildDetailService.stageStart(
-                buildId = buildId,
-                stageId = stageId,
-                controlOption = buildStage.controlOption!!,
-                checkIn = checkIn,
-                checkOut = checkOut
-            )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 pipelineBuildStageDao.updateStatus(
@@ -216,7 +208,18 @@ class PipelineStageService @Autowired constructor(
                     checkIn = checkIn,
                     checkOut = checkOut
                 )
+                // #4531 如果没有其他需要审核的审核组则可以启动stage，否则直接返回
+                if (buildStage.checkIn?.groupToReview() != null) {
+                    return@transaction
+                }
 
+                val allStageStatus = stageBuildDetailService.stageStart(
+                    buildId = buildId,
+                    stageId = stageId,
+                    controlOption = buildStage.controlOption!!,
+                    checkIn = checkIn,
+                    checkOut = checkOut
+                )
                 pipelineBuildDao.updateStatus(
                     dslContext = context, buildId = buildId,
                     oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
@@ -229,20 +232,19 @@ class PipelineStageService @Autowired constructor(
                 pipelineBuildSummaryDao.updateRunningCount(
                     dslContext = context, pipelineId = pipelineId, buildId = buildId, runningIncrement = 1
                 )
-            }
-
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildStageEvent(
-                    source = BS_MANUAL_START_STAGE,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildId = buildId,
-                    stageId = stageId,
-                    actionType = ActionType.REFRESH
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildStageEvent(
+                        source = BS_MANUAL_START_STAGE,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId,
+                        buildId = buildId,
+                        stageId = stageId,
+                        actionType = ActionType.REFRESH
+                    )
+                    // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
                 )
-                // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
-            )
+            }
             return true
         }
     }
@@ -258,6 +260,8 @@ class PipelineStageService @Autowired constructor(
                 groupId = groupId,
                 action = ManualReviewAction.ABORT
             )
+            // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
+            checkIn?.reviewStatus = BuildStatus.REVIEW_ABORT.name
             stageBuildDetailService.stageCancel(
                 buildId = buildId,
                 stageId = stageId,

@@ -129,8 +129,6 @@ class StageBuildDetailService(
                     stage.reviewStatus = BuildStatus.REVIEWING.name
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.startEpoch = System.currentTimeMillis()
-                    // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
-                    checkIn?.reviewStatus = BuildStatus.REVIEWING.name
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
                     allStageStatus = fetchHistoryStageStatus(model)
@@ -201,7 +199,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING)
+        }, BuildStatus.STAGE_SUCCESS)
     }
 
     fun stageStart(
