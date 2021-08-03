@@ -32,6 +32,7 @@ import com.tencent.devops.common.db.util.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
+import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_STAGE
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.common.Timeout
@@ -198,17 +199,8 @@ class PipelineBuildStageDao {
                 val checkInOption = if (!checkIn.isNullOrBlank()) {
                     JsonUtil.to(checkIn, StagePauseCheck::class.java)
                 } else {
-                    StagePauseCheck(
-                        manualTrigger = controlOption.stageControlOption.manualTrigger,
-                        reviewStatus = when (controlOption.stageControlOption.triggered) {
-                            true -> BuildStatus.REVIEW_PROCESSED.name
-                            false -> BuildStatus.REVIEW_ABORT.name
-                            else -> null
-                        },
-                        reviewDesc = controlOption.stageControlOption.reviewDesc,
-                        reviewParams = controlOption.stageControlOption.reviewParams,
-                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
-                    )
+                    // #4531 兼容旧数据运行过程时的取值
+                    StagePauseCheck.convertControlOption(controlOption.stageControlOption)
                 }
 
                 val checkOutOption = if (!checkOut.isNullOrBlank()) {

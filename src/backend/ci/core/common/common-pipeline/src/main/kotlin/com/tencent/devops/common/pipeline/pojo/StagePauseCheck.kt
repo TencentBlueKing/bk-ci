@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import java.time.LocalDateTime
 
@@ -120,7 +121,7 @@ data class StagePauseCheck(
     }
 
     /**
-     * 填充审核组ID
+     * 处理审核参数 - 与默认值相同的变量不显示
      */
     fun parseReviewParams(params: List<ManualReviewParam>?): MutableList<ManualReviewParam>? {
         try {
@@ -136,6 +137,32 @@ data class StagePauseCheck(
             return diff
         } catch (ignore: Throwable) {
             return null
+        }
+    }
+
+    companion object {
+        fun convertControlOption(stageControlOption: StageControlOption): StagePauseCheck {
+            return StagePauseCheck(
+                manualTrigger = stageControlOption.manualTrigger,
+                reviewStatus = when (stageControlOption.triggered) {
+                    true -> BuildStatus.REVIEW_PROCESSED.name
+                    false -> BuildStatus.REVIEW_ABORT.name
+                    else -> null
+                },
+                reviewGroups = mutableListOf(StageReviewGroup(
+                    id = UUIDUtil.generate(),
+                    reviewers = stageControlOption.triggerUsers ?: listOf(),
+                    status = when (stageControlOption.triggered) {
+                        true -> ManualReviewAction.PROCESS.name
+                        false -> ManualReviewAction.ABORT.name
+                        else -> null
+                    },
+                    params = stageControlOption.reviewParams?.toMutableList()
+                )),
+                reviewDesc = stageControlOption.reviewDesc,
+                reviewParams = stageControlOption.reviewParams,
+                timeout = stageControlOption.timeout
+            )
         }
     }
 }
