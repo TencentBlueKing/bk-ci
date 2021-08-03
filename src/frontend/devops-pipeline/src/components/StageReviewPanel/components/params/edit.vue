@@ -108,7 +108,7 @@
             },
 
             jsonFormatter (row, column, cellValue, index) {
-                const valJson = JSON.stringify(cellValue) || '--'
+                const valJson = cellValue && Array.isArray(cellValue) && cellValue.length ? JSON.stringify(cellValue) : '--'
                 return valJson.replace(/"([^"]+)":/g, '$1:')
             },
 

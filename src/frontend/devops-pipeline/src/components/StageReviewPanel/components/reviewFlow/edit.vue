@@ -2,7 +2,7 @@
     <section>
         <bk-form>
             <bk-form-item
-                v-for="(reviewGroup, index) in reviewGroups"
+                v-for="(reviewGroup, index) in copyReviewGroups"
                 :key="index"
                 :class="{ 'is-error': errorIndexs.includes(index), 'review-form': true }"
             >
@@ -57,7 +57,7 @@
 
         watch: {
             errorIndexs (val) {
-                const isReviewError = val.length > 0
+                const isReviewError = val.length > 0 || this.copyReviewGroups.length <= 0
                 this.$emit('change', 'isReviewError', isReviewError)
             }
         },

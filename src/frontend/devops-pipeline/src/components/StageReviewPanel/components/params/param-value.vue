@@ -13,10 +13,10 @@
 
     <bk-radio-group v-model="form.value" v-else-if="isBooleanParam(form.valueType)">
         <bk-radio :value="true" :disabled="disabled">
-            是
+            true
         </bk-radio>
-        <bk-radio :value="false" :disabled="disabled" style="marginLeft:55px">
-            否
+        <bk-radio :value="false" :disabled="disabled" style="marginLeft:44px">
+            false
         </bk-radio>
     </bk-radio-group>
 </template>
