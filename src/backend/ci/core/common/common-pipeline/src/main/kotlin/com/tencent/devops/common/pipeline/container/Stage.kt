@@ -69,6 +69,7 @@ data class Stage(
      * 兼容性逻辑 - 将原有的审核配置刷新到审核流中，并且补充审核组ID
      */
     fun refreshReviewOption() {
+        checkIn?.fixReviewGroups()
         val originControlOption = stageControlOption ?: return
         if (originControlOption.manualTrigger != true) {
             checkIn = StagePauseCheck(manualTrigger = stageControlOption?.manualTrigger)
@@ -77,9 +78,9 @@ data class Stage(
             stageControlOption?.triggered = null
             stageControlOption?.reviewParams = null
             stageControlOption?.reviewDesc = null
+            return
         }
         checkIn = StagePauseCheck.convertControlOption(originControlOption)
-        checkIn?.fixReviewGroups()
         // TODO 在下一次发布中增加抹除旧数据逻辑
 //        stageControlOption?.triggerUsers = null
 //        stageControlOption?.triggered = null
