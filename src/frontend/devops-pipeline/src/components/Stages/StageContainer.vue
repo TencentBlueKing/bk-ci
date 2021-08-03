@@ -1,19 +1,15 @@
 <template>
     <div
         ref="stageContainer"
-        :class="{ 'devops-stage-container': true, 'first-stage-container': stageIndex === 0, 'readonly': !editable || containerDisabled }"
+        :class="{ 'devops-stage-container': true, 'first-stage-container': stageIndex === 0, 'readonly': !editable || containerDisabled, 'editing': isEditPage }"
     >
         <template v-if="containerIndex > 0">
-            <cruve-line :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px;stroke: ${affterContainerDisabled ? '' : '#3a84ff'};`" :height="cruveHeight" class="connect-line left" />
-            <cruve-line :vertical="false" :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px`" :height="cruveHeight" class="connect-line left" />
-            <cruve-line :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px;stroke: ${affterContainerDisabled ? '' : '#3a84ff'};`" :height="cruveHeight" :direction="false" class="connect-line right" />
-            <cruve-line :vertical="false" :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px`" :height="cruveHeight" :direction="false" class="connect-line right" />
+            <cruve-line :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px`" :height="cruveHeight" class="connect-line left" />
+            <cruve-line :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px`" :height="cruveHeight" :direction="false" class="connect-line right" />
         </template>
         <template v-else>
-            <cruve-line v-if="stageIndex !== 0" class="first-connect-line connect-line left" :style="`stroke: ${affterContainerDisabled ? '' : '#3a84ff'};`" :width="60" :height="60"></cruve-line>
-            <cruve-line v-if="stageIndex !== 0" :vertical="false" class="first-connect-line connect-line left" :width="60" :height="60"></cruve-line>
-            <cruve-line class="first-connect-line connect-line right" :width="60" :style="`stroke: ${affterContainerDisabled ? '' : '#3a84ff'};`" :direction="false" :height="60"></cruve-line>
-            <cruve-line :vertical="false" class="first-connect-line connect-line right" :width="60" :direction="false" :height="60"></cruve-line>
+            <cruveLine v-if="stageIndex !== 0" class="first-connect-line connect-line left" :width="60" :height="60"></cruveLine>
+            <cruve-line class="first-connect-line connect-line right" :width="60" :direction="false" :height="60"></cruve-line>
         </template>
 
         <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [containerCls]: true }" @click.stop="showContainerPanel">
@@ -65,7 +61,6 @@
         },
         props: {
             preContainer: Object,
-            containerList: Array,
             container: Object,
             stageIndex: Number,
             containerIndex: Number,
@@ -103,6 +98,9 @@
 
                 'getAllContainers'
             ]),
+            isEditPage () {
+                return this.$route.name === 'pipelinesEdit' || this.$route.name === 'templateEdit'
+            },
             containerCls () {
                 if (this.container.jobControlOption && this.container.jobControlOption.enable === false) {
                     return 'DISABLED'
@@ -129,9 +127,6 @@
             },
             containerDisabled () {
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
-            },
-            affterContainerDisabled () {
-                return !!(this.containerList.slice(this.containerIndex).every(i => i.jobControlOption && i.jobControlOption.enable === false) || this.stageDisabled)
             },
             dependOnValue () {
                 if (this.container.status !== 'DEPENDENT_WAITING') return ''
