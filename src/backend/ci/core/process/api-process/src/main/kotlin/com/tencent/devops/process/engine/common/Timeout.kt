@@ -35,7 +35,7 @@ object Timeout {
     const val DEFAULT_PREPARE_MINUTES = 10 // 10分钟
     const val DEFAULT_STAGE_TIMEOUT_HOURS = 24 // 24小时
     private const val MAX_STAGE_REVIEW_DAYS = 30L // 审核最大天数
-    private const val MAX_JOB_RUN_DAYS = 7L // Job运行最大天数
+    const val MAX_JOB_RUN_DAYS = 7L // Job运行最大天数
 
     val MAX_HOURS = TimeUnit.DAYS.toHours(MAX_STAGE_REVIEW_DAYS) // 60 * 24 = 1440 小时 = 审核最多超时60天
 
