@@ -780,7 +780,7 @@ class YamlBuildV2 @Autowired constructor(
         return elementList
     }
 
-    private fun getElementEnv(env: Map<String, String>?): List<NameAndValue>? {
+    private fun getElementEnv(env: Map<String, Any?>?): List<NameAndValue>? {
         if (env == null) {
             return null
         }
@@ -790,7 +790,7 @@ class YamlBuildV2 @Autowired constructor(
             nameAndValueList.add(
                 NameAndValue(
                 key = it.key,
-                value = it.value
+                value = it.value.toString()
             ))
         }
 
