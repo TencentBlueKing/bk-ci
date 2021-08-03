@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("人工审核-自定义参数")
 data class StageReviewRequest(
-    @ApiModelProperty("reviewParams", required = true)
+    @ApiModelProperty("审核参数", required = true)
     val reviewParams: List<ManualReviewParam>,
     @ApiModelProperty("审核组ID", required = false)
     val id: String?,

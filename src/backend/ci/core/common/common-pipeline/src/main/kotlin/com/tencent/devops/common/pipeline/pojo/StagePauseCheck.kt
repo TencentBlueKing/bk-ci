@@ -33,11 +33,12 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import java.time.LocalDateTime
 
-data class StagePauseCheck (
+data class StagePauseCheck(
     val manualTrigger: Boolean? = false,
     var reviewStatus: String? = null,
     var reviewDesc: String? = null,
     var reviewGroups: MutableList<StageReviewGroup>? = null, // 审核流配置
+    var reviewParams: List<ManualReviewParam>? = null, // 审核变量
     val timeout: Int? = null, // 等待审核的超时时间
     var ruleIds: List<String>? = null // 质量红线规则ID集合
 ) {
@@ -81,14 +82,21 @@ data class StagePauseCheck (
             group.status = action.name
             group.operator = userId
             group.reviewTime = LocalDateTime.now().timestampmilli()
-            group.params = params?.toMutableList()
             group.suggest = suggest
+            // #4531 只显示有相比默认有修改的部分
+            val originMap = reviewParams?.associate { it.key to it }
+            if (originMap.isNullOrEmpty()) return true
+            val diff = mutableListOf<ManualReviewParam>()
+            params?.forEach { param ->
+                // 如果原变量里没有该key值则跳过
+                if (!originMap.containsKey(param.key)) return@forEach
+                if (originMap[param.key]?.value.toString() != param.value.toString()) diff.add(param)
+            }
+            group.params = diff
             return true
         }
         return false
     }
-
-
 
     /**
      * 获取指定ID的审核组
