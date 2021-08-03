@@ -1057,6 +1057,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
 
             // 只在第一次启动时刷新为QUEUE，若重试则保持原审核状态
+            stage.refreshReviewOption()
             if (stage.checkIn?.manualTrigger == true &&
                 stage.checkIn?.groupToReview() != null) {
                 stage.checkIn?.reviewStatus = BuildStatus.QUEUE.name

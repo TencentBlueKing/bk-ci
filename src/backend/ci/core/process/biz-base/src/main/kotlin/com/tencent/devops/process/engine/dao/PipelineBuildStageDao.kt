@@ -198,7 +198,17 @@ class PipelineBuildStageDao {
                 val checkInOption = if (!checkIn.isNullOrBlank()) {
                     JsonUtil.to(checkIn, StagePauseCheck::class.java)
                 } else {
-                    StagePauseCheck(timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS)
+                    StagePauseCheck(
+                        manualTrigger = controlOption.stageControlOption.manualTrigger,
+                        reviewStatus = when (controlOption.stageControlOption.triggered) {
+                            true -> BuildStatus.REVIEW_PROCESSED.name
+                            false -> BuildStatus.REVIEW_ABORT.name
+                            else -> null
+                        },
+                        reviewDesc = controlOption.stageControlOption.reviewDesc,
+                        reviewParams = controlOption.stageControlOption.reviewParams,
+                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
+                    )
                 }
 
                 val checkOutOption = if (!checkOut.isNullOrBlank()) {

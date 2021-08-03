@@ -170,7 +170,7 @@ class PipelineStageService @Autowired constructor(
     ): Boolean {
         with(buildStage) {
             // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
-            val success = buildStage.checkIn?.reviewGroup(
+            val success = checkIn?.reviewGroup(
                 userId = userId, groupId = reviewRequest?.id,
                 action = ManualReviewAction.PROCESS, params = reviewRequest?.reviewParams,
                 suggest = reviewRequest?.suggest
@@ -178,7 +178,7 @@ class PipelineStageService @Autowired constructor(
             if (success != true) return false
             stageBuildDetailService.stageReview(
                 buildId = buildId, stageId = stageId,
-                controlOption = buildStage.controlOption!!,
+                controlOption = controlOption!!,
                 checkIn = checkIn, checkOut = checkOut
             )
             // #4531 stage先保持暂停，如果没有其他需要审核的审核组则可以启动stage，否则直接返回
@@ -188,12 +188,12 @@ class PipelineStageService @Autowired constructor(
                 controlOption = controlOption, checkIn = checkIn, checkOut = checkOut
             )
 
-            if (buildStage.checkIn?.groupToReview() != null) {
+            if (checkIn?.groupToReview() != null) {
                 return true
             }
             val allStageStatus = stageBuildDetailService.stageStart(
                 buildId = buildId, stageId = stageId,
-                controlOption = buildStage.controlOption!!,
+                controlOption = controlOption!!,
                 checkIn = checkIn, checkOut = checkOut
             )
 

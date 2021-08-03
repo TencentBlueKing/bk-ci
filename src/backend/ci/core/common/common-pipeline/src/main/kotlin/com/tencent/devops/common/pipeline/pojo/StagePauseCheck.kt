@@ -84,16 +84,7 @@ data class StagePauseCheck(
             group.operator = userId
             group.reviewTime = LocalDateTime.now().timestampmilli()
             group.suggest = suggest
-            // #4531 只显示有相比默认有修改的部分
-            val originMap = reviewParams?.associate { it.key to it }
-            if (originMap.isNullOrEmpty()) return true
-            val diff = mutableListOf<ManualReviewParam>()
-            params?.forEach { param ->
-                // 如果原变量里没有该key值则跳过
-                if (!originMap.containsKey(param.key)) return@forEach
-                if (originMap[param.key]?.value.toString() != param.value.toString()) diff.add(param)
-            }
-            group.params = diff
+            group.params = parseReviewParams(params)
             // #4531 如果没有剩下未审核的组则刷新为审核完成状态
             if (groupToReview() == null) {
                 reviewStatus = BuildStatus.REVIEW_PROCESSED.name
@@ -125,6 +116,26 @@ data class StagePauseCheck(
     fun fixReviewGroups() {
         reviewGroups?.forEach { group ->
             if (group.id.isNullOrBlank()) group.id = UUIDUtil.generate()
+        }
+    }
+
+    /**
+     * 填充审核组ID
+     */
+    fun parseReviewParams(params: List<ManualReviewParam>?): MutableList<ManualReviewParam>? {
+        try {
+            // #4531 只显示有相比默认有修改的部分
+            if (reviewParams.isNullOrEmpty() || params.isNullOrEmpty()) return null
+            val originMap = reviewParams!!.associateBy { it.key }
+            val diff = mutableListOf<ManualReviewParam>()
+            params.forEach { param ->
+                // 如果原变量里没有该key值则跳过
+                if (!originMap.containsKey(param.key)) return@forEach
+                if (originMap[param.key]?.value.toString() != param.value.toString()) diff.add(param)
+            }
+            return diff
+        } catch (ignore: Throwable) {
+            return null
         }
     }
 }
