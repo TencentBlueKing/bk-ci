@@ -100,7 +100,7 @@
             background-color: #fff;
             height: 6.4vh !important;
             line-height: 6.4vh !important;
-            background-image: linear-gradient(transparent 6.3vh !important,#dcdee5 0);
+            background-image: linear-gradient(transparent 6.3vh,#dcdee5 0) !important;
             .bk-tab-label-wrapper {
                 background-color: #fff;
             }
