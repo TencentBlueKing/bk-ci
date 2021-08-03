@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import java.time.LocalDateTime
@@ -93,6 +94,12 @@ data class StagePauseCheck(
                 if (originMap[param.key]?.value.toString() != param.value.toString()) diff.add(param)
             }
             group.params = diff
+            // #4531 如果没有剩下未审核的组则刷新为审核完成状态
+            if (groupToReview() == null) {
+                reviewStatus = BuildStatus.REVIEW_PROCESSED.name
+            } else if (action == ManualReviewAction.ABORT) {
+                reviewStatus = BuildStatus.REVIEW_ABORT.name
+            }
             return true
         }
         return false
