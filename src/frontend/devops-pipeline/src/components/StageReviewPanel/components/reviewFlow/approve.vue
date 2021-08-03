@@ -81,7 +81,7 @@
                 return this.reviewGroups.map((item, index) => {
                     return {
                         title: item.name,
-                        icon: `${index + 1}`,
+                        icon: `${index + 1} devops-icon`,
                         status: getStatus(item, index)
                     }
                 })
@@ -149,6 +149,10 @@
         margin: 25px 0 32px;
         /deep/ .bk-step {
             max-width: 367.56px;
+        }
+        /deep/ .devops-icon {
+            font-family: 'devops' !important;
+            font-size: 12px;
         }
     }
     .review-result {

@@ -46,7 +46,7 @@
         methods: {
             updateParams () {
                 const params = this.showReviewGroup.params && this.showReviewGroup.params.length ? this.showReviewGroup.params : this.reviewParams
-                this.params = params
+                this.params = params || []
             },
 
             getApproveData () {
