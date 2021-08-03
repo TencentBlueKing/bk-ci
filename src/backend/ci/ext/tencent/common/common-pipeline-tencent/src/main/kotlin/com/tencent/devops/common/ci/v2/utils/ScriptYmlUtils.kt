@@ -150,22 +150,38 @@ object ScriptYmlUtils {
         return newValue
     }
 
-    fun parseParameterValue(value: String?, settingMap: Map<String, String?>): String? {
+    fun parseParameterValue(value: String?, settingMap: Map<String, Any?>): String? {
         if (value.isNullOrBlank()) {
             return ""
         }
-
         var newValue = value
         val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
         val matcher = pattern.matcher(value)
         while (matcher.find()) {
             if (settingMap.containsKey(matcher.group(1).trim())) {
                 val realValue = settingMap[matcher.group(1).trim()]
-                newValue = newValue!!.replace(matcher.group(), realValue ?: "")
+                newValue = newValue!!.replace(matcher.group(),
+                    if (realValue is List<*>) {
+                        parseArrayValue(realValue)
+                    } else {
+                        realValue.toString()
+                    }
+                )
             }
         }
 
         return newValue
+    }
+
+    private fun parseArrayValue(realValue: List<*>): String {
+        val sb = StringBuilder()
+        sb.append("[")
+        realValue.forEach {
+            sb.append("\"${it}\",")
+        }
+        sb.removeSuffix(",")
+        sb.append("]")
+        return sb.toString()
     }
 
     fun parseImage(imageNameInput: String): Triple<String, String, String> {

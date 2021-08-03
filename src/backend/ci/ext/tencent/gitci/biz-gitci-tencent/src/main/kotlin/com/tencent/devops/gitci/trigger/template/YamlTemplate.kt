@@ -41,6 +41,7 @@ import com.tencent.devops.common.ci.v2.stageCheck.GateTemplate
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.PreTemplateStageCheck
 import com.tencent.devops.common.ci.v2.ParametersTemplateNull
+import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.gitci.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.gitci.trigger.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -764,7 +765,11 @@ class YamlTemplate(
             "parameters.${it.name}" to if (it.default == null) {
                 null
             } else {
-                it.default.toString()
+                if (it.type == ParametersType.ARRAY.value) {
+                    transValue<List<String>>(fromPath, "array", it.default)
+                } else {
+                    it.default.toString()
+                }
             }
         }
         return ScriptYmlUtils.parseParameterValue(template, parametersMap)!!
