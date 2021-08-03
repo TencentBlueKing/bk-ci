@@ -197,6 +197,26 @@ class PipelineStageService @Autowired constructor(
                 checkIn = checkIn,
                 checkOut = checkOut
             )
+            // #4531 stage先保持暂停，如果没有其他需要审核的审核组则可以启动stage，否则直接返回
+            pipelineBuildStageDao.updateStatus(
+                dslContext = dslContext,
+                buildId = buildId,
+                stageId = stageId,
+                buildStatus = BuildStatus.PAUSE,
+                controlOption = controlOption,
+                checkIn = checkIn,
+                checkOut = checkOut
+            )
+            if (buildStage.checkIn?.groupToReview() != null) {
+                return true
+            }
+            val allStageStatus = stageBuildDetailService.stageStart(
+                buildId = buildId,
+                stageId = stageId,
+                controlOption = buildStage.controlOption!!,
+                checkIn = checkIn,
+                checkOut = checkOut
+            )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 pipelineBuildStageDao.updateStatus(
@@ -205,18 +225,6 @@ class PipelineStageService @Autowired constructor(
                     stageId = stageId,
                     buildStatus = BuildStatus.QUEUE,
                     controlOption = controlOption,
-                    checkIn = checkIn,
-                    checkOut = checkOut
-                )
-                // #4531 如果没有其他需要审核的审核组则可以启动stage，否则直接返回
-                if (buildStage.checkIn?.groupToReview() != null) {
-                    return@transaction
-                }
-
-                val allStageStatus = stageBuildDetailService.stageStart(
-                    buildId = buildId,
-                    stageId = stageId,
-                    controlOption = buildStage.controlOption!!,
                     checkIn = checkIn,
                     checkOut = checkOut
                 )
@@ -232,19 +240,19 @@ class PipelineStageService @Autowired constructor(
                 pipelineBuildSummaryDao.updateRunningCount(
                     dslContext = context, pipelineId = pipelineId, buildId = buildId, runningIncrement = 1
                 )
-                pipelineEventDispatcher.dispatch(
-                    PipelineBuildStageEvent(
-                        source = BS_MANUAL_START_STAGE,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = userId,
-                        buildId = buildId,
-                        stageId = stageId,
-                        actionType = ActionType.REFRESH
-                    )
-                    // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
-                )
             }
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildStageEvent(
+                    source = BS_MANUAL_START_STAGE,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    actionType = ActionType.REFRESH
+                )
+                // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
+            )
             return true
         }
     }
