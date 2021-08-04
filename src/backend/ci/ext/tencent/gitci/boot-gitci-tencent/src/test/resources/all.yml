@@ -20,8 +20,8 @@ stages:
           参数var_1如何取值
     gates:
       - template: epc_checks.yml
-        parameters:
-          receivers: [ "ruotiantang","royalhuang"]
+#        parameters:
+#          receivers: [ "ruotiantang","royalhuang"]
     timeout-hours: 10
   jobs:
     job_1:

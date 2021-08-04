@@ -41,6 +41,7 @@ import com.tencent.devops.common.ci.v2.stageCheck.GateTemplate
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.PreTemplateStageCheck
 import com.tencent.devops.common.ci.v2.ParametersTemplateNull
+import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.gitci.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.gitci.trigger.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -760,14 +761,24 @@ class YamlTemplate(
             return template
         }
         // 模板替换 先替换调用模板传入的参数，再替换模板的默认参数
-        val parametersMap = newParameters.filter { it.default != null }.associate {
+        val parametersListMap = newParameters.filter {
+            it.default != null && it.type == ParametersType.ARRAY.value
+        }.associate {
             "parameters.${it.name}" to if (it.default == null) {
                 null
             } else {
                 it.default.toString()
             }
         }
-        return ScriptYmlUtils.parseParameterValue(template, parametersMap)!!
+        val parametersStringMap = newParameters.filter { it.default != null }.associate {
+            "parameters.${it.name}" to if (it.default == null) {
+                null
+            } else {
+                it.default.toString()
+            }
+        }
+        val replacedList = ScriptYmlUtils.parseParameterValue(template, parametersListMap, ParametersType.ARRAY)!!
+        return ScriptYmlUtils.parseParameterValue(replacedList, parametersStringMap, ParametersType.STRING)!!
     }
 
     // 构造对象,因为未保存远程库的template信息，所以在递归回溯时无法通过yaml文件直接生成，故手动构造
