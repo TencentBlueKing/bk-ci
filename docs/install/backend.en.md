@@ -5,10 +5,10 @@ There are 10 microservices (artifactory, dispatch, environment, log, plugin, pro
 ## 1. System Requirements
 
 - JDK 1.8
-- Gradle 4.8
+- Gradle 6.7
 - Redis 2.8.17
 - MySQL 5.7
-- ES 5.6
+- ES 7.4
 - Consul 1.0 [Consul Installation](consul.en.md)
 - RabbitMQ 3.7.15 [RabbitMQ Deployment](rabbitmq.en.md)
 

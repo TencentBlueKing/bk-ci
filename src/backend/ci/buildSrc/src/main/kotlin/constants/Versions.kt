@@ -7,7 +7,6 @@ object Versions {
     const val Dom4j = "1.6.1"
     const val JsonSchema = "2.2.6"
     const val Jasypt = "3.0.3"
-    const val Lucene = "8.6.0"
     const val Swagger = "1.6.2"
     const val Mockito = "1.10.19"
     const val JsonLib = "2.4"
@@ -31,5 +30,7 @@ object Versions {
     const val AsyncHttpClient = "2.1.0"
     const val KtlintHtmlReport = "0.1.2"
     const val Ktlint = "0.29.0"
+    const val Elasticsearch = "7.4.0"
+    const val Lucene = "8.2.0"
     const val Feign = "11.6" //TODO 修复这个BUG:https://github.com/OpenFeign/feign/pull/1347 , 后续SpringCloud升级后可以去掉
 }
