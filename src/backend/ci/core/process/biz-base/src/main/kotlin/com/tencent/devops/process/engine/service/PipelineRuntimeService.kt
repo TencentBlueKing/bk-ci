@@ -1060,7 +1060,7 @@ class PipelineRuntimeService @Autowired constructor(
             stage.refreshReviewOption()
             if (stage.checkIn?.manualTrigger == true &&
                 stage.checkIn?.groupToReview() != null) {
-                stage.checkIn?.reviewStatus = BuildStatus.QUEUE.name
+                stage.checkIn?.status = BuildStatus.QUEUE.name
             }
 
             if (lastTimeBuildStageRecords.isNotEmpty()) {
