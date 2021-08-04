@@ -1,3 +1,4 @@
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,15 +26,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.pojo
+package com.tencent.devops.quality.resources.v3
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
+import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
+import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
+import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
+import com.tencent.devops.common.quality.pojo.RuleCheckResult
+import com.tencent.devops.quality.service.v2.QualityRuleCheckService
+import com.tencent.devops.quality.service.v2.QualityRuleService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("质量红线-单条规则拦截结果")
-data class RuleCheckSingleResult(
-    @ApiModelProperty("规则名称", required = true)
-    val ruleName: String,
-    @ApiModelProperty("失败信息", required = true)
-    val messagePairs: List<Pair<String, String/*detail*/>>
-)
+@RestResource
+class ServiceQualityRuleV3ResourceImpl @Autowired constructor(
+    private val qualityRuleService: QualityRuleService,
+    private val qualityRuleCheckService: QualityRuleCheckService
+): ServiceQualityRuleResource {
+    override fun check(buildCheckParams: BuildCheckParamsV3): Result<RuleCheckResult> {
+        return Result(qualityRuleCheckService.check(buildCheckParams))
+    }
+
+    override fun create(userId: String, projectId: String, pipelineId: String, ruleList: List<RuleCreateRequestV3>): Result<List<RuleCreateResponseV3>> {
+        return Result(qualityRuleService.serviceCreate(userId, projectId, pipelineId, ruleList))
+    }
+}

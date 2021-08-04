@@ -25,19 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.pojo
+package com.tencent.devops.quality.api.v3.pojo.request
 
 import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import java.io.StringReader
 
-@ApiModel("质量红线-拦截检测结果")
-data class RuleCheckResult(
-    @ApiModelProperty("是否通过", required = true)
-    val success: Boolean,
-    @ApiModelProperty("失败后是否结束", required = true)
-    val failEnd: Boolean,
-    @ApiModelProperty("审核超时时间", required = true)
-    val auditTimeoutSeconds: Int,
-    @ApiModelProperty("失败信息", required = true)
-    val resultList: List<RuleCheckSingleResult>
+@ApiModel("构建检查参数")
+data class BuildCheckParamsV3(
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
+    val position: String,
+    val templateId: String?,
+    val interceptName: String?,
+    val ruleBuildIds: Set<String>,
+    val runtimeVariable: Map<String, String>?
 )

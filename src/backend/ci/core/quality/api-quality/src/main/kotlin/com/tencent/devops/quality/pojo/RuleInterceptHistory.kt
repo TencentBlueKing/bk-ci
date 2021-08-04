@@ -27,6 +27,7 @@
 
 package com.tencent.devops.quality.pojo
 
+import com.tencent.devops.quality.api.v2.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -55,6 +56,8 @@ data class RuleInterceptHistory(
     val buildNo: String,
     @ApiModelProperty("描述", required = true)
     val remark: String,
+    @ApiModelProperty("描述列表", required = true)
+    val interceptList: List<QualityRuleInterceptRecord>? = null,
     @ApiModelProperty("流水线是否已删除", required = true)
     val pipelineIsDelete: Boolean = false
 )

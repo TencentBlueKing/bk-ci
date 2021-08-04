@@ -26,13 +26,5 @@
  */
 
 dependencies {
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-quality"))
-}
-
-plugins {
-    `task-deploy-to-maven`
+    implementation("io.swagger:swagger-jersey2-jaxrs")
 }

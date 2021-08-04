@@ -25,26 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2.pojo.response
+package com.tencent.devops.quality.api.v3.pojo.request
 
 import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
-import com.tencent.devops.quality.api.v2.pojo.QualityRule
 import com.tencent.devops.quality.pojo.enum.RuleOperation
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-data class UserQualityRule(
-    val hashId: String,
+@ApiModel("规则创建请求")
+data class RuleCreateRequestV3(
+    @ApiModelProperty("规则名称", required = true)
     val name: String,
-    val desc: String,
-    val indicators: List<QualityIndicator>,
-    val controlPoint: QualityRule.RuleControlPoint?,
+    @ApiModelProperty("规则描述", required = true)
+    val desc: String?,
+    @ApiModelProperty("指标类型", required = true)
+    val indicators: List<CreateRequestIndicator>,
+    @ApiModelProperty("控制点位置", required = true)
+    val position: String,
     @ApiModelProperty("生效的流水线id集合", required = true)
-    val range: List<RangeItem>,
+    val range: List<String>?,
     @ApiModelProperty("生效的流水线模板id集合", required = true)
-    val templateRange: List<RangeItem>,
-    @ApiModelProperty("生效的流水线和模板对应的流水线总数", required = true)
-    val pipelineCount: Int,
+    val templateRange: List<String>?,
     @ApiModelProperty("操作类型", required = true)
     val operation: RuleOperation,
     @ApiModelProperty("通知类型", required = false)
@@ -57,13 +58,13 @@ data class UserQualityRule(
     val auditUserList: List<String>?,
     @ApiModelProperty("审核超时时间", required = false)
     val auditTimeoutMinutes: Int?,
-    @ApiModelProperty("最新拦截状态", required = false)
-    var interceptRecent: String?,
     @ApiModelProperty("红线匹配的id", required = false)
     val gatewayId: String?
 ) {
-    data class RangeItem(
-        val id: String, // 流水线或者模板id
-        val name: String
+    data class CreateRequestIndicator(
+        val atomCode: String,
+        val enName: String,
+        val operation: String,
+        val threshold: String
     )
 }
