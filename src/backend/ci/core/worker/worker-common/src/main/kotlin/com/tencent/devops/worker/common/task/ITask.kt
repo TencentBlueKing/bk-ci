@@ -51,26 +51,25 @@ abstract class ITask {
             val additionalOptionsStr = params["additionalOptions"]
             val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
             if (additionalOptions?.enableCustomEnv == true && additionalOptions.customEnv?.isNotEmpty() == true) {
-                val variables = buildVariables.variables.toMutableMap()
-                additionalOptions.customEnv!!.filter { !it.key.isNullOrBlank() }.forEach {
-                    variables[it.key!!] = it.value ?: ""
+                val variables = buildTask.buildVariable?.toMutableMap()
+                if (variables != null) {
+                    additionalOptions.customEnv!!.filter { !it.key.isNullOrBlank() }.forEach {
+                        variables[it.key!!] = it.value ?: ""
+                    }
                 }
                 return execute(
-                    buildTask,
-                    BuildVariables(
-                        buildId = buildVariables.buildId,
-                        vmSeqId = buildVariables.vmSeqId,
-                        vmName = buildVariables.vmName,
-                        projectId = buildVariables.projectId,
-                        pipelineId = buildVariables.pipelineId,
-                        variables = variables,
-                        buildEnvs = buildVariables.buildEnvs,
-                        containerId = buildVariables.containerId,
-                        containerHashId = buildVariables.containerHashId,
-                        variablesWithType = buildVariables.variablesWithType,
-                        timeoutMills = buildVariables.timeoutMills,
-                        containerType = buildVariables.containerType
+                    BuildTask(
+                        buildId = buildTask.buildId,
+                        vmSeqId = buildTask.vmSeqId,
+                        status = buildTask.status,
+                        taskId = buildTask.taskId,
+                        elementId = buildTask.elementId,
+                        elementName = buildTask.elementName,
+                        type = buildTask.type,
+                        params = buildTask.params,
+                        buildVariable = variables
                     ),
+                    buildVariables,
                     workspace
                 )
             }
