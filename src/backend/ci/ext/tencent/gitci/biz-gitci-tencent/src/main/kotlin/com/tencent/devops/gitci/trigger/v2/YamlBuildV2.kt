@@ -791,14 +791,13 @@ class YamlBuildV2 @Autowired constructor(
         }
         // 非mr和tag触发下根据commitId拉取本地工程代码
         if (step.checkout == "self") {
-            inputMap["accessToken"] =
-                oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
+            inputMap["authUserId"] = gitBasicSetting.enableUserId
             inputMap["repositoryUrl"] = if (gitBasicSetting.gitHttpUrl.isBlank()) {
                 gitCISettingDao.getSetting(dslContext, gitBasicSetting.gitProjectId)?.gitHttpUrl
             } else {
                 gitBasicSetting.gitHttpUrl
             }
-            inputMap["authType"] = "ACCESS_TOKEN"
+            inputMap["authType"] = "AUTH_USER_TOKEN"
 
             when (event.objectKind) {
                 OBJECT_KIND_MERGE_REQUEST ->
@@ -824,9 +823,8 @@ class YamlBuildV2 @Autowired constructor(
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
             if (step.with == null || (step.with != null && !step.with!!.containsKey("authType"))) {
-                inputMap["accessToken"] =
-                    oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
-                inputMap["authType"] = "ACCESS_TOKEN"
+                inputMap["authUserId"] = gitBasicSetting.enableUserId
+                inputMap["authType"] = "AUTH_USER_TOKEN"
             }
         }
 
