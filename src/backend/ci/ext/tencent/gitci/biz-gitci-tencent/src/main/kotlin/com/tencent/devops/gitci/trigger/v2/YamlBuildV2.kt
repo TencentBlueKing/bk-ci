@@ -278,11 +278,17 @@ class YamlBuildV2 @Autowired constructor(
         stage: GitCIV2Stage,
         event: GitRequestEvent,
         pipeline: GitProjectPipeline
-    ): Pair<List<String>?, List<String>?> {
+    ): Pair<StagePauseCheck?, StagePauseCheck?> {
         val operations = QualityOperation.values().map { QualityOperation.convertToSymbol(it) }.toSet()
-        var checkInRuleIds: List<String>? = null
-        var checkOutRuleIds: List<String>? = null
+        var checkIn: StagePauseCheck? = null
+        var checkOut: StagePauseCheck? = null
         if (stage.checkIn != null) {
+            val check = StagePauseCheck()
+            if (stage.checkIn?.reviews?.flows?.isNotEmpty() == true) {
+                check.manualTrigger = true
+                check.reviewDesc = stage.checkIn?.reviews.description
+                check.reviewParams =
+            }
             checkInRuleIds = createRules(
                 stageCheck = stage.checkIn!!,
                 operations = operations,
@@ -292,6 +298,7 @@ class YamlBuildV2 @Autowired constructor(
             )
         }
         if (stage.checkOut != null) {
+
             checkOutRuleIds = createRules(
                 stageCheck = stage.checkOut!!,
                 operations = operations,
@@ -300,7 +307,7 @@ class YamlBuildV2 @Autowired constructor(
                 pipeline = pipeline
             )
         }
-        return Pair(checkInRuleIds, checkOutRuleIds)
+        return Pair(checkIn, checkOut)
     }
 
     /**
