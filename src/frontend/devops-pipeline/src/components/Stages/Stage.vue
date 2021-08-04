@@ -298,7 +298,7 @@
                 const reviewGroups = stageControl.reviewGroups || []
                 const curReviewGroup = reviewGroups.find((review) => (review.status === undefined)) || {}
                 const canTriggerStage = (curReviewGroup.reviewers || []).includes(this.$userInfo.username)
-                const isStagePause = stageControl.reviewStatus !== 'REVIEWING'
+                const isStagePause = stageControl.status !== 'REVIEWING'
                 return {
                     content: canTriggerStage ? this.$t('editPage.toCheck') : this.$t('editPage.noAuthToCheck'),
                     disabled: isStagePause
@@ -309,13 +309,13 @@
                 try {
                     if (stageControl.isReviewError) return 'review-error'
                     switch (true) {
-                        case stageControl.reviewStatus === 'REVIEWING':
+                        case stageControl.status === 'REVIEWING':
                             return 'reviewing'
-                        case stageControl.reviewStatus === 'QUEUE':
+                        case stageControl.status === 'QUEUE':
                             return 'review-waiting'
-                        case stageControl.reviewStatus === 'REVIEW_PROCESSED':
+                        case stageControl.status === 'REVIEW_PROCESSED':
                             return 'reviewed'
-                        case stageControl.reviewStatus === 'REVIEW_ABORT':
+                        case stageControl.status === 'REVIEW_ABORT':
                             return 'review-abort'
                         case this.stageStatusCls === 'SKIP':
                         case !this.stageStatusCls && this.isExecDetail:

@@ -75,16 +75,13 @@
                     const curExecIndex = this.reviewGroups.findIndex(x => x.status === undefined)
                     if (curExecIndex === index) status = 'loading'
 
-                    return status
+                    let icon = index + 1
+                    if (!status) icon = `${index + 1} bk-devops-icon`
+
+                    return { status, title: item.name, icon }
                 }
 
-                return this.reviewGroups.map((item, index) => {
-                    return {
-                        title: item.name,
-                        icon: `${index + 1} devops-icon`,
-                        status: getStatus(item, index)
-                    }
-                })
+                return this.reviewGroups.map((item, index) => getStatus(item, index))
             },
 
             computedTime () {
@@ -150,9 +147,8 @@
         /deep/ .bk-step {
             max-width: 367.56px;
         }
-        /deep/ .devops-icon {
-            font-family: 'devops' !important;
-            font-size: 12px;
+        /deep/ .bk-devops-icon {
+            font-family: 'bk-devops' !important;
         }
     }
     .review-result {

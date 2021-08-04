@@ -5,7 +5,7 @@
         <review-flow-approve
             ref="flowApprove"
             :show-review-group.sync="showReviewGroup"
-            :disabled="!isShowExecGroup"
+            :disabled="disabled"
             :review-groups="stageControl.reviewGroups"
             :timeout="stageControl.timeout"
             :stage="stage"
@@ -14,12 +14,12 @@
         <params-approve
             ref="paramsApprove"
             :show-review-group.sync="showReviewGroup"
-            :disabled="!isShowExecGroup"
+            :disabled="disabled"
             :review-params="stageControl.reviewParams"
         ></params-approve>
 
         <section class="approve-footer">
-            <bk-button theme="primary" class="approve-button" @click="confirmApprove" :loading="isApproving" :disabled="!isShowExecGroup">确定</bk-button>
+            <bk-button theme="primary" class="approve-button" @click="confirmApprove" :loading="isApproving" :disabled="disabled">确定</bk-button>
             <bk-button @click="cancelApprove" :disabled="isApproving">取消</bk-button>
         </section>
     </section>
@@ -57,6 +57,16 @@
 
             isShowExecGroup () {
                 return this.showReviewGroup === this.execReviewGroup
+            },
+
+            canTriggerStage () {
+                const reviewGroups = this.stageControl.reviewGroups || []
+                const curReviewGroup = reviewGroups.find((review) => (review.status === undefined))
+                return curReviewGroup.reviewers.includes(this.$userInfo.username)
+            },
+
+            disabled () {
+                return !this.isShowExecGroup || !this.canTriggerStage
             }
         },
 

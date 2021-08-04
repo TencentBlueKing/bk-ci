@@ -63,25 +63,19 @@
             },
             reviewComponent () {
                 let reviewComponent = 'reviewShow'
-                if (this.canTriggerStage && this.isStagePause) reviewComponent = 'reviewApprove'
-                if (this.editable || !this.isStagePause) reviewComponent = 'reviewEdit'
+                if (this.isStagePause) reviewComponent = 'reviewApprove'
+                if (this.editable || this.isStageWait) reviewComponent = 'reviewEdit'
                 return reviewComponent
-            },
-            canTriggerStage () {
-                try {
-                    const reviewGroups = this.stageControl.reviewGroups || []
-                    const curReviewGroup = reviewGroups.find((review) => (review.status === undefined))
-                    return curReviewGroup.reviewers.includes(this.$userInfo.username)
-                } catch (e) {
-                    return false
-                }
             },
             stageReviewDisabled () {
                 return !this.editable && !this.isStagePause
             },
+            isStageWait () {
+                return this.stageControl.status === undefined
+            },
             isStagePause () {
                 try {
-                    return this.stageControl.reviewStatus === 'REVIEWING'
+                    return this.stageControl.status === 'REVIEWING'
                 } catch (error) {
                     return false
                 }
