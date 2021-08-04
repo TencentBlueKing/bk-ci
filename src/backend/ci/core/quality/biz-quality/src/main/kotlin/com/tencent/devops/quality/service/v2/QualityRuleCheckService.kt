@@ -54,8 +54,8 @@ import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RefreshType
-import com.tencent.devops.quality.pojo.RuleCheckResult
-import com.tencent.devops.quality.pojo.RuleCheckSingleResult
+import com.tencent.devops.common.quality.pojo.RuleCheckResult
+import com.tencent.devops.common.quality.pojo.RuleCheckSingleResult
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.QualityNotifyGroupService
@@ -530,8 +530,8 @@ class QualityRuleCheckService @Autowired constructor(
                         buildId = buildId,
                         result = RuleInterceptResult.PASS.name,
                         interceptList = interceptList,
-                        time = time,
-                        time1 = time)
+                        createTime = time,
+                        updateTime = time)
                 } else {
                     historyService.serviceCreate(projectId = projectId,
                         ruleId = ruleId,
@@ -539,8 +539,8 @@ class QualityRuleCheckService @Autowired constructor(
                         buildId = buildId,
                         result = RuleInterceptResult.FAIL.name,
                         interceptList = interceptList,
-                        time = time,
-                        time1 = time)
+                        createTime = time,
+                        updateTime = time)
                 }
             }
         }

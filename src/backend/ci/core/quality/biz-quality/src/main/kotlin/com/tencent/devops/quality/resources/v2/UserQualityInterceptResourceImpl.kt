@@ -78,6 +78,14 @@ class UserQualityInterceptResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.first, result.second))
     }
 
+    override fun pipelineList(
+        userId: String, projectId: String, pipelineId: String?, buildId: String?, ruleHashIds: Set<String>
+    ): Result<List<RuleInterceptHistory>> {
+        return Result(historyService.listInterceptHistoryForPipeline(
+            userId, projectId, pipelineId, buildId, ruleHashIds)
+        )
+    }
+
     override fun getAuditUserList(
         userId: String,
         projectId: String,

@@ -234,18 +234,43 @@ class QualityHistoryService @Autowired constructor(
     fun serviceList(
         projectId: String,
         pipelineId: String?,
+        buildId: String?,
         ruleId: Long?,
         result: String?,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
-        offset: Int,
-        limit: Int
+        offset: Int?,
+        limit: Int?
     ): Result<THistoryRecord> {
         return historyDao.list(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             ruleId = ruleId,
+            result = result,
+            startTime = startTime,
+            endTime = endTime,
+            offset = offset,
+            limit = limit
+        )
+    }
+
+    fun batchServiceList(
+        projectId: String,
+        pipelineId: String?,
+        buildId: String?,
+        ruleIds: Set<Long>?,
+        result: String?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?,
+        offset: Int?,
+        limit: Int?
+    ): Result<THistoryRecord> {
+        return historyDao.batchList(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            ruleIds = ruleIds,
             result = result,
             startTime = startTime,
             endTime = endTime,
@@ -282,7 +307,7 @@ class QualityHistoryService @Autowired constructor(
         }
 
         val count = serviceCount(projectId, pipelineId, ruleId, ruleInterceptResult, startLocalDateTime, endLocalDateTime)
-        val recordList = serviceList(projectId, pipelineId, ruleId, ruleInterceptResult, startLocalDateTime, endLocalDateTime, offset, limit)
+        val recordList = serviceList(projectId, pipelineId, null, ruleId, ruleInterceptResult, startLocalDateTime, endLocalDateTime, offset, limit)
 
         val ruleIdList = recordList.map { it.ruleId }
         val ruleIdToNameMap = ruleService.serviceListRuleByIds(projectId = projectId, ruleIds = ruleIdList.toSet())
@@ -320,6 +345,38 @@ class QualityHistoryService @Autowired constructor(
             )
         }
         return Pair(count, list)
+    }
+
+    fun listInterceptHistoryForPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildId: String?,
+        ruleHashIds: Set<String>
+    ): List<RuleInterceptHistory> {
+        val ruleIds = ruleHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
+        val ruleIdToNameMap = ruleService.serviceListRuleByIds(projectId = projectId, ruleIds = ruleIds)
+            .map { it.hashId to it.name }.toMap()
+        val recordList = batchServiceList(projectId, pipelineId, buildId, ruleIds,
+            null, null, null, null, null)
+        return recordList.map {
+            val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
+            val hisRuleHashId = HashUtil.encodeLongId(it.ruleId)
+            RuleInterceptHistory(
+                hashId = HashUtil.encodeLongId(it.id),
+                num = it.projectNum,
+                timestamp = it.createTime.timestamp(),
+                interceptResult = RuleInterceptResult.valueOf(it.result),
+                ruleHashId = hisRuleHashId,
+                ruleName = ruleIdToNameMap[hisRuleHashId] ?: "",
+                pipelineId = it.pipelineId,
+                pipelineName = "",
+                buildId = it.buildId,
+                buildNo = "",
+                remark = "",
+                interceptList = interceptList
+            )
+        }
     }
 
     fun userGetInterceptRecent(projectId: String, ruleId: String): String? {
@@ -375,8 +432,8 @@ class QualityHistoryService @Autowired constructor(
         buildId: String,
         result: String,
         interceptList: String,
-        time: LocalDateTime,
-        time1: LocalDateTime
+        createTime: LocalDateTime,
+        updateTime: LocalDateTime
     ) {
         historyDao.create(
             dslContext = dslContext,
@@ -386,8 +443,8 @@ class QualityHistoryService @Autowired constructor(
             buildId = buildId,
             result = result,
             interceptList = interceptList,
-            createTime = time,
-            updateTime = time
+            createTime = createTime,
+            updateTime = createTime
         )
     }
 }
