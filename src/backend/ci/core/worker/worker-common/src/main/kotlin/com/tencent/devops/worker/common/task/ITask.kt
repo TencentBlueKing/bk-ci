@@ -67,7 +67,8 @@ abstract class ITask {
                         elementName = buildTask.elementName,
                         type = buildTask.type,
                         params = buildTask.params,
-                        buildVariable = variables
+                        buildVariable = variables,
+                        containerType = buildTask.containerType
                     ),
                     buildVariables,
                     workspace
