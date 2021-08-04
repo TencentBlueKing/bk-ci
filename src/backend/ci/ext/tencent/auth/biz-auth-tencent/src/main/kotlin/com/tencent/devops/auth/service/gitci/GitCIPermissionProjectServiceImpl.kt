@@ -28,11 +28,14 @@
 package com.tencent.devops.auth.service.gitci
 
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,9 +45,21 @@ class GitCIPermissionProjectServiceImpl @Autowired constructor(
     val projectInfoService: GitCiProjectInfoService
 ) : PermissionProjectService {
 
-    // GitCI权限场景不会出现次调用, 故做默认实现
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
-        return emptyList()
+        val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
+
+        val gitProjectMembers = client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
+            gitProjectId = gitProjectId,
+            page = 0,
+            pageSize = 1000,
+            search = ""
+        ).data
+        logger.info("$projectCode project member  $gitProjectMembers")
+        if (gitProjectMembers.isNullOrEmpty()) {
+            return emptyList()
+        }
+
+        return gitProjectMembers.map { it.username }
     }
 
     override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
