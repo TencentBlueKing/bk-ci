@@ -44,6 +44,9 @@ allprojects {
             dependency("org.asynchttpclient:async-http-client:${Versions.AsyncHttpClient}")
             dependency("me.cassiano:ktlint-html-reporter:${Versions.KtlintHtmlReport}")
             dependency("com.github.shyiko:ktlint:${Versions.Ktlint}")
+            dependency("org.elasticsearch:elasticsearch:${Versions.Elasticsearch}")
+            dependency("org.elasticsearch.client:elasticsearch-rest-client:${Versions.Elasticsearch}")
+            dependency("org.elasticsearch.client:elasticsearch-rest-high-level-client:${Versions.Elasticsearch}")
             dependencySet("io.github.openfeign:${Versions.Feign}") {
                 entry("feign-core")
                 entry("feign-jackson")
