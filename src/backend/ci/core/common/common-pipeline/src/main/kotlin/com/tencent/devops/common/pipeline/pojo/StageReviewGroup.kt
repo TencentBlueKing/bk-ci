@@ -25,24 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
-import java.time.LocalDateTime
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class PipelineBuildStage(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val stageId: String,
-    val seq: Int,
-    var status: BuildStatus,
-    val startTime: LocalDateTime? = null,
-    val endTime: LocalDateTime? = null,
-    val cost: Int = 0,
-    val executeCount: Int = 1,
-    val controlOption: PipelineBuildStageControlOption?,
-    var checkIn: StagePauseCheck? = null,
-    var checkOut: StagePauseCheck? = null
+@ApiModel("Stage审核组信息")
+data class StageReviewGroup(
+    @ApiModelProperty("审核组ID(后台生成)", required = false)
+    var id: String? = null,
+    @ApiModelProperty("审核组名称", required = true)
+    val name: String = "default",
+    @ApiModelProperty("审核人员", required = true)
+    var reviewers: List<String> = listOf(),
+    @ApiModelProperty("审核结果（枚举）", required = false)
+    var status: String? = null,
+    @ApiModelProperty("审核操作人", required = false)
+    var operator: String? = null,
+    @ApiModelProperty("审核操作时间", required = false)
+    var reviewTime: Long? = null,
+    @ApiModelProperty("审核建议", required = false)
+    var suggest: String? = null,
+    @ApiModelProperty("审核传入变量", required = false)
+    var params: MutableList<ManualReviewParam>? = null
 )
