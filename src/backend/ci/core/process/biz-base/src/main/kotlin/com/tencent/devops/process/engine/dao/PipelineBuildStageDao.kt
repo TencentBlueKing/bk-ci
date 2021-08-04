@@ -32,7 +32,6 @@ import com.tencent.devops.common.db.util.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
-import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_STAGE
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.common.Timeout

@@ -3,7 +3,6 @@ package com.tencent.devops.common.pipeline.pojo
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import org.junit.Assert
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 
 internal class StagePauseCheckTest {
 
