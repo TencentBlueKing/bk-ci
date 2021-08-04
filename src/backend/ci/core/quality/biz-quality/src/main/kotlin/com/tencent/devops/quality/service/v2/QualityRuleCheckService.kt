@@ -243,9 +243,8 @@ class QualityRuleCheckService @Autowired constructor(
             logger.info("start to check rule(${rule.name})")
 
             val result = checkIndicator(
-                rule.indicators,
-                "",
-                metadataList)
+                rule.controlPoint.name, rule.indicators, metadataList
+            )
             val interceptRecordList = result.second
             val interceptResult = result.first
             val params = mapOf("projectId" to projectId,
@@ -336,8 +335,8 @@ class QualityRuleCheckService @Autowired constructor(
     }
 
     private fun checkIndicator(
-        indicators: List<QualityIndicator>,
         controlPointName: String,
+        indicators: List<QualityIndicator>,
         metadataList: List<QualityHisMetadata>
     ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
         var allCheckResult = true
@@ -450,8 +449,10 @@ class QualityRuleCheckService @Autowired constructor(
             }
             with(indicator) {
                 interceptList.add(
-                    QualityRuleInterceptRecord(hashId, cnName, elementType, operation, threshold,
-                        result, controlPointName, checkResult, elementDetail, logPrompt)
+                    QualityRuleInterceptRecord(
+                        indicatorId = hashId, indicatorName = cnName, indicatorType = elementType,
+                        controlPoint = controlPointName, operation = operation, value = threshold, actualValue = result,
+                        pass = checkResult, detail = elementDetail, logPrompt = logPrompt)
                 )
             }
         }
