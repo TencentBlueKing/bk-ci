@@ -1,6 +1,7 @@
 package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import org.junit.Assert
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
@@ -19,6 +20,9 @@ internal class StagePauseCheckTest {
             ManualReviewParam(key = "p1", value = "123"),
             ManualReviewParam(key = "p2", value = "222")
         )
-        println(check.parseReviewParams(params))
+        Assert.assertEquals(
+            mutableListOf(ManualReviewParam(key = "p1", value = "123")),
+            check.parseReviewParams(params)
+        )
     }
 }
