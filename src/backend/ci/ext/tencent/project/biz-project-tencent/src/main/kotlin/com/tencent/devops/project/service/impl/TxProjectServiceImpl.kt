@@ -305,7 +305,7 @@ class TxProjectServiceImpl @Autowired constructor(
         } else {
             accessToken
         }
-        val url = "$v0IamUrl/projects?access_token=$token"
+        val url = "$v0IamUrl/projects?access_token=$token&user_id=$userId"
         logger.info("Start to get auth projects - ($url)")
         val request = Request.Builder().url(url).get().build()
         val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
