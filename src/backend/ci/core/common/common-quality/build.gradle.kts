@@ -25,11 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
-
-enum class PipelineSortType {
-    NAME,
-    CREATE_TIME,
-    UPDATE_TIME,
-    LAST_EXEC_TIME
+dependencies {
+    implementation("io.swagger:swagger-jersey2-jaxrs")
 }

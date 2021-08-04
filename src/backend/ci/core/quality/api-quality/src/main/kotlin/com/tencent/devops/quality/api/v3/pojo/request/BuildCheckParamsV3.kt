@@ -38,6 +38,6 @@ data class BuildCheckParamsV3(
     val position: String,
     val templateId: String?,
     val interceptName: String?,
-    val ruleIds: Set<String>,
+    val ruleBuildIds: Set<String>,
     val runtimeVariable: Map<String, String>?
 )

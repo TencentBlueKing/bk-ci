@@ -35,6 +35,7 @@ import com.tencent.devops.quality.api.v2.pojo.QualityRule
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
@@ -43,12 +44,18 @@ class QualityRuleBuildHisService constructor(
   private val qualityIndicatorService: QualityIndicatorService,
   private val dslContext: DSLContext
 ) {
+
+    private val logger = LoggerFactory.getLogger(QualityRuleBuildHisService::class.java)
+
     fun list(ruleIds: List<Long>): List<QualityRule> {
+        logger.info("start to check rule in his: $ruleIds")
         val allRule = qualityRuleBuildHisDao.list(dslContext, ruleIds)
         val allIndicatorIds = mutableSetOf<Long>()
         allRule.forEach {
-            allIndicatorIds.addAll(it.indicatorIds.map { indicatorId -> indicatorId.toLong() })
+            allIndicatorIds.addAll(it.indicatorIds.split(",").map { indicatorId -> indicatorId.toLong() })
         }
+
+        logger.info("start to check rule indicator: ${allIndicatorIds.firstOrNull()}, ${allIndicatorIds.size}")
         val qualityIndicatorMap = qualityIndicatorService.serviceList(allIndicatorIds).map {
             HashUtil.decodeIdToLong(it.hashId).toString() to it
         }.toMap()

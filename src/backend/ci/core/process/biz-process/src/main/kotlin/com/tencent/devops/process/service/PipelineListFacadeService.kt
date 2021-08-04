@@ -122,6 +122,9 @@ class PipelineListFacadeService @Autowired constructor(
                 PipelineSortType.UPDATE_TIME -> {
                     b.deploymentTime.compareTo(a.deploymentTime)
                 }
+                PipelineSortType.LAST_EXEC_TIME -> {
+                    b.deploymentTime.compareTo(a.latestBuildStartTime ?: 0)
+                }
             }
         })
     }

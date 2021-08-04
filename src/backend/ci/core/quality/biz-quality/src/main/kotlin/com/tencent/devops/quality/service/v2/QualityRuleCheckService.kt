@@ -54,8 +54,8 @@ import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RefreshType
-import com.tencent.devops.quality.pojo.RuleCheckResult
-import com.tencent.devops.quality.pojo.RuleCheckSingleResult
+import com.tencent.devops.common.quality.pojo.RuleCheckResult
+import com.tencent.devops.common.quality.pojo.RuleCheckSingleResult
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.QualityNotifyGroupService
@@ -208,7 +208,7 @@ class QualityRuleCheckService @Autowired constructor(
     fun check(buildCheckParams: BuildCheckParamsV3): RuleCheckResult {
         with(buildCheckParams) {
             // 遍历项目下所有拦截规则
-            val ruleList = qualityRuleBuildHisService.list(ruleIds.map { HashUtil.decodeIdToLong(it) })
+            val ruleList = qualityRuleBuildHisService.list(ruleBuildIds.map { HashUtil.decodeIdToLong(it) })
 
             val filterRuleList = ruleList.filter { rule ->
                 logger.info("validate whether to check rule with gatewayId: " +
@@ -243,9 +243,8 @@ class QualityRuleCheckService @Autowired constructor(
             logger.info("start to check rule(${rule.name})")
 
             val result = checkIndicator(
-                rule.indicators,
-                "",
-                metadataList)
+                rule.controlPoint.name, rule.indicators, metadataList
+            )
             val interceptRecordList = result.second
             val interceptResult = result.first
             val params = mapOf("projectId" to projectId,
@@ -336,13 +335,13 @@ class QualityRuleCheckService @Autowired constructor(
     }
 
     private fun checkIndicator(
-        indicators: List<QualityIndicator>,
         controlPointName: String,
+        indicators: List<QualityIndicator>,
         metadataList: List<QualityHisMetadata>
     ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
         var allCheckResult = true
         val interceptList = mutableListOf<QualityRuleInterceptRecord>()
-        val metadataMap = metadataList.associateBy { it.enName }
+        val metadataMap = metadataList.map { it.enName to it }.toMap()
         // 遍历每个指标
         indicators.forEach { indicator ->
             val thresholdType = indicator.thresholdType
@@ -450,8 +449,10 @@ class QualityRuleCheckService @Autowired constructor(
             }
             with(indicator) {
                 interceptList.add(
-                    QualityRuleInterceptRecord(hashId, cnName, elementType, operation, threshold,
-                        result, controlPointName, checkResult, elementDetail, logPrompt)
+                    QualityRuleInterceptRecord(
+                        indicatorId = hashId, indicatorName = cnName, indicatorType = elementType,
+                        controlPoint = controlPointName, operation = operation, value = threshold, actualValue = result,
+                        pass = checkResult, detail = elementDetail, logPrompt = logPrompt)
                 )
             }
         }
@@ -536,8 +537,8 @@ class QualityRuleCheckService @Autowired constructor(
                         buildId = buildId,
                         result = RuleInterceptResult.PASS.name,
                         interceptList = interceptList,
-                        time = time,
-                        time1 = time)
+                        createTime = time,
+                        updateTime = time)
                 } else {
                     historyService.serviceCreate(projectId = projectId,
                         ruleId = ruleId,
@@ -545,8 +546,8 @@ class QualityRuleCheckService @Autowired constructor(
                         buildId = buildId,
                         result = RuleInterceptResult.FAIL.name,
                         interceptList = interceptList,
-                        time = time,
-                        time1 = time)
+                        createTime = time,
+                        updateTime = time)
                 }
             }
         }

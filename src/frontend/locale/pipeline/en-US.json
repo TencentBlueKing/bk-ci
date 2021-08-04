@@ -383,6 +383,7 @@
         "orderByAlpha": "By a~z",
         "orderByCreateTime": "By created time",
         "orderByUpdateTime": "By edited time",
+        "orderByExecuteTime": "By execute time",
         "order": "Sort",
         "filter": "Filter",
         "reset": "Reset",

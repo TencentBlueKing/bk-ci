@@ -110,8 +110,8 @@ class HistoryDao {
         result: String?,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
-        offset: Int,
-        limit: Int
+        offset: Int?,
+        limit: Int?
     ): Result<THistoryRecord> {
         with(THistory.T_HISTORY) {
             val step1 = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
@@ -120,10 +120,45 @@ class HistoryDao {
             val step4 = if (result == null) step3 else step3.and(RESULT.eq(result))
             val step5 = if (startTime == null) step4 else step4.and(CREATE_TIME.gt(startTime))
             val step6 = if (endTime == null) step5 else step5.and(CREATE_TIME.lt(endTime))
-            return step6.orderBy(PROJECT_NUM.desc())
-                .offset(offset)
-                .limit(limit)
-                .fetch()
+            val sql = step6.orderBy(PROJECT_NUM.desc())
+            if (offset != null) {
+                sql.offset(offset)
+            }
+            if (limit != null) {
+                sql.limit(limit)
+            }
+            return sql.fetch()
+        }
+    }
+
+    fun batchList(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        buildId: String?,
+        ruleIds: Set<Long>?,
+        result: String?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?,
+        offset: Int?,
+        limit: Int?
+    ): Result<THistoryRecord> {
+        with(THistory.T_HISTORY) {
+            val step1 = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+            val step2 = if (pipelineId == null) step1 else step1.and(PIPELINE_ID.eq(pipelineId))
+            val step3 = if (buildId == null) step2 else step2.and(BUILD_ID.eq(buildId))
+            val step4 = if (ruleIds == null) step3 else step3.and(RULE_ID.`in`(ruleIds))
+            val step5 = if (result == null) step4 else step4.and(RESULT.eq(result))
+            val step6 = if (startTime == null) step5 else step5.and(CREATE_TIME.gt(startTime))
+            val step7 = if (endTime == null) step6 else step6.and(CREATE_TIME.lt(endTime))
+            val sql = step7.orderBy(PROJECT_NUM.desc())
+            if (offset != null) {
+                sql.offset(offset)
+            }
+            if (limit != null) {
+                sql.limit(limit)
+            }
+            return sql.fetch()
         }
     }
 

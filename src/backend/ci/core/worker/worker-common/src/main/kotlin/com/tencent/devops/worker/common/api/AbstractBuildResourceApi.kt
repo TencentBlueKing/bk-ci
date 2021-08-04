@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.worker.common.CommonEnv
+import com.tencent.devops.worker.common.LOG_DEBUG_FLAG
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
@@ -167,7 +168,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             throw RemoteServiceException("获取文件失败")
         }
         if (!destPath.parentFile.exists()) destPath.parentFile.mkdirs()
-        LoggerService.addNormalLine("save file >>>> ${destPath.canonicalPath}")
+        LoggerService.addNormalLine("${LOG_DEBUG_FLAG}save file >>>> ${destPath.canonicalPath}")
 
         response.body()!!.byteStream().use { bs ->
             val buf = ByteArray(BYTE_ARRAY_SIZE)

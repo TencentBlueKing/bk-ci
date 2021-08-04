@@ -34,7 +34,7 @@ import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
-import com.tencent.devops.quality.pojo.RuleCheckResult
+import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.service.v2.QualityRuleCheckService
 import com.tencent.devops.quality.service.v2.QualityRuleService
 import org.springframework.beans.factory.annotation.Autowired

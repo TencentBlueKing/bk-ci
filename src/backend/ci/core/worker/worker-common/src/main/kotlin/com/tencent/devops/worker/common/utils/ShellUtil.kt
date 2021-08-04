@@ -78,7 +78,6 @@ object ShellUtil {
     lateinit var buildEnvs: List<BuildEnv>
 
     private val specialKey = listOf(".", "-")
-    private val specialValue = listOf("|", "&", "(", ")")
     private val specialCharToReplace = Regex("['\n]") // --bug=75509999 Agent环境变量中替换掉破坏性字符
 
     fun execute(
@@ -144,9 +143,7 @@ object ShellUtil {
         }
 
         val commonEnv = runtimeVariables.plus(CommonEnv.getCommonEnv())
-            .filter {
-                !specialEnv(it.key, it.value)
-            }
+            .filterNot { specialEnv(it.key) }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
                 // --bug=75509999 Agent环境变量中替换掉破坏性字符
@@ -243,18 +240,7 @@ object ShellUtil {
         }
     }
 
-    private fun specialEnv(key: String, value: String): Boolean {
-        specialKey.forEach {
-            if (key.contains(it)) {
-                return true
-            }
-        }
-
-        specialValue.forEach {
-            if (value.contains(it)) {
-                return true
-            }
-        }
-        return false
+    private fun specialEnv(key: String): Boolean {
+        return specialKey.any { key.contains(it) }
     }
 }
