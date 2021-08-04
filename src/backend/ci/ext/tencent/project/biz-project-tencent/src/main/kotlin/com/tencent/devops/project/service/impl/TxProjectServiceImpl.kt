@@ -301,7 +301,7 @@ class TxProjectServiceImpl @Autowired constructor(
 
     private fun getV0UserProject(userId: String?, accessToken: String?): List<String> {
         val token = if (accessToken.isNullOrEmpty()) {
-            val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+            bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
         } else {
             accessToken
         }
