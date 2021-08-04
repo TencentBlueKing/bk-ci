@@ -1,7 +1,7 @@
 parameters:
   - name: receivers
     type: array
-    default: [ "\"${{ ci.actor1 }}\"","\"${{ ci.actor1 }}\"" ]
+    default: [ "${{ ci.actor1 }}","${{ ci.actor1 }}" ]
 
 gates:
   - name: gate-1

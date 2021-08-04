@@ -767,7 +767,7 @@ class YamlTemplate(
             "parameters.${it.name}" to if (it.default == null) {
                 null
             } else {
-                it.default.toString()
+                it.default
             }
         }
         val parametersStringMap = newParameters.filter { it.default != null }.associate {

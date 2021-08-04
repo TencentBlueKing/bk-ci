@@ -30,7 +30,6 @@ package com.tencent.devops.quality.service.v2
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.pojo.enum.RuleOperation
