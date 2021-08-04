@@ -270,6 +270,7 @@ class QualityHistoryService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
+            buildId = buildId,
             ruleIds = ruleIds,
             result = result,
             startTime = startTime,

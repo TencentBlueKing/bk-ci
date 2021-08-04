@@ -135,7 +135,7 @@ class HistoryDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String?,
-        buildIdSet: Set<String>?,
+        buildId: String?,
         ruleIds: Set<Long>?,
         result: String?,
         startTime: LocalDateTime?,
@@ -146,7 +146,7 @@ class HistoryDao {
         with(THistory.T_HISTORY) {
             val step1 = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
             val step2 = if (pipelineId == null) step1 else step1.and(PIPELINE_ID.eq(pipelineId))
-            val step3 = if (buildIdSet == null) step2 else step2.and(BUILD_ID.`in`(buildIdSet))
+            val step3 = if (buildId == null) step2 else step2.and(BUILD_ID.eq(buildId))
             val step4 = if (ruleIds == null) step3 else step3.and(RULE_ID.`in`(ruleIds))
             val step5 = if (result == null) step4 else step4.and(RESULT.eq(result))
             val step6 = if (startTime == null) step5 else step5.and(CREATE_TIME.gt(startTime))
