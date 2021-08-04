@@ -56,7 +56,7 @@ import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
 @Component
-@Suppress("ALL", "CHANGING_ARGUMENTS_EXECUTION_ORDER_FOR_NAMED_VARARGS")
+@Suppress("ALL")
 class PipelineBuildHistoryDataClearJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val miscBuildDataClearConfig: MiscBuildDataClearConfig,
@@ -188,8 +188,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 }
             }
             // 将线程编号存入redis集合
-            redisOperation.sadd(key = PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY,
-                values = *arrayOf(threadNo.toString()),
+            redisOperation.sadd(PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY,
+                threadNo.toString(),
                 isDistinguishCluster = true)
             try {
                 val maxEveryProjectHandleNum = miscBuildDataClearConfig.maxEveryProjectHandleNum
