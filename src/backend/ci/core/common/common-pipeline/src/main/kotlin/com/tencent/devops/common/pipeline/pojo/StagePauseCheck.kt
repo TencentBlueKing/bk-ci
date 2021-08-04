@@ -144,19 +144,15 @@ data class StagePauseCheck(
         fun convertControlOption(stageControlOption: StageControlOption): StagePauseCheck {
             return StagePauseCheck(
                 manualTrigger = stageControlOption.manualTrigger,
-                reviewStatus = when (stageControlOption.triggered) {
-                    true -> BuildStatus.REVIEW_PROCESSED.name
-                    false -> BuildStatus.REVIEW_ABORT.name
-                    else -> null
-                },
+                reviewStatus = if (stageControlOption.triggered == true) {
+                    BuildStatus.REVIEW_PROCESSED.name
+                 } else null,
                 reviewGroups = mutableListOf(StageReviewGroup(
                     id = UUIDUtil.generate(),
                     reviewers = stageControlOption.triggerUsers ?: listOf(),
-                    status = when (stageControlOption.triggered) {
-                        true -> ManualReviewAction.PROCESS.name
-                        false -> ManualReviewAction.ABORT.name
-                        else -> null
-                    },
+                    status = if (stageControlOption.triggered == true) {
+                        ManualReviewAction.PROCESS.name
+                    } else null,
                     params = stageControlOption.reviewParams?.toMutableList()
                 )),
                 reviewDesc = stageControlOption.reviewDesc,

@@ -838,8 +838,6 @@ class PipelineBuildFacadeService(
                 )
             }
             val success = if (isCancel) {
-                // TODO 暂时兼容前端显示的变量刷新，下次发版去掉
-                buildStage.controlOption!!.stageControlOption.triggered = false
                 pipelineStageService.cancelStage(
                     userId = userId,
                     buildStage = buildStage,
