@@ -25,7 +25,8 @@ const localeAliasMap = {
     'us': 'en-US'
 }
 
-const BK_CI_DOMAIN = document.domain.split('.').slice(-2).join('.')
+const domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/)
+const BK_CI_DOMAIN = domainMatch.length > 2 ? domainMatch[2] : location.hostname
 
 function getLsLocale () {
     try {
