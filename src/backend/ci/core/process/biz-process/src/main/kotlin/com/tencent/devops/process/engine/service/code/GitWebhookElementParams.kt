@@ -57,6 +57,7 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
         params.eventType = element.eventType
         params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
+        params.pathFilterType = element.pathFilterType
         params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
         params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
         params.codeType = CodeType.GIT

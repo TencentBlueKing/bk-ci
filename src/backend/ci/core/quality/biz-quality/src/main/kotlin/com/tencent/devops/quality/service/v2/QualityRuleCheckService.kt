@@ -71,7 +71,15 @@ import java.util.*
 import java.util.concurrent.Executors
 
 @Service
-@Suppress("ALL")
+@Suppress(
+    "TooManyFunctions",
+    "LongParameterList",
+    "NestedBlockDepth",
+    "ReturnCount",
+    "MagicNumber",
+    "ComplexMethod",
+    "LongMethod"
+)
 class QualityRuleCheckService @Autowired constructor(
     private val ruleService: QualityRuleService,
     private val qualityHisMetadataService: QualityHisMetadataService,
@@ -84,7 +92,6 @@ class QualityRuleCheckService @Autowired constructor(
     private val qualityCacheService: QualityCacheService,
     private val qualityRuleBuildHisService: QualityRuleBuildHisService
 ) {
-    private val DEFAULT_TIMEOUT_MINUTES = 15
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
     fun userGetMatchRuleList(projectId: String, pipelineId: String): List<QualityRuleMatchTask> {
@@ -118,7 +125,7 @@ class QualityRuleCheckService @Autowired constructor(
 
     fun getMatchTemplateListByCache(projectId: String, templateId: String?): List<QualityRuleMatchTask> {
         if (templateId.isNullOrBlank()) return listOf()
-        val cacheData = qualityCacheService.getCacheRuleListByTemplateId(projectId, templateId!!)
+        val cacheData = qualityCacheService.getCacheRuleListByTemplateId(projectId, templateId)
         if (cacheData != null) {
             return cacheData
         }
@@ -302,8 +309,8 @@ class QualityRuleCheckService @Autowired constructor(
                                 interceptRecordList = interceptRecordList,
                                 endNotifyTypeList = rule.notifyTypeList ?: listOf(),
                                 endNotifyGroupList = rule.notifyGroupList ?: listOf(),
-                                endNotifyUserList = (rule.notifyUserList ?: listOf()).map {
-                                    EnvUtils.parseEnv(it, runtimeVariable ?: mapOf())
+                                endNotifyUserList = (rule.notifyUserList ?: listOf()).map { user ->
+                                    EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
                                 })
                         } else {
                             val startUser = runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
@@ -314,12 +321,13 @@ class QualityRuleCheckService @Autowired constructor(
                                 buildNo = buildNo,
                                 createTime = createTime,
                                 resultList = resultList,
-                                auditNotifyUserList = (rule.auditUserList ?: listOf()).toSet().plus(startUser).map {
-                                    EnvUtils.parseEnv(it, runtimeVariable ?: mapOf())
+                                auditNotifyUserList = (rule.auditUserList
+                                    ?: listOf()).toSet().plus(startUser).map { user ->
+                                    EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
                                 })
                         }
-                    } catch (t: Throwable) {
-                        logger.error("send notification fail", t)
+                    } catch (ignored: Throwable) {
+                        logger.error("send notification fail", ignored)
                     }
                 }
                 countService.countIntercept(projectId, pipelineId, ruleId, interceptResult)
@@ -362,7 +370,7 @@ class QualityRuleCheckService @Autowired constructor(
                             break
                         }
 
-                        if (it?.value != null && NumberUtils.isNumber(it.value)) {
+                        if (it?.value != null && NumberUtils.isCreatable(it.value)) {
                             val value = it.value.toInt()
                             result = (result ?: 0) + value
                             // 记录”查看详情“里面跳转的基础数据, 记录第一个
@@ -380,7 +388,7 @@ class QualityRuleCheckService @Autowired constructor(
                     var result: BigDecimal? = null
                     for (it in filterMetadataList) {
 
-                        if (it?.value != null && NumberUtils.isNumber(it.value)) {
+                        if (it?.value != null && NumberUtils.isCreatable(it.value)) {
                             val value = BigDecimal(it.value)
 
                             // -1表示直接失败
@@ -492,13 +500,11 @@ class QualityRuleCheckService @Autowired constructor(
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""
             }
-            if (record.detail.isNullOrBlank()) {
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}" +
-                    "/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
+            if (record.detail.isNullOrBlank()) { // #4796 日志展示的链接去掉域名
+                "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
                 val detail = codeccToolUrlPathMap[record.detail!!] ?: "defect/lint"
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}" +
-                    "/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list" +
+                "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list" +
                     "?buildId=$buildId&status=7&sortField=createBuildNumber'>查看详情</a>"
             }
         } else {
@@ -697,6 +703,7 @@ class QualityRuleCheckService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(QualityRuleCheckService::class.java)
         private const val DETAIL_NOT_RUN_VALUE = "-1"
+        private const val DEFAULT_TIMEOUT_MINUTES = 15
         val DETAIL_NOT_RUN_FLOAT_VALUE = BigDecimal(-1)
     }
 }

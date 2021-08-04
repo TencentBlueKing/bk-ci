@@ -27,13 +27,13 @@
 
 package com.tencent.devops.common.api.util
 
-import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.Calendar
 import java.util.Date
+import java.util.TimeZone
 
 /**
  *
@@ -54,7 +54,11 @@ object DateTimeUtil {
 
     private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
 
-    private val logger = LoggerFactory.getLogger(DateTimeUtil::class.java)
+    private val utcTimeFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+
+    init {
+        utcTimeFormatter.timeZone = TimeZone.getTimeZone("UTC")
+    }
 
     const val YYYY_MM_DD = "yyyy-MM-dd"
 
@@ -144,7 +148,10 @@ object DateTimeUtil {
             if (timeStr.isNullOrBlank()) return 0L
             return formatter.parse(timeStr).time
         } catch (e: Exception) {
-            logger.error("fail to parse time string: $timeStr", e)
+            try {
+                return utcTimeFormatter.parse(timeStr).time
+            } catch (ignore: Exception) {
+            }
         }
         return 0L
     }

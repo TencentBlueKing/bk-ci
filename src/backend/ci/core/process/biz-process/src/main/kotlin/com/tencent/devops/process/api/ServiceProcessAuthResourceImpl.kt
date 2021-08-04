@@ -46,9 +46,9 @@ class ServiceProcessAuthResourceImpl @Autowired constructor(
     ): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
-        val projectId = callBackInfo.filter.parent.id
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
+                val projectId = callBackInfo.filter.parent.id
                 return authPipelineService.getPipeline(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
@@ -56,6 +56,7 @@ class ServiceProcessAuthResourceImpl @Autowired constructor(
                 return authPipelineService.getPipelineInfo(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
+                val projectId = callBackInfo.filter.parent.id
                 return authPipelineService.searchPipeline(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,

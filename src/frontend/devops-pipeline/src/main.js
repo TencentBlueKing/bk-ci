@@ -62,6 +62,10 @@ Vue.prototype.$setLocale = setLocale
 Vue.prototype.$permissionActionMap = actionMap
 Vue.prototype.$permissionResourceMap = resourceMap
 Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
+Vue.prototype.$bkMessage = function (config) {
+    config.ellipsisLine = config.ellipsisLine || 3
+    bkMagic.bkMessage(config)
+}
 
 Vue.mixin({
     methods: {

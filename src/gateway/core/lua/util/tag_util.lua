@@ -25,7 +25,7 @@ function _M:get_tag(ns_config)
     local devops_project = ngx.var.project_id
     local default_tag = ns_config.tag
     local tag = default_tag
-    local header_tag = ngx.var.http_x_devops_tag
+    local header_tag = ngx.var.http_x_gateway_tag
 
     if header_tag == nil then
         if devops_project ~= nil and devops_project ~= '' then
@@ -91,7 +91,7 @@ function _M:get_tag(ns_config)
         end
 
         -- 设置tag到http请求头
-        ngx.header["X-DEVOPS-TAG"] = tag
+        ngx.header["X-GATEWAY-TAG"] = tag
     else
         tag = header_tag
     end

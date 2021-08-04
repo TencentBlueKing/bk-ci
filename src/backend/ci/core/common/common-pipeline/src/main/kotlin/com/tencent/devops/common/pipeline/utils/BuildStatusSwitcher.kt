@@ -36,14 +36,13 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 object BuildStatusSwitcher {
 
     /**
-     * 一个[BuildStatus.isReadyToRun]状态的插件任务在切换成[BuildStatus.SKIP]前，
-     * 如果 [containerFailure]容器状态已经出错：
-     *  则返回[BuildStatus.UNEXEC]表示从未执行
+     * 如果 buildStatus 为结束态：
+     *  则返回[BuildStatus.UNEXEC]
      * 否则
      *  返回[BuildStatus.SKIP] 切换成为跳过
      */
-    fun readyToSkipWhen(containerFailure: Boolean): BuildStatus {
-        return if (containerFailure) { // 容器已经出错，排队变未执行
+    fun readyToSkipWhen(buildStatus: BuildStatus): BuildStatus {
+        return if (buildStatus.isFailure() || buildStatus.isCancel()) {
             BuildStatus.UNEXEC
         } else {
             BuildStatus.SKIP
