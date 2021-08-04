@@ -41,7 +41,7 @@ data class StagePauseCheck(
     var reviewDesc: String? = null,
     var reviewGroups: MutableList<StageReviewGroup>? = null, // 审核流配置
     var reviewParams: List<ManualReviewParam>? = null, // 审核变量
-    val timeout: Int? = null, // 等待审核的超时时间
+    var timeout: Int? = 24, // 等待审核的超时时间，默认24小时
     var ruleIds: List<String>? = null // 质量红线规则ID集合
 ) {
 
