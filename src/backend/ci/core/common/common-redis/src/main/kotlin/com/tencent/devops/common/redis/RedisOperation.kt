@@ -204,7 +204,7 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.opsForList().rightPop(getFinalKey(key, isDistinguishCluster))
     }
 
-    private fun getRedisName(): String? {
+    fun getRedisName(): String? {
         return redisName
     }
 
