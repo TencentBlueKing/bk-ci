@@ -7,6 +7,7 @@ on_ERR (){
 }
 
 source ${CTRL_DIR:-/data/install}/load_env.sh
+source ${CTRL_DIR:-/data/install}/bin/04-final/ci.env
 cmd_mysql="mysql -h${BK_PAAS_MYSQL_HOST} -u${BK_PAAS_MYSQL_USER} -P $BK_PAAS_MYSQL_PORT open_paas"
 export MYSQL_PWD=$BK_PAAS_MYSQL_PASSWORD
 
