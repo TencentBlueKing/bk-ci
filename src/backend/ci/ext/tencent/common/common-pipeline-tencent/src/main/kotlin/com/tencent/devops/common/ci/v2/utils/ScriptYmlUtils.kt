@@ -52,6 +52,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.Job
+import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
@@ -150,12 +151,20 @@ object ScriptYmlUtils {
         return newValue
     }
 
-    fun parseParameterValue(value: String?, settingMap: Map<String, String?>): String? {
+    fun parseParameterValue(value: String?, settingMap: Map<String, String?>, paramType: ParametersType): String? {
         if (value.isNullOrBlank()) {
             return ""
         }
         var newValue = value
-        val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
+        // ScriptUtils.formatYaml会将所有的带上 "" 但替换时数组不需要"" 所以数组单独匹配
+        val pattern = when (paramType) {
+            ParametersType.ARRAY -> {
+                Pattern.compile("\"\\$\\{\\{([^{}]+?)}}\"")
+            }
+            else -> {
+                Pattern.compile("\\$\\{\\{([^{}]+?)}}")
+            }
+        }
         val matcher = pattern.matcher(value)
         while (matcher.find()) {
             if (settingMap.containsKey(matcher.group(1).trim())) {
