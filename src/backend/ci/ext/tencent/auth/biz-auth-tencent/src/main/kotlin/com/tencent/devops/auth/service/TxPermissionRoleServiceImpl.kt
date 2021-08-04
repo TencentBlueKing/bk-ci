@@ -37,6 +37,7 @@ import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.client.Client
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,14 +49,16 @@ class TxPermissionRoleServiceImpl @Autowired constructor(
     private val iamConfiguration: IamConfiguration,
     private val groupService: AuthGroupService,
     private val authGroupDao: AuthGroupDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val client: Client
 ) : IamPermissionRoleExtService(
     iamManagerService,
     permissionGradeService,
     iamConfiguration,
     groupService,
     authGroupDao,
-    dslContext
+    dslContext,
+    client
 ) {
 
     override fun createPermissionRole(
