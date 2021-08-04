@@ -52,6 +52,7 @@ import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Step
+import com.tencent.devops.common.ci.v2.stageCheck.ReviewVariable
 import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
@@ -74,11 +75,16 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
+import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -286,28 +292,78 @@ class YamlBuildV2 @Autowired constructor(
             val check = StagePauseCheck()
             if (stage.checkIn?.reviews?.flows?.isNotEmpty() == true) {
                 check.manualTrigger = true
-                check.reviewDesc = stage.checkIn?.reviews.description
-                check.reviewParams =
+                check.reviewDesc = stage.checkIn?.reviews?.description
+                check.reviewParams = createReviewParams(stage.checkIn?.reviews?.variable)
+                check.timeout = stage.checkIn?.timeoutHours
+                check.reviewGroups = stage.checkIn?.reviews?.flows?.map { it ->
+                    StageReviewGroup(name = it.name, reviewers = it.reviewers)
+                }?.toMutableList()
             }
-            checkInRuleIds = createRules(
-                stageCheck = stage.checkIn!!,
-                operations = operations,
-                event = event,
-                position = ControlPointPosition.BEFORE_POSITION,
-                pipeline = pipeline
-            )
+            if (stage.checkIn?.gates?.isNotEmpty() == true) {
+                check.ruleIds = createRules(
+                    stageCheck = stage.checkIn!!,
+                    operations = operations,
+                    event = event,
+                    position = ControlPointPosition.BEFORE_POSITION,
+                    pipeline = pipeline
+                )
+            }
+            checkIn = check
         }
         if (stage.checkOut != null) {
+            val check = StagePauseCheck()
 
-            checkOutRuleIds = createRules(
-                stageCheck = stage.checkOut!!,
-                operations = operations,
-                event = event,
-                position = ControlPointPosition.AFTER_POSITION,
-                pipeline = pipeline
-            )
+            checkOut = check
         }
         return Pair(checkIn, checkOut)
+    }
+
+    private fun createStagePauseCheck(
+        stageCheck: StageCheck?,
+        position: String
+    ): StagePauseCheck? {
+        if (stageCheck == null) return null
+        val check = StagePauseCheck()
+        if (stageCheck.reviews?.flows?.isNotEmpty() == true) {
+                check.manualTrigger = true
+                check.reviewDesc = stageCheck.reviews?.description
+                check.reviewParams = createReviewParams(stageCheck.reviews?.variable)
+                check.timeout = stageCheck.timeoutHours
+                check.reviewGroups = stageCheck.reviews?.flows?.map { it ->
+                    StageReviewGroup(name = it.name, reviewers = it.reviewers)
+                }?.toMutableList()
+            }
+            if (stageCheck.gates?.isNotEmpty() == true) {
+                check.ruleIds = createRules(
+                    stageCheck = stageCheck,
+                    operations = operations,
+                    event = event,
+                position = ControlPointPosition.AFTER_POSITION,
+                    pipeline = pipeline
+                )
+            }
+    }
+
+    private fun createReviewParams(variable: Map<String, ReviewVariable>?): List<ManualReviewParam>? {
+        if (variable.isNullOrEmpty()) return null
+        val params = mutableListOf<ManualReviewParam>()
+        variable.forEach { (key, variable) ->
+            params.add(ManualReviewParam(
+                key = key,
+                value = variable.default,
+                required = true,
+                valueType = when (variable.type) {
+                    "SELECTOR" -> ManualReviewParamType.BOOLEAN
+                    "RADIO" -> ManualReviewParamType.ENUM
+                    "CHECKBOX" -> ManualReviewParamType.MULTIPLE
+                    else -> ManualReviewParamType.STRING
+                },
+                chineseName = variable.label,
+                desc = variable.label,
+                options = variable.values?.map { ManualReviewParamPair(it, it) }
+            ))
+        }
+        return params
     }
 
     /**
