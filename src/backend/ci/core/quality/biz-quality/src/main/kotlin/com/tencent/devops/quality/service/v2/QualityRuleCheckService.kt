@@ -56,6 +56,7 @@ import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.common.quality.pojo.RuleCheckSingleResult
+import com.tencent.devops.quality.bean.QualityUrlBean
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.QualityNotifyGroupService
@@ -90,7 +91,8 @@ class QualityRuleCheckService @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val qualityCacheService: QualityCacheService,
-    private val qualityRuleBuildHisService: QualityRuleBuildHisService
+    private val qualityRuleBuildHisService: QualityRuleBuildHisService,
+    private val qualityUrlBean: QualityUrlBean
 ) {
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
@@ -564,7 +566,7 @@ class QualityRuleCheckService @Autowired constructor(
     ) {
         val projectName = getProjectName(projectId)
         val pipelineName = getPipelineName(projectId, pipelineId)
-        val url = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+        val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId)
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
 
         // 获取通知用户集合
