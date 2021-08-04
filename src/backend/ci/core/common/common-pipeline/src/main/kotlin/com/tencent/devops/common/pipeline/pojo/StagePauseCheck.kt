@@ -146,7 +146,7 @@ data class StagePauseCheck(
                 manualTrigger = stageControlOption.manualTrigger,
                 reviewStatus = if (stageControlOption.triggered == true) {
                     BuildStatus.REVIEW_PROCESSED.name
-                 } else null,
+                } else null,
                 reviewGroups = mutableListOf(StageReviewGroup(
                     id = UUIDUtil.generate(),
                     reviewers = stageControlOption.triggerUsers ?: listOf(),
