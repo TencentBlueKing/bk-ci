@@ -68,7 +68,7 @@ class QualityConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun txV3QualityPermissionService(
+    fun gitCIQualityPermissionService(
         client: Client,
         tokenCheckService: ClientTokenService,
         ruleDao: QualityRuleDao,
