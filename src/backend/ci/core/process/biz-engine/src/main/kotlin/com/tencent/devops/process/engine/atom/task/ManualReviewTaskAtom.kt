@@ -161,6 +161,9 @@ class ManualReviewTaskAtom(
                 )
                 AtomResponse(BuildStatus.REVIEW_ABORT)
             }
+            else -> {
+                AtomResponse(BuildStatus.REVIEWING)
+            }
         }
 
         postPrint(param = param, task = task, suggestContent = suggestContent)

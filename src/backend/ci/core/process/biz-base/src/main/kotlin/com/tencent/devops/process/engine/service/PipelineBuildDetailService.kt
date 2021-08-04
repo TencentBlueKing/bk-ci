@@ -130,6 +130,11 @@ class PipelineBuildDetailService @Autowired constructor(
         }
         triggerContainer.params = newParams
 
+        // #4531 兼容历史构建的页面显示
+        model.stages.forEach { stage ->
+            stage.refreshReviewOption()
+        }
+
         return ModelDetail(
             id = record.buildId,
             pipelineId = buildInfo.pipelineId,
