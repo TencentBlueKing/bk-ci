@@ -48,8 +48,10 @@ import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,7 +63,8 @@ open class IamPermissionRoleExtService @Autowired constructor(
     private val iamConfiguration: IamConfiguration,
     private val groupService: AuthGroupService,
     private val groupDao: AuthGroupDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val client: Client
 ) : AbsPermissionRoleServiceImpl(groupService) {
 
     override fun groupCreateExt(
@@ -223,7 +226,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     private fun addPMPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
-//        actions.add(PROJECT)
+        actions.add(PROJECT)
         actions.add(CREDENTIALACTION)
         actions.add(REPERTORYACTION)
         val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
@@ -232,7 +235,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     private fun addQCPermission(roleId: Int, projectCode: String) {
         val createActions = mutableListOf<String>()
-//        createActions.add(PROJECT)
+        createActions.add(PROJECT)
         createActions.add(CREDENTIALACTION)
         createActions.add(REPERTORYACTION)
         createActions.add(RULECREATEACTION)
@@ -249,7 +252,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     private fun addMaintainerPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
-//        actions.add(PROJECT)
+        actions.add(PROJECT)
         actions.add(PIPELINEACTION)
         actions.add(CREDENTIALACTION)
         actions.add(REPERTORYACTION)
@@ -260,13 +263,14 @@ open class IamPermissionRoleExtService @Autowired constructor(
     }
 
     private fun buildCreateAuthorizationScopes(actions: List<String>, projectCode: String): AuthorizationScopes {
+        val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data
         val managerResources = mutableListOf<ManagerResources>()
         val managerPath = mutableListOf<ManagerPath>()
         val projectPath = ManagerPath(
             iamConfiguration.systemId,
             AuthResourceType.PROJECT.value,
             projectCode,
-            ""
+            projectInfo?.projectName ?: ""
         )
         managerPath.add(projectPath)
         val paths = mutableListOf<List<ManagerPath>>()
@@ -293,6 +297,8 @@ open class IamPermissionRoleExtService @Autowired constructor(
         projectCode: String,
         defaultType: String? = null
     ): AuthorizationScopes? {
+        val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data
+
         val resourceTypes = mutableSetOf<String>()
         var type = ""
         actions.forEach {
@@ -310,7 +316,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
             iamConfiguration.systemId,
             AuthResourceType.PROJECT.value,
             projectCode,
-            ""
+            projectInfo?.projectName ?: ""
         )
 
         val iamType = if (defaultType.isNullOrEmpty()) {
