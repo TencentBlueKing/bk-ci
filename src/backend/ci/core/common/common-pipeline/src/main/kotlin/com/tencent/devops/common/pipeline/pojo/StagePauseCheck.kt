@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import java.time.LocalDateTime
 
 data class StagePauseCheck(
-    val manualTrigger: Boolean? = false,
+    var manualTrigger: Boolean? = false,
     var status: String? = null,
     var reviewDesc: String? = null,
     var reviewGroups: MutableList<StageReviewGroup>? = null, // 审核流配置
