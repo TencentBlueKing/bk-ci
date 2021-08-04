@@ -81,7 +81,7 @@ data class Stage(
             stageControlOption?.triggered = null
             stageControlOption?.reviewParams = null
             stageControlOption?.reviewDesc = null
-        } else  {
+        } else {
             checkIn = StagePauseCheck.convertControlOption(originControlOption)
         }
         // TODO 在下一次发布中增加抹除旧数据逻辑
