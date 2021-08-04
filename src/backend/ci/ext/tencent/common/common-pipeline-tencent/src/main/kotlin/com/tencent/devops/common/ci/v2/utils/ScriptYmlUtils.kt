@@ -151,7 +151,7 @@ object ScriptYmlUtils {
         return newValue
     }
 
-    fun parseParameterValue(value: String?, settingMap: Map<String, String?>, paramType: ParametersType): String? {
+    fun parseParameterValue(value: String?, settingMap: Map<String, Any?>, paramType: ParametersType): String? {
         if (value.isNullOrBlank()) {
             return ""
         }
@@ -169,7 +169,11 @@ object ScriptYmlUtils {
         while (matcher.find()) {
             if (settingMap.containsKey(matcher.group(1).trim())) {
                 val realValue = settingMap[matcher.group(1).trim()]
-                newValue = newValue!!.replace(matcher.group(), realValue ?: "")
+                if (realValue is List<*>) {
+                    newValue = newValue!!.replace(matcher.group(), JsonUtil.toJson(realValue))
+                } else {
+                    newValue = newValue!!.replace(matcher.group(), realValue.toString())
+                }
             }
         }
         return newValue

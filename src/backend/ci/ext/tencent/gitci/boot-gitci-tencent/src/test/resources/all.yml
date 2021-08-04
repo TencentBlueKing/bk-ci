@@ -6,9 +6,9 @@ stages:
     reviews:
       flows:
         - name: 审批组1
-          reviewers: ["fayewang"]
+          reviewers: [ "${{ci.actor}}" ]
         - name: 审批组2
-          reviewers: fayewang
+          reviewers: ${{ci.actor}}
       variables:
         var_1:
           default: 1
@@ -20,8 +20,10 @@ stages:
           参数var_1如何取值
     gates:
       - template: epc_checks.yml
-#        parameters:
-#          receivers: [ "ruotiantang","royalhuang"]
+        parameters:
+          receivers:
+            - ruotiantang
+            - ${{ci.actor}}
     timeout-hours: 10
   jobs:
     job_1:
