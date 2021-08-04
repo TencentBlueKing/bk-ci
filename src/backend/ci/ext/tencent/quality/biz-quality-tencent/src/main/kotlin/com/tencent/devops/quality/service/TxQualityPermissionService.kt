@@ -42,7 +42,6 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
 class TxQualityPermissionService @Autowired constructor(
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val bkAuthResourceApi: AuthResourceApi,
