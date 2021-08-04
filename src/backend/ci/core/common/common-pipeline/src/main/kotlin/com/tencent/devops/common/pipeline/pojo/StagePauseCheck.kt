@@ -37,7 +37,7 @@ import java.time.LocalDateTime
 
 data class StagePauseCheck(
     val manualTrigger: Boolean? = false,
-    var reviewStatus: String? = null,
+    var status: String? = null,
     var reviewDesc: String? = null,
     var reviewGroups: MutableList<StageReviewGroup>? = null, // 审核流配置
     var reviewParams: List<ManualReviewParam>? = null, // 审核变量
@@ -88,9 +88,9 @@ data class StagePauseCheck(
             group.params = parseReviewParams(params)
             // #4531 如果没有剩下未审核的组则刷新为审核完成状态
             if (groupToReview() == null) {
-                reviewStatus = BuildStatus.REVIEW_PROCESSED.name
+                status = BuildStatus.REVIEW_PROCESSED.name
             } else if (action == ManualReviewAction.ABORT) {
-                reviewStatus = BuildStatus.REVIEW_ABORT.name
+                status = BuildStatus.REVIEW_ABORT.name
             }
             return true
         }
@@ -144,7 +144,7 @@ data class StagePauseCheck(
         fun convertControlOption(stageControlOption: StageControlOption): StagePauseCheck {
             return StagePauseCheck(
                 manualTrigger = stageControlOption.manualTrigger,
-                reviewStatus = if (stageControlOption.triggered == true) {
+                status = if (stageControlOption.triggered == true) {
                     BuildStatus.REVIEW_PROCESSED.name
                 } else null,
                 reviewGroups = mutableListOf(StageReviewGroup(

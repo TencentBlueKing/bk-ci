@@ -131,7 +131,7 @@ class PipelineStageService @Autowired constructor(
     fun pauseStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
             // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
-            checkIn?.reviewStatus = BuildStatus.REVIEWING.name
+            checkIn?.status = BuildStatus.REVIEWING.name
             val allStageStatus = stageBuildDetailService.stagePause(
                 buildId = buildId,
                 stageId = stageId,
@@ -241,7 +241,7 @@ class PipelineStageService @Autowired constructor(
                 action = ManualReviewAction.ABORT
             )
             // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
-            checkIn?.reviewStatus = BuildStatus.REVIEW_ABORT.name
+            checkIn?.status = BuildStatus.REVIEW_ABORT.name
             stageBuildDetailService.stageCancel(
                 buildId = buildId, stageId = stageId, controlOption = controlOption!!,
                 checkIn = checkIn, checkOut = checkOut
