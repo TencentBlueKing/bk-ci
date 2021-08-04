@@ -43,7 +43,7 @@ class YamlTemplateTest {
 
     @Test
     fun testAllTemplate() {
-        // replace("all.yml")
+        replace("all.yml")
     }
 
     @Test

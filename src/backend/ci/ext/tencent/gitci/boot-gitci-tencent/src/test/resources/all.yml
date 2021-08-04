@@ -1,241 +1,34 @@
 version: v2.0
 
-on:
-  push:
-    branches:
-      - master
-      - release/*
-    path:
-      - src/*
-  tag:
-    tags:
-      - release_*
-    from-branches:
-      - master
-  mr:
-    target-branches:
-      - master
-    path:
-      - src/*/*
-  schedules:
-    cron: 0 0/5 0 0 0
-    branches:
-      - master
-      - develop
-    always: false
-
-#variables:
-#  DEPLOY_TYPE:
-#    value: dev
-#  APPROVE:
-#    value: ${{ sss }}_${{ approve22 }}
-#  GIT_USERNAME:
-#    value: user1
-#    readonly: true
-#  template:
-##    - name: variables.yml
-##      parameters:
-##        username: VARIABLES
-#    - name: variable1.yml@repoA
-
 stages:
-  - name: "root_stage_id_1"
-    id: root_stage_id_1
-    label: "${{ varivable.approve }}"
-    if: [ envs.BK_CI_EVENT == 'push' || varivable.approve ]
-    jobs:
-      root_job_id_1:
-        name: root_job_id_1
-        runs-on:
-          - docker-on-vm
-        container:
-          image: tlinux:2.2
-          credentials:
-            username: user1
-            password: password
-        services:
-          mysql1:
-            image: mysql:8.0
-            with:
-              password: 123456
-        if:
-          - variables.DEPLOY_TYPE == 'dev' || cancelled()
-        steps:
-          - name: "root_step_1"
-            id: root_step_1
-            if: xxx
-            uses: UploadArtifactory@1.*
-            with:
-              path: test.txt
-            timeout-minutes: 480
-            continue-on-error: false
-            retry-times: 0
-            env:
-          #          - template: steps.yml
-          #            parameters:
-          #              username: STEP
-          - run: |
-              echo "root_step_1"
-        timeout-minutes: 480
-        env:
-        continue-on-error: false
-        strategy:
-          matrix:
-          fast-kill: true
-          max-parallel: 10
-        depend-on:
-          - job1
-          - job2
-      root_job_id_2:
-        name: root_job_id_2
-        steps:
-          - run: |
-              echo "root_stage_id_1, root_job_id_2"
-        depend-on:
-          - job_id_1
-      template:
-        #        - name: jobs.yml
-        #          parameters:
-        #            username: JOB
-        - name: job1.yml@repoA
-          parameters:
-            username: RES_JOB
-    check-in:
-      reviews:
-        flows:
-          - name: 审批组1
-            reviewers: [ a, b, c ] # a、b、c 三人中任意一人操作即可
-          - name: 审批组2
-            reviewers: fayewang
-        variables:
-          var_1:
-            default: 1
-            label: 中文
-            type: SELECTOR
-            values: [ 1,2,3 ]
-        description: |
+- name: stage-1
+  check-in:
+    reviews:
+      flows:
+        - name: 审批组1
+          reviewers: ["fayewang"]
+        - name: 审批组2
+          reviewers: fayewang
+      variables:
+        var_1:
+          default: 1
+          label: 中文
+          type: SELECTOR
+          values: [1,2,3,4]
+      description: |
           说明下如何审核
           参数var_1如何取值
-      gates:
-        - template: epc_checks.yml@repoA
-          parameters:
-            receivers:
-              - 1
-              - 2
-              - 3
-      timeout-hours: 10
-  #  - template: stages.yml
-  #    parameters:
-  #      username: STAGE
-  - template: stage1.yml@repoA
-    parameters:
-      username: RES_STAGE
-#
-#on-fail:
-#  job1:
-#    name: test1
-#  job2:
-#    name: test2
-#  steps:
-#    - run: |
-#        echo "do something when the upstream fails"
-#
-
-finally:
-  root_job_id_1:
-    name: root_job_id_1
-    runs-on:
-      - docker-on-vm
-    container:
-      image: tlinux:2.2
-      credentials:
-        username: user1
-        password: password
-    services:
-      mysql1:
-        image: mysql:8.0
-        with:
-          password: 123456
-    if:
-      - variables.DEPLOY_TYPE == 'dev' || cancelled()
-    steps:
-      - name: "root_step_1"
-        id: root_step_1
-        if: xxx
-        uses: UploadArtifactory@1.*
-        with:
-          path: test.txt
-        timeout-minutes: 480
-        continue-on-error: false
-        retry-times: 0
-        env:
-      #          - template: steps.yml
-      #            parameters:
-      #              username: STEP
+    gates:
+      - template: epc_checks.yml
+        parameters:
+          receivers: [ "ruotiantang","royalhuang"]
+    timeout-hours: 10
+  jobs:
+    job_1:
+      steps:
       - run: |
-          echo "root_step_1"
-    timeout-minutes: 480
-    env:
-    continue-on-error: false
-    strategy:
-      matrix:
-      fast-kill: true
-      max-parallel: 10
-    depend-on:
-      - job1
-      - job2
-  root_job_id_2:
-    name: root_job_id_2
-    steps:
-      - run: |
-          echo "root_stage_id_1, root_job_id_2"
-    depend-on:
-      - job_id_1
-  template:
-    #        - name: jobs.yml
-    #          parameters:
-    #            username: JOB
-    - name: job1.yml@repoA
-      parameters:
-        username: RES_JOB
-
-#steps:
-#  - template: steps.yml
-#    parameters:
-#      username: false
-#      stepname: 2
-#
-resources:
-  repositories:
-    - repository: repoC
-      name: repoC
-      ref: master  # 可选
-      credentials:
-        personal-access-token: xxx
-    - repository: repoA
-      name: repoA
-      ref: master  # 可选
-      credentials:
-        personal-access-token: xxx
-#
-#notices:
-#  - type: email
-#    title: this is a email notice
-#    content: this is a email notice,content is hello.
-#    receivers:
-#      - user1
-#      - user2
-#    ccs:
-#      - user3
-#    if: SUCCESS
-#  - type: wework-message
-#    title: this is a wework-message notice
-#    content: this is a wework-message notice,content is hello.
-#    receivers:
-#      - user1
-#      - user2
-#  - type: wework-chat
-#    chat-id:
-#      - xxxxxxxx
-#    content: this is a wework-chat notice,content is hello.
-
+          echo "hello 1"
+        with:
+          sourceMirrorTicketPair:
+            - host: 11
+              username: 111

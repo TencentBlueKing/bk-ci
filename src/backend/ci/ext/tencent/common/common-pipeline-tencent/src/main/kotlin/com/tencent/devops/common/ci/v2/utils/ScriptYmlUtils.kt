@@ -154,7 +154,6 @@ object ScriptYmlUtils {
         if (value.isNullOrBlank()) {
             return ""
         }
-
         var newValue = value
         val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
         val matcher = pattern.matcher(value)
@@ -164,7 +163,6 @@ object ScriptYmlUtils {
                 newValue = newValue!!.replace(matcher.group(), realValue ?: "")
             }
         }
-
         return newValue
     }
 

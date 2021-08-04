@@ -38,6 +38,7 @@ enum class ParametersType(val value: String) {
     STRING("string"),
     NUMBER("number"),
     BOOLEAN("boolean"),
+    ARRAY("array")
 //    OBJECT("object"),
 //    TASK("task"),
 //    TASKLIST("taskList"),
