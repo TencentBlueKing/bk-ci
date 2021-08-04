@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.service.trace
 
-import com.tencent.devops.common.api.util.UUIDUtil
+import java.util.UUID
 
 object TraceTag {
     const val BIZID = "bizId"
@@ -37,6 +37,6 @@ object TraceTag {
     const val BIZIDTAG = "biz"
 
     fun buildBiz(): String {
-        return "$BIZIDTAG-${UUIDUtil.generate()}"
+        return UUID.randomUUID().toString()
     }
 }
