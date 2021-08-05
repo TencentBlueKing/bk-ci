@@ -113,7 +113,7 @@
             </form-field>
 
             <section v-if="buildResourceType === 'DOCKER'">
-                <form-field :label="$t('editPage.performance')">
+                <form-field :label="$t('editPage.performance')" v-show="isShowPerformance">
                     <devcloud-option
                         :disabled="!editable"
                         :value="container.dispatchType.performanceConfigId"
