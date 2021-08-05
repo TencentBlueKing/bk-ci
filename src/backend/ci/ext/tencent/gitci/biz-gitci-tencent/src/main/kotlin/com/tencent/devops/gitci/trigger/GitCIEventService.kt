@@ -34,6 +34,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.client.ScmClient
+import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitRequestEvent
@@ -55,7 +56,7 @@ import org.springframework.stereotype.Service
  * 用作事务存储需要附带用户消息通知的数据
  */
 @Service
-class GitCIEventSaveService @Autowired constructor(
+class GitCIEventService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val scmClient: ScmClient,
@@ -64,11 +65,12 @@ class GitCIEventSaveService @Autowired constructor(
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitCIBasicSettingService: GitCIBasicSettingService,
-    private val websocketService: GitCIV2WebsocketService
+    private val websocketService: GitCIV2WebsocketService,
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCIEventSaveService::class.java)
+        private val logger = LoggerFactory.getLogger(GitCIEventService::class.java)
     }
 
     // 触发检查错误,未涉及版本解析
@@ -253,5 +255,13 @@ class GitCIEventSaveService @Autowired constructor(
             }
         }
         return messageId
+    }
+
+    fun deletePipelineBuildHistory(
+        pipelineIds: Set<String>
+    ): Pair<Int, Int> {
+        val notBuildcnt = gitRequestEventNotBuildDao.deleteNotBuildByPipelineIds(dslContext, pipelineIds)
+        val buildcnt = gitRequestEventBuildDao.deleteBuildByPipelineIds(dslContext, pipelineIds)
+        return Pair(buildcnt, notBuildcnt)
     }
 }

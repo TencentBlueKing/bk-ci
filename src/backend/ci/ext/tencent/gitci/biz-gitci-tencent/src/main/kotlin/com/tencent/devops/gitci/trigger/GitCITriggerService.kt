@@ -46,6 +46,8 @@ import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
@@ -73,6 +75,8 @@ import com.tencent.devops.gitci.trigger.v2.YamlBuildV2
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
+import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.joda.time.DateTime
 import org.jooq.DSLContext
@@ -96,6 +100,7 @@ class GitCITriggerService @Autowired constructor(
     private val scmClient: ScmClient,
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
@@ -106,7 +111,8 @@ class GitCITriggerService @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val yamlTriggerFactory: YamlTriggerFactory,
     private val oauthService: OauthService,
-    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val gitCIEventSaveService: GitCIEventService,
+    private val gitPipelineBranchService: GitPipelineBranchService,
     private val scmService: ScmService,
     private val yamlBuild: YamlBuild,
     private val yamlBuildV2: YamlBuildV2
@@ -337,7 +343,10 @@ class GitCITriggerService @Autowired constructor(
                 }] form scm, token: $forkGitToken"
             )
         }
-
+        // 判断本次push提交是否需要删除流水线
+        if (event is GitPushEvent) {
+            checkAndDeletePipeline(gitRequestEvent, event, path2PipelineExists, gitProjectConf)
+        }
         // 获取指定目录下所有yml文件
         val yamlPathList = if (isFork) {
             getCIYamlList(forkGitToken!!, gitRequestEvent, mrEvent)
@@ -402,8 +411,20 @@ class GitCITriggerService @Autowired constructor(
             }
             val existsPipeline = path2PipelineExists[filePath]
             // 如果该流水线已保存过，则继续使用
-            val buildPipeline = existsPipeline
-                ?: GitProjectPipeline(
+            val buildPipeline = if (existsPipeline != null) {
+                // mr请求不涉及删除操作
+                if (!mrEvent) {
+                    // 触发时新增流水线-分支记录
+                    gitPipelineBranchService.save(
+                        gitProjectId = gitProjectConf.gitProjectId,
+                        pipelineId = existsPipeline.pipelineId,
+                        branch = gitRequestEvent.branch
+                    )
+                }
+                existsPipeline
+            } else {
+                // 对于来自fork库的mr新建的流水线，当前库不维护其状态
+                GitProjectPipeline(
                     gitProjectId = gitProjectConf.gitProjectId,
                     displayName = displayName,
                     pipelineId = "", // 留空用于是否创建判断
@@ -412,6 +433,7 @@ class GitCITriggerService @Autowired constructor(
                     creator = gitRequestEvent.userId,
                     latestBuildInfo = null
                 )
+            }
 
             // 流水线未启用则跳过
             if (!buildPipeline.enabled) {
@@ -930,6 +952,66 @@ class GitCITriggerService @Autowired constructor(
                 description = null
             )
         }
+    }
+
+    /**
+     * push请求时涉及到删除yml文件的操作
+     * 所有向远程库的请求最后都会为push，所以针对push删除即可
+     * push请求  - 检索当前流水线的存在分支，如果源分支分支在流水线存在分支中唯一，删除流水线
+     * 因为源分支已经删除文件，所以后面执行时不会触发构建
+     */
+    private fun checkAndDeletePipeline(
+        gitRequestEvent: GitRequestEvent,
+        event: GitEvent,
+        path2PipelineExists: Map<String, GitProjectPipeline>,
+        gitProjectConf: GitCIBasicSetting
+    ) {
+        val deleteYamlFiles = (event as GitPushEvent).commits.flatMap {
+            if (it.removed != null) {
+                it.removed!!.asIterable()
+            } else {
+                emptyList()
+            }
+        }.filter { isCiFile(it) }
+
+        if (deleteYamlFiles.isEmpty()) {
+            return
+        }
+
+        val processClient = client.get(ServicePipelineResource::class)
+        deleteYamlFiles.forEach { filePath ->
+            val existPipeline = path2PipelineExists[filePath] ?: return@forEach
+            val pipelineId = existPipeline.pipelineId
+            // 先删除后查询的过程需要加锁
+            val redisLock = RedisLock(
+                redisOperation,
+                "GIT_CI_DELETE_PIPELINE_$pipelineId",
+                60L
+            )
+            try {
+                redisLock.lock()
+                gitPipelineBranchService.deleteBranch(pipelineId, gitRequestEvent.branch)
+                if (!gitPipelineBranchService.hasBranchExist(pipelineId)) {
+                    gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
+                    processClient.delete(gitRequestEvent.userId, gitProjectConf.projectCode!!, pipelineId, channelCode)
+                    // 删除相关的构建记录
+                    gitCIEventSaveService.deletePipelineBuildHistory(setOf(pipelineId))
+                }
+            } finally {
+                redisLock.unlock()
+            }
+        }
+    }
+
+    private fun isCiFile(name: String): Boolean {
+        if (name == ciFileName) {
+            return true
+        }
+        if (name.startsWith(ciFileDirectoryName) &&
+            (name.endsWith(ciFileExtensionYml) || name.endsWith(ciFileExtensionYaml))) {
+            return true
+        }
+        return false
     }
 
     private fun replaceEnv(yaml: String, gitProjectId: Long?): String {

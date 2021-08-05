@@ -85,7 +85,8 @@ import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
-import com.tencent.devops.gitci.trigger.GitCIEventSaveService
+import com.tencent.devops.gitci.trigger.GitCIEventService
+import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -125,7 +126,8 @@ class YamlBuild @Autowired constructor(
     private val buildConfig: BuildConfig,
     private val objectMapper: ObjectMapper,
     private val gitCIParameterUtils: GitCIParameterUtils,
-    gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventService,
+    private val gitPipelineBranchService: GitPipelineBranchService
 ) : YamlBaseBuild<CIBuildYaml>(
     client,
     scmClient,
@@ -133,7 +135,8 @@ class YamlBuild @Autowired constructor(
     redisOperation,
     gitPipelineResourceDao,
     gitRequestEventBuildDao,
-    gitCIEventSaveService
+    gitCIEventSaveService,
+    gitPipelineBranchService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(YamlBuild::class.java)

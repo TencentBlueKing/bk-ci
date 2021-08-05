@@ -46,7 +46,7 @@ import com.tencent.devops.gitci.pojo.v2.YamlObjects
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.trigger.YamlTriggerInterface
 import com.tencent.devops.gitci.v2.common.CommonConst
-import com.tencent.devops.gitci.trigger.GitCIEventSaveService
+import com.tencent.devops.gitci.trigger.GitCIEventService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.trigger.template.YamlTemplate
 import com.tencent.devops.gitci.trigger.template.YamlTemplateService
@@ -66,7 +66,7 @@ class YamlTriggerV2 @Autowired constructor(
     private val scmService: ScmService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitBasicSettingService: GitRepositoryConfService,
-    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val gitCIEventSaveService: GitCIEventService,
     private val yamlTemplateService: YamlTemplateService,
     private val v2WebHookMatcher: V2WebHookMatcher,
     private val redisOperation: RedisOperation,
@@ -76,7 +76,6 @@ class YamlTriggerV2 @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(YamlTriggerV2::class.java)
         private const val ymlVersion = "v2.0"
-
         // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
         private const val GIT_CI_TEMPLATE_ROOT_FILE = "GIT_CI_TEMPLATE_ROOT_FILE"
     }
