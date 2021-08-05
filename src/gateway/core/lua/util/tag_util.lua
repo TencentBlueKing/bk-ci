@@ -98,9 +98,15 @@ function _M:get_tag(ns_config)
     red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
 
     -- 设置tag到http请求头
-    ngx.header["X-GATEWAY-TAG"] = tag
+    self:set_header(tag)
 
     return tag
+end
+
+-- 设置tag到http请求头
+function _M:set_header(tag)
+    ngx.header["X-GATEWAY-TAG"] = tag
+    ngx.var.route_tag = tag
 end
 
 -- 获取tag对应的路径
