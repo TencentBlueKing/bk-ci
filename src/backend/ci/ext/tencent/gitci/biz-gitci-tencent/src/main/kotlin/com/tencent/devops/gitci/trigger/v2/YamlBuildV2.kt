@@ -152,6 +152,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
+import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation.Companion.convertToSymbol
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
@@ -330,25 +331,41 @@ class YamlBuildV2 @Autowired constructor(
      */
     private fun createRules(
         stageCheck: StageCheck,
-        operations: Set<String>,
         event: GitRequestEvent,
         position: String,
         pipeline: GitProjectPipeline
     ): List<String>? {
+        // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
+        val operations = listOf(
+            convertToSymbol(QualityOperation.GE),
+            convertToSymbol(QualityOperation.LE),
+            convertToSymbol(QualityOperation.GT),
+            convertToSymbol(QualityOperation.LT),
+            convertToSymbol(QualityOperation.EQ)
+        )
         val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
         stageCheck.gates?.forEach GateEach@{ gate ->
             val indicators = gate.rule.map { rule ->
                 val (atomCode, mid) = rule.split(".")
-                val op = operations.filter { mid.contains(it) }.toSet()
-                if (op.isEmpty() || op.size > 1) {
+                var op = ""
+                run breaking@{
+                    operations.forEach {
+                        if (mid.contains(it)) {
+                            op = it
+                            return@breaking
+                        }
+                    }
+                }
+                if (op.isBlank()) {
+                    logger.warn("GitProject: ${event.gitProjectId} event: ${event.id} rule: $rule not find operations")
                     return@GateEach
                 }
-                val (enName, threshold) = mid.split(op.first())
+                val enNameAndthreshold = mid.split(op)
                 RuleCreateRequestV3.CreateRequestIndicator(
                     atomCode = atomCode,
-                    enName = enName.trim(),
-                    operation = op.first(),
-                    threshold = threshold.trim()
+                    enName = enNameAndthreshold.first().trim(),
+                    operation = op,
+                    threshold = enNameAndthreshold.last().trim()
                 )
             }
             ruleList.add(
