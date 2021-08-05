@@ -658,7 +658,8 @@ class ExperienceService @Autowired constructor(
         )
 
         return ExperienceCreateResp(
-            url = getShortExternalUrl(experienceId)
+            url = getShortExternalUrl(experienceId),
+            experienceHashId = HashUtil.encodeLongId(experienceId)
         )
     }
 
