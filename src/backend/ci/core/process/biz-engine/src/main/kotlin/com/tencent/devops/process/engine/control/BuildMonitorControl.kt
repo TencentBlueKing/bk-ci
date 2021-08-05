@@ -244,7 +244,8 @@ class BuildMonitorControl @Autowired constructor(
                     reviewParams = listOf(),
                     id = checkIn?.groupToReview()?.id,
                     suggest = null
-                )
+                ),
+                timeout = true
             )
         }
 
