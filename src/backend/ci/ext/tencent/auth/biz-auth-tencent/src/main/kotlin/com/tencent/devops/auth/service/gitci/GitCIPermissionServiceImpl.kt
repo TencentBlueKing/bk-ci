@@ -61,10 +61,6 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String?
     ): Boolean {
-        // 特殊逻辑, 额外校验工蜂ci页面是否展示新增按钮
-        if (action == WEB_CHECK) {
-            return webCheckAction(projectCode, userId)
-        }
         // review管理员校验
         try {
             if (reviewManagerCheck(userId, projectCode, action, resourceType ?: "")) {
@@ -74,6 +70,10 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         } catch (e: Exception) {
             // 管理员报错不影响主流程, 有种场景gitCI会在项目未创建得时候调权限校验,通过projectId匹配组织会报空指针
             logger.warn("reviewManager fail $e")
+        }
+        // 特殊逻辑, 额外校验工蜂ci页面是否展示新增按钮
+        if (action == AuthPermission.WEB_CHECK.value) {
+            return webCheckAction(projectCode, userId)
         }
 
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
@@ -212,7 +212,10 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             logger.info("$projectCode project member $userId $gitProjectMembers")
             if (gitProjectMembers.isNullOrEmpty()) {
                 throw PermissionForbiddenException(
-                    MessageCodeUtil.getCodeMessage(CommonMessageCode.PERMISSION_DENIED, arrayOf(WEB_CHECK)))
+                    MessageCodeUtil.getCodeMessage(
+                        CommonMessageCode.PERMISSION_DENIED,
+                        arrayOf(AuthPermission.WEB_CHECK.value))
+                )
             }
 
             val memberMap = mutableMapOf<String, GitMember>()
@@ -237,7 +240,10 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         if (!publicCheck) {
             if (permissionCheck == GitCIPermissionLevel.NO_PERMISSION) {
                 throw PermissionForbiddenException(
-                    MessageCodeUtil.getCodeMessage(CommonMessageCode.PERMISSION_DENIED, arrayOf(WEB_CHECK))
+                    MessageCodeUtil.getCodeMessage(
+                        CommonMessageCode.PERMISSION_DENIED,
+                        arrayOf(AuthPermission.WEB_CHECK.value)
+                    )
                 )
             } else return permissionCheck != GitCIPermissionLevel.DEVELOP_DOWN
         }
@@ -246,6 +252,5 @@ class GitCIPermissionServiceImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(GitCIPermissionServiceImpl::class.java)
-        const val WEB_CHECK = "webcheck"
     }
 }
