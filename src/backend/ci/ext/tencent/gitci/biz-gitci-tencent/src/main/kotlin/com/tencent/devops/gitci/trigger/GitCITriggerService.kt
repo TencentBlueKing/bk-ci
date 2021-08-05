@@ -40,11 +40,11 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
@@ -74,8 +74,6 @@ import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.scm.api.ServiceGitResource
-import com.tencent.devops.scm.pojo.GitFileInfo
 import org.joda.time.DateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -321,7 +319,7 @@ class GitCITriggerService @Autowired constructor(
     ): Boolean {
         val mrEvent = event is GitMergeRequestEvent
         val hookStartTime = LocalDateTime.now()
-        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
+        val gitToken = scmService.getToken(gitRequestEvent.gitProjectId.toString())
         logger.info("get token for gitProject[${gitRequestEvent.gitProjectId}] form scm, token: $gitToken")
         // fork项目库的projectId与原项目不同
         val isFork = isFork(mrEvent, gitRequestEvent)
@@ -329,7 +327,7 @@ class GitCITriggerService @Autowired constructor(
         var forkGitToken: GitToken? = null
         if (isFork) {
             forkGitToken =
-                client.getScm(ServiceGitResource::class).getToken(getProjectId(mrEvent, gitRequestEvent)).data!!
+                scmService.getToken(getProjectId(mrEvent, gitRequestEvent).toString())
             logger.info(
                 "get fork token for gitProject[${
                     getProjectId(
@@ -470,11 +468,12 @@ class GitCITriggerService @Autowired constructor(
                 }
                 orgYaml
             } else {
-                getYamlFromGit(
-                    gitToken = forkGitToken ?: gitToken,
+                scmService.getYamlFromGit(
+                    token = forkGitToken?.accessToken ?: gitToken.accessToken,
                     ref = gitRequestEvent.branch,
                     fileName = filePath,
-                    gitProjectId = getProjectId(mrEvent, gitRequestEvent)
+                    gitProjectId = getProjectId(mrEvent, gitRequestEvent).toString(),
+                    useAccessToken = true
                 )
             }
 
@@ -703,7 +702,7 @@ class GitCITriggerService @Autowired constructor(
         path2PipelineExists: Map<String, GitProjectPipeline>,
         gitProjectConf: GitCIBasicSetting
     ): Boolean {
-        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
+        val gitToken = scmService.getToken(gitRequestEvent.gitProjectId.toString())
         logger.info("get token form scm, token: $gitToken")
 
         val projectId = gitRequestEvent.gitProjectId
@@ -983,32 +982,12 @@ class GitCITriggerService @Autowired constructor(
         GitCIMrConflictCheckDispatcher.dispatch(rabbitTemplate, event)
     }
 
-    private fun getYamlFromGit(
-        gitToken: GitToken,
-        ref: String,
-        fileName: String,
-        gitProjectId: Long
-    ): String? {
-        return try {
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileContent(
-                gitProjectId = gitProjectId,
-                filePath = fileName,
-                token = gitToken.accessToken,
-                ref = ref
-            )
-            result.data
-        } catch (e: Throwable) {
-            logger.error("Get yaml from git failed", e)
-            null
-        }
-    }
-
     private fun getCIYamlList(
         gitToken: GitToken,
         gitRequestEvent: GitRequestEvent,
         isMrEvent: Boolean = false
     ): MutableList<String> {
-        val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, ciFileDirectoryName, isMrEvent)
+        val ciFileList = scmService.getFileTreeFromGit(gitToken, gitRequestEvent, ciFileDirectoryName, isMrEvent)
             .filter { it.name.endsWith(ciFileExtensionYml) || it.name.endsWith(ciFileExtensionYaml) }
         return ciFileList.map { ciFileDirectoryName + File.separator + it.name }.toMutableList()
     }
@@ -1018,29 +997,9 @@ class GitCITriggerService @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         isMrEvent: Boolean = false
     ): Boolean {
-        val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, "", isMrEvent)
+        val ciFileList = scmService.getFileTreeFromGit(gitToken, gitRequestEvent, "", isMrEvent)
             .filter { it.name == ciFileName }
         return ciFileList.isNotEmpty()
-    }
-
-    private fun getFileTreeFromGit(
-        gitToken: GitToken,
-        gitRequestEvent: GitRequestEvent,
-        filePath: String,
-        isMrEvent: Boolean = false
-    ): List<GitFileInfo> {
-        return try {
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileTree(
-                gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
-                path = filePath,
-                token = gitToken.accessToken,
-                ref = getTriggerBranch(gitRequestEvent.branch)
-            )
-            result.data!!
-        } catch (e: Throwable) {
-            logger.error("Get yaml from git failed", e)
-            emptyList()
-        }
     }
 
     // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
