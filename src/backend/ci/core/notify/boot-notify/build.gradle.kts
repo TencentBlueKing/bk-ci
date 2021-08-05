@@ -28,6 +28,7 @@
 dependencies {
     api(project(":core:notify:biz-notify")) // 开源版实现
     api(project(":core:notify:biz-notify-blueking")) // 对接蓝鲸实现
+    implementation(project(":core:notify:biz-notify-wework")) // 对接蓝鲸实现
 }
 
 plugins {

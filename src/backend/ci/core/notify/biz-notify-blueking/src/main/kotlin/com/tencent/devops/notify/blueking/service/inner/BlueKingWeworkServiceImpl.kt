@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service
 
 @Service
 @Suppress("ALL")
-class WeworkServiceImpl @Autowired constructor() : WeworkService {
+class BlueKingWeworkServiceImpl @Autowired constructor() : WeworkService {
 
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
         TODO("Not yet implemented")

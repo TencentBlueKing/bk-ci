@@ -154,12 +154,13 @@ object OkhttpUtils {
         url: String,
         uploadFile: File,
         headers: Map<String, String?>? = null,
-        fileFieldName: String = "file"
+        fileFieldName: String = "file",
+        fileName: String = uploadFile.name
     ): Response {
         val fileBody = RequestBody.create(octetStream, uploadFile)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
-            .addFormDataPart(fileFieldName, uploadFile.name, fileBody)
+            .addFormDataPart(fileFieldName, fileName, fileBody)
             .build()
         val requestBuilder = Request.Builder()
             .url(url)

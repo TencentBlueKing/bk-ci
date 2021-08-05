@@ -24,17 +24,11 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.service
 
-import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
-import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
-import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
-
-interface WeworkService {
-
-    fun sendMqMsg(message: WeworkNotifyMessageWithOperation) = Unit
-
-    fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage)
-
-    fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage)
+dependencies {
+    implementation(project(":core:notify:api-notify"))
+    implementation(project(":core:notify:biz-notify"))
+    implementation(project(":core:notify:model-notify"))
+    implementation(project(":core:common:common-db"))
+    implementation(project(":core:common:common-notify"))
 }
