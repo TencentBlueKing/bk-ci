@@ -25,14 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-quality"))
-}
+package com.tencent.devops.quality.bean
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
+
+class DefaultQualityUrlBean constructor(private val commonConfig: CommonConfig) : QualityUrlBean {
+    override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String, runtimeVariable: Map<String, String>?): String {
+        return "${HomeHostUtil
+            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+    }
 }

@@ -25,14 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-quality"))
-}
+package com.tencent.devops.common.quality.pojo
 
-plugins {
-    `task-deploy-to-maven`
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("质量红线-拦截检测结果")
+data class RuleCheckResult(
+    @ApiModelProperty("是否通过", required = true)
+    val success: Boolean,
+    @ApiModelProperty("失败后是否结束", required = true)
+    val failEnd: Boolean,
+    @ApiModelProperty("审核超时时间", required = true)
+    val auditTimeoutSeconds: Int,
+    @ApiModelProperty("失败信息", required = true)
+    val resultList: List<RuleCheckSingleResult>
+)

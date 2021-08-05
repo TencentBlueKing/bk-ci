@@ -25,14 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-quality"))
-}
+package com.tencent.devops.quality.bean
 
-plugins {
-    `task-deploy-to-maven`
+interface QualityUrlBean {
+
+    /**
+     * 生成构建详情访问链接
+     */
+    fun genBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        runtimeVariable: Map<String, String>?
+    ): String
 }

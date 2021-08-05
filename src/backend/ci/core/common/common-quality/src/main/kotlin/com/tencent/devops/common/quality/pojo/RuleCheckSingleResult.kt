@@ -25,14 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-quality"))
-}
+package com.tencent.devops.common.quality.pojo
 
-plugins {
-    `task-deploy-to-maven`
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("质量红线-单条规则拦截结果")
+data class RuleCheckSingleResult(
+    @ApiModelProperty("规则名称", required = true)
+    val ruleName: String,
+    @ApiModelProperty("失败信息", required = true)
+    val messagePairs: List<Pair<String, String/*detail*/>>
+)
