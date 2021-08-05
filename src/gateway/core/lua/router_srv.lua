@@ -81,6 +81,7 @@ if target == nil then
     -- 用默认tag
     if devops_tag ~= ns_config.tag then
         target = loadBalanceUtil:getTarget(ns_config.tag, service_name, cache_tail, ns_config)
+        tagUtil:set_header(ns_config.tag)
     end
 
     if target == nil then

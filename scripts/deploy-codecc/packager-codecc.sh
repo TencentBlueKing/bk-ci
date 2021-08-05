@@ -68,6 +68,8 @@ prepare_reports (){
   cp -r "$codecc_pkg_dir/defect" "$codecc_pkg_dir/report"
   echo "copy defect/ to asyncreport/."
   cp -r "$codecc_pkg_dir/defect" "$codecc_pkg_dir/asyncreport"
+  # asyncreport 加载代码需要大量内存.
+  sed -i 's/MEM_OPTS=.*/MEM_OPTS="-Xms512m -Xms2048m"/' "$codecc_pkg_dir/asyncreport/service.env"
 }
 
 packager_codecc (){

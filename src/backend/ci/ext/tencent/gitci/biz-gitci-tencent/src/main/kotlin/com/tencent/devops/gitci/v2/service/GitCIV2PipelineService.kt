@@ -39,7 +39,6 @@ import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -202,14 +201,14 @@ class GitCIV2PipelineService @Autowired constructor(
         val filePath =
             pipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)?.filePath ?: return null
         val token = try {
-            client.getScm(ServiceGitResource::class).getToken(gitProjectId).data!!
+            scmService.getToken(gitProjectId.toString())
         } catch (e: Exception) {
             logger.error("getYamlByPipeline $pipelineId $ref can't get token")
             return null
         }
         return scmService.getYamlFromGit(
             token = token.accessToken,
-            gitProjectId = gitProjectId,
+            gitProjectId = gitProjectId.toString(),
             fileName = filePath,
             ref = ref,
             useAccessToken = true
@@ -254,12 +253,12 @@ class GitCIV2PipelineService @Autowired constructor(
     ): Boolean? {
         try {
             val response = processClient.edit(
-                    userId = userId,
-                    projectId = "$DEVOPS_PROJECT_PREFIX$gitProjectId",
-                    pipelineId = pipelineId,
-                    pipeline = model,
-                    channelCode = channelCode
-                )
+                userId = userId,
+                projectId = "$DEVOPS_PROJECT_PREFIX$gitProjectId",
+                pipelineId = pipelineId,
+                pipeline = model,
+                channelCode = channelCode
+            )
             if (response.isNotOk()) {
                 logger.error("edit pipeline failed, msg: ${response.message}")
                 return null

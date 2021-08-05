@@ -386,6 +386,7 @@
         "orderByAlpha": "按名称A-Z",
         "orderByCreateTime": "按创建时间",
         "orderByUpdateTime": "按修改时间",
+        "orderByExecuteTime": "按执行时间",
         "order": "排序",
         "filter": "过滤",
         "reset": "清空",

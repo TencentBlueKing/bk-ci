@@ -41,7 +41,8 @@ import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
-import com.tencent.devops.gitci.trigger.GitCIEventSaveService
+import com.tencent.devops.gitci.trigger.GitCIEventService
+import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -60,7 +61,8 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventService,
+    private val gitPipelineBranchService: GitPipelineBranchService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(YamlBaseBuild::class.java)
@@ -99,12 +101,19 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
                 pipeline = pipeline,
                 version = null
             )
+            // 新建流水线时保存流水线-分支记录
+            gitPipelineBranchService.save(
+                gitProjectId = gitProjectConf.gitProjectId,
+                pipelineId = pipeline.pipelineId,
+                branch = event.branch
+            )
         } else if (needReCreate(processClient, event, gitProjectConf, pipeline)) {
+            val oldPipelineId = pipeline.pipelineId
             // 先删除已有数据
             logger.info("recreate gitBuildId:$gitBuildId, pipeline: $pipeline")
             try {
-                gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
-                processClient.delete(event.userId, gitProjectConf.projectCode!!, pipeline.pipelineId, channelCode)
+                gitPipelineResourceDao.deleteByPipelineId(dslContext, oldPipelineId)
+                processClient.delete(event.userId, gitProjectConf.projectCode!!, oldPipelineId, channelCode)
             } catch (e: Exception) {
                 logger.error("failed to delete pipeline resource gitBuildId:$gitBuildId, pipeline: $pipeline", e)
             }
@@ -120,6 +129,13 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
                 gitProjectId = gitProjectConf.gitProjectId,
                 pipeline = pipeline,
                 version = null
+            )
+            // 对于需要删了重建的，删除流水线-分支记录在重建
+            gitPipelineBranchService.deleteBranch(pipelineId = oldPipelineId, branch = null)
+            gitPipelineBranchService.save(
+                gitProjectId = gitProjectConf.gitProjectId,
+                pipelineId = pipeline.pipelineId,
+                branch = event.branch
             )
         } else if (pipeline.pipelineId.isNotBlank()) {
             // 已有的流水线需要更新下工蜂CI这里的状态
