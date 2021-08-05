@@ -591,4 +591,13 @@ class GitRequestEventBuildDao {
     fun batchUpdateBuild(dslContext: DSLContext, builds: List<TGitRequestEventBuildRecord>) {
         dslContext.batchUpdate(builds).execute()
     }
+
+    fun isBuildExist(dslContext: DSLContext, buildId: String): Boolean {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(BUILD_ID))
+                .fetch()
+                .isNotEmpty
+        }
+    }
 }
