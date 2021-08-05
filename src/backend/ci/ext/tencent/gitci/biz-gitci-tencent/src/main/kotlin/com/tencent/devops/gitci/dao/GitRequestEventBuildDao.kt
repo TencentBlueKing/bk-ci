@@ -601,13 +601,13 @@ class GitRequestEventBuildDao {
         }
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val records = dslContext.select(
-                DSL.max(this.ID).`as`("ID"),
-                this.EVENT_ID,
-                this.BUILD_STATUS,
-                this.PIPELINE_ID,
-                this.BUILD_ID,
-                this.GIT_PROJECT_ID
-            ).groupBy(GIT_PROJECT_ID)
+                DSL.max(ID).`as`("ID"),
+                EVENT_ID,
+                BUILD_STATUS,
+                PIPELINE_ID,
+                BUILD_ID,
+                GIT_PROJECT_ID
+            ).from(this).groupBy(GIT_PROJECT_ID)
                 .having(GIT_PROJECT_ID.`in`(gitProjectIds))
                 .fetch()
             return records.map { record ->
