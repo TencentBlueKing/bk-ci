@@ -44,7 +44,8 @@ class QualityRuleBuildHisDao {
         userId: String,
         projectId: String,
         pipelineId: String,
-        ruleId: Long, ruleRequest: RuleCreateRequestV3,
+        ruleId: Long,
+        ruleRequest: RuleCreateRequestV3,
         indicatorIds: List<RuleCreateRequest.CreateRequestIndicator>
     ): Long {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {

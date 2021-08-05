@@ -33,7 +33,8 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.quality.pojo.RuleCheckResult
+import com.tencent.devops.common.quality.pojo.RuleCheckSingleResult
 import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE
 import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -52,11 +53,9 @@ import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.AtomRuleResponse
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
+import com.tencent.devops.quality.bean.QualityUrlBean
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RefreshType
-import com.tencent.devops.common.quality.pojo.RuleCheckResult
-import com.tencent.devops.common.quality.pojo.RuleCheckSingleResult
-import com.tencent.devops.quality.bean.QualityUrlBean
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.QualityNotifyGroupService
@@ -240,7 +239,7 @@ class QualityRuleCheckService @Autowired constructor(
         buildId: String,
         filterRuleList: List<QualityRule>,
         runtimeVariable: Map<String, String>?
-    ) : Pair<List<RuleCheckSingleResult>, List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>> {
+    ): Pair<List<RuleCheckSingleResult>, List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>> {
         val resultList = mutableListOf<RuleCheckSingleResult>()
         val ruleInterceptList = mutableListOf<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>()
 
@@ -273,7 +272,8 @@ class QualityRuleCheckService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         resultList: List<RuleCheckSingleResult>,
-        ruleInterceptList: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>): RuleCheckResult {
+        ruleInterceptList: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
+    ): RuleCheckResult {
         // generate result
         val failRule = ruleInterceptList.filter { !it.second }.map { it.first }
         val allPass = failRule.isEmpty()
