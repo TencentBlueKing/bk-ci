@@ -39,9 +39,15 @@ import java.time.LocalDateTime
 
 @Repository@Suppress("ALL")
 class QualityRuleBuildHisDao {
-    fun create(dslContext: DSLContext, userId: String, projectId: String, pipelineId: String,
-               ruleId: Long, ruleRequest: RuleCreateRequestV3,
-               indicatorIds: List<RuleCreateRequest.CreateRequestIndicator>): Long {
+    fun create(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        ruleId: Long,
+        ruleRequest: RuleCreateRequestV3,
+        indicatorIds: List<RuleCreateRequest.CreateRequestIndicator>
+    ): Long {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             dslContext.insertInto(
                 this,

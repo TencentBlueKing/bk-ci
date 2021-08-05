@@ -25,18 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v3.pojo.request
+package com.tencent.devops.quality.bean
 
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 
-@ApiModel("构建检查参数")
-data class BuildCheckParamsV3(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val position: String,
-    val templateId: String?,
-    val interceptName: String?,
-    val ruleBuildIds: Set<String>,
-    val runtimeVariable: Map<String, String>?
-)
+class DefaultQualityUrlBean constructor(private val commonConfig: CommonConfig) : QualityUrlBean {
+    override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String, runtimeVariable: Map<String, String>?): String {
+        return "${HomeHostUtil
+            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+    }
+}

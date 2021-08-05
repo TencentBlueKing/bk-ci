@@ -841,7 +841,7 @@ class PipelineBuildFacadeService(
                 pipelineStageService.cancelStage(
                     userId = userId,
                     buildStage = buildStage,
-                    groupId = reviewRequest?.id
+                    reviewRequest = reviewRequest
                 )
             } else {
                 // TODO 暂时兼容前端显示的变量刷新，下次发版去掉

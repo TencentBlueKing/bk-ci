@@ -25,18 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v3.pojo.request
+package com.tencent.devops.quality.bean
 
-import io.swagger.annotations.ApiModel
+interface QualityUrlBean {
 
-@ApiModel("构建检查参数")
-data class BuildCheckParamsV3(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val position: String,
-    val templateId: String?,
-    val interceptName: String?,
-    val ruleBuildIds: Set<String>,
-    val runtimeVariable: Map<String, String>?
-)
+    /**
+     * 生成构建详情访问链接
+     */
+    fun genBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        runtimeVariable: Map<String, String>?
+    ): String
+}

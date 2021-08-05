@@ -25,18 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v3.pojo.request
+package com.tencent.devops.quality.notify
 
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.quality.bean.DefaultQualityUrlBean
+import com.tencent.devops.quality.bean.QualityUrlBean
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-@ApiModel("构建检查参数")
-data class BuildCheckParamsV3(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val position: String,
-    val templateId: String?,
-    val interceptName: String?,
-    val ruleBuildIds: Set<String>,
-    val runtimeVariable: Map<String, String>?
-)
+/**
+ * 质量红线扩展通知配置
+ */
+@Configuration
+class QualityExtendsNotifyConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(QualityUrlBean::class)
+    fun qualityUrlBean(@Autowired commonConfig: CommonConfig) = DefaultQualityUrlBean(commonConfig)
+}

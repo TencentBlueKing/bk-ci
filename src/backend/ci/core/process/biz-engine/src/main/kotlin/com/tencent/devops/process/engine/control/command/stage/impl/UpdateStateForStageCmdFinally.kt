@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCas
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
+import com.tencent.devops.process.engine.common.BS_STAGE_QUALITY_CHECK_FAIL_END_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
@@ -111,7 +112,8 @@ class UpdateStateForStageCmdFinally(
         val gotoFinal = commandContext.buildStatus.isFailure() ||
             commandContext.buildStatus.isCancel() ||
             commandContext.fastKill ||
-            event.source == BS_STAGE_CANCELED_END_SOURCE
+            event.source == BS_STAGE_CANCELED_END_SOURCE ||
+            event.source == BS_STAGE_QUALITY_CHECK_FAIL_END_SOURCE
 
         if (gotoFinal) {
             nextStage = pipelineStageService.getLastStage(buildId = event.buildId)
@@ -146,22 +148,30 @@ class UpdateStateForStageCmdFinally(
     private fun updateStageStatus(commandContext: StageContext) {
         val event = commandContext.event
         // 更新状态
-        pipelineStageService.updateStageStatus(event.buildId, event.stageId, buildStatus = commandContext.buildStatus)
+        pipelineStageService.updateStageStatus(buildId = event.buildId,
+            stageId = event.stageId,
+            buildStatus = commandContext.buildStatus,
+            checkIn = commandContext.stage.checkIn,
+            checkOut = commandContext.stage.checkOut
+        )
 
         // 对未结束的Container进行强制更新[失败状态]
         if (commandContext.buildStatus.isFailure()) {
             forceFlushContainerStatus(commandContext = commandContext, stageStatus = commandContext.buildStatus)
         }
 
-        // stage第一次启动[isReadyToRun]或者准备结束[commandContext.buildStatus]，要刷新编排模型。 to do 改进
+        // stage第一次启动[isReadyToRun]或者准备结束[commandContext.buildStatus]，要刷新编排模型 TODO 改进
         if (commandContext.stage.status.isReadyToRun() || commandContext.buildStatus.isFinish()) {
 
             // 如果是因fastKill强制终止，流水线状态标记为失败
-            if (commandContext.fastKill) {
+            if (commandContext.fastKill || commandContext.buildStatus.isFailure()) {
                 commandContext.buildStatus = BuildStatus.FAILED
             }
             val allStageStatus = stageBuildDetailService.updateStageStatus(
-                buildId = event.buildId, stageId = event.stageId, buildStatus = commandContext.buildStatus
+                buildId = event.buildId, stageId = event.stageId,
+                buildStatus = commandContext.buildStatus,
+                checkIn = commandContext.stage.checkIn,
+                checkOut = commandContext.stage.checkOut
             )
             pipelineRuntimeService.updateBuildHistoryStageState(event.buildId, allStageStatus = allStageStatus)
         }
