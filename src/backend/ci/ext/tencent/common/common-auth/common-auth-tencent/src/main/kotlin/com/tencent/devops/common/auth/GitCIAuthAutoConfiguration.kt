@@ -31,7 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
-import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.gitci.GitCIAuthProjectApi
 import com.tencent.devops.common.auth.code.BSArtifactoryAuthServiceCode
@@ -96,8 +95,8 @@ class GitCIAuthAutoConfiguration {
     @Bean
     @Primary
     fun authProjectApi(
-       client: Client,
-       tokenService: ClientTokenService
+        client: Client,
+        tokenService: ClientTokenService
     ) =
         GitCIAuthProjectApi(client, tokenService)
 
