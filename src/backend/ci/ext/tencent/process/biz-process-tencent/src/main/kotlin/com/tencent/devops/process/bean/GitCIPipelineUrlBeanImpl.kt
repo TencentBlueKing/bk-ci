@@ -32,6 +32,8 @@ import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
@@ -48,7 +50,10 @@ class GitCIPipelineUrlBeanImpl constructor(
 
     override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
         logger.info("[$buildId]|genGitCIBuildDetailUrl| host=$v2GitUrl")
-        val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId"
+        val project = client.getScm(ServiceGitCiResource::class)
+            .getGitCodeProjectInfo(projectCode.removePrefix("git_"))
+            .data ?: return ""
+        val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId/#${project.pathWithNamespace}"
         return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
     }
 
