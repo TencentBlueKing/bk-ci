@@ -181,7 +181,7 @@
                                     </bk-checkbox-group>
                                 </bk-form-item>
                             </div>
-                            <div class="cc-col" v-show="lineAverageOpt >= 4 || isSearchDropdown">
+                            <!-- <div class="cc-col" v-show="lineAverageOpt >= 4 || isSearchDropdown">
                                 <bk-form-item :label="$t('时期')">
                                     <bk-checkbox-group v-model="searchParams.defectType" class="checkbox-group">
                                         <bk-checkbox
@@ -199,7 +199,7 @@
                                         </bk-popover>
                                     </bk-checkbox-group>
                                 </bk-form-item>
-                            </div>
+                            </div> -->
                             <div class="cc-col" v-show="lineAverageOpt >= 10 || isSearchDropdown">
                                 <bk-form-item :label="$t('聚类')">
                                     <bk-radio-group v-model="searchParams.clusterType">
