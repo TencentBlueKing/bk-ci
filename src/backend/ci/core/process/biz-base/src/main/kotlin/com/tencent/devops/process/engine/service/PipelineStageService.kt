@@ -31,10 +31,12 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
+import com.tencent.devops.process.engine.common.BS_STAGE_QUALITY_CHECK_FAIL_END_SOURCE
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -85,11 +87,18 @@ class PipelineStageService @Autowired constructor(
         return null
     }
 
-    fun updateStageStatus(buildId: String, stageId: String, buildStatus: BuildStatus) {
+    fun updateStageStatus(
+        buildId: String,
+        stageId: String,
+        buildStatus: BuildStatus,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
+    ) {
         logger.info("[$buildId]|updateStageStatus|status=$buildStatus|stageId=$stageId")
         pipelineBuildStageDao.updateStatus(
             dslContext = dslContext, buildId = buildId,
-            stageId = stageId, buildStatus = buildStatus
+            stageId = stageId, buildStatus = buildStatus,
+            checkIn = checkIn, checkOut = checkOut
         )
     }
 

@@ -302,7 +302,9 @@ class BuildStartControl @Autowired constructor(
         pipelineStageService.updateStageStatus(
             buildId = buildInfo.buildId,
             stageId = stage.id!!,
-            buildStatus = BuildStatus.SUCCEED
+            buildStatus = BuildStatus.SUCCEED,
+            checkIn = stage.checkIn,
+            checkOut = stage.checkOut
         )
 
         stage.status = BuildStatus.SUCCEED.name
