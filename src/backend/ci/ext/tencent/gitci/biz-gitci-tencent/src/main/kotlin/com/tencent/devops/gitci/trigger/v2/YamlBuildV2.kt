@@ -559,7 +559,7 @@ class YamlBuildV2 @Autowired constructor(
         if (job.runsOn.selfHosted == true) {
             return ThirdPartyAgentEnvDispatchType(
                 envName = job.runsOn.poolName,
-                workspace = "",
+                workspace = job.runsOn.workspace,
                 agentType = AgentType.NAME
             )
         }
