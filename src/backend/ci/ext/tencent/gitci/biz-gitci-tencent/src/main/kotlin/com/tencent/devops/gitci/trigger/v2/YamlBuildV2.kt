@@ -312,9 +312,10 @@ class YamlBuildV2 @Autowired constructor(
                 value = variable.default,
                 required = true,
                 valueType = when (variable.type) {
-                    "SELECTOR" -> ManualReviewParamType.BOOLEAN
-                    "RADIO" -> ManualReviewParamType.ENUM
-                    "CHECKBOX" -> ManualReviewParamType.MULTIPLE
+                    "TEXTAREA" -> ManualReviewParamType.TEXTAREA
+                    "SELECTOR" -> ManualReviewParamType.ENUM
+                    "SELECTOR-MULTIPLE" -> ManualReviewParamType.MULTIPLE
+                    "BOOL" -> ManualReviewParamType.BOOLEAN
                     else -> ManualReviewParamType.STRING
                 },
                 chineseName = variable.label,
