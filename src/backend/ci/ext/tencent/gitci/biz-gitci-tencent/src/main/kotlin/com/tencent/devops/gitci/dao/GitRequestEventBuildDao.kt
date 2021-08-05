@@ -29,14 +29,17 @@ package com.tencent.devops.gitci.dao
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.pojo.BranchBuilds
+import com.tencent.devops.gitci.pojo.GitCIEventBuildDTO
 import com.tencent.devops.model.gitci.tables.TGitRequestEvent
 import com.tencent.devops.model.gitci.tables.TGitRequestEventBuild
 import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.SelectConditionStep
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import kotlin.math.max
 
 @Repository
 class GitRequestEventBuildDao {
@@ -592,14 +595,31 @@ class GitRequestEventBuildDao {
         dslContext.batchUpdate(builds).execute()
     }
 
-    fun lastBuildByProject(dslContext: DSLContext, gitProjectIds: Set<Long>?): List<TGitRequestEventBuildRecord> {
+    fun lastBuildByProject(dslContext: DSLContext, gitProjectIds: Set<Long>?): List<GitCIEventBuildDTO> {
         if (gitProjectIds.isNullOrEmpty()) {
             return emptyList()
         }
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectFrom(this)
-                .groupBy(GIT_PROJECT_ID).having(GIT_PROJECT_ID.`in`(gitProjectIds))
+            val records = dslContext.select(
+                DSL.max(this.ID).`as`("ID"),
+                this.EVENT_ID,
+                this.BUILD_STATUS,
+                this.PIPELINE_ID,
+                this.BUILD_ID,
+                this.GIT_PROJECT_ID
+            ).groupBy(GIT_PROJECT_ID)
+                .having(GIT_PROJECT_ID.`in`(gitProjectIds))
                 .fetch()
+            return records.map { record ->
+                GitCIEventBuildDTO(
+                    id = record["ID"].toString().toLong(),
+                    eventId = record["EVENT_ID"].toString().toLong(),
+                    pipelineId = record["PIPELINE_ID"].toString(),
+                    buildId = record["BUILD_ID"].toString(),
+                    buildStatus = BuildStatus.valueOf(record["BUILD_STATUS"].toString()),
+                    gitProjectId = record["GIT_PROJECT_ID"].toString().toLong()
+                )
+            }
         }
     }
 }

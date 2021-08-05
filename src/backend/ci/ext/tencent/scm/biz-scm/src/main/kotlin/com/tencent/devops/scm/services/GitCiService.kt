@@ -255,13 +255,13 @@ class GitCiService {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         val url = "$gitCIUrl/api/v3/projects?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
-        url.addParams(mapOf(
-            "search" to search,
-            "order_by" to orderBy?.value,
-            "sort" to sort?.value,
-            "owned" to owned?.toString(),
-            "min_access_level" to minAccessLevel?.level.toString()
-        ))
+            .addParams(mapOf(
+                "search" to search,
+                "order_by" to orderBy?.value,
+                "sort" to sort?.value,
+                "owned" to owned?.toString(),
+                "min_access_level" to minAccessLevel?.level.toString()
+            ))
         val res = mutableListOf<GitCodeProjectInfo>()
         val request = Request.Builder()
             .url(url)

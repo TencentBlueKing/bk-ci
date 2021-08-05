@@ -39,7 +39,6 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
@@ -110,11 +109,11 @@ class GitCIProjectService @Autowired constructor(
             dslContext = dslContext,
             projectIds = gitProjects.map { it.id!! }.toSet()
         ).associateBy { it.id }
-        val lastBuildList =
+        val lastBuildMap =
             gitRequestEventBuildDao.lastBuildByProject(dslContext, projectIdMap.keys).associateBy { it.gitProjectId }
         val eventMap = gitRequestEventDao.getRequestsById(
             dslContext = dslContext,
-            requestIds = lastBuildList.values.map { it.eventId.toInt() }.toSet()
+            requestIds = lastBuildMap.values.map { it.eventId.toInt() }.toSet()
         ).associateBy { it.id }
         val result = gitProjects.map {
             val project = projectIdMap[it.id]
@@ -131,16 +130,12 @@ class GitCIProjectService @Autowired constructor(
                 ciInfo = CIInfo(
                     enableCI = project?.enableCi ?: false,
                     lastBuildMessage = getEventMessage(
-                        event = eventMap[lastBuildList[it.id]?.eventId],
+                        event = eventMap[lastBuildMap[it.id!!]?.eventId],
                         gitProjectId = it.id!!
                     ),
-                    lastBuildStatus = if (lastBuildList[it.id]?.buildStatus.isNullOrBlank()) {
-                        null
-                    } else {
-                        BuildStatus.valueOf(lastBuildList[it.id]?.buildStatus!!)
-                    },
-                    lastBuildPipelineId = lastBuildList[it.id]?.pipelineId,
-                    lastBuildId = lastBuildList[it.id]?.buildId
+                    lastBuildStatus = lastBuildMap[it.id!!]?.buildStatus,
+                    lastBuildPipelineId = lastBuildMap[it.id!!]?.pipelineId,
+                    lastBuildId = lastBuildMap[it.id!!]?.buildId
                 )
             )
         }
