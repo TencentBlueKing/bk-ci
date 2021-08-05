@@ -222,7 +222,7 @@ interface ServiceGitCiResource {
         @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam("搜索条件，模糊匹配path,name")
-        @QueryParam("searchName")
+        @QueryParam("search")
         search: String?,
         @ApiParam("排序字段")
         @QueryParam("orderBy")

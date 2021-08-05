@@ -62,5 +62,9 @@ data class CIInfo(
     @ApiModelProperty("最后一次构建信息")
     val lastBuildMessage: String?,
     @ApiModelProperty("最后一次构建状态")
-    val lastBuildStatus: BuildStatus?
+    val lastBuildStatus: BuildStatus?,
+    @ApiModelProperty("流水线ID")
+    val lastBuildPipelineId: String?,
+    @ApiModelProperty("构建ID")
+    val lastBuildId: String?
 )

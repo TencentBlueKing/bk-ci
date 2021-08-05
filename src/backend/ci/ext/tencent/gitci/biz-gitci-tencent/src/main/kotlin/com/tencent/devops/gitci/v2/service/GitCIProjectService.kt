@@ -138,7 +138,9 @@ class GitCIProjectService @Autowired constructor(
                         null
                     } else {
                         BuildStatus.valueOf(lastBuildList[it.id]?.buildStatus!!)
-                    }
+                    },
+                    lastBuildPipelineId = lastBuildList[it.id]?.pipelineId,
+                    lastBuildId = lastBuildList[it.id]?.buildId
                 )
             )
         }
