@@ -82,6 +82,8 @@ object TaskUtils {
         val conditionFlag = if (runCondition == RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT) {
             // 判断父任务是否是取消或者超时状态
             parentTask?.status == BuildStatus.CANCELED || parentTask?.status == BuildStatus.EXEC_TIMEOUT
+        } else if (runCondition == RunCondition.PARENT_TASK_FINISH) {
+            parentTask?.status?.isFinish() ?: false
         } else if (runCondition == RunCondition.PRE_TASK_SUCCESS ||
             runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL
         ) {
