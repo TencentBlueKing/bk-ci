@@ -220,6 +220,8 @@ class StageBuildDetailService(
                     stage.status = BuildStatus.QUEUE.name
                     stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
                     stage.stageControlOption = controlOption.stageControlOption
+                    stage.checkIn = checkIn
+                    stage.checkOut = checkOut
                     allStageStatus = fetchHistoryStageStatus(model)
                     return Traverse.BREAK
                 }

@@ -232,16 +232,22 @@ class PipelineStageService @Autowired constructor(
     fun cancelStage(
         userId: String,
         buildStage: PipelineBuildStage,
-        groupId: String?
+        reviewRequest: StageReviewRequest?,
+        timeout: Boolean? = false
     ): Boolean {
         with(buildStage) {
             checkIn?.reviewGroup(
                 userId = userId,
-                groupId = groupId,
-                action = ManualReviewAction.ABORT
+                groupId = reviewRequest?.id,
+                action = ManualReviewAction.ABORT,
+                suggest = reviewRequest?.suggest
             )
             // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
-            checkIn?.status = BuildStatus.REVIEW_ABORT.name
+            checkIn?.status = if (timeout == true) {
+                BuildStatus.EXEC_TIMEOUT.name
+            } else {
+                BuildStatus.REVIEW_ABORT.name
+            }
             stageBuildDetailService.stageCancel(
                 buildId = buildId, stageId = stageId, controlOption = controlOption!!,
                 checkIn = checkIn, checkOut = checkOut
