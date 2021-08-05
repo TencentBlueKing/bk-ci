@@ -34,6 +34,8 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.process.bean.GitCIPipelineUrlBeanImpl
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.GitCiPipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
@@ -41,6 +43,7 @@ import com.tencent.devops.process.ws.GitCIDetailPageBuild
 import com.tencent.devops.process.ws.GitCIHistoryPageBuild
 import com.tencent.devops.process.ws.GitCIStatusPageBuild
 import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -102,4 +105,11 @@ class TxPipelineEngineConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
     fun statusPage() = GitCIStatusPageBuild()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun pipelineUrlBean(
+        @Autowired commonConfig: CommonConfig,
+        @Autowired client: Client
+    ) = GitCIPipelineUrlBeanImpl(commonConfig, client)
 }

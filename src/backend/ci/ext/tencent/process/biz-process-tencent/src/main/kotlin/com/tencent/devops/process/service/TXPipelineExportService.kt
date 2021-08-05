@@ -242,7 +242,10 @@ class TXPipelineExportService @Autowired constructor(
                         null
                     },
                     fastKill = if (stage.fastKill == true) true else null,
-                    jobs = jobs
+                    jobs = jobs,
+                    // TODO 暂时不支持准入准出的导出
+                    checkIn = null,
+                    checkOut = null
                 )
             )
         }
