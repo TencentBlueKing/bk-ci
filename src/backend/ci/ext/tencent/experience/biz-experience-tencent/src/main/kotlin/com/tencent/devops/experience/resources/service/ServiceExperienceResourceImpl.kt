@@ -51,7 +51,7 @@ class ServiceExperienceResourceImpl @Autowired constructor(private val experienc
 
     override fun get(userId: String, projectId: String, experienceHashId: String): Result<Experience> {
         checkParam(userId, projectId)
-        return Result(experienceService.get(userId, projectId, experienceHashId, false))
+        return Result(experienceService.get(userId, experienceHashId, false))
     }
 
     private fun checkParam(userId: String, projectId: String) {
