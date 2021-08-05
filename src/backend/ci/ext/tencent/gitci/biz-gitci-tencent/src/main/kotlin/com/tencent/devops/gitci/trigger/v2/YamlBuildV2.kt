@@ -55,6 +55,7 @@ import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -715,7 +716,7 @@ class YamlBuildV2 @Autowired constructor(
                 retryWhenFailed = step.retryTimes != null,
                 retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
-                customEnv = emptyList(),
+                customEnv = getElementEnv(step.env),
                 runCondition = if (step.ifFiled.isNullOrBlank()) {
                     RunCondition.PRE_TASK_SUCCESS
                 } else {
@@ -777,6 +778,23 @@ class YamlBuildV2 @Autowired constructor(
         }
 
         return elementList
+    }
+
+    private fun getElementEnv(env: Map<String, Any?>?): List<NameAndValue>? {
+        if (env == null) {
+            return null
+        }
+
+        val nameAndValueList = mutableListOf<NameAndValue>()
+        env.forEach {
+            nameAndValueList.add(
+                NameAndValue(
+                key = it.key,
+                value = it.value.toString()
+            ))
+        }
+
+        return nameAndValueList
     }
 
     private fun makeCheckoutElement(
