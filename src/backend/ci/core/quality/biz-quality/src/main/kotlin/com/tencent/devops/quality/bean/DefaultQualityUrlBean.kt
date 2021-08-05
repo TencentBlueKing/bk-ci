@@ -31,7 +31,7 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 
 class DefaultQualityUrlBean constructor(private val commonConfig: CommonConfig) : QualityUrlBean {
-    override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+    override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String, runtimeVariable: Map<String, String>?): String {
         return "${HomeHostUtil
             .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
     }

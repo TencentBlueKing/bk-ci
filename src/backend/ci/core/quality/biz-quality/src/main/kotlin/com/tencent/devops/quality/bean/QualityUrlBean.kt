@@ -32,5 +32,10 @@ interface QualityUrlBean {
     /**
      * 生成构建详情访问链接
      */
-    fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+    fun genBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        runtimeVariable: Map<String, String>?
+    ): String
 }

@@ -317,7 +317,9 @@ class QualityRuleCheckService @Autowired constructor(
                                 endNotifyGroupList = rule.notifyGroupList ?: listOf(),
                                 endNotifyUserList = (rule.notifyUserList ?: listOf()).map { user ->
                                     EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
-                                })
+                                },
+                                runtimeVariable = buildCheckParams.runtimeVariable
+                            )
                         } else {
                             val startUser = runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
                             sendAuditNotification(
@@ -330,7 +332,9 @@ class QualityRuleCheckService @Autowired constructor(
                                 auditNotifyUserList = (rule.auditUserList
                                     ?: listOf()).toSet().plus(startUser).map { user ->
                                     EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
-                                })
+                                },
+                                runtimeVariable = buildCheckParams.runtimeVariable
+                            )
                         }
                     } catch (ignored: Throwable) {
                         logger.error("send notification fail", ignored)
@@ -567,11 +571,12 @@ class QualityRuleCheckService @Autowired constructor(
         buildNo: String,
         createTime: LocalDateTime,
         resultList: List<RuleCheckSingleResult>,
-        auditNotifyUserList: List<String>
+        auditNotifyUserList: List<String>,
+        runtimeVariable: Map<String, String>?
     ) {
         val projectName = getProjectName(projectId)
         val pipelineName = getPipelineName(projectId, pipelineId)
-        val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId)
+        val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, runtimeVariable)
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
 
         // 获取通知用户集合
@@ -632,11 +637,12 @@ class QualityRuleCheckService @Autowired constructor(
         interceptRecordList: List<QualityRuleInterceptRecord>,
         endNotifyTypeList: List<NotifyType>,
         endNotifyGroupList: List<String>,
-        endNotifyUserList: List<String>
+        endNotifyUserList: List<String>,
+        runtimeVariable: Map<String, String>?
     ) {
         val projectName = getProjectName(projectId)
         val pipelineName = getPipelineName(projectId, pipelineId)
-        val url = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+        val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, runtimeVariable)
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
         // 获取通知用户集合
