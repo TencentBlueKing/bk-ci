@@ -216,6 +216,7 @@ class GitCIBasicSettingService @Autowired constructor(
         val accessToken = try {
             client.getScm(ServiceGitCiResource::class).getToken(gitProjectId.toString()).data!!.accessToken
         } catch (e: Exception) {
+            logger.error("requestGitProjectInfo, msg: ${e.message}")
             return null
         }
         return client.getScm(ServiceGitCiResource::class)
