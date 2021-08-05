@@ -35,8 +35,6 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 
-@Primary
-@Component
 class TencentPipelineUrlBeanImpl constructor(
     private val commonConfig: CommonConfig,
     private val client: Client

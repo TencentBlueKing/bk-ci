@@ -33,13 +33,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.scm.api.ServiceGitCiResource
-import com.tencent.devops.scm.api.ServiceGitResource
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Component
 
-@Primary
-@Component
 class GitCIPipelineUrlBeanImpl constructor(
     private val commonConfig: CommonConfig,
     private val client: Client
@@ -66,7 +61,7 @@ class GitCIPipelineUrlBeanImpl constructor(
     }
 
     companion object {
-        private val logger = org.slf4j.LoggerFactory.getLogger(TencentPipelineUrlBeanImpl::class.java)
+        private val logger = org.slf4j.LoggerFactory.getLogger(GitCIPipelineUrlBeanImpl::class.java)
         private const val TTL = 24 * 3600 * 3
     }
 }

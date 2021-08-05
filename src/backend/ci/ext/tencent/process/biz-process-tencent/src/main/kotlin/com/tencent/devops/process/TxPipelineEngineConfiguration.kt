@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.process.bean.GitCIPipelineUrlBeanImpl
+import com.tencent.devops.process.bean.TencentPipelineUrlBeanImpl
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.GitCiPipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
@@ -108,8 +109,15 @@ class TxPipelineEngineConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
-    fun pipelineUrlBean(
+    fun pipelineUrlBeanGitCI(
         @Autowired commonConfig: CommonConfig,
         @Autowired client: Client
     ) = GitCIPipelineUrlBeanImpl(commonConfig, client)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
+    fun pipelineUrlBean(
+        @Autowired commonConfig: CommonConfig,
+        @Autowired client: Client
+    ) = TencentPipelineUrlBeanImpl(commonConfig, client)
 }
