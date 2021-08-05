@@ -85,7 +85,7 @@ open class ScriptTask : ITask() {
             runtimeVariables.plus(buildTask.buildVariable!!)
         }
         // #4812 提供给git插件使用
-        runtimeVariables.plus(XDG_CONFIG_HOME to getXdgConfigHomePath(buildVariables.pipelineId))
+        variables.plus(XDG_CONFIG_HOME to getXdgConfigHomePath(buildVariables.pipelineId))
 
         try {
             command.execute(
