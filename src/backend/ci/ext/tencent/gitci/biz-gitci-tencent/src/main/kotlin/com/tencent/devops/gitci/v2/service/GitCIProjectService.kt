@@ -39,6 +39,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
@@ -133,7 +134,11 @@ class GitCIProjectService @Autowired constructor(
                         event = eventMap[lastBuildMap[it.id!!]?.eventId],
                         gitProjectId = it.id!!
                     ),
-                    lastBuildStatus = lastBuildMap[it.id!!]?.buildStatus,
+                    lastBuildStatus = if (lastBuildMap[it.id!!]?.buildStatus.isNullOrBlank()) {
+                        null
+                    } else {
+                        BuildStatus.valueOf(lastBuildMap[it.id!!]?.buildStatus!!)
+                    },
                     lastBuildPipelineId = lastBuildMap[it.id!!]?.pipelineId,
                     lastBuildId = lastBuildMap[it.id!!]?.buildId
                 )

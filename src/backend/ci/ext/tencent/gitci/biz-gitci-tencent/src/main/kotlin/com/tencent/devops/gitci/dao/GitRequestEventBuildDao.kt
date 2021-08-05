@@ -29,7 +29,6 @@ package com.tencent.devops.gitci.dao
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.pojo.BranchBuilds
-import com.tencent.devops.gitci.pojo.GitCIEventBuildDTO
 import com.tencent.devops.model.gitci.tables.TGitRequestEvent
 import com.tencent.devops.model.gitci.tables.TGitRequestEventBuild
 import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
@@ -595,31 +594,18 @@ class GitRequestEventBuildDao {
         dslContext.batchUpdate(builds).execute()
     }
 
-    fun lastBuildByProject(dslContext: DSLContext, gitProjectIds: Set<Long>?): List<GitCIEventBuildDTO> {
+    fun lastBuildByProject(dslContext: DSLContext, gitProjectIds: Set<Long>?): List<TGitRequestEventBuildRecord> {
         if (gitProjectIds.isNullOrEmpty()) {
             return emptyList()
         }
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val records = dslContext.select(
-                DSL.max(ID).`as`("ID"),
-                EVENT_ID,
-                BUILD_STATUS,
-                PIPELINE_ID,
-                BUILD_ID,
-                GIT_PROJECT_ID
-            ).from(this).groupBy(GIT_PROJECT_ID)
-                .having(GIT_PROJECT_ID.`in`(gitProjectIds))
-                .fetch()
-            return records.map { record ->
-                GitCIEventBuildDTO(
-                    id = record["ID"].toString().toLong(),
-                    eventId = record["EVENT_ID"].toString().toLong(),
-                    pipelineId = record["PIPELINE_ID"].toString(),
-                    buildId = record["BUILD_ID"].toString(),
-                    buildStatus = BuildStatus.valueOf(record["BUILD_STATUS"].toString()),
-                    gitProjectId = record["GIT_PROJECT_ID"].toString().toLong()
-                )
-            }
+            return dslContext.selectFrom(this)
+                .where(UPDATE_TIME.`in`(
+                    dslContext.select(DSL.max(UPDATE_TIME))
+                        .from(this)
+                        .groupBy(GIT_PROJECT_ID)
+                        .having(GIT_PROJECT_ID.`in`(gitProjectIds)))
+                ).fetch()
         }
     }
 }
