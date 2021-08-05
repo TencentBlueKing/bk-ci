@@ -461,7 +461,7 @@ object ScriptYmlUtils {
                             reviewers = anyToListString(it.reviewers)
                         )
                     },
-                    variable = preCheck.reviews.variable,
+                    variables = preCheck.reviews.variables,
                     description = preCheck.reviews.description
                 )
             } else {

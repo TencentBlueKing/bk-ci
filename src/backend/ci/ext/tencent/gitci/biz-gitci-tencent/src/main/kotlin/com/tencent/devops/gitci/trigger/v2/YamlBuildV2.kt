@@ -286,7 +286,7 @@ class YamlBuildV2 @Autowired constructor(
         if (stageCheck.reviews?.flows?.isNotEmpty() == true) {
             check.manualTrigger = true
             check.reviewDesc = stageCheck.reviews?.description
-            check.reviewParams = createReviewParams(stageCheck.reviews?.variable)
+            check.reviewParams = createReviewParams(stageCheck.reviews?.variables)
             check.timeout = stageCheck.timeoutHours
             check.reviewGroups = stageCheck.reviews?.flows?.map { it ->
                 StageReviewGroup(name = it.name, reviewers = it.reviewers)
@@ -303,10 +303,10 @@ class YamlBuildV2 @Autowired constructor(
         return check
     }
 
-    private fun createReviewParams(variable: Map<String, ReviewVariable>?): List<ManualReviewParam>? {
-        if (variable.isNullOrEmpty()) return null
+    private fun createReviewParams(variables: Map<String, ReviewVariable>?): List<ManualReviewParam>? {
+        if (variables.isNullOrEmpty()) return null
         val params = mutableListOf<ManualReviewParam>()
-        variable.forEach { (key, variable) ->
+        variables.forEach { (key, variable) ->
             params.add(ManualReviewParam(
                 key = key,
                 value = variable.default,
