@@ -267,24 +267,8 @@ class YamlBuildV2 @Autowired constructor(
         val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
             ?: throw OperationException("git ci projectCode not exist")
 
-        val model = createPipelineModel(event, gitBasicSetting, yaml)
+        val model = createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
-
-        // 新增质量红线
-        yaml.stages.forEach {
-            it.checkIn = createStagePauseCheck(
-                stageCheck = it.checkIn,
-                position = ControlPointPosition.BEFORE_POSITION,
-                event = event,
-                pipeline = pipeline
-            )
-            it.checkOut = createStagePauseCheck(
-                stageCheck = it.checkOut,
-                position = ControlPointPosition.AFTER_POSITION,
-                event = event,
-                pipeline = pipeline
-            )
-        }
 
         savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
@@ -310,7 +294,6 @@ class YamlBuildV2 @Autowired constructor(
         if (stageCheck.gates?.isNotEmpty() == true) {
             check.ruleIds = createRules(
                 stageCheck = stageCheck,
-                operations = operations,
                 event = event,
                 position = position,
                 pipeline = pipeline
@@ -412,7 +395,7 @@ class YamlBuildV2 @Autowired constructor(
         val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
             ?: throw OperationException("git ci projectCode not exist")
 
-        val model = createPipelineModel(event, gitBasicSetting, yaml)
+        val model = createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request , pipeline:$pipeline, model: $model")
         savePipeline(pipeline, event, gitBasicSetting, model)
     }
@@ -434,7 +417,8 @@ class YamlBuildV2 @Autowired constructor(
     private fun createPipelineModel(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
-        yaml: ScriptBuildYaml
+        yaml: ScriptBuildYaml,
+        pipeline: GitProjectPipeline
     ): Model {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, gitBasicSetting, yaml)
@@ -487,7 +471,8 @@ class YamlBuildV2 @Autowired constructor(
                 stage = stage,
                 event = event,
                 gitBasicSetting = gitBasicSetting,
-                stageIndex = stageIndex + 1
+                stageIndex = stageIndex + 1,
+                pipeline = pipeline
             ))
         }
         // 添加finally
@@ -506,7 +491,9 @@ class YamlBuildV2 @Autowired constructor(
                     ),
                     event = event,
                     gitBasicSetting = gitBasicSetting,
-                    finalStage = true)
+                    finalStage = true,
+                    pipeline = pipeline
+                )
             )
         }
 
@@ -595,7 +582,8 @@ class YamlBuildV2 @Autowired constructor(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
         stageIndex: Int = 0,
-        finalStage: Boolean = false
+        finalStage: Boolean = false,
+        pipeline: GitProjectPipeline
     ): Stage {
         val containerList = mutableListOf<Container>()
         stage.jobs.forEachIndexed { jobIndex, job ->
@@ -634,7 +622,19 @@ class YamlBuildV2 @Autowired constructor(
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
             containers = containerList,
-            finally = finalStage
+            finally = finalStage,
+            checkIn = createStagePauseCheck(
+                stageCheck = stage.checkIn,
+                position = ControlPointPosition.BEFORE_POSITION,
+                event = event,
+                pipeline = pipeline
+            ),
+            checkOut = createStagePauseCheck(
+                stageCheck = stage.checkOut,
+                position = ControlPointPosition.AFTER_POSITION,
+                event = event,
+                pipeline = pipeline
+            )
         )
     }
 
