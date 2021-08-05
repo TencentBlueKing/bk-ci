@@ -217,7 +217,7 @@ object ScriptYmlUtils {
         }
     }
 
-    private fun formatYamlCustom(yamlStr: String): String {
+    fun formatYamlCustom(yamlStr: String): String {
         val sb = StringBuilder()
         val br = BufferedReader(StringReader(yamlStr))
         var line: String? = br.readLine()
