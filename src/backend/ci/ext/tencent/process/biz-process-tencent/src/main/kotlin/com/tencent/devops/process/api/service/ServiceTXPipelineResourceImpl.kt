@@ -25,23 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-util"))
-    api(project(":core:quality:api-quality"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:openapi:api-openapi"))
-    api(project(":core:store:api-store"))
-    api(project(":core:store:api-store"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":core:process:api-process"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":core:artifactory:api-artifactory-push"))
-    api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
-    api(project(":ext:tencent:gitci:api-gitci-tencent"))
-    api(project(":core:auth:api-auth"))
+package com.tencent.devops.process.api.service
+
+import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.service.TXPipelineExportService
+import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
+
+@RestResource
+class ServiceTXPipelineResourceImpl @Autowired constructor(
+    private val pipelineExportService: TXPipelineExportService
+) : ServiceTXPipelineResource {
+    override fun exportPipelineGitCI(userId: String, projectId: String, pipelineId: String): String {
+        checkParam(userId, projectId)
+        checkPipelineId(pipelineId)
+        return pipelineExportService.exportV2YamlStr(userId, projectId, pipelineId, true)
+    }
+
+    private fun checkParam(userId: String, projectId: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+    }
+
+    private fun checkPipelineId(pipelineId: String) {
+        if (pipelineId.isBlank()) {
+            throw ParamBlankException("Invalid pipelineId")
+        }
+    }
 }
