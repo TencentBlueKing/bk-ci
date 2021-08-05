@@ -76,10 +76,12 @@ class QualityIndicatorDao {
         }
     }
 
-    fun listByElementType(dslContext: DSLContext,
-                          elementType: String,
-                          type: IndicatorType? = IndicatorType.MARKET,
-                          enNameSet: Collection<String>? = null): Result<TQualityIndicatorRecord>? {
+    fun listByElementType(
+        dslContext: DSLContext,
+        elementType: String,
+        type: IndicatorType? = IndicatorType.MARKET,
+        enNameSet: Collection<String>? = null
+    ): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ELEMENT_TYPE.eq(elementType))

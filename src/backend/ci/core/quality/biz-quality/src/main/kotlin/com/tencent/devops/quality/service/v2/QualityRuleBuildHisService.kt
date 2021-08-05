@@ -39,9 +39,9 @@ import org.springframework.stereotype.Service
 
 @Service
 class QualityRuleBuildHisService constructor(
-  private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
-  private val qualityIndicatorService: QualityIndicatorService,
-  private val dslContext: DSLContext
+    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
+    private val qualityIndicatorService: QualityIndicatorService,
+    private val dslContext: DSLContext
 ) {
 
     private val logger = LoggerFactory.getLogger(QualityRuleBuildHisService::class.java)

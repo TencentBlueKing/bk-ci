@@ -217,8 +217,8 @@ class QualityRuleCheckService @Autowired constructor(
                     "${rule.name}, ${HashUtil.decodeIdToLong(rule.hashId)}, ${rule.gatewayId}")
 
                 val gatewayId = rule.gatewayId ?: ""
-                if (!buildCheckParams.interceptName.isNullOrBlank()
-                    && !buildCheckParams.interceptName!!.toLowerCase().contains(gatewayId.toLowerCase())) {
+                if (!buildCheckParams.interceptName.isNullOrBlank() &&
+                    !buildCheckParams.interceptName!!.toLowerCase().contains(gatewayId.toLowerCase())) {
                     return@filter false
                 }
 
@@ -234,8 +234,13 @@ class QualityRuleCheckService @Autowired constructor(
         }
     }
 
-    private fun doCheck(projectId: String, pipelineId: String, buildId: String,
-                        filterRuleList: List<QualityRule>, runtimeVariable: Map<String, String>?): Pair<List<RuleCheckSingleResult>, List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>> {
+    private fun doCheck(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        filterRuleList: List<QualityRule>,
+        runtimeVariable: Map<String, String>?
+    ) : Pair<List<RuleCheckSingleResult>, List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>> {
         val resultList = mutableListOf<RuleCheckSingleResult>()
         val ruleInterceptList = mutableListOf<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>()
 
