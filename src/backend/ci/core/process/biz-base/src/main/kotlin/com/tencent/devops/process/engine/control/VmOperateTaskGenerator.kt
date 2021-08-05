@@ -220,10 +220,10 @@ class VmOperateTaskGenerator {
     private fun Container.opts(taskName: String, taskSeq: Int) = ElementAdditionalOptions(
         continueWhenFailed = true,
         timeout = 1, // 1分钟超时
-        runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
+        runCondition = RunCondition.PARENT_TASK_FINISH,
         elementPostInfo = ElementPostInfo(
             parentElementId = VMUtils.genStartVMTaskId(id!!),
-            postCondition = "always",
+            postCondition = "",
             postEntryParam = "",
             parentElementName = taskName,
             parentElementJobIndex = taskSeq
