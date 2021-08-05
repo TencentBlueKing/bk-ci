@@ -92,8 +92,8 @@ class YamlTriggerV2 @Autowired constructor(
         if (originYaml.isNullOrBlank()) {
             return false
         }
-
-        val (isTrigger, isTiming) = isMatch(event, gitRequestEvent, originYaml)
+        // 触发器需要将 on: 转为 TriggeriOn:
+        val (isTrigger, isTiming) = isMatch(event, gitRequestEvent, ScriptYmlUtils.formatYaml(originYaml))
 
         if (!isTrigger && !isTiming) {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
