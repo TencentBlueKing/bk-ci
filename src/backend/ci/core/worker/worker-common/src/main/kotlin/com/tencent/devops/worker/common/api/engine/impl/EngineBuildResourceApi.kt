@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.engine.impl
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -106,8 +107,8 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun heartbeat(): Result<Boolean> {
-        val path = getRequestUrl(path = "api/build/worker/heartbeat")
+    override fun heartbeat(): Result<HeartBeatInfo> {
+        val path = getRequestUrl(path = "api/build/worker/heartbeat/v1")
         val request = buildPost(path)
         val errorMessage = "心跳失败"
         val responseContent = request(

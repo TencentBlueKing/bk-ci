@@ -141,7 +141,11 @@ abstract class Element(
     }
 
     fun disableBySkipVar(variables: Map<String, Any>) {
-        if (variables[SkipElementUtils.getSkipElementVariableName(id!!)] == "true") { // 参数中指明要求跳过
+        val elementPostInfo = additionalOptions?.elementPostInfo
+        val postFlag = elementPostInfo != null
+        // post插件的父插件如果跳过执行，则其自身也需要跳过执行
+        val elementId = if (postFlag) elementPostInfo?.parentElementId else id
+        if (variables[SkipElementUtils.getSkipElementVariableName(elementId)] == "true") { // 参数中指明要求跳过
             if (additionalOptions == null) {
                 additionalOptions = ElementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS)
             }

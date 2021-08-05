@@ -173,6 +173,14 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.execute(action)
     }
 
+    fun leftPush(key: String, value: String): Long? {
+        return redisTemplate.opsForList().leftPush(key, value)
+    }
+
+    fun rightPop(key: String): String? {
+        return redisTemplate.opsForList().rightPop(key)
+    }
+
     fun getRedisName(): String? {
         return redisName
     }
