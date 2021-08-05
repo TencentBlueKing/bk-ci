@@ -272,76 +272,51 @@ class YamlBuildV2 @Autowired constructor(
 
         // 新增质量红线
         yaml.stages.forEach {
-            val (checkInRuleIds, checkOutRuleIds) = createRules(it, event, pipeline)
-            logger.info("checkInId: $checkInRuleIds, checkOutId: $checkOutRuleIds")
+            it.checkIn = createStagePauseCheck(
+                stageCheck = it.checkIn,
+                position = ControlPointPosition.BEFORE_POSITION,
+                event = event,
+                pipeline = pipeline
+            )
+            it.checkOut = createStagePauseCheck(
+                stageCheck = it.checkOut,
+                position = ControlPointPosition.AFTER_POSITION,
+                event = event,
+                pipeline = pipeline
+            )
         }
 
         savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
     }
 
-    private fun createRules(
-        stage: GitCIV2Stage,
-        event: GitRequestEvent,
-        pipeline: GitProjectPipeline
-    ): Pair<StagePauseCheck?, StagePauseCheck?> {
-        val operations = QualityOperation.values().map { QualityOperation.convertToSymbol(it) }.toSet()
-        var checkIn: StagePauseCheck? = null
-        var checkOut: StagePauseCheck? = null
-        if (stage.checkIn != null) {
-            val check = StagePauseCheck()
-            if (stage.checkIn?.reviews?.flows?.isNotEmpty() == true) {
-                check.manualTrigger = true
-                check.reviewDesc = stage.checkIn?.reviews?.description
-                check.reviewParams = createReviewParams(stage.checkIn?.reviews?.variable)
-                check.timeout = stage.checkIn?.timeoutHours
-                check.reviewGroups = stage.checkIn?.reviews?.flows?.map { it ->
-                    StageReviewGroup(name = it.name, reviewers = it.reviewers)
-                }?.toMutableList()
-            }
-            if (stage.checkIn?.gates?.isNotEmpty() == true) {
-                check.ruleIds = createRules(
-                    stageCheck = stage.checkIn!!,
-                    operations = operations,
-                    event = event,
-                    position = ControlPointPosition.BEFORE_POSITION,
-                    pipeline = pipeline
-                )
-            }
-            checkIn = check
-        }
-        if (stage.checkOut != null) {
-            val check = StagePauseCheck()
-
-            checkOut = check
-        }
-        return Pair(checkIn, checkOut)
-    }
-
     private fun createStagePauseCheck(
         stageCheck: StageCheck?,
-        position: String
+        position: String,
+        event: GitRequestEvent,
+        pipeline: GitProjectPipeline
     ): StagePauseCheck? {
         if (stageCheck == null) return null
         val check = StagePauseCheck()
         if (stageCheck.reviews?.flows?.isNotEmpty() == true) {
-                check.manualTrigger = true
-                check.reviewDesc = stageCheck.reviews?.description
-                check.reviewParams = createReviewParams(stageCheck.reviews?.variable)
-                check.timeout = stageCheck.timeoutHours
-                check.reviewGroups = stageCheck.reviews?.flows?.map { it ->
-                    StageReviewGroup(name = it.name, reviewers = it.reviewers)
-                }?.toMutableList()
-            }
-            if (stageCheck.gates?.isNotEmpty() == true) {
-                check.ruleIds = createRules(
-                    stageCheck = stageCheck,
-                    operations = operations,
-                    event = event,
-                position = ControlPointPosition.AFTER_POSITION,
-                    pipeline = pipeline
-                )
-            }
+            check.manualTrigger = true
+            check.reviewDesc = stageCheck.reviews?.description
+            check.reviewParams = createReviewParams(stageCheck.reviews?.variable)
+            check.timeout = stageCheck.timeoutHours
+            check.reviewGroups = stageCheck.reviews?.flows?.map { it ->
+                StageReviewGroup(name = it.name, reviewers = it.reviewers)
+            }?.toMutableList()
+        }
+        if (stageCheck.gates?.isNotEmpty() == true) {
+            check.ruleIds = createRules(
+                stageCheck = stageCheck,
+                operations = operations,
+                event = event,
+                position = position,
+                pipeline = pipeline
+            )
+        }
+        return check
     }
 
     private fun createReviewParams(variable: Map<String, ReviewVariable>?): List<ManualReviewParam>? {
