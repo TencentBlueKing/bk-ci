@@ -2,25 +2,14 @@ package com.tencent.bk.codecc.defect.service.newdefectjudge;
 
 import com.google.common.collect.Maps;
 import com.tencent.bk.codecc.defect.dao.mongorepository.FirstAnalysisSuccessTimeRepository;
-import com.tencent.bk.codecc.defect.model.FirstAnalysisSuccessEntity;
-import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.bk.codecc.task.vo.scanconfiguration.NewDefectJudgeVO;
-import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
-import com.tencent.devops.common.constant.CommonMessageCode;
-import com.tencent.devops.common.util.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 描述
