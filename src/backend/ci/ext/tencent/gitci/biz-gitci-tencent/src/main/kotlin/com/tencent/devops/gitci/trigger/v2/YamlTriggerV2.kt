@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.trigger.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
@@ -49,6 +50,7 @@ import com.tencent.devops.gitci.trigger.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.trigger.template.YamlTemplate
 import com.tencent.devops.gitci.trigger.template.YamlTemplateService
+import com.tencent.devops.gitci.trigger.template.pojo.NoReplaceTemplate
 import com.tencent.devops.gitci.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.gitci.v2.utils.V2WebHookMatcher
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -88,6 +90,34 @@ class YamlTriggerV2 @Autowired constructor(
         originYaml: String?,
         filePath: String
     ): Boolean {
+        if (originYaml.isNullOrBlank()) {
+            return false
+        }
+
+        val (isTrigger, isTiming) = isMatch(event, gitRequestEvent, originYaml)
+
+        if (!isTrigger && !isTiming) {
+            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                "eventId: ${gitRequestEvent.id}")
+            gitCIEventSaveService.saveBuildNotBuildEvent(
+                userId = gitRequestEvent.userId,
+                eventId = gitRequestEvent.id!!,
+                pipelineId = gitProjectPipeline.pipelineId.ifBlank { null },
+                pipelineName = gitProjectPipeline.displayName,
+                filePath = gitProjectPipeline.filePath,
+                originYaml = originYaml,
+                parsedYaml = null,
+                normalizedYaml = null,
+                reason = TriggerReason.TRIGGER_NOT_MATCH.name,
+                reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
+                gitProjectId = gitRequestEvent.gitProjectId,
+                sendCommitCheck = false,
+                commitCheckBlock = false,
+                version = ymlVersion
+            )
+            return false
+        }
+
         val yamlObjects = prepareCIBuildYaml(
             gitToken = gitToken,
             forkGitToken = forkGitToken,
@@ -108,8 +138,7 @@ class YamlTriggerV2 @Autowired constructor(
         gitProjectPipeline.displayName =
             if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
 
-        val matchResult = isMatch(event, gitRequestEvent, yamlObjects)
-        if (matchResult.first) {
+        if (isTrigger) {
             // 正常匹配仓库操作触发
             logger.info(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
@@ -118,7 +147,7 @@ class YamlTriggerV2 @Autowired constructor(
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
-                originYaml = originYaml!!,
+                originYaml = originYaml,
                 parsedYaml = parsedYaml,
                 normalizedYaml = normalizedYaml,
                 gitProjectId = gitRequestEvent.gitProjectId,
@@ -140,7 +169,10 @@ class YamlTriggerV2 @Autowired constructor(
                 gitBuildId = gitBuildId
             )
             gitBasicSettingService.updateGitCISetting(gitRequestEvent.gitProjectId)
-        } else if (matchResult.second) {
+            return true
+        }
+
+        if (isTiming) {
             // 只有定时任务的保存任务
             logger.warn("Only schedules matched, only save the pipeline, " +
                 "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
@@ -149,39 +181,26 @@ class YamlTriggerV2 @Autowired constructor(
                 event = gitRequestEvent,
                 yaml = yamlObject,
                 parsedYaml = parsedYaml,
-                originYaml = originYaml!!,
+                originYaml = originYaml,
                 normalizedYaml = normalizedYaml,
                 gitBuildId = null
-            )
-        } else {
-            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                "eventId: ${gitRequestEvent.id}")
-            gitCIEventSaveService.saveBuildNotBuildEvent(
-                userId = gitRequestEvent.userId,
-                eventId = gitRequestEvent.id!!,
-                pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
-                pipelineName = gitProjectPipeline.displayName,
-                filePath = gitProjectPipeline.filePath,
-                originYaml = originYaml,
-                parsedYaml = parsedYaml,
-                normalizedYaml = normalizedYaml,
-                reason = TriggerReason.TRIGGER_NOT_MATCH.name,
-                reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
-                gitProjectId = gitRequestEvent.gitProjectId,
-                sendCommitCheck = false,
-                commitCheckBlock = false,
-                version = ymlVersion
             )
         }
         return true
     }
 
-    override fun isMatch(
+    fun isMatch(
         event: GitEvent,
         gitRequestEvent: GitRequestEvent,
-        ymlObject: YamlObjects
+        originYaml: String
     ): Pair<Boolean, Boolean> {
-        return v2WebHookMatcher.isMatch(ymlObject.normalYaml.triggerOn!!, event, gitRequestEvent)
+        val newYaml = YamlUtil.getObjectMapper()
+            .readValue(originYaml, object : TypeReference<NoReplaceTemplate>() {})
+        return v2WebHookMatcher.isMatch(
+            triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
+            event = event,
+            gitRequestEvent = gitRequestEvent
+        )
     }
 
     override fun prepareCIBuildYaml(

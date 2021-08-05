@@ -145,7 +145,7 @@ class YamlTrigger @Autowired constructor(
         return true
     }
 
-    override fun isMatch(
+    fun isMatch(
         event: GitEvent,
         gitRequestEvent: GitRequestEvent,
         ymlObject: CIBuildYaml
