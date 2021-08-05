@@ -1058,11 +1058,11 @@ class PipelineRuntimeService @Autowired constructor(
                 if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
             }
 
-            // 只在第一次启动时刷新为QUEUE，若重试则保持原审核状态
+            // TODO 只在第一次启动时刷新为QUEUE，后续只需保留兼容数据刷新
             stage.refreshReviewOption()
             if (stage.checkIn?.manualTrigger == true &&
                 stage.checkIn?.groupToReview() != null) {
-                stage.checkIn?.status = BuildStatus.QUEUE.name
+                stage.reviewStatus = BuildStatus.QUEUE.name
             }
 
             if (lastTimeBuildStageRecords.isNotEmpty()) {
