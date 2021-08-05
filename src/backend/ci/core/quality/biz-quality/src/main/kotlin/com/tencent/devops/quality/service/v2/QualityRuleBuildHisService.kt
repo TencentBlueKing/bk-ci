@@ -64,9 +64,12 @@ class QualityRuleBuildHisService constructor(
                 name = it.ruleName,
                 desc = it.ruleDesc,
                 indicators = it.indicatorIds.split(",").map { indicatorId ->
-                    qualityIndicatorMap[indicatorId] ?: throw IllegalArgumentException("indicatorId not found in map: $indicatorId, $qualityIndicatorMap")
+                    qualityIndicatorMap[indicatorId]
+                        ?: throw IllegalArgumentException("indicatorId not found: $indicatorId, $qualityIndicatorMap")
                 },
-                controlPoint = QualityRule.RuleControlPoint("", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()),
+                controlPoint = QualityRule.RuleControlPoint(
+                    "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
+                ),
                 range = listOf(it.pipelineId!!),
                 templateRange = listOf(),
                 operation = RuleOperation.valueOf(it.opType),
