@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils.formatYamlCustom
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -94,7 +93,7 @@ class YamlTriggerV2 @Autowired constructor(
             return false
         }
         // 触发器需要将 on: 转为 TriggeriOn:
-        val (isTrigger, isTiming) = isMatch(event, gitRequestEvent, formatYamlCustom(originYaml))
+        val (isTrigger, isTiming) = isMatch(event, gitRequestEvent, ScriptYmlUtils.formatYaml(originYaml))
 
         if (!isTrigger && !isTiming) {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
