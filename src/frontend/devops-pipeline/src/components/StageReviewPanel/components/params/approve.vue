@@ -1,5 +1,5 @@
 <template>
-    <section v-if="params.length">
+    <section v-if="computedShowParam">
         <span class="review-subtitle">自定义参数</span>
         <ul>
             <li v-for="(param, index) in params" :key="index" class="review-params">
@@ -31,6 +31,12 @@
             return {
                 params: [],
                 errMessage: ''
+            }
+        },
+
+        computed: {
+            computedShowParam () {
+                return this.params.length && !this.$parent.$refs.flowApprove.isCancel
             }
         },
 

@@ -67,6 +67,7 @@
         word-break: break-all;
         font-size: 12px;
         color: #666770;
+        white-space: pre-wrap;
         &.show-more {
             display: block;
         }

@@ -108,7 +108,7 @@
         watch: {
             showReviewGroup: {
                 handler () {
-                    this.suggest = this.showReviewGroup.suggest
+                    this.suggest = this.showReviewGroup.suggest || ''
                     this.isCancel = this.showReviewGroup.status === 'ABORT'
                 },
                 immediate: true

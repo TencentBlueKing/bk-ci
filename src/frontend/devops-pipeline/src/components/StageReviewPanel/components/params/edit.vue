@@ -116,6 +116,8 @@
                 let res = cellValue || '--'
                 if (Array.isArray(cellValue)) {
                     res = `[${cellValue.join(', ')}]`
+                } else {
+                    res = String(cellValue) || '--'
                 }
                 return res
             }
