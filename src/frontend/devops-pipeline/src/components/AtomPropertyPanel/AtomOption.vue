@@ -143,6 +143,7 @@
                     width: auto;
                     .bk-form-content {
                         display: inline-block;
+                        width: 150px;
                     };
                 }
             }
