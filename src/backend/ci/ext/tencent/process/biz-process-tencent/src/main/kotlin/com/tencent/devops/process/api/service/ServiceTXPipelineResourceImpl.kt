@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.service.TXPipelineExportService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
 class ServiceTXPipelineResourceImpl @Autowired constructor(

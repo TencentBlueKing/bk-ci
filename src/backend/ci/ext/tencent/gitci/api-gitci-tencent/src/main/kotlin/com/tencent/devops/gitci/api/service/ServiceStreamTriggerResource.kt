@@ -29,24 +29,17 @@ package com.tencent.devops.gitci.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.StreamTriggerBuildReq
-import com.tencent.devops.gitci.pojo.V2TriggerBuildReq
-import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.project.pojo.app.AppProjectVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_GIT_CI_TRIGGER"], description = "service-trigger调用")

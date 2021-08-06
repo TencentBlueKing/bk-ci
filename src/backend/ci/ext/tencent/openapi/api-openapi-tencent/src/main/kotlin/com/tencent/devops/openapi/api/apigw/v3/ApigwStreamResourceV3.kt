@@ -4,12 +4,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.gitci.pojo.StreamTriggerBuildReq
-import com.tencent.devops.gitci.pojo.V2TriggerBuildReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path

@@ -5,10 +5,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.service.ServiceStreamTriggerResource
 import com.tencent.devops.gitci.pojo.StreamTriggerBuildReq
-import com.tencent.devops.gitci.pojo.V2TriggerBuildReq
 import com.tencent.devops.openapi.api.apigw.v3.ApigwStreamResourceV3
-import com.tencent.devops.openapi.api.apigw.v3.ApigwTXPipelineResourceV3
-import com.tencent.devops.process.api.service.ServiceTXPipelineResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
