@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -70,6 +71,8 @@ data class CodeTGitWebHookTriggerInput(
     val branchName: String?,
     @ApiModelProperty("excludeBranch", required = false)
     val excludeBranchName: String?,
+    @ApiModelProperty("路径过滤类型", required = true)
+    val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
     @ApiModelProperty("includePaths", required = false)
     val includePaths: String?,
     @ApiModelProperty("excludePaths", required = false)

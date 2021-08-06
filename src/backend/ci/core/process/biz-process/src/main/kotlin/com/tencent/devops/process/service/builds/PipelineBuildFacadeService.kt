@@ -928,18 +928,6 @@ class PipelineBuildFacadeService(
             }
 
             try {
-                val lastStage = pipelineStageService.getLastStage(buildId)
-                if (lastStage?.status?.isRunning() == true && lastStage.controlOption?.finally == true) {
-                    val message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_FINAL_STAGE_CANNOT_CANCEL)
-                    buildLogPrinter.addRedLine(
-                        buildId = buildId,
-                        message = message,
-                        tag = "startVM-0",
-                        jobId = "0",
-                        executeCount = lastStage.executeCount
-                    )
-                    return
-                }
                 pipelineRuntimeService.cancelBuild(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -1663,8 +1651,9 @@ class PipelineBuildFacadeService(
                     errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
                 )
             }
-
-            if (!alreadyCancelUser.isNullOrBlank()) {
+            // 兼容post任务的场景，处于”运行中“的构建可以支持多次取消操作
+            val cancelFlag = redisOperation.get("${BuildStatus.CANCELED.name}_$buildId")?.toBoolean()
+            if (cancelFlag == true) {
                 logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
@@ -1693,24 +1682,6 @@ class PipelineBuildFacadeService(
                     params = arrayOf(buildId)
                 )
             }
-            val lastStage = pipelineStageService.getLastStage(buildId)
-            if (lastStage?.status?.isRunning() == true && lastStage.controlOption?.finally == true) {
-                val message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_FINAL_STAGE_CANNOT_CANCEL)
-                buildLogPrinter.addRedLine(
-                    buildId = buildId,
-                    message = "$message userId:$userId",
-                    tag = "startVM-0",
-                    jobId = "0",
-                    executeCount = lastStage.executeCount
-                )
-
-                throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_FINAL_STAGE_CANNOT_CANCEL,
-                    defaultMessage = "Cannot cancel the running [final stage]",
-                    params = arrayOf(buildId)
-                )
-            }
 
             val tasks = getRunningTask(projectId, buildId)
 
@@ -1722,7 +1693,7 @@ class PipelineBuildFacadeService(
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "流水线被用户终止，操作人:$userId",
+                    message = "Run cancelled by $userId",
                     tag = taskId.toString(),
                     jobId = containerId.toString(),
                     executeCount = executeCount as Int
@@ -1732,7 +1703,7 @@ class PipelineBuildFacadeService(
             if (tasks.isEmpty()) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "流水线被用户终止，操作人:$userId",
+                    message = "Run cancelled by $userId",
                     tag = "",
                     jobId = "",
                     executeCount = 1

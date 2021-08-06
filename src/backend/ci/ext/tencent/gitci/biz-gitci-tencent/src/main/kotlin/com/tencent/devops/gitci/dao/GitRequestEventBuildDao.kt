@@ -581,6 +581,17 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun deleteBuildByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>
+    ): Int {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
+        }
+    }
+
     fun getProjectAfterId(dslContext: DSLContext, startId: Long, limit: Int): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
@@ -606,6 +617,15 @@ class GitRequestEventBuildDao {
                         .groupBy(GIT_PROJECT_ID)
                         .having(GIT_PROJECT_ID.`in`(gitProjectIds)))
                 ).fetch()
+        }
+    }
+
+    fun isBuildExist(dslContext: DSLContext, buildId: String): Boolean {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(BUILD_ID))
+                .fetch()
+                .isNotEmpty
         }
     }
 }

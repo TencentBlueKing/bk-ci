@@ -166,7 +166,7 @@ interface ServiceGitCiResource {
     fun getGitCIFileContent(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
-        gitProjectId: Long,
+        gitProjectId: String,
         @ApiParam(value = "文件路径")
         @QueryParam("filePath")
         filePath: String,

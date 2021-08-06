@@ -45,7 +45,7 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.trigger.YamlTriggerInterface
 import com.tencent.devops.gitci.utils.GitCIWebHookMatcher
-import com.tencent.devops.gitci.trigger.GitCIEventSaveService
+import com.tencent.devops.gitci.trigger.GitCIEventService
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -62,7 +62,7 @@ class YamlTrigger @Autowired constructor(
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val repositoryConfService: GitRepositoryConfService,
-    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val gitCIEventSaveService: GitCIEventService,
     private val yamlBuild: YamlBuild
 ) : YamlTriggerInterface<CIBuildYaml> {
 
@@ -145,7 +145,7 @@ class YamlTrigger @Autowired constructor(
         return true
     }
 
-    override fun isMatch(
+    fun isMatch(
         event: GitEvent,
         gitRequestEvent: GitRequestEvent,
         ymlObject: CIBuildYaml

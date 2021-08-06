@@ -53,6 +53,10 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
+import com.tencent.devops.process.utils.PIPELINE_ATOM_CODE
+import com.tencent.devops.process.utils.PIPELINE_ATOM_NAME
+import com.tencent.devops.process.utils.PIPELINE_ATOM_VERSION
+import com.tencent.devops.process.utils.PIPELINE_TASK_NAME
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
@@ -144,8 +148,6 @@ open class MarketAtomTask : ITask() {
             variablesMap
         }
 
-        val command = StringBuilder()
-
         // 解析输出字段模板
         val props = JsonUtil.toMutableMapSkipEmpty(atomData.props!!)
 
@@ -213,7 +215,14 @@ open class MarketAtomTask : ITask() {
         }
         runtimeVariables = runtimeVariables.plus(Pair("testVersionFlag", testVersionFlag)) // 设置是否是测试版本的标识
         // 设置插件名称和任务名称变量
-        runtimeVariables = runtimeVariables.plus(mapOf("atomName" to atomData.atomName, "taskName" to taskName))
+        runtimeVariables = runtimeVariables.plus(
+            mapOf(
+                PIPELINE_ATOM_NAME to atomData.atomName,
+                PIPELINE_ATOM_CODE to atomData.atomCode,
+                PIPELINE_ATOM_VERSION to atomData.version,
+                PIPELINE_TASK_NAME to taskName
+            )
+        )
         val variables = runtimeVariables.plus(atomParams)
         logger.info("atomCode is:$atomCode ,variables is:$variables")
 
@@ -264,6 +273,7 @@ open class MarketAtomTask : ITask() {
         var error: Throwable? = null
         try {
             // 下载atom执行文件
+            LoggerService.addFoldStartLine("[Install plugin]")
             atomExecuteFile = downloadAtomExecuteFile(atomData.pkgPath!!, atomTmpSpace)
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
@@ -273,24 +283,33 @@ open class MarketAtomTask : ITask() {
                 atomLanguage, buildHostType.name, AgentEnv.getOS().name)
             logger.info("atomCode is:$atomCode ,atomDevLanguageEnvVarsResult is:$atomDevLanguageEnvVarsResult")
             val atomDevLanguageEnvVars = atomDevLanguageEnvVarsResult.data
-            val systemEnvVariables = mutableMapOf(
-                "PROJECT_ID" to buildVariables.projectId,
-                "BUILD_ID" to buildVariables.buildId,
-                "VM_SEQ_ID" to buildVariables.vmSeqId
-            )
+            val systemEnvVariables = TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)
             atomDevLanguageEnvVars?.forEach {
                 systemEnvVariables[it.envKey] = it.envValue
             }
-            val preCmds = mutableListOf<String>()
-            if (!atomData.preCmd.isNullOrBlank()) {
-                if (atomData.preCmd!!.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*\\]\\s*$"))) {
-                    preCmds.addAll(JsonUtil.to(atomData.preCmd!!))
-                } else {
-                    preCmds.add(atomData.preCmd!!)
-                }
-            }
-            val atomTargetHandleService = AtomTargetFactory.createAtomTargetHandleService(atomLanguage)
+            val preCmd = atomData.preCmd
             val buildEnvs = buildVariables.buildEnvs
+            if (!preCmd.isNullOrBlank()) {
+                val preCmds = mutableListOf<String>()
+                if (preCmd.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*\\]\\s*$"))) {
+                    preCmds.addAll(JsonUtil.to(preCmd))
+                } else {
+                    preCmds.add(preCmd)
+                }
+                runPreCmds(
+                    preCmds = preCmds,
+                    buildVariables = buildVariables,
+                    atomTmpSpace = atomTmpSpace,
+                    workspace = workspace,
+                    environment = environment,
+                    buildEnvs = buildEnvs,
+                    systemEnvVariables = systemVariables,
+                    buildTask = buildTask
+                )
+            }
+            LoggerService.addFoldEndLine("-----")
+            LoggerService.addNormalLine("")
+            val atomTargetHandleService = AtomTargetFactory.createAtomTargetHandleService(atomLanguage)
             val additionalOptions = taskParams["additionalOptions"]
             // 获取插件post操作入口参数
             var postEntryParam: String? = null
@@ -308,17 +327,11 @@ open class MarketAtomTask : ITask() {
                 postEntryParam = postEntryParam
             )
             val errorMessage = "Fail to run the plugin"
-            when {
-                AgentEnv.getOS() == OSType.WINDOWS -> {
-                    if (preCmds.isNotEmpty()) {
-                        preCmds.forEach { cmd ->
-                            command.append("\r\n$cmd\r\n")
-                        }
-                    }
-                    command.append("\r\n$atomTarget\r\n")
+            when (AgentEnv.getOS()) {
+                OSType.WINDOWS -> {
                     BatScriptUtil.execute(
                         buildId = buildVariables.buildId,
-                        script = command.toString(),
+                        script = "\r\n$atomTarget\r\n",
                         runtimeVariables = environment,
                         dir = atomTmpSpace,
                         workspace = workspace,
@@ -326,16 +339,10 @@ open class MarketAtomTask : ITask() {
                         elementId = buildTask.elementId
                     )
                 }
-                AgentEnv.getOS() == OSType.LINUX || AgentEnv.getOS() == OSType.MAC_OS -> {
-                    if (preCmds.isNotEmpty()) {
-                        preCmds.forEach { cmd ->
-                            command.append("\n$cmd\n")
-                        }
-                    }
-                    command.append("\n$atomTarget\n")
+                OSType.LINUX, OSType.MAC_OS -> {
                     ShellUtil.execute(
                         buildId = buildVariables.buildId,
-                        script = command.toString(),
+                        script = "\n$atomTarget\n",
                         dir = atomTmpSpace,
                         workspace = workspace,
                         buildEnvs = buildEnvs,
@@ -344,6 +351,8 @@ open class MarketAtomTask : ITask() {
                         errorMessage = errorMessage,
                         elementId = buildTask.elementId
                     )
+                }
+                else -> {
                 }
             }
         } catch (e: Throwable) {
@@ -367,11 +376,59 @@ open class MarketAtomTask : ITask() {
         }
     }
 
+    private fun runPreCmds(
+        preCmds: List<String>,
+        buildVariables: BuildVariables,
+        atomTmpSpace: File,
+        workspace: File,
+        environment: Map<String, String>,
+        buildEnvs: List<com.tencent.devops.store.pojo.app.BuildEnv>,
+        systemEnvVariables: Map<String, String>,
+        buildTask: BuildTask
+    ) {
+        val preCmdErrorMessage = "Fail to run the plugin demand command"
+        when (AgentEnv.getOS()) {
+            OSType.WINDOWS -> {
+                if (preCmds.isNotEmpty()) {
+                    val preCommand = preCmds.joinToString { "\r\n${it}\r\n" }
+                    BatScriptUtil.execute(
+                        buildId = buildVariables.buildId,
+                        script = preCommand,
+                        runtimeVariables = environment,
+                        dir = atomTmpSpace,
+                        workspace = workspace,
+                        errorMessage = preCmdErrorMessage,
+                        elementId = buildTask.elementId
+                    )
+                }
+            }
+            OSType.LINUX, OSType.MAC_OS -> {
+                if (preCmds.isNotEmpty()) {
+                    val preCommand = preCmds.joinToString { "\n${it}\n" }
+                    ShellUtil.execute(
+                        buildId = buildVariables.buildId,
+                        script = preCommand,
+                        dir = atomTmpSpace,
+                        workspace = workspace,
+                        buildEnvs = buildEnvs,
+                        runtimeVariables = environment,
+                        systemEnvVariables = systemEnvVariables,
+                        errorMessage = preCmdErrorMessage,
+                        elementId = buildTask.elementId
+                    )
+                }
+            }
+            else -> {
+            }
+        }
+    }
+
     private fun printInput(
         atomData: AtomEnv,
         atomParams: MutableMap<String, String>,
         inputTemplate: Map<String, Map<String, Any>>
     ) {
+        LoggerService.addFoldStartLine("[Plugin info]")
         LoggerService.addNormalLine("=====================================================================")
         LoggerService.addNormalLine("Task           : ${atomData.atomName}")
         if (!atomData.summary.isNullOrBlank()) {
@@ -396,7 +453,9 @@ open class MarketAtomTask : ITask() {
                     "[WARNING]The plugin is in the transition period and may not work properly in the future."
             )
         }
-
+        LoggerService.addFoldEndLine("-----")
+        LoggerService.addNormalLine("")
+        LoggerService.addFoldStartLine("[Input]")
         atomParams.forEach { (key, value) ->
             if (inputTemplate[key] != null) {
                 val def = inputTemplate[key] as Map<String, Any>
@@ -410,6 +469,8 @@ open class MarketAtomTask : ITask() {
                 LoggerService.addYellowLine("input(except): $key=$value")
             }
         }
+        LoggerService.addFoldEndLine("-----")
+        LoggerService.addNormalLine("")
     }
 
     private fun writeSdkEnv(workspace: File, buildTask: BuildTask, buildVariables: BuildVariables) {
@@ -507,15 +568,12 @@ open class MarketAtomTask : ITask() {
         if (atomResult == null) {
             LoggerService.addYellowLine("No output")
         } else {
-            if (atomResult.status == "success") {
-                success = true
-                LoggerService.addNormalLine("success: ${atomResult.message ?: ""}")
-            } else {
-                success = false
-            }
+            success = atomResult.status == "success"
 
             val outputData = atomResult.data
             val env = mutableMapOf<String, String>()
+            LoggerService.addNormalLine("")
+            LoggerService.addFoldStartLine("[Output]")
             outputData?.forEach { (varKey, output) ->
                 val type = output[TYPE]
                 val key = if (!namespace.isNullOrBlank()) {
@@ -578,6 +636,7 @@ open class MarketAtomTask : ITask() {
                     LoggerService.addYellowLine("output(except): $key=${env[key]}")
                 }
             }
+            LoggerService.addFoldEndLine("-----")
 
             if (atomResult.type == "default") {
                 if (env.isNotEmpty()) {

@@ -30,6 +30,7 @@ package com.tencent.devops.scm.services
 import com.fasterxml.jackson.core.type.TypeReference
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -48,6 +49,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import javax.ws.rs.core.Response
 
 @Service
 class GitCiService {
@@ -144,7 +146,7 @@ class GitCiService {
     }
 
     fun getGitCIFileContent(
-        gitProjectId: Long,
+        gitProjectId: String,
         filePath: String,
         token: String,
         ref: String,
@@ -153,7 +155,7 @@ class GitCiService {
         logger.info("[$gitProjectId|$filePath|$ref] Start to get the git file content")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/blobs/" +
+            val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "utf-8")}/repository/blobs/" +
                 "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
                 if (useAccessToken) {
                     "&access_token=$token"
@@ -180,7 +182,6 @@ class GitCiService {
         token: String,
         useAccessToken: Boolean = true
     ): Result<GitCIProjectInfo?> {
-        logger.info("[gitProjectId=$gitProjectId]|getGitCIProjectInfo")
         val encodeId = URLEncoder.encode(gitProjectId, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
         val str = "$gitCIUrl/api/v3/projects/$encodeId?" + if (useAccessToken) {
             "access_token=$token"
@@ -192,11 +193,16 @@ class GitCiService {
             .url(url.toString())
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use {
-            val response = it.body()!!.string()
-            logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
-            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-            return Result(JsonUtil.to(response, GitCIProjectInfo::class.java))
+        OkhttpUtils.doHttp(request).use { response ->
+            logger.info("[url=$url]|getGitCIProjectInfo($gitProjectId) with response=$response")
+            if (!response.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "(${response.code()})${response.message()}"
+                )
+            }
+            val data = response.body()!!.string()
+            return Result(JsonUtil.to(data, GitCIProjectInfo::class.java))
         }
     }
 

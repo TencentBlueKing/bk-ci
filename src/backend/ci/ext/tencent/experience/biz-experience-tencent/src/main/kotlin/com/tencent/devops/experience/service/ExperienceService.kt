@@ -99,6 +99,7 @@ import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
 @Service
+@SuppressWarnings("LongParameterList", "LargeClass", "TooManyFunctions", "LongMethod", "TooGenericExceptionThrown")
 class ExperienceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experienceDao: ExperienceDao,
@@ -185,7 +186,7 @@ class ExperienceService @Autowired constructor(
         }
     }
 
-    fun get(userId: String, projectId: String, experienceHashId: String, checkPermission: Boolean = true): Experience {
+    fun get(userId: String, experienceHashId: String, checkPermission: Boolean = true): Experience {
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
 
@@ -391,6 +392,11 @@ class ExperienceService @Autowired constructor(
             }
         }
 
+        val endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault())
+            .withHour(23)
+            .withMinute(59)
+            .withSecond(0)
+
         val experienceId = experienceDao.create(
             dslContext = dslContext,
             projectId = projectId,
@@ -402,7 +408,7 @@ class ExperienceService @Autowired constructor(
             bundleIdentifier = appBundleIdentifier,
             version = appVersion,
             remark = experience.remark,
-            endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
+            endDate = endDate,
             experienceGroups = "[]",
             innerUsers = "[]",
             notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
@@ -486,12 +492,17 @@ class ExperienceService @Autowired constructor(
         val experienceRecord = getExperienceId4Update(experienceHashId, userId, projectId)
         val isPublic = isPublicGroupAndCheck(experience.experienceGroups)
 
+        val endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault())
+            .withHour(23)
+            .withMinute(59)
+            .withSecond(0)
+
         experienceDao.update(
             dslContext = dslContext,
             id = experienceRecord.id,
             name = experience.name,
             remark = experience.remark,
-            endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
+            endDate = endDate,
             experienceGroups = "[]",
             innerUsers = "[]",
             notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
@@ -573,7 +584,6 @@ class ExperienceService @Autowired constructor(
             user = userId,
             projectId = projectId,
             experienceId = experienceId,
-            authPermission = AuthPermission.EDIT,
             message = "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限"
         )
         return experienceDao.getOrNull(dslContext, experienceId)
@@ -585,12 +595,12 @@ class ExperienceService @Autowired constructor(
             )
     }
 
-    fun externalUrl(userId: String, projectId: String, experienceHashId: String): String {
+    fun externalUrl(userId: String, experienceHashId: String): String {
         checkExperienceAndGetId(experienceHashId, userId)
         return experienceDownloadService.getQrCodeUrl(experienceHashId)
     }
 
-    fun downloadUrl(userId: String, projectId: String, experienceHashId: String): String {
+    fun downloadUrl(userId: String, experienceHashId: String): String {
         val experienceId = checkExperienceAndGetId(experienceHashId, userId)
         return experienceDownloadService.getInnerDownloadUrl(userId, experienceId)
     }
@@ -658,7 +668,8 @@ class ExperienceService @Autowired constructor(
         )
 
         return ExperienceCreateResp(
-            url = getShortExternalUrl(experienceId)
+            url = getShortExternalUrl(experienceId),
+            experienceHashId = HashUtil.encodeLongId(experienceId)
         )
     }
 
@@ -749,7 +760,6 @@ class ExperienceService @Autowired constructor(
         user: String,
         projectId: String,
         experienceId: Long,
-        authPermission: AuthPermission,
         message: String
     ) {
         if (!bsAuthPermissionApi.validateUserResourcePermission(
@@ -758,12 +768,12 @@ class ExperienceService @Autowired constructor(
                 resourceType = taskResourceType,
                 projectCode = projectId,
                 resourceCode = HashUtil.encodeLongId(experienceId),
-                permission = authPermission
+                permission = AuthPermission.EDIT
             )
         ) {
             val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.EDIT.value}",
+                defaultMessage = AuthPermission.EDIT.alias
             )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
