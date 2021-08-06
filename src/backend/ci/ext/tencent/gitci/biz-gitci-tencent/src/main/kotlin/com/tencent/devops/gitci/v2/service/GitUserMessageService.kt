@@ -150,14 +150,14 @@ class GitUserMessageService @Autowired constructor(
     fun readMessage(
         userId: String,
         id: Int,
-        projectId: String
+        projectId: String?
     ): Boolean {
         websocketService.pushNotifyWebsocket(userId, projectId)
         return gitUserMessageDao.readMessage(dslContext, id) >= 0
     }
 
     fun readAllMessage(
-        projectId: String,
+        projectId: String?,
         userId: String
     ): Boolean {
         websocketService.pushNotifyWebsocket(userId, projectId)
@@ -165,7 +165,7 @@ class GitUserMessageService @Autowired constructor(
     }
 
     fun getNoReadMessageCount(
-        projectId: String,
+        projectId: String?,
         userId: String
     ): Int {
         return gitUserMessageDao.getNoReadCount(dslContext = dslContext, projectId = projectId, userId = userId)

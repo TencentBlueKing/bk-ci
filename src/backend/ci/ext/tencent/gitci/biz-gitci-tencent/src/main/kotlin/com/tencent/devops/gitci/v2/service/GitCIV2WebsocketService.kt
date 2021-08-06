@@ -18,8 +18,12 @@ class GitCIV2WebsocketService @Autowired constructor(
     val redisOperation: RedisOperation,
     val objectMapper: ObjectMapper
 ) {
-    fun pushNotifyWebsocket(userId: String, gitProjectId: String) {
-        val projectCode = GitCIUtils.getGitCiProjectId(gitProjectId)
+    fun pushNotifyWebsocket(userId: String, gitProjectId: String?) {
+        val projectCode = if (gitProjectId == null) {
+            null
+        } else {
+            GitCIUtils.getGitCiProjectId(gitProjectId)
+        }
         try {
             webSocketDispatcher.dispatch(
                 GitCINotifyWebsocketPush(
