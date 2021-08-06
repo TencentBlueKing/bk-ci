@@ -337,12 +337,12 @@ class YamlBuildV2 @Autowired constructor(
         pipeline: GitProjectPipeline
     ): List<String>? {
         // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
-        val operations = listOf(
-            convertToSymbol(QualityOperation.GE),
-            convertToSymbol(QualityOperation.LE),
-            convertToSymbol(QualityOperation.GT),
-            convertToSymbol(QualityOperation.LT),
-            convertToSymbol(QualityOperation.EQ)
+        val operations = mapOf(
+            convertToSymbol(QualityOperation.GE) to QualityOperation.GE,
+            convertToSymbol(QualityOperation.LE) to QualityOperation.LE,
+            convertToSymbol(QualityOperation.GT) to QualityOperation.GT,
+            convertToSymbol(QualityOperation.LT) to QualityOperation.LT,
+            convertToSymbol(QualityOperation.EQ) to QualityOperation.EQ
         )
         val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
         stageCheck.gates?.forEach GateEach@{ gate ->
@@ -350,7 +350,7 @@ class YamlBuildV2 @Autowired constructor(
                 val (atomCode, mid) = rule.split(".")
                 var op = ""
                 run breaking@{
-                    operations.forEach {
+                    operations.keys.forEach {
                         if (mid.contains(it)) {
                             op = it
                             return@breaking
@@ -365,7 +365,7 @@ class YamlBuildV2 @Autowired constructor(
                 RuleCreateRequestV3.CreateRequestIndicator(
                     atomCode = atomCode,
                     enName = enNameAndthreshold.first().trim(),
-                    operation = op,
+                    operation = operations[op].name,
                     threshold = enNameAndthreshold.last().trim()
                 )
             }
