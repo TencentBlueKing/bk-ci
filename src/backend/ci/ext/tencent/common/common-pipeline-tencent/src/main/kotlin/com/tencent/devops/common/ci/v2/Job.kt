@@ -92,10 +92,14 @@ data class RunsOn(
     val poolName: String = JobRunsOnType.DOCKER.type,
     val container: Any? = null,
     @JsonProperty("agent-selector")
-    val agentSelector: List<String>? = null
+    val agentSelector: List<String>? = null,
+    @JsonProperty("nfs-mount")
+    val nfsMount: Map<String, String>? = emptyMap()
 )
 
 enum class JobRunsOnType(val type: String) {
     DOCKER("docker"),
-    AGENT_LESS("agentless")
+    AGENT_LESS("agentless"),
+    DEV_CLOUD("devcloud"),
+    LOCAL("local")
 }

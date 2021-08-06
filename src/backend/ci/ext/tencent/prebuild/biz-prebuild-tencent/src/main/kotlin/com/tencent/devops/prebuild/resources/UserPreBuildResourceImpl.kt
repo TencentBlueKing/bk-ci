@@ -34,17 +34,17 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
+import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
-import com.tencent.devops.prebuild.pojo.GitYamlString
-import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.prebuild.api.UserPreBuildResource
+import com.tencent.devops.prebuild.pojo.GitYamlString
+import com.tencent.devops.prebuild.pojo.HistoryResponse
+import com.tencent.devops.prebuild.pojo.PrePluginVersion
 import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.UserProject
-import com.tencent.devops.prebuild.pojo.HistoryResponse
-import com.tencent.devops.prebuild.pojo.PrePluginVersion
 import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.prebuild.service.PreBuildService
 import com.tencent.devops.prebuild.v2.service.PreBuildV2Service
@@ -71,7 +71,12 @@ class UserPreBuildResourceImpl @Autowired constructor(
         return Result(preBuildService.getOrCreatePreAgent(userId, os, ip, hostName))
     }
 
-    override fun getAgentStatus(userId: String, os: OS, ip: String, hostName: String): Result<AgentStatus> {
+    override fun getAgentStatus(
+        userId: String,
+        os: OS,
+        ip: String,
+        hostName: String
+    ): Result<AgentStatus> {
         return Result(preBuildService.getAgentStatus(userId, os, ip, hostName))
     }
 
@@ -83,22 +88,40 @@ class UserPreBuildResourceImpl @Autowired constructor(
         return Result(preBuildService.projectNameExist(userId, preProjectId))
     }
 
-    override fun manualStartup(userId: String, preProjectId: String, startUpReq: StartUpReq): Result<BuildId> {
-        val yaml = try {
-            val yamlStr = CiYamlUtils.formatYaml(startUpReq.yaml)
-            val yamlObject = YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java)
-            CiYamlUtils.normalizePrebuildYaml(yamlObject)
-        } catch (e: Throwable) {
-            logger.error("Invalid yml, error message: ", e)
-            return Result(1, "YAML非法: ${e.message}")
-        }
-        val agentInfo = preBuildService.getAgent(userId, startUpReq.os, startUpReq.ip, startUpReq.hostname)
-        if (null == agentInfo) {
-            logger.error("Agent not install")
-            return Result(2, "Agent未安装，请安装Agent.")
-        }
+    override fun manualStartup(
+        userId: String,
+        preProjectId: String,
+        startUpReq: StartUpReq
+    ): Result<BuildId> {
         return try {
-            Result(preBuildService.startBuild(userId, preProjectId, startUpReq, yaml, agentInfo))
+            val agentInfo =
+                preBuildService.getAgent(userId, startUpReq.os, startUpReq.ip, startUpReq.hostname)
+            if (null == agentInfo) {
+                logger.error("Agent not install")
+                return Result(2, "Agent未安装，请安装Agent.")
+            }
+
+            val ymlVersion = ScriptYmlUtils.parseVersion(startUpReq.yaml)
+            val buildId = when (ymlVersion?.version == "v2.0") {
+                true -> {
+                    preBuildV2Service.startBuild(userId, preProjectId, startUpReq, agentInfo)
+                }
+
+                false -> {
+                    val yaml = try {
+                        val yamlStr = CiYamlUtils.formatYaml(startUpReq.yaml)
+                        val yamlObject =
+                            YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java)
+                        CiYamlUtils.normalizePrebuildYaml(yamlObject)
+                    } catch (e: Throwable) {
+                        logger.error("Invalid yml, error message: ", e)
+                        return Result(1, "YAML非法: ${e.message}")
+                    }
+                    preBuildService.startBuild(userId, preProjectId, startUpReq, yaml, agentInfo)
+                }
+            }
+
+            Result(buildId)
         } catch (e: Throwable) {
             logger.error("startBuild failed, exception: ", e)
             Result(3, "启动失败，错误详情: ${e.message}")
@@ -119,7 +142,11 @@ class UserPreBuildResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getBuildDetail(userId: String, preProjectId: String, buildId: String): Result<ModelDetail> {
+    override fun getBuildDetail(
+        userId: String,
+        preProjectId: String,
+        buildId: String
+    ): Result<ModelDetail> {
         return preBuildService.getBuildDetail(userId, preProjectId, buildId)
     }
 
@@ -155,26 +182,23 @@ class UserPreBuildResourceImpl @Autowired constructor(
         return Result(preBuildService.getHistory(userId, preProjectId, page, pageSize))
     }
 
-    override fun getBuildLink(userId: String, preProjectId: String, buildId: String): Result<String> {
+    override fun getBuildLink(
+        userId: String,
+        preProjectId: String,
+        buildId: String
+    ): Result<String> {
         return Result(preBuildService.getBuildLink(userId, preProjectId, buildId))
     }
 
     override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
         try {
             val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
-            when {
-                ymlVersion == null -> {
-                    return Result(1, "Invalid yaml")
+            when (ymlVersion?.version == "v2.0") {
+                true -> {
+                    return preBuildV2Service.checkYamlSchema(yaml.yaml)
                 }
 
-                ymlVersion.version == "v2.0" -> {
-                    val (validate, message) = preBuildV2Service.checkYaml(yaml.yaml)
-                    if (!validate) {
-                        return Result(1, "Invalid yaml: $message", message)
-                    }
-                }
-
-                else -> {
+                false -> {
                     val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
                     val (validate, message) = preBuildService.validateCIBuildYaml(yamlStr)
                     if (!validate) {
@@ -191,7 +215,10 @@ class UserPreBuildResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getPluginVersion(userId: String, pluginType: PreBuildPluginType): Result<PrePluginVersion?> {
+    override fun getPluginVersion(
+        userId: String,
+        pluginType: PreBuildPluginType
+    ): Result<PrePluginVersion?> {
         return Result(preBuildService.getPluginVersion(userId, pluginType))
     }
 

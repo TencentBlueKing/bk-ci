@@ -49,5 +49,7 @@ data class PreJob(
     val continueOnError: Boolean? = null,
     val strategy: Strategy? = null,
     @JsonProperty("depend-on")
-    val dependOn: List<String>? = null
+    val dependOn: List<String>? = null,
+    @JsonProperty("enable-agent-label")
+    val enableAgentLabel: Boolean = false
 )

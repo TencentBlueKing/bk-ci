@@ -37,29 +37,30 @@ import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
-import com.tencent.devops.common.ci.v2.MrRule
-import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
-import com.tencent.devops.common.ci.v2.PreTriggerOn
-import com.tencent.devops.common.ci.v2.PushRule
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
-import com.tencent.devops.common.ci.v2.Stage
-import com.tencent.devops.common.ci.v2.TagRule
-import com.tencent.devops.common.ci.v2.TriggerOn
-import com.tencent.devops.common.ci.v2.YmlVersion
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.Job
+import com.tencent.devops.common.ci.v2.JobRunsOnType
+import com.tencent.devops.common.ci.v2.MrRule
 import com.tencent.devops.common.ci.v2.PreJob
+import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
+import com.tencent.devops.common.ci.v2.PreTriggerOn
+import com.tencent.devops.common.ci.v2.PushRule
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.SchedulesRule
+import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Service
+import com.tencent.devops.common.ci.v2.Stage
 import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
+import com.tencent.devops.common.ci.v2.TagRule
+import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.ci.v2.YmlVersion
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
@@ -92,8 +93,7 @@ object ScriptYmlUtils {
      */
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
-        val yamlNormal =
-            formatYamlCustom(yamlStr)
+        val yamlNormal = formatYamlCustom(yamlStr)
         // replace anchor tag
         val yaml = Yaml()
         val obj = yaml.load(yamlNormal) as Any
@@ -333,7 +333,7 @@ object ScriptYmlUtils {
                 Job(
                     id = t,
                     name = u.name,
-                    runsOn = formatRunsOn(u.runsOn),
+                    runsOn = formatRunsOn(u.runsOn, u.enableAgentLabel),
                     services = services,
                     ifField = u.ifField,
                     steps = formatSteps(u.steps),
@@ -349,7 +349,7 @@ object ScriptYmlUtils {
         return jobs
     }
 
-    private fun formatRunsOn(preRunsOn: Any?): RunsOn {
+    private fun formatRunsOn(preRunsOn: Any?, enableAgentLabel: Boolean): RunsOn {
         if (preRunsOn == null) {
             return RunsOn()
         }
@@ -368,6 +368,16 @@ object ScriptYmlUtils {
                 runsOn
             }
         } catch (e: Exception) {
+            if (enableAgentLabel) {
+                val preRunsOnArray = preRunsOn.toString().split(",")
+                if (preRunsOnArray.size == 2 &&
+                    preRunsOnArray.contains(JobRunsOnType.DOCKER.type)
+                    && preRunsOnArray.contains(JobRunsOnType.DEV_CLOUD.type)
+                ) {
+                    return RunsOn(poolName = JobRunsOnType.DEV_CLOUD.type)
+                }
+            }
+
             return RunsOn(
                 poolName = preRunsOn.toString()
             )
@@ -479,6 +489,25 @@ object ScriptYmlUtils {
         }
 
         return null
+    }
+
+    fun normalizePreCiYaml(preScriptBuildYaml: PreScriptBuildYaml): ScriptBuildYaml {
+        val stages = formatStage(
+            preScriptBuildYaml
+        )
+
+        return ScriptBuildYaml(
+            name = preScriptBuildYaml.name,
+            version = preScriptBuildYaml.version,
+            triggerOn = null,
+            variables = preScriptBuildYaml.variables,
+            extends = preScriptBuildYaml.extends,
+            resource = preScriptBuildYaml.resources,
+            notices = preScriptBuildYaml.notices,
+            stages = stages,
+            finally = preJobs2Jobs(preScriptBuildYaml.finally),
+            label = preScriptBuildYaml.label ?: emptyList()
+        )
     }
 
     /**
