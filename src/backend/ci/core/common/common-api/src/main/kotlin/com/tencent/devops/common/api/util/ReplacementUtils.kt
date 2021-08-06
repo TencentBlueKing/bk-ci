@@ -27,6 +27,9 @@
 
 package com.tencent.devops.common.api.util
 
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
 object ReplacementUtils {
 
     fun replace(command: String, replacement: KeyReplacement): String {
@@ -49,10 +52,7 @@ object ReplacementUtils {
             val template = if (line.trim().startsWith("#")) {
                 line
             } else {
-                // 先处理${} 单个花括号的情况
-                val lineTmp = parseTemplate(line, replacement, contextMap)
-                // 再处理${{}} 双花括号的情况
-                parseWithDoubleCurlyBraces(lineTmp, replacement, contextMap)
+                parseTemplate(line, replacement, contextMap)
             }
             sb.append(template)
             if (index != lines.size - 1) {
@@ -65,122 +65,36 @@ object ReplacementUtils {
     private fun parseTemplate(
         command: String,
         replacement: KeyReplacement,
-        contextMap: Map<String, String>? = emptyMap()
+        contextMap: Map<String, String>?,
+        depth: Int = 1
     ): String {
-        if (command.isBlank()) {
+        if (depth < 0) {
             return command
         }
-        val newValue = StringBuilder()
-        var index = 0
-        while (index < command.length) {
-            val c = command[index]
-            if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
-                val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, replacement, contextMap)
-                newValue.append(inside)
+        val matcher = tPattern.matcher(command)
+        val buff = StringBuffer()
+        while (matcher.find()) {
+            val key = (matcher.group("single") ?: matcher.group("double")).trim()
+            var value = replacement.getReplacement(key) ?: contextMap?.get(key)
+            if (value == null) {
+                value = matcher.group()
             } else {
-                newValue.append(c)
-                index++
-            }
-        }
-        return newValue.toString()
-    }
-
-    private fun parseWithDoubleCurlyBraces(
-        command: String,
-        replacement: KeyReplacement,
-        contextMap: Map<String, String>? = emptyMap()
-    ): String {
-        if (command.isBlank()) {
-            return command
-        }
-        val newValue = StringBuilder()
-        var index = 0
-        while (index < command.length) {
-            val c = command[index]
-            if (checkPrefix(c, index, command)) {
-                val inside = StringBuilder()
-                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement, contextMap)
-                newValue.append(inside)
-            } else {
-                newValue.append(c)
-                index++
-            }
-        }
-        return newValue.toString()
-    }
-
-    private fun parseVariable(
-        command: String,
-        start: Int,
-        newValue: StringBuilder,
-        replacement: KeyReplacement,
-        contextMap: Map<String, String>? = emptyMap()
-    ): Int {
-        val token = StringBuilder()
-        var index = start
-        while (index < command.length) {
-            val c = command[index]
-            if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
-                val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, replacement)
-                token.append(inside)
-            } else if (c == '}') {
-                var tokenValue = getVariable(token.toString(), replacement, false)
-                if (tokenValue == "\${$token}") {
-                    tokenValue = contextMap?.get(token.toString()) ?: "\${$token}"
+                if (depth > 0 && tPattern.matcher(value).find()) {
+                    value = parseTemplate(value, replacement, contextMap, depth = depth - 1)
                 }
-                newValue.append(tokenValue)
-                return index + 1
-            } else {
-                token.append(c)
-                index++
             }
+            matcher.appendReplacement(buff, Matcher.quoteReplacement(value))
         }
-        newValue.append("\${").append(token)
-        return index
+        matcher.appendTail(buff)
+        return buff.toString()
     }
 
-    private fun parseVariableWithDoubleCurlyBraces(
-        command: String,
-        start: Int,
-        newValue: StringBuilder,
-        replacement: KeyReplacement,
-        contextMap: Map<String, String>? = emptyMap()
-    ): Int {
-        val token = StringBuilder()
-        var index = start
-
-        while (index < command.length) {
-            val c = command[index]
-            if (checkPrefix(c, index, command)) {
-                val inside = StringBuilder()
-                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement, contextMap)
-                token.append(inside)
-            } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
-                val tokenStr = token.toString().trim()
-                var tokenValue = getVariable(token.toString().trim(), replacement, true)
-                if (tokenValue == "\${{$tokenStr}}") {
-                    tokenValue = contextMap?.get(tokenStr) ?: "\${{$token}}"
-                }
-                newValue.append(tokenValue)
-                return index + 2
-            } else {
-                token.append(c)
-                index++
-            }
-        }
-        newValue.append("\${{").append(token)
-        return index
-    }
-
-    private fun checkPrefix(c: Char, index: Int, command: String) =
-        c == '$' && (index + 2) < command.length && command[index + 1] == '{' && command[index + 2] == '{'
-
-    private fun getVariable(key: String, replacement: KeyReplacement, doubleCurlyBraces: Boolean) =
-        replacement.getReplacement(key, doubleCurlyBraces)
+    private val tPattern = Pattern.compile("(\\$[{](?<single>[^$^{}]+)})|(\\$[{]{2}(?<double>[^$^{}]+)[}]{2})")
 
     interface KeyReplacement {
-        fun getReplacement(key: String, doubleCurlyBraces: Boolean): String?
+        /**
+         * 如果[key]替换不成功需要返回null，不建议直接返回[key]，避免无法判断到底替换成功
+         */
+        fun getReplacement(key: String): String?
     }
 }

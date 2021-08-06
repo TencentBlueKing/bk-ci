@@ -33,6 +33,9 @@ import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.ProjectFreshDao
 import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
+import com.tencent.devops.project.dispatch.ProjectDispatcher
+import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
@@ -42,12 +45,14 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
 @Service
+@Suppress("ALL")
 class ProjectUserRefreshService @Autowired constructor(
     val tofService: TOFService,
     val projectUserService: ProjectUserService,
     val userDao: UserDao,
     val projectUserDao: ProjectUserDao,
     val projectFreshDao: ProjectFreshDao,
+    val projectDispatcher: ProjectDispatcher,
     val dslContext: DSLContext
 ) {
     private val executorService = Executors.newSingleThreadExecutor()
@@ -173,25 +178,92 @@ class ProjectUserRefreshService @Autowired constructor(
         return null
     }
 
-    fun fixGitCIProjectInfo(): Int {
-        val limitCount = 5
+    fun resetProjectInfo(): Int {
+        return projectFreshDao.resetProjectDeptInfo(dslContext)
+    }
+
+    fun fixGitCIProjectInfo(start: Long, limitCount: Int, sleepTime: Long): Int {
+        var startId = start
         var count = 0
-        var startId = 0L
-        var currProjects = projectFreshDao.getProjectAfterIdWithoutDept(dslContext, startId, limitCount)
+        var currProjects = projectFreshDao.getProjectAfterId(dslContext, startId, limitCount)
         while (currProjects.isNotEmpty()) {
             currProjects.forEach {
                 try {
-                    val userInfo = tofService.getUserDeptDetail(it.creator)
-                    count += projectFreshDao.fixProjectInfo(
-                        dslContext = dslContext,
-                        id = it.id,
-                        creatorBgId = userInfo.bgId.toLong(),
-                        creatorBgName = userInfo.bgName,
-                        creatorDeptId = userInfo.deptId.toLong(),
-                        creatorDeptName = userInfo.deptName,
-                        creatorCenterId = userInfo.centerId.toLong(),
-                        creatorCenterName = userInfo.centerName
-                    )
+                    val devopsUser = projectFreshDao.getDevopsUserInfo(dslContext, it.creator)
+                    if (devopsUser == null) {
+                        Thread.sleep(sleepTime)
+                        val userInfo = tofService.getUserDeptDetail(it.creator)
+                        logger.info("[${it.creator}] fixGitCIProjectInfo tofService: $userInfo")
+                        count += projectFreshDao.fixProjectInfo(
+                            dslContext = dslContext,
+                            id = it.id,
+                            creatorBgId = userInfo.bgId.toLong(),
+                            creatorBgName = userInfo.bgName,
+                            creatorDeptId = userInfo.deptId.toLong(),
+                            creatorDeptName = userInfo.deptName,
+                            creatorCenterId = userInfo.centerId.toLong(),
+                            creatorCenterName = userInfo.centerName
+                        )
+                        projectDispatcher.dispatch(
+                            ProjectUpdateBroadCastEvent(
+                                userId = it.creator,
+                                projectId = it.projectId,
+                                projectInfo = ProjectUpdateInfo(
+                                    projectName = it.projectName,
+                                    projectType = it.projectType,
+                                    bgId = userInfo.bgId.toLong(),
+                                    bgName = userInfo.bgName,
+                                    centerId = userInfo.centerId.toLong(),
+                                    centerName = userInfo.centerName,
+                                    deptId = userInfo.deptId.toLong(),
+                                    deptName = userInfo.deptName,
+                                    description = it.description,
+                                    englishName = it.englishName,
+                                    ccAppId = it.ccAppId,
+                                    ccAppName = it.ccAppName,
+                                    kind = it.kind,
+                                    secrecy = it.isSecrecy
+                                )
+                            )
+                        )
+                    } else {
+                        logger.info("[${it.creator}] fixGitCIProjectInfo getDevopsUserInfo: " +
+                            "creatorBgId=${devopsUser.bgId}, creatorBgName=${devopsUser.bgName}" +
+                            "creatorDeptId=${devopsUser.deptId}, creatorDeptName=${devopsUser.deptName}" +
+                            "creatorCenterId=${devopsUser.centerId}, creatorCenterName=${devopsUser.centerName}")
+                        count += projectFreshDao.fixProjectInfo(
+                            dslContext = dslContext,
+                            id = it.id,
+                            creatorBgId = devopsUser.bgId.toLong(),
+                            creatorBgName = devopsUser.bgName,
+                            creatorDeptId = devopsUser.deptId.toLong(),
+                            creatorDeptName = devopsUser.deptName,
+                            creatorCenterId = devopsUser.centerId.toLong(),
+                            creatorCenterName = devopsUser.centerName
+                        )
+                        projectDispatcher.dispatch(
+                            ProjectUpdateBroadCastEvent(
+                                userId = it.creator,
+                                projectId = it.projectId,
+                                projectInfo = ProjectUpdateInfo(
+                                    projectName = it.projectName,
+                                    projectType = it.projectType,
+                                    bgId = devopsUser.bgId.toLong(),
+                                    bgName = devopsUser.bgName,
+                                    centerId = devopsUser.centerId.toLong(),
+                                    centerName = devopsUser.centerName,
+                                    deptId = devopsUser.deptId.toLong(),
+                                    deptName = devopsUser.deptName,
+                                    description = it.description,
+                                    englishName = it.englishName,
+                                    ccAppId = it.ccAppId,
+                                    ccAppName = it.ccAppName,
+                                    kind = it.kind,
+                                    secrecy = it.isSecrecy
+                                )
+                            )
+                        )
+                    }
                 } catch (t: Throwable) {
                     logger.error("Update git ci project in devops failed, msg: ${t.message}")
                     return@forEach
@@ -200,14 +272,13 @@ class ProjectUserRefreshService @Autowired constructor(
                 }
             }
             logger.info("fixGitCIProjectInfo project ${currProjects.map { it.id }.toList()}, fixed count: $count")
-            Thread.sleep(100)
-            currProjects = projectFreshDao.getProjectAfterIdWithoutDept(dslContext, startId, limitCount)
+            currProjects = projectFreshDao.getProjectAfterId(dslContext, startId, limitCount)
         }
         logger.info("fixGitCIProjectInfo finished count: $count")
         return count
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ProjectUserRefreshService::class.java)
     }
 }

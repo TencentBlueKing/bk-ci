@@ -54,7 +54,7 @@ class GitRequestEventBuildDao {
         description: String?,
         sourceGitProjectId: Long?,
         buildStatus: BuildStatus,
-        version: String? = null
+        version: String?
     ): Long {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val record = dslContext.insertInto(
@@ -107,7 +107,7 @@ class GitRequestEventBuildDao {
         pipelineId: String,
         buildId: String,
         buildStatus: BuildStatus,
-        version: String? = null
+        version: String?
     ) {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             dslContext.insertInto(
@@ -177,7 +177,7 @@ class GitRequestEventBuildDao {
         gitBuildId: Long,
         pipelineId: String,
         buildId: String,
-        version: String? = null
+        version: String?
     ) {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             dslContext.update(this)
@@ -579,6 +579,17 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun deleteBuildByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>
+    ): Int {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
+        }
+    }
+
     fun getProjectAfterId(dslContext: DSLContext, startId: Long, limit: Int): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
@@ -590,5 +601,14 @@ class GitRequestEventBuildDao {
 
     fun batchUpdateBuild(dslContext: DSLContext, builds: List<TGitRequestEventBuildRecord>) {
         dslContext.batchUpdate(builds).execute()
+    }
+
+    fun isBuildExist(dslContext: DSLContext, buildId: String): Boolean {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(BUILD_ID))
+                .fetch()
+                .isNotEmpty
+        }
     }
 }

@@ -124,6 +124,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         )
         return Result(
             scmService.createNewFile(
+                userId = userId,
                 token = getToken(userId = userId, isEnableUser = false, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
                 gitCICreateFile = newFile

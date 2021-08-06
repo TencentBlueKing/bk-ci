@@ -87,6 +87,7 @@ const val MULTIPLE_SELECTOR = "multiple" // 多选
 const val SINGLE_SELECTOR = "single" // 单选
 const val OPTIONS = "options" // 可选项
 const val LABEL = "label" // 标签
+const val NO_LABEL = "no label" // 无标题
 const val URL = "url" // url链接
 const val PATH = "path" // 路径
 const val ARTIFACTORY_TYPE = "artifactoryType" // 归档仓库类型

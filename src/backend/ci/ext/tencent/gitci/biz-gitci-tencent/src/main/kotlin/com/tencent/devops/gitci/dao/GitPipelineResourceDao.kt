@@ -42,7 +42,7 @@ class GitPipelineResourceDao {
         dslContext: DSLContext,
         gitProjectId: Long,
         pipeline: GitProjectPipeline,
-        version: String? = null
+        version: String?
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.insertInto(
@@ -77,7 +77,7 @@ class GitPipelineResourceDao {
         gitProjectId: Long,
         pipelineId: String,
         displayName: String,
-        version: String? = null
+        version: String?
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.update(this)
@@ -100,7 +100,7 @@ class GitPipelineResourceDao {
         creator: String?,
         latestBuildId: String?,
         manualTrigger: Boolean? = false,
-        version: String? = null
+        version: String?
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.insertInto(
@@ -134,7 +134,7 @@ class GitPipelineResourceDao {
         dslContext: DSLContext,
         pipeline: GitProjectPipeline,
         buildId: String,
-        version: String? = null
+        version: String?
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.update(this)
@@ -272,6 +272,30 @@ class GitPipelineResourceDao {
             return dslContext.update(this)
                 .set(VERSION, version)
                 .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
+    fun getLastUpdatePipelines(
+        dslContext: DSLContext,
+        limit: Int,
+        lastUpdateTime: LocalDateTime
+    ): List<TGitPipelineResourceRecord> {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(UPDATE_TIME.le(lastUpdateTime))
+                .limit(limit)
+                .fetch()
+        }
+    }
+
+    fun deleteLastUpdatePipelines(
+        dslContext: DSLContext,
+        ids: Set<Long>
+    ): Int {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.deleteFrom(this)
+                .where(ID.`in`(ids))
                 .execute()
         }
     }

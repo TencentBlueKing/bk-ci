@@ -28,10 +28,10 @@
 package com.tencent.devops.openapi.resources.apigw.v2
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
-import com.tencent.devops.artifactory.api.user.UserArtifactoryResource
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
-import com.tencent.devops.artifactory.pojo.SearchProps
+import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.pojo.Result
@@ -101,7 +101,7 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<Url> {
-        return client.get(UserArtifactoryResource::class).downloadUrl(
+        return client.get(ServiceArtifactoryResource::class).downloadUrlForOpenApi(
             userId = userId,
             projectId = projectId,
             artifactoryType = artifactoryType,
@@ -119,14 +119,8 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>> {
-        val map = mutableMapOf<String, String>()
-        map["pipelineId"] = pipelineId
-        map["buildId"] = buildId
-        val searchProps = SearchProps(
-            fileNames = null,
-            props = map
-        )
-        return client.get(UserArtifactoryResource::class).search(
+        val searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId))
+        return client.get(ServiceArtifactoryResource::class).search(
             userId = userId,
             projectId = projectId,
             page = page,
