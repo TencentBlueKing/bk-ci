@@ -72,7 +72,7 @@
                     if (errorKeys.length) this.errMessage = `${errorKeys.join(',')} 是必填项，请修改后再试`
                     else this.errMessage = ''
 
-                    if (this.errMessage) reject(new Error(this.errMessage))
+                    if (this.errMessage && !this.$parent.$refs.flowApprove.isCancel) reject(new Error(this.errMessage))
                     else resolve(this.params)
                 })
             }
