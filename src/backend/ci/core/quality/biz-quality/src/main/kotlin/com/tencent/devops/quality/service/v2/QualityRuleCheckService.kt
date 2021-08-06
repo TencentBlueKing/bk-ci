@@ -52,7 +52,7 @@ import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.AtomRuleResponse
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
-import com.tencent.devops.quality.constant.defaultCodeCCUrl
+import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.pojo.RuleCheckSingleResult
@@ -454,7 +454,7 @@ class QualityRuleCheckService @Autowired constructor(
             if (record.detail.isNullOrBlank()) { // #4796 日志展示的链接去掉域名
                 "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
-                val detailUrl = codeccToolUrlPathMap[record.detail!!] ?: defaultCodeCCUrl
+                val detailUrl = codeccToolUrlPathMap[record.detail!!] ?: DEFAULT_CODECC_URL
                 val fillDetailUrl = detailUrl.replace("##projectId##", projectId)
                     .replace("##taskId##", taskId.toString())
                     .replace("##buildId##", buildId)
