@@ -27,16 +27,32 @@
 
 package com.tencent.devops.gitci.v2.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.gitci.dao.GitPipelineResourceDao
+import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
+import com.tencent.devops.gitci.dao.GitRequestEventDao
+import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
+import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.gitci.pojo.git.GitPushEvent
+import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.message.ContentAttr
+import com.tencent.devops.gitci.pojo.v2.message.RequestMessageContent
 import com.tencent.devops.gitci.pojo.v2.message.UserMessage
 import com.tencent.devops.gitci.pojo.v2.message.UserMessageRecord
 import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.dao.GitUserMessageDao
+import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
+import com.tencent.devops.model.gitci.tables.records.TGitRequestEventNotBuildRecord
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,15 +61,22 @@ import java.time.format.DateTimeFormatter
 
 @Service
 class GitUserMessageService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper,
     private val gitUserMessageDao: GitUserMessageDao,
-    private val gitCIV2RequestService: GitCIV2RequestService,
-    private val websocketService: GitCIV2WebsocketService
+    private val websocketService: GitCIV2WebsocketService,
+    private val gitRequestEventDao: GitRequestEventDao,
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
+    private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
         private val timeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         private val logger = LoggerFactory.getLogger(GitUserMessageService::class.java)
     }
+
+    private val channelCode = ChannelCode.GIT
 
     fun getMessages(
         projectId: String?,
@@ -102,7 +125,7 @@ class GitUserMessageService @Autowired constructor(
         logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get messageRecords")
 
         val requestIds = messageRecords.map { it.messageId.toInt() }.toSet()
-        val eventMap = gitCIV2RequestService.getRequestMap(userId, gitProjectId, requestIds)
+        val eventMap = getRequestMap(userId, gitProjectId, requestIds)
 
         logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get eventMap")
 
@@ -169,5 +192,139 @@ class GitUserMessageService @Autowired constructor(
         userId: String
     ): Int {
         return gitUserMessageDao.getNoReadCount(dslContext = dslContext, projectId = projectId, userId = userId)
+    }
+
+    private fun getRequestMap(
+        userId: String,
+        gitProjectId: Long?,
+        requestIds: Set<Int>
+    ): Map<Long, List<RequestMessageContent>> {
+        val eventList = gitRequestEventDao.getRequestsById(
+            dslContext = dslContext,
+            requestIds = requestIds
+        )
+        if (eventList.isEmpty()) {
+            return emptyMap()
+        }
+        val eventIds = eventList.map { it.id!! }.toSet()
+        val resultMap = mutableMapOf<Long, List<RequestMessageContent>>()
+
+        // 未触发的所有记录
+        val noBuildList = gitRequestEventNotBuildDao.getListByEventIds(dslContext, eventIds)
+        val noBuildMap = getNoBuildEventMap(noBuildList)
+        // 触发的所有记录
+        val buildList = gitRequestEventBuildDao.getByEventIds(dslContext, eventIds)
+        val buildMap = getBuildEventMap(buildList)
+        // 项目ID可能为空，用所有的构建记录的流水线ID查询流水线
+        val pipelineMap = if (gitProjectId != null) {
+            pipelineResourceDao.getPipelines(dslContext, gitProjectId).associateBy { it.pipelineId }
+        } else {
+            val pipelineIds =
+                (noBuildList.map { it.pipelineId }.toSet() + buildList.map { it.pipelineId }.toSet()).toList()
+            pipelineResourceDao.getPipelinesInIds(dslContext, null, pipelineIds).associateBy { it.pipelineId }
+        }
+
+        val processBuildList = client.get(ServiceBuildResource::class)
+            .getBatchBuildStatus(
+                projectId = "git_$gitProjectId",
+                buildId = buildList.map { it.buildId }.toSet(),
+                channelCode = channelCode
+            ).data?.associateBy { it.id }
+
+        eventList.forEach { event ->
+            val eventId = event.id!!
+            val records = mutableListOf<RequestMessageContent>()
+            // 添加未构建的记录
+            noBuildMap[eventId]?.forEach nextBuild@{
+                val pipeline = if (it.pipelineId.isNullOrBlank()) {
+                    null
+                } else {
+                    pipelineMap[it.pipelineId]
+                }
+                records.add(
+                    RequestMessageContent(
+                        id = it.id,
+                        pipelineName = pipeline?.displayName ?: it.filePath,
+                        buildBum = null,
+                        triggerReasonName = it.reason,
+                        triggerReasonDetail = it.reasonDetail,
+                        filePathUrl = getYamlUrl(event.event, pipeline?.filePath)
+                    )
+                )
+            }
+            // 添加构建的记录
+            buildMap[eventId]?.forEach nextBuild@{
+                val buildNum = processBuildList?.get(it.buildId)?.buildNum
+                val pipeline = pipelineMap[it.pipelineId]
+                records.add(
+                    RequestMessageContent(
+                        id = it.id,
+                        pipelineName = pipeline?.displayName,
+                        buildBum = buildNum,
+                        triggerReasonName = TriggerReason.TRIGGER_SUCCESS.name,
+                        triggerReasonDetail = null,
+                        filePathUrl = getYamlUrl(event.event, pipeline?.filePath)
+                    )
+                )
+            }
+            resultMap[eventId] = records
+        }
+        return resultMap
+    }
+
+    private fun getBuildEventMap(
+        buildList: List<TGitRequestEventBuildRecord>
+    ): MutableMap<Long, MutableList<TGitRequestEventBuildRecord>> {
+        val resultMap = mutableMapOf<Long, MutableList<TGitRequestEventBuildRecord>>()
+        buildList.forEach {
+            if (resultMap[it.eventId].isNullOrEmpty()) {
+                resultMap[it.eventId] = mutableListOf(it)
+            } else {
+                resultMap[it.eventId]!!.add(it)
+            }
+        }
+        return resultMap
+    }
+
+    private fun getNoBuildEventMap(
+        noBuildList: List<TGitRequestEventNotBuildRecord>
+    ): MutableMap<Long, MutableList<TGitRequestEventNotBuildRecord>> {
+        val resultMap = mutableMapOf<Long, MutableList<TGitRequestEventNotBuildRecord>>()
+        noBuildList.forEach {
+            if (resultMap[it.eventId].isNullOrEmpty()) {
+                resultMap[it.eventId] = mutableListOf(it)
+            } else {
+                resultMap[it.eventId]!!.add(it)
+            }
+        }
+        return resultMap
+    }
+
+    private fun getYamlUrl(event: String, filePath: String?): String? {
+        if (filePath == null) {
+            return null
+        }
+        val gitEvent =
+            try {
+                objectMapper.readValue<GitEvent>(event)
+            } catch (e: Exception) {
+                logger.error("get message getYamlUrl error : ${e.message}")
+                return null
+            }
+        val homepage = when (gitEvent) {
+            is GitPushEvent -> {
+                gitEvent.repository.homepage
+            }
+            is GitTagPushEvent -> {
+                gitEvent.repository.homepage
+            }
+            is GitMergeRequestEvent -> {
+                gitEvent.object_attributes.source.web_url
+            }
+            else -> {
+                null
+            }
+        }
+        return "$homepage/$filePath"
     }
 }
