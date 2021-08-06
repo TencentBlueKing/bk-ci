@@ -36,13 +36,11 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
-import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.ci.image.BuildType
 import com.tencent.devops.common.ci.image.Credential
 import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
-import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
@@ -57,6 +55,7 @@ import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -65,12 +64,9 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.DependOnType
-import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.StageControlOption
@@ -134,8 +130,9 @@ import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BRANCH
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BUILD_URL
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_PIPELINE_NAME
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
-import com.tencent.devops.gitci.trigger.GitCIEventSaveService
+import com.tencent.devops.gitci.trigger.GitCIEventService
 import com.tencent.devops.gitci.v2.service.GitCIV2WebsocketService
+import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.pojo.BuildId
@@ -180,12 +177,13 @@ class YamlBuildV2 @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val oauthService: OauthService,
-    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val gitCIEventSaveService: GitCIEventService,
     private val websocketService: GitCIV2WebsocketService,
-    private val gitCISettingDao: GitCISettingDao
+    private val gitCISettingDao: GitCISettingDao,
+    private val gitPipelineBranchService: GitPipelineBranchService
 ) : YamlBaseBuildV2<ScriptBuildYaml>(
     client, scmClient, dslContext, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitCIEventSaveService, websocketService
+    gitRequestEventBuildDao, gitCIEventSaveService, websocketService, gitPipelineBranchService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -365,7 +363,7 @@ class YamlBuildV2 @Autowired constructor(
                 RuleCreateRequestV3.CreateRequestIndicator(
                     atomCode = atomCode,
                     enName = enNameAndthreshold.first().trim(),
-                    operation = operations[op].name,
+                    operation = operations[op]!!.name,
                     threshold = enNameAndthreshold.last().trim()
                 )
             }
@@ -719,7 +717,7 @@ class YamlBuildV2 @Autowired constructor(
         if (job.runsOn.selfHosted == true) {
             return ThirdPartyAgentEnvDispatchType(
                 envName = job.runsOn.poolName,
-                workspace = "",
+                workspace = job.runsOn.workspace,
                 agentType = AgentType.NAME
             )
         }
@@ -876,7 +874,7 @@ class YamlBuildV2 @Autowired constructor(
                 retryWhenFailed = step.retryTimes != null,
                 retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
-                customEnv = emptyList(),
+                customEnv = getElementEnv(step.env),
                 runCondition = if (step.ifFiled.isNullOrBlank()) {
                     RunCondition.PRE_TASK_SUCCESS
                 } else {
@@ -940,6 +938,23 @@ class YamlBuildV2 @Autowired constructor(
         return elementList
     }
 
+    private fun getElementEnv(env: Map<String, Any?>?): List<NameAndValue>? {
+        if (env == null) {
+            return null
+        }
+
+        val nameAndValueList = mutableListOf<NameAndValue>()
+        env.forEach {
+            nameAndValueList.add(
+                NameAndValue(
+                key = it.key,
+                value = it.value.toString()
+            ))
+        }
+
+        return nameAndValueList
+    }
+
     private fun makeCheckoutElement(
         step: Step,
         gitBasicSetting: GitCIBasicSetting,
@@ -952,14 +967,13 @@ class YamlBuildV2 @Autowired constructor(
         }
         // 非mr和tag触发下根据commitId拉取本地工程代码
         if (step.checkout == "self") {
-            inputMap["accessToken"] =
-                oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
+            inputMap["authUserId"] = gitBasicSetting.enableUserId
             inputMap["repositoryUrl"] = if (gitBasicSetting.gitHttpUrl.isBlank()) {
                 gitCISettingDao.getSetting(dslContext, gitBasicSetting.gitProjectId)?.gitHttpUrl
             } else {
                 gitBasicSetting.gitHttpUrl
             }
-            inputMap["authType"] = "ACCESS_TOKEN"
+            inputMap["authType"] = "AUTH_USER_TOKEN"
 
             when (event.objectKind) {
                 OBJECT_KIND_MERGE_REQUEST ->
@@ -985,9 +999,8 @@ class YamlBuildV2 @Autowired constructor(
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
             if (step.with == null || (step.with != null && !step.with!!.containsKey("authType"))) {
-                inputMap["accessToken"] =
-                    oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
-                inputMap["authType"] = "ACCESS_TOKEN"
+                inputMap["authUserId"] = gitBasicSetting.enableUserId
+                inputMap["authType"] = "AUTH_USER_TOKEN"
             }
         }
 
@@ -1048,83 +1061,6 @@ class YamlBuildV2 @Autowired constructor(
         }
 
         return elementList
-    }
-
-    private fun createGitCodeElement(event: GitRequestEvent, gitBasicSetting: GitCIBasicSetting): Element {
-        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitBasicSetting.gitProjectId).data!!
-        logger.info("get token from scm success, gitToken: $gitToken")
-        val gitCiCodeRepoInput = when (event.objectKind) {
-            OBJECT_KIND_PUSH -> {
-                GitCiCodeRepoInput(
-                    repositoryName = gitBasicSetting.name,
-                    repositoryUrl = gitBasicSetting.gitHttpUrl,
-                    oauthToken = gitToken.accessToken,
-                    localPath = null,
-                    strategy = CodePullStrategy.REVERT_UPDATE,
-                    pullType = GitPullModeType.COMMIT_ID,
-                    refName = event.commitId
-                )
-            }
-            OBJECT_KIND_TAG_PUSH -> {
-                GitCiCodeRepoInput(
-                    repositoryName = gitBasicSetting.name,
-                    repositoryUrl = gitBasicSetting.gitHttpUrl,
-                    oauthToken = gitToken.accessToken,
-                    localPath = null,
-                    strategy = CodePullStrategy.REVERT_UPDATE,
-                    pullType = GitPullModeType.TAG,
-                    refName = event.branch.removePrefix("refs/tags/")
-                )
-            }
-            OBJECT_KIND_MERGE_REQUEST -> {
-                // MR时fork库的源仓库URL会不同，需要单独拿出来处理
-                val gitEvent = objectMapper.readValue<GitEvent>(event.event) as GitMergeRequestEvent
-                GitCiCodeRepoInput(
-                    repositoryName = gitBasicSetting.name,
-                    repositoryUrl = gitBasicSetting.gitHttpUrl,
-                    oauthToken = gitToken.accessToken,
-                    localPath = null,
-                    strategy = CodePullStrategy.REVERT_UPDATE,
-                    pullType = GitPullModeType.BRANCH,
-                    refName = "",
-                    pipelineStartType = StartType.WEB_HOOK,
-                    hookEventType = CodeEventType.MERGE_REQUEST.name,
-                    hookSourceBranch = event.branch,
-                    hookTargetBranch = event.targetBranch,
-                    hookSourceUrl = if (event.sourceGitProjectId != null &&
-                        event.sourceGitProjectId != event.gitProjectId) {
-                        gitEvent.object_attributes.source.http_url
-                    } else {
-                        gitBasicSetting.gitHttpUrl
-                    },
-                    hookTargetUrl = gitBasicSetting.gitHttpUrl
-                )
-            }
-            OBJECT_KIND_MANUAL -> {
-                GitCiCodeRepoInput(
-                    repositoryName = gitBasicSetting.name,
-                    repositoryUrl = gitBasicSetting.gitHttpUrl,
-                    oauthToken = gitToken.accessToken,
-                    localPath = null,
-                    strategy = CodePullStrategy.REVERT_UPDATE,
-                    pullType = GitPullModeType.BRANCH,
-                    refName = event.branch.removePrefix("refs/heads/")
-                )
-            }
-            else -> {
-                logger.error("event.objectKind invalid")
-                null
-            }
-        }
-
-        return MarketBuildAtomElement(
-            name = "拉代码",
-            id = null,
-            status = null,
-            atomCode = GitCiCodeRepoTask.atomCode,
-            version = "1.*",
-            data = mapOf("input" to gitCiCodeRepoInput!!)
-        )
     }
 
     private fun createPipelineParams(

@@ -232,7 +232,7 @@ object ScriptYmlUtils {
         }
     }
 
-    private fun formatYamlCustom(yamlStr: String): String {
+    fun formatYamlCustom(yamlStr: String): String {
         val sb = StringBuilder()
         val br = BufferedReader(StringReader(yamlStr))
         var line: String? = br.readLine()
@@ -337,6 +337,9 @@ object ScriptYmlUtils {
 
         val jobs = mutableListOf<Job>()
         preJobs.forEach { (t, u) ->
+            // 检测job env合法性
+            GitCIEnvUtils.checkEnv(u.env)
+
             val services = mutableListOf<Service>()
             u.services?.forEach { key, value ->
                 services.add(
@@ -403,6 +406,8 @@ object ScriptYmlUtils {
             if (it.uses == null && it.run == null && it.checkout == null) {
                 throw CustomException(Response.Status.BAD_REQUEST, "step必须包含uses或run或checkout!")
             }
+            // 检测step env合法性
+            GitCIEnvUtils.checkEnv(it.env)
 
             stepList.add(
                 Step(
@@ -510,24 +515,7 @@ object ScriptYmlUtils {
             preScriptBuildYaml
         )
 
-        var thisTriggerOn = TriggerOn(
-            push = PushRule(
-                branches = listOf("*")
-            ),
-            tag = TagRule(
-                tags = listOf("*")
-            ),
-            mr = MrRule(
-                targetBranches = listOf("*")
-            )
-        )
-
-        if (preScriptBuildYaml.triggerOn != null) {
-            thisTriggerOn =
-                formatTriggerOn(
-                    preScriptBuildYaml.triggerOn!!
-                )
-        }
+        val thisTriggerOn = formatTriggerOn(preScriptBuildYaml.triggerOn)
 
         return ScriptBuildYaml(
             name = if (!preScriptBuildYaml.name.isNullOrBlank()) {
@@ -547,7 +535,22 @@ object ScriptYmlUtils {
         )
     }
 
-    private fun formatTriggerOn(preTriggerOn: PreTriggerOn): TriggerOn {
+    fun formatTriggerOn(preTriggerOn: PreTriggerOn?): TriggerOn {
+
+        if (preTriggerOn == null) {
+            return TriggerOn(
+                push = PushRule(
+                    branches = listOf("*")
+                ),
+                tag = TagRule(
+                    tags = listOf("*")
+                ),
+                mr = MrRule(
+                    targetBranches = listOf("*")
+                )
+            )
+        }
+
         var pushRule: PushRule? = null
         var tagRule: TagRule? = null
         var mrRule: MrRule? = null

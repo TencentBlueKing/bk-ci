@@ -92,7 +92,8 @@ data class RunsOn(
     val poolName: String = JobRunsOnType.DOCKER.type,
     val container: Any? = null,
     @JsonProperty("agent-selector")
-    val agentSelector: List<String>? = null
+    val agentSelector: List<String>? = null,
+    val workspace: String? = ""
 )
 
 enum class JobRunsOnType(val type: String) {
