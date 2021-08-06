@@ -137,7 +137,7 @@ class GitCIV2RequestService @Autowired constructor(
                     } catch (e: Exception) {
                         logger.error(
                             "Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId:" +
-                                    " ${it.pipelineId} failed with error: ",
+                                " ${it.pipelineId} failed with error: ",
                             e
                         )
                         return@nextBuild
@@ -189,25 +189,35 @@ class GitCIV2RequestService @Autowired constructor(
     }
 
     fun getRequestMap(
-        gitProjectId: Long,
         userId: String,
+        gitProjectId: Long?,
         requestIds: Set<Int>
     ): Map<Long, List<RequestMessageContent>> {
         val eventList = gitRequestEventDao.getRequestsById(
             dslContext = dslContext,
             requestIds = requestIds
         )
-        if (eventList.isNullOrEmpty()) {
+        if (eventList.isEmpty()) {
             return emptyMap()
         }
         val eventIds = eventList.map { it.id!! }.toSet()
         val resultMap = mutableMapOf<Long, List<RequestMessageContent>>()
-        val pipelineMap = pipelineResourceDao.getPipelines(dslContext, gitProjectId).associateBy { it.pipelineId }
+
         // 未触发的所有记录
-        val noBuildMap = getNoBuildEventMap(gitRequestEventNotBuildDao.getListByEventIds(dslContext, eventIds))
+        val noBuildList = gitRequestEventNotBuildDao.getListByEventIds(dslContext, eventIds)
+        val noBuildMap = getNoBuildEventMap(noBuildList)
         // 触发的所有记录
         val buildList = gitRequestEventBuildDao.getByEventIds(dslContext, eventIds)
         val buildMap = getBuildEventMap(buildList)
+        // 项目ID可能为空，用所有的构建记录的流水线ID查询流水线
+        val pipelineMap = if (gitProjectId != null) {
+            pipelineResourceDao.getPipelines(dslContext, gitProjectId).associateBy { it.pipelineId }
+        } else {
+            val pipelineIds =
+                (noBuildList.map { it.pipelineId }.toSet() + buildList.map { it.pipelineId }.toSet()).toList()
+            pipelineResourceDao.getPipelinesInIds(dslContext, null, pipelineIds).associateBy { it.pipelineId }
+        }
+
         val processBuildList = client.get(ServiceBuildResource::class)
             .getBatchBuildStatus(
                 projectId = "git_$gitProjectId",

@@ -56,7 +56,7 @@ class GitUserMessageService @Autowired constructor(
     }
 
     fun getMessages(
-        projectId: String,
+        projectId: String?,
         userId: String,
         messageType: UserMessageType?,
         haveRead: Boolean?,
@@ -64,7 +64,11 @@ class GitUserMessageService @Autowired constructor(
         pageSize: Int
     ): Page<UserMessageRecord> {
         val startEpoch = System.currentTimeMillis()
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        val gitProjectId = if (projectId == null) {
+            null
+        } else {
+            GitCommonUtils.getGitProjectId(projectId)
+        }
         // 后续有不同类型再考虑分开逻辑，目前全部按照request处理
         val messageCount = gitUserMessageDao.getMessageCount(
             dslContext = dslContext,
@@ -98,7 +102,7 @@ class GitUserMessageService @Autowired constructor(
         logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get messageRecords")
 
         val requestIds = messageRecords.map { it.messageId.toInt() }.toSet()
-        val eventMap = gitCIV2RequestService.getRequestMap(gitProjectId, userId, requestIds)
+        val eventMap = gitCIV2RequestService.getRequestMap(userId, gitProjectId, requestIds)
 
         logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get eventMap")
 
