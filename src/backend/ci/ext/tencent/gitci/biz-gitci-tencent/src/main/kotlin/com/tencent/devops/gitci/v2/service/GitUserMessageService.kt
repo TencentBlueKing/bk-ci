@@ -312,20 +312,37 @@ class GitUserMessageService @Autowired constructor(
                 logger.error("get message getYamlUrl error : ${e.message}")
                 return null
             }
-        val homepage = when (gitEvent) {
+        val homepageAndBranch = when (gitEvent) {
             is GitPushEvent -> {
-                gitEvent.repository.homepage
+                Pair(gitEvent.repository.homepage, getTriggerBranch(gitEvent.ref))
             }
             is GitTagPushEvent -> {
-                gitEvent.repository.homepage
+                Pair(gitEvent.repository.homepage, getTriggerBranch(gitEvent.ref))
             }
             is GitMergeRequestEvent -> {
-                gitEvent.object_attributes.source.web_url
+                Pair(
+                    gitEvent.object_attributes.source.web_url,
+                    getTriggerBranch(gitEvent.object_attributes.source_branch)
+                )
             }
             else -> {
                 null
             }
         }
-        return "$homepage/$filePath"
+        return if (homepageAndBranch == null) {
+            null
+        } else {
+            "${homepageAndBranch.first}/blob/${homepageAndBranch.second}/$filePath"
+        }
+    }
+
+    private fun getTriggerBranch(branch: String): String {
+        return when {
+            branch.startsWith("refs/heads/") ->
+                branch.removePrefix("refs/heads/")
+            branch.startsWith("refs/tags/") ->
+                branch.removePrefix("refs/tags/")
+            else -> branch
+        }
     }
 }
