@@ -64,5 +64,5 @@ interface ServiceTXPipelineResource {
         @ApiParam(value = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String
-    ): String
+    ): Result<String>
 }

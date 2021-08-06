@@ -2,6 +2,7 @@ package com.tencent.devops.openapi.api.apigw.v3
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -32,5 +33,5 @@ interface ApigwTXPipelineResourceV3 {
         @ApiParam(value = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String
-    ): String
+    ): Result<String>
 }
