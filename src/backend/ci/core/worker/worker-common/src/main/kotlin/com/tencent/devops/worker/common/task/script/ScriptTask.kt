@@ -79,13 +79,13 @@ open class ScriptTask : ITask() {
         ScriptEnvUtils.cleanEnv(buildId, workspace)
         ScriptEnvUtils.cleanContext(buildId, workspace)
 
-        val variables = if (buildTask.buildVariable == null) {
+        var variables = if (buildTask.buildVariable == null) {
             runtimeVariables
         } else {
             runtimeVariables.plus(buildTask.buildVariable!!)
         }
         // #4812 提供给git插件使用
-        variables.plus(XDG_CONFIG_HOME to getXdgConfigHomePath(buildVariables.pipelineId))
+        variables = variables.plus(XDG_CONFIG_HOME to getXdgConfigHomePath(buildVariables.pipelineId))
 
         try {
             command.execute(
