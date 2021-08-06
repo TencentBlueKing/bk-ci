@@ -20,62 +20,64 @@
         }
 
         body {
-            line-height: 18px;
-            font: 13px Helvetica, "Microsoft YaHei", sans-serif;
-            color: #333;
+            font-family: -apple-system, PingFang SC, BlinkMacSystemFont, Segoe UI, Roboto, Ubuntu, Helvetica Neue, Helvetica, Arial, Hiragino Sans GB, Microsoft YaHei UI, Microsoft YaHei, Source Han Sans CN, sans-serif;
+            color: #63656E;
             text-align: center;
         }
 
         .logo {
             display: block;
-            width: 70px;
-            height: 70px;
-            margin: 36px auto;
-            border: none;
+            width: 24.8vw;
+            height: 24.8vw;
+            margin: 3.2vw auto;
+            border-radius: 0.8vw;
+        }
+
+        .container {
+            display: block;
+            margin-top: 20.267vw;
+        }
+
+        h2 {
+            font-size: 5.333vw;
+            line-height: 7.2vw;
         }
 
         .tips {
-            line-height: 22px;
+            font-size: 4vw;
+            line-height: 5.6vw;
+            margin-bottom: 17.867vw;
         }
 
-        .container .downloadbtn {
+        #btn_install {
             display: block;
-            width: 260px;
-            height: 28px;
-            line-height: 28px;
-            margin: 20px auto 24px;
-            font-size: 14px;
-            color: #333;
-            text-align: center;
+            width: 91.467vw;
+            height: 11.733vw;
             text-decoration: none;
-            background: #fff;
-            border: 1px solid #797979;
-            border-radius: 3px;
-        }
-
-        .tipstxt {
-            margin-bottom: 8px;
-            color: #999;
+            background: #3A84FF;
+            border-radius: 0.8vw;
+            line-height: 11.733vw;
+            color: white;
+            margin: 0 auto;
+            font-size: 4vw;
         }
 
         .warning {
-            color: #f00;
+            margin-top: 3.2vw;
+            font-size: 3.2vw;
+            color: #EA3636;
         }
     </style>
 </head>
 
 <body cz-shortcut-listen="true">
-    <div id="text" style="display: none;">
-        加载中...
-    </div>
     <div class="wrapper" style="display: block;" id="showContent">
         <div class="container">
             <img class="logo" src="/app/download/devops_app.png" alt="蓝盾DevOps平台logo">
-            <p class="tips">请通过蓝盾DevOps移动版访问内部体验<br>假如页面没有自动跳转，请先安装蓝盾DevOps移动版</p>
-            <a id="btn_install" class="downloadbtn" href="javascript:download();"
-                style="display: block;">立即安装蓝盾DevOps移动版</a>
-            <p class="tipstxt">假如页面能自动跳转，请忽略此页面</p>
-            <p class="warning">公司内部信息，请勿转发！</p>
+            <h2>蓝盾</h2>
+            <p class="tips">请通过蓝盾APP访问内部体验<br>如果页面没有自动跳转，请先安装蓝盾APP</br></p>
+            <a id="btn_install" class="downloadbtn" href="javascript:download();" style="display: block;">立即安装蓝盾App</a>
+            <p class="warning">仅限腾讯员工和合作伙伴使用</p>
         </div>
     </div>
 
@@ -91,30 +93,21 @@
 
         }
 
-        function hideLabelA() {
-            var as = document.getElementsByTagName("a");
-
-            for (var i = 0; i < as.length; i++) {
-                as[i].style.display = "none";
-            }
-        }
-
-        var timeout, t = 1000, hasApp = false, flag = true;
+        var timeout;
+        var t = 1000;
+        var hasApp = true
+        var flag = true;
         setTimeout(function () {
             if (hasApp) {
                 var te = document.getElementById('te');
                 te.click();
 
             } else if (!hasApp && flag) {
-                var btn = document.getElementById('text');
-                btn.style.display = "none";
                 var divCon = document.getElementById("showContent");
                 divCon.style.display = "block";
 
                 var installButton = document.getElementById("btn_install");
                 installButton.style.display = "block";
-                //var txt = document.getElementById('text');
-                //txt.innerHTML='未安装RD，请先安装RD，然后在扫描下载，点击下面的按钮下载安装。';
             }
         }, 2000);
 
@@ -170,8 +163,6 @@
 
             if (terminal == 1 || terminal == 2 || terminal == 3) {
                 //在 IOS 9 中，使用 ifr 的方式还是拉不起来程序，需要使用 window.location 的方式
-                //window.location.href = ifr.src;
-
                 //微信从6.5.6新版本后，拉起其它应该有了新限制
                 if (isNewWeixin()) {  //大于等于6.5.6
                     if (window.WeixinJSBridge) {
@@ -184,8 +175,6 @@
                 } else {
                     location.href = ifr.src;
                 }
-            } else {
-                window.location.href = "http://devops.oa.com";
             }
 
 
@@ -207,7 +196,7 @@
 
         }
 
-        var isNewWeixin = function () {
+        function isNewWeixin() {
             var wechatInfo = navigator.userAgent.match(/MicroMessenger\/([\d\.]+)/i);
             var isWxwork = navigator.userAgent.match(/wxwork\/([\d\.]+)/i);
 
@@ -244,7 +233,7 @@
             return true;
         };
 
-        var doLaunch = function (schemeUrl) {
+        function doLaunch(schemeUrl) {
             setTimeout(function () {
                 window.WeixinJSBridge.invoke('launchApplication', {
                     "schemeUrl": schemeUrl,
@@ -266,14 +255,17 @@
         function getTerminal() {
             var terminal = 0;
             var u = navigator.userAgent;
+
             if (u.indexOf('Android') > -1 || u.indexOf('Linux') > -1) { //Android
                 terminal = 1;
             }
             else if (u.indexOf('iPhone') > -1) {//iPhone
                 terminal = 2;
             }
-            else if (u.indexOf('iPad') > -1 || u.indexOf('Mac') > -1) {
+            else if (u.indexOf('iPad') > -1 && u.indexOf('Mac') > -1) {
                 terminal = 3;
+            } else { // PC
+                return terminal = 4;
             }
 
             return terminal;
@@ -291,10 +283,7 @@
         }
 
 
-        // alert(123);
-        hideLabelA();
         openApp();
-
 
     </script>
 </body>
