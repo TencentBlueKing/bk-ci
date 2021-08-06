@@ -339,7 +339,7 @@
                     const { $route: { params }, tempRemark } = this
                     if (tempRemark !== row.remark) {
                         this.isChangeRemark = true
-                        row.remark = tempRemark
+                        this.$set(row, 'remark', tempRemark)
                         this.resetRemark()
                         await this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/${row.id}/updateRemark`, {
                             remark: tempRemark
@@ -352,11 +352,12 @@
                         this.resetRemark()
                     }
                 } catch (e) {
+                    console.log(e)
                     this.$showTips({
                         theme: 'error',
                         message: this.$t('updateFail')
                     })
-                    row.remark = preRemark
+                    this.$set(row, 'remark', preRemark)
                 }
             },
             resetRemark () {
