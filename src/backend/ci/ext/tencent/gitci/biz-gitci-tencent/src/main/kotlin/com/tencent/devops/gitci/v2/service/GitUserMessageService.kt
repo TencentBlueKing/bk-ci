@@ -201,7 +201,8 @@ class GitUserMessageService @Autowired constructor(
     ): Map<Long, List<RequestMessageContent>> {
         val eventList = gitRequestEventDao.getRequestsById(
             dslContext = dslContext,
-            requestIds = requestIds
+            requestIds = requestIds,
+            hasEvent = true
         )
         if (eventList.isEmpty()) {
             return emptyMap()

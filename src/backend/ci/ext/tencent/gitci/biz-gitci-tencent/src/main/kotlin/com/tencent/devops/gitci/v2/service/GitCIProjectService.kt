@@ -114,7 +114,8 @@ class GitCIProjectService @Autowired constructor(
             gitRequestEventBuildDao.lastBuildByProject(dslContext, projectIdMap.keys).associateBy { it.gitProjectId }
         val eventMap = gitRequestEventDao.getRequestsById(
             dslContext = dslContext,
-            requestIds = lastBuildMap.values.map { it.eventId.toInt() }.toSet()
+            requestIds = lastBuildMap.values.map { it.eventId.toInt() }.toSet(),
+            hasEvent = false
         ).associateBy { it.id }
         val result = gitProjects.map {
             val project = projectIdMap[it.id]
