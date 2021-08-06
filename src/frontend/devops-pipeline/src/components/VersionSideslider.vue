@@ -72,7 +72,7 @@
             },
             // 最新的流水线版本信息
             latestPipelineVersionInfo () {
-                return this.currentPipeline ? `${this.$t('version')} ${this.currentPipeline.pipelineVersion} ${this.$t('save') + this.$t('at')} ${convertTime(this.currentPipeline.deploymentTime)}` : this.$t('pipelinesEdit')
+                return this.currentPipeline ? `${this.$t('version')} ${this.currentPipeline.pipelineVersion} ${this.$t('save') + this.$t('at')} ${this.currentPipeline.deploymentTime}` : this.$t('pipelinesEdit')
             }
         },
         methods: {

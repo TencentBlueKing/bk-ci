@@ -190,7 +190,7 @@ class TaskControl @Autowired constructor(
             }
         }
         buildTask.status.isRunning() -> { // 运行中的，检查是否运行结束，以及决定是否强制终止
-            atomBuildStatus(taskAtomService.tryFinish(task = buildTask, force = actionType.isTerminate()))
+            atomBuildStatus(taskAtomService.tryFinish(task = buildTask, actionType = actionType))
         }
         else -> buildTask.status // 其他状态不做动作
     }
