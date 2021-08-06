@@ -54,7 +54,6 @@ interface ServiceTXPipelineResource {
     @ApiOperation("导出流水线yaml,gitci")
     @GET
     @Path("/pipeline/{pipelineId}/projects/{projectId}/yaml/gitci")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportPipelineGitCI(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

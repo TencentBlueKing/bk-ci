@@ -22,7 +22,6 @@ interface ApigwTXPipelineResourceV3 {
     @ApiOperation("导出流水线yaml,gitci")
     @GET
     @Path("/{pipelineId}/stream/yaml")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportPipelineGitCI(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
