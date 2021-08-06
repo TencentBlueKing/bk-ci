@@ -55,6 +55,7 @@ import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.bean.QualityUrlBean
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
+import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
@@ -515,9 +516,12 @@ class QualityRuleCheckService @Autowired constructor(
             if (record.detail.isNullOrBlank()) { // #4796 日志展示的链接去掉域名
                 "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
-                val detail = codeccToolUrlPathMap[record.detail!!] ?: "defect/lint"
-                "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list" +
-                    "?buildId=$buildId&status=7&sortField=createBuildNumber'>查看详情</a>"
+                val detailUrl = codeccToolUrlPathMap[record.detail!!] ?: DEFAULT_CODECC_URL
+                val fillDetailUrl = detailUrl.replace("##projectId##", projectId)
+                    .replace("##taskId##", taskId.toString())
+                    .replace("##buildId##", buildId)
+                    .replace("##detail##", record.detail!!)
+                "<a target='_blank' href='$fillDetailUrl'>查看详情</a>"
             }
         } else {
             record.logPrompt ?: ""

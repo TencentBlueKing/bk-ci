@@ -86,7 +86,7 @@ class CheckPauseReviewStageCmd(
                 commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_FAIL.name
                 commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
                 commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_IN"
-                commandContext.cmdFlowState = CmdFlowState.FINALLY
+                commandContext.cmdFlowState = CmdFlowState.CONTINUE
                 return
             }
 
@@ -140,7 +140,8 @@ class CheckPauseReviewStageCmd(
                 ruleBuildIds = stage.checkIn?.ruleIds!!.toSet(),
                 runtimeVariable = null
             )).data!!
-            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK|${event.stageId}|result=$result")
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK|${event.stageId}|" +
+                "result=$result|ruleIds=${stage.checkIn?.ruleIds}")
             return !result.success
         } catch (ignore: Throwable) {
             LOG.error("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)
