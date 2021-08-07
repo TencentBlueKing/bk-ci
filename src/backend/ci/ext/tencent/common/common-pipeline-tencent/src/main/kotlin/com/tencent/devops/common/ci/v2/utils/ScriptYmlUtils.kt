@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.ci.v2.utils
 
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -61,6 +62,7 @@ import com.tencent.devops.common.ci.v2.SchedulesRule
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
+import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.stageCheck.Flow
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
@@ -95,6 +97,7 @@ object ScriptYmlUtils {
      * 1、解决锚点
      * 2、yml string层面的格式化填充
      */
+    @Throws(JsonProcessingException::class)
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
         val yamlNormal =
@@ -179,58 +182,58 @@ object ScriptYmlUtils {
         return newValue
     }
 
-    fun parseImage(imageNameInput: String): Triple<String, String, String> {
-        val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
-        val arry = imageNameStr.split(":")
-        if (arry.size == 1) {
-            val str = imageNameStr.split("/")
-            return if (str.size == 1) {
-                Triple(dockerHubUrl, imageNameStr, "latest")
-            } else {
-                Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
-            }
-        } else if (arry.size == 2) {
-            val str = imageNameStr.split("/")
-            when {
-                str.size == 1 -> return Triple(dockerHubUrl, arry[0], arry[1])
-                str.size >= 2 -> return if (str[0].contains(":")) {
-                    Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
-                } else {
-                    if (str.last().contains(":")) {
-                        val nameTag = str.last().split(":")
-                        Triple(
-                            str[0],
-                            imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]),
-                            nameTag[1]
-                        )
-                    } else {
-                        Triple(str[0], str.last(), "latest")
-                    }
-                }
-                else -> {
-                    logger.error("image name invalid: $imageNameStr")
-                    throw Exception("image name invalid.")
-                }
-            }
-        } else if (arry.size == 3) {
-            val str = imageNameStr.split("/")
-            if (str.size >= 2) {
-                val tail = imageNameStr.removePrefix(str[0] + "/")
-                val nameAndTag = tail.split(":")
-                if (nameAndTag.size != 2) {
-                    logger.error("image name invalid: $imageNameStr")
-                    throw Exception("image name invalid.")
-                }
-                return Triple(str[0], nameAndTag[0], nameAndTag[1])
-            } else {
-                logger.error("image name invalid: $imageNameStr")
-                throw Exception("image name invalid.")
-            }
-        } else {
-            logger.error("image name invalid: $imageNameStr")
-            throw Exception("image name invalid.")
-        }
-    }
+//    fun parseImage(imageNameInput: String): Triple<String, String, String> {
+//        val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
+//        val arry = imageNameStr.split(":")
+//        if (arry.size == 1) {
+//            val str = imageNameStr.split("/")
+//            return if (str.size == 1) {
+//                Triple(dockerHubUrl, imageNameStr, "latest")
+//            } else {
+//                Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
+//            }
+//        } else if (arry.size == 2) {
+//            val str = imageNameStr.split("/")
+//            when {
+//                str.size == 1 -> return Triple(dockerHubUrl, arry[0], arry[1])
+//                str.size >= 2 -> return if (str[0].contains(":")) {
+//                    Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
+//                } else {
+//                    if (str.last().contains(":")) {
+//                        val nameTag = str.last().split(":")
+//                        Triple(
+//                            str[0],
+//                            imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]),
+//                            nameTag[1]
+//                        )
+//                    } else {
+//                        Triple(str[0], str.last(), "latest")
+//                    }
+//                }
+//                else -> {
+//                    logger.error("image name invalid: $imageNameStr")
+//                    throw Exception("image name invalid.")
+//                }
+//            }
+//        } else if (arry.size == 3) {
+//            val str = imageNameStr.split("/")
+//            if (str.size >= 2) {
+//                val tail = imageNameStr.removePrefix(str[0] + "/")
+//                val nameAndTag = tail.split(":")
+//                if (nameAndTag.size != 2) {
+//                    logger.error("image name invalid: $imageNameStr")
+//                    throw Exception("image name invalid.")
+//                }
+//                return Triple(str[0], nameAndTag[0], nameAndTag[1])
+//            } else {
+//                logger.error("image name invalid: $imageNameStr")
+//                throw Exception("image name invalid.")
+//            }
+//        } else {
+//            logger.error("image name invalid: $imageNameStr")
+//            throw Exception("image name invalid.")
+//        }
+//    }
 
     fun formatYamlCustom(yamlStr: String): String {
         val sb = StringBuilder()
@@ -263,7 +266,7 @@ object ScriptYmlUtils {
         preScriptBuildYaml.variables.forEach {
             val keyRegex = Regex("^[0-9a-zA-Z_]+$")
             if (!keyRegex.matches(it.key)) {
-                throw CustomException(Response.Status.BAD_REQUEST, "变量名称必须是英文字母、数字或下划线(_)")
+                throw YamlFormatException("变量名称必须是英文字母、数字或下划线(_)")
             }
         }
     }
@@ -273,7 +276,7 @@ object ScriptYmlUtils {
             (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
             (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null)
         ) {
-            throw CustomException(Response.Status.BAD_REQUEST, "stages, jobs, steps不能并列存在，只能存在其一")
+            throw YamlFormatException("stages, jobs, steps不能并列存在，只能存在其一")
         }
     }
 
@@ -285,10 +288,7 @@ object ScriptYmlUtils {
         yamlMap.forEach { (t, _) ->
             if (t != formatTrigger && t != "extends" && t != "version" &&
                 t != "resources" && t != "name" && t != "on") {
-                throw CustomException(
-                    status = Response.Status.BAD_REQUEST,
-                    message = "使用 extends 时顶级关键字只能有触发器 on 与 resources"
-                )
+                throw YamlFormatException("使用 extends 时顶级关键字只能有触发器 name, on , version 与 resources")
             }
         }
     }
@@ -341,7 +341,7 @@ object ScriptYmlUtils {
             GitCIEnvUtils.checkEnv(u.env)
 
             val services = mutableListOf<Service>()
-            u.services?.forEach { key, value ->
+            u.services?.forEach { (key, value) ->
                 services.add(
                     Service(
                         serviceId = key,
@@ -404,7 +404,7 @@ object ScriptYmlUtils {
         val stepList = mutableListOf<Step>()
         oldSteps.forEach {
             if (it.uses == null && it.run == null && it.checkout == null) {
-                throw CustomException(Response.Status.BAD_REQUEST, "step必须包含uses或run或checkout!")
+                throw YamlFormatException("step必须包含uses或run或checkout!")
             }
             // 检测step env合法性
             GitCIEnvUtils.checkEnv(it.env)
@@ -490,7 +490,7 @@ object ScriptYmlUtils {
             if (stageLabel != null) {
                 newLabels.add(stageLabel.id)
             } else {
-                throw CustomException(Response.Status.BAD_REQUEST, "请核对Stage标签是否正确")
+                throw YamlFormatException("请核对Stage标签是否正确")
             }
         }
 
@@ -721,7 +721,7 @@ object ScriptYmlUtils {
     fun parseServiceImage(image: String): Pair<String, String> {
         val list = image.split(":")
         if (list.size != 2) {
-            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "GITCI Service镜像格式非法")
+            throw YamlFormatException("GITCI Service镜像格式非法")
         }
         return Pair(list[0], list[1])
     }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.trigger.template
 
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Extends
 import com.tencent.devops.common.ci.v2.PreJob
@@ -42,6 +43,7 @@ import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.PreTemplateStageCheck
 import com.tencent.devops.common.ci.v2.ParametersTemplateNull
 import com.tencent.devops.common.ci.v2.ParametersType
+import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.gitci.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.gitci.trigger.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -147,6 +149,11 @@ class YamlTemplate(
     var jobTemplateGraph = TemplateGraph<String>()
     var stepTemplateGraph = TemplateGraph<String>()
 
+    @Throws(
+        YamlFormatException::class,
+        JsonProcessingException::class,
+        StackOverflowError::class
+    )
     fun replace(
         parameters: Map<String, Any?>? = null
     ): PreScriptBuildYaml {
@@ -348,7 +355,7 @@ class YamlTemplate(
         toPath: String? = null
     ): Boolean {
         val interSet = newKeys intersect keys
-        if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == TEMPLATE_KEY)) {
+        if (interSet.isEmpty() || (interSet.size == 1 && interSet.last() == TEMPLATE_KEY)) {
             return true
         } else {
             if (toPath == null) {
@@ -660,7 +667,7 @@ class YamlTemplate(
                 return it
             }
         }
-        throw RuntimeException(REPO_NOT_FOUND_ERROR.format(fromPath, repoName))
+        throw YamlFormatException(REPO_NOT_FOUND_ERROR.format(fromPath, repoName))
     }
 
     // 对远程仓库中的模板进行远程仓库替换
@@ -939,7 +946,7 @@ class YamlTemplate(
 
     private inline fun <reified T> transValue(file: String, type: String, value: Any?): T {
         if (value == null) {
-            throw RuntimeException(TRANS_AS_ERROR.format(file, type))
+            throw YamlFormatException(TRANS_AS_ERROR.format(file, type))
         }
         return try {
             value as T
@@ -949,11 +956,11 @@ class YamlTemplate(
             } else {
                 "${repo.repository}/$templateDirectory$file"
             }
-            throw RuntimeException(TRANS_AS_ERROR.format(newFile, type))
+            throw YamlFormatException(TRANS_AS_ERROR.format(newFile, type))
         }
     }
 
     private fun error(content: String) {
-        throw RuntimeException(content)
+        throw YamlFormatException(content)
     }
 }

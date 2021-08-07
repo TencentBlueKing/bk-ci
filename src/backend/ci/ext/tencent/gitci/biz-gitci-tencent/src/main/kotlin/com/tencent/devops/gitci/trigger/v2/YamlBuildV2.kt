@@ -27,10 +27,11 @@
 
 package com.tencent.devops.gitci.trigger.v2
 
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiBuildConfig
@@ -107,6 +108,9 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
+import com.tencent.devops.gitci.common.exception.CommitCheck
+import com.tencent.devops.gitci.common.exception.TriggerException
+import com.tencent.devops.gitci.common.exception.Yamls
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
@@ -115,6 +119,7 @@ import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
@@ -153,7 +158,6 @@ import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation.Companion.c
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
-import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -232,23 +236,30 @@ class YamlBuildV2 @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.error("Fail to start the git ci build($event)", e)
-            gitCIEventSaveService.saveRunNotBuildEvent(
-                userId = event.userId,
-                eventId = event.id!!,
-                originYaml = originYaml,
-                parsedYaml = parsedYaml,
-                normalizedYaml = normalizedYaml,
-                reason = TriggerReason.PIPELINE_PREPARE_ERROR.name,
-                reasonDetail = TriggerReason.PIPELINE_PREPARE_ERROR.detail.format(e.message),
-                pipelineId = pipeline.pipelineId,
-                pipelineName = pipeline.displayName,
-                filePath = pipeline.filePath,
-                gitProjectId = event.gitProjectId,
-                sendCommitCheck = true,
-                commitCheckBlock = (event.objectKind == OBJECT_KIND_MERGE_REQUEST),
-                version = ymlVersion
+            val (block, message, reason) = when (e) {
+                is JsonProcessingException, is ParamBlankException, is CustomException -> {
+                    Triple(
+                        (event.objectKind == OBJECT_KIND_MERGE_REQUEST),
+                        e.message,
+                        TriggerReason.PIPELINE_PREPARE_ERROR
+                    )
+                }
+                else -> {
+                    Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
+                }
+            }
+            TriggerException.triggerError(
+                request = event,
+                pipeline = pipeline,
+                reason = reason,
+                reasonParams = listOf(message ?: ""),
+                yamls = Yamls(originYaml, parsedYaml, normalizedYaml),
+                version = ymlVersion,
+                commitCheck = CommitCheck(
+                    block = block,
+                    state = GitCICommitCheckState.FAILURE
+                )
             )
-            return null
         } finally {
             triggerLock.unlock()
         }
@@ -263,8 +274,7 @@ class YamlBuildV2 @Autowired constructor(
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
-        val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
-            ?: throw OperationException("git ci projectCode not exist")
+        val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)!!
 
         val model = createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
@@ -408,8 +418,7 @@ class YamlBuildV2 @Autowired constructor(
         logger.info("Git request save pipeline, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
-        val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
-            ?: throw OperationException("git ci projectCode not exist")
+        val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)!!
 
         val model = createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request , pipeline:$pipeline, model: $model")
@@ -523,6 +532,7 @@ class YamlBuildV2 @Autowired constructor(
         )
     }
 
+    // todo: 标签异常不处理？
     private fun preparePipelineLabels(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
@@ -703,6 +713,11 @@ class YamlBuildV2 @Autowired constructor(
         }
     }
 
+    @Throws(
+        JsonProcessingException::class,
+        ParamBlankException::class,
+        CustomException::class
+    )
     fun getDispatchType(job: Job, projectCode: String): DispatchType {
         // macos构建机
         if (job.runsOn.poolName.startsWith("macos")) {
@@ -947,9 +962,9 @@ class YamlBuildV2 @Autowired constructor(
         env.forEach {
             nameAndValueList.add(
                 NameAndValue(
-                key = it.key,
-                value = it.value.toString()
-            ))
+                    key = it.key,
+                    value = it.value.toString()
+                ))
         }
 
         return nameAndValueList
@@ -1081,7 +1096,7 @@ class YamlBuildV2 @Autowired constructor(
         startParams[PIPELINE_GIT_EVENT_CONTENT] = JsonUtil.toJson(event)
         startParams[PIPELINE_GIT_COMMIT_MESSAGE] = event.commitMsg ?: ""
         startParams[PIPELINE_GIT_SHA] = event.commitId
-        if (!event.commitId.isBlank() && event.commitId.length >= 8) {
+        if (event.commitId.isNotBlank() && event.commitId.length >= 8) {
             startParams[PIPELINE_GIT_SHA_SHORT] = event.commitId.substring(0, 8)
         }
 

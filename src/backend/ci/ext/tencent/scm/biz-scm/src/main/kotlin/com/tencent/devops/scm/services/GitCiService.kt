@@ -165,10 +165,14 @@ class GitCiService {
                 .url(url)
                 .get()
                 .build()
-            OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
-                if (!it.isSuccessful) throw RuntimeException("fail to get git file content with: $url($data)")
-                return data
+            OkhttpUtils.doHttp(request).use { response ->
+                if (!response.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${response.code()})${response.message()}"
+                    )
+                }
+                return response.body()!!.string()
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")

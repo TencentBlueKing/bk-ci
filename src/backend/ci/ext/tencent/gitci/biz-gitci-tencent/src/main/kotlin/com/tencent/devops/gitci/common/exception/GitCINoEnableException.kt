@@ -25,12 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.exception
+package com.tencent.devops.gitci.common.exception
 
-import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 
-open class GitCIServiceException(
-    val errorType: ErrorType,
-    val errorCode: Int,
-    errorMsg: String
-) : Exception(errorMsg)
+class GitCINoEnableException(project: String) : ErrorCodeException(
+    statusCode = ErrorCodeEnum.GITCI_NOT_ENABLE_ERROR.errorCode,
+    errorCode = ErrorCodeEnum.GITCI_NOT_ENABLE_ERROR.errorCode.toString(),
+    defaultMessage = ErrorCodeEnum.GITCI_NOT_ENABLE_ERROR.formatErrorMessage.format(project),
+    params = null
+)
