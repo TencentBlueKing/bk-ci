@@ -148,7 +148,8 @@ class UpdateStateForStageCmdFinally(
     private fun updateStageStatus(commandContext: StageContext) {
         val event = commandContext.event
         // 更新状态
-        pipelineStageService.updateStageStatus(buildId = event.buildId,
+        pipelineStageService.updateStageStatus(
+            buildId = event.buildId,
             stageId = event.stageId,
             buildStatus = commandContext.buildStatus,
             checkIn = commandContext.stage.checkIn,
