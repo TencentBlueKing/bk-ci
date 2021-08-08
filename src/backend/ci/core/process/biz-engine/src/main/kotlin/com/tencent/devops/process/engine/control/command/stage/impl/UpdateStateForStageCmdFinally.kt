@@ -89,6 +89,8 @@ class UpdateStateForStageCmdFinally(
         } else if (commandContext.buildStatus.isFinish()) { // 当前Stage结束
             if (commandContext.buildStatus == BuildStatus.SKIP) { // 跳过
                 pipelineStageService.skipStage(userId = event.userId, buildStage = stage)
+            } else if (commandContext.buildStatus == BuildStatus.QUALITY_CHECK_FAIL) {
+                pipelineStageService.checkQualityFailStage(userId = event.userId, buildStage = stage)
             }
             nextOrFinish(event, stage, commandContext)
             sendStageEndCallBack(stage, event)
@@ -112,8 +114,7 @@ class UpdateStateForStageCmdFinally(
         val gotoFinal = commandContext.buildStatus.isFailure() ||
             commandContext.buildStatus.isCancel() ||
             commandContext.fastKill ||
-            event.source == BS_STAGE_CANCELED_END_SOURCE ||
-            event.source == BS_STAGE_QUALITY_CHECK_FAIL_END_SOURCE
+            event.source == BS_STAGE_CANCELED_END_SOURCE
 
         if (gotoFinal) {
             nextStage = pipelineStageService.getLastStage(buildId = event.buildId)

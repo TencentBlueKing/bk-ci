@@ -190,8 +190,9 @@ class StageBuildDetailService(
         controlOption: PipelineBuildStageControlOption,
         checkIn: StagePauseCheck?,
         checkOut: StagePauseCheck?
-    ) {
+    ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_cancel|stageId=$stageId")
+        var allStageStatus: List<BuildStageStatus>? = null
         update(buildId, object : ModelInterface {
             var update = false
 
@@ -203,6 +204,7 @@ class StageBuildDetailService(
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
+                    allStageStatus = fetchHistoryStageStatus(model)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -212,6 +214,7 @@ class StageBuildDetailService(
                 return update
             }
         }, BuildStatus.FAILED)
+        return allStageStatus ?: emptyList()
     }
 
     fun stageReview(
