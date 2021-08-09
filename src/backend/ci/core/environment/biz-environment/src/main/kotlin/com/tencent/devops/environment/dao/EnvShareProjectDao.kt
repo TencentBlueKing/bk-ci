@@ -51,7 +51,7 @@ class EnvShareProjectDao {
             if (!name.isNullOrBlank()) {
                 where.and(SHARED_PROJECT_NAME.like("%$name%"))
             }
-            return where.limit(limit).offset(offset)
+            return where.orderBy(UPDATE_TIME.desc()).limit(limit).offset(offset)
                 .fetch()
         }
     }
