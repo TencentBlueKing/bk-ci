@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import net.coobird.thumbnailator.Thumbnails
 import org.apache.commons.codec.binary.Base64
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.net.URL
 import java.nio.file.Files
@@ -40,8 +39,6 @@ import java.nio.file.Files
 @RestResource
 class ServiceImageManageResourceImpl @Autowired constructor() :
     ServiceImageManageResource {
-
-    private val logger = LoggerFactory.getLogger(ServiceImageManageResourceImpl::class.java)
 
     /**
      * 按照规定大小压缩图片
@@ -60,7 +57,6 @@ class ServiceImageManageResourceImpl @Autowired constructor() :
             file.delete()
         }
         val data = "data:image/png;base64," + Base64.encodeBase64String(bytes)
-        logger.info("the compressImage base64 data is:$data")
         return Result(data)
     }
 }
