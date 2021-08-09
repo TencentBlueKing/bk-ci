@@ -147,11 +147,12 @@ class PipelineStageService @Autowired constructor(
             )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                pipelineBuildStageDao.updateOptions(
+                pipelineBuildStageDao.updateStatus(
                     dslContext = context, buildId = buildId,
-                    stageId = stageId, controlOption = controlOption!!,
-                    checkIn = checkIn, checkOut = checkOut
+                    stageId = stageId, buildStatus = BuildStatus.UNEXEC,
+                    controlOption = controlOption, checkIn = checkIn, checkOut = checkOut
                 )
+
                 pipelineBuildDao.updateBuildStageStatus(
                     dslContext = context, buildId = buildId, stageStatus = allStageStatus
                 )
