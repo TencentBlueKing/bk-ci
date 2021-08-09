@@ -153,7 +153,6 @@ import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation.Companion.c
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
-import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -378,7 +377,7 @@ class YamlBuildV2 @Autowired constructor(
                     operation = RuleOperation.END,
                     notifyTypeList = GitCINotifyType.getNotifyListByYaml(gate.notifyOnFail?.map { it.type }),
                     notifyGroupList = null,
-                    // todo: 人和通知的方式不匹配
+                    // todo: 等dd修改数据类型为map
                     notifyUserList = null,
                     auditUserList = null,
                     auditTimeoutMinutes = null,
