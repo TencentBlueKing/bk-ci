@@ -40,14 +40,18 @@ class EnvShareProjectDao {
         dslContext: DSLContext,
         projectId: String,
         envId: Long,
+        name: String?,
         offset: Int,
         limit: Int
     ): List<TEnvShareProjectRecord> {
         with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
-            return dslContext.selectFrom(this)
+            val where = dslContext.selectFrom(this)
                 .where(MAIN_PROJECT_ID.eq(projectId))
                 .and((ENV_ID.eq(envId)))
-                .limit(limit).offset(offset)
+            if (!name.isNullOrBlank()) {
+                where.and(ENV_NAME.like("%$name%"))
+            }
+            return where.limit(limit).offset(offset)
                 .fetch()
         }
     }
@@ -56,13 +60,17 @@ class EnvShareProjectDao {
     fun count(
         dslContext: DSLContext,
         projectId: String,
-        envId: Long
+        envId: Long,
+        name: String?
     ): Int {
         with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
-            return dslContext.selectCount().from(this)
+            val where = dslContext.selectCount().from(this)
                 .where(MAIN_PROJECT_ID.eq(projectId))
                 .and((ENV_ID.eq(envId)))
-                .fetchOne(0, Int::class.java)!!
+            if (!name.isNullOrBlank()) {
+                where.and(ENV_NAME.like("%$name%"))
+            }
+            return where.fetchOne(0, Int::class.java)!!
         }
     }
 

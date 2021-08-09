@@ -167,6 +167,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
+        name: String?,
         offset: Int?,
         limit: Int?
     ): Result<Page<SharedProjectInfo>> {
@@ -175,6 +176,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             userId,
             projectId,
             envHashId,
+            name,
             offset ?: 0,
             limit ?: 20
         ))

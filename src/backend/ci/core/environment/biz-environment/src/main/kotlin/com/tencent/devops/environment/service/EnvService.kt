@@ -679,13 +679,14 @@ class EnvService @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
+        name: String?,
         offset: Int = 0,
         limit: Int = 20
     ): Page<SharedProjectInfo> {
         val envId = HashUtil.decodeIdToLong(envHashId)
         val limitTmp = if (limit >= 1000) { 1000 } else { limit }
         val sharedProjectInfos = mutableListOf<SharedProjectInfo>()
-        val records = envShareProjectDao.listPage(dslContext, projectId, envId, offset, limitTmp)
+        val records = envShareProjectDao.listPage(dslContext, projectId, envId, name, offset, limitTmp)
         records.map {
             sharedProjectInfos.add(
                 SharedProjectInfo(
@@ -703,7 +704,7 @@ class EnvService @Autowired constructor(
                 )
             )
         }
-        val count = envShareProjectDao.count(dslContext, projectId, envId)
+        val count = envShareProjectDao.count(dslContext, projectId, envId, name)
         return Page(
             count = count.toLong(),
             records = sharedProjectInfos,

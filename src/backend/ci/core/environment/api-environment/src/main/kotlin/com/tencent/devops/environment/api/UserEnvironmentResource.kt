@@ -248,6 +248,9 @@ interface UserEnvironmentResource {
         @ApiParam("环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
+        @ApiParam("项目名称", required = false)
+        @QueryParam("name")
+        name: String? = null,
         @ApiParam("起始位置", required = false)
         @QueryParam("offset")
         offset: Int? = null,
@@ -288,7 +291,7 @@ interface UserEnvironmentResource {
         envHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("按环境删除环境共享")
+    @ApiOperation("按项目删除环境共享")
     @DELETE
     @Path("/{projectId}/{envHashId}/{sharedProjectId}/sharedProject")
     fun deleteShareEnvBySharedProj(
