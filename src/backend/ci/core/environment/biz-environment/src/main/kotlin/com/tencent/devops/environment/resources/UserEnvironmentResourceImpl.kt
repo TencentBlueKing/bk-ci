@@ -29,6 +29,7 @@ package com.tencent.devops.environment.resources
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
@@ -41,6 +42,7 @@ import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.service.EnvService
 import org.springframework.beans.factory.annotation.Autowired
@@ -161,25 +163,60 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun listShareEnv(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        offset: Int?,
+        limit: Int?
+    ): Result<Page<SharedProjectInfo>> {
+        checkParam(userId, projectId, envHashId)
+        return Result(envService.listShareEnv(
+            userId,
+            projectId,
+            envHashId,
+            offset ?: 0,
+            limit ?: 20
+        ))
+    }
+
     override fun setShareEnv(
         userId: String,
         projectId: String,
         envHashId: String,
-        sharedProjectId: List<String>
+        sharedProjects: List<SharedProjectInfo>
     ): Result<Boolean> {
-        if (envHashId.isBlank()) {
-            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
-        }
-
-        if (sharedProjectId.isEmpty()) {
-            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_EMPTY)
-        }
-
-        envService.setShareEnv(userId, projectId, envHashId, sharedProjectId)
+        checkParam(userId, projectId, envHashId)
+        envService.setShareEnv(userId, projectId, envHashId, sharedProjects)
         return Result(true)
     }
 
     override fun deleteShareEnv(userId: String, projectId: String, envHashId: String): Result<Boolean> {
+        checkParam(userId, projectId, envHashId)
+        envService.deleteShareEnv(userId, projectId, envHashId)
+        return Result(true)
+    }
+
+    override fun deleteShareEnvBySharedProj(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        sharedProjectId: String
+    ): Result<Boolean> {
+        checkParam(userId, projectId, envHashId)
+        envService.deleteShareEnvBySharedProj(userId, projectId, envHashId, sharedProjectId)
+        return Result(true)
+    }
+
+    private fun checkParam(
+        userId: String,
+        projectId: String,
+        envHashId: String
+    ) {
+        if (userId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
@@ -187,8 +224,5 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         if (projectId.isEmpty()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_EMPTY)
         }
-
-        envService.deleteShareEnv(userId, projectId, envHashId)
-        return Result(true)
     }
 }

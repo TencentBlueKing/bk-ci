@@ -63,9 +63,11 @@ import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.enums.SharedEnvType
 import com.tencent.devops.environment.service.node.EnvCreatorFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
@@ -641,7 +643,7 @@ class EnvService @Autowired constructor(
         }
     }
 
-    fun setShareEnv(userId: String, projectId: String, envHashId: String, sharedProjectId: List<String>) {
+    fun setShareEnv(userId: String, projectId: String, envHashId: String, sharedProjects: List<SharedProjectInfo>) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
@@ -652,23 +654,14 @@ class EnvService @Autowired constructor(
         if (existEnv.envType != EnvType.BUILD.name) {
             throw ErrorCodeException(errorCode = ERROR_NODE_SHARE_PROJECT_TYPE_ERROR)
         }
-
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            envShareProjectDao.deleteByEnvAndMainProj(
-                dslContext = context,
-                envId = envId,
-                mainProjectId = projectId
-            )
-            envShareProjectDao.batchSave(
-                dslContext = context,
-                userId = userId,
-                envId = envId,
-                envName = existEnv.envName,
-                mainProjectId = projectId,
-                sharedProjects = sharedProjectId
-            )
-        }
+        envShareProjectDao.batchSave(
+            dslContext = dslContext,
+            userId = userId,
+            envId = envId,
+            envName = existEnv.envName,
+            mainProjectId = projectId,
+            sharedProjects = sharedProjects
+        )
     }
 
     fun deleteShareEnv(userId: String, projectId: String, envHashId: String) {
@@ -680,5 +673,53 @@ class EnvService @Autowired constructor(
         }
 
         envShareProjectDao.deleteByEnvAndMainProj(dslContext, envId, projectId)
+    }
+
+    fun listShareEnv(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        offset: Int = 0,
+        limit: Int = 20
+    ): Page<SharedProjectInfo> {
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        val limitTmp = if (limit >= 1000) { 1000 } else { limit }
+        val sharedProjectInfos = mutableListOf<SharedProjectInfo>()
+        val records = envShareProjectDao.listPage(dslContext, projectId, envId, offset, limitTmp)
+        records.map {
+            sharedProjectInfos.add(
+                SharedProjectInfo(
+                    projectId = it.mainProjectId,
+                    gitProjectId = it.sharedProjectId,
+                    name = it.sharedProjectName,
+                    type = if (it.type == SharedEnvType.PROJECT.name) {
+                        SharedEnvType.PROJECT
+                    } else {
+                        SharedEnvType.GROUP
+                    },
+                    creator = it.creator,
+                    createTime = it.createTime.timestamp(),
+                    updateTime = it.updateTime.timestamp()
+                )
+            )
+        }
+        val count = envShareProjectDao.count(dslContext, projectId, envId)
+        return Page(
+            count = count.toLong(),
+            records = sharedProjectInfos,
+            pageSize = offset,
+            page = limit
+        )
+    }
+
+    fun deleteShareEnvBySharedProj(userId: String, projectId: String, envHashId: String, sharedProjectId: String) {
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        envDao.getOrNull(dslContext, projectId, envId) ?: return
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION))
+        }
+
+        envShareProjectDao.deleteBySharedProj(dslContext, envId, projectId, sharedProjectId)
     }
 }
