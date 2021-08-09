@@ -30,17 +30,24 @@ package com.tencent.devops.dispatch.docker.pojo.resource
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("devcloud性能用户选项配置")
-data class UserPerformanceOptionsVO(
-    @ApiModelProperty("默认选项")
-    val default: String,
-    @ApiModelProperty("是否展示")
-    val needShow: Boolean,
-    @ApiModelProperty("性能配置")
-    val performanceMaps: List<PerformanceMap>
-)
+@ApiModel("资源配置")
+data class DockerResourceOptionsShow(
 
-data class PerformanceMap(
-    val id: String,
-    val dockerResourceConfigVO: DockerResourceConfigVO
+    @ApiModelProperty("内存")
+    val memory: String,
+
+    @ApiModelProperty("CPU")
+    val cpu: String,
+
+    @ApiModelProperty("磁盘写速率")
+    val blkioDeviceWriteBps: String = "",
+
+    @ApiModelProperty("磁盘读速率")
+    val blkioDeviceReadBps: String = "",
+
+    @ApiModelProperty("磁盘大小: 单位GB")
+    val disk: String,
+
+    @ApiModelProperty("描述")
+    val description: String
 )

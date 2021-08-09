@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
-import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceConfigVO
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.SigarUtil
@@ -76,7 +76,7 @@ class DockerHostBuildResourceApi constructor(
         }
     }
 
-    fun getResourceConfig(projectId: String, retryCount: Int = 3): DockerResourceConfigVO {
+    fun getResourceConfig(projectId: String, retryCount: Int = 3): DockerResourceOptionsVO {
         try {
             val path = "/${getUrlPrefix()}/api/dockerhost/resource-config/projectId/$projectId"
             OkhttpUtils.doHttp(buildGet(path)).use { response ->
@@ -96,8 +96,7 @@ class DockerHostBuildResourceApi constructor(
             return if (localRetryCount > 0) {
                 getResourceConfig(projectId, localRetryCount)
             } else {
-                return DockerResourceConfigVO(
-                    projectId = projectId,
+                return DockerResourceOptionsVO(
                     cpuPeriod = dockerHostConfig.cpuPeriod,
                     cpuQuota = dockerHostConfig.cpuQuota,
                     memoryLimitBytes = dockerHostConfig.memory,

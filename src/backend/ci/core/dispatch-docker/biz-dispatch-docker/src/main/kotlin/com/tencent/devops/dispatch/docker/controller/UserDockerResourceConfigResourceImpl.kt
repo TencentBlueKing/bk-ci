@@ -29,38 +29,18 @@ package com.tencent.devops.dispatch.docker.controller
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.docker.api.op.OPDockerResourceConfigResource
-import com.tencent.devops.dispatch.docker.pojo.resource.CreateResourceConfigVO
-import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceConfigVO
-import com.tencent.devops.dispatch.docker.pojo.resource.ListPage
-import com.tencent.devops.dispatch.docker.service.DockerResourceConfigService
+import com.tencent.devops.dispatch.docker.api.user.UserDockerResourceConfigResource
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptions
+import com.tencent.devops.dispatch.docker.service.DockerResourceOptionsService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpDockerResourceConfigResourceImpl @Autowired constructor(
-    private val dockerResourceConfigService: DockerResourceConfigService
-) : OPDockerResourceConfigResource {
-    override fun listResourceConfig(userId: String, page: Int?, pageSize: Int?): Result<ListPage<DockerResourceConfigVO>> {
-        return Result(dockerResourceConfigService.listDockerResourceConfig(userId, page, pageSize))
-    }
+@Suppress("ALL")
+class UserDockerResourceConfigResourceImpl @Autowired constructor(
+    private val dockerResourceOptionsService: DockerResourceOptionsService
+) : UserDockerResourceConfigResource {
 
-    override fun createResourceConfig(
-        userId: String,
-        createResourceConfigVO: CreateResourceConfigVO
-    ): Result<Boolean> {
-        return Result(dockerResourceConfigService.createDockerResourceConfig(userId, createResourceConfigVO))
+    override fun getDockerResourceConfigList(userId: String, projectId: String): Result<UserDockerResourceOptions> {
+        return Result(dockerResourceOptionsService.getDcPerformanceConfigList(userId, projectId))
     }
-
-    override fun updateResourceConfig(
-        userId: String,
-        projectId: String,
-        createResourceConfigVO: CreateResourceConfigVO
-    ): Result<Boolean> {
-        return Result(dockerResourceConfigService.updateDockerResourceConfig(userId, projectId, createResourceConfigVO))
-    }
-
-    override fun deleteResourceConfig(userId: String, projectId: String): Result<Boolean> {
-        return Result(dockerResourceConfigService.deleteDockerResourceConfig(userId, projectId))
-    }
-
 }

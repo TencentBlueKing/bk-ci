@@ -30,7 +30,7 @@ package com.tencent.devops.dispatch.docker.api.builds
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
-import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceConfigVO
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -71,7 +71,7 @@ interface BuildDockerHostResource {
         @ApiParam("蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String
-    ): Result<DockerResourceConfigVO>
+    ): Result<DockerResourceOptionsVO>
 
     @ApiOperation("上报日志信息")
     @POST

@@ -837,7 +837,7 @@ class DockerHostBuildService(
 
     fun refreshDockerIpStatus(): Boolean? {
         val port = environment.getProperty("local.server.port")
-        return dockerHostBuildApi.refreshDockerIpStatus(port, getContainerNum())!!.data
+        return dockerHostBuildApi.refreshDockerIpStatus(port!!, getContainerNum())!!.data
     }
 
     private fun getPublicImages(): List<String> {

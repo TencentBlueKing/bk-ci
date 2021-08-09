@@ -27,8 +27,13 @@
 
 package com.tencent.devops.dispatch.docker.service
 
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.dispatch.docker.dao.DockerResourceOptionsDao
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsMap
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsShow
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptions
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -36,7 +41,9 @@ import org.springframework.stereotype.Service
 @Service
 class DockerResourceOptionsService constructor(
     private val dslContext: DSLContext,
-    private val dockerResourceOptionsDao: DockerResourceOptionsDao
+    private val dockerResourceOptionsDao: DockerResourceOptionsDao,
+    private val dockerResourceWhitelistService: DockerResourceWhitelistService,
+    private val extDockerResourceOptionsService: ExtDockerResourceOptionsService
 ) {
     private val logger = LoggerFactory.getLogger(DockerResourceOptionsService::class.java)
 
@@ -113,6 +120,67 @@ class DockerResourceOptionsService constructor(
         checkParameter(userId, id.toString())
         val result = dockerResourceOptionsDao.delete(dslContext, id)
         return result == 1
+    }
+
+    fun getDcPerformanceConfigList(userId: String, projectId: String): UserDockerResourceOptions {
+        var default = "0"
+        var needShow = false
+        val performanceMaps = mutableListOf<DockerResourceOptionsMap>()
+
+        if (dockerResourceWhitelistService.checkDockerResourceWhitelist(projectId)) {
+            needShow = true
+
+            val optionList = dockerResourceOptionsDao.getList(dslContext)
+            if (optionList.size == 0) {
+                performanceMaps.add(
+                    DockerResourceOptionsMap("0", DockerResourceOptionsShow(
+                        cpu = (16000 / 10000).toString(),
+                        memory = (34359738368 / (1024 * 1024 * 1024)).toString().plus("G"),
+                        disk = (100).toString().plus("G"),
+                        description = "Basic"
+                    )
+                    )
+                )
+            } else {
+                optionList.forEach {
+                    if (it.memoryLimitBytes == 34359738368) {
+                        default = it.id.toString()
+                    }
+                    performanceMaps.add(
+                        DockerResourceOptionsMap(it.id.toString(), DockerResourceOptionsShow(
+                            cpu = (it.cpuQuota / it.cpuPeriod).toString(),
+                            memory = "${it.memoryLimitBytes / (1024 * 1024 * 1024)}G",
+                            disk = "${it.disk}G",
+                            description = it.description
+                        )
+                        )
+                    )
+                }
+
+                // 没有默认的配置，默认第一个
+                if (default == "0") {
+                    default = optionList[0].id.toString()
+                }
+            }
+        } else {
+            performanceMaps.add(
+                DockerResourceOptionsMap("0", DockerResourceOptionsShow(
+                    cpu = (16000 / 10000).toString(),
+                    memory = (34359738368 / (1024 * 1024 * 1024)).toString().plus("G"),
+                    disk = (100).toString().plus("G"),
+                    description = "Basic"
+                )
+                )
+            )
+        }
+
+        val userDockerResourceOptionsMaps = mutableMapOf<String, UserDockerResourceOptionsVO>()
+        userDockerResourceOptionsMaps[BuildType.DOCKER.name] = UserDockerResourceOptionsVO(default, needShow, performanceMaps)
+        userDockerResourceOptionsMaps.putAll(extDockerResourceOptionsService.getDockerResourceConfigList(userId, projectId))
+
+        return UserDockerResourceOptions(
+            userDockerResourceOptionsMaps = userDockerResourceOptionsMaps
+        )
     }
 
     private fun checkParameter(userId: String, projectId: String) {

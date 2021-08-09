@@ -25,34 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo.resource
+package com.tencent.devops.dispatch.docker.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@ApiModel("资源配置")
-data class DockerResourceConfigVO(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
+@Service
+class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
+) : ExtDockerResourceOptionsService {
 
-    @ApiModelProperty("内存")
-    val memoryLimitBytes: Long,
-
-    @ApiModelProperty("CPU")
-    val cpuPeriod: Int,
-
-    @ApiModelProperty("CPU")
-    val cpuQuota: Int,
-
-    @ApiModelProperty("磁盘写速率")
-    val blkioDeviceWriteBps: Long,
-
-    @ApiModelProperty("磁盘读速率")
-    val blkioDeviceReadBps: Long,
-
-    @ApiModelProperty("磁盘大小: 单位GB")
-    val disk: Int,
-
-    @ApiModelProperty("描述")
-    val description: String
-)
+    override fun getDockerResourceConfigList(userId: String, projectId: String): Map<String, UserDockerResourceOptionsVO> {
+        return emptyMap()
+    }
+}
