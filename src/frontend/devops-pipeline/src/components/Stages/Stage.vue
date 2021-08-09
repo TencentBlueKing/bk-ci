@@ -316,6 +316,7 @@
                         case stageControl.status === 'REVIEW_PROCESSED':
                             return 'reviewed'
                         case stageControl.status === 'REVIEW_ABORT':
+                        case stageControl.status === 'QUALITY_CHECK_FAIL':
                             return 'review-abort'
                         case this.stageStatusCls === 'SKIP':
                         case !this.stageStatusCls && this.isExecDetail:
