@@ -60,7 +60,6 @@ class GitRequestEventDao {
                 MERGE_REQUEST_ID,
                 EVENT,
                 CREATE_TIME,
-                DESCRIPTION,
                 MR_TITLE
             ).values(
                 event.objectKind,
@@ -78,7 +77,6 @@ class GitRequestEventDao {
                 event.mergeRequestId,
                 event.event,
                 LocalDateTime.now(),
-                event.description,
                 event.mrTitle
             ).returning(ID)
                 .fetchOne()!!

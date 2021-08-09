@@ -105,7 +105,7 @@ class V2GitCIBuildQueueListener @Autowired constructor(
                 branch = branch,
                 objectKind = objectKind,
                 triggerUser = triggerUser,
-                description = description,
+                commitMsg = description,
                 sourceGitProjectId = sourceGitProjectId,
                 pipelineId = buildQueueEvent.pipelineId,
                 buildId = buildQueueEvent.buildId,
