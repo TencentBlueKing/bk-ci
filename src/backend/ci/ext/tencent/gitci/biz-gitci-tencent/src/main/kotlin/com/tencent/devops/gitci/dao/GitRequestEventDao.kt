@@ -115,7 +115,7 @@ class GitRequestEventDao {
                     totalCommitCount = record.totalCommitCount,
                     mergeRequestId = record.mergeRequestId,
                     event = "", // record.event,
-                    description = if (record.description.isNullOrBlank()) {
+                    description = if (!record.description.isNullOrBlank()) {
                         record.description
                     } else {
                         record.commitMessage
@@ -157,7 +157,7 @@ class GitRequestEventDao {
                     totalCommitCount = record.totalCommitCount,
                     mergeRequestId = record.mergeRequestId,
                     event = record.event,
-                    description = if (record.description.isNullOrBlank()) {
+                    description = if (!record.description.isNullOrBlank()) {
                         record.description
                     } else {
                         record.commitMessage
@@ -199,7 +199,7 @@ class GitRequestEventDao {
                         totalCommitCount = it.totalCommitCount,
                         mergeRequestId = it.mergeRequestId,
                         event = "", // record.event,
-                        description = if (it.description.isNullOrBlank()) {
+                        description = if (!it.description.isNullOrBlank()) {
                             it.description
                         } else {
                             it.commitMessage
@@ -244,7 +244,7 @@ class GitRequestEventDao {
                         totalCommitCount = it.totalCommitCount,
                         mergeRequestId = it.mergeRequestId,
                         event = "", // record.event,
-                        description = if (it.description.isNullOrBlank()) {
+                        description = if (!it.description.isNullOrBlank()) {
                             it.description
                         } else {
                             it.commitMessage
@@ -344,7 +344,7 @@ class GitRequestEventDao {
                         totalCommitCount = it.totalCommitCount,
                         mergeRequestId = it.mergeRequestId,
                         event = "", // record.event,
-                        description = if (it.description.isNullOrBlank()) {
+                        description = if (!it.description.isNullOrBlank()) {
                             it.description
                         } else {
                             it.commitMessage
