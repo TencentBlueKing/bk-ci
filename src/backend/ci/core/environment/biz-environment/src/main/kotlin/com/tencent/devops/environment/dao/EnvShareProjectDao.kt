@@ -56,7 +56,6 @@ class EnvShareProjectDao {
         }
     }
 
-
     fun count(
         dslContext: DSLContext,
         projectId: String,
