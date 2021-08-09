@@ -918,7 +918,7 @@ class YamlBuildV2 @Autowired constructor(
         startParams[BK_CI_RUN] = "true"
         startParams[CI_ACTOR] = event.userId
         startParams[CI_BRANCH] = event.branch
-        startParams[PIPELINE_GIT_EVENT_CONTENT] = JsonUtil.toJson(event)
+        startParams[PIPELINE_GIT_EVENT_CONTENT] = JsonUtil.toJson(EmojiUtil.removeAllEmoji(event))
         startParams[PIPELINE_GIT_COMMIT_MESSAGE] = parsedCommitMsg
         startParams[PIPELINE_GIT_SHA] = event.commitId
         if (!event.commitId.isBlank() && event.commitId.length >= 8) {
