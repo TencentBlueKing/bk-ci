@@ -28,6 +28,7 @@
 dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
+    api(project(":core:auth:api-auth"))
 }
 
 plugins {

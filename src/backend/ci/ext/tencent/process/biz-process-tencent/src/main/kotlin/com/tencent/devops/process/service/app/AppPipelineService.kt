@@ -28,7 +28,7 @@
 package com.tencent.devops.process.service.app
 
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -48,7 +48,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class AppPipelineService @Autowired constructor(
-    private val bkAuthProjectApi: BSAuthProjectApi,
+    private val bkAuthProjectApi: AuthProjectApi,
     private val bkCCProjectApi: BSCCProjectApi,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelineListFacadeService: PipelineListFacadeService,

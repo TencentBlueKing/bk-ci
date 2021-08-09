@@ -30,3 +30,7 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":core:common:common-client"))
 }
+
+plugins {
+    `task-deploy-to-maven`
+}

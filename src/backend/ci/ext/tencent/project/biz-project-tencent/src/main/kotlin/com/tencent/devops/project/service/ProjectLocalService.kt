@@ -38,7 +38,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
@@ -64,6 +64,7 @@ import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
+import com.tencent.devops.project.service.impl.TxProjectServiceImpl
 import com.tencent.devops.project.util.ProjectUtils
 import okhttp3.MediaType
 import okhttp3.Request
@@ -85,7 +86,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectDao: ProjectDao,
     private val objectMapper: ObjectMapper,
     private val redisOperation: RedisOperation,
-    private val bkAuthProjectApi: BSAuthProjectApi,
+    private val authProjectApi: AuthProjectApi,
+    private val bkAuthProperties: BkAuthProperties,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi,
@@ -93,7 +95,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectIamV0Service: ProjectIamV0Service,
     private val projectTagService: ProjectTagService,
     private val client: Client,
-    bkAuthProperties: BkAuthProperties
+    private val projectPermissionService: ProjectPermissionService,
+    private val txProjectServiceImpl: TxProjectServiceImpl
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -128,7 +131,7 @@ class ProjectLocalService @Autowired constructor(
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val offset = sqlLimit.offset
         val limit = sqlLimit.limit
-        val projectIds = bkAuthProjectApi.getUserProjects(bsPipelineAuthServiceCode, userId, null)
+        val projectIds = txProjectServiceImpl.getProjectFromAuth(userId, null)
         // 如果使用搜索 且 总数量少于1000 , 则全量获取
         if (searchName != null &&
             searchName.isNotEmpty() &&
@@ -435,14 +438,14 @@ class ProjectLocalService @Autowired constructor(
     fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
         logger.info("getProjectUsers accessToken is :$accessToken,userId is :$userId,projectCode is :$projectCode")
         // 检查用户是否有查询项目下用户列表的权限
-        val validateResult = verifyUserProjectPermission(accessToken, projectCode, userId)
-        logger.info("getProjectUsers validateResult is :$validateResult")
-        val validateFlag = validateResult.data
+//        val validateResult = verifyUserProjectPermission(accessToken, projectCode, userId)
+        val validateFlag = projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId)
+        logger.info("getProjectUsers validateResult is :$validateFlag")
         if (null == validateFlag || !validateFlag) {
             val messageResult = MessageCodeUtil.generateResponseDataObject<String>(CommonMessageCode.PERMISSION_DENIED)
             return Result(messageResult.status, messageResult.message, null)
         }
-        val projectUserList = bkAuthProjectApi.getProjectUsers(bsPipelineAuthServiceCode, projectCode)
+        val projectUserList = authProjectApi.getProjectUsers(bsPipelineAuthServiceCode, projectCode)
         logger.info("getProjectUsers projectUserList is :$projectUserList")
         return Result(projectUserList)
     }
@@ -453,7 +456,7 @@ class ProjectLocalService @Autowired constructor(
         projectCode: String,
         serviceCode: AuthServiceCode
     ): List<UserRole> {
-        val groupAndUsersList = bkAuthProjectApi.getProjectGroupAndUserList(serviceCode, projectCode)
+        val groupAndUsersList = authProjectApi.getProjectGroupAndUserList(serviceCode, projectCode)
         return groupAndUsersList.filter { it.userIdList.contains(userId) }
             .map { UserRole(it.displayName, it.roleId, it.roleName, it.type) }
     }
@@ -660,7 +663,7 @@ class ProjectLocalService @Autowired constructor(
         }
         var roles = mutableListOf<BKAuthProjectRolesResources>()
         if (queryProject != null) {
-            roles = bkAuthProjectApi.getProjectRoles(
+            roles = authProjectApi.getProjectRoles(
                 bsPipelineAuthServiceCode,
                 queryProject!!.englishName,
                 queryProject!!.projectId
@@ -697,7 +700,10 @@ class ProjectLocalService @Autowired constructor(
         val createUserList = userId.split(",")
 
         createUserList?.forEach {
-            if (!bkAuthProjectApi.isProjectUser(it, bsPipelineAuthServiceCode, projectId, null)) {
+            if (!projectPermissionService.verifyUserProjectPermission(
+                    accessToken = null,
+                    projectCode = projectId,
+                    userId = userId)) {
                 logger.error("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
                 throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
             }
@@ -713,6 +719,10 @@ class ProjectLocalService @Autowired constructor(
             resourceTypeCode = resourceTypeCode,
             userList = createUserList
         )
+    }
+
+    fun updateRelationId(projectCode: String, relationId: String) {
+        projectDao.updateRelationByCode(dslContext, projectCode, relationId)
     }
 
     private fun getProjectListByOrg(

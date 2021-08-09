@@ -25,21 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process
+package com.tencent.devops.process.config
 
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.GitCiPipelinePermissionServiceImpl
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
 import com.tencent.devops.process.ws.GitCIDetailPageBuild
 import com.tencent.devops.process.ws.GitCIHistoryPageBuild
 import com.tencent.devops.process.ws.GitCIStatusPageBuild
+import com.tencent.devops.process.permission.V3PipelinePermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -102,4 +106,23 @@ class TxPipelineEngineConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
     fun statusPage() = GitCIStatusPageBuild()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun txV3PipelinePermissionService(
+        txV3AuthPermission: AuthPermissionApi,
+        txV3AuthProjectApi: AuthProjectApi,
+        bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+        dslContext: DSLContext,
+        pipelineInfoDao: PipelineInfoDao,
+        authResourceApi: AuthResourceApiStr
+    ): PipelinePermissionService =
+        V3PipelinePermissionServiceImpl(
+            authPermissionApi = txV3AuthPermission,
+            authProjectApi = txV3AuthProjectApi,
+            bsPipelineAuthServiceCode = bsPipelineAuthServiceCode,
+            dslContext = dslContext,
+            pipelineInfoDao = pipelineInfoDao,
+            authResourceApi = authResourceApi
+        )
 }
