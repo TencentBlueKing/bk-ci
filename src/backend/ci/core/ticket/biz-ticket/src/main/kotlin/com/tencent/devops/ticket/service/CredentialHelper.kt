@@ -40,8 +40,8 @@ import java.util.Base64
 @Component
 class CredentialHelper {
     companion object {
-        private const val SSH_PRIVATE_PREFIX = "-----BEGIN RSA PRIVATE KEY-----"
-        private const val SSH_PRIVATE_SUFFIX = "-----END RSA PRIVATE KEY-----"
+        private val SSH_PRIVATE_REGEX = Regex("^(-----BEGIN (RSA|OPENSSH) PRIVATE KEY-----)[\\s\\S]*" +
+            "(-----END (RSA|OPENSSH) PRIVATE KEY-----)\$")
     }
 
     @Value("\${credential.mixer}")
@@ -86,7 +86,7 @@ class CredentialHelper {
                 true
             }
             CredentialType.SSH_PRIVATEKEY -> {
-                if (!(v1.startsWith(SSH_PRIVATE_PREFIX) && v1.endsWith(SSH_PRIVATE_SUFFIX))) {
+                if (!SSH_PRIVATE_REGEX.matches(v1)) {
                     update && v1 == credentialMixer
                 } else {
                     true
@@ -94,7 +94,7 @@ class CredentialHelper {
             }
             CredentialType.TOKEN_SSH_PRIVATEKEY -> {
                 v2 ?: return false
-                if (!(v2.startsWith(SSH_PRIVATE_PREFIX) && v2.endsWith(SSH_PRIVATE_SUFFIX))) {
+                if (!SSH_PRIVATE_REGEX.matches(v2)) {
                     update && v2 == credentialMixer
                 } else {
                     true

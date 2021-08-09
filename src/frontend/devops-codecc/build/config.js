@@ -22,7 +22,7 @@ export default {
     dev: {
         env: devEnv,
         cfgInHtml: cfgInHtmlDev,
-        port: 8009,
+        port: 80,
         assetsSubDirectory: 'static',
         assetsPublicPath: '/',
         proxyTable: {},

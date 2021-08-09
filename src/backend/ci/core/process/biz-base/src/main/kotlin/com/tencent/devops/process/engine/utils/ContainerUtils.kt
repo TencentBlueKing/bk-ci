@@ -38,6 +38,12 @@ object ContainerUtils {
         containerId: String
     ) = "container:startup:$pipelineId:$buildId:$containerId"
 
+    fun getContainerRunEvenCancelTaskKey(
+        pipelineId: String,
+        buildId: String,
+        containerId: String
+    ) = "container:taskEvenCancel:$pipelineId:$buildId:$containerId"
+
     fun isNormalContainerEnable(normalContainer: NormalContainer): Boolean {
         return if (normalContainer.jobControlOption != null) {
             normalContainer.jobControlOption!!.enable

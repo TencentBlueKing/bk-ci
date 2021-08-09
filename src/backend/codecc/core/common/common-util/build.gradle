@@ -12,7 +12,7 @@ dependencies {
     compile "commons-lang:commons-lang:2.6"
     compile "commons-codec:commons-codec:1.9"
     compile "com.google.code.gson:gson:2.8.2"
-    compile "com.alibaba:fastjson:1.2.68"
+    compile "com.alibaba:fastjson:1.2.76"
     compile "com.squareup.okhttp3:okhttp"
     compile "org.springframework.boot:spring-boot-starter-jersey"
     compile "org.springframework.boot:spring-boot-starter-undertow"

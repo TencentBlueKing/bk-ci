@@ -52,14 +52,15 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        channelCode: ChannelCode?
     ): Result<BuildManualStartupInfo> {
         logger.info("$pipelineId|manualStartupInfo|user($userId)")
         return client.get(ServiceBuildResource::class).manualStartupInfo(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = channelCode ?: ChannelCode.BS
         )
     }
 
@@ -69,7 +70,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        channelCode: ChannelCode?
     ): Result<ModelDetail> {
         logger.info("$buildId|DETAIL|user($userId)")
         return client.get(ServiceBuildResource::class).getBuildDetail(
@@ -77,7 +79,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = channelCode ?: ChannelCode.BS
         )
     }
 
@@ -88,7 +90,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        channelCode: ChannelCode?
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info("$pipelineId|getHistoryBuild|user($userId)")
         return client.get(ServiceBuildResource::class).getHistoryBuild(
@@ -97,7 +100,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             page = page,
             pageSize = pageSize,
-            channelCode = ChannelCode.BS
+            channelCode = channelCode ?: ChannelCode.BS
         )
     }
 
@@ -108,7 +111,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>,
-        buildNo: Int?
+        buildNo: Int?,
+        channelCode: ChannelCode?
     ): Result<BuildId> {
         logger.info("$pipelineId|manualStartup|user($userId)")
         return client.get(ServiceBuildResource::class).manualStartup(
@@ -117,7 +121,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             values = values,
             buildNo = buildNo,
-            channelCode = ChannelCode.BS
+            channelCode = channelCode ?: ChannelCode.BS
         )
     }
 
@@ -127,7 +131,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        channelCode: ChannelCode?
     ): Result<Boolean> {
         logger.info("$pipelineId|manualShutdown|user($userId)")
         return client.get(ServiceBuildResource::class).manualShutdown(
@@ -135,7 +140,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = channelCode ?: ChannelCode.BS
         )
     }
 
@@ -148,7 +153,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         buildId: String,
         taskId: String?,
         failedContainer: Boolean?,
-        skipFailedTask: Boolean?
+        skipFailedTask: Boolean?,
+        channelCode: ChannelCode?
     ): Result<BuildId> {
         logger.info("$pipelineId|retry|user($userId)")
         return client.get(ServiceBuildResource::class).retry(
@@ -159,7 +165,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             taskId = taskId,
             failedContainer = failedContainer,
             skipFailedTask = skipFailedTask,
-            channelCode = ChannelCode.BS
+            channelCode = channelCode ?: ChannelCode.BS
         )
     }
 
@@ -169,7 +175,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        channelCode: ChannelCode?
     ): Result<BuildHistoryWithVars> {
         logger.info("$pipelineId|getBuildStatus|user($userId)|build($buildId)")
         return client.get(ServiceBuildResource::class).getBuildStatus(
@@ -177,7 +184,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = channelCode ?: ChannelCode.BS
         )
     }
 
