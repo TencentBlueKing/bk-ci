@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
+import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.v3.TxV3AuthProjectApi
@@ -122,6 +123,15 @@ class TxV3AuthAutoConfiguration {
         iamConfiguration: IamConfiguration
     ) =
         TxV3AuthResourceApiStr(iamEsbService, iamConfiguration, client, tokenService)
+
+    @Bean
+    @Primary
+    fun bsAuthResourceApi(
+        bkAuthProperties: BkAuthProperties,
+        objectMapper: ObjectMapper,
+        bsAuthTokenApi: BSAuthTokenApi
+    ) =
+        BSAuthResourceApi(bkAuthProperties, objectMapper, bsAuthTokenApi)
 
     @Bean
     @Primary
