@@ -34,6 +34,7 @@ import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.AuthConfigurations
+import com.github.dockerjava.api.model.BlkioRateDevice
 import com.github.dockerjava.api.model.BuildResponseItem
 import com.github.dockerjava.api.model.Capability
 import com.github.dockerjava.api.model.ExposedPort
@@ -203,6 +204,13 @@ class DockerHostBuildService(
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
+            val blkioRateDeviceWirte = BlkioRateDevice()
+                .withPath("/dev/sda")
+                .withRate(dockerBuildInfo.dockerResource.blkioDeviceWriteBps)
+            val blkioRateDeviceRead = BlkioRateDevice()
+                .withPath("/dev/sda")
+                .withRate(dockerBuildInfo.dockerResource.blkioDeviceReadBps)
+
             val containerName =
                 "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = httpLongDockerCli.createContainerCmd(imageName)
@@ -211,8 +219,14 @@ class DockerHostBuildService(
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                 .withHostConfig(HostConfig()
-                    .withBinds(binds)
                     .withCapAdd(Capability.SYS_PTRACE)
+                    .withMemory(dockerBuildInfo.dockerResource.memoryLimitBytes)
+                    .withMemorySwap(dockerBuildInfo.dockerResource.memoryLimitBytes)
+                    .withCpuQuota(dockerBuildInfo.dockerResource.cpuQuota.toLong())
+                    .withCpuPeriod(dockerBuildInfo.dockerResource.cpuPeriod.toLong())
+/*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
+                    .withBinds(binds)
                     .withNetworkMode("bridge"))
                 .exec()
 
@@ -522,33 +536,38 @@ class DockerHostBuildService(
             val containerName =
                 "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
 
-            val container = if (dockerRunParam.command.isEmpty() || dockerRunParam.command.equals("[]")) {
-                httpLongDockerCli.createContainerCmd(imageName)
-                    .withName(containerName)
-                    .withEnv(env)
-                    .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                    .withHostConfig(HostConfig()
-                        .withCapAdd(Capability.SYS_PTRACE)
-                        .withBinds(binds)
-                        .withNetworkMode("bridge")
-                        .withPortBindings(portBindings)
-                    )
-                    .withWorkingDir(dockerHostConfig.volumeWorkspace)
-                    .exec()
-            } else {
-                httpLongDockerCli.createContainerCmd(imageName)
-                    .withName(containerName)
-                    .withCmd(dockerRunParam.command)
-                    .withEnv(env)
-                    .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                    .withHostConfig(HostConfig()
-                        .withCapAdd(Capability.SYS_PTRACE)
-                        .withBinds(binds)
-                        .withNetworkMode("bridge")
-                        .withPortBindings(portBindings))
-                    .withWorkingDir(dockerHostConfig.volumeWorkspace)
-                    .exec()
+            val dockerResource = dockerHostBuildApi.getResourceConfig(projectId)
+
+            val blkioRateDeviceWirte = BlkioRateDevice()
+                .withPath("/dev/sda")
+                .withRate(dockerResource.blkioDeviceWriteBps)
+            val blkioRateDeviceRead = BlkioRateDevice()
+                .withPath("/dev/sda")
+                .withRate(dockerResource.blkioDeviceReadBps)
+
+            val createContainerCmd = httpLongDockerCli.createContainerCmd(imageName)
+                .withName(containerName)
+                .withEnv(env)
+                .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
+                .withHostConfig(HostConfig()
+                    .withCapAdd(Capability.SYS_PTRACE)
+                    .withBinds(binds)
+                    .withMemory(dockerResource.memoryLimitBytes)
+                    .withMemorySwap(dockerResource.memoryLimitBytes)
+                    .withCpuQuota(dockerResource.cpuQuota.toLong())
+                    .withCpuPeriod(dockerResource.cpuPeriod.toLong())
+/*                        .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                        .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
+                    .withNetworkMode("bridge")
+                    .withPortBindings(portBindings)
+                )
+                .withWorkingDir(dockerHostConfig.volumeWorkspace)
+
+            if (dockerRunParam.command.isEmpty() || dockerRunParam.command.equals("[]")) {
+                createContainerCmd.withCmd(dockerRunParam.command)
             }
+
+            val container = createContainerCmd.exec()
 
             logger.info("Created container $container")
             val timestamp = (System.currentTimeMillis() / 1000).toInt()
@@ -696,7 +715,7 @@ class DockerHostBuildService(
         val cpuPeriod = dockerHostConfig.elasticityCpuPeriod ?: 10000
         val cpuQuota = dockerHostConfig.elasticityCpuQuota ?: 80000
         httpDockerCli.updateContainerCmd(containerId)
-            .withMemoryReservation(memReservation)
+            .withMemory(memReservation)
             .withCpuPeriod(cpuPeriod)
             .withCpuQuota(cpuQuota).exec()
         logger.info("<<<< Trigger container reset, containerId: $containerId," +
@@ -818,7 +837,7 @@ class DockerHostBuildService(
 
     fun refreshDockerIpStatus(): Boolean? {
         val port = environment.getProperty("local.server.port")
-        return dockerHostBuildApi.refreshDockerIpStatus(port, getContainerNum())!!.data
+        return dockerHostBuildApi.refreshDockerIpStatus(port!!, getContainerNum())!!.data
     }
 
     private fun getPublicImages(): List<String> {

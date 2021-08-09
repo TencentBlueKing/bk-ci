@@ -46,8 +46,8 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
-import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dispatch.pojo.DebugStartParam
+import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
+import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext

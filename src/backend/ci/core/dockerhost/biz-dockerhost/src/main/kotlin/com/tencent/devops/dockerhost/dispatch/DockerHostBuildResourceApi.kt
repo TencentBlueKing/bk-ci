@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.SigarUtil
@@ -72,6 +73,39 @@ class DockerHostBuildResourceApi constructor(
             }
         } catch (e: Exception) {
             logger.error("DockerHostBuildResourceApi postLog error.", e)
+        }
+    }
+
+    fun getResourceConfig(projectId: String, retryCount: Int = 3): DockerResourceOptionsVO {
+        try {
+            val path = "/${getUrlPrefix()}/api/dockerhost/resource-config/projectId/$projectId"
+            OkhttpUtils.doHttp(buildGet(path)).use { response ->
+                val responseContent = response.body()!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("Get resourceConfig $path fail. $responseContent")
+                    throw TaskExecuteException(
+                        errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                        errorType = ErrorType.SYSTEM,
+                        errorMsg = "Get resourceConfig $path fail")
+                }
+                return objectMapper.readValue(responseContent)
+
+            }
+        } catch (e: Exception) {
+            val localRetryCount = retryCount - 1
+            return if (localRetryCount > 0) {
+                getResourceConfig(projectId, localRetryCount)
+            } else {
+                return DockerResourceOptionsVO(
+                    cpuPeriod = dockerHostConfig.cpuPeriod,
+                    cpuQuota = dockerHostConfig.cpuQuota,
+                    memoryLimitBytes = dockerHostConfig.memory,
+                    blkioDeviceReadBps = dockerHostConfig.blkioDeviceReadBps,
+                    blkioDeviceWriteBps = dockerHostConfig.blkioDeviceWriteBps,
+                    disk = 100,
+                    description = ""
+                )
+            }
         }
     }
 

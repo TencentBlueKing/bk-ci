@@ -36,12 +36,14 @@ import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 
 @Suppress("LongParameterList", "MagicNumber")
 @Service
 class StageBuildDetailService(
+    private val stageTagService: StageTagService,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
@@ -54,7 +56,6 @@ class StageBuildDetailService(
     pipelineEventDispatcher,
     redisOperation
 ) {
-
     fun updateStageStatus(buildId: String, stageId: String, buildStatus: BuildStatus): List<BuildStageStatus> {
         logger.info("[$buildId]|update_stage_status|stageId=$stageId|status=$buildStatus")
         var allStageStatus: List<BuildStageStatus>? = null
@@ -191,6 +192,8 @@ class StageBuildDetailService(
     }
 
     private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
+        val stageTagMap: Map<String, String>
+            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } ?: emptyMap() }
         // 更新Stage状态至BuildHistory
         return model.stages.map {
             BuildStageStatus(
@@ -198,7 +201,10 @@ class StageBuildDetailService(
                 name = it.name ?: it.id!!,
                 status = it.status,
                 startEpoch = it.startEpoch,
-                elapsed = it.elapsed
+                elapsed = it.elapsed,
+                tag = it.tag?.map { _it ->
+                    stageTagMap.getOrDefault(_it, "null")
+                }
             )
         }
     }
