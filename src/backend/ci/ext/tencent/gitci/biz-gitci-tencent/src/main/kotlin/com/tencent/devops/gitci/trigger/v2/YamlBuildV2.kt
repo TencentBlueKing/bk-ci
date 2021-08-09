@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiBuildConfig
@@ -924,7 +925,7 @@ class YamlBuildV2 @Autowired constructor(
         }
 
         // 替换BuildMessage为了展示commit信息
-        startParams[PIPELINE_BUILD_MSG] = event.commitMsg ?: ""
+        startParams[PIPELINE_BUILD_MSG] = EmojiUtil.removeAllEmoji(event.commitMsg ?: "")
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {

@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.trigger.v1
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
@@ -515,7 +516,7 @@ class YamlBuild @Autowired constructor(
         }
 
         // 替换BuildMessage为了展示commit信息
-        startParams[PIPELINE_BUILD_MSG] = event.commitMsg ?: ""
+        startParams[PIPELINE_BUILD_MSG] = EmojiUtil.removeAllEmoji(event.commitMsg ?: "")
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {
