@@ -84,6 +84,7 @@ class CheckPauseReviewStageCmd(
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_FAILED|${event.stageId}")
                 // TODO 暂时只处理准入，后续需要兼容准出
                 commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_FAIL.name
+                commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
                 commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_IN"
                 commandContext.cmdFlowState = CmdFlowState.FINALLY
                 return
