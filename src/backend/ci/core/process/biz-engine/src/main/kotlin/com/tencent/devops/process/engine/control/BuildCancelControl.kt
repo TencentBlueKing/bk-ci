@@ -175,8 +175,8 @@ class BuildCancelControl @Autowired constructor(
                 val preStageStatus = BuildStatus.parse(stages[index - 1].status)
                 val preStageNoExecuteBusFlag = !preStageStatus.isFinish() && preStageStatus != BuildStatus.UNEXEC
                 // 当触发器stage执行完成且业务stage还未执行，则不需要执行finallyStage
-                if (!preStageNoExecuteBusFlag ||
-                    (!getStageExecuteBusFlag(stages[0]) || !getStageExecuteBusFlag(stages[1]))
+                if (getStageExecuteBusFlag(stages[0]) &&
+                    (preStageNoExecuteBusFlag || !getStageExecuteBusFlag(stages[1]))
                 ) {
                     return@forEach
                 }
@@ -188,11 +188,9 @@ class BuildCancelControl @Autowired constructor(
                 )
                 // 调整Container状态位
                 val containerBuildStatus = BuildStatus.parse(container.status)
-                // 获取当前job第一个插件
-                val firstElement = container.elements[0]
                 // 取消构建,当前运行的stage及当前stage下的job不能马上置为取消状态
                 if ((!containerBuildStatus.isFinish() && stageStatus != BuildStatus.RUNNING &&
-                        containerBuildStatus != BuildStatus.RUNNING) || firstElement.status.isNullOrBlank()
+                        containerBuildStatus != BuildStatus.RUNNING) || containerBuildStatus == BuildStatus.PREPARE_ENV
                 ) {
                     pipelineRuntimeService.updateContainerStatus(
                         buildId = event.buildId,
@@ -228,7 +226,7 @@ class BuildCancelControl @Autowired constructor(
 
     private fun getStageExecuteBusFlag(tmpStage: Stage): Boolean {
         val containers = tmpStage.containers
-        val containerSize = containers.size
+        val containerSize = containers.size - 1
         var flag = false
         for (i in 0..containerSize) {
             val container = containers[i]
