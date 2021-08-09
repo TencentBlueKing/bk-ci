@@ -33,7 +33,6 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCas
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
-import com.tencent.devops.process.engine.common.BS_STAGE_QUALITY_CHECK_FAIL_END_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
@@ -149,7 +148,8 @@ class UpdateStateForStageCmdFinally(
     private fun updateStageStatus(commandContext: StageContext) {
         val event = commandContext.event
         // 更新状态
-        pipelineStageService.updateStageStatus(buildId = event.buildId,
+        pipelineStageService.updateStageStatus(
+            buildId = event.buildId,
             stageId = event.stageId,
             buildStatus = commandContext.buildStatus,
             checkIn = commandContext.stage.checkIn,
