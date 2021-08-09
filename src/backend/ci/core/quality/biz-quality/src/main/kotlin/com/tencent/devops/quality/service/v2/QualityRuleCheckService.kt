@@ -306,10 +306,12 @@ class QualityRuleCheckService @Autowired constructor(
 
                     try {
                         if (rule.opList != null) {
+                            logger.info("do op list action: $buildId, $rule")
                             rule.opList!!.forEach { ruleOp ->
                                 doRuleOperation(buildCheckParams, interceptRecordList, resultList, ruleOp)
                             }
                         } else {
+                            logger.info("op list is empty for rule and build: $buildId, $rule")
                             doRuleOperation(this, interceptRecordList, resultList, QualityRule.RuleOp(
                                 operation = rule.operation,
                                 notifyTypeList = rule.notifyTypeList,
