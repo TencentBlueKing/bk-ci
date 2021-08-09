@@ -205,8 +205,9 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                 }
                 // #3138 状态实时刷新
-                if (status.isRunning() && container.elements[0].status.isNullOrBlank() &&
-                    container.containPostTaskFlag != true) {
+                val refreshFlag = status.isRunning() && container.elements[0].status.isNullOrBlank() &&
+                    container.containPostTaskFlag != true
+                if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
                     container.status = buildStatus.name
                 }
                 return Traverse.CONTINUE

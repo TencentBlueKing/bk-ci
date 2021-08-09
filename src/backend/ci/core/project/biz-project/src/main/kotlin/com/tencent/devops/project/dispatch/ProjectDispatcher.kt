@@ -56,8 +56,6 @@ class ProjectDispatcher @Autowired constructor(
                     } else {
                         eventType.routeKey
                     }
-//                logger.info("[${eventType.exchange}|$routeKey|
-//               ${event.userId}|${event.projectId}] dispatch the project event")
                 rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
                     when {
                         event.delayMills > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
