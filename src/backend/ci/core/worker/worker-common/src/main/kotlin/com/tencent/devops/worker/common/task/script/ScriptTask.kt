@@ -162,11 +162,11 @@ open class ScriptTask : ITask() {
         }
     }
 
-    private fun getXdgConfigHomePath(pipeline: String): String {
+    private fun getXdgConfigHomePath(pipelineId: String): String {
         try {
             return System.getenv(XDG_CONFIG_HOME) ?: Paths.get(
                 System.getProperty("user.home"),
-                ".checkout", pipeline
+                ".checkout", pipelineId
             ).normalize().toString()
         } catch (ignore: Exception) {
             logger.error("get xdg_config_home error", ignore)
