@@ -43,6 +43,7 @@ import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfo
+import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.service.EnvService
 import org.springframework.beans.factory.annotation.Autowired
@@ -186,10 +187,10 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
-        sharedProjects: List<SharedProjectInfo>
+        sharedProjects: SharedProjectInfoWrap
     ): Result<Boolean> {
         checkParam(userId, projectId, envHashId)
-        envService.setShareEnv(userId, projectId, envHashId, sharedProjects)
+        envService.setShareEnv(userId, projectId, envHashId, sharedProjects.sharedProjects)
         return Result(true)
     }
 
