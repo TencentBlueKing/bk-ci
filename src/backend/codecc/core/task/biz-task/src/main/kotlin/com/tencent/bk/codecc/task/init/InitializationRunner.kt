@@ -88,7 +88,6 @@ class InitializationRunner @Autowired constructor(
             jedisConnectionFactory.port,
             jedisConnectionFactory.database)
 
-
         // 国际化操作[ 响应码、操作记录、规则包、规则名称、报表日期、工具参数、工具描述、操作类型 ]
         globalMessage(redisTemplate)
 

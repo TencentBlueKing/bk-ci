@@ -61,6 +61,13 @@
                     model['failControl'].list.push(failControlManualRetryOption)
                 }
 
+                // 编辑状态
+                if (!this.disabled) {
+                    model['runCondition'].list = model['runCondition'].list.filter(item => {
+                        return item.id !== 'PARENT_TASK_CANCELED_OR_TIMEOUT'
+                    })
+                }
+
                 return model
             }
         },
@@ -132,8 +139,12 @@
                 left: 180px;
                 top:77px;
                 &.retry-count-input {
-                    top: 118px;
-                    width: 154px;
+                    top: 117px;
+                    width: 260px;
+                    .bk-form-content {
+                        display: inline-block;
+                        width: 150px;
+                    };
                 }
             }
 
