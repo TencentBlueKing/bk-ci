@@ -41,7 +41,6 @@ import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
-import com.tencent.devops.process.engine.control.lock.TaskIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
