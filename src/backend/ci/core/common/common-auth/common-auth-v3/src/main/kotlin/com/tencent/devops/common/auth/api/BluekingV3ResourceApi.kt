@@ -32,8 +32,8 @@ import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
-import com.tencent.devops.common.auth.pojo.AncestorsApiReq
-import com.tencent.devops.common.auth.pojo.IamCreateApiReq
+import com.tencent.devops.common.auth.api.pojo.AncestorsApiReq
+import com.tencent.devops.common.auth.api.pojo.EsbCreateApiReq
 import com.tencent.devops.common.auth.service.IamEsbService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -125,7 +125,7 @@ class BluekingV3ResourceApi @Autowired constructor(
                 type = AuthResourceType.PROJECT.value
             ))
         }
-        val iamApiReq = IamCreateApiReq(
+        val iamApiReq = EsbCreateApiReq(
             creator = user,
             name = resourceName,
             id = resourceCode,

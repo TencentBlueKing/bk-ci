@@ -33,7 +33,6 @@ import org.springframework.context.annotation.ComponentScan
 
 @MicroService
 @ComponentScan("com.tencent.devops.common", "com.tencent.devops.project")
-
 class Application
 
 fun main(args: Array<String>) {

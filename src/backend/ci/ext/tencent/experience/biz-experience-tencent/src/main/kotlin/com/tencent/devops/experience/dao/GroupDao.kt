@@ -51,6 +51,25 @@ class GroupDao {
         }
     }
 
+    fun search(
+        dslContext: DSLContext,
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        name: String
+    ): Result<TGroupRecord> {
+        return with(TGroup.T_GROUP) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .let {
+                    if (null == name) it else it.and(NAME.eq(name))
+                }
+                .orderBy(CREATE_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
     fun getIdByGroupUser(dslContext: DSLContext, userId: String): Result<Record1<Long>>? {
         with(TGroup.T_GROUP) {
             return dslContext.selectDistinct(ID)

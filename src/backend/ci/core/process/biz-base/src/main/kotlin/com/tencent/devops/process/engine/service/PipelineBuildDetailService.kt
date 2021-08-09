@@ -49,6 +49,7 @@ import com.tencent.devops.process.engine.service.detail.BaseBuildDetailService
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -63,6 +64,7 @@ import java.util.concurrent.TimeUnit
 class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val stageTagService: StageTagService,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
@@ -203,8 +205,9 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                 }
                 // #3138 状态实时刷新
-                if (status.isRunning() && container.elements[0].status.isNullOrBlank() &&
-                    container.containPostTaskFlag != true) {
+                val refreshFlag = status.isRunning() && container.elements[0].status.isNullOrBlank() &&
+                    container.containPostTaskFlag != true
+                if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
                     container.status = buildStatus.name
                 }
                 return Traverse.CONTINUE
@@ -326,6 +329,8 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
+        val stageTagMap: Map<String, String>
+            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } ?: emptyMap() }
         // 更新Stage状态至BuildHistory
         return model.stages.map {
             BuildStageStatus(
@@ -333,7 +338,10 @@ class PipelineBuildDetailService @Autowired constructor(
                 name = it.name ?: it.id!!,
                 status = it.status,
                 startEpoch = it.startEpoch,
-                elapsed = it.elapsed
+                elapsed = it.elapsed,
+                tag = it.tag?.map { _it ->
+                    stageTagMap.getOrDefault(_it, "null")
+                }
             )
         }
     }
