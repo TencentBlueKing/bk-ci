@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
@@ -48,6 +49,7 @@ import com.tencent.devops.process.engine.service.detail.BaseBuildDetailService
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -62,6 +64,7 @@ import java.util.concurrent.TimeUnit
 class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val stageTagService: StageTagService,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
@@ -202,35 +205,44 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                 }
                 // #3138 状态实时刷新
-                if (status.isRunning()) {
+                if (status.isRunning() && container.elements[0].status.isNullOrBlank() &&
+                    container.containPostTaskFlag != true) {
                     container.status = buildStatus.name
                 }
                 return Traverse.CONTINUE
             }
 
-            override fun onFindElement(e: Element, c: Container): Traverse {
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (e.status == BuildStatus.RUNNING.name || e.status == BuildStatus.REVIEWING.name) {
                     val status = if (e.status == BuildStatus.RUNNING.name) {
-                        BuildStatus.TERMINATE.name
+                        val runCondition = e.additionalOptions?.runCondition
+                        // 当task的runCondition为PRE_TASK_FAILED_EVEN_CANCEL，点击取消还需要运行
+                        if (runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
+                            BuildStatus.RUNNING.name
+                        } else {
+                            BuildStatus.CANCELED.name
+                        }
                     } else buildStatus.name
                     e.status = status
-                    c.status = status
-
-                    if (e.startEpoch != null) {
-                        e.elapsed = System.currentTimeMillis() - e.startEpoch!!
+                    if (c.containPostTaskFlag != true) {
+                        c.status = status
                     }
-
-                    var elementElapsed = 0L
-                    run lit@{
-                        c.elements.forEach {
-                            elementElapsed += it.elapsed ?: 0
-                            if (it == e) {
-                                return@lit
+                    if (BuildStatus.parse(status).isFinish()) {
+                        if (e.startEpoch != null) {
+                            e.elapsed = System.currentTimeMillis() - e.startEpoch!!
+                        }
+                        var elementElapsed = 0L
+                        run lit@{
+                            c.elements.forEach {
+                                elementElapsed += it.elapsed ?: 0
+                                if (it == e) {
+                                    return@lit
+                                }
                             }
                         }
-                    }
 
-                    c.elementElapsed = elementElapsed
+                        c.elementElapsed = elementElapsed
+                    }
 
                     update = true
                 }
@@ -281,7 +293,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 return Traverse.CONTINUE
             }
 
-            override fun onFindElement(e: Element, c: Container): Traverse {
+            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (!e.status.isNullOrBlank() && BuildStatus.valueOf(e.status!!).isRunning()) {
                     e.status = buildStatus.name
                     update = true
@@ -316,6 +328,8 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
+        val stageTagMap: Map<String, String>
+            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } ?: emptyMap() }
         // 更新Stage状态至BuildHistory
         return model.stages.map {
             BuildStageStatus(
@@ -323,7 +337,10 @@ class PipelineBuildDetailService @Autowired constructor(
                 name = it.name ?: it.id!!,
                 status = it.status,
                 startEpoch = it.startEpoch,
-                elapsed = it.elapsed
+                elapsed = it.elapsed,
+                tag = it.tag?.map { _it ->
+                    stageTagMap.getOrDefault(_it, "null")
+                }
             )
         }
     }

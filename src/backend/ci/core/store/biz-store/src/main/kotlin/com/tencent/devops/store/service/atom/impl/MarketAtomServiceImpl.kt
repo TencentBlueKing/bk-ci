@@ -33,8 +33,9 @@ import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT
 import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
-import com.tencent.devops.common.api.constant.REQUIRED
+import com.tencent.devops.common.api.constant.NO_LABEL
 import com.tencent.devops.common.api.constant.OPTIONS
+import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -46,6 +47,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -116,54 +118,79 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var atomDao: AtomDao
+
     @Autowired
     lateinit var marketAtomDao: MarketAtomDao
+
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var storeBuildInfoDao: StoreBuildInfoDao
+
     @Autowired
     lateinit var marketAtomEnvInfoDao: MarketAtomEnvInfoDao
+
     @Autowired
     lateinit var marketAtomClassifyDao: MarketAtomClassifyDao
+
     @Autowired
     lateinit var marketAtomFeatureDao: MarketAtomFeatureDao
+
     @Autowired
     lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
+
     @Autowired
     lateinit var atomApproveRelDao: AtomApproveRelDao
+
     @Autowired
     lateinit var atomLabelRelDao: AtomLabelRelDao
+
     @Autowired
     lateinit var storeTotalStatisticService: StoreTotalStatisticService
+
     @Autowired
     lateinit var atomLabelService: AtomLabelService
+
     @Autowired
     lateinit var storeProjectService: StoreProjectService
+
     @Autowired
     lateinit var storeUserService: StoreUserService
+
     @Autowired
     lateinit var atomMemberService: AtomMemberServiceImpl
+
     @Autowired
     lateinit var storeCommentService: StoreCommentService
+
     @Autowired
     lateinit var classifyService: ClassifyService
+
     @Autowired
     lateinit var storeWebsocketService: StoreWebsocketService
+
     @Autowired
     lateinit var storeCommonService: StoreCommonService
+
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
+
     @Autowired
     lateinit var marketAtomEnvService: MarketAtomEnvService
+
     @Autowired
     lateinit var storeDailyStatisticService: StoreDailyStatisticService
+
     @Autowired
     lateinit var redisOperation: RedisOperation
+
     @Autowired
     lateinit var client: Client
 
@@ -172,7 +199,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         private val executor = Executors.newFixedThreadPool(30)
     }
 
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST", "LongParameterList", "LongMethod")
     private fun doList(
         userId: String,
         userDeptList: List<Int>,
@@ -186,7 +213,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         sortType: MarketAtomSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        urlProtocolTrim: Boolean = false
     ): Future<MarketAtomResp> {
         return executor.submit(Callable<MarketAtomResp> {
             val results = mutableListOf<MarketItem>()
@@ -246,6 +274,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val defaultFlag = it["DEFAULT_FLAG"] as Boolean
                 val flag = generateInstallFlag(defaultFlag, members, userId, visibleList, userDeptList)
                 val classifyId = it["CLASSIFY_ID"] as String
+                var logoUrl = it["LOGO_URL"] as? String
+                if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
+                    logoUrl = RegexUtils.trimProtocol(logoUrl)
+                }
                 results.add(
                     MarketItem(
                         id = it["ID"] as String,
@@ -255,7 +287,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         rdType = AtomTypeEnum.getAtomType((it["ATOM_TYPE"] as Byte).toInt()),
                         classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
                         category = AtomCategoryEnum.getAtomCategory((it["CATEGROY"] as Byte).toInt()),
-                        logoUrl = it["LOGO_URL"] as? String,
+                        logoUrl = logoUrl,
                         publisher = it["PUBLISHER"] as String,
                         os = if (!StringUtils.isEmpty(it["OS"])) JsonUtil.getObjectMapper().readValue(
                             it["OS"] as String,
@@ -303,7 +335,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     override fun mainPageList(
         userId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        urlProtocolTrim: Boolean
     ): Result<List<MarketMainItem>> {
         val result = mutableListOf<MarketMainItem>()
         // 获取用户组织架构
@@ -325,7 +358,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 sortType = MarketAtomSortTypeEnum.UPDATE_TIME,
                 desc = true,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                urlProtocolTrim = urlProtocolTrim
             )
         )
         labelInfoList.add(MarketMainItemLabel(HOTTEST, MessageCodeUtil.getCodeLanMessage(HOTTEST)))
@@ -343,7 +377,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
                 desc = true,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                urlProtocolTrim = urlProtocolTrim
             )
         )
 
@@ -371,7 +406,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
                         desc = true,
                         page = page,
-                        pageSize = pageSize
+                        pageSize = pageSize,
+                        urlProtocolTrim = urlProtocolTrim
                     )
                 )
             }
@@ -403,7 +439,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         recommendFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        urlProtocolTrim: Boolean
     ): MarketAtomResp {
         logger.info("[list]enter")
 
@@ -424,7 +461,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             recommendFlag = recommendFlag,
             desc = true,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            urlProtocolTrim = urlProtocolTrim
         ).get()
     }
 
@@ -883,11 +921,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     @Suppress("UNCHECKED_CAST")
     private fun generateYaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
         val sb = StringBuilder()
-            if (defaultShowFlag != null && defaultShowFlag) {
-                sb.append("h2. ${atom.name}\r\n")
-                    .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
-            }
-            sb.append("- taskType: marketBuild@latest\r\n")
+        if (defaultShowFlag != null && defaultShowFlag) {
+            sb.append("h2. ${atom.name}\r\n")
+                .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
+        }
+        sb.append("- taskType: marketBuild@latest\r\n")
             .append("  displayName: ${atom.name}\r\n")
             .append("  inputs:\r\n")
             .append("    atomCode: ${atom.atomCode}\r\n")
@@ -995,14 +1033,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val label = paramValueMap["label"]
                 val text = paramValueMap["text"]
                 val desc = paramValueMap["desc"]
-                val description = if (label?.toString().isNullOrBlank()) {
-                    if (text?.toString().isNullOrBlank()) {
-                        desc.toString()
-                    } else {
-                        text.toString()
-                    }
-                } else {
+                val description = if (!label?.toString().isNullOrBlank()) {
                     label.toString()
+                } else if (!text?.toString().isNullOrBlank()) {
+                    text.toString()
+                } else if (!desc?.toString().isNullOrBlank()) {
+                    desc.toString()
+                } else {
+                    MessageCodeUtil.getCodeLanMessage(NO_LABEL)
                 }
                 val type = paramValueMap["type"]
                 val required = null != paramValueMap["required"] &&
@@ -1034,7 +1072,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         defaultName = defaultName
                     )
                     sb.append("\r\n")
-                    sb.append("      $paramKey: ")
+                    sb.append("    $paramKey:\r\n")
                     sb.append("        - string\r\n")
                     sb.append("        - string\r\n")
                 } else {

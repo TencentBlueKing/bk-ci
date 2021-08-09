@@ -25,15 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.common
+package com.tencent.devops.common.webhook.pojo.code
 
-enum class EnvEnum(
-    val value: String
-) {
-    DEV_ENV("dev"),
-    TEST_ENV("test"),
-    GRAY_ENV("gray"),
-    PROD_ENV("prod"),
-    AUTO_ENV("auto"),
-    GITCI_PROD_ENV("gitci-prod")
-}
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+
+data class PathFilterConfig(
+    val pathFilterType: PathFilterType?,
+    val pipelineId: String,
+    val triggerOnPath: List<String>,
+    val includedPaths: List<String>,
+    val excludedPaths: List<String>
+)

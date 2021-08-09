@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
+import com.tencent.devops.scm.pojo.MATCH_BRANCH
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 
@@ -39,7 +40,6 @@ class BranchFilter(
 
     companion object {
         private val logger = LoggerFactory.getLogger(BranchFilter::class.java)
-        private const val MATCH_BRANCH = "matchBranch"
     }
     private val matcher = AntPathMatcher()
 
