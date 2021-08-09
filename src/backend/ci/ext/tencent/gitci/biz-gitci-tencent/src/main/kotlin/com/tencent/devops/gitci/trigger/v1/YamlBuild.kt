@@ -499,6 +499,7 @@ class YamlBuild @Autowired constructor(
         }
 
         val startParams = mutableMapOf<String, String>()
+        val parsedCommitMsg = EmojiUtil.removeAllEmoji(event.commitMsg ?: "")
 
         // 通用参数
         startParams[BK_CI_RUN] = "true"
@@ -510,13 +511,13 @@ class YamlBuild @Autowired constructor(
         startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = event.commitId
         startParams[BK_REPO_WEBHOOK_REPO_NAME] = gitProjectConf.name
         startParams[BK_REPO_WEBHOOK_REPO_URL] = gitProjectConf.url
-        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE] = event.commitMsg.toString()
+        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE] = parsedCommitMsg
         if (event.commitId.isNotBlank() && event.commitId.length >= 8) {
             startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT] = event.commitId.substring(0, 8)
         }
 
         // 替换BuildMessage为了展示commit信息
-        startParams[PIPELINE_BUILD_MSG] = EmojiUtil.removeAllEmoji(event.commitMsg ?: "")
+        startParams[PIPELINE_BUILD_MSG] = parsedCommitMsg
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {

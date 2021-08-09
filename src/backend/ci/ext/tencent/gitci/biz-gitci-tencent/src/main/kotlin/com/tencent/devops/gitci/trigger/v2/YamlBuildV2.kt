@@ -910,6 +910,7 @@ class YamlBuildV2 @Autowired constructor(
         val result = mutableListOf<BuildFormProperty>()
 
         val startParams = mutableMapOf<String, String>()
+        val parsedCommitMsg = EmojiUtil.removeAllEmoji(event.commitMsg ?: "")
 
         // 通用参数
         startParams[CI_PIPELINE_NAME] = yaml.name ?: ""
@@ -918,14 +919,14 @@ class YamlBuildV2 @Autowired constructor(
         startParams[CI_ACTOR] = event.userId
         startParams[CI_BRANCH] = event.branch
         startParams[PIPELINE_GIT_EVENT_CONTENT] = JsonUtil.toJson(event)
-        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = event.commitMsg ?: ""
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = parsedCommitMsg
         startParams[PIPELINE_GIT_SHA] = event.commitId
         if (!event.commitId.isBlank() && event.commitId.length >= 8) {
             startParams[PIPELINE_GIT_SHA_SHORT] = event.commitId.substring(0, 8)
         }
 
         // 替换BuildMessage为了展示commit信息
-        startParams[PIPELINE_BUILD_MSG] = EmojiUtil.removeAllEmoji(event.commitMsg ?: "")
+        startParams[PIPELINE_BUILD_MSG] = parsedCommitMsg
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {
