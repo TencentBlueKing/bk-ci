@@ -27,7 +27,7 @@
 
 package com.tencent.devops.environment.dao
 
-import com.tencent.devops.environment.pojo.SharedProjectInfo
+import com.tencent.devops.environment.pojo.AddSharedProjectInfo
 import com.tencent.devops.model.environment.tables.TEnvShareProject
 import com.tencent.devops.model.environment.tables.records.TEnvShareProjectRecord
 import org.jooq.DSLContext
@@ -49,7 +49,7 @@ class EnvShareProjectDao {
                 .where(MAIN_PROJECT_ID.eq(projectId))
                 .and((ENV_ID.eq(envId)))
             if (!name.isNullOrBlank()) {
-                where.and(ENV_NAME.like("%$name%"))
+                where.and(SHARED_PROJECT_NAME.like("%$name%"))
             }
             return where.limit(limit).offset(offset)
                 .fetch()
@@ -68,7 +68,7 @@ class EnvShareProjectDao {
                 .where(MAIN_PROJECT_ID.eq(projectId))
                 .and((ENV_ID.eq(envId)))
             if (!name.isNullOrBlank()) {
-                where.and(ENV_NAME.like("%$name%"))
+                where.and(SHARED_PROJECT_NAME.like("%$name%"))
             }
             return where.fetchOne(0, Int::class.java)!!
         }
@@ -89,7 +89,7 @@ class EnvShareProjectDao {
         envId: Long,
         envName: String,
         mainProjectId: String,
-        sharedProjects: List<SharedProjectInfo>
+        sharedProjects: List<AddSharedProjectInfo>
     ) {
         if (sharedProjects.isEmpty()) {
             return

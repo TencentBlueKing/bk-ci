@@ -57,6 +57,7 @@ import com.tencent.devops.environment.dao.EnvShareProjectDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.pojo.AddSharedProjectInfo
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
@@ -643,7 +644,7 @@ class EnvService @Autowired constructor(
         }
     }
 
-    fun setShareEnv(userId: String, projectId: String, envHashId: String, sharedProjects: List<SharedProjectInfo>) {
+    fun setShareEnv(userId: String, projectId: String, envHashId: String, sharedProjects: List<AddSharedProjectInfo>) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(

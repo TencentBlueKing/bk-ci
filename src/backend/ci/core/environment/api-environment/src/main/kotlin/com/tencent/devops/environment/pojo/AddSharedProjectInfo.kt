@@ -27,11 +27,16 @@
 
 package com.tencent.devops.environment.pojo
 
+import com.tencent.devops.environment.pojo.enums.SharedEnvType
 import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiParam
+import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("共享的项目列表")
-data class SharedProjectInfoWrap(
-    @ApiParam(value = "共享的项目列表", required = true)
-    val sharedProjects: List<AddSharedProjectInfo>
+@ApiModel("VM虚拟机配额")
+data class AddSharedProjectInfo(
+    @ApiModelProperty("工蜂项目ID", required = true)
+    val gitProjectId: String,
+    @ApiModelProperty("项目名称，工蜂项目则为groupName/projectName", required = true)
+    val name: String,
+    @ApiModelProperty("类型，预留", required = true)
+    val type: SharedEnvType
 )
