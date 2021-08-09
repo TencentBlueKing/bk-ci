@@ -156,9 +156,13 @@ class GitCIBuildFinishListener @Autowired constructor(
                     throw OperationException("git ci all projectCode not exist")
                 }
 
-                val description = if (record["COMMIT_MESSAGE"] != null) {
-                    record["COMMIT_MESSAGE"] as String
-                } else ""
+                val description = try {
+                    if (record["COMMIT_MESSAGE"] != null) {
+                        record["COMMIT_MESSAGE"] as String
+                    } else ""
+                } catch (ignore: Throwable) {
+                    ""
+                }
 
                 val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
                     ?: throw OperationException("git ci pipeline not exist")
