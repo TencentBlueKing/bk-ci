@@ -25,10 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.gitci.utils
 
-const val AGENT_VERSION = 12.43 // 不能以0结束
+import com.tencent.devops.common.api.exception.ClientException
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+object RetryUtils {
+
+    @Throws(ClientException::class)
+    fun <T> clientRetry(retryTime: Int = 5, retryPeriodMills: Long = 500, action: () -> T): T {
+        return try {
+            action()
+        } catch (re: ClientException) {
+            if (retryTime - 1 < 0) {
+                throw re
+            }
+            if (retryPeriodMills > 0) {
+                Thread.sleep(retryPeriodMills)
+            }
+            clientRetry(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
+        }
+    }
 }
