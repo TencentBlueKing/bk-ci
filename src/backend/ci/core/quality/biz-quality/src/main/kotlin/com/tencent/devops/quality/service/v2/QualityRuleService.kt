@@ -208,7 +208,7 @@ class QualityRuleService @Autowired constructor(
                     auditUserList = ruleRequest.auditUserList,
                     auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes,
                     gatewayId = ruleRequest.gatewayId ?: "",
-                    opList = null
+                    opList = ruleRequest.opList
                 ),
                 createAuth = false)
 

@@ -28,6 +28,7 @@
 package com.tencent.devops.quality.api.v3.pojo.request
 
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -58,6 +59,8 @@ data class RuleCreateRequestV3(
     val auditUserList: List<String>?,
     @ApiModelProperty("审核超时时间", required = false)
     val auditTimeoutMinutes: Int?,
+    @ApiModelProperty("操作类型结合", required = false)
+    val opList: List<RuleCreateRequest.CreateRequestOp>?,
     @ApiModelProperty("红线匹配的id", required = false)
     val gatewayId: String?
 ) {
