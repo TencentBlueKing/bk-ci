@@ -296,7 +296,6 @@ class QualityRuleCheckService @Autowired constructor(
             val ruleId = HashUtil.decodeIdToLong(rule.hashId)
             val interceptResult = it.second
             val interceptRecordList = it.third
-            val createTime = LocalDateTime.now()
 
             with(buildCheckParams) {
                 ruleService.plusExecuteCount(ruleId)
@@ -305,42 +304,67 @@ class QualityRuleCheckService @Autowired constructor(
                     ruleService.plusInterceptTimes(ruleId)
 
                     try {
-                        if (rule.operation == RuleOperation.END) {
-                            sendEndNotification(
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                buildId = buildId,
-                                buildNo = buildNo,
-                                createTime = createTime,
-                                interceptRecordList = interceptRecordList,
-                                endNotifyTypeList = rule.notifyTypeList ?: listOf(),
-                                endNotifyGroupList = rule.notifyGroupList ?: listOf(),
-                                endNotifyUserList = (rule.notifyUserList ?: listOf()).map { user ->
-                                    EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
-                                },
-                                runtimeVariable = buildCheckParams.runtimeVariable
-                            )
+                        if (rule.opList != null) {
+                            rule.opList!!.forEach { ruleOp ->
+                                doRuleOperation(buildCheckParams, interceptRecordList, resultList, ruleOp)
+                            }
                         } else {
-                            val startUser = runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
-                            sendAuditNotification(
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                buildId = buildId,
-                                buildNo = buildNo,
-                                createTime = createTime,
-                                resultList = resultList,
-                                auditNotifyUserList = (rule.auditUserList
-                                    ?: listOf()).toSet().plus(startUser).map { user ->
-                                    EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
-                                },
-                                runtimeVariable = buildCheckParams.runtimeVariable
-                            )
+                            doRuleOperation(this, interceptRecordList, resultList, QualityRule.RuleOp(
+                                operation = rule.operation,
+                                notifyTypeList = rule.notifyTypeList,
+                                notifyGroupList = rule.notifyGroupList,
+                                notifyUserList = rule.notifyUserList,
+                                auditUserList = rule.auditUserList,
+                                auditTimeoutMinutes = rule.auditTimeoutMinutes
+                            ))
                         }
                     } catch (ignored: Throwable) {
                         logger.error("send notification fail", ignored)
                     }
                 }
                 countService.countIntercept(projectId, pipelineId, ruleId, interceptResult)
+            }
+        }
+    }
+
+    private fun doRuleOperation(
+        buildCheckParams: BuildCheckParams,
+        interceptRecordList: List<QualityRuleInterceptRecord>,
+        resultList: List<RuleCheckSingleResult>,
+        ruleOp: QualityRule.RuleOp
+    ) {
+        with(buildCheckParams) {
+            val createTime = LocalDateTime.now()
+            if (ruleOp.operation == RuleOperation.END) {
+                sendEndNotification(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    buildNo = buildNo,
+                    createTime = createTime,
+                    interceptRecordList = interceptRecordList,
+                    endNotifyTypeList = ruleOp.notifyTypeList ?: listOf(),
+                    endNotifyGroupList = ruleOp.notifyGroupList ?: listOf(),
+                    endNotifyUserList = (ruleOp.notifyUserList ?: listOf()).map { user ->
+                        EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
+                    },
+                    runtimeVariable = buildCheckParams.runtimeVariable
+                )
+            } else {
+                val startUser = runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
+                sendAuditNotification(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    buildNo = buildNo,
+                    createTime = createTime,
+                    resultList = resultList,
+                    auditNotifyUserList = (ruleOp.auditUserList
+                        ?: listOf()).toSet().plus(startUser).map { user ->
+                        EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
+                    },
+                    runtimeVariable = buildCheckParams.runtimeVariable
+                )
             }
         }
     }
