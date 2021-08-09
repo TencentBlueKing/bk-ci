@@ -72,7 +72,11 @@ class QualityRuleBuildHisService constructor(
                 ),
                 range = listOf(it.pipelineId!!),
                 templateRange = listOf(),
-                operation = RuleOperation.valueOf(it.opType),
+                operation = if (it.opType.isNullOrBlank()) {
+                    RuleOperation.END
+                } else {
+                    RuleOperation.valueOf(it.opType)
+                },
                 notifyTypeList = it.notifyType.split(",").map { NotifyType.valueOf(it) },
                 notifyUserList = it.notifyUser.split(","),
                 notifyGroupList = it.notifyGroupId.split(","),
