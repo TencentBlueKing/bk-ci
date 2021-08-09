@@ -1665,7 +1665,7 @@ class PipelineBuildFacadeService(
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
                     defaultMessage = "流水线已经被取消构建或已完成",
-                    params = arrayOf(alreadyCancelUser?:"")
+                    params = arrayOf(alreadyCancelUser ?: "")
                 )
             }
 
