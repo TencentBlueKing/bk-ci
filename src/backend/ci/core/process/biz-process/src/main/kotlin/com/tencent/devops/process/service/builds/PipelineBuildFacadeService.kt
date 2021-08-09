@@ -1661,11 +1661,11 @@ class PipelineBuildFacadeService(
             val alreadyCancelUser = modelDetail.cancelUserId
 
             if (BuildStatus.parse(modelDetail.status).isFinish()) {
-                logger.warn("The build $buildId of project $projectId already finish ")
+                logger.warn("The build $buildId of project $projectId already finished ")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
                     defaultMessage = "流水线已经被取消构建或已完成",
-                    params = arrayOf(userId)
+                    params = arrayOf(alreadyCancelUser?:"")
                 )
             }
 
