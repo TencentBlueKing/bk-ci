@@ -168,6 +168,9 @@ const actions: ActionTree<RootState, any> = {
     },
     hasProjectPermission (_, projectId) {
         return Request.get(`${AUTH_API_URL_PREFIX}/user/project/roles/projects/${projectId}/manager/hasPermission`)
+    },
+    getV3UserGroupUrl (_, params) {
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/auth/group/permission/url`, { params })
     }
 }
 

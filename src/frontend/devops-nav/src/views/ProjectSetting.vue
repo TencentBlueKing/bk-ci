@@ -6,13 +6,14 @@
             :active-child-tab.sync="activeChildTab"
         ></transition-tab>
 
-        <component :is="activeChildTab" class="project-setting-main"></component>
+        <component :is="activeChildTab" class="project-setting-main" ref="member"></component>
     </article>
 </template>
 
 <script lang="ts">
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
+    import { Action } from 'vuex-class'
     import TransitionTab from '../components/TransitionTab'
     import basic from '../components/ProjectSetting/basic'
     import member from '../components/ProjectSetting/member'
@@ -25,6 +26,8 @@
         }
     })
     export default class ProjectSetting extends Vue {
+        @Action getV3UserGroupUrl
+
         tabs: object[] = []
         activeTab: string = ''
         activeChildTab: string = ''
@@ -46,7 +49,7 @@
                     name: 'manage',
                     children: [
                         { label: this.$t('memberManagement'), name: 'member' },
-                        { label: this.$t('userGroupPermissions'), name: 'userGroup', link: `${BK_CI_IAM_SAAS_URL}/user-group-detail/${this.$route.params.iamId}?tab=group_perm` }
+                        { label: this.$t('userGroupPermissions'), name: 'userGroup' }
                     ],
                     showChildTab: true
                 }
@@ -63,12 +66,26 @@
         }
 
         childTabChange (name) {
-            this.$router.push({
-                name: 'ps',
-                params: {
-                    type: name
+            if (name === 'userGroup') {
+                this.activeChildTab = 'member'
+                const memberComponent = this.$refs.member || {}
+                const params = {
+                    projectId: memberComponent.projectId,
+                    roleId: memberComponent.curRole.id
                 }
-            })
+                this.getV3UserGroupUrl(params).then((res) => {
+                    window.open(res, '_blank')
+                }).catch((err) => {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                })
+            } else {
+                this.$router.push({
+                    name: 'ps',
+                    params: {
+                        type: name
+                    }
+                })
+            }
         }
     }
 </script>
