@@ -151,7 +151,8 @@ object ModelUtils {
                 element.canRetry = null // 自动跳过的不能手动重试
             }
         } else if (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY ||
-            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
+            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
         ) {
             // 前面有失败的插件时也要运行的插件，将前面的失败插件置为不可重试和跳过
             element.canRetry = null

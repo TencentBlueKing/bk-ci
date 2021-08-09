@@ -31,6 +31,7 @@ import com.cronutils.mapper.CronMapper
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
@@ -78,7 +79,7 @@ data class TimerTriggerElement(
         }
     }
 
-    fun convertExpressions(): Set<String> {
+    fun convertExpressions(params: Map<String, String>): Set<String> {
         return if (isOldExpress()) {
             if (expression != null) {
                 setOf(convertExpression(expression))
@@ -94,7 +95,7 @@ data class TimerTriggerElement(
             }
             if (advanceExpression != null && advanceExpression.isNotEmpty()) {
                 advanceExpression.forEach { expression ->
-                    expressions.add(convertExpression(expression))
+                    expressions.add(convertExpression(EnvUtils.parseEnv(command = expression, data = params)))
                 }
             }
             expressions

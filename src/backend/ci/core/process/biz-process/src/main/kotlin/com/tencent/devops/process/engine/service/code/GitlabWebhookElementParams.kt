@@ -36,6 +36,7 @@ import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
 
 class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTriggerElement> {
 
+    @SuppressWarnings("ComplexMethod")
     override fun getWebhookElementParams(
         element: CodeGitlabWebHookTriggerElement,
         variables: Map<String, String>
@@ -64,6 +65,7 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
         params.eventType = element.eventType
         params.block = element.block ?: false
         params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
+        params.pathFilterType = element.pathFilterType
         params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
         params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
         params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)

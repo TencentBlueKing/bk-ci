@@ -72,7 +72,9 @@ data class NormalContainer(
     @ApiModelProperty("容器运行次数", required = false, hidden = true)
     override var executeCount: Int? = 0,
     @ApiModelProperty("用户自定义ID", required = false, hidden = false)
-    override val jobId: String? = null
+    override val jobId: String? = null,
+    @ApiModelProperty("是否包含post任务标识", required = false, hidden = true)
+    override var containPostTaskFlag: Boolean? = null
 ) : Container {
     companion object {
         const val classType = "normal"

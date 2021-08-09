@@ -53,6 +53,7 @@ interface Container {
     var startVMStatus: String?
     var executeCount: Int?
     val jobId: String? // 用户自定义id
+    var containPostTaskFlag: Boolean? // 是否包含post任务
 
     /**
      * 只存储Container相关的配置，elements不会存储。

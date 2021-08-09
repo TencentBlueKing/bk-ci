@@ -45,7 +45,6 @@ import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 import java.security.cert.CertificateException
-import java.util.ArrayList
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
@@ -80,13 +79,17 @@ object OkhttpUtils {
     private const val readTimeout = 30L
     private const val writeTimeout = 30L
 
+    init {
+        logger.info("[OkhttpUtils init]")
+    }
+
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(connectTimeout, TimeUnit.SECONDS)
         .readTimeout(readTimeout, TimeUnit.SECONDS)
         .writeTimeout(writeTimeout, TimeUnit.SECONDS)
         .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
         .hostnameVerifier { _, _ -> true }
-        .build()!!
+        .build()
 
     // 下载会出现从 文件源--（耗时长）---->网关（网关全部收完才转发给用户，所以用户侧与网关存在读超时的可能)-->用户
     private val longHttpClient = OkHttpClient.Builder()
@@ -95,7 +98,7 @@ object OkhttpUtils {
         .writeTimeout(readTimeout, TimeUnit.MINUTES)
         .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
         .hostnameVerifier { _, _ -> true }
-        .build()!!
+        .build()
 
     @Throws(UnsupportedEncodingException::class)
     fun joinParams(params: Map<String, String>): String {
@@ -166,7 +169,7 @@ object OkhttpUtils {
             .post(requestBody)
         headers?.forEach { (key, value) ->
             if (!value.isNullOrBlank()) {
-                requestBuilder.addHeader(key, value!!)
+                requestBuilder.addHeader(key, value)
             }
         }
         val request = requestBuilder.build()
