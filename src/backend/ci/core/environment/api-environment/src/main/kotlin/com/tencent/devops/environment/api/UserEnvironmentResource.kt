@@ -39,6 +39,7 @@ import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfo
+import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -273,7 +274,7 @@ interface UserEnvironmentResource {
         @PathParam("envHashId")
         envHashId: String,
         @ApiParam(value = "共享的项目列表", required = true)
-        sharedProjects: List<SharedProjectInfo>
+        sharedProjects: SharedProjectInfoWrap
     ): Result<Boolean>
 
     @ApiOperation("按环境删除环境共享")
