@@ -10,5 +10,5 @@ data class Gate(
     val name: String,
     val rule: List<String>,
     @JsonProperty("notify-on-fail")
-    val notifyOnFail: List<GateNotices>?
+    val notifyOnFail: List<GateNotices>
 )

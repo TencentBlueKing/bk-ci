@@ -150,6 +150,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation.Companion.convertToSymbol
+import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
@@ -366,6 +367,25 @@ class YamlBuildV2 @Autowired constructor(
                     threshold = enNameAndthreshold.last().trim()
                 )
             }
+            val opList = mutableListOf<RuleCreateRequest.CreateRequestOp>()
+            gate.notifyOnFail.forEach NotifyEach@{ notify ->
+                val type = GitCINotifyType.getNotifyByYaml(notify.type) ?: return@NotifyEach
+                opList.add(
+                    RuleCreateRequest.CreateRequestOp(
+                        operation = RuleOperation.END,
+                        notifyTypeList = listOf(type),
+                        // 通知接受人未填缺省触发人
+                        notifyUserList = if (notify.receivers.isNullOrEmpty()) {
+                            listOf(event.userId)
+                        } else {
+                            notify.receivers?.toList()
+                        },
+                        notifyGroupList = null,
+                        auditUserList = null,
+                        auditTimeoutMinutes = null
+                    )
+                )
+            }
             ruleList.add(
                 RuleCreateRequestV3(
                     name = gate.name,
@@ -375,13 +395,13 @@ class YamlBuildV2 @Autowired constructor(
                     range = null,
                     templateRange = null,
                     operation = RuleOperation.END,
-                    notifyTypeList = GitCINotifyType.getNotifyListByYaml(gate.notifyOnFail?.map { it.type }),
+                    notifyTypeList = null,
                     notifyGroupList = null,
-                    // todo: 等dd修改数据类型为map
                     notifyUserList = null,
                     auditUserList = null,
                     auditTimeoutMinutes = null,
-                    gatewayId = null
+                    gatewayId = null,
+                    opList = opList
                 )
             )
         }
@@ -946,9 +966,9 @@ class YamlBuildV2 @Autowired constructor(
         env.forEach {
             nameAndValueList.add(
                 NameAndValue(
-                key = it.key,
-                value = it.value.toString()
-            ))
+                    key = it.key,
+                    value = it.value.toString()
+                ))
         }
 
         return nameAndValueList
