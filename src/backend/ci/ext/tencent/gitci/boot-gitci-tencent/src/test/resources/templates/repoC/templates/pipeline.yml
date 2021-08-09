@@ -165,24 +165,24 @@ resources:
       credentials:
         personal-access-token: xxx
 
-#notices:
-#  - type: email
-#    title: this is a email notice
-#    content: this is a email notice,content is hello.
-#    receivers:
-#      - user1
-#      - user2
-#    ccs:
-#      - user3
-#    if: SUCCESS
-#  - type: wework-message
-#    title: this is a wework-message notice
-#    content: this is a wework-message notice,content is hello.
-#    receivers:
-#      - user1
-#      - user2
-#  - type: wework-chat
-#    chat-id:
-#      - xxxxxxxx
-#    content: this is a wework-chat notice,content is hello.
+notices:
+  - type: email
+    title: this is a email notice
+    content: this is a email notice,content is hello.
+    receivers:
+      - user1
+      - user2
+    ccs:
+      - user3
+    if: SUCCESS
+  - type: wework-message
+    title: this is a wework-message notice
+    content: this is a wework-message notice,content is hello.
+    receivers:
+      - user1
+      - user2
+  - type: wework-chat
+    chat-id:
+      - xxxxxxxx
+    content: this is a wework-chat notice,content is hello.
 

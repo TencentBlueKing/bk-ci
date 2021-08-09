@@ -36,7 +36,6 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
-import com.tencent.devops.process.engine.common.BS_STAGE_QUALITY_CHECK_FAIL_END_SOURCE
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -131,6 +130,29 @@ class PipelineStageService @Autowired constructor(
             pipelineEventDispatcher.dispatch(
                 PipelineBuildWebSocketPushEvent(
                     source = "skipStage", projectId = projectId, pipelineId = pipelineId,
+                    userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
+                )
+            )
+        }
+    }
+
+    fun checkQualityFailStage(userId: String, buildStage: PipelineBuildStage) {
+        with(buildStage) {
+            val allStageStatus = stageBuildDetailService.stageCheckQualityFail(buildId = buildId, stageId = stageId)
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                pipelineBuildStageDao.updateOptions(
+                    dslContext = context, buildId = buildId,
+                    stageId = stageId, controlOption = controlOption!!,
+                    checkIn = checkIn, checkOut = checkOut
+                )
+                pipelineBuildDao.updateBuildStageStatus(
+                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                )
+            }
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildWebSocketPushEvent(
+                    source = "checkQualityFailStage", projectId = projectId, pipelineId = pipelineId,
                     userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
                 )
             )

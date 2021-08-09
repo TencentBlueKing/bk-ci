@@ -43,23 +43,19 @@ enum class GitCINotifyType(val yamlText: String) {
     RTX_GROUP("wework-chat");
 
     companion object {
-        // 获取蓝盾通知支持的列表
-        fun getNotifyListByYaml(yamlText: List<String>?): List<NotifyType> {
-            val result = listOf<NotifyType>()
-            yamlText?.forEach {
-                when (it) {
-                    "email" -> {
-                        NotifyType.EMAIL
-                    }
-                    "wework-message" -> {
-                        NotifyType.RTX
-                    }
-                    else -> {
-                        return@forEach
-                    }
+        // 获取蓝盾通知支持的类型
+        fun getNotifyByYaml(yamlText: String): NotifyType? {
+            return when (yamlText) {
+                "email" -> {
+                    NotifyType.EMAIL
+                }
+                "wework-message" -> {
+                    NotifyType.RTX
+                }
+                else -> {
+                    return null
                 }
             }
-            return result
         }
     }
 }

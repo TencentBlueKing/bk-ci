@@ -86,7 +86,7 @@ class CheckPauseReviewStageCmd(
                 commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_FAIL.name
                 commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
                 commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_IN"
-                commandContext.cmdFlowState = CmdFlowState.CONTINUE
+                commandContext.cmdFlowState = CmdFlowState.FINALLY
                 return
             }
 

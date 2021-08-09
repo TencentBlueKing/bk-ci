@@ -46,6 +46,6 @@ data class ScriptBuildYaml(
     val stages: List<Stage>,
     val extends: Extends?,
     val resource: Resources?,
-    val notices: List<Notices>?,
+    val notices: List<GitNotices>?,
     var finally: List<Job>?
 )
