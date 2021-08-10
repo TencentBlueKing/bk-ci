@@ -6,7 +6,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
@@ -31,7 +30,7 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
     override fun getDockerResourceConfigList(
         userId: String,
         projectId: String
-    ): Map<String, UserDockerResourceOptionsVO> {
+    ): UserDockerResourceOptionsVO {
         val url = String.format(
             "%s/ms/dispatch-devcloud/api/service/dispatchDevcloud/project/%s/performanceConfig/list",
             commonConfig.devopsIdcGateway,
@@ -52,11 +51,11 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
                 val dcUserPerformanceOptionsVO = objectMapper.readValue(JsonUtil.toJson(response["data"] ?: ""),
                     UserPerformanceOptionsVO::class.java)
 
-                return mapOf(BuildType.PUBLIC_DEVCLOUD.name to UserDockerResourceOptionsVO(
+                return UserDockerResourceOptionsVO(
                     default = dcUserPerformanceOptionsVO.default,
                     needShow = dcUserPerformanceOptionsVO.needShow,
                     dockerResourceOptionsMaps = getDockerResourceOptionsMap(dcUserPerformanceOptionsVO.performanceMaps)
-                ))
+                )
             } else {
                 val msg = response["message"] as String
                 logger.error("[$projectId] get devcloud resourceConfig failed, msg: $msg")
