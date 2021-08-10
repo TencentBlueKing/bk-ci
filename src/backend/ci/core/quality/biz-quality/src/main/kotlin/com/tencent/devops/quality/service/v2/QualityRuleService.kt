@@ -213,10 +213,10 @@ class QualityRuleService @Autowired constructor(
                 createAuth = false)
 
             logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
-            val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId,
+            qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId,
                 HashUtil.decodeIdToLong(ruleId), ruleRequest, indicatorIds)
 
-            RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, HashUtil.encodeLongId(id))
+            RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, ruleId)
         }
     }
 
