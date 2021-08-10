@@ -27,16 +27,10 @@
 
 package com.tencent.devops.dispatch.docker.service
 
-import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.dao.DockerResourceConfigDao
-import com.tencent.devops.dispatch.docker.dao.DockerResourceOptionsDao
-import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsMap
-import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsShow
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
-import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptions
-import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -48,31 +42,6 @@ class DockerResourceWhitelistService constructor(
     private val dockerResourceConfigDao: DockerResourceConfigDao
 ) {
     private val logger = LoggerFactory.getLogger(DockerResourceWhitelistService::class.java)
-
-    fun getDockerResourceConfig(projectId: String): DockerResourceOptionsVO {
-        val dockerResourceRecord = dockerResourceConfigDao.getByProjectId(dslContext, projectId)
-        if (dockerResourceRecord != null) {
-            return DockerResourceOptionsVO(
-                cpuPeriod = dockerResourceRecord["CPU_PERIOD"] as Int,
-                cpuQuota = dockerResourceRecord["CPU_QUOTA"] as Int,
-                memoryLimitBytes = dockerResourceRecord["MEMORY_LIMIT_BYTES"] as Long,
-                blkioDeviceReadBps = dockerResourceRecord["BLKIO_DEVICE_READ_BPS"] as Long,
-                blkioDeviceWriteBps = dockerResourceRecord["BLKIO_DEVICE_WRITE_BPS"] as Long,
-                disk = dockerResourceRecord["DISK"] as Int,
-                description = dockerResourceRecord["DESCRIPTION"] as String
-            )
-        } else {
-            return DockerResourceOptionsVO(
-                memoryLimitBytes = 34359738368L,
-                cpuPeriod = 10000,
-                cpuQuota = 160000,
-                blkioDeviceReadBps = 125829120,
-                blkioDeviceWriteBps = 125829120,
-                disk = 100,
-                description = ""
-            )
-        }
-    }
 
     fun getDockerResourceWhiteList(userId: String): List<String> {
         val whiteList = mutableListOf<String>()

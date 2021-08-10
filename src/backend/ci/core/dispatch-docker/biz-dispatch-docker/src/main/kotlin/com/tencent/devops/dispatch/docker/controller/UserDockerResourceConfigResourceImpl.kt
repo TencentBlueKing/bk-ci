@@ -30,7 +30,7 @@ package com.tencent.devops.dispatch.docker.controller
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerResourceConfigResource
-import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptions
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.service.DockerResourceOptionsService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -40,7 +40,11 @@ class UserDockerResourceConfigResourceImpl @Autowired constructor(
     private val dockerResourceOptionsService: DockerResourceOptionsService
 ) : UserDockerResourceConfigResource {
 
-    override fun getDockerResourceConfigList(userId: String, projectId: String): Result<UserDockerResourceOptions> {
-        return Result(dockerResourceOptionsService.getDcPerformanceConfigList(userId, projectId))
+    override fun getDockerResourceConfigList(
+        userId: String,
+        projectId: String,
+        buildType: String
+    ): Result<UserDockerResourceOptionsVO> {
+        return Result(dockerResourceOptionsService.getDcPerformanceConfigList(userId, projectId, buildType))
     }
 }

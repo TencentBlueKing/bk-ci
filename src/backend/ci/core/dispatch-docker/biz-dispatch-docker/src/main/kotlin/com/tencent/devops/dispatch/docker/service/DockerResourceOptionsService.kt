@@ -29,10 +29,10 @@ package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.dispatch.docker.dao.DockerResourceOptionsDao
+import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsMap
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsShow
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
-import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptions
 import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -42,6 +42,7 @@ import org.springframework.stereotype.Service
 class DockerResourceOptionsService constructor(
     private val dslContext: DSLContext,
     private val dockerResourceOptionsDao: DockerResourceOptionsDao,
+    private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val dockerResourceWhitelistService: DockerResourceWhitelistService,
     private val extDockerResourceOptionsService: ExtDockerResourceOptionsService
 ) {
@@ -122,65 +123,105 @@ class DockerResourceOptionsService constructor(
         return result == 1
     }
 
-    fun getDcPerformanceConfigList(userId: String, projectId: String): UserDockerResourceOptions {
-        var default = "0"
-        var needShow = false
-        val performanceMaps = mutableListOf<DockerResourceOptionsMap>()
-
-        if (dockerResourceWhitelistService.checkDockerResourceWhitelist(projectId)) {
-            needShow = true
-
-            val optionList = dockerResourceOptionsDao.getList(dslContext)
-            if (optionList.size == 0) {
-                performanceMaps.add(
-                    DockerResourceOptionsMap("0", DockerResourceOptionsShow(
-                        cpu = (16000 / 10000).toString(),
-                        memory = (34359738368 / (1024 * 1024 * 1024)).toString().plus("G"),
-                        disk = (100).toString().plus("G"),
-                        description = "Basic"
-                    )
-                    )
-                )
-            } else {
-                optionList.forEach {
-                    if (it.memoryLimitBytes == 34359738368) {
-                        default = it.id.toString()
-                    }
-                    performanceMaps.add(
-                        DockerResourceOptionsMap(it.id.toString(), DockerResourceOptionsShow(
-                            cpu = (it.cpuQuota / it.cpuPeriod).toString(),
-                            memory = "${it.memoryLimitBytes / (1024 * 1024 * 1024)}G",
-                            disk = "${it.disk}G",
-                            description = it.description
-                        )
-                        )
-                    )
-                }
-
-                // 没有默认的配置，默认第一个
-                if (default == "0") {
-                    default = optionList[0].id.toString()
-                }
-            }
+    fun getDockerResourceConfig(pipelineId: String, vmSeqId: String): DockerResourceOptionsVO {
+        val dockerResourceOptionId = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            vmSeq = vmSeqId
+        )?.dockerResourceOption ?: 0
+        val dockerResourceOptions = dockerResourceOptionsDao.get(dslContext, dockerResourceOptionId.toLong())
+        if (dockerResourceOptions != null) {
+            return DockerResourceOptionsVO(
+                cpuPeriod = dockerResourceOptions["CPU_PERIOD"] as Int,
+                cpuQuota = dockerResourceOptions["CPU_QUOTA"] as Int,
+                memoryLimitBytes = dockerResourceOptions["MEMORY_LIMIT_BYTES"] as Long,
+                blkioDeviceReadBps = dockerResourceOptions["BLKIO_DEVICE_READ_BPS"] as Long,
+                blkioDeviceWriteBps = dockerResourceOptions["BLKIO_DEVICE_WRITE_BPS"] as Long,
+                disk = dockerResourceOptions["DISK"] as Int,
+                description = dockerResourceOptions["DESCRIPTION"] as String
+            )
         } else {
-            performanceMaps.add(
-                DockerResourceOptionsMap("0", DockerResourceOptionsShow(
-                    cpu = (16000 / 10000).toString(),
-                    memory = (34359738368 / (1024 * 1024 * 1024)).toString().plus("G"),
-                    disk = (100).toString().plus("G"),
-                    description = "Basic"
-                )
-                )
+            return DockerResourceOptionsVO(
+                memoryLimitBytes = 34359738368L,
+                cpuPeriod = 10000,
+                cpuQuota = 160000,
+                blkioDeviceReadBps = 125829120,
+                blkioDeviceWriteBps = 125829120,
+                disk = 100,
+                description = ""
             )
         }
+    }
 
-        val userDockerResourceOptionsMaps = mutableMapOf<String, UserDockerResourceOptionsVO>()
-        userDockerResourceOptionsMaps[BuildType.DOCKER.name] = UserDockerResourceOptionsVO(default, needShow, performanceMaps)
-        userDockerResourceOptionsMaps.putAll(extDockerResourceOptionsService.getDockerResourceConfigList(userId, projectId))
+    fun getDcPerformanceConfigList(
+        userId: String,
+        projectId: String,
+        buildType: String
+    ): UserDockerResourceOptionsVO {
+        when (buildType) {
+            BuildType.DOCKER.name -> {
+                var default = "0"
+                var needShow = false
+                val dockerResourceOptionsMaps = mutableListOf<DockerResourceOptionsMap>()
 
-        return UserDockerResourceOptions(
-            userDockerResourceOptionsMaps = userDockerResourceOptionsMaps
-        )
+                if (dockerResourceWhitelistService.checkDockerResourceWhitelist(projectId)) {
+                    needShow = true
+
+                    val optionList = dockerResourceOptionsDao.getList(dslContext)
+                    if (optionList.size == 0) {
+                        dockerResourceOptionsMaps.add(
+                            DockerResourceOptionsMap("0", DockerResourceOptionsShow(
+                                cpu = (16000 / 10000).toString(),
+                                memory = (34359738368 / (1024 * 1024 * 1024)).toString().plus("G"),
+                                disk = (100).toString().plus("G"),
+                                description = "Basic"
+                            )
+                            )
+                        )
+                    } else {
+                        optionList.forEach {
+                            if (it.memoryLimitBytes == 34359738368) {
+                                default = it.id.toString()
+                            }
+                            dockerResourceOptionsMaps.add(
+                                DockerResourceOptionsMap(it.id.toString(), DockerResourceOptionsShow(
+                                    cpu = (it.cpuQuota / it.cpuPeriod).toString(),
+                                    memory = "${it.memoryLimitBytes / (1024 * 1024 * 1024)}G",
+                                    disk = "${it.disk}G",
+                                    description = it.description
+                                )
+                                )
+                            )
+                        }
+
+                        // 没有默认的配置，默认第一个
+                        if (default == "0") {
+                            default = optionList[0].id.toString()
+                        }
+                    }
+                } else {
+                    dockerResourceOptionsMaps.add(
+                        DockerResourceOptionsMap("0", DockerResourceOptionsShow(
+                            cpu = (16000 / 10000).toString(),
+                            memory = (34359738368 / (1024 * 1024 * 1024)).toString().plus("G"),
+                            disk = (100).toString().plus("G"),
+                            description = "Basic"
+                        )
+                        )
+                    )
+                }
+
+                return UserDockerResourceOptionsVO(default, needShow, dockerResourceOptionsMaps)
+            }
+            else -> {
+                return extDockerResourceOptionsService.getDockerResourceConfigList(userId, projectId) ?:
+                        UserDockerResourceOptionsVO(
+                            default = "",
+                            needShow = false,
+                            dockerResourceOptionsMaps = emptyList()
+                        )
+            }
+        }
     }
 
     private fun checkParameter(userId: String, projectId: String) {

@@ -36,6 +36,7 @@ import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.service.DispatchDockerService
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
+import com.tencent.devops.dispatch.docker.service.DockerResourceOptionsService
 import com.tencent.devops.dispatch.docker.service.DockerResourceWhitelistService
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildDockerHostResourceImpl @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
     private val dispatchDockerService: DispatchDockerService,
-    private val dockerResourceWhitelistService: DockerResourceWhitelistService
+    private val dockerResourceOptionsService: DockerResourceOptionsService
 ) : BuildDockerHostResource {
 
     override fun alert(level: AlertLevel, title: String, message: String): Result<Boolean>? {
@@ -52,8 +53,8 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         return Result(0, "success")
     }
 
-    override fun getResourceConfig(projectId: String): Result<DockerResourceOptionsVO> {
-        return Result(dockerResourceWhitelistService.getDockerResourceConfig(projectId))
+    override fun getResourceConfig(pipelineId: String, vmSeqId: String): Result<DockerResourceOptionsVO> {
+        return Result(dockerResourceOptionsService.getDockerResourceConfig(pipelineId, vmSeqId))
     }
 
     override fun log(buildId: String, red: Boolean, message: String, tag: String?, jobId: String?): Result<Boolean>? {

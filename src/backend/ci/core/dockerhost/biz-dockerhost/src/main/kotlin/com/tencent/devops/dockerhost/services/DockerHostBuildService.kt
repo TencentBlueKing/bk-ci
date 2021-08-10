@@ -536,7 +536,7 @@ class DockerHostBuildService(
             val containerName =
                 "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
 
-            val dockerResource = dockerHostBuildApi.getResourceConfig(projectId)
+            val dockerResource = dockerHostBuildApi.getResourceConfig(pipelineId, vmSeqId)
 
             val blkioRateDeviceWirte = BlkioRateDevice()
                 .withPath("/dev/sda")
