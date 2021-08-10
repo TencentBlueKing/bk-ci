@@ -30,7 +30,7 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
         projectId: String
     ): Map<String, UserDockerResourceOptionsVO> {
         val url = String.format(
-            "http://dev.devops.oa.com/ms/dispatch-devcloud/api/user/dispatchDevcloud/project/%s/performanceConfig/list",
+            "http://dev.devops.oa.com/ms/dispatch-devcloud/api/service/dispatchDevcloud/project/%s/performanceConfig/list",
             projectId
         )
         val request = Request.Builder().url(url)
