@@ -16,6 +16,7 @@ import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOption
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -25,12 +26,16 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(ExtDockerResourceOptionsServiceImpl::class.java)
 
+    @Value("\${devopsGateway.idc:#{null}}")
+    private val devopsGateway: String? = null
+
     override fun getDockerResourceConfigList(
         userId: String,
         projectId: String
     ): Map<String, UserDockerResourceOptionsVO> {
         val url = String.format(
-            "http://dev.devops.oa.com/ms/dispatch-devcloud/api/service/dispatchDevcloud/project/%s/performanceConfig/list",
+            "http://%s/ms/dispatch-devcloud/api/service/dispatchDevcloud/project/%s/performanceConfig/list",
+            devopsGateway,
             projectId
         )
         val request = Request.Builder().url(url)
@@ -44,7 +49,7 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
             val responseBody = resp.body()!!.string()
             logger.info("[$projectId get devcloud resourceConfig responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
-            if (response["status"] == 0) {
+            if (response["code"] == 0) {
                 val dcUserPerformanceOptionsVO = objectMapper.readValue(response["data"] as String,
                     UserPerformanceOptionsVO::class.java)
 
