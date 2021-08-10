@@ -18,6 +18,7 @@ import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
+import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
@@ -89,7 +90,7 @@ class PreBuildV2Service @Autowired constructor(
             schema = yamlSchema,
             yamlJson = yamlJsonStr
         )
-        // schema校验
+        // 整体schema校验
         if (!schemaPassed) {
             logger.error("Check yaml schema failed. $errorMessage")
             throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, errorMessage)
@@ -97,7 +98,6 @@ class PreBuildV2Service @Autowired constructor(
 
         val preScriptBuildYaml = YamlUtil
             .getObjectMapper().readValue(formatYamlStr, PreScriptBuildYaml::class.java)
-
         checkYamlBusiness(preScriptBuildYaml, originYaml)
 
         return preScriptBuildYaml
@@ -588,7 +588,19 @@ class PreBuildV2Service @Autowired constructor(
         val mapper = ObjectMapper()
         mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
         val schemaGenerator = JsonSchemaGenerator(mapper)
-        val schema = schemaGenerator.generateSchema(ScriptBuildYaml::class.java)
+        val schema = schemaGenerator.generateSchema(PreScriptBuildYaml::class.java)
+        with(schema) {
+            `$schema` = "http://json-schema.org/draft-03/schema#"
+        }
+
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema)
+    }
+
+    private fun getRunsOnYamlSchema(): String {
+        val mapper = ObjectMapper()
+        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
+        val schemaGenerator = JsonSchemaGenerator(mapper)
+        val schema = schemaGenerator.generateSchema(RunsOn::class.java)
         with(schema) {
             `$schema` = "http://json-schema.org/draft-03/schema#"
         }
@@ -597,9 +609,39 @@ class PreBuildV2Service @Autowired constructor(
     }
 
     private fun checkYamlBusiness(preScriptBuildYaml: PreScriptBuildYaml, originYaml: String) {
+        checkRunsOn(preScriptBuildYaml)
         checkVariable(preScriptBuildYaml)
         checkStage(preScriptBuildYaml)
         checkExtend(originYaml)
+    }
+
+    private fun checkRunsOn(preScriptBuildYaml: PreScriptBuildYaml) {
+        if (preScriptBuildYaml.stages.isNullOrEmpty()) {
+            return;
+        }
+
+        val runsOnYamlSchema = getRunsOnYamlSchema()
+        preScriptBuildYaml.stages!!.forEach { stage ->
+            if (stage.jobs.isNullOrEmpty()) {
+                return@forEach
+            }
+
+            stage.jobs!!.forEach { (_, preJob) ->
+                if (preJob.runsOn == null || preJob.runsOn!! is String) {
+                    return@forEach
+                }
+
+                val (passed, errMsg) = ScriptYmlUtils.validate(
+                    schema = runsOnYamlSchema,
+                    yamlJson = YamlUtil.getObjectMapper().writeValueAsString(preJob)
+                )
+
+                if (!passed) {
+                    logger.error("Check yaml schema failed, stages->jobs->runs-on. $errMsg")
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, errMsg)
+                }
+            }
+        }
     }
 
     private fun checkStage(preScriptBuildYaml: PreScriptBuildYaml) {
