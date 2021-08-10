@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service
 class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
 ) : ExtDockerResourceOptionsService {
 
-    override fun getDockerResourceConfigList(userId: String, projectId: String): Map<String, UserDockerResourceOptionsVO> {
-        return emptyMap()
+    override fun getDockerResourceConfigList(userId: String, projectId: String): UserDockerResourceOptionsVO? {
+        return null
     }
 }

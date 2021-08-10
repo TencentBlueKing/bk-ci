@@ -65,12 +65,15 @@ interface BuildDockerHostResource {
     ): Result<Boolean>?
 
     @GET
-    @Path("/resource-config/projectId/{projectId}")
+    @Path("/resource-config/pipelines/{pipelineId}/vmSeqs/{vmSeqId}")
     @ApiOperation("获取蓝盾项目的docker性能配置")
     fun getResourceConfig(
         @ApiParam("蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("蓝盾项目ID", required = true)
+        @PathParam("vmSeqId")
+        vmSeqId: String
     ): Result<DockerResourceOptionsVO>
 
     @ApiOperation("上报日志信息")

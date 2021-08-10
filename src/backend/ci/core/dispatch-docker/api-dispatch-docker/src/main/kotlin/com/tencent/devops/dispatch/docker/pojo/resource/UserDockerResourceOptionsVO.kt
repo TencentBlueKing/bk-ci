@@ -31,10 +31,6 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("docker性能用户选项配置")
-data class UserDockerResourceOptions(
-    val userDockerResourceOptionsMaps: Map<String, UserDockerResourceOptionsVO>
-)
-
 data class UserDockerResourceOptionsVO(
     @ApiModelProperty("默认选项")
     val default: String,

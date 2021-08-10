@@ -76,9 +76,9 @@ class DockerHostBuildResourceApi constructor(
         }
     }
 
-    fun getResourceConfig(projectId: String, retryCount: Int = 3): DockerResourceOptionsVO {
+    fun getResourceConfig(pipelineId: String, vmSeqId: String, retryCount: Int = 3): DockerResourceOptionsVO {
         try {
-            val path = "/${getUrlPrefix()}/api/dockerhost/resource-config/projectId/$projectId"
+            val path = "/${getUrlPrefix()}/api/dockerhost/resource-config/pipelines/${pipelineId}/vmSeqs/${vmSeqId}"
             OkhttpUtils.doHttp(buildGet(path)).use { response ->
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
@@ -94,7 +94,7 @@ class DockerHostBuildResourceApi constructor(
         } catch (e: Exception) {
             val localRetryCount = retryCount - 1
             return if (localRetryCount > 0) {
-                getResourceConfig(projectId, localRetryCount)
+                getResourceConfig(pipelineId, vmSeqId, localRetryCount)
             } else {
                 return DockerResourceOptionsVO(
                     cpuPeriod = dockerHostConfig.cpuPeriod,

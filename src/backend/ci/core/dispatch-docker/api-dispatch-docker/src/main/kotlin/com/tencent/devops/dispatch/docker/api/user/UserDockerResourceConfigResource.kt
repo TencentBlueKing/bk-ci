@@ -30,7 +30,8 @@ package com.tencent.devops.dispatch.docker.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptions
+import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -40,6 +41,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_DOCKER_HOST"], description = "用户-获取构建容器信息")
@@ -57,6 +59,9 @@ interface UserDockerResourceConfigResource {
         userId: String,
         @ApiParam("projectId", required = true)
         @PathParam("projectId")
-        projectId: String
-    ): Result<UserDockerResourceOptions>
+        projectId: String,
+        @ApiParam("buildType", required = false)
+        @QueryParam("buildType")
+        buildType: String = BuildType.DOCKER.name
+    ): Result<UserDockerResourceOptionsVO>
 }

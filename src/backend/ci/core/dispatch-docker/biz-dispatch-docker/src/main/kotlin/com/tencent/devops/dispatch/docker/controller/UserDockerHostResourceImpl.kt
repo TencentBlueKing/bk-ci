@@ -153,7 +153,9 @@ class UserDockerHostResourceImpl @Autowired constructor(
                     dslContext = dslContext,
                     pipelineId = debugStartParam.pipelineId,
                     vmSeq = debugStartParam.vmSeqId,
-                    dockerIp = dockerIp)
+                    dockerIp = dockerIp,
+                    dockerResourceOptionsId = 0
+                )
             }
             // 首次构建poolNo=1
             poolNo = 1
