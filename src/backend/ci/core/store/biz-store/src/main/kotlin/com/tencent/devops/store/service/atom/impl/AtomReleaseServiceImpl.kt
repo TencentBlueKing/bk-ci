@@ -381,7 +381,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         val logoUrl = marketAtomUpdateRequest.logoUrl
         val iconData = marketAtomUpdateRequest.iconData
-        if (!iconData.isNullOrBlank() && !logoUrl.isNullOrBlank()) {
+        if (iconData.isNullOrBlank() && !logoUrl.isNullOrBlank()) {
             try {
                 marketAtomUpdateRequest.iconData = client.get(ServiceImageManageResource::class)
                     .compressImage(imageUrl = logoUrl,
