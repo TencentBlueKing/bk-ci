@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.PerformanceMap
@@ -21,21 +23,19 @@ import org.springframework.stereotype.Service
 
 @Service
 class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val commonConfig: CommonConfig
 ) : ExtDockerResourceOptionsService {
 
     private val logger = LoggerFactory.getLogger(ExtDockerResourceOptionsServiceImpl::class.java)
-
-    @Value("\${devopsGateway.idc:#{null}}")
-    private val devopsGateway: String? = null
 
     override fun getDockerResourceConfigList(
         userId: String,
         projectId: String
     ): Map<String, UserDockerResourceOptionsVO> {
         val url = String.format(
-            "http://%s/ms/dispatch-devcloud/api/service/dispatchDevcloud/project/%s/performanceConfig/list",
-            devopsGateway,
+            "%s/ms/dispatch-devcloud/api/service/dispatchDevcloud/project/%s/performanceConfig/list",
+            commonConfig.devopsIdcGateway,
             projectId
         )
         val request = Request.Builder().url(url)
@@ -50,7 +50,7 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
             logger.info("[$projectId get devcloud resourceConfig responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["code"] == 0) {
-                val dcUserPerformanceOptionsVO = objectMapper.readValue(response["data"] as String,
+                val dcUserPerformanceOptionsVO = objectMapper.readValue(JsonUtil.toJson(response["data"] ?: ""),
                     UserPerformanceOptionsVO::class.java)
 
                 return mapOf(BuildType.PUBLIC_DEVCLOUD.name to UserDockerResourceOptionsVO(
