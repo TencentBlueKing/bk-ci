@@ -1,0 +1,41 @@
+#####################################################################################################################
+# 项目ID: bkdevops 
+# 流水线ID: p-5ef04bbb79dd42a9941c9e535d81eeb7 
+# 流水线名称: BK-CI后端MR代码检查 
+# 导出时间: 2021-08-10 18:52:08 
+# 
+# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ 
+# 注意：[插件]输入参数可能存在敏感信息，请仔细检查，谨慎分享！！！ 
+# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 
+#####################################################################################################################
+
+---
+version: "v2.0"
+name: "Backend"
+on:
+  mr: [ integration ]
+
+stages:
+- name: "PreMR"
+  label:
+  - "Build"
+  jobs:
+    job_1:
+      name: "Build"
+      runs-on: docker
+      steps:
+      - checkout: self
+      - uses: mysqlservice@1.*
+        name: Mysql服务
+        with:
+          imageName: mysql:5.7
+          # MYSQL登录端口, 必选, 默认: 3306
+          port: 3306
+          # MYSQL登录密码, 必选
+          mysqlPw: root
+      - name: "代码编译和单元测试"
+        id: "step_4"
+        run: | 
+          cd src/backend/ci/ext/tencent
+          mysql -h ${MYSQL_IP} -P ${MYSQL_PORT} -uroot -proot -e “select NOW()”
+
