@@ -634,6 +634,8 @@ class PreBuildV2Service @Autowired constructor(
         }
 
         val runsOnYamlSchema = getRunsOnYamlSchema()
+        val objectMapper = ObjectMapper()
+
         preJobList.forEach { preJob ->
             if (preJob.runsOn == null || preJob.runsOn!! is String || preJob.runsOn!! is List<*>) {
                 return@forEach
@@ -641,7 +643,7 @@ class PreBuildV2Service @Autowired constructor(
 
             val (passed, errMsg) = ScriptYmlUtils.validate(
                 schema = runsOnYamlSchema,
-                yamlJson = YamlUtil.getObjectMapper().writeValueAsString(preJob.runsOn)
+                yamlJson = objectMapper.writeValueAsString(preJob.runsOn)
             )
 
             if (!passed) {
