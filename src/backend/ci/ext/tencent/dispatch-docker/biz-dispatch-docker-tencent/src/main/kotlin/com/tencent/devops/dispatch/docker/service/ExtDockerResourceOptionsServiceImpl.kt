@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
@@ -28,6 +29,18 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(ExtDockerResourceOptionsServiceImpl::class.java)
 
     override fun getDockerResourceConfigList(
+        userId: String,
+        projectId: String,
+        buildType: String
+    ): UserDockerResourceOptionsVO? {
+        return if (buildType == BuildType.PUBLIC_DEVCLOUD.name) {
+            getDevcloudResourceConfig(userId, projectId)
+        } else {
+            null
+        }
+    }
+
+    private fun getDevcloudResourceConfig(
         userId: String,
         projectId: String
     ): UserDockerResourceOptionsVO {
