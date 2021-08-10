@@ -196,7 +196,8 @@ class GitCIBuildFinishListener @Autowired constructor(
                             context = pipeline.filePath,
                             gitCIBasicSetting = v2GitSetting!!,
                             pipelineId = buildFinishEvent.pipelineId,
-                            block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess())
+                            block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess() &&
+                                v2GitSetting.enableMrBlock)
                         )
                     } else {
                         scmClient.pushCommitCheck(
