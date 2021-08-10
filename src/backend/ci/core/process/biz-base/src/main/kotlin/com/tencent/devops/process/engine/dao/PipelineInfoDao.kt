@@ -511,7 +511,8 @@ class PipelineInfoDao {
                     channelCode = ChannelCode.valueOf(channel),
                     canManualStartup = manualStartup == 1,
                     canElementSkip = elementSkip == 1,
-                    taskCount = taskCount
+                    taskCount = taskCount,
+                    id = id
                 )
             }
         } else {
@@ -541,6 +542,27 @@ class PipelineInfoDao {
         return with(T_PIPELINE_INFO) {
             dslContext.select(PIPELINE_ID.`as`("pipelineId"), ID.`as`("id")).from(this)
                 .where(PROJECT_ID.eq(projectCode)).fetch()
+        }
+    }
+
+    fun getPipelineId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): TPipelineInfoRecord? {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .fetchAny()
+        }
+    }
+
+    fun getPieplineByAutoId(
+        dslContext: DSLContext,
+        ids: List<Int>
+    ): Result<TPipelineInfoRecord> {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectFrom(this).where(ID.`in`(ids)).fetch()
         }
     }
 
