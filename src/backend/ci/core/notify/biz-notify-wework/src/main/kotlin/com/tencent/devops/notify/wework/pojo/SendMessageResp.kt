@@ -2,7 +2,6 @@ package com.tencent.devops.notify.wework.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-
 data class SendMessageResp(
     @JsonProperty("errcode")
     val errCode: Int?,
