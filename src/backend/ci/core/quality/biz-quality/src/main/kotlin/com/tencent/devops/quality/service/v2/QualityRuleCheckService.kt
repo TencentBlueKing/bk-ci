@@ -688,7 +688,8 @@ class QualityRuleCheckService @Autowired constructor(
 
         // 获取通知用户集合
         val notifyUserSet = mutableSetOf<String>()
-        val groupUsers = qualityNotifyGroupService.serviceGetUsers(endNotifyGroupList.map { it.toLong() })
+
+        val groupUsers = qualityNotifyGroupService.serviceGetUsers(endNotifyGroupList)
         notifyUserSet.addAll(groupUsers.innerUsers)
         notifyUserSet.addAll(endNotifyUserList)
 
