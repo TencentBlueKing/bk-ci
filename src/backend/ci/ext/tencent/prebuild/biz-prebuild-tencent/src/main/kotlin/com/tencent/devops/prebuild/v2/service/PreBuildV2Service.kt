@@ -588,7 +588,7 @@ class PreBuildV2Service @Autowired constructor(
         val mapper = ObjectMapper()
         mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
         val schemaGenerator = JsonSchemaGenerator(mapper)
-        val schema = schemaGenerator.generateSchema(PreScriptBuildYaml::class.java)
+        val schema = schemaGenerator.generateSchema(ScriptBuildYaml::class.java)
         with(schema) {
             `$schema` = "http://json-schema.org/draft-03/schema#"
         }
