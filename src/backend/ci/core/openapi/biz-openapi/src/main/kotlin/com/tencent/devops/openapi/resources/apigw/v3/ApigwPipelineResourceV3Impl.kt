@@ -37,7 +37,11 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwPipelineResourceV3
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.audit.service.AuditService
-import com.tencent.devops.process.pojo.*
+import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCopy
+import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineWithModel
+import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
