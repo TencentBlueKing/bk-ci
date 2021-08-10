@@ -104,6 +104,7 @@ class YamlTriggerV2 @Autowired constructor(
         val (isTrigger, isTiming) = isMatch(
             event = event,
             gitRequestEvent = gitRequestEvent,
+            pipeline = gitProjectPipeline,
             originYaml = try {
                 ScriptYmlUtils.formatYaml(originYaml)
             } catch (e: JsonProcessingException) {
@@ -209,10 +210,28 @@ class YamlTriggerV2 @Autowired constructor(
     fun isMatch(
         event: GitEvent,
         gitRequestEvent: GitRequestEvent,
+        pipeline: GitProjectPipeline,
         originYaml: String
     ): Pair<Boolean, Boolean> {
-        val newYaml = YamlUtil.getObjectMapper()
-            .readValue(originYaml, object : TypeReference<NoReplaceTemplate>() {})
+        val newYaml =
+            try {
+                YamlUtil.getObjectMapper()
+                    .readValue(originYaml, object : TypeReference<NoReplaceTemplate>() {})
+            } catch (e: JsonProcessingException) {
+                triggerError(
+                    request = gitRequestEvent,
+                    event = event,
+                    pipeline = pipeline,
+                    reason = TriggerReason.CI_YAML_INVALID,
+                    reasonParams = listOf(e.message ?: ""),
+                    yamls = Yamls(originYaml, null, null),
+                    commitCheck = CommitCheck(
+                        block = event is GitMergeRequestEvent,
+                        state = GitCICommitCheckState.FAILURE
+                    )
+                )
+            }
+
         return v2WebHookMatcher.isMatch(
             triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
             event = event,
