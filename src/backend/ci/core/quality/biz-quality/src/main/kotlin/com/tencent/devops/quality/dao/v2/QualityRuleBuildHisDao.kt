@@ -87,7 +87,7 @@ class QualityRuleBuildHisDao {
     fun list(dslContext: DSLContext, ruleIds: Collection<Long>): Result<TQualityRuleBuildHisRecord> {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             dslContext.selectFrom(this)
-                .where(ID.`in`(ruleIds))
+                .where(RULE_ID.`in`(ruleIds))
                 .fetch()
         }
     }
