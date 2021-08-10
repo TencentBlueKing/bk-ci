@@ -130,7 +130,7 @@ class CheckPauseReviewStageCmd(
     private fun checkQualityFailed(event: PipelineBuildStageEvent, stage: PipelineBuildStage): Boolean {
         if (stage.checkIn?.ruleIds.isNullOrEmpty()) return false
         try {
-            val result = client.get(ServiceQualityRuleResource::class).check(BuildCheckParamsV3(
+            val request = BuildCheckParamsV3(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 buildId = event.buildId,
@@ -139,9 +139,12 @@ class CheckPauseReviewStageCmd(
                 interceptName = null,
                 ruleBuildIds = stage.checkIn?.ruleIds!!.toSet(),
                 runtimeVariable = null
-            )).data!!
-            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK|${event.stageId}|" +
-                "result=$result|ruleIds=${stage.checkIn?.ruleIds}")
+            )
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
+                "request=$request|ruleIds=${stage.checkIn?.ruleIds}")
+            val result = client.get(ServiceQualityRuleResource::class).check(request).data!!
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
+                "response=$result|ruleIds=${stage.checkIn?.ruleIds}")
             return !result.success
         } catch (ignore: Throwable) {
             LOG.error("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)
