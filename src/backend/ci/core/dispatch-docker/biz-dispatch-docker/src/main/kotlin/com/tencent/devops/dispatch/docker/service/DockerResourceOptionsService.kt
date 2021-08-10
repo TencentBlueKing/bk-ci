@@ -156,7 +156,7 @@ class DockerResourceOptionsService constructor(
     fun getDcPerformanceConfigList(
         userId: String,
         projectId: String,
-        buildType: String
+        buildType: String? = BuildType.DOCKER.name
     ): UserDockerResourceOptionsVO {
         when (buildType) {
             BuildType.DOCKER.name -> {
@@ -214,7 +214,7 @@ class DockerResourceOptionsService constructor(
                 return UserDockerResourceOptionsVO(default, needShow, dockerResourceOptionsMaps)
             }
             else -> {
-                return extDockerResourceOptionsService.getDockerResourceConfigList(userId, projectId) ?:
+                return extDockerResourceOptionsService.getDockerResourceConfigList(userId, projectId, buildType) ?:
                         UserDockerResourceOptionsVO(
                             default = "",
                             needShow = false,

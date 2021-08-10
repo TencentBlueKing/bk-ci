@@ -30,5 +30,5 @@ package com.tencent.devops.dispatch.docker.service
 import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
 
 interface ExtDockerResourceOptionsService {
-    fun getDockerResourceConfigList(userId: String, projectId: String): UserDockerResourceOptionsVO?
+    fun getDockerResourceConfigList(userId: String, projectId: String, buildType: String): UserDockerResourceOptionsVO?
 }
