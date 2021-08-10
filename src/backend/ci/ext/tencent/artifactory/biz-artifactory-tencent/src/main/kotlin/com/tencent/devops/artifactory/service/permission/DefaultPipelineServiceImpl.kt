@@ -39,7 +39,7 @@ import com.tencent.devops.common.client.Client
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-class DefaultPipelineService @Autowired constructor(
+class DefaultPipelineServiceImpl @Autowired constructor(
     private val client: Client,
     private val pipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val bkAuthPermissionApi: BSAuthPermissionApi,
@@ -98,6 +98,6 @@ class DefaultPipelineService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(DefaultPipelineService::class.java)
+        val logger = LoggerFactory.getLogger(DefaultPipelineServiceImpl::class.java)
     }
 }

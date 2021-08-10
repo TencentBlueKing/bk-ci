@@ -28,9 +28,6 @@
 package com.tencent.devops.repository
 
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.repository.dao.RepositoryDao
@@ -38,11 +35,16 @@ import com.tencent.devops.repository.service.impl.GitCiRepositoryPermissionServi
 import com.tencent.devops.repository.service.impl.RepositoryPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
+import com.tencent.devops.common.auth.code.CodeAuthServiceCode
+import com.tencent.devops.repository.service.impl.TxV3RepositoryPermissionServiceImpl
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 
 @Configuration
 @ConditionalOnWebApplication
@@ -81,5 +83,21 @@ class RepositoryConfiguration {
         tokenService = tokenService,
         client = client,
         repositoryDao = repositoryDao
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun txRepositoryPermissionService(
+        repositoryDao: RepositoryDao,
+        dslContext: DSLContext,
+        client: Client,
+        tokenService: ClientTokenService,
+        authResourceApiStr: AuthResourceApiStr
+    ) = TxV3RepositoryPermissionServiceImpl(
+        repositoryDao = repositoryDao,
+        dslContext = dslContext,
+        client = client,
+        tokenService = tokenService,
+        authResourceApiStr = authResourceApiStr
     )
 }

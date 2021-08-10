@@ -82,4 +82,7 @@ class BkAuthProperties {
 
     @Value("\${auth.ignore:#{null}}")
     val ignoreService: String? = null
+
+    @Value("\${auth.apigwUrl:#{null}}")
+    val apigwUrl: String? = null
 }

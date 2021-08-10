@@ -29,7 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -48,7 +48,7 @@ class TxAtomServiceImpl : TxAtomService, AtomServiceImpl() {
     @Autowired
     lateinit var bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
     @Autowired
-    lateinit var bsAuthProjectApi: BSAuthProjectApi
+    lateinit var bsAuthProjectApi: AuthProjectApi
 
     private val logger = LoggerFactory.getLogger(TxAtomServiceImpl::class.java)
 
