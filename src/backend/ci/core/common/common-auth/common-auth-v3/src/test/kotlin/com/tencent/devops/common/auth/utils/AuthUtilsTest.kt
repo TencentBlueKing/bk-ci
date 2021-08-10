@@ -25,13 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.utlis
+package com.tencent.devops.common.auth.utils
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.constants.ExpressionOperationEnum
 import com.tencent.bk.sdk.iam.dto.action.ActionPolicyDTO
 import com.tencent.bk.sdk.iam.dto.expression.ExpressionDTO
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.utils.AuthUtils
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -39,6 +39,7 @@ import org.junit.Test
 class AuthUtilsTest {
 
     private val actionPolicys = mutableListOf<ActionPolicyDTO>()
+    private val actionPolicys1 = mutableListOf<ActionPolicyDTO>()
 
     private val expressionList = mutableListOf<ExpressionDTO>()
 
@@ -97,6 +98,48 @@ class AuthUtilsTest {
 
         buildExpression()
         buildNewExpression()
+
+        val objectMapper = ObjectMapper()
+
+
+        val expressionStr1 = "{\"content\":[{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,iamV3test-080303/\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,bkdevops/\"},{\"content\":[{\"field\":\"pipeline.id\",\"op\":\"eq\",\"value\":\"868835\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,iamV3test-080303/\"}],\"op\":\"AND\"},{\"content\":[{\"field\":\"pipeline.id\",\"op\":\"in\",\"value\":[\"873400\",\"873416\"]},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,bkdevops/\"}],\"op\":\"AND\"}],\"op\":\"OR\"}"
+        val expressionStr2 = "{\"content\":[{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,iamV3test-080303/\"},{\"content\":[{\"field\":\"pipeline.id\",\"op\":\"eq\",\"value\":\"868835\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,iamV3test-080303/\"}],\"op\":\"AND\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,bkdevops/\"},{\"content\":[{\"field\":\"pipeline.id\",\"op\":\"in\",\"value\":[\"873400\",\"873416\"]},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,bkdevops/\"}],\"op\":\"AND\"}],\"op\":\"OR\"}"
+        val expressionStr3 = "{\"content\":[{\"content\":[{\"field\":\"pipeline.id\",\"op\":\"in\",\"value\":[\"873400\",\"873416\"]},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,bkdevops/\"}],\"op\":\"AND\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,bkdevops/\"},{\"content\":[{\"field\":\"pipeline.id\",\"op\":\"eq\",\"value\":\"868835\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,iamV3test-080303/\"}],\"op\":\"AND\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,iamV3test-080303/\"}],\"op\":\"OR\"}"
+        val expressionStr4 = "{\"content\":[{\"content\":[{\"field\":\"pipeline.id\",\"op\":\"in\",\"value\":[\"873400\",\"873416\"]},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,bkdevops/\"}],\"op\":\"AND\"},{\"content\":[{\"field\":\"pipeline.id\",\"op\":\"eq\",\"value\":\"868835\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,iamV3test-080303/\"}],\"op\":\"AND\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,iamV3test-080303/\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,bkdevops/\"}],\"op\":\"OR\"}"
+        val expressionStr5 = "{\"content\":[{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,iamV3test-080303/\"},{\"content\":[{\"field\":\"pipeline.id\",\"op\":\"in\",\"value\":[\"873400\",\"873416\"]},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,bkdevops/\"}],\"op\":\"AND\"},{\"content\":[{\"field\":\"pipeline.id\",\"op\":\"eq\",\"value\":\"868835\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,iamV3test-080303/\"}],\"op\":\"AND\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,bkdevops/\"}],\"op\":\"OR\"}"
+        val expressionStr6 = "{\"content\":[{\"content\":[{\"field\":\"pipeline.id\",\"op\":\"eq\",\"value\":\"868835\"},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,bkdevops/\"}],\"op\":\"AND\"},{\"content\":[{\"field\":\"pipeline.id\",\"op\":\"in\",\"value\":[\"873400\",\"873416\"]},{\"field\":\"pipeline._bk_iam_path_\",\"op\":\"starts_with\",\"value\":\"/project,bkdevops/\"}],\"op\":\"AND\"}],\"op\":\"OR\"}"
+
+        val expressionResult1 = objectMapper.readValue(expressionStr1, ExpressionDTO::class.java)
+        val actionPolicyResultDTO1 = ActionPolicyDTO()
+        actionPolicyResultDTO1.actionId = null
+        actionPolicyResultDTO1.condition = expressionResult1
+        val expressionResult2 = objectMapper.readValue(expressionStr2, ExpressionDTO::class.java)
+        val actionPolicyResultDTO2 = ActionPolicyDTO()
+        actionPolicyResultDTO2.actionId = null
+        actionPolicyResultDTO2.condition = expressionResult2
+        val actionPolicyResultDTO3 = ActionPolicyDTO()
+        val expressionResult3 = objectMapper.readValue(expressionStr3, ExpressionDTO::class.java)
+        actionPolicyResultDTO3.actionId = null
+        actionPolicyResultDTO3.condition = expressionResult3
+        val actionPolicyResultDTO4 = ActionPolicyDTO()
+        val expressionResult4 = objectMapper.readValue(expressionStr4, ExpressionDTO::class.java)
+        actionPolicyResultDTO4.actionId = null
+        actionPolicyResultDTO4.condition = expressionResult4
+        val actionPolicyResultDTO5 = ActionPolicyDTO()
+        val expressionResult5 = objectMapper.readValue(expressionStr5, ExpressionDTO::class.java)
+        actionPolicyResultDTO5.actionId = null
+        actionPolicyResultDTO5.condition = expressionResult5
+        val actionPolicyResultDTO6 = ActionPolicyDTO()
+        val expressionResult6 = objectMapper.readValue(expressionStr6, ExpressionDTO::class.java)
+        actionPolicyResultDTO6.actionId = null
+        actionPolicyResultDTO6.condition = expressionResult6
+
+        actionPolicys1.add(actionPolicyResultDTO1)
+        actionPolicys1.add(actionPolicyResultDTO2)
+        actionPolicys1.add(actionPolicyResultDTO3)
+        actionPolicys1.add(actionPolicyResultDTO4)
+        actionPolicys1.add(actionPolicyResultDTO5)
+        actionPolicys1.add(actionPolicyResultDTO6)
     }
 
     private fun buildNewExpression() {
@@ -505,6 +548,45 @@ class AuthUtilsTest {
         val mockSet = mutableSetOf<String>()
         mockSet.add("*")
         Assert.assertEquals(mockSet, AuthUtils.getResourceInstance(expression, "testProject", resourceType))
+    }
+
+    @Test
+    fun getResourceInstanceTest11() {
+        val resourceType = AuthResourceType.PIPELINE_DEFAULT.value
+        val mockSet1 = mutableSetOf<String>()
+        mockSet1.add("*")
+        val mockSet2 = mutableSetOf<String>()
+        mockSet2.add("873400")
+        mockSet2.add("873416")
+        val mockSet3 = mutableSetOf<String>()
+        mockSet3.add("868835")
+        val resultSet1 = mutableSetOf<String>()
+        resultSet1.addAll(mockSet1)
+        resultSet1.addAll(mockSet2)
+        val resultSet2 = mutableSetOf<String>()
+        resultSet2.addAll(mockSet2)
+        resultSet2.addAll(mockSet3)
+        Assert.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[0].condition, "bkdevops", resourceType))
+        Assert.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[1].condition, "bkdevops", resourceType))
+        Assert.assertEquals(resultSet1, AuthUtils.getResourceInstance(actionPolicys1[2].condition, "bkdevops", resourceType))
+        Assert.assertEquals(resultSet1, AuthUtils.getResourceInstance(actionPolicys1[3].condition, "bkdevops", resourceType))
+        Assert.assertEquals(resultSet1, AuthUtils.getResourceInstance(actionPolicys1[4].condition, "bkdevops", resourceType))
+        Assert.assertEquals(resultSet2, AuthUtils.getResourceInstance(actionPolicys1[5].condition, "bkdevops", resourceType))
+    }
+
+    @Test
+    fun getResourceInstanceTest12() {
+        val resourceType = AuthResourceType.PIPELINE_DEFAULT.value
+        val mockSet1 = mutableSetOf<String>()
+        mockSet1.add("*")
+        val mockSet2 = mutableSetOf<String>()
+        mockSet2.add("*")
+        mockSet2.add("868835")
+        Assert.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[0].condition, "iamV3test-080303", resourceType))
+        Assert.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[1].condition, "iamV3test-080303", resourceType))
+        Assert.assertEquals(mockSet2, AuthUtils.getResourceInstance(actionPolicys1[2].condition, "iamV3test-080303", resourceType))
+        Assert.assertEquals(mockSet2, AuthUtils.getResourceInstance(actionPolicys1[3].condition, "iamV3test-080303", resourceType))
+        Assert.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[4].condition, "iamV3test-080303", resourceType))
     }
 
     private fun print(projectList: List<String>) {
