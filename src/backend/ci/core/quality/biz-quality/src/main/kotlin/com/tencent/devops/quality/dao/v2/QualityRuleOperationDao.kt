@@ -122,10 +122,10 @@ class QualityRuleOperationDao {
         }
     }
 
-    fun get(dslContext: DSLContext, ruleId: Long): Result<TQualityRuleOperationRecord> {
+    fun get(dslContext: DSLContext, ruleIds: Collection<Long>): Result<TQualityRuleOperationRecord> {
         return with(TQualityRuleOperation.T_QUALITY_RULE_OPERATION) {
             dslContext.selectFrom(this)
-                .where(RULE_ID.eq(ruleId))
+                .where(RULE_ID.`in`(ruleIds))
                 .fetch()
         }
     }
