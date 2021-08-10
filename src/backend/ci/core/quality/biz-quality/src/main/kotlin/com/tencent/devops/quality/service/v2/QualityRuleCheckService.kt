@@ -173,13 +173,43 @@ class QualityRuleCheckService @Autowired constructor(
     }
 
     fun check(buildCheckParams: BuildCheckParams): RuleCheckResult {
-        with(buildCheckParams) {
-            // 遍历项目下所有拦截规则
-            val ruleList = ruleService.serviceListRuleByPosition(projectId, buildCheckParams.position)
+        // 遍历项目下所有拦截规则
+        val ruleList = ruleService.serviceListRuleByPosition(
+            buildCheckParams.projectId,
+            buildCheckParams.position
+        )
 
+        return doCheckRules(buildCheckParams, ruleList)
+    }
+
+    fun checkV3(buildCheckParams: BuildCheckParamsV3): RuleCheckResult {
+        // 遍历项目下所有拦截规则
+        val ruleList = qualityRuleBuildHisService.list(
+            buildCheckParams.ruleBuildIds.map {
+                HashUtil.decodeIdToLong(it)
+            }
+        )
+
+        val params = BuildCheckParams(
+            buildCheckParams.projectId,
+            buildCheckParams.pipelineId,
+            buildCheckParams.buildId,
+            "",
+            buildCheckParams.interceptName ?: "",
+            System.currentTimeMillis(),
+            "",
+            "",
+            buildCheckParams.templateId,
+            buildCheckParams.runtimeVariable
+        )
+        return doCheckRules(buildCheckParams =  params, ruleList = ruleList)
+    }
+
+    private fun doCheckRules(buildCheckParams: BuildCheckParams, ruleList: List<QualityRule>): RuleCheckResult {
+        with(buildCheckParams) {
             val filterRuleList = ruleList.filter { rule ->
                 logger.info("validate whether to check rule(${rule.name}) with gatewayId(${rule.gatewayId})")
-                if (rule.controlPoint?.name != buildCheckParams.taskId) {
+                if (!buildCheckParams.taskId.isBlank() && rule.controlPoint.name != buildCheckParams.taskId) {
                     return@filter false
                 }
                 val gatewayId = rule.gatewayId ?: ""
@@ -201,33 +231,6 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 记录结果
             recordHistory(buildCheckParams, ruleInterceptList)
-
-            return genResult(projectId, pipelineId, buildId, resultList, ruleInterceptList)
-        }
-    }
-
-    fun check(buildCheckParams: BuildCheckParamsV3): RuleCheckResult {
-        with(buildCheckParams) {
-            // 遍历项目下所有拦截规则
-            val ruleList = qualityRuleBuildHisService.list(ruleBuildIds.map { HashUtil.decodeIdToLong(it) })
-
-            val filterRuleList = ruleList.filter { rule ->
-                logger.info("validate whether to check rule with gatewayId: " +
-                    "${rule.name}, ${HashUtil.decodeIdToLong(rule.hashId)}, ${rule.gatewayId}")
-
-                val gatewayId = rule.gatewayId ?: ""
-                if (!buildCheckParams.interceptName.isNullOrBlank() &&
-                    !buildCheckParams.interceptName!!.toLowerCase().contains(gatewayId.toLowerCase())) {
-                    return@filter false
-                }
-
-                return@filter true
-            }
-
-            val resultPair = doCheck(projectId, pipelineId, buildId, filterRuleList, runtimeVariable)
-
-            val resultList = resultPair.first
-            val ruleInterceptList = resultPair.second
 
             return genResult(projectId, pipelineId, buildId, resultList, ruleInterceptList)
         }
@@ -530,11 +533,8 @@ class QualityRuleCheckService @Autowired constructor(
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
             val buildId = params["buildId"] ?: ""
-            val paramTaskId = params[CodeccUtils.BK_CI_CODECC_TASK_ID]
-            val taskId = if (paramTaskId.isNullOrBlank()) {
-                client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
-            } else paramTaskId
-            if (taskId.isNullOrBlank()) {
+            val taskId = getTaskId(projectId, pipelineId, params)
+            if (taskId.isBlank()) {
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""
             }
@@ -547,6 +547,21 @@ class QualityRuleCheckService @Autowired constructor(
             }
         } else {
             record.logPrompt ?: ""
+        }
+    }
+
+    private fun getTaskId(projectId: String, pipelineId: String, params: Map<String, String>): String {
+        val paramTaskId = params[CodeccUtils.BK_CI_CODECC_TASK_ID]
+
+        return if (paramTaskId.isNullOrBlank()) {
+            try {
+                client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId ?: ""
+            } catch (e: Exception) {
+                logger.warn("fail to get codecc task id: ${e.message}")
+                ""
+            }
+        } else {
+            paramTaskId
         }
     }
 
