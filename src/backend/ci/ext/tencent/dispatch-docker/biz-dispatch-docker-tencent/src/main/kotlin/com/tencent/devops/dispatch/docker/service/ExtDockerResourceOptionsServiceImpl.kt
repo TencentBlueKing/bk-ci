@@ -3,6 +3,7 @@ package com.tencent.devops.dispatch.docker.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
@@ -18,11 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class DcDockerResourceOptionsServiceImpl @Autowired constructor(
+class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) : ExtDockerResourceOptionsService {
 
-    private val logger = LoggerFactory.getLogger(DcDockerResourceOptionsServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(ExtDockerResourceOptionsServiceImpl::class.java)
 
     override fun getDockerResourceConfigList(
         userId: String,
@@ -35,6 +36,7 @@ class DcDockerResourceOptionsServiceImpl @Autowired constructor(
         val request = Request.Builder().url(url)
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
+            .addHeader(AUTH_HEADER_DEVOPS_USER_ID, userId)
             .get()
             .build()
 
