@@ -637,6 +637,7 @@ class PreBuildV2Service @Autowired constructor(
         val objectMapper = ObjectMapper()
 
         preJobList.forEach { preJob ->
+            // runs-on存在3种结构，String、标签的话是数组、T
             if (preJob.runsOn == null || preJob.runsOn!! is String || preJob.runsOn!! is List<*>) {
                 return@forEach
             }
@@ -648,7 +649,9 @@ class PreBuildV2Service @Autowired constructor(
 
             if (!passed) {
                 logger.error("Check yaml schema failed [runs-on]. $errMsg")
-                throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, errMsg)
+                throw CustomException(
+                    Response.Status.INTERNAL_SERVER_ERROR, "runs-on只能是String、Array、Object其一"
+                )
             }
         }
     }
