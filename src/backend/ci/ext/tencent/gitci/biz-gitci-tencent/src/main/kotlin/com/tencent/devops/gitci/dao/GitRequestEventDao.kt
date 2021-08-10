@@ -60,7 +60,6 @@ class GitRequestEventDao {
                 MERGE_REQUEST_ID,
                 EVENT,
                 CREATE_TIME,
-                DESCRIPTION,
                 MR_TITLE
             ).values(
                 event.objectKind,
@@ -78,7 +77,6 @@ class GitRequestEventDao {
                 event.mergeRequestId,
                 event.event,
                 LocalDateTime.now(),
-                event.description,
                 event.mrTitle
             ).returning(ID)
                 .fetchOne()!!
@@ -117,7 +115,11 @@ class GitRequestEventDao {
                     totalCommitCount = record.totalCommitCount,
                     mergeRequestId = record.mergeRequestId,
                     event = "", // record.event,
-                    description = record.description,
+                    description = if (!record.description.isNullOrBlank()) {
+                        record.description
+                    } else {
+                        record.commitMessage
+                    },
                     mrTitle = record.mrTitle
                 )
             }
@@ -155,7 +157,11 @@ class GitRequestEventDao {
                     totalCommitCount = record.totalCommitCount,
                     mergeRequestId = record.mergeRequestId,
                     event = record.event,
-                    description = record.description,
+                    description = if (!record.description.isNullOrBlank()) {
+                        record.description
+                    } else {
+                        record.commitMessage
+                    },
                     mrTitle = record.mrTitle
                 )
             }
@@ -193,7 +199,11 @@ class GitRequestEventDao {
                         totalCommitCount = it.totalCommitCount,
                         mergeRequestId = it.mergeRequestId,
                         event = "", // record.event,
-                        description = it.description,
+                        description = if (!it.description.isNullOrBlank()) {
+                            it.description
+                        } else {
+                            it.commitMessage
+                        },
                         mrTitle = it.mrTitle
                     )
                 )
@@ -234,7 +244,11 @@ class GitRequestEventDao {
                         totalCommitCount = it.totalCommitCount,
                         mergeRequestId = it.mergeRequestId,
                         event = "", // record.event,
-                        description = it.description,
+                        description = if (!it.description.isNullOrBlank()) {
+                            it.description
+                        } else {
+                            it.commitMessage
+                        },
                         mrTitle = it.mrTitle
                     )
                 )
@@ -330,7 +344,11 @@ class GitRequestEventDao {
                         totalCommitCount = it.totalCommitCount,
                         mergeRequestId = it.mergeRequestId,
                         event = "", // record.event,
-                        description = it.description,
+                        description = if (!it.description.isNullOrBlank()) {
+                            it.description
+                        } else {
+                            it.commitMessage
+                        },
                         mrTitle = it.mrTitle
                     )
                 )
