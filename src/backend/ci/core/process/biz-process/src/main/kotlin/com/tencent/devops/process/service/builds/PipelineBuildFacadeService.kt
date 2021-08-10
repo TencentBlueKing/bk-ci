@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -95,6 +94,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
+import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -102,9 +102,8 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -128,6 +127,7 @@ class PipelineBuildFacadeService(
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
     private val buildDetailService: PipelineBuildDetailService,
+    private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val jmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
     private val buildStartupParamService: BuildStartupParamService,
@@ -261,7 +261,7 @@ class PipelineBuildFacadeService(
 
         val currentBuildNo = triggerContainer.buildNo
         if (currentBuildNo != null) {
-            currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId)
+            currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(pipelineId = pipelineId)
                 ?: currentBuildNo.buildNo
         }
 
@@ -315,6 +315,7 @@ class PipelineBuildFacadeService(
         buildId: String,
         taskId: String? = null,
         failedContainer: Boolean? = false,
+        skipFailedTask: Boolean? = false,
         isMobile: Boolean = false,
         channelCode: ChannelCode? = ChannelCode.BS,
         checkPermission: Boolean? = true
@@ -372,29 +373,60 @@ class PipelineBuildFacadeService(
             val model = buildDetailService.getBuildModel(buildId) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
-            val params = mutableMapOf<String, Any>()
+            val startParamsWithType = mutableListOf<BuildParameters>()
             val originVars = buildVariableService.getAllVariable(buildId)
             if (!taskId.isNullOrBlank()) {
                 // stage/job/task级重试，获取buildVariable构建参数，恢复环境变量
-                params.putAll(originVars)
+                originVars.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
+
                 // stage/job/task级重试
                 run {
                     model.stages.forEach { s ->
                         // stage 级重试
                         if (s.id == taskId) {
-                            params[PIPELINE_RETRY_START_TASK_ID] = s.id!!
-                            params[PIPELINE_RETRY_ALL_FAILED_CONTAINER] = failedContainer == true
+                            startParamsWithType.add(BuildParameters(key = PIPELINE_RETRY_START_TASK_ID, value = s.id!!))
+                            startParamsWithType.add(
+                                BuildParameters(
+                                    key = PIPELINE_RETRY_ALL_FAILED_CONTAINER,
+                                    value = failedContainer ?: false,
+                                    valueType = BuildFormPropertyType.TEMPORARY
+                                )
+                            )
+                            startParamsWithType.add(
+                                BuildParameters(
+                                    key = PIPELINE_SKIP_FAILED_TASK,
+                                    value = skipFailedTask ?: false,
+                                    valueType = BuildFormPropertyType.TEMPORARY
+                                )
+                            )
                             return@run
                         }
                         s.containers.forEach { c ->
                             val pos = if (c.id == taskId) 0 else -1 // 容器job级别的重试，则找job的第一个原子
                             c.elements.forEachIndexed { index, element ->
                                 if (index == pos) {
-                                    params[PIPELINE_RETRY_START_TASK_ID] = element.id!!
+                                    startParamsWithType.add(
+                                        BuildParameters(
+                                            key = PIPELINE_RETRY_START_TASK_ID,
+                                            value = element.id!!
+                                        )
+                                    )
                                     return@run
                                 }
                                 if (element.id == taskId) {
-                                    params[PIPELINE_RETRY_START_TASK_ID] = element.id!!
+                                    startParamsWithType.add(
+                                        BuildParameters(
+                                            key = PIPELINE_RETRY_START_TASK_ID,
+                                            value = element.id!!
+                                        )
+                                    )
+                                    startParamsWithType.add(
+                                        BuildParameters(
+                                            key = PIPELINE_SKIP_FAILED_TASK,
+                                            value = skipFailedTask ?: false,
+                                            valueType = BuildFormPropertyType.TEMPORARY
+                                        )
+                                    )
                                     return@run
                                 }
                             }
@@ -406,38 +438,38 @@ class PipelineBuildFacadeService(
                 try {
                     val startupParam = buildStartupParamService.getParam(buildId)
                     if (startupParam != null && startupParam.isNotEmpty()) {
-                        params.putAll(JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID })
+                        startParamsWithType.addAll(
+                            JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID }.map {
+                                BuildParameters(key = it.key, value = it.value)
+                            }
+                        )
                     }
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }
             }
 
-            // 刷新因暂停而变化的element(需同时支持流水线重试和stage重试, task重试)
-            buildDetailService.updateElementWhenPauseRetry(buildId, model)
+            // 重置因暂停而变化的element(需同时支持流水线重试和stage重试, task重试), model不在这保存，在startBuild中保存
+            pipelineTaskPauseService.resetElementWhenPauseRetry(buildId, model)
 
-            logger.info("ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                "retryCount=${params[PIPELINE_RETRY_COUNT]}|startParams=$params")
+            logger.info(
+                "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
+                        "retryCount=${originVars[PIPELINE_RETRY_COUNT]}|fc=$failedContainer|skip=$skipFailedTask"
+            )
 
             // rebuild重试计数
-            params[PIPELINE_RETRY_COUNT] = if (originVars[PIPELINE_RETRY_COUNT] != null) {
+            val retryCount = if (originVars[PIPELINE_RETRY_COUNT] != null) {
                 originVars[PIPELINE_RETRY_COUNT].toString().toInt() + 1
             } else {
                 1
             }
-
-            params[PIPELINE_START_USER_ID] = userId
-            params[PIPELINE_RETRY_BUILD_ID] = buildId
-            params[PIPELINE_START_TYPE] = originVars[PIPELINE_START_TYPE] ?: ""
-            params[PIPELINE_START_TASK_ID] = originVars[PIPELINE_START_TASK_ID] ?: ""
-
-            val startParamsWithType = mutableListOf<BuildParameters>()
-            params.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
+            startParamsWithType.add(BuildParameters(key = PIPELINE_RETRY_COUNT, value = retryCount))
+            startParamsWithType.add(BuildParameters(key = PIPELINE_RETRY_BUILD_ID, value = buildId))
 
             return pipelineBuildService.startPipeline(
                 userId = userId,
                 readyToBuildPipelineInfo = readyToBuildPipelineInfo,
-                startType = StartType.toStartType(params[PIPELINE_START_TYPE]?.toString() ?: ""),
+                startType = StartType.toStartType(originVars[PIPELINE_START_TYPE] ?: ""),
                 startParamsWithType = startParamsWithType,
                 channelCode = channelCode ?: ChannelCode.BS,
                 isMobile = isMobile,
@@ -586,17 +618,27 @@ class PipelineBuildFacadeService(
              */
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
-            val startParams = mutableMapOf<String, Any>()
-            startParams.putAll(parameters)
+            val startParams = mutableListOf<BuildParameters>()
+            for (it in parameters) {
+                startParams.add(BuildParameters(it.key, it.value))
+            }
+            val paramsKeyList = startParams.map { it.key }
             triggerContainer.params.forEach {
-                if (startParams.containsKey(it.id)) {
+                if (paramsKeyList.contains(it.id)) {
                     return@forEach
                 }
-                startParams[it.id] = it.defaultValue
+                startParams.add(BuildParameters(key = it.id, value = it.defaultValue, readOnly = it.readOnly))
             }
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
-            startParams.forEach { (key, value) -> startParamsWithType.add(BuildParameters(key, value)) }
+            startParams.forEach { (key, value, valueType, readOnly) ->
+                startParamsWithType.add(BuildParameters(
+                    key,
+                    value,
+                    valueType,
+                    readOnly
+                ))
+            }
 
             return pipelineBuildService.startPipeline(
                 userId = userId,
@@ -674,7 +716,6 @@ class PipelineBuildFacadeService(
         // 对人工审核提交时的参数做必填和范围校验
         checkManualReviewParam(params = params.params)
 
-        val runtimeVars = buildVariableService.getAllVariable(buildId)
         model.stages.forEachIndexed { index, s ->
             if (index == 0) {
                 return@forEachIndexed
@@ -685,8 +726,7 @@ class PipelineBuildFacadeService(
                         // Replace the review user with environment
                         val reviewUser = mutableListOf<String>()
                         el.reviewUsers.forEach { user ->
-                            reviewUser.addAll(EnvUtils.parseEnv(user, runtimeVars).split(",").map { it.trim() }
-                                .toList())
+                            reviewUser.addAll(buildVariableService.replaceTemplate(buildId, user).split(","))
                         }
                         params.params.forEach {
                             when (it.valueType) {
@@ -694,11 +734,10 @@ class PipelineBuildFacadeService(
                                     it.value = it.value ?: it.value.toString().toBoolean()
                                 }
                                 else -> {
-                                    it.value = EnvUtils.parseEnv(it.value.toString(), runtimeVars)
+                                    it.value = buildVariableService.replaceTemplate(buildId, it.value.toString())
                                 }
                             }
                         }
-//                        elementName = el.name
                         if (!reviewUser.contains(userId)) {
                             throw ErrorCodeException(
                                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -732,13 +771,15 @@ class PipelineBuildFacadeService(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 defaultMessage = "流水线不存在",
-                params = arrayOf(buildId))
+                params = arrayOf(buildId)
+            )
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 defaultMessage = "构建任务${buildId}不存在",
-                params = arrayOf(buildId))
+                params = arrayOf(buildId)
+            )
 
         if (buildInfo.pipelineId != pipelineId) {
             logger.warn("[$buildId]|buildManualStartStage error|input=$pipelineId|pipeline=${buildInfo.pipelineId}")
@@ -818,7 +859,6 @@ class PipelineBuildFacadeService(
             defaultMessage = "流水线编排不存在"
         )
 
-        val runtimeVars = buildVariableService.getAllVariable(buildId)
         model.stages.forEachIndexed { index, s ->
             if (index == 0) {
                 return@forEachIndexed
@@ -828,8 +868,7 @@ class PipelineBuildFacadeService(
                     if (el is ManualReviewUserTaskElement && el.id == elementId) {
                         val reviewUser = mutableListOf<String>()
                         el.reviewUsers.forEach { user ->
-                            reviewUser.addAll(EnvUtils.parseEnv(user, runtimeVars).split(",").map { it.trim() }
-                                .toList())
+                            reviewUser.addAll(buildVariableService.replaceTemplate(buildId, user).split(","))
                         }
                         el.params.forEach { param ->
                             when (param.valueType) {
@@ -837,11 +876,11 @@ class PipelineBuildFacadeService(
                                     param.value = param.value ?: param.value.toString().toBoolean()
                                 }
                                 else -> {
-                                    param.value = EnvUtils.parseEnv(param.value.toString(), runtimeVars)
+                                    param.value = buildVariableService.replaceTemplate(buildId, param.value.toString())
                                 }
                             }
                         }
-                        el.desc = EnvUtils.parseEnv(el.desc ?: "", runtimeVars)
+                        el.desc = buildVariableService.replaceTemplate(buildId, el.desc)
                         if (!reviewUser.contains(userId)) {
                             throw ErrorCodeException(
                                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -889,18 +928,6 @@ class PipelineBuildFacadeService(
             }
 
             try {
-                val lastStage = pipelineStageService.getLastStage(buildId)
-                if (lastStage?.status?.isRunning() == true && lastStage.controlOption?.finally == true) {
-                    val message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_FINAL_STAGE_CANNOT_CANCEL)
-                    buildLogPrinter.addRedLine(
-                        buildId = buildId,
-                        message = message,
-                        tag = "startVM-0",
-                        jobId = "0",
-                        executeCount = lastStage.executeCount
-                    )
-                    return
-                }
                 pipelineRuntimeService.cancelBuild(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -1278,7 +1305,9 @@ class PipelineBuildFacadeService(
         val offset = sqlLimit?.offset ?: 0
         val limit = sqlLimit?.limit ?: 50
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
@@ -1541,7 +1570,7 @@ class PipelineBuildFacadeService(
             if (atomEnvResult.isNotOk() || atomEnv == null) {
                 val message =
                     "Can not found atom($atomCode) in $projectId| ${atomEnvResult.message}, " +
-                        "please check if the plugin is installed."
+                            "please check if the plugin is installed."
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
                     errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
@@ -1573,7 +1602,8 @@ class PipelineBuildFacadeService(
                 val newRedisBuildAuth = redisBuildAuth.copy(atoms = redisBuildAuth.atoms.plus(incrementAtoms))
                 redisOperation.set(
                     key = redisKey(hashId = secretInfo.hashId, secretKey = secretInfo.secretKey),
-                    value = JsonUtil.toJson(newRedisBuildAuth))
+                    value = JsonUtil.toJson(newRedisBuildAuth)
+                )
             } else {
                 logger.error("buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, no redisBuild in redis.")
                 throw ErrorCodeException(
@@ -1624,8 +1654,9 @@ class PipelineBuildFacadeService(
                     errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
                 )
             }
-
-            if (!alreadyCancelUser.isNullOrBlank()) {
+            // 兼容post任务的场景，处于”运行中“的构建可以支持多次取消操作
+            val cancelFlag = redisOperation.get("${BuildStatus.CANCELED.name}_$buildId")?.toBoolean()
+            if (cancelFlag == true) {
                 logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
@@ -1654,24 +1685,6 @@ class PipelineBuildFacadeService(
                     params = arrayOf(buildId)
                 )
             }
-            val lastStage = pipelineStageService.getLastStage(buildId)
-            if (lastStage?.status?.isRunning() == true && lastStage.controlOption?.finally == true) {
-                val message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_FINAL_STAGE_CANNOT_CANCEL)
-                buildLogPrinter.addRedLine(
-                    buildId = buildId,
-                    message = "$message userId:$userId",
-                    tag = "startVM-0",
-                    jobId = "0",
-                    executeCount = lastStage.executeCount
-                )
-
-                throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_FINAL_STAGE_CANNOT_CANCEL,
-                    defaultMessage = "Cannot cancel the running [final stage]",
-                    params = arrayOf(buildId)
-                )
-            }
 
             val tasks = getRunningTask(projectId, buildId)
 
@@ -1683,7 +1696,7 @@ class PipelineBuildFacadeService(
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "流水线被用户终止，操作人:$userId",
+                    message = "Run cancelled by $userId",
                     tag = taskId.toString(),
                     jobId = containerId.toString(),
                     executeCount = executeCount as Int
@@ -1693,7 +1706,7 @@ class PipelineBuildFacadeService(
             if (tasks.isEmpty()) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "流水线被用户终止，操作人:$userId",
+                    message = "Run cancelled by $userId",
                     tag = "",
                     jobId = "",
                     executeCount = 1

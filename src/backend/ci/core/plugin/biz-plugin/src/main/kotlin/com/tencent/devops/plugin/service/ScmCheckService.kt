@@ -30,6 +30,7 @@ package com.tencent.devops.plugin.service
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil
@@ -57,8 +58,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.util.Base64
+import javax.ws.rs.NotFoundException
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class ScmCheckService @Autowired constructor(private val client: Client) {
     private val logger = LoggerFactory.getLogger(ScmCheckService::class.java)
 
@@ -224,7 +227,10 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         )
         if (repoResult.isNotOk() || repoResult.data == null) {
             logger.warn("getRepo|($repositoryConfig)|project($projectId)|${repoResult.message}")
-            throw RuntimeException("Fail to get the repo")
+            throw ErrorCodeException(
+                errorCode = repoResult.status.toString(),
+                defaultMessage = repoResult.message
+            )
         }
         return repoResult.data!!
     }
@@ -240,7 +246,10 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             logger.warn("getCredential|credential($credentialId)|project($projectId)|${credentialResult.message}")
-            throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
+            throw ErrorCodeException(
+                errorCode = credentialResult.status.toString(),
+                defaultMessage = credentialResult.message
+            )
         }
 
         val credential = credentialResult.data!!
@@ -276,13 +285,13 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
 
     private fun getAccessToken(userName: String): Pair<String, String?> {
         val gitOauthData = client.get(ServiceOauthResource::class).gitGet(userName).data
-            ?: throw RuntimeException("cannot found oauth access token for user($userName)")
+            ?: throw NotFoundException("cannot found oauth access token for user($userName)")
         return gitOauthData.accessToken to null
     }
 
     private fun getGithubAccessToken(userName: String): String {
         val accessToken = client.get(ServiceGithubResource::class).getAccessToken(userName).data
-            ?: throw RuntimeException("cannot find github oauth accessToekn for user($userName)")
+            ?: throw NotFoundException("cannot find github oauth accessToekn for user($userName)")
         return accessToken.accessToken
     }
 }

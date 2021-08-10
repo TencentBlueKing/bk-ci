@@ -30,7 +30,6 @@ package com.tencent.devops.common.api.expression
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Test
-import java.lang.RuntimeException
 
 class GrammarAnalysisTest {
 
@@ -76,7 +75,7 @@ class GrammarAnalysisTest {
         try {
             GrammarAnalysis(items).analysis()
         } catch (e: Exception) {
-            assertEquals(e.javaClass, RuntimeException::class.java)
+            assertEquals(e.javaClass, IllegalArgumentException::class.java)
         }
     }
 }

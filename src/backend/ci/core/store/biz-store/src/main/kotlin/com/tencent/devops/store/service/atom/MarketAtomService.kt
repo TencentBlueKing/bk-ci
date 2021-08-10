@@ -52,7 +52,8 @@ interface MarketAtomService {
     fun mainPageList(
         userId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        urlProtocolTrim: Boolean = false
     ): Result<List<MarketMainItem>>
 
     /**
@@ -69,7 +70,8 @@ interface MarketAtomService {
         recommendFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        urlProtocolTrim: Boolean = false
     ): MarketAtomResp
 
     /**
@@ -144,6 +146,16 @@ interface MarketAtomService {
      */
     fun generateCiYaml(
         atomCode: String?,
+        os: String? = null,
+        classType: String? = null,
+        defaultShowFlag: Boolean? = true
+    ): String
+
+    /**
+     * 生成插件yml 2.0文件
+     */
+    fun generateCiV2Yaml(
+        atomCode: String,
         os: String? = null,
         classType: String? = null,
         defaultShowFlag: Boolean? = true

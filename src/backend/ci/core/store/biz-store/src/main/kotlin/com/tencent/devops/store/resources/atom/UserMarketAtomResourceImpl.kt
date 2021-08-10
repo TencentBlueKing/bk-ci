@@ -54,7 +54,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
 ) : UserMarketAtomResource {
 
     override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketMainItem>> {
-        return marketAtomService.mainPageList(userId, page, pageSize)
+        return marketAtomService.mainPageList(userId, page, pageSize, urlProtocolTrim = true)
     }
 
     override fun list(
@@ -82,7 +82,8 @@ class UserMarketAtomResourceImpl @Autowired constructor(
                 recommendFlag = recommendFlag,
                 sortType = sortType,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                urlProtocolTrim = true
             )
         )
     }
@@ -136,5 +137,9 @@ class UserMarketAtomResourceImpl @Autowired constructor(
 
     override fun getAtomYmlInfo(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
         return Result(marketAtomService.generateCiYaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag ?: false))
+    }
+
+    override fun getAtomYmlV2Info(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
+        return Result(marketAtomService.generateCiV2Yaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag ?: false))
     }
 }

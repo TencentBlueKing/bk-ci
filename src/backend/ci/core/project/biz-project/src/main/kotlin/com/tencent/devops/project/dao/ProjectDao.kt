@@ -424,6 +424,12 @@ class ProjectDao {
         }
     }
 
+    fun updateProjectId(dslContext: DSLContext, projectId: String, projectCode: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this).set(PROJECT_ID, projectId).where(ENGLISH_NAME.eq(projectCode)).execute()
+        }
+    }
+
     fun updateLogoAddress(dslContext: DSLContext, userId: String, projectId: String, logoAddress: String): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
@@ -746,6 +752,14 @@ class ProjectDao {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
                 .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun updateRelationByCode(dslContext: DSLContext, projectCode: String, relationId: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(RELATION_ID, relationId).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
         }
     }
 

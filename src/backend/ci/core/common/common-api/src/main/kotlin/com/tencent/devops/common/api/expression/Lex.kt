@@ -254,7 +254,7 @@ class Lex(var str: MutableList<Char>) {
     }
 
     private fun isLetter(c: Char): Boolean {
-        val chars = setOf('.', '\'', '[', ']', '_')
+        val chars = setOf('.', '\'', '[', ']', '_', '-')
         return (c in 'a'..'z' || c in 'A'..'Z' || c in '0'..'9' || c in chars)
     }
 

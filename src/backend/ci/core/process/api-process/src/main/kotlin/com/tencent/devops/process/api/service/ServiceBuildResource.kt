@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
@@ -184,7 +185,7 @@ interface ServiceBuildResource {
         buildNo: Int? = null
     ): Result<BuildId>
 
-    @ApiOperation("重试流水线")
+    @ApiOperation("重试流水线-重试或者跳过失败插件")
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/retry")
     fun retry(
@@ -200,12 +201,15 @@ interface ServiceBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("要重试的原子任务ID", required = false)
+        @ApiParam("要重试或跳过的插件ID，或者StageId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
         @ApiParam("仅重试所有失败Job", required = false)
         @QueryParam("failedContainer")
         failedContainer: Boolean? = false,
+        @ApiParam("跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
+        @QueryParam("skip")
+        skipFailedTask: Boolean? = false,
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
@@ -546,5 +550,24 @@ interface ServiceBuildResource {
         cancel: Boolean?,
         @ApiParam("审核请求体", required = false)
         reviewRequest: StageReviewRequest? = null
+    ): Result<Boolean>
+
+    @ApiOperation("操作暂停插件")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/execution/pause")
+    fun executionPauseAtom(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        taskPauseExecute: BuildTaskPauseInfo
     ): Result<Boolean>
 }

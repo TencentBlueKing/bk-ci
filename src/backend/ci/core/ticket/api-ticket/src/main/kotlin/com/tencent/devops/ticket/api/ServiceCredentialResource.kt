@@ -84,7 +84,7 @@ interface ServiceCredentialResource {
         @ApiParam("Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
-    ): Result<CredentialInfo>
+    ): Result<CredentialInfo?>
 
     @ApiOperation("检查凭据是否存在")
     @Path("/{projectId}/{credentialId}/")

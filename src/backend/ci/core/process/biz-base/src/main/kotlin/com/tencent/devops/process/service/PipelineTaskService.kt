@@ -45,9 +45,9 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelinePauseExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
@@ -70,7 +70,7 @@ class PipelineTaskService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val taskBuildDetailService: TaskBuildDetailService,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
@@ -152,19 +152,16 @@ class PipelineTaskService @Autowired constructor(
             }
         }
 
-        val records = if (pipelineTasks == null) {
-            listOf<PipelineProjectRel>()
-        } else {
-            pipelineTasks.map {
-                val pipelineId = it[KEY_PIPELINE_ID] as String
-                PipelineProjectRel(
-                    pipelineId = pipelineId,
-                    pipelineName = pipelineNameMap?.get(pipelineId) ?: "",
-                    projectCode = it[KEY_PROJECT_ID] as String,
-                    atomVersion = pipelineAtomVersionInfo[pipelineId]?.joinToString(",") ?: ""
-                )
-            }
+        val records = pipelineTasks?.map {
+            val pipelineId = it[KEY_PIPELINE_ID] as String
+            PipelineProjectRel(
+                pipelineId = pipelineId,
+                pipelineName = pipelineNameMap?.get(pipelineId) ?: "",
+                projectCode = it[KEY_PROJECT_ID] as String,
+                atomVersion = pipelineAtomVersionInfo[pipelineId]?.joinToString(",") ?: ""
+            )
         }
+            ?: listOf<PipelineProjectRel>()
 
         return Page(pageNotNull, pageSizeNotNull, count, records)
     }
@@ -192,7 +189,7 @@ class PipelineTaskService @Autowired constructor(
             )
             buildLogPrinter.addYellowLine(
                 buildId = buildId,
-                message = "插件${taskRecord.taskName}执行失败, 5s后开始执行第${nextCount}次重试",
+                message = "[${taskRecord.taskName}] failed, and retry $nextCount",
                 tag = taskRecord.taskId,
                 jobId = taskRecord.containerId,
                 executeCount = 1
@@ -228,7 +225,7 @@ class PipelineTaskService @Autowired constructor(
     fun createFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
         val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
             ?: return
-        val model = pipelineBuildDetailService.getBuildModel(buildId)
+        val model = taskBuildDetailService.getBuildModel(buildId)
         val failTask = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKS)
         val failTaskNames = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKNAMES)
         try {
@@ -339,7 +336,7 @@ class PipelineTaskService @Autowired constructor(
         // 修改任务状态位暂停
         pipelineRuntimeService.updateTaskStatus(task = task, userId = task.starter, buildStatus = BuildStatus.PAUSE)
 
-        pipelineBuildDetailService.pauseTask(
+        taskBuildDetailService.taskPause(
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId,

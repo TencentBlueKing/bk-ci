@@ -143,4 +143,6 @@ interface ProjectService {
     fun listSecrecyProject(): Set<String>?
 
     fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean
+
+    fun relationIamProject(projectCode: String, relationId: String): Boolean
 }

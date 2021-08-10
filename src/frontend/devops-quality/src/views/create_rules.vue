@@ -46,22 +46,6 @@
                                 v-validate="'required'">
                             </bk-input>
                         </devops-form-item>
-                        <devops-form-item label="ID" :property="'id'" :is-error="errors.has('gatewayId')" :error-msg="errors.first('gatewayId')">
-                            <bk-input
-                                class="rule-name-input"
-                                placeholder="可不填。仅支持英文和数字，例如gate1。"
-                                name="gatewayId"
-                                v-model="createRuleForm.gatewayId"
-                                v-validate="{
-                                    max: 10,
-                                    customRuleId: true
-                                }">
-                            </bk-input>
-                        </devops-form-item>
-                        <p class="gateway-id-tips">
-                            <i class="devops-icon icon-info-circle-shape"></i>
-                            <span>若输入了ID（例如gate1），红线将只对名称以ID加下划线开头的控制点生效（例如gate1_XX）</span>
-                        </p>
                         <bk-form-item label="描述" :property="'desc'">
                             <bk-input
                                 type="text"
@@ -192,6 +176,22 @@
                                 </bk-option>
                             </bk-select>
                         </bk-form-item>
+                        <devops-form-item label="控制点前缀" :property="'id'" :is-error="errors.has('gatewayId')" :error-msg="errors.first('gatewayId')">
+                            <bk-input
+                                class="rule-name-input"
+                                placeholder="默认可不填，不填则对所有控制点生效。仅支持英文和数字，例如gate1."
+                                name="gatewayId"
+                                v-model="createRuleForm.gatewayId"
+                                v-validate="{
+                                    max: 10,
+                                    customRuleId: true
+                                }">
+                            </bk-input>
+                        </devops-form-item>
+                        <p class="gateway-id-tips">
+                            <i class="devops-icon icon-info-circle-shape"></i>
+                            <span>若输入了前缀（例如gate1），红线将只对名称以前缀加下划线开头的控制点生效（例如gate1_XX）</span>
+                        </p>
                         <bk-form-item label="生效范围" class="blod-label"
                             :property="'controlPointPosition'">
                             <bk-dropdown-menu @show="isDropdownShow = true" @hide="isDropdownShow = false" ref="dropdown">
@@ -299,14 +299,14 @@
                                                 </bk-checkbox>
                                             </bk-checkbox-group>
                                         </bk-form-item>
-                                        <bk-form-item label="附加通知人员">
-                                            <user-input :handle-change="handleChange" name="attacher" :value="createRuleForm.notifyUserList" placeholder="请输入通知人员"></user-input>
+                                        <bk-form-item label="附加通知人员" desc="请输入通知人员，支持输入流水线变量">
+                                            <user-input :handle-change="handleChange" name="attacher" :value="createRuleForm.notifyUserList" placeholder="请输入通知人员，支持输入流水线变量"></user-input>
                                         </bk-form-item>
                                     </bk-form>
 
                                     <bk-form v-else :label-width="120" :model="createRuleForm" class="user-audit-form">
-                                        <bk-form-item label="审核人" :required="true">
-                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" placeholder="请输入通知人员"></user-input>
+                                        <bk-form-item label="审核人" desc="请输入通知人员，支持输入流水线变量" :required="true">
+                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" placeholder="请输入通知人员，支持输入流水线变量"></user-input>
                                         </bk-form-item>
                                         <bk-form-item label="审核超时时间">
                                             <bk-input type="number"

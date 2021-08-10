@@ -94,7 +94,7 @@
 
                 try {
                     if (!this.startTime || !this.endTime) return
-                    const res = await this.$store.dispatch('soda/requestTrendData', {
+                    const res = await this.$store.dispatch('common/requestTrendData', {
                         pipelineId,
                         startTime,
                         endTime

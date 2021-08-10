@@ -30,7 +30,7 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.log.Ansi
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
@@ -78,7 +78,6 @@ object ShellUtil {
     lateinit var buildEnvs: List<BuildEnv>
 
     private val specialKey = listOf(".", "-")
-    private val specialValue = listOf("|", "&", "(", ")")
     private val specialCharToReplace = Regex("['\n]") // --bug=75509999 Agent环境变量中替换掉破坏性字符
 
     fun execute(
@@ -92,7 +91,8 @@ object ShellUtil {
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
-        print2Logger: Boolean = true
+        print2Logger: Boolean = true,
+        elementId: String? = null
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
@@ -110,7 +110,8 @@ object ShellUtil {
             errorMessage = errorMessage,
             print2Logger = print2Logger,
             executeErrorMessage = "",
-            buildId = buildId
+            buildId = buildId,
+            elementId = elementId
         )
     }
 
@@ -142,9 +143,7 @@ object ShellUtil {
         }
 
         val commonEnv = runtimeVariables.plus(CommonEnv.getCommonEnv())
-            .filter {
-                !specialEnv(it.key, it.value)
-            }
+            .filterNot { specialEnv(it.key) }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
                 // --bug=75509999 Agent环境变量中替换掉破坏性字符
@@ -217,7 +216,8 @@ object ShellUtil {
         errorMessage: String? = null,
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
-        buildId: String? = null
+        buildId: String? = null,
+        elementId: String? = null
     ): String {
         try {
             return CommandLineUtils.execute(
@@ -226,7 +226,8 @@ object ShellUtil {
                 print2Logger = print2Logger,
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
-                buildId = buildId
+                buildId = buildId,
+                elementId = elementId
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"
@@ -239,18 +240,7 @@ object ShellUtil {
         }
     }
 
-    private fun specialEnv(key: String, value: String): Boolean {
-        specialKey.forEach {
-            if (key.contains(it)) {
-                return true
-            }
-        }
-
-        specialValue.forEach {
-            if (value.contains(it)) {
-                return true
-            }
-        }
-        return false
+    private fun specialEnv(key: String): Boolean {
+        return specialKey.any { key.contains(it) }
     }
 }

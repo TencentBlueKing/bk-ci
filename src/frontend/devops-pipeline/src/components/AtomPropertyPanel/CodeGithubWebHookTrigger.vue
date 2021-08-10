@@ -31,7 +31,7 @@
         },
         async mounted () {
             try {
-                const res = await this.$store.dispatch('soda/getGithubAppUrl')
+                const res = await this.$store.dispatch('common/getGithubAppUrl')
                 this.githubAppUrl = res.url
             } catch (err) {
                 this.$showTips({

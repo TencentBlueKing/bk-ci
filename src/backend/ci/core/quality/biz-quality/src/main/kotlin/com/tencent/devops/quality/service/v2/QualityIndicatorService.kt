@@ -335,7 +335,7 @@ class QualityIndicatorService @Autowired constructor(
                     availableOperation = indicator.operationAvailable.split(",").map { QualityOperation.valueOf(it) },
                     dataType = QualityDataType.valueOf(indicator.thresholdType.toUpperCase()),
                     threshold = indicator.threshold,
-                    desc = indicator.desc,
+                    desc = indicator.desc ?: "",
                     range = indicator.indicatorRange // 脚本指标需要加上可见范围
                 )
 
@@ -588,6 +588,11 @@ class QualityIndicatorService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(QualityIndicatorService::class.java)
 
         val codeccToolNameMap = mapOf(
+            "STANDARD" to "代码规范",
+            "DEFECT" to "代码缺陷",
+            "SECURITY" to "安全漏洞",
+            "CCN" to "圈复杂度",
+            "DUPC" to "重复率",
             "COVERITY" to "Coverity",
             "KLOCWORK" to "Klocwork",
             "CPPLINT" to "CppLint",
@@ -599,13 +604,16 @@ class QualityIndicatorService @Autowired constructor(
             "DETEKT" to "detekt",
             "PHPCS" to "PHPCS",
             "SENSITIVE" to "敏感信息",
-            "CCN" to "圈复杂度",
-            "DUPC" to "重复率",
             "OCCHECK" to "OCCheck",
             "RIPS" to "啄木鸟漏洞扫描-PHP",
             "WOODPECKER_SENSITIVE" to "啄木鸟敏感信息")
 
         private val codeccToolDescMap = mapOf(
+            "STANDARD" to "按维度(推荐)",
+            "DEFECT" to "按维度(推荐)",
+            "SECURITY" to "按维度(推荐)",
+            "CCN" to "通过计算函数的节点个数来衡量代码复杂性",
+            "DUPC" to "可以检测项目中复制粘贴和重复开发相同功能等问题",
             "COVERITY" to "斯坦福大学科学家研究成果，静态源代码分析领域的领导者",
             "KLOCWORK" to "业界广泛使用的商用代码检查工具，与Coverity互补",
             "CPPLINT" to "谷歌开源的C++代码风格检查工具",
@@ -617,8 +625,6 @@ class QualityIndicatorService @Autowired constructor(
             "DETEKT" to "Kotlin静态代码分析工具 ",
             "PHPCS" to "PHP代码风格检查工具",
             "SENSITIVE" to "可扫描代码中有安全风险的敏感信息",
-            "CCN" to "通过计算函数的节点个数来衡量代码复杂性",
-            "DUPC" to "可以检测项目中复制粘贴和重复开发相同功能等问题",
             "OCCHECK" to "OC代码风格检查工具")
     }
 }

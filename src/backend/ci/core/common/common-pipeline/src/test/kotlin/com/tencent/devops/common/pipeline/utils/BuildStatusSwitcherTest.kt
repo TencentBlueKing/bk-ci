@@ -50,6 +50,12 @@ class BuildStatusSwitcherTest {
                         BuildStatusSwitcher.pipelineStatusMaker.finish(status)
                     )
                 }
+                status == BuildStatus.TERMINATE -> {
+                    Assert.assertEquals(
+                        BuildStatus.TERMINATE,
+                        BuildStatusSwitcher.pipelineStatusMaker.finish(status)
+                    )
+                }
                 status.isReadyToRun() -> {
                     Assert.assertEquals(BuildStatus.CANCELED, BuildStatusSwitcher.pipelineStatusMaker.finish(status))
                 }
@@ -123,8 +129,17 @@ class BuildStatusSwitcherTest {
                         BuildStatusSwitcher.pipelineStatusMaker.forceFinish(status)
                     )
                 }
+                status == BuildStatus.TERMINATE -> {
+                    Assert.assertEquals(
+                        BuildStatus.TERMINATE,
+                        BuildStatusSwitcher.pipelineStatusMaker.forceFinish(status)
+                    )
+                }
                 status.isFailure() -> {
-                    Assert.assertEquals(BuildStatus.FAILED, BuildStatusSwitcher.pipelineStatusMaker.forceFinish(status))
+                    Assert.assertEquals(
+                        BuildStatus.FAILED,
+                        BuildStatusSwitcher.pipelineStatusMaker.forceFinish(status)
+                    )
                 }
                 status.isFinish() -> {
                     Assert.assertTrue(
@@ -456,10 +471,10 @@ class BuildStatusSwitcherTest {
     fun readyToSkipWhen() {
 
         BuildStatus.values().forEach { currentBuildStatus ->
-            if (currentBuildStatus.isFailure()) {
-                Assert.assertEquals(BuildStatus.UNEXEC, BuildStatusSwitcher.readyToSkipWhen(true))
+            if (currentBuildStatus.isFailure() || currentBuildStatus.isCancel()) {
+                Assert.assertEquals(BuildStatus.UNEXEC, BuildStatusSwitcher.readyToSkipWhen(currentBuildStatus))
             } else {
-                Assert.assertEquals(BuildStatus.SKIP, BuildStatusSwitcher.readyToSkipWhen(false))
+                Assert.assertEquals(BuildStatus.SKIP, BuildStatusSwitcher.readyToSkipWhen(currentBuildStatus))
             }
         }
     }

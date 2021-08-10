@@ -9,7 +9,7 @@
     "vee-validate": "^2.0.3",
     "vue-file-upload": "^0.1.12",
     "vue-property-decorator": "^6.0.0",
-    "vue-template-compiler": "2.6.10",
+    "vue-template-compiler": "2.6.12",
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {

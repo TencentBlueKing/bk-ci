@@ -94,7 +94,8 @@ class GithubOAuthService @Autowired constructor(
             val data = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.info("Github get code(${response.code()}) and response($data)")
-                throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "获取Github access_token失败")
+                throw CustomException(Response.Status.fromStatusCode(response.code())
+                    ?: Response.Status.BAD_REQUEST, "获取Github access_token失败: $data")
             }
             return objectMapper.readValue(data)
         }

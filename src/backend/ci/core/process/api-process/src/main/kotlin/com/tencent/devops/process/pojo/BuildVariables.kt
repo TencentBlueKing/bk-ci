@@ -57,5 +57,7 @@ data class BuildVariables(
     @ApiModelProperty("参数类型集合", required = false)
     val variablesWithType: List<BuildParameters>,
     @ApiModelProperty("Job超时时间（毫秒）", required = true)
-    var timeoutMills: Long = TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong())
+    var timeoutMills: Long = TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong()),
+    @ApiModelProperty("容器类型", required = false)
+    val containerType: String? = null
 )

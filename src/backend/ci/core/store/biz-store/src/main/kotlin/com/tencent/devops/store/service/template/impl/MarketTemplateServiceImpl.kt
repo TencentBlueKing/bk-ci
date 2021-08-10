@@ -63,6 +63,7 @@ import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
+import com.tencent.devops.store.dao.template.TemplateLabelRelDao
 import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.DeptInfo
@@ -84,6 +85,7 @@ import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
+import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreDeptService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
@@ -116,6 +118,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     @Autowired
     lateinit var templateCategoryRelDao: TemplateCategoryRelDao
     @Autowired
+    lateinit var templateLabelRelDao: TemplateLabelRelDao
+    @Autowired
     lateinit var marketAtomDao: MarketAtomDao
     @Autowired
     lateinit var atomDao: AtomDao
@@ -142,6 +146,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     lateinit var classifyService: ClassifyService
     @Autowired
     lateinit var storeDeptService: StoreDeptService
+    @Autowired
+    lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var client: Client
 
@@ -465,26 +471,20 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     override fun getTemplateDetailByCode(userId: String, templateCode: String): Result<TemplateDetail?> {
         logger.info("getTemplateDetailByCode userId is :$userId, templateCode is :$templateCode")
         val templateRecord = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
-        logger.info("the templateRecord is :$templateRecord")
-        if (null == templateRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageCodeUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateCode)
             )
-        }
         return getTemplateDetail(templateRecord, userId)
     }
 
     override fun getTemplateDetailById(userId: String, templateId: String): Result<TemplateDetail?> {
         logger.info("getTemplateDetailById userId is :$userId, templateId is :$templateId")
         val templateRecord = marketTemplateDao.getTemplate(dslContext, templateId)
-        logger.info("the templateRecord is :$templateRecord")
-        if (null == templateRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageCodeUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateId)
             )
-        }
         return getTemplateDetail(templateRecord, userId)
     }
 
@@ -577,9 +577,9 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             val context = DSL.using(t)
 
             client.get(ServiceTemplateResource::class).updateStoreFlag(userId, templateCode, false)
-
-            storeMemberDao.deleteAll(context, templateCode, type)
-            storeProjectRelDao.deleteAllRel(context, templateCode, type)
+            storeCommonService.deleteStoreInfo(context, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())
+            templateCategoryRelDao.deleteByTemplateCode(context, templateCode)
+            templateLabelRelDao.deleteByTemplateCode(context, templateCode)
             marketTemplateDao.delete(context, templateCode)
         }
 

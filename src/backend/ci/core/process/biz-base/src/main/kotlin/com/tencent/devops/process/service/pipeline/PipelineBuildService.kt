@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -142,7 +143,11 @@ class PipelineBuildService(
 
             val defaultParam = mutableListOf<BuildParameters>()
             triggerContainer.params.forEach {
-                defaultParam.add(BuildParameters(key = it.id, value = it.defaultValue, valueType = it.type))
+                defaultParam.add(BuildParameters(
+                        key = it.id,
+                        value = it.defaultValue,
+                        valueType = it.type,
+                        readOnly = it.readOnly))
             }
             val startParamsWithType = buildParamCompatibilityTransformer.transform(inputBuildParam, defaultParam)
 
@@ -206,7 +211,7 @@ class PipelineBuildService(
             readyToBuildPipelineInfo.version = signPipelineVersion ?: readyToBuildPipelineInfo.version
 
             val startParamsList = startParamsWithType.toMutableList()
-            val startParams = startParamsList.map { it.key to it.value }.toMap().toMutableMap()
+            val startParams = startParamsList.associate { it.key to it.value }.toMutableMap()
             // 只有新构建才需要填充Post插件与质量红线插件
             if (!startParams.containsKey(PIPELINE_RETRY_COUNT)) {
                 fillElementWhenNew(
@@ -336,7 +341,13 @@ class PipelineBuildService(
                         // 优化循环
                         val key = SkipElementUtils.getSkipElementVariableName(element.id)
                         if (startValues[key] == "true") {
-                            startParamsList.add(BuildParameters(key = key, value = "true"))
+                            startParamsList.add(
+                                element = BuildParameters(
+                                    key = key,
+                                    value = "true",
+                                    valueType = BuildFormPropertyType.TEMPORARY
+                                )
+                            )
                             startParams[key] = "true"
                             logger.info("[$pipelineId]|${element.id}|${element.name} will be skipped.")
                         }
@@ -392,6 +403,10 @@ class PipelineBuildService(
                         startValues = startValues,
                         finallyStage = stage.finally
                     )
+                }
+                if (finalElementList.size > originalElementList.size) {
+                    // 最终生成的元素集合比原元素集合数量多，则说明包含post任务
+                    container.containPostTaskFlag = true
                 }
                 container.elements = finalElementList
             }

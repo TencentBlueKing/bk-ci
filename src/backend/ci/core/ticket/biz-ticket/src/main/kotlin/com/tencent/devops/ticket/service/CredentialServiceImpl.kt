@@ -418,7 +418,7 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
-    override fun buildGet(buildId: String, credentialId: String, publicKey: String): CredentialInfo {
+    override fun buildGet(buildId: String, credentialId: String, publicKey: String): CredentialInfo? {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
@@ -451,8 +451,8 @@ class CredentialServiceImpl @Autowired constructor(
         return ret
     }
 
-    override fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo {
-        val credentialRecord = credentialDao.get(dslContext, projectId, credentialId)
+    override fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo? {
+        val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId) ?: return null
 
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
@@ -568,7 +568,7 @@ class CredentialServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(CredentialServiceImpl::class.java)
         private const val CREDENTIAL_ID_MAX_SIZE = 40
-        private const val CREDENTIAL_NAME_MAX_SIZE = 30
+        private const val CREDENTIAL_NAME_MAX_SIZE = 64
         private val CREDENTIAL_ID_REGEX = Regex("^[0-9a-zA-Z_]+$")
         private val CREDENTIAL_NAME_REGEX = Regex("^[a-zA-Z0-9_\u4e00-\u9fa5-.]+$")
     }

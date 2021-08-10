@@ -28,6 +28,7 @@
 package com.tencent.devops.common.api.expression
 
 import java.lang.Exception
+import java.lang.IllegalArgumentException
 import java.util.ArrayDeque
 
 @Suppress("ALL")
@@ -118,6 +119,6 @@ class GrammarAnalysis(private val items: List<Word>) {
     }
 
     private fun error(message: String) {
-        throw RuntimeException(message)
+        throw IllegalArgumentException(message)
     }
 }

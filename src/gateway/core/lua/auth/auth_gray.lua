@@ -23,8 +23,7 @@ else
 end
 
 local tag = tagUtil:get_tag(ns_config)
-local isGray = grayUtil:get_gray()
-if isGray or tag == "gray" then
+if tag == "gray" then
     ngx.var.static_dir = config.static_dir_gray
     ngx.var.static_dir_codecc = config.static_dir_codecc_gray
     ngx.header["X-DEVOPS-GRAY"] = "true"

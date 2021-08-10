@@ -244,6 +244,7 @@ class MarketAtomDao : AtomBaseDao() {
                 tas.STORE_CODE,
                 tas.STORE_TYPE,
                 tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
+                tas.RECENT_EXECUTE_NUM.`as`(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name),
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))

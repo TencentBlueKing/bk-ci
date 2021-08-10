@@ -68,7 +68,8 @@ abstract class ITask {
                         containerId = buildVariables.containerId,
                         containerHashId = buildVariables.containerHashId,
                         variablesWithType = buildVariables.variablesWithType,
-                        timeoutMills = buildVariables.timeoutMills
+                        timeoutMills = buildVariables.timeoutMills,
+                        containerType = buildVariables.containerType
                     ),
                     workspace
                 )

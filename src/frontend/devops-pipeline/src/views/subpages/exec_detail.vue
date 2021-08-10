@@ -29,7 +29,7 @@
                     </div>
                     <div class="info-item">
                         <span class="item-label">{{ $t('details.executionTime') }}：</span>
-                        <span>{{ execDetail.endTime ? convertMStoStringByRule(execDetail.endTime - execDetail.startTime) : '--' }}</span>
+                        <span>{{ execDetail.executeTime ? convertMStoStringByRule(execDetail.executeTime) : '--' }}</span>
                     </div>
                 </div>
                 <bk-tab-panel
@@ -315,7 +315,7 @@
 
         mounted () {
             this.requestPipelineExecDetail(this.routerParams)
-            this.$store.dispatch('soda/requestInterceptAtom', {
+            this.$store.dispatch('common/requestInterceptAtom', {
                 projectId: this.routerParams.projectId,
                 pipelineId: this.routerParams.pipelineId
             })
@@ -339,7 +339,7 @@
                 'getInitLog',
                 'getAfterLog'
             ]),
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestInterceptAtom'
             ]),
             convertMStoStringByRule,
@@ -365,8 +365,11 @@
 
         .pipeline-detail-tab-card {
             height: 100%;
-            .bk-tab-section {
-                height: calc(100% - 52px);
+            display: flex;
+            flex-direction: column;
+            .bk-tab-content {
+                height: calc(100% - 25px);
+                overflow: auto;
             }
         }
         .exec-pipeline {

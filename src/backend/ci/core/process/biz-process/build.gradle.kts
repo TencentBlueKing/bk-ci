@@ -32,7 +32,6 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-archive"))
-    api(project(":core:common:common-log"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-websocket"))
@@ -48,6 +47,7 @@ dependencies {
     api(project(":core:plugin:codecc-plugin:common-codecc"))
     api(project(":core:notify:api-notify"))
     api(project(":core:process:biz-base"))
+    api(project(":core:log:api-log"))
 
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")
@@ -56,4 +56,5 @@ dependencies {
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
     testImplementation(project(":core:common:common-test"))
+    api(project(":core:common:common-webhook:biz-common-webhook"))
 }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.plugin
 
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
@@ -54,7 +55,8 @@ interface ElementBizPlugin<T : Element> {
         pipelineName: String,
         userId: String,
         channelCode: ChannelCode = ChannelCode.BS,
-        create: Boolean
+        create: Boolean,
+        container: Container
     )
 
     /**

@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.element.BuildPushDockerImageElement
-import com.tencent.devops.common.log.Ansi
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status

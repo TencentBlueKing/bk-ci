@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
@@ -62,7 +63,7 @@ class CallBackControlTest : TestBase() {
     @Before
     fun setUp2() {
 
-        val existsModel = genModel(stageSize = 4, jobSize = 2, elementSize = 2)
+        val existsModel = genModel(stageSize = 4, jobSize = 3, elementSize = 2)
 
         modelDetail = ModelDetail(
             id = buildId,
@@ -79,7 +80,8 @@ class CallBackControlTest : TestBase() {
             cancelUserId = null,
             curVersion = 2,
             latestBuildNum = 1,
-            latestVersion = 1
+            latestVersion = 1,
+            executeTime = 100
         )
 
         whenever(pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false))
@@ -138,6 +140,110 @@ class CallBackControlTest : TestBase() {
         }
         whenever(projectPipelineCallBackService.listProjectCallBack(projectId = projectId, events = events.toString()))
             .thenReturn(callbacks)
+    }
+
+    @Test
+    fun `stage running cover finish`() {
+        val expectStatus = BuildStatus.RUNNING.name
+        val existsModel = modelDetail!!.model
+        val currentTimeMillis = System.currentTimeMillis()
+        existsModel.stages.forEachIndexed { si, s ->
+            if (si == 0) {
+                s.containers[0].status = BuildStatus.SUCCEED.name
+                s.containers[0].elementElapsed = 10
+                return@forEachIndexed
+            }
+            if (si == 1) {
+                s.startEpoch = currentTimeMillis // 有值不会被覆盖
+            }
+            s.containers.forEachIndexed { ci, container ->
+                if (si == existsModel.stages.size - 1 && ci == 0) {
+                    container.status = expectStatus
+                    container.systemElapsed = 10
+                    container.elementElapsed = 1000
+                    container.startEpoch = currentTimeMillis - 100000
+                } else {
+                    container.status = BuildStatus.SUCCEED.name
+                    container.systemElapsed = 10
+                    container.elementElapsed = 1000
+                    container.startEpoch = currentTimeMillis - 100000 - (ci * 10000)
+                }
+                container.elements.forEach {
+                    it.status = container.status
+                    it.startEpoch = container.startEpoch
+                    it.elapsed = 1
+                }
+            }
+        }
+        val parseModel = callBackControl.parseModel(existsModel)
+        parseModel.forEachIndexed { index, stage ->
+            if (index == 0) {
+                return@forEachIndexed
+            }
+
+            println("${stage.stageName},status=${stage.status}, start=${stage.startTime}, end=${stage.endTime}")
+            if (index == 1) {
+                Assert.assertEquals(currentTimeMillis, stage.startTime)
+            }
+
+            if (index == parseModel.size - 1) {
+                Assert.assertEquals(expectStatus, stage.status)
+            } else {
+                Assert.assertEquals(BuildStatus.SUCCEED.name, stage.status)
+            }
+        }
+    }
+
+    @Test
+    fun `stage failure cover other`() {
+        val expectStatus = BuildStatus.FAILED.name
+        val existsModel = modelDetail!!.model
+        val currentTimeMillis = System.currentTimeMillis()
+        existsModel.stages.forEachIndexed { si, s ->
+            if (si == 0) {
+                s.containers[0].status = BuildStatus.SUCCEED.name
+                s.containers[0].elementElapsed = 10
+                return@forEachIndexed
+            }
+            if (si == 1) {
+                s.startEpoch = currentTimeMillis // 有值不会被覆盖
+            }
+            s.containers.forEachIndexed { ci, container ->
+                if (si == existsModel.stages.size - 1 && ci == 0) {
+                    container.status = expectStatus
+                    container.systemElapsed = 10
+                    container.elementElapsed = 1000
+                    container.startEpoch = currentTimeMillis - 100000
+                } else {
+                    container.status = BuildStatus.SUCCEED.name
+                    container.systemElapsed = 10
+                    container.elementElapsed = 1000
+                    container.startEpoch = currentTimeMillis - 100000 - (ci * 10000)
+                }
+                container.elements.forEach {
+                    it.status = container.status
+                    it.startEpoch = container.startEpoch
+                    it.elapsed = 1
+                }
+            }
+        }
+        val parseModel = callBackControl.parseModel(existsModel)
+        parseModel.forEachIndexed { index, stage ->
+            if (index == 0) {
+                return@forEachIndexed
+            }
+
+            println("${stage.stageName},status=${stage.status}, start=${stage.startTime}, end=${stage.endTime}")
+            if (index == 1) {
+                Assert.assertEquals(currentTimeMillis, stage.startTime)
+            }
+
+            if (index == parseModel.size - 1) {
+                Assert.assertEquals(expectStatus, stage.status)
+            } else {
+                Assert.assertEquals(BuildStatus.SUCCEED.name, stage.status)
+            }
+        }
     }
 
     private fun genCallBackList(event: CallBackEvent): List<ProjectPipelineCallBack> {

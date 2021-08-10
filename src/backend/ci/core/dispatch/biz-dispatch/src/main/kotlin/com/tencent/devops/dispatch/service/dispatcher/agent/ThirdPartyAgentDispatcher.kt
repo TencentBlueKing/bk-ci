@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -373,7 +374,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
              */
             val activeAgents = agentsResult.data!!.filter {
                 it.status == AgentStatus.IMPORT_OK &&
-                    event.os == it.os
+                    (event.os == it.os || event.os == VMBaseOS.ALL.name)
             }.toHashSet()
             val agentMaps = activeAgents.map { it.agentId to it }.toMap()
 

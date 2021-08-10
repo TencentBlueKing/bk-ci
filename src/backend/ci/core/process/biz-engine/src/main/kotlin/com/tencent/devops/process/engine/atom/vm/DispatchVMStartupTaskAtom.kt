@@ -54,9 +54,9 @@ import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.BuildVariableService
@@ -70,13 +70,13 @@ import org.springframework.stereotype.Component
  *
  * @version 1.0
  */
-@Suppress("ALL")
+@Suppress("UNUSED", "LongParameterList")
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -97,6 +97,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         var atomResponse: AtomResponse
         try {
             atomResponse = execute(task, param)
+            buildLogPrinter.stopLog(
+                buildId = task.buildId,
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
         } catch (e: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
@@ -153,7 +159,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             taskId = taskId
         ))
 
-        val container = pipelineBuildDetailService.getBuildModel(buildId)?.getContainer(vmSeqId)
+        val container = containerBuildDetailService.getBuildModel(buildId)?.getContainer(vmSeqId)
         Preconditions.checkNotNull(container, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
@@ -166,7 +172,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         // 这个任务是在构建子流程启动的，所以必须使用根流程进程ID
         // 注意区分buildId和vmSeqId，BuildId是一次构建整体的ID，
         // vmSeqId是该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
-        pipelineBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
+        containerBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
 
         dispatch(task, pipelineInfo!!, param, vmNames, container!!)
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")

@@ -56,7 +56,7 @@
 
         methods: {
             initCodeMirror () {
-                const ele = document.querySelector('.store-code')
+                const ele = this.$el
                 if (this.codeEditor) ele.innerHTML = ''
                 this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
                 this.codeEditor.setValue(this.code || '')

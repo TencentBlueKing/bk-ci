@@ -41,6 +41,7 @@ import org.junit.Test
 /**
  * @version 1.0
  */
+@Suppress("ALL")
 class ControlUtilsTest : TestBase() {
 
     @Test

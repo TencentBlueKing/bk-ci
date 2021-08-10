@@ -74,6 +74,7 @@ open class DefaultModelCheckPlugin constructor(
     override fun checkModelIntegrity(model: Model, projectId: String?) {
         // 检查流水线名称
         PipelineUtils.checkPipelineName(model.name)
+        PipelineUtils.checkPipelineDescLength(model.desc)
         // 检查流水线model是否过大
         val modelSize = JsonUtil.toJson(model).length
         if (modelSize > pipelineCommonSettingConfig.maxModelSize.toLong()) {
@@ -310,7 +311,6 @@ open class DefaultModelCheckPlugin constructor(
         sourceModel: Model?,
         param: BeforeDeleteParam
     ) {
-
         existModel.stages.forEach { s ->
             s.containers.forEach { c ->
                 c.elements.forEach { e ->

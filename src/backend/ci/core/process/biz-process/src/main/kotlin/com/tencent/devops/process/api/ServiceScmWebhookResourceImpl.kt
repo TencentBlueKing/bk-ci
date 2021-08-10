@@ -30,11 +30,11 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.pojo.code.WebhookCommit
-import com.tencent.devops.process.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService

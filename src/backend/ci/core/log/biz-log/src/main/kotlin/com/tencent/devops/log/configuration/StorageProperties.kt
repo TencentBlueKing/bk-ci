@@ -32,6 +32,8 @@ import org.springframework.stereotype.Component
 
 @Component
 class StorageProperties {
+    @Value("\${log.storage.enable:#{null}}")
+    val enable: String? = null
     @Value("\${log.storage.type}")
     val type: String = "lucene"
     @Value("\${log.storage.closeInDay:#{null}}")

@@ -140,25 +140,41 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
     fun listPipeline(
         dslContext: DSLContext,
         instanceType: String,
-        templateIds: Collection<String>
+        templateIds: Collection<String>,
+        deleteFlag: Boolean? = null
     ): Result<TTemplatePipelineRecord> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            val conditions = getQueryTemplatePipelineCondition(templateIds, instanceType, deleteFlag)
             return dslContext.selectFrom(this)
-                .where(TEMPLATE_ID.`in`(templateIds))
-                .and(INSTANCE_TYPE.eq(instanceType))
+                .where(conditions)
                 .fetch()
         }
+    }
+
+    private fun TTemplatePipeline.getQueryTemplatePipelineCondition(
+        templateIds: Collection<String>,
+        instanceType: String,
+        deleteFlag: Boolean?
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(TEMPLATE_ID.`in`(templateIds))
+        conditions.add(INSTANCE_TYPE.eq(instanceType))
+        if (deleteFlag != null) {
+            conditions.add(DELETED.eq(deleteFlag))
+        }
+        return conditions
     }
 
     fun countByTemplates(
         dslContext: DSLContext,
         instanceType: String,
-        templateIds: Collection<String>
+        templateIds: Collection<String>,
+        deleteFlag: Boolean? = null
     ): Int {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            val conditions = getQueryTemplatePipelineCondition(templateIds, instanceType, deleteFlag)
             return dslContext.select(DSL.count(PIPELINE_ID)).from(this)
-                .where(TEMPLATE_ID.`in`(templateIds))
-                .and(INSTANCE_TYPE.eq(instanceType))
+                .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -232,7 +248,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
                 conditions.add(VERSION_NAME.eq(versionName))
             }
             conditions.add(DELETED.eq(false)) // #4012 模板实例列表需要隐藏 回收站的流水线
-            return dslContext.selectFrom(this)
+            return dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
@@ -260,6 +276,22 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             dslContext.deleteFrom(this)
                 .where(TEMPLATE_ID.eq(templateId))
+                .execute()
+        }
+    }
+
+    fun deleteByVersion(dslContext: DSLContext, templateId: String, version: Long) {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            dslContext.deleteFrom(this)
+                .where(TEMPLATE_ID.eq(templateId).and(VERSION.eq(version)))
+                .execute()
+        }
+    }
+
+    fun deleteByVersionName(dslContext: DSLContext, templateId: String, versionName: String) {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            dslContext.deleteFrom(this)
+                .where(TEMPLATE_ID.eq(templateId).and(VERSION_NAME.eq(versionName)))
                 .execute()
         }
     }

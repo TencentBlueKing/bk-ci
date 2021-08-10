@@ -29,6 +29,7 @@ package com.tencent.devops.plugin.codecc.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -54,6 +55,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
 import java.util.Date
+import javax.ws.rs.NotFoundException
 
 @Service@Suppress("ALL")
 class CodeccService @Autowired constructor(
@@ -137,7 +139,7 @@ class CodeccService @Autowired constructor(
                 infoList.map { it.buildId }.toSet(),
                 ChannelCode.BS
             ).data
-                ?: throw RuntimeException("no build status buildId($buildId)")
+                ?: throw NotFoundException("no build status buildId($buildId)")
             resultMap.putAll(buildStatusList.map {
                 it.id to CodeccBuildInfo(
                     buildNoMap[it.id] ?: "",
@@ -210,7 +212,10 @@ class CodeccService @Autowired constructor(
                 val body = response.body()!!.string()
                 logger.info("codecc blueShield response: $body")
                 if (!response.isSuccessful) {
-                    throw RuntimeException("get codecc blueShield response fail")
+                    throw ErrorCodeException(
+                        errorCode = response.code().toString(),
+                        defaultMessage = "get codecc blueShield response fail $body"
+                    )
                 }
                 return objectMapper.readValue(body, BlueShieldResponse::class.java)
             }

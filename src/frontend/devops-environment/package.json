@@ -48,7 +48,7 @@
     "url-loader": "^1.0.1",
     "vue-loader": "^15.0.9",
     "vue-property-decorator": "^6.0.0",
-    "vue-template-compiler": "2.6.10",
+    "vue-template-compiler": "2.6.12",
     "webpack": "^4.8.1",
     "webpack-bundle-analyzer": "^2.11.1",
     "webpack-cli": "^3.1.1",

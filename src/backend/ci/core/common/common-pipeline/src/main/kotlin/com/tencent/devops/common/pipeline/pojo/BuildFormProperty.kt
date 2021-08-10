@@ -78,5 +78,7 @@ data class BuildFormProperty(
      * 假设用户输入aaa，那么前端请求就是aaa/bbb?search=aaa
      */
     @ApiModelProperty("替换搜索url中的搜素关键字", required = false)
-    var replaceKey: String? = null
+    var replaceKey: String? = null,
+    @ApiModelProperty("是否只读", required = false)
+    val readOnly: Boolean? = false
 )

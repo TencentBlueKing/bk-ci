@@ -2,7 +2,7 @@
     <section>
         <draggable class="container-atom-list" :class="{ 'trigger-container': isTriggerContainer(container), 'readonly': !editable }" :data-baseos="container.baseOS || container.classType" v-model="atomList" v-bind="dragOptions" :move="checkMove">
             <li v-for="(atom, index) in atomList" :key="atom.id" :class="{ 'atom-item': true,
-                                                                           [atom.status]: atom.status,
+                                                                           [atomCls(atom)]: true,
                                                                            'quality-item': (atom['@type'] === 'qualityGateOutTask') || (atom['@type'] === 'qualityGateInTask'),
                                                                            'last-quality-item': (atom['@type'] === 'qualityGateOutTask' && index === atomList.length - 1),
                                                                            'arrival-atom': atom.status,
@@ -10,7 +10,7 @@
             }"
                 @click.stop="showPropertyPanel(index)"
             >
-                <section class="atom-item atom-section normal-atom" :class="{ [atom.status]: atom.status,
+                <section class="atom-item atom-section normal-atom" :class="{ [atomCls(atom)]: true,
                                                                               'is-error': atom.isError,
                                                                               'quality-atom': atom['@type'] === 'qualityGateOutTask',
                                                                               'is-intercept': atom.isQualityCheck,
@@ -43,7 +43,7 @@
                         </span>
                     </template>
                     <a href="javascript: void(0);" class="atom-single-retry" v-else-if="atom.status !== 'SKIP' && atom.canRetry" @click.stop="singleRetry(atom.id)">{{ $t('retry') }}</a>
-                    <bk-popover placement="top" v-else-if="atom.status !== 'SKIP'" :disabled="!atom.elapsed">
+                    <bk-popover placement="top" v-else-if="atom.status !== 'SKIP' && !atom.canSkip" :disabled="!atom.elapsed">
                         <span :class="atom.status === 'SUCCEED' ? 'atom-success-timer' : (atom.status === 'REVIEW_ABORT' ? 'atom-warning-timer' : 'atom-fail-timer')">
                             <span v-if="atom.elapsed && atom.elapsed >= 36e5">&gt;</span>{{ atom.elapsed ? atom.elapsed > 36e5 ? '1h' : localTime(atom.elapsed) : '' }}
                         </span>
@@ -51,6 +51,7 @@
                             <p>{{ atom.elapsed ? localTime(atom.elapsed) : '' }}</p>
                         </template>
                     </bk-popover>
+                    <a href="javascript: void(0);" class="atom-single-skip" v-if="atom.status !== 'SKIP' && atom.canSkip" @click.stop="singleRetry(atom.id, true)">{{ $t('details.statusMap.SKIP') }}</a>
                     <span class="devops-icon copy" v-if="editable && stageIndex !== 0 && !atom.isError" :title="$t('editPage.copyAtom')" @click.stop="copyAtom(index)">
                         <Logo name="copy" size="18"></Logo>
                     </span>
@@ -127,7 +128,7 @@
             }
         },
         computed: {
-            ...mapState('soda', [
+            ...mapState('common', [
                 'ruleList',
                 'templateRuleList'
             ]),
@@ -157,8 +158,9 @@
             atomList: {
                 get () {
                     const atoms = this.getElements(this.container)
+
                     atoms.forEach(atom => {
-                        if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
+                        if (Array.isArray(this.curMatchRules) && this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
                                 || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
@@ -194,7 +196,7 @@
             }
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'reviewExcuteAtom',
                 'requestAuditUserList'
             ]),
@@ -392,15 +394,15 @@
                     }
                 }
             },
-            singleRetry (taskId) {
+            singleRetry (taskId, skip) {
                 if (typeof taskId === 'string') {
-                    this.retryPipeline(taskId)
+                    this.retryPipeline(taskId, skip)
                 }
             },
             /**
              * 重试流水线
              */
-            async retryPipeline (taskId) {
+            async retryPipeline (taskId, skip = false) {
                 let message, theme
                 try {
                     // 请求执行构建
@@ -408,13 +410,14 @@
                         projectId: this.routerParams.projectId,
                         pipelineId: this.routerParams.pipelineId,
                         buildId: this.routerParams.buildNo,
-                        taskId: taskId
+                        taskId: taskId,
+                        skip
                     })
                     if (res.id) {
-                        message = this.$t('subpage.retrySuc')
+                        message = this.$t(`subpage.${skip ? 'skipSuc' : 'retrySuc'}`)
                         theme = 'success'
                     } else {
-                        message = this.$t('subpage.retryFail')
+                        message = this.$t(`subpage.${skip ? 'skipFail' : 'retryFail'}`)
                         theme = 'error'
                     }
                 } catch (err) {
@@ -434,8 +437,16 @@
                     })
                 }
             },
+
             useSkipStyle (atom) {
                 return (atom && (atom.status === 'SKIP' || (atom.additionalOptions && atom.additionalOptions.enable === false))) || this.containerDisabled
+            },
+
+            atomCls (atom) {
+                if (atom && atom.additionalOptions && atom.additionalOptions.enable === false) {
+                    return 'DISABLED'
+                }
+                return atom && atom.status ? atom.status : ''
             }
         }
     }
@@ -609,7 +620,8 @@
                 margin: 0 8px 0 2px;
                 color: $warningColor;
             }
-            .atom-single-retry {
+            .atom-single-retry,
+            .atom-single-skip {
                 margin: 0 8px 0 2px;
                 color: $primaryColor;
             }
@@ -795,58 +807,36 @@
                         color: #c4cdd6;
                     }
                 }
-                &.CANCELED, &.REVIEWING {
+                &.CANCELED,
+                &.SKIP,
+                &.REVIEWING {
                     border-color: $warningColor;
-                    // &:before {
-                    //     background: $warningColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $warningColor;
-                    //     background: white;
-                    // }
+                    
                     .atom-icon {
                         color: $warningColor;
                     }
                 }
-                &.FAILED, &.QUALITY_CHECK_FAIL, &.HEARTBEAT_TIMEOUT, &.QUEUE_TIMEOUT, .EXEC_TIMEOUT {
+                &.FAILED,
+                &.QUALITY_CHECK_FAIL,
+                &.HEARTBEAT_TIMEOUT,
+                &.QUEUE_TIMEOUT,
+                &.EXEC_TIMEOUT {
                     border-color: $dangerColor;
-                    // &:before {
-                    //     background: $dangerColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $dangerColor;
-                    //     background: white;
-                    // }
                     .atom-icon {
                         color: $dangerColor;
                     }
                 }
-                &.SUCCEED, &.REVIEW_PROCESSED {
+                &.SUCCEED,
+                &.REVIEW_PROCESSED {
                     border-color: $successColor;
-                    // &:before {
-                    //     background: $successColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $successColor;
-                    //     background: white;
-                    // }
+                    
                     .atom-icon {
                         color: $successColor;
                     }
                 }
                 &.PAUSE {
                     border-color: $pauseColor;
-                    // &:before {
-                    //     background: $successColor;
-                    // }
-
-                    // &:after {
-                    //     border: 2px solid $successColor;
-                    //     background: white;
-                    // }
+                    
                     .atom-icon {
                         color: $pauseColor;
                     }

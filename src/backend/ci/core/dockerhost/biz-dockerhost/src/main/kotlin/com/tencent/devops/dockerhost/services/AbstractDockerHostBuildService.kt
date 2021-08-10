@@ -152,17 +152,15 @@ abstract class AbstractDockerHostBuildService constructor(
                     errorCodeEnum = ErrorCodeEnum.NO_AUTH_PULL_IMAGE_ERROR,
                     message = errorMessage
                 )
-                // throw NoSuchImageException(errorMessage)
             } catch (t: NotFoundException) {
                 val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；" +
                         "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
-                throw ContainerException(
+    /*            throw ContainerException(
                     errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
                     message = errorMessage
-                )
-                // throw NoSuchImageException(errorMessage)
+                )*/
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
                 log(

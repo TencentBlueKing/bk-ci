@@ -31,21 +31,27 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 
 class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTriggerElement> {
 
+    @SuppressWarnings("ComplexMethod")
     override fun getWebhookElementParams(
         element: CodeGitlabWebHookTriggerElement,
         variables: Map<String, String>
-    ): ScmWebhookMatcher.WebHookParams? {
-        val params = ScmWebhookMatcher.WebHookParams(
+    ): WebHookParams? {
+        val params = WebHookParams(
             repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
                 repositoryConfig = RepositoryConfigUtils.buildConfig(element),
                 variables = variables
             )
         )
+        params.includeUsers = if (element.includeUsers == null || element.includeUsers!!.isEmpty()) {
+            ""
+        } else {
+            EnvUtils.parseEnv(element.includeUsers!!.joinToString(","), variables)
+        }
         params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
             ""
         } else {
@@ -58,14 +64,16 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
         params.codeType = CodeType.GITLAB
         params.eventType = element.eventType
         params.block = element.block ?: false
-        params.eventType = element.eventType
         params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
+        params.pathFilterType = element.pathFilterType
         params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
         params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
         params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
         params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
         params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
         params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
+        params.includeCommitMsg = EnvUtils.parseEnv(element.includeCommitMsg ?: "", variables)
+        params.excludeCommitMsg = EnvUtils.parseEnv(element.excludeCommitMsg ?: "", variables)
         return params
     }
 }

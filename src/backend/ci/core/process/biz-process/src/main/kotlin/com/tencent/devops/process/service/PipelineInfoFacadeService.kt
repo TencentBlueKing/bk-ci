@@ -118,7 +118,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         return exportModelToFile(modelAndSetting, settingInfo.pipelineName)
     }
 
-    fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String? {
+    fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String {
         val permissionCheck = pipelinePermissionService.checkPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -438,13 +438,20 @@ class PipelineInfoFacadeService @Autowired constructor(
                 permission = AuthPermission.EDIT,
                 message = "用户无流水线编辑权限"
             )
-            pipelinePermissionService.validPipelinePermission(
+//            pipelinePermissionService.validPipelinePermission(
+//                userId = userId,
+//                projectId = projectId,
+//                pipelineId = "*",
+//                permission = AuthPermission.CREATE,
+//                message = "用户($userId)无权限在工程($projectId)下创建流水线"
+//            )
+            if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
-                pipelineId = "*",
-                permission = AuthPermission.CREATE,
-                message = "用户($userId)无权限在工程($projectId)下创建流水线"
-            )
+                permission = AuthPermission.CREATE
+            )) {
+                throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下创建流水线")
+            }
         }
 
         if (pipeline.channelCode != channelCode) {
@@ -631,6 +638,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             checkPermission = checkPermission,
             checkTemplate = checkTemplate
         )
+        setting.pipelineId = pipelineResult.pipelineId // fix 用户端可能不传入pipelineId的问题，或者传错的问题
         pipelineSettingFacadeService.saveSetting(userId, setting, false, pipelineResult.version)
         return pipelineResult
     }
@@ -681,7 +689,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val buildNo = triggerContainer.buildNo
             if (buildNo != null) {
-                buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
+                buildNo.buildNo = pipelineRepositoryService.getBuildNo(pipelineId = pipelineId)
                     ?: buildNo.buildNo
             }
             // 兼容性处理
@@ -698,7 +706,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
 
-            val defaultTagIds = listOf(stageTagService.getDefaultStageTag().data?.id)
+            val defaultTagIds by lazy { listOf(stageTagService.getDefaultStageTag().data?.id) } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagIds

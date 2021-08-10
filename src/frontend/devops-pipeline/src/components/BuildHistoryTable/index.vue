@@ -254,7 +254,7 @@
                         startTime: item.startTime ? convertMiniTime(item.startTime) : '--',
                         endTime: item.endTime ? convertMiniTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertMiniTime(item.queueTime) : '--',
-                        totalTime: item.totalTime ? convertMStoStringByRule(item.totalTime) : '--',
+                        executeTime: item.executeTime ? convertMStoStringByRule(item.executeTime) : '--',
                         material: !active && Array.isArray(item.material) && item.material.length > 1 ? item.material.slice(0, 1) : item.material,
                         sumSize: convertFileSize(sumSize, 'B'),
                         artifactories: needShowAll ? artifactories.slice(0, 11) : artifactories,
@@ -333,28 +333,31 @@
                 return ['QUEUE', 'RUNNING'].indexOf(row.status) < 0
             },
             async handleRemarkChange (row) {
+                if (this.isChangeRemark) return
+                const preRemark = row.remark
                 try {
                     const { $route: { params }, tempRemark } = this
                     if (tempRemark !== row.remark) {
                         this.isChangeRemark = true
-
+                        this.$set(row, 'remark', tempRemark)
+                        this.resetRemark()
                         await this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/${row.id}/updateRemark`, {
                             remark: tempRemark
                         })
-                        this.$emit('update-table')
                         this.$showTips({
                             theme: 'success',
                             message: this.$t('updateSuc')
                         })
-                        this.resetRemark()
                     } else {
                         this.resetRemark()
                     }
                 } catch (e) {
+                    console.log(e)
                     this.$showTips({
                         theme: 'error',
                         message: this.$t('updateFail')
                     })
+                    this.$set(row, 'remark', preRemark)
                 }
             },
             resetRemark () {
@@ -444,7 +447,7 @@
             async downloadFile ({ artifactoryType, path }, key = 'download') {
                 try {
                     const { projectId } = this.$route.params
-                    const res = await this.$store.dispatch('soda/requestDownloadUrl', {
+                    const res = await this.$store.dispatch('common/requestDownloadUrl', {
                         projectId,
                         artifactoryType,
                         path
@@ -468,7 +471,7 @@
                         files: [artifactory.name],
                         copyAll: false
                     }
-                    const res = await this.$store.dispatch('soda/requestCopyArtifactory', {
+                    const res = await this.$store.dispatch('common/requestCopyArtifactory', {
                         projectId,
                         pipelineId,
                         buildId: this.currentBuildId,

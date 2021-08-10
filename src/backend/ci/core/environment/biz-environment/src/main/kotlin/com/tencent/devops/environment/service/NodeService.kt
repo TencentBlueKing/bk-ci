@@ -148,7 +148,6 @@ class NodeService @Autowired constructor(
             // 如果是构建机类型，则取蓝盾Node状态，否则取gseAgent状态
             val nodeStatus =
                 if (it.nodeType == NodeType.THIRDPARTY.name ||
-                    it.nodeType == NodeType.TSTACK.name ||
                     it.nodeType == NodeType.DEVCLOUD.name) {
                     it.nodeStatus
                 } else {

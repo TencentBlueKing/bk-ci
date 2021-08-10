@@ -27,44 +27,37 @@
 
 package com.tencent.devops.process.engine.listener.run
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.BS_MANUAL_STOP_PAUSE_ATOM
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
-import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
-import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
-import com.tencent.devops.process.service.BuildVariableService
-import org.jooq.DSLContext
+import com.tencent.devops.process.service.PipelineTaskPauseService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-@Suppress("ALL")
+@Suppress("LongParameterList")
 @Component
 class PipelineTaskPauseListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     val redisOperation: RedisOperation,
-    val buildDetailService: PipelineBuildDetailService,
-    val dslContext: DSLContext,
-    val buildVariableService: BuildVariableService,
-    val pipelineBuildTaskDao: PipelineBuildTaskDao,
+    val taskBuildDetailService: TaskBuildDetailService,
+    val pipelineBuildTaskService: PipelineBuildTaskService,
     val pipelineRuntimeService: PipelineRuntimeService,
-    val objectMapper: ObjectMapper,
-    private val buildLogPrinter: BuildLogPrinter,
-    val pipelinePauseValueDao: PipelinePauseValueDao
+    val pipelineTaskPauseService: PipelineTaskPauseService,
+    private val buildLogPrinter: BuildLogPrinter
 ) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTaskPauseEvent) {
@@ -74,7 +67,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             redisLock.lock()
             if (event.actionType == ActionType.REFRESH) {
                 taskContinue(task = taskRecord!!, userId = event.userId)
-            } else if (event.actionType == ActionType.TERMINATE) {
+            } else if (event.actionType == ActionType.END) {
                 taskCancel(task = taskRecord!!, userId = event.userId)
             }
             // #3400 减少重复DETAIL事件转发， Cancel与Continue之后插件任务执行都会刷新DETAIL
@@ -88,42 +81,24 @@ class PipelineTaskPauseListener @Autowired constructor(
     private fun taskContinue(task: PipelineBuildTask, userId: String) {
         continuePauseTask(current = task, userId = userId)
 
-        val params = mutableListOf<BuildParameters>()
-        buildVariableService.batchSetVariable(
-            dslContext = dslContext,
-            projectId = task.projectId,
-            pipelineId = task.pipelineId,
-            buildId = task.buildId,
-            variables = params
-        )
-
-        val newElementRecord = pipelinePauseValueDao.get(dslContext, task.buildId, task.taskId)
+        var newElement: Element? = null
+        val newElementRecord = pipelineTaskPauseService.getPauseTask(buildId = task.buildId, taskId = task.taskId)
         if (newElementRecord != null) {
-            val newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)
+            newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)
             newElement.executeCount = task.executeCount ?: 1
             // 修改插件运行设置
-            pipelineBuildTaskDao.updateTaskParam(
-                dslContext, task.buildId, task.taskId, objectMapper.writeValueAsString(newElement)
-            )
+            pipelineBuildTaskService.updateTaskParam(task.buildId, task.taskId, newElement)
             logger.info("update task param success | ${task.buildId}| ${task.taskId} ")
-
-            // 修改详情model
-            buildDetailService.updateElementWhenPauseContinue(
-                buildId = task.buildId,
-                stageId = task.stageId,
-                containerId = task.containerId,
-                taskId = task.taskId,
-                element = newElement
-            )
-        } else {
-            buildDetailService.updateElementWhenPauseContinue(
-                buildId = task.buildId,
-                stageId = task.stageId,
-                containerId = task.containerId,
-                taskId = task.taskId,
-                element = null
-            )
         }
+
+        // 修改详情model
+        taskBuildDetailService.taskContinue(
+            buildId = task.buildId,
+            stageId = task.stageId,
+            containerId = task.containerId,
+            taskId = task.taskId,
+            element = newElement
+        )
 
         // 触发引擎container事件，继续后续流程
         pipelineEventDispatcher.dispatch(
@@ -154,14 +129,12 @@ class PipelineTaskPauseListener @Autowired constructor(
         pipelineRuntimeService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.CANCELED)
 
         // 刷新detail内model
-        buildDetailService.taskCancel(
+        taskBuildDetailService.taskCancel(
             buildId = task.buildId,
-            stageId = task.stageId,
             containerId = task.containerId,
-            taskId = task.taskId
+            taskId = task.taskId,
+            cancelUser = userId // fix me: 是否要直接更新取消人，暂时维护原有逻辑
         )
-
-        buildDetailService.updateBuildCancelUser(task.buildId, userId)
 
         buildLogPrinter.addYellowLine(
             buildId = task.buildId,

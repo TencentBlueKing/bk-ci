@@ -28,12 +28,15 @@
 package com.tencent.devops.worker.common.service
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
+import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.HttpRetryUtils
 import org.slf4j.LoggerFactory
@@ -66,12 +69,16 @@ object EngineService {
                 vmName = ret.vmName,
                 projectId = ret.projectId,
                 pipelineId = ret.pipelineId,
-                variables = ret.variables.plus(mapOf(CI_TOKEN_CONTEXT to ciToken)),
+                variables = ret.variables.plus(mapOf(
+                    CI_TOKEN_CONTEXT to ciToken,
+                    JOB_OS_CONTEXT to AgentEnv.getOS().name
+                )),
                 buildEnvs = ret.buildEnvs,
                 containerId = ret.containerId,
                 containerHashId = ret.containerHashId,
                 variablesWithType = ret.variablesWithType,
-                timeoutMills = ret.timeoutMills
+                timeoutMills = ret.timeoutMills,
+                containerType = ret.containerType
             )
         }
     }
@@ -117,7 +124,7 @@ object EngineService {
         }
     }
 
-    fun heartbeat() {
+    fun heartbeat(): HeartBeatInfo {
         var retryCount = 0
         val result = HttpRetryUtils.retryWhenHttpRetryException {
             if (retryCount > 0) {
@@ -129,6 +136,7 @@ object EngineService {
         if (result.isNotOk()) {
             throw RemoteServiceException("Failed to do heartbeat task")
         }
+        return result.data ?: throw RemoteServiceException("Failed to do heartbeat task")
     }
 
     fun timeout() {

@@ -57,7 +57,6 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreCommonService
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -209,28 +208,25 @@ class StoreCommonServiceImpl @Autowired constructor(
         return url
     }
 
-    override fun deleteStoreInfo(storeCode: String, storeType: Byte): Boolean {
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            operationLogDao.deleteOperationLog(context, storeCode, storeType)
-            sensitiveConfDao.deleteSensitiveConf(context, storeCode, storeType)
-            reasonRelDao.deleteReasonRel(context, storeCode, storeType)
-            storeApproveDao.deleteApproveInfo(context, storeCode, storeType)
-            storeCommentDao.deleteStoreComment(context, storeCode, storeType)
-            storeCommentPraiseDao.deleteStoreCommentPraise(context, storeCode, storeType)
-            storeCommentReplyDao.deleteStoreCommentReply(context, storeCode, storeType)
-            storeDeptRelDao.deleteByStoreCode(context, storeCode, storeType)
-            storeEnvVarDao.deleteEnvVar(context, storeCode, storeType)
-            storeMediaInfoDao.deleteByStoreCode(context, storeCode, storeType)
-            storeMemberDao.deleteAll(context, storeCode, storeType)
-            storePipelineBuildRelDao.deleteStorePipelineBuildRel(context, storeCode, storeType)
-            storePipelineRelDao.deleteStorePipelineRel(context, storeCode, storeType)
-            storeProjectRelDao.deleteAllRel(context, storeCode, storeType)
-            storeReleaseDao.deleteStoreReleaseInfo(context, storeCode, storeType)
-            storeStatisticDao.deleteStoreStatistic(context, storeCode, storeType)
-            storeStatisticTotalDao.deleteStoreStatisticTotal(context, storeCode, storeType)
-            storeStatisticDailyDao.deleteDailyStatisticData(context, storeCode, storeType)
-        }
+    override fun deleteStoreInfo(context: DSLContext, storeCode: String, storeType: Byte): Boolean {
+        operationLogDao.deleteOperationLog(context, storeCode, storeType)
+        sensitiveConfDao.deleteSensitiveConf(context, storeCode, storeType)
+        reasonRelDao.deleteReasonRel(context, storeCode, storeType)
+        storeApproveDao.deleteApproveInfo(context, storeCode, storeType)
+        storeCommentDao.deleteStoreComment(context, storeCode, storeType)
+        storeCommentPraiseDao.deleteStoreCommentPraise(context, storeCode, storeType)
+        storeCommentReplyDao.deleteStoreCommentReply(context, storeCode, storeType)
+        storeDeptRelDao.deleteByStoreCode(context, storeCode, storeType)
+        storeEnvVarDao.deleteEnvVar(context, storeCode, storeType)
+        storeMediaInfoDao.deleteByStoreCode(context, storeCode, storeType)
+        storeMemberDao.deleteAll(context, storeCode, storeType)
+        storePipelineBuildRelDao.deleteStorePipelineBuildRel(context, storeCode, storeType)
+        storePipelineRelDao.deleteStorePipelineRel(context, storeCode, storeType)
+        storeProjectRelDao.deleteAllRel(context, storeCode, storeType)
+        storeReleaseDao.deleteStoreReleaseInfo(context, storeCode, storeType)
+        storeStatisticDao.deleteStoreStatistic(context, storeCode, storeType)
+        storeStatisticTotalDao.deleteStoreStatisticTotal(context, storeCode, storeType)
+        storeStatisticDailyDao.deleteDailyStatisticData(context, storeCode, storeType)
         return true
     }
 }

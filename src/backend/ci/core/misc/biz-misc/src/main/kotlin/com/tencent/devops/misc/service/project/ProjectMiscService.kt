@@ -54,13 +54,15 @@ class ProjectMiscService @Autowired constructor(
     fun getProjectInfoList(
         projectIdList: List<String>? = null,
         minId: Long? = null,
-        maxId: Long? = null
+        maxId: Long? = null,
+        channelCodeList: List<String>? = null
     ): List<ProjectInfo>? {
         val projectInfoRecords = projectMiscDao.getProjectInfoList(
             dslContext = dslContext,
             projectIdList = projectIdList,
             minId = minId,
-            maxId = maxId
+            maxId = maxId,
+            channelCodeList = channelCodeList
         )
         return if (projectInfoRecords == null) {
             null

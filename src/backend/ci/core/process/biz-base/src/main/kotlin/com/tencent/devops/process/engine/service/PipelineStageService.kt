@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -56,7 +57,7 @@ class PipelineStageService @Autowired constructor(
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildStageDao: PipelineBuildStageDao,
-    private val pipelineBuildDetailService: PipelineBuildDetailService
+    private val stageBuildDetailService: StageBuildDetailService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineStageService::class.java)
@@ -105,7 +106,7 @@ class PipelineStageService @Autowired constructor(
 
     fun skipStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
-            val allStageStatus = pipelineBuildDetailService.stageSkip(buildId = buildId, stageId = stageId)
+            val allStageStatus = stageBuildDetailService.stageSkip(buildId = buildId, stageId = stageId)
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 pipelineBuildStageDao.updateStatus(
@@ -129,8 +130,7 @@ class PipelineStageService @Autowired constructor(
 
     fun pauseStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
-            val allStageStatus = pipelineBuildDetailService.stagePause(
-                pipelineId = pipelineId,
+            val allStageStatus = stageBuildDetailService.stagePause(
                 buildId = buildId,
                 stageId = stageId,
                 controlOption = controlOption!!
@@ -163,8 +163,7 @@ class PipelineStageService @Autowired constructor(
     fun startStage(userId: String, buildStage: PipelineBuildStage) {
         buildStage.controlOption!!.stageControlOption.triggered = true
         with(buildStage) {
-            val allStageStatus = pipelineBuildDetailService.stageStart(
-                pipelineId = pipelineId,
+            val allStageStatus = stageBuildDetailService.stageStart(
                 buildId = buildId,
                 stageId = stageId,
                 controlOption = buildStage.controlOption!!
@@ -207,7 +206,7 @@ class PipelineStageService @Autowired constructor(
 
     fun cancelStage(userId: String, buildStage: PipelineBuildStage) {
 
-        pipelineBuildDetailService.stageCancel(buildId = buildStage.buildId, stageId = buildStage.stageId)
+        stageBuildDetailService.stageCancel(buildId = buildStage.buildId, stageId = buildStage.stageId)
 
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)

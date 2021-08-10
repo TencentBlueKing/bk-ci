@@ -28,15 +28,15 @@
 package com.tencent.devops.process.engine.dao
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_TASK
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
 import org.jooq.InsertSetMoreStep
@@ -174,9 +174,9 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         .set(CONTAINER_TYPE, it.containerType)
                         .set(ADDITIONAL_OPTIONS, it.additionalOptions)
                         .set(TOTAL_TIME, it.totalTime)
-                        .setNull(ERROR_TYPE)
-                        .setNull(ERROR_CODE)
-                        .setNull(ERROR_MSG)
+                        .set(ERROR_TYPE, it.errorType)
+                        .set(ERROR_MSG, it.errorMsg)
+                        .set(ERROR_CODE, it.errorCode)
                         .set(CONTAINER_HASH_ID, it.containerHashId)
                         .set(ATOM_CODE, it.atomCode)
                         .where(BUILD_ID.eq(it.buildId).and(TASK_ID.eq(it.taskId)))
@@ -285,7 +285,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         dslContext: DSLContext,
         buildId: String,
         taskId: String,
-        userId: String?,
+        userId: String? = null,
         buildStatus: BuildStatus
     ) {
         with(T_PIPELINE_BUILD_TASK) {
@@ -306,14 +306,15 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 
             if (buildStatus.isFinish()) {
-                val record = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).fetchOne()!!
+                val record = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId))
+                    .fetchAny() ?: return
                 val totalTime = if (record.startTime == null || record.endTime == null) {
                     0
                 } else {
-                    Duration.between(record.startTime, record.endTime).toMillis() / 1000
+                    Duration.between(record.startTime, record.endTime).toMillis()
                 }
                 dslContext.update(this)
-                    .set(TOTAL_TIME, (record.totalTime ?: 0) + totalTime)
+                    .set(TOTAL_TIME, totalTime)
                     .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
             }
         }

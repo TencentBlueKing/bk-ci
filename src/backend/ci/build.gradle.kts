@@ -1,15 +1,14 @@
 plugins {
     kotlin("jvm")
+    detektCheck
 }
-
-apply("$rootDir/detekt.gradle.kts")
 
 allprojects {
     // 包路径
     group = "com.tencent.bk.devops.ci"
 
     // 版本
-    version = "1.5.5"
+    version = "1.6.0"
     val devopsVersion = System.getProperty("ci_version")
     if (devopsVersion != null) {
         version = devopsVersion
@@ -142,6 +141,7 @@ subprojects {
             dependency("com.github.ulisesbocchio:jasypt-spring-boot-starter:${Versions.Jasypt}")
             dependency("org.jolokia:jolokia-core:${Versions.Jolokia}")
             dependency("org.apache.commons:commons-lang3:${Versions.CommonLang3}")
+            dependency("org.apache.commons:commons-collections4:${Versions.Collection4}")
             dependency("commons-codec:commons-codec:${Versions.CommonCodec}")
             dependency("org.jooq:jooq:${Versions.Jooq}")
             dependency("org.apache.lucene:lucene-core:${Versions.Lucene}")

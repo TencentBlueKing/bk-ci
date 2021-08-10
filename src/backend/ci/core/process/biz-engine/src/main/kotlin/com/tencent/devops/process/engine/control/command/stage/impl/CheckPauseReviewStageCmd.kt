@@ -80,17 +80,19 @@ class CheckPauseReviewStageCmd(
                 stageControlOption.triggered == false
 
             if (needPause) {
-                // 进入暂停状态等待手动触发
+                // #3742 进入暂停状态则刷新完状态后直接返回，等待手动触发
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_PAUSE|${event.stageId}")
                 pauseStageNotify(commandContext)
                 commandContext.buildStatus = BuildStatus.STAGE_SUCCESS
                 commandContext.latestSummary = "s(${stage.stageId}) waiting for REVIEW"
                 commandContext.cmdFlowState = CmdFlowState.FINALLY
-            } else {
+                return
+            }
 
+            commandContext.cmdFlowState = CmdFlowState.CONTINUE
+            // #3742 只有经过手动审核才做审核变量的保存
+            if (stageControlOption?.manualTrigger == true) {
                 saveStageReviewParams(stage = stage, stageControlOption = stageControlOption)
-
-                commandContext.cmdFlowState = CmdFlowState.CONTINUE
             }
         }
     }

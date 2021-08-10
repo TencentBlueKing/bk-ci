@@ -28,12 +28,9 @@
 package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.MESSAGE
-import com.tencent.devops.common.api.constant.PATTERN_STYLE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import com.tencent.devops.common.web.constant.BkStyleEnum
 import org.slf4j.LoggerFactory
 import java.text.MessageFormat
 import javax.validation.ConstraintViolationException
@@ -53,12 +50,7 @@ class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
         var errorResult: Result<Any> = MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation ->
-                val constraintDescriptor = constraintViolation.constraintDescriptor
-                val attributes = constraintDescriptor.attributes
-                val patternStyle = attributes[PATTERN_STYLE] as BkStyleEnum // 获取接口参数校验的正则表达式
-                val defaultMessage = attributes[MESSAGE] as String // 获取接口参数校验的默认错误描述
-                // 获取接口参数正则表达式对应的错误描述信息
-                val patternStyleMessage = MessageCodeUtil.getCodeLanMessage(patternStyle.name, defaultMessage)
+                val validateMessage = constraintViolation.messageTemplate // 获取接口参数校验的错误描述
                 // 获取接口参数在接口资源路径对应方法中path路径
                 val propertyPath = constraintViolation.propertyPath.toString()
                 val pathList = propertyPath.split(".")
@@ -74,11 +66,11 @@ class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
                 // 生成错误信息
                 errorResult = MessageCodeUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
-                    params = arrayOf(parameterName, patternStyleMessage),
+                    params = arrayOf(parameterName, validateMessage),
                     data = null,
-                    defaultMessage = MessageFormat(patternStyleMessage).format(arrayOf(parameterName))
+                    defaultMessage = MessageFormat(validateMessage).format(arrayOf(parameterName))
                 )
-                logger.info("field:$propertyPath errorResult is；$errorResult")
+                logger.info("field:$propertyPath errorResult is:$errorResult")
                 return Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
                     .entity(errorResult).build()
             }

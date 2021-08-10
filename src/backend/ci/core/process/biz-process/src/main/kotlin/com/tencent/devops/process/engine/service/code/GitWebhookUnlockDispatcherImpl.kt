@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine.service.code
 
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import org.springframework.stereotype.Service
 
 @Service

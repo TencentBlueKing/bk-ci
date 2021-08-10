@@ -28,7 +28,7 @@
 package com.tencent.devops.plugin.worker.task.scm.svn
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.log.Ansi
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
 import com.tencent.devops.plugin.worker.task.scm.util.DirectoryUtil
@@ -489,10 +489,12 @@ open class SvnUpdateTask constructor(
             override fun handleEvent(event: SVNEvent, progress: Double) {
                 val action = event.action
                 if (action == SVNEventAction.UPDATE_ADD || action == SVNEventAction.ADD) {
-                    LoggerService.addNormalLine(Ansi().fgGreen().a("A").reset()
+                    LoggerService.addNormalLine(
+                        Ansi().fgGreen().a("A").reset()
                         .a("\t").a(event.file.path).reset().toString())
                 } else if (action == SVNEventAction.UPDATE_DELETE || action == SVNEventAction.DELETE) {
-                    LoggerService.addNormalLine(Ansi().fgRed().a("D").reset()
+                    LoggerService.addNormalLine(
+                        Ansi().fgRed().a("D").reset()
                         .a("\t").a(event.file.path).reset().toString())
                 } else if (action == SVNEventAction.UPDATE_UPDATE) {
                     when (event.contentsStatus) {

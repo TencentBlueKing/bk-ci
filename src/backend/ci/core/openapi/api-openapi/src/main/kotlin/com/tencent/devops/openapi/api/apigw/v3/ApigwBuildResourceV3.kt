@@ -30,13 +30,17 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -81,7 +85,10 @@ interface ApigwBuildResourceV3 {
         values: Map<String, String>,
         @ApiParam("手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<BuildId>
 
     @ApiOperation("停止构建")
@@ -105,10 +112,13 @@ interface ApigwBuildResourceV3 {
         pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<Boolean>
 
-    @ApiOperation("重试构建")
+    @ApiOperation("重试构建-重试或者跳过失败插件")
     @POST
     @Path("/{buildId}/retry")
     fun retry(
@@ -130,12 +140,18 @@ interface ApigwBuildResourceV3 {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("要重试的原子任务ID", required = false)
+        @ApiParam("要重试或跳过的插件ID，或者StageId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
         @ApiParam("仅重试所有失败Job", required = false)
         @QueryParam("failedContainer")
-        failedContainer: Boolean? = false
+        failedContainer: Boolean? = false,
+        @ApiParam("跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
+        @QueryParam("skip")
+        skipFailedTask: Boolean? = false,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<BuildId>
 
     @ApiOperation("查看构建状态信息,#4295增加stageStatus等")
@@ -159,7 +175,10 @@ interface ApigwBuildResourceV3 {
         pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<BuildHistoryWithVars>
 
     @ApiOperation("获取流水线构建历史")
@@ -186,7 +205,10 @@ interface ApigwBuildResourceV3 {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取流水线手动启动参数")
@@ -207,7 +229,10 @@ interface ApigwBuildResourceV3 {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<BuildManualStartupInfo>
 
     @ApiOperation("构建详情")
@@ -231,7 +256,10 @@ interface ApigwBuildResourceV3 {
         pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<ModelDetail>
 
     @ApiOperation("手动审核启动阶段")
@@ -291,4 +319,23 @@ interface ApigwBuildResourceV3 {
         @ApiParam("变量名列表", required = true)
         variableNames: List<String>
     ): Result<Map<String, String>>
+
+    @ApiOperation("操作暂停插件")
+    @POST
+    @Path("/{buildId}/execute/pause")
+    fun executionPauseAtom(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        taskPauseExecute: BuildTaskPauseInfo
+    ): Result<Boolean>
 }

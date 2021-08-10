@@ -29,8 +29,11 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
@@ -42,6 +45,7 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.dao.PipelineFavorDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -53,7 +57,10 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineIdAndName
+import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
@@ -92,7 +99,8 @@ class PipelineListFacadeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val pipelineFavorDao: PipelineFavorDao
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -113,6 +121,9 @@ class PipelineListFacadeService @Autowired constructor(
                 }
                 PipelineSortType.UPDATE_TIME -> {
                     b.deploymentTime.compareTo(a.deploymentTime)
+                }
+                PipelineSortType.LAST_EXEC_TIME -> {
+                    b.deploymentTime.compareTo(a.latestBuildStartTime ?: 0)
                 }
             }
         })
@@ -453,9 +464,11 @@ class PipelineListFacadeService @Autowired constructor(
         watcher.start("s_r_summary")
         try {
             val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
-            val (filterByPipelineNames: List<PipelineViewFilterByName>,
+            val (
+                filterByPipelineNames: List<PipelineViewFilterByName>,
                 filterByPipelineCreators: List<PipelineViewFilterByCreator>,
-                filterByPipelineLabels: List<PipelineViewFilterByLabel>) = generatePipelineFilterInfo(
+                filterByPipelineLabels: List<PipelineViewFilterByLabel>
+            ) = generatePipelineFilterInfo(
                 filterByName = filterByPipelineName,
                 filterByCreator = filterByCreator,
                 filterByLabels = filterByLabels
@@ -964,14 +977,18 @@ class PipelineListFacadeService @Autowired constructor(
         return buildInfo != null && buildInfo.status.isRunning()
     }
 
-    fun getPipelineStatus(userId: String, projectId: String, pipelines: Set<String>): List<Pipeline> {
+    fun getPipelineStatus(
+        userId: String,
+        projectId: String,
+        pipelines: Set<String>,
+        channelCode: ChannelCode? = ChannelCode.BS
+    ): List<Pipeline> {
         val watcher = Watcher(id = "getPipelineStatus|$projectId|$userId|${pipelines.size}")
-        val channelCode = ChannelCode.BS
         try {
             watcher.start("s_r_summary")
             val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(
                 projectId = projectId,
-                channelCode = channelCode,
+                channelCode = channelCode ?: ChannelCode.BS,
                 pipelineIds = pipelines
             )
             watcher.start("perm_r_perm")
@@ -991,9 +1008,14 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     // 获取单条流水线的运行状态
-    fun getSinglePipelineStatus(userId: String, projectId: String, pipeline: String): Pipeline? {
+    fun getSinglePipelineStatus(
+        userId: String,
+        projectId: String,
+        pipeline: String,
+        channelCode: ChannelCode?
+    ): Pipeline? {
         val pipelines = setOf(pipeline)
-        val pipelineList = getPipelineStatus(userId, projectId, pipelines)
+        val pipelineList = getPipelineStatus(userId, projectId, pipelines, channelCode)
         return if (pipelineList.isEmpty()) {
             null
         } else {
@@ -1036,7 +1058,8 @@ class PipelineListFacadeService @Autowired constructor(
                     pipelineDesc = it.pipelineDesc,
                     taskCount = it.taskCount,
                     isDelete = it.delete,
-                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId)
+                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId),
+                    id = it.id
                 )
             }
         } finally {
@@ -1146,7 +1169,9 @@ class PipelineListFacadeService @Autowired constructor(
         }
         val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
         pipelines.forEach {
-            it.instanceFromTemplate = pipelineTemplateMap[it.pipelineId] != null
+            val templateId = pipelineTemplateMap[it.pipelineId]
+            it.instanceFromTemplate = templateId != null
+            it.templateId = templateId
             it.groupLabel = pipelineGroupLabel[it.pipelineId]
         }
 
@@ -1292,7 +1317,7 @@ class PipelineListFacadeService @Autowired constructor(
 
     fun searchByPipelineName(
         projectId: String,
-        pipelineName: String,
+        pipelineName: String?,
         limit: Int?,
         offset: Int?
     ): PipelineViewPipelinePage<PipelineInfo> {
@@ -1303,7 +1328,7 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineInfoDao.searchByPipelineName(
                 dslContext = dslContext,
                 pipelineName = pipelineName,
-                projectId = projectId,
+                projectCode = projectId,
                 limit = limitNotNull,
                 offset = offsetNotNull
             )
@@ -1314,13 +1339,88 @@ class PipelineListFacadeService @Autowired constructor(
         val count = pipelineInfoDao.countPipelineInfoByProject(
             dslContext = dslContext,
             pipelineName = pipelineName,
-            projectId = projectId
+            projectCode = projectId
         )
         return PipelineViewPipelinePage(
             page = limitNotNull,
             pageSize = offsetNotNull,
             records = pipelineInfos,
             count = count.toLong()
+        )
+    }
+
+    fun searchIdAndName(
+        projectId: String,
+        pipelineName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): List<PipelineIdAndName> {
+        logger.info("searchIdAndName |$projectId|$pipelineName| $page| $pageSize")
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 10
+        val page = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val pipelineRecords =
+            pipelineInfoDao.searchByPipelineName(
+                dslContext = dslContext,
+                pipelineName = pipelineName,
+                projectCode = projectId,
+                limit = page.limit,
+                offset = page.offset
+            )
+        val pipelineInfos = mutableListOf<PipelineIdAndName>()
+        pipelineRecords?.map {
+            pipelineInfos.add(PipelineIdAndName(it.pipelineId, it.pipelineName))
+        }
+
+        return pipelineInfos
+    }
+
+    fun getPipelineDetail(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): PipelineDetailInfo? {
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW
+            )) {
+            throw PermissionForbiddenException("$userId 无流水线$pipelineId 查看权限")
+        }
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(
+            dslContext = dslContext,
+            pipelineId = pipelineId
+        ) ?: return null
+        if (pipelineInfo.projectId != projectId) {
+            throw ParamBlankException("$pipelineId 非 $projectId 流水线")
+        }
+        val hasEditPermission = pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
+        val templateId = templatePipelineDao.get(dslContext, pipelineId)?.templateId
+        val instanceFromTemplate = templateId != null
+        val favorInfos = pipelineFavorDao.listByPipelineId(
+            dslContext = dslContext,
+            userId = userId,
+            pipelineId = pipelineId
+        )
+        val hasCollect = if (favorInfos != null) {
+            favorInfos.size > 0
+        } else false
+        return PipelineDetailInfo(
+            pipelineId = pipelineInfo.pipelineId,
+            pipelineName = pipelineInfo.pipelineName,
+            instanceFromTemplate = instanceFromTemplate,
+            hasCollect = hasCollect,
+            canManualStartup = pipelineInfo.manualStartup,
+            pipelineVersion = pipelineInfo.version.toString(),
+            deploymentTime = DateTimeUtil.toDateTime(pipelineInfo.updateTime),
+            hasPermission = hasEditPermission,
+            templateId = templateId
         )
     }
 
@@ -1333,5 +1433,70 @@ class PipelineListFacadeService @Autowired constructor(
         if (pipelineNames.isEmpty() || projectId.isBlank()) return mapOf()
 
         return pipelineRepositoryService.listPipelineIdByName(projectId, pipelineNames, filterDelete)
+    }
+
+    fun getProjectPipelineId(
+        projectCode: String
+    ): List<PipelineIdInfo> {
+        val pipelineIdInfos = pipelineInfoDao.listByProject(dslContext, projectCode)
+        val idInfos = mutableListOf<PipelineIdInfo>()
+        pipelineIdInfos.forEach {
+            idInfos.add(PipelineIdInfo(it.get("pipelineId") as String, it.get("id") as Long))
+        }
+        return idInfos
+    }
+
+    fun getPipelineId(
+        projectId: String,
+        pipelineId: String
+    ): PipelineIdInfo? {
+        val pipelineInfo = pipelineInfoDao.getPipelineId(dslContext, projectId, pipelineId) ?: return null
+        return PipelineIdInfo(
+            id = pipelineInfo.id,
+            pipelineId = pipelineId
+        )
+    }
+
+    fun getByPipelineIds(
+        pipelineIds: Set<String>
+    ): List<SimplePipeline> {
+        val pipelineInfos = pipelineInfoDao.listInfoByPipelineIds(
+            dslContext = dslContext,
+            pipelineIds = pipelineIds,
+            projectId = null
+        )
+        return pipelineInfos.map {
+            SimplePipeline(
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                pipelineName = it.pipelineName,
+                pipelineDesc = it.pipelineDesc,
+                taskCount = it.taskCount,
+                isDelete = it.delete,
+                instanceFromTemplate = false,
+                id = it.id
+            )
+        }
+    }
+
+    fun getByAutoIds(
+        ids: List<Int>
+    ): List<SimplePipeline> {
+        val pipelines = pipelineInfoDao.getPieplineByAutoId(
+            dslContext = dslContext,
+            ids = ids
+        )
+        return pipelines.map {
+            SimplePipeline(
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                pipelineName = it.pipelineName,
+                pipelineDesc = it.pipelineDesc,
+                taskCount = it.taskCount,
+                isDelete = it.delete,
+                instanceFromTemplate = false,
+                id = it.id
+            )
+        }
     }
 }

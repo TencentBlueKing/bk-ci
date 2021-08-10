@@ -37,10 +37,12 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
+import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
@@ -75,6 +77,7 @@ open class ScriptTask : ITask() {
         val projectId = buildVariables.projectId
 
         ScriptEnvUtils.cleanEnv(buildId, workspace)
+        ScriptEnvUtils.cleanContext(buildId, workspace)
 
         val variables = if (buildTask.buildVariable == null) {
             runtimeVariables
@@ -84,9 +87,10 @@ open class ScriptTask : ITask() {
         try {
             command.execute(
                 buildId = buildId,
+                elementId = buildTask.elementId,
                 script = script,
                 taskParam = taskParams,
-                runtimeVariables = variables,
+                runtimeVariables = variables.plus(TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)),
                 projectId = projectId,
                 dir = workspace,
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
@@ -110,6 +114,8 @@ open class ScriptTask : ITask() {
         } finally {
             // 成功失败都写入环境变量
             addEnv(ScriptEnvUtils.getEnv(buildId, workspace))
+            addEnv(ScriptEnvUtils.getContext(buildId, workspace))
+            addEnv(mapOf("jobs.${buildVariables.containerId}.os" to AgentEnv.getOS().name))
             ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
 
             // 设置质量红线指标信息
