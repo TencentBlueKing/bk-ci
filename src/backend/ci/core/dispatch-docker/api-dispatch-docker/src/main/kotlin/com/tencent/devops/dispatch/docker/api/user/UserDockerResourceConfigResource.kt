@@ -62,6 +62,6 @@ interface UserDockerResourceConfigResource {
         projectId: String,
         @ApiParam("buildType", required = false)
         @QueryParam("buildType")
-        buildType: String = BuildType.DOCKER.name
+        buildType: String? = BuildType.DOCKER.name
     ): Result<UserDockerResourceOptionsVO>
 }
