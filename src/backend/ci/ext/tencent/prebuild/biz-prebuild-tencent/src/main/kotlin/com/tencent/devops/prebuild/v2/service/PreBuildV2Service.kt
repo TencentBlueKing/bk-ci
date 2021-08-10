@@ -17,6 +17,7 @@ import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
+import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
@@ -616,30 +617,36 @@ class PreBuildV2Service @Autowired constructor(
     }
 
     private fun checkRunsOn(preScriptBuildYaml: PreScriptBuildYaml) {
-        if (preScriptBuildYaml.stages.isNullOrEmpty()) {
-            return;
+        val preJobList = mutableListOf<PreJob>()
+        if (!preScriptBuildYaml.stages.isNullOrEmpty()) {
+            preScriptBuildYaml.stages!!.forEach { stage ->
+                if (!stage.jobs.isNullOrEmpty()) {
+                    preJobList.addAll(stage.jobs!!.values)
+                }
+            }
+        }
+        if (!preScriptBuildYaml.jobs.isNullOrEmpty()) {
+            preJobList.addAll(preScriptBuildYaml.jobs!!.values)
+        }
+
+        if (preJobList.isNullOrEmpty()) {
+            return
         }
 
         val runsOnYamlSchema = getRunsOnYamlSchema()
-        preScriptBuildYaml.stages!!.forEach { stage ->
-            if (stage.jobs.isNullOrEmpty()) {
+        preJobList.forEach { preJob ->
+            if (preJob.runsOn == null || preJob.runsOn!! is String || preJob.runsOn!! is List<*>) {
                 return@forEach
             }
 
-            stage.jobs!!.forEach { (_, preJob) ->
-                if (preJob.runsOn == null || preJob.runsOn!! is String) {
-                    return@forEach
-                }
+            val (passed, errMsg) = ScriptYmlUtils.validate(
+                schema = runsOnYamlSchema,
+                yamlJson = YamlUtil.getObjectMapper().writeValueAsString(preJob.runsOn)
+            )
 
-                val (passed, errMsg) = ScriptYmlUtils.validate(
-                    schema = runsOnYamlSchema,
-                    yamlJson = YamlUtil.getObjectMapper().writeValueAsString(preJob)
-                )
-
-                if (!passed) {
-                    logger.error("Check yaml schema failed, stages->jobs->runs-on. $errMsg")
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, errMsg)
-                }
+            if (!passed) {
+                logger.error("Check yaml schema failed [runs-on]. $errMsg")
+                throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, errMsg)
             }
         }
     }
