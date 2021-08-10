@@ -108,8 +108,6 @@ class TriggerExceptionService @Autowired constructor(
                 )
                 null
             }
-        } finally {
-            TODO()
         }
     }
 
