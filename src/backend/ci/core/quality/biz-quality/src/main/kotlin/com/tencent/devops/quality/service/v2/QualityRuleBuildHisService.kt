@@ -82,7 +82,8 @@ class QualityRuleBuildHisService constructor(
                 notifyGroupList = it.notifyGroupId.split(","),
                 auditUserList = it.auditUser.split(","),
                 auditTimeoutMinutes = it.auditTimeout,
-                gatewayId = it.gatewayId
+                gatewayId = it.gatewayId,
+                opList = null
             )
             rule
         }
