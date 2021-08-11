@@ -557,12 +557,16 @@ class AtomDao : AtomBaseDao() {
             defaultAtomCondition.add(
                 a.ATOM_CODE.notIn(
                     dslContext.select(a.ATOM_CODE).from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE))
+                        .join(d).on(a.ATOM_CODE.eq(d.ATOM_CODE))
+                        .join(e).on(a.ATOM_CODE.eq(e.STORE_CODE))
                         .where(initTestAtomCondition)
                 )
             )
             normalAtomConditions.add(
                 a.ATOM_CODE.notIn(
                     dslContext.select(a.ATOM_CODE).from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE))
+                        .join(d).on(a.ATOM_CODE.eq(d.ATOM_CODE))
+                        .join(e).on(a.ATOM_CODE.eq(e.STORE_CODE))
                         .where(initTestAtomCondition)
                 )
             )
@@ -633,9 +637,9 @@ class AtomDao : AtomBaseDao() {
             .from(a)
             .join(b)
             .on(a.CLASSIFY_ID.eq(b.ID))
-            .leftJoin(d)
+            .join(d)
             .on(a.ATOM_CODE.eq(d.ATOM_CODE))
-            .leftJoin(e)
+            .join(e)
             .on(a.ATOM_CODE.eq(e.STORE_CODE))
     }
 
@@ -677,8 +681,11 @@ class AtomDao : AtomBaseDao() {
             classifyId = classifyId,
             recommendFlag = recommendFlag
         ) // 普通插件查询条件组装
+        val queryNormalAtomStep = getPipelineAtomCountBaseStep(dslContext, a, d, e)
+        var queryInitTestAtomStep:SelectOnConditionStep<Record1<Int>>? = null
         var initTestAtomCondition: MutableList<Condition>? = null
         if (!projectCode.isNullOrBlank()) {
+            queryInitTestAtomStep = getPipelineAtomCountBaseStep(dslContext, a, d, e)
             initTestAtomCondition = queryTestAtomCondition(
                 a = a,
                 c = c,
@@ -694,22 +701,40 @@ class AtomDao : AtomBaseDao() {
             ) // 开发者测试插件查询条件组装
             // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
             defaultAtomCondition.add(a.ATOM_CODE.notIn(dslContext.select(a.ATOM_CODE)
-                .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)))
+                .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE))
+                .join(d).on(a.ATOM_CODE.eq(d.ATOM_CODE))
+                .join(e).on(a.ATOM_CODE.eq(e.STORE_CODE))
+                .where(initTestAtomCondition)))
             normalAtomConditions.add(a.ATOM_CODE.notIn(dslContext.select(a.ATOM_CODE)
-                .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)))
+                .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE))
+                .join(d).on(a.ATOM_CODE.eq(d.ATOM_CODE))
+                .join(e).on(a.ATOM_CODE.eq(e.STORE_CODE))
+                .where(initTestAtomCondition)))
+            queryNormalAtomStep.join(c).on(a.ATOM_CODE.eq(c.STORE_CODE))
+            queryInitTestAtomStep.join(c).on(a.ATOM_CODE.eq(c.STORE_CODE))
         }
-        val defaultAtomCount = dslContext.selectCount().from(a)
+        val defaultAtomCount = getPipelineAtomCountBaseStep(dslContext, a, d, e)
             .where(defaultAtomCondition).fetchOne(0, Long::class.java)!!
-        val normalAtomCount =
-            dslContext.selectCount().from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(normalAtomConditions)
-                .fetchOne(0, Long::class.java)!!
-        val initTestAtomCount = if (initTestAtomCondition != null) {
-            dslContext.selectCount().from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)
-                .fetchOne(0, Long::class.java)!!
+        val normalAtomCount = queryNormalAtomStep.where(normalAtomConditions).fetchOne(0, Long::class.java)!!
+        val initTestAtomCount = if (initTestAtomCondition != null && queryInitTestAtomStep != null) {
+            queryInitTestAtomStep.where(initTestAtomCondition).fetchOne(0, Long::class.java)!!
         } else {
             0
         }
         return defaultAtomCount + normalAtomCount + initTestAtomCount
+    }
+
+    private fun getPipelineAtomCountBaseStep(
+        dslContext: DSLContext,
+        a: TAtom,
+        d: TAtomFeature,
+        e: TStoreStatisticsTotal
+    ): SelectOnConditionStep<Record1<Int>> {
+        return dslContext.selectCount().from(a)
+            .join(d)
+            .on(a.ATOM_CODE.eq(d.ATOM_CODE))
+            .join(e)
+            .on(a.ATOM_CODE.eq(e.STORE_CODE))
     }
 
     private fun queryDefaultAtomCondition(
