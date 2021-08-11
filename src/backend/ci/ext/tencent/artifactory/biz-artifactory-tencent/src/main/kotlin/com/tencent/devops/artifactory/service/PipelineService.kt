@@ -268,7 +268,7 @@ abstract class PipelineService @Autowired constructor(
     fun getBuildName(buildId: String): String {
         val startTimestamp = System.currentTimeMillis()
         try {
-            return client.get(ServiceJfrogResource::class).getBuildNoByBuildIds(setOf(buildId)).data!![buildId]!!
+            return client.get(ServiceJfrogResource::class).getBuildNoByBuildIdsNew(setOf(buildId)).data!![buildId]!!
         } finally {
             logger.info("getBuildName [$buildId] cost ${System.currentTimeMillis() - startTimestamp}ms")
         }
@@ -278,7 +278,7 @@ abstract class PipelineService @Autowired constructor(
         val startTimestamp = System.currentTimeMillis()
         try {
             if (buildIds.isEmpty()) return emptyMap()
-            return client.get(ServiceJfrogResource::class).getBuildNoByBuildIds(buildIds).data!!
+            return client.get(ServiceJfrogResource::class).getBuildNoByBuildIdsNew(buildIds).data!!
         } finally {
             logger.info("getBuildNames [$buildIds] cost ${System.currentTimeMillis() - startTimestamp}ms")
         }
