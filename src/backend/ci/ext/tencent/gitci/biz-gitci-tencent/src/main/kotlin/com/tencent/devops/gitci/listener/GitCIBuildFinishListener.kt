@@ -56,6 +56,7 @@ import com.tencent.devops.gitci.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.utils.QualityUtils
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
@@ -192,7 +193,8 @@ class GitCIBuildFinishListener @Autowired constructor(
                             context = pipeline.filePath,
                             gitCIBasicSetting = v2GitSetting!!,
                             pipelineId = buildFinishEvent.pipelineId,
-                            block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess())
+                            block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess()),
+                            reportData = QualityUtils.getQualityGitMrResult(client = client, event = buildFinishEvent)
                         )
                     } else {
                         scmClient.pushCommitCheck(
