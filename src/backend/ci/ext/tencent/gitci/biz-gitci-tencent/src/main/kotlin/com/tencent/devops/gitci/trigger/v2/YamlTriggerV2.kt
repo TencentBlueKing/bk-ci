@@ -309,7 +309,7 @@ class YamlTriggerV2 @Autowired constructor(
 
         // 先做总体的schema校验
         if (!schemaPassed) {
-            logger.error("Check yaml schema failed. $errorMessage")
+            logger.warn("Check yaml schema failed. $errorMessage")
             throw YamlFormatException(errorMessage)
         }
 
@@ -332,7 +332,7 @@ class YamlTriggerV2 @Autowired constructor(
         return try {
             checkYamlSchema(originYaml)
         } catch (e: Throwable) {
-            logger.error("git ci yaml is invalid", e)
+            logger.info("gitRequestEvent ${gitRequestEvent.id} git ci yaml is invalid", e)
             val (block, message, reason) = when (e) {
                 is YamlFormatException, is CustomException -> {
                     Triple(isMr, e.message, TriggerReason.CI_YAML_INVALID)
@@ -341,6 +341,7 @@ class YamlTriggerV2 @Autowired constructor(
                     Triple(isMr, e.message, TriggerReason.CI_YAML_INVALID)
                 }
                 else -> {
+                    logger.error("event: ${gitRequestEvent.id} unknow error: ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
@@ -394,7 +395,7 @@ class YamlTriggerV2 @Autowired constructor(
                 normalYaml = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject, filePath)
             )
         } catch (e: Throwable) {
-            logger.error("git ci yaml template replace error", e)
+            logger.info("event ${gitRequestEvent.id} yaml template replace error", e)
             val (block, message, reason) = when (e) {
                 is YamlBlankException -> {
                     Triple(isMr, "", TriggerReason.CI_YAML_CONTENT_NULL)
@@ -406,6 +407,7 @@ class YamlTriggerV2 @Autowired constructor(
                     Triple(isMr, "Yaml file has circular dependency", TriggerReason.CI_YAML_TEMPLATE_ERROR)
                 }
                 else -> {
+                    logger.error("event: ${gitRequestEvent.id} unknow error: ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }

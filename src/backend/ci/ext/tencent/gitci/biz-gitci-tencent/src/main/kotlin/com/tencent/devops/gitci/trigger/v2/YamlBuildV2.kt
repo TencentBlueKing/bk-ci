@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiBuildConfig
@@ -109,6 +110,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.common.exception.CommitCheck
+import com.tencent.devops.gitci.common.exception.QualityRulesException
 import com.tencent.devops.gitci.common.exception.TriggerException
 import com.tencent.devops.gitci.common.exception.Yamls
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
@@ -236,7 +238,7 @@ class YamlBuildV2 @Autowired constructor(
                 null
             }
         } catch (e: Throwable) {
-            logger.error("Fail to start the git ci build($event)", e)
+            logger.warn("Fail to start the git ci build($event)", e)
             val (block, message, reason) = when (e) {
                 is JsonProcessingException, is ParamBlankException, is CustomException -> {
                     Triple(
@@ -245,7 +247,15 @@ class YamlBuildV2 @Autowired constructor(
                         TriggerReason.PIPELINE_PREPARE_ERROR
                     )
                 }
+                is QualityRulesException -> {
+                    Triple(
+                        false,
+                        e.message,
+                        TriggerReason.CREATE_QUALITY_RULRS_ERROR
+                    )
+                }
                 else -> {
+                    logger.error("event: ${event.id} unknow error: ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
@@ -425,7 +435,12 @@ class YamlBuildV2 @Autowired constructor(
             ).data
             if (!resultList.isNullOrEmpty()) return resultList.map { it.ruleBuildId!! }
         } catch (ignore: Throwable) {
-            logger.error("Failed to save quality rules with error: ", ignore)
+            logger.warn("Failed to save quality rules with error: ", ignore.message)
+            if (ignore is RemoteServiceException) {
+                throw QualityRulesException(ignore.errorMessage, ignore.errorCode.toString())
+            } else {
+                throw QualityRulesException(ignore.message ?: "")
+            }
         }
         return null
     }
@@ -552,7 +567,6 @@ class YamlBuildV2 @Autowired constructor(
         )
     }
 
-    // todo: 标签异常不处理？
     private fun preparePipelineLabels(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
@@ -592,7 +606,7 @@ class YamlBuildV2 @Autowired constructor(
                 gitCIPipelineLabels.add(pipelineGroup!!.labels[0].id)
             }
         } catch (e: Exception) {
-            logger.error("${event.userId}|${gitBasicSetting.projectCode!!} preparePipelineLabels error.", e)
+            logger.warn("${event.userId}|${gitBasicSetting.projectCode!!} preparePipelineLabels error.", e)
         }
 
         return gitCIPipelineLabels

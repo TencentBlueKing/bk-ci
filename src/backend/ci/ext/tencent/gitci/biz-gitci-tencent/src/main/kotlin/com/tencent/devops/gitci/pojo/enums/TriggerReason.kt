@@ -67,6 +67,7 @@ enum class TriggerReason(val summary: String, val detail: String) {
     PIPELINE_DISABLE("Pipeline is disabled", "Pipeline is disabled"),
     CI_YAML_TEMPLATE_ERROR("YAML template parse error", "YAML template parse error: %s"),
     PIPELINE_PREPARE_ERROR("Pipeline prepare error", "Pipeline prepare error: %s"),
+    CREATE_QUALITY_RULRS_ERROR("Create quality rules error", "Create quality rules error: %s"),
     UNKNOWN_ERROR(
         "Unknown error, please contact DevOps-helper",
         "Unknown error, please contact DevOps-helper. %s"

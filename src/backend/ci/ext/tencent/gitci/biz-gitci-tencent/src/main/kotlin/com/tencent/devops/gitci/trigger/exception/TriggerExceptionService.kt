@@ -40,53 +40,10 @@ class TriggerExceptionService @Autowired constructor(
         try {
             return action()
         } catch (triggerE: TriggerBaseException) {
-            val gitRequestEvent = triggerE.requestEvent
-            val (realReason, realReasonDetail) = getReason(triggerE)
-            // 为解析yaml之前统一检查
-            if (triggerE.pipeline == null && triggerE.filePath == null) {
-                gitCIEventService.saveTriggerNotBuildEvent(
-                    userId = gitRequestEvent.userId,
-                    eventId = gitRequestEvent.id!!,
-                    reason = realReason,
-                    reasonDetail = realReasonDetail,
-                    gitProjectId = gitRequestEvent.gitProjectId
-                )
-                if (triggerE.commitCheck != null) {
-                    // 没有yaml前只有无流水线commitCheck
-                    noPipelineCommitCheck(
-                        gitRequestEvent = triggerE.requestEvent,
-                        block = triggerE.commitCheck.block,
-                        state = triggerE.commitCheck.state,
-                        gitCIBasicSetting = triggerE.basicSetting!!
-                    )
-                }
-                return null
-            } else {
-                with(triggerE) {
-                    gitCIEventService.saveBuildNotBuildEvent(
-                        userId = requestEvent.userId,
-                        eventId = requestEvent.id!!,
-                        pipelineId = if (pipeline?.pipelineId.isNullOrBlank()) {
-                            null
-                        } else {
-                            pipeline?.pipelineId
-                        },
-                        pipelineName = pipeline?.displayName,
-                        filePath = filePath ?: pipeline!!.filePath,
-                        originYaml = yamls?.originYaml,
-                        normalizedYaml = yamls?.normalYaml,
-                        reason = realReason,
-                        reasonDetail = realReasonDetail,
-                        gitProjectId = requestEvent.gitProjectId,
-                        sendCommitCheck = commitCheck != null,
-                        commitCheckBlock = commitCheck?.block ?: false,
-                        version = version
-                    )
-                }
-                return null
-            }
+            return handleTriggerException(triggerE)
         } catch (e: Throwable) {
             // 触发只要出了异常就把Mr锁定取消，防止出现工蜂项目无法合并
+            logger.error("Trigger handle catch Throwable ${e.message}")
             return if (requestEvent == null || basicSetting == null || gitEvent == null) {
                 null
             } else {
@@ -108,6 +65,54 @@ class TriggerExceptionService @Autowired constructor(
                 )
                 null
             }
+        }
+    }
+
+    private fun handleTriggerException(triggerE: TriggerBaseException): Nothing? {
+        val gitRequestEvent = triggerE.requestEvent
+        val (realReason, realReasonDetail) = getReason(triggerE)
+        // 为解析yaml之前统一检查
+        if (triggerE.pipeline == null && triggerE.filePath == null) {
+            gitCIEventService.saveTriggerNotBuildEvent(
+                userId = gitRequestEvent.userId,
+                eventId = gitRequestEvent.id!!,
+                reason = realReason,
+                reasonDetail = realReasonDetail,
+                gitProjectId = gitRequestEvent.gitProjectId
+            )
+            if (triggerE.commitCheck != null) {
+                // 没有yaml前只有无流水线commitCheck
+                noPipelineCommitCheck(
+                    gitRequestEvent = triggerE.requestEvent,
+                    block = triggerE.commitCheck.block,
+                    state = triggerE.commitCheck.state,
+                    gitCIBasicSetting = triggerE.basicSetting!!
+                )
+            }
+            return null
+        } else {
+            with(triggerE) {
+                gitCIEventService.saveBuildNotBuildEvent(
+                    userId = requestEvent.userId,
+                    eventId = requestEvent.id!!,
+                    pipelineId = if (pipeline?.pipelineId.isNullOrBlank()) {
+                        null
+                    } else {
+                        pipeline?.pipelineId
+                    },
+                    pipelineName = pipeline?.displayName,
+                    filePath = filePath ?: pipeline!!.filePath,
+                    originYaml = yamls?.originYaml,
+                    normalizedYaml = yamls?.normalYaml,
+                    reason = realReason,
+                    reasonDetail = realReasonDetail,
+                    gitProjectId = requestEvent.gitProjectId,
+                    sendCommitCheck = commitCheck != null,
+                    commitCheckBlock = commitCheck?.block ?: false,
+                    version = version
+                )
+            }
+            return null
         }
     }
 

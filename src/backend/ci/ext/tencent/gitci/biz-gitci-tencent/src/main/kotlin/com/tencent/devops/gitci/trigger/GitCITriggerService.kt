@@ -95,7 +95,6 @@ import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.File
 import java.io.StringReader
-import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.Base64
@@ -160,22 +159,20 @@ class GitCITriggerService @Autowired constructor(
 
         // 流水线未启用在手动触发处直接报错
         if (!buildPipeline.enabled) {
-            logger.error(
-                "Pipeline is not enabled, return, " +
-                    "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+            throw CustomException(
+                status = Response.Status.METHOD_NOT_ALLOWED,
+                message = "${TriggerReason.PIPELINE_DISABLE.name}(${TriggerReason.PIPELINE_DISABLE.detail})"
             )
-            throw RuntimeException("${TriggerReason.PIPELINE_DISABLE.name}(${TriggerReason.PIPELINE_DISABLE.detail})")
         }
 
         val originYaml = triggerBuildReq.yaml
         // 如果当前文件没有内容直接不触发
         if (originYaml.isNullOrBlank()) {
-            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                "eventId: ${gitRequestEvent.id}")
+            logger.warn("Matcher is false, event: ${gitRequestEvent.id} yaml is null")
             gitCIEventSaveService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
-                pipelineId = if (buildPipeline.pipelineId.isBlank()) null else buildPipeline.pipelineId,
+                pipelineId = buildPipeline.pipelineId.ifBlank { null },
                 pipelineName = buildPipeline.displayName,
                 filePath = buildPipeline.filePath,
                 originYaml = originYaml,
@@ -223,7 +220,6 @@ class GitCITriggerService @Autowired constructor(
             return true
         } else {
             // v2 先做OAuth校验
-            val triggerUser = gitRequestEvent.userId
             val token = oauthService.getAndCheckOauthToken(userId)
             val objects = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
                 gitToken = token,
@@ -364,7 +360,7 @@ class GitCITriggerService @Autowired constructor(
             "yamlCheckedTime:${DateTimeUtil.toDateTime(LocalDateTime.now())}")
         // 如果没有Yaml文件则直接不触发
         if (yamlPathList.isEmpty()) {
-            logger.error("gitProjectId: ${gitRequestEvent.gitProjectId} cannot found ci yaml from git")
+            logger.warn("event: ${gitRequestEvent.id} cannot found ci yaml from git")
             triggerError(
                 request = gitRequestEvent,
                 reason = TriggerReason.CI_YAML_NOT_FOUND
@@ -618,7 +614,7 @@ class GitCITriggerService @Autowired constructor(
         val yamlObject = try {
             createCIBuildYaml(originYaml!!, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
-            logger.error("git ci yaml is invalid", e)
+            logger.warn("v1 git ci yaml is invalid", e)
             // 手动触发不发送commitCheck
             gitCIEventSaveService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
