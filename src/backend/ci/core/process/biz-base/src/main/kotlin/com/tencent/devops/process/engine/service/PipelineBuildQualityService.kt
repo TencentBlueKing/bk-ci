@@ -56,7 +56,7 @@ import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
-import com.tencent.devops.quality.pojo.RuleCheckResult
+import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -498,6 +498,9 @@ class PipelineBuildQualityService(
                             errorCode = ErrorCode.USER_QUALITY_CHECK_FAIL,
                             errorMsg = "quality review abort"
                         )
+                    }
+                    else -> {
+                        AtomResponse(buildStatus = BuildStatus.REVIEWING)
                     }
                 }
             } else {

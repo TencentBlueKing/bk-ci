@@ -51,6 +51,8 @@ import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Step
+import com.tencent.devops.common.ci.v2.stageCheck.ReviewVariable
+import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -70,11 +72,16 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
+import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -109,6 +116,7 @@ import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
@@ -140,6 +148,13 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
+import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation.Companion.convertToSymbol
+import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
+import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
+import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
+import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -252,10 +267,157 @@ class YamlBuildV2 @Autowired constructor(
         val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
             ?: throw OperationException("git ci projectCode not exist")
 
-        val model = createPipelineModel(event, gitBasicSetting, yaml)
+        val model = createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
+
         savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
+    }
+
+    private fun createStagePauseCheck(
+        stageCheck: StageCheck?,
+        position: String,
+        event: GitRequestEvent,
+        pipeline: GitProjectPipeline
+    ): StagePauseCheck? {
+        if (stageCheck == null) return null
+        val check = StagePauseCheck()
+        if (stageCheck.reviews?.flows?.isNotEmpty() == true) {
+            check.manualTrigger = true
+            check.reviewDesc = stageCheck.reviews?.description
+            check.reviewParams = createReviewParams(stageCheck.reviews?.variables)
+            check.timeout = stageCheck.timeoutHours
+            check.reviewGroups = stageCheck.reviews?.flows?.map { it ->
+                StageReviewGroup(name = it.name, reviewers = it.reviewers)
+            }?.toMutableList()
+        }
+        if (stageCheck.gates?.isNotEmpty() == true) {
+            check.ruleIds = createRules(
+                stageCheck = stageCheck,
+                event = event,
+                position = position,
+                pipeline = pipeline
+            )
+        }
+        return check
+    }
+
+    private fun createReviewParams(variables: Map<String, ReviewVariable>?): List<ManualReviewParam>? {
+        if (variables.isNullOrEmpty()) return null
+        val params = mutableListOf<ManualReviewParam>()
+        variables.forEach { (key, variable) ->
+            params.add(ManualReviewParam(
+                key = key,
+                value = variable.default,
+                required = true,
+                valueType = when (variable.type) {
+                    "TEXTAREA" -> ManualReviewParamType.TEXTAREA
+                    "SELECTOR" -> ManualReviewParamType.ENUM
+                    "SELECTOR-MULTIPLE" -> ManualReviewParamType.MULTIPLE
+                    "BOOL" -> ManualReviewParamType.BOOLEAN
+                    else -> ManualReviewParamType.STRING
+                },
+                chineseName = variable.label,
+                desc = variable.label,
+                options = variable.values?.map { ManualReviewParamPair(it, it) }
+            ))
+        }
+        return params
+    }
+
+    /**
+     * 根据规则创建红线
+     * 规则实例： CodeccCheckAtomDebug.coverity_serious_defect <= 2
+     */
+    private fun createRules(
+        stageCheck: StageCheck,
+        event: GitRequestEvent,
+        position: String,
+        pipeline: GitProjectPipeline
+    ): List<String>? {
+        // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
+        val operations = mapOf(
+            convertToSymbol(QualityOperation.GE) to QualityOperation.GE,
+            convertToSymbol(QualityOperation.LE) to QualityOperation.LE,
+            convertToSymbol(QualityOperation.GT) to QualityOperation.GT,
+            convertToSymbol(QualityOperation.LT) to QualityOperation.LT,
+            convertToSymbol(QualityOperation.EQ) to QualityOperation.EQ
+        )
+        val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
+        stageCheck.gates?.forEach GateEach@{ gate ->
+            val indicators = gate.rule.map { rule ->
+                val (atomCode, mid) = rule.split(".")
+                var op = ""
+                run breaking@{
+                    operations.keys.forEach {
+                        if (mid.contains(it)) {
+                            op = it
+                            return@breaking
+                        }
+                    }
+                }
+                if (op.isBlank()) {
+                    logger.warn("GitProject: ${event.gitProjectId} event: ${event.id} rule: $rule not find operations")
+                    return@GateEach
+                }
+                val enNameAndthreshold = mid.split(op)
+                RuleCreateRequestV3.CreateRequestIndicator(
+                    atomCode = atomCode,
+                    enName = enNameAndthreshold.first().trim(),
+                    operation = operations[op]!!.name,
+                    threshold = enNameAndthreshold.last().trim()
+                )
+            }
+            val opList = mutableListOf<RuleCreateRequest.CreateRequestOp>()
+            gate.notifyOnFail.forEach NotifyEach@{ notify ->
+                val type = GitCINotifyType.getNotifyByYaml(notify.type) ?: return@NotifyEach
+                opList.add(
+                    RuleCreateRequest.CreateRequestOp(
+                        operation = RuleOperation.END,
+                        notifyTypeList = listOf(type),
+                        // 通知接受人未填缺省触发人
+                        notifyUserList = if (notify.receivers.isNullOrEmpty()) {
+                            listOf(event.userId)
+                        } else {
+                            notify.receivers?.toList()
+                        },
+                        notifyGroupList = null,
+                        auditUserList = null,
+                        auditTimeoutMinutes = null
+                    )
+                )
+            }
+            ruleList.add(
+                RuleCreateRequestV3(
+                    name = gate.name,
+                    desc = "",
+                    indicators = indicators,
+                    position = position,
+                    range = null,
+                    templateRange = null,
+                    operation = RuleOperation.END,
+                    notifyTypeList = null,
+                    notifyGroupList = null,
+                    notifyUserList = null,
+                    auditUserList = null,
+                    auditTimeoutMinutes = null,
+                    gatewayId = null,
+                    opList = opList
+                )
+            )
+        }
+        try {
+            val resultList = client.get(ServiceQualityRuleResource::class).create(
+                userId = event.userId,
+                projectId = "git_${event.gitProjectId}",
+                pipelineId = pipeline.pipelineId,
+                ruleList = ruleList
+            ).data
+            if (!resultList.isNullOrEmpty()) return resultList.map { it.ruleBuildId!! }
+        } catch (ignore: Throwable) {
+            logger.error("Failed to save quality rules with error: ", ignore)
+        }
+        return null
     }
 
     fun savePipelineModel(
@@ -269,7 +431,7 @@ class YamlBuildV2 @Autowired constructor(
         val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
             ?: throw OperationException("git ci projectCode not exist")
 
-        val model = createPipelineModel(event, gitBasicSetting, yaml)
+        val model = createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request , pipeline:$pipeline, model: $model")
         savePipeline(pipeline, event, gitBasicSetting, model)
     }
@@ -291,7 +453,8 @@ class YamlBuildV2 @Autowired constructor(
     private fun createPipelineModel(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
-        yaml: ScriptBuildYaml
+        yaml: ScriptBuildYaml,
+        pipeline: GitProjectPipeline
     ): Model {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, gitBasicSetting, yaml)
@@ -344,7 +507,8 @@ class YamlBuildV2 @Autowired constructor(
                 stage = stage,
                 event = event,
                 gitBasicSetting = gitBasicSetting,
-                stageIndex = stageIndex + 1
+                stageIndex = stageIndex + 1,
+                pipeline = pipeline
             ))
         }
         // 添加finally
@@ -357,11 +521,15 @@ class YamlBuildV2 @Autowired constructor(
                         label = emptyList(),
                         ifField = null,
                         fastKill = false,
-                        jobs = yaml.finally!!
+                        jobs = yaml.finally!!,
+                        checkIn = null,
+                        checkOut = null
                     ),
                     event = event,
                     gitBasicSetting = gitBasicSetting,
-                    finalStage = true)
+                    finalStage = true,
+                    pipeline = pipeline
+                )
             )
         }
 
@@ -450,7 +618,8 @@ class YamlBuildV2 @Autowired constructor(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
         stageIndex: Int = 0,
-        finalStage: Boolean = false
+        finalStage: Boolean = false,
+        pipeline: GitProjectPipeline
     ): Stage {
         val containerList = mutableListOf<Container>()
         stage.jobs.forEachIndexed { jobIndex, job ->
@@ -489,7 +658,19 @@ class YamlBuildV2 @Autowired constructor(
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
             containers = containerList,
-            finally = finalStage
+            finally = finalStage,
+            checkIn = createStagePauseCheck(
+                stageCheck = stage.checkIn,
+                position = ControlPointPosition.BEFORE_POSITION,
+                event = event,
+                pipeline = pipeline
+            ),
+            checkOut = createStagePauseCheck(
+                stageCheck = stage.checkOut,
+                position = ControlPointPosition.AFTER_POSITION,
+                event = event,
+                pipeline = pipeline
+            )
         )
     }
 
@@ -786,9 +967,9 @@ class YamlBuildV2 @Autowired constructor(
         env.forEach {
             nameAndValueList.add(
                 NameAndValue(
-                key = it.key,
-                value = it.value.toString()
-            ))
+                    key = it.key,
+                    value = it.value.toString()
+                ))
         }
 
         return nameAndValueList

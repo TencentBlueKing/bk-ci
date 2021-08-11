@@ -27,11 +27,35 @@
 
 package com.tencent.devops.gitci.pojo.enums
 
-enum class GitCINotifyType {
+import com.tencent.devops.common.notify.enums.NotifyType
+
+/**
+ * "email","wework-message","wework-chat"
+ */
+enum class GitCINotifyType(val yamlText: String) {
     // 企业微信客服
-    RTX_CUSTOM,
+    RTX_CUSTOM("wework-message"),
+
     // 邮件
-    EMAIL,
+    EMAIL("email"),
+
     // 企业微信群
-    RTX_GROUP
+    RTX_GROUP("wework-chat");
+
+    companion object {
+        // 获取蓝盾通知支持的类型
+        fun getNotifyByYaml(yamlText: String): NotifyType? {
+            return when (yamlText) {
+                "email" -> {
+                    NotifyType.EMAIL
+                }
+                "wework-message" -> {
+                    NotifyType.RTX
+                }
+                else -> {
+                    return null
+                }
+            }
+        }
+    }
 }

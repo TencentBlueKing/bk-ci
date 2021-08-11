@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.util.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.StageControlOption
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_STAGE
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.common.Timeout
@@ -66,7 +67,9 @@ class PipelineBuildStageDao {
                 END_TIME,
                 COST,
                 EXECUTE_COUNT,
-                CONDITIONS
+                CONDITIONS,
+                CHECK_IN,
+                CHECK_OUT
             )
                 .values(
                     buildStage.projectId,
@@ -81,6 +84,12 @@ class PipelineBuildStageDao {
                     buildStage.executeCount,
                     if (buildStage.controlOption != null) {
                         JsonUtil.toJson(buildStage.controlOption!!)
+                    } else null,
+                    if (buildStage.checkIn != null) {
+                        JsonUtil.toJson(buildStage.checkIn!!)
+                    } else null,
+                    if (buildStage.checkOut != null) {
+                        JsonUtil.toJson(buildStage.checkOut!!)
                     } else null
                 )
                 .execute()
@@ -105,6 +114,8 @@ class PipelineBuildStageDao {
                         .set(COST, it.cost)
                         .set(EXECUTE_COUNT, it.executeCount)
                         .set(CONDITIONS, if (it.controlOption != null) JsonUtil.toJson(it.controlOption!!) else null)
+                        .set(CHECK_IN, if (it.checkIn != null) JsonUtil.toJson(it.checkIn!!) else null)
+                        .set(CHECK_OUT, if (it.checkOut != null) JsonUtil.toJson(it.checkOut!!) else null)
                         .onDuplicateKeyUpdate()
                         .set(STATUS, it.status.ordinal)
                         .set(START_TIME, it.startTime)
@@ -132,6 +143,8 @@ class PipelineBuildStageDao {
                         .set(COST, it.cost)
                         .set(EXECUTE_COUNT, it.executeCount)
                         .set(CONDITIONS, it.conditions)
+                        .set(CHECK_IN, it.checkIn)
+                        .set(CHECK_OUT, it.checkOut)
                         .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)))
                 )
             }
@@ -182,6 +195,19 @@ class PipelineBuildStageDao {
                     )
                 }
 
+                val checkInOption = if (!checkIn.isNullOrBlank()) {
+                    JsonUtil.to(checkIn, StagePauseCheck::class.java)
+                } else {
+                    // #4531 兼容旧数据运行过程时的取值
+                    StagePauseCheck.convertControlOption(controlOption.stageControlOption)
+                }
+
+                val checkOutOption = if (!checkOut.isNullOrBlank()) {
+                    JsonUtil.to(checkOut, StagePauseCheck::class.java)
+                } else {
+                    null
+                }
+
                 PipelineBuildStage(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -193,7 +219,9 @@ class PipelineBuildStageDao {
                     endTime = endTime,
                     cost = cost ?: 0,
                     executeCount = executeCount ?: 1,
-                    controlOption = controlOption
+                    controlOption = controlOption,
+                    checkIn = checkInOption,
+                    checkOut = checkOutOption
                 )
             }
         } else {
@@ -206,7 +234,9 @@ class PipelineBuildStageDao {
         buildId: String,
         stageId: String,
         buildStatus: BuildStatus,
-        controlOption: PipelineBuildStageControlOption? = null
+        controlOption: PipelineBuildStageControlOption? = null,
+        checkIn: StagePauseCheck? = null,
+        checkOut: StagePauseCheck? = null
     ): Int {
         return with(T_PIPELINE_BUILD_STAGE) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
@@ -224,6 +254,31 @@ class PipelineBuildStageDao {
                 update.set(START_TIME, LocalDateTime.now())
             }
             if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption))
+            if (checkIn != null) update.set(CHECK_IN, JsonUtil.toJson(checkIn))
+            if (checkOut != null) update.set(CHECK_OUT, JsonUtil.toJson(checkOut))
+            update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
+        }
+    }
+
+    fun updateOptions(
+        dslContext: DSLContext,
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption,
+        buildStatus: BuildStatus?,
+        checkIn: StagePauseCheck? = null,
+        checkOut: StagePauseCheck? = null
+    ): Int {
+        return with(T_PIPELINE_BUILD_STAGE) {
+            val update = dslContext.update(this)
+                .set(CONDITIONS, JsonUtil.toJson(controlOption))
+            if (buildStatus == null) {
+                update.setNull(STATUS)
+            } else {
+                update.set(STATUS, buildStatus.ordinal)
+            }
+            if (checkIn != null) update.set(CHECK_IN, JsonUtil.toJson(checkIn))
+            if (checkOut != null) update.set(CHECK_OUT, JsonUtil.toJson(checkOut))
             update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
         }
     }

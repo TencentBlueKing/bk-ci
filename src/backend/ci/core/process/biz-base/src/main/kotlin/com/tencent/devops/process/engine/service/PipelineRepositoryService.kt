@@ -189,6 +189,8 @@ class PipelineRepositoryService constructor(
         val containerSeqId = AtomicInteger(0)
         model.stages.forEachIndexed { index, s ->
             s.id = VMUtils.genStageId(index + 1)
+            // #4531 对存量的stage审核数据做兼容处理
+            s.refreshReviewOption()
             if (index == 0) { // 在流程模型中初始化触发类容器
                 initTriggerContainer(
                     stage = s,

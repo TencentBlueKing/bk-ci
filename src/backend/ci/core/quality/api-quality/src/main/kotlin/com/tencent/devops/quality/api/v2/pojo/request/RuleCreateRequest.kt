@@ -60,6 +60,8 @@ data class RuleCreateRequest(
     val auditUserList: List<String>?,
     @ApiModelProperty("审核超时时间", required = false)
     val auditTimeoutMinutes: Int?,
+    @ApiModelProperty("操作类型结合", required = false)
+    val opList: List<CreateRequestOp>?,
     @ApiModelProperty("红线匹配的id", required = false)
     val gatewayId: String?
 ) {
@@ -67,5 +69,20 @@ data class RuleCreateRequest(
         val hashId: String,
         val operation: String,
         val threshold: String
+    )
+
+    data class CreateRequestOp(
+        @ApiModelProperty("操作类型", required = true)
+        val operation: RuleOperation,
+        @ApiModelProperty("通知类型", required = false)
+        val notifyTypeList: List<NotifyType>?,
+        @ApiModelProperty("通知组名单", required = false)
+        val notifyGroupList: List<String>?,
+        @ApiModelProperty("通知人员名单", required = false)
+        val notifyUserList: List<String>?,
+        @ApiModelProperty("审核通知人员", required = false)
+        val auditUserList: List<String>?,
+        @ApiModelProperty("审核超时时间", required = false)
+        val auditTimeoutMinutes: Int?
     )
 }

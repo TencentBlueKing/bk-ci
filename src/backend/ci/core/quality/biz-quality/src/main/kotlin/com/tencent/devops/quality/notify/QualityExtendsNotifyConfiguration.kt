@@ -25,15 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.pojo
+package com.tencent.devops.quality.notify
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.quality.bean.DefaultQualityUrlBean
+import com.tencent.devops.quality.bean.QualityUrlBean
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-@ApiModel("质量红线-单条规则拦截结果")
-data class RuleCheckSingleResult(
-    @ApiModelProperty("规则名称", required = true)
-    val ruleName: String,
-    @ApiModelProperty("失败信息", required = true)
-    val messagePairs: List<Pair<String, String/*detail*/>>
-)
+/**
+ * 质量红线扩展通知配置
+ */
+@Configuration
+class QualityExtendsNotifyConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(QualityUrlBean::class)
+    fun qualityUrlBean(@Autowired commonConfig: CommonConfig) = DefaultQualityUrlBean(commonConfig)
+}

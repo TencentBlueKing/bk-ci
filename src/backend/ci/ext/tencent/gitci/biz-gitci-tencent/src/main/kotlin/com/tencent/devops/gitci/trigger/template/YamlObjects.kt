@@ -145,7 +145,7 @@ object YamlObjects {
         }
     }
 
-    private fun <T> transValue(file: String, type: String, value: Any?): T {
+    private inline fun <reified T> transValue(file: String, type: String, value: Any?): T {
         if (value == null) {
             throw RuntimeException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
         }

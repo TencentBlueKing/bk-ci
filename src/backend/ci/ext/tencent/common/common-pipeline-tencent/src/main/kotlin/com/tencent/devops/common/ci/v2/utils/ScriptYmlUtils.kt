@@ -52,6 +52,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.Job
+import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
@@ -60,6 +61,10 @@ import com.tencent.devops.common.ci.v2.SchedulesRule
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
+import com.tencent.devops.common.ci.v2.stageCheck.Flow
+import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
+import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
+import com.tencent.devops.common.ci.v2.stageCheck.StageReviews
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
@@ -146,21 +151,31 @@ object ScriptYmlUtils {
         return newValue
     }
 
-    fun parseParameterValue(value: String?, settingMap: Map<String, String?>): String? {
+    fun parseParameterValue(value: String?, settingMap: Map<String, Any?>, paramType: ParametersType): String? {
         if (value.isNullOrBlank()) {
             return ""
         }
-
         var newValue = value
-        val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
+        // ScriptUtils.formatYaml会将所有的带上 "" 但替换时数组不需要"" 所以数组单独匹配
+        val pattern = when (paramType) {
+            ParametersType.ARRAY -> {
+                Pattern.compile("\"\\$\\{\\{([^{}]+?)}}\"")
+            }
+            else -> {
+                Pattern.compile("\\$\\{\\{([^{}]+?)}}")
+            }
+        }
         val matcher = pattern.matcher(value)
         while (matcher.find()) {
             if (settingMap.containsKey(matcher.group(1).trim())) {
                 val realValue = settingMap[matcher.group(1).trim()]
-                newValue = newValue!!.replace(matcher.group(), realValue ?: "")
+                if (realValue is List<*>) {
+                    newValue = newValue!!.replace(matcher.group(), JsonUtil.toJson(realValue))
+                } else {
+                    newValue = newValue!!.replace(matcher.group(), realValue.toString())
+                }
             }
         }
-
         return newValue
     }
 
@@ -292,7 +307,9 @@ object ScriptYmlUtils {
                                 runsOn = RunsOn(),
                                 steps = formatSteps(preScriptBuildYaml.steps)
                             )
-                        )
+                        ),
+                        checkIn = null,
+                        checkOut = null
                     )
                 )
             }
@@ -301,7 +318,9 @@ object ScriptYmlUtils {
                     Stage(
                         name = "stage_1",
                         id = randomString(stageNamespace),
-                        jobs = preJobs2Jobs(preScriptBuildYaml.jobs)
+                        jobs = preJobs2Jobs(preScriptBuildYaml.jobs),
+                        checkIn = null,
+                        checkOut = null
                     )
                 )
             }
@@ -410,20 +429,6 @@ object ScriptYmlUtils {
         return stepList
     }
 
-    private fun preStage2Stage(preStage: PreStage?): Stage? {
-        if (preStage == null) {
-            return null
-        }
-        return Stage(
-            id = preStage.id ?: randomString(stageNamespace),
-            name = preStage.name,
-            label = formatStageLabel(preStage.label),
-            ifField = preStage.ifField,
-            fastKill = preStage.fastKill ?: false,
-            jobs = preJobs2Jobs(preStage.jobs as Map<String, PreJob>)
-        )
-    }
-
     private fun preStages2Stages(preStageList: List<PreStage>?): List<Stage> {
         if (preStageList == null) {
             return emptyList()
@@ -438,7 +443,9 @@ object ScriptYmlUtils {
                     label = formatStageLabel(it.label),
                     ifField = it.ifField,
                     fastKill = it.fastKill ?: false,
-                    jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>)
+                    jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>),
+                    checkIn = formatStageCheck(it.checkIn),
+                    checkOut = formatStageCheck(it.checkOut)
                 )
             )
         }
@@ -446,22 +453,36 @@ object ScriptYmlUtils {
         return stageList
     }
 
+    private fun formatStageCheck(preCheck: PreStageCheck?): StageCheck? {
+        if (preCheck == null) {
+            return null
+        }
+        return StageCheck(
+            reviews = if (preCheck.reviews != null) {
+                StageReviews(
+                    flows = preCheck.reviews.flows?.map {
+                        Flow(
+                            name = it.name,
+                            reviewers = anyToListString(it.reviewers)
+                        )
+                    },
+                    variables = preCheck.reviews.variables,
+                    description = preCheck.reviews.description
+                )
+            } else {
+                null
+            },
+            gates = preCheck.gates,
+            timeoutHours = preCheck.timeoutHours
+        )
+    }
+
     private fun formatStageLabel(labels: Any?): List<String> {
         if (labels == null) {
             return emptyList()
         }
 
-        val transLabels = try {
-            YamlUtil.getObjectMapper().readValue(
-                JsonUtil.toJson(labels),
-                List::class.java
-            ) as ArrayList<String>
-        } catch (e: MismatchedInputException) {
-            listOf(labels.toString())
-        } catch (e: Exception) {
-            logger.error("Format label  failed.", e)
-            listOf<String>()
-        }
+        val transLabels = anyToListString(labels)
 
         val newLabels = mutableListOf<String>()
         transLabels.forEach {
@@ -713,5 +734,19 @@ object ScriptYmlUtils {
             buf.append(secretSeed[num])
         }
         return buf.toString()
+    }
+
+    private fun anyToListString(value: Any): List<String> {
+        return try {
+            YamlUtil.getObjectMapper().readValue(
+                JsonUtil.toJson(value),
+                List::class.java
+            ) as ArrayList<String>
+        } catch (e: MismatchedInputException) {
+            listOf(value.toString())
+        } catch (e: Exception) {
+            logger.error("Format label  failed.", e)
+            listOf<String>()
+        }
     }
 }
