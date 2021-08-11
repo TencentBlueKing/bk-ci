@@ -41,6 +41,7 @@ import org.springframework.stereotype.Service
 class QualityRuleBuildHisService constructor(
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
     private val qualityIndicatorService: QualityIndicatorService,
+    private val qualityRuleOperationService: QualityRuleOperationService,
     private val dslContext: DSLContext
 ) {
 
@@ -49,6 +50,21 @@ class QualityRuleBuildHisService constructor(
     fun list(ruleIds: List<Long>): List<QualityRule> {
         logger.info("start to check rule in his: $ruleIds")
         val allRule = qualityRuleBuildHisDao.list(dslContext, ruleIds)
+
+        logger.info("start to check rule op list in his: ${allRule.size}")
+        val opList = qualityRuleOperationService.serviceList(dslContext, ruleIds).map {
+            QualityRule.RuleOp(
+                operation = RuleOperation.valueOf(it.type),
+                notifyTypeList = it.notifyTypes?.split(",")?.map { type ->
+                    NotifyType.valueOf(type)
+                },
+                notifyGroupList = it.notifyGroupId?.split(","),
+                notifyUserList = it.notifyUser?.split(","),
+                auditUserList = it.auditUser?.split(","),
+                auditTimeoutMinutes = it.auditTimeout
+            )
+        }
+
         val allIndicatorIds = mutableSetOf<Long>()
         allRule.forEach {
             allIndicatorIds.addAll(it.indicatorIds.split(",").map { indicatorId -> indicatorId.toLong() })
@@ -72,18 +88,14 @@ class QualityRuleBuildHisService constructor(
                 ),
                 range = listOf(it.pipelineId!!),
                 templateRange = listOf(),
-                operation = if (it.opType.isNullOrBlank()) {
-                    RuleOperation.END
-                } else {
-                    RuleOperation.valueOf(it.opType)
-                },
-                notifyTypeList = it.notifyType.split(",").map { NotifyType.valueOf(it) },
-                notifyUserList = it.notifyUser.split(","),
-                notifyGroupList = it.notifyGroupId.split(","),
-                auditUserList = it.auditUser.split(","),
-                auditTimeoutMinutes = it.auditTimeout,
+                operation = RuleOperation.END,
+                notifyTypeList = null,
+                notifyUserList = null,
+                notifyGroupList = null,
+                auditUserList = null,
+                auditTimeoutMinutes = null,
                 gatewayId = it.gatewayId,
-                opList = null
+                opList = opList
             )
             rule
         }
