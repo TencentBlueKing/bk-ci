@@ -119,6 +119,7 @@ class PreBuildV2Service @Autowired constructor(
 
         val scriptBuildYaml = ScriptYmlUtils.normalizePreCiYaml(preYamlObject)
         val model = getPipelineModel(userId, preProjectId, startUpReq, scriptBuildYaml, agentId)
+        logger.warn("model info: ${ObjectMapper().writeValueAsString(model)}")
         val pipelineId = createOrUpdatePipeline(userId, preProjectId, startUpReq, model)
         val projectId = getUserProjectId(userId)
 
