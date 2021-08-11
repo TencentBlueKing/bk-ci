@@ -1,8 +1,6 @@
 package com.tencent.devops.common.ci.v2.utils
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
-import javax.ws.rs.core.Response
 
 object GitCIEnvUtils {
     fun checkEnv(env: Map<String, Any?>?): Boolean {
