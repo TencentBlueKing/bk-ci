@@ -60,6 +60,7 @@ interface AtomService {
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
+        keyword: String?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?>
@@ -75,6 +76,7 @@ interface AtomService {
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
+        keyword: String?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?>
