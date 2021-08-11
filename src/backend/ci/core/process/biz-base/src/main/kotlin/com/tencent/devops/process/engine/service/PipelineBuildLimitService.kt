@@ -146,7 +146,7 @@ class PipelineBuildLimitService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(PipelineBuildLimitService::class.java)
         const val executeJobKey = "PROCESS_ENGINE_RUNNING_JOB_COUNT"
         const val executeMaxCountKey = "PROCESS_ENGINE_MAX_COUNT"
         const val executeBuildRecordKey = "PIPELINE_EXECUTE_COUNT_RECORD_"
