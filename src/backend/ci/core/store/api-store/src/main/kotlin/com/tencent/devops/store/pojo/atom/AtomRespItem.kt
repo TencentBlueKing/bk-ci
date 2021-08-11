@@ -81,5 +81,9 @@ data class AtomRespItem(
     @ApiModelProperty("权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
-    val recommendFlag: Boolean?
+    val recommendFlag: Boolean?,
+    @ApiModelProperty("评分")
+    val score: Double? = null,
+    @ApiModelProperty("最近执行次数")
+    val recentExecuteNum: Int? = null
 )

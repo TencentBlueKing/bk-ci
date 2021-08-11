@@ -28,12 +28,20 @@
 package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
+import com.tencent.devops.common.api.constant.KEY_DOCSLINK
+import com.tencent.devops.common.api.constant.KEY_OS
+import com.tencent.devops.common.api.constant.KEY_SUMMARY
+import com.tencent.devops.common.api.constant.KEY_WEIGHT
+import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreProjectRel
+import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
@@ -43,7 +51,31 @@ import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
+import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
+import com.tencent.devops.store.pojo.common.KEY_AVG_SCORE
+import com.tencent.devops.store.pojo.common.KEY_BUILD_LESS_RUN_FLAG
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
+import com.tencent.devops.store.pojo.common.KEY_CLASS_TYPE
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
+import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
+import com.tencent.devops.store.pojo.common.KEY_ICON
+import com.tencent.devops.store.pojo.common.KEY_ID
+import com.tencent.devops.store.pojo.common.KEY_INSTALLER
+import com.tencent.devops.store.pojo.common.KEY_INSTALL_TIME
+import com.tencent.devops.store.pojo.common.KEY_INSTALL_TYPE
+import com.tencent.devops.store.pojo.common.KEY_LATEST_FLAG
+import com.tencent.devops.store.pojo.common.KEY_LOGO_URL
+import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
+import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
+import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
+import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -57,6 +89,7 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import org.springframework.util.StringUtils
 import java.net.URLDecoder
 import java.time.LocalDateTime
 
@@ -417,70 +450,55 @@ class AtomDao : AtomBaseDao() {
         defaultFlag: Boolean,
         atomStatusList: List<Byte>?
     ): Result<out Record>? {
-        val tAtom = TAtom.T_ATOM
-        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
-        val baseStep = dslContext.select(
-            tAtom.VERSION.`as`(KEY_VERSION),
-            tAtom.ATOM_STATUS.`as`(KEY_ATOM_STATUS)
-        ).from(tAtom)
-        val t = if (defaultFlag) {
-            val conditions = generateGetPipelineAtomCondition(
-                tAtom = tAtom,
-                atomCode = atomCode,
-                defaultFlag = true,
-                atomStatusList = atomStatusList
+        val a = TAtom.T_ATOM.`as`("a")
+        val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
+        val t = dslContext.select(
+            a.VERSION.`as`(KEY_VERSION),
+            a.CREATE_TIME.`as`(KEY_CREATE_TIME),
+            a.ATOM_STATUS.`as`(KEY_ATOM_STATUS)
+        ).from(a)
+            .where(
+                generateGetPipelineAtomCondition(
+                    tAtom = a,
+                    atomCode = atomCode,
+                    defaultFlag = true,
+                    atomStatusList = atomStatusList
+                )
             )
-            baseStep.where(conditions)
-        } else {
-            val conditions = generateGetPipelineAtomCondition(
-                tAtom = tAtom,
-                atomCode = atomCode,
-                defaultFlag = false,
-                atomStatusList = atomStatusList
+            .union(
+                dslContext.select(
+                    a.VERSION.`as`(KEY_VERSION),
+                    a.CREATE_TIME.`as`(KEY_CREATE_TIME),
+                    a.ATOM_STATUS.`as`(KEY_ATOM_STATUS)
+                ).from(a).join(b).on(a.ATOM_CODE.eq(b.STORE_CODE))
+                    .where(
+                        generateGetPipelineAtomCondition(
+                            tAtom = a,
+                            atomCode = atomCode,
+                            defaultFlag = false,
+                            atomStatusList = atomStatusList
+                        )
+                    )
+                    .andExists(
+                        dslContext.selectOne().from(b).where(
+                            a.ATOM_CODE.eq(b.STORE_CODE).and(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+                                .and(b.PROJECT_CODE.eq(projectCode))
+                        )
+                    )
             )
-            conditions.add(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
-            conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-            baseStep.join(tStoreProjectRel).on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
-                .where(conditions)
-                .groupBy(tAtom.VERSION, tAtom.ATOM_STATUS)
-        }
-        val firstVersion = JooqUtils.subStr(
-            str = t.field(KEY_VERSION) as Field<String>,
-            delim = ".",
-            count = 1
-        )
-        val secondVersion = JooqUtils.subStr(
-            str = JooqUtils.subStr(
-                str = t.field(KEY_VERSION) as Field<String>,
-                delim = ".",
-                count = -2
-            ),
-            delim = ".",
-            count = 1
-        )
-        val thirdVersion = JooqUtils.subStr(
-            str = t.field(KEY_VERSION) as Field<String>,
-            delim = ".",
-            count = -1
-        )
-        return dslContext.select(
-            t.field(KEY_VERSION),
-            t.field(KEY_ATOM_STATUS),
-            firstVersion,
-            secondVersion,
-            thirdVersion
-        ).from(t)
-            .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
-            .fetch()
+            .asTable("t")
+        return dslContext.select().from(t).orderBy(t.field(KEY_CREATE_TIME)!!.desc()).fetch()
     }
 
     fun getPipelineAtoms(
         dslContext: DSLContext,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
-        projectCode: String,
+        projectCode: String?,
         category: String?,
         classifyId: String?,
+        recommendFlag: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
@@ -488,61 +506,82 @@ class AtomDao : AtomBaseDao() {
         val b = TClassify.T_CLASSIFY.`as`("b")
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")
         val d = TAtomFeature.T_ATOM_FEATURE.`as`("d")
+        val e = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("e")
         val defaultAtomCondition = queryDefaultAtomCondition(
             a = a,
+            d = d,
+            e = e,
             serviceScope = serviceScope,
+            jobType = jobType,
             os = os,
             category = category,
-            classifyId = classifyId
+            classifyId = classifyId,
+            recommendFlag = recommendFlag
         ) // 默认插件查询条件组装
         val normalAtomConditions =
             queryNormalAtomCondition(
                 a = a,
                 c = c,
+                d = d,
+                e = e,
                 serviceScope = serviceScope,
+                jobType = jobType,
                 os = os,
                 projectCode = projectCode,
                 category = category,
-                classifyId = classifyId
+                classifyId = classifyId,
+                recommendFlag = recommendFlag
             ) // 普通插件查询条件组装
-        val initTestAtomCondition =
-            queryTestAtomCondition(
-                a = a,
-                c = c,
-                serviceScope = serviceScope,
-                os = os,
-                projectCode = projectCode,
-                category = category,
-                classifyId = classifyId
-            ) // 开发者测试插件查询条件组装
-        // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
-        defaultAtomCondition.add(
-            a.ATOM_CODE.notIn(
-                dslContext.select(a.ATOM_CODE).from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE))
-                    .where(initTestAtomCondition)
+        val queryNormalAtomStep = getPipelineAtomBaseStep(dslContext, a, b, d, e)
+        var queryInitTestAtomStep:SelectOnConditionStep<Record>? = null
+        var initTestAtomCondition: MutableList<Condition>? = null
+        if (!projectCode.isNullOrBlank()) {
+            queryInitTestAtomStep = getPipelineAtomBaseStep(dslContext, a, b, d, e)
+            initTestAtomCondition =
+                queryTestAtomCondition(
+                    a = a,
+                    c = c,
+                    d = d,
+                    e = e,
+                    serviceScope = serviceScope,
+                    jobType = jobType,
+                    os = os,
+                    projectCode = projectCode,
+                    category = category,
+                    classifyId = classifyId,
+                    recommendFlag = recommendFlag
+                ) // 开发者测试插件查询条件组装
+            // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
+            defaultAtomCondition.add(
+                a.ATOM_CODE.notIn(
+                    dslContext.select(a.ATOM_CODE).from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE))
+                        .where(initTestAtomCondition)
+                )
             )
-        )
-        normalAtomConditions.add(
-            a.ATOM_CODE.notIn(
-                dslContext.select(a.ATOM_CODE).from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE))
-                    .where(initTestAtomCondition)
+            normalAtomConditions.add(
+                a.ATOM_CODE.notIn(
+                    dslContext.select(a.ATOM_CODE).from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE))
+                        .where(initTestAtomCondition)
+                )
             )
-        )
-        val t = getPipelineAtomBaseStep(dslContext, a, b, d)
-            .join(c)
-            .on(a.ATOM_CODE.eq(c.STORE_CODE))
+            queryNormalAtomStep.join(c).on(a.ATOM_CODE.eq(c.STORE_CODE))
+            queryInitTestAtomStep.join(c).on(a.ATOM_CODE.eq(c.STORE_CODE))
+        }
+        val queryAtomStep = queryNormalAtomStep
             .where(normalAtomConditions)
             .union(
-                getPipelineAtomBaseStep(dslContext, a, b, d).where(defaultAtomCondition)
+                getPipelineAtomBaseStep(dslContext, a, b, d, e).where(defaultAtomCondition)
             )
-            .union(
-                getPipelineAtomBaseStep(dslContext, a, b, d)
+        if (queryInitTestAtomStep != null && initTestAtomCondition != null) {
+            queryAtomStep.union(
+                getPipelineAtomBaseStep(dslContext, a, b, d, e)
                     .join(c)
                     .on(a.ATOM_CODE.eq(c.STORE_CODE))
                     .where(initTestAtomCondition)
             )
-            .asTable("t")
-        val baseStep = dslContext.select().from(t).orderBy(t.field("weight")!!.desc(), t.field("name")!!.asc())
+        }
+        val t = queryAtomStep.asTable("t")
+        val baseStep = dslContext.select().from(t).orderBy(t.field(KEY_WEIGHT)!!.desc(), t.field(NAME)!!.asc())
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
@@ -554,110 +593,142 @@ class AtomDao : AtomBaseDao() {
         dslContext: DSLContext,
         a: TAtom,
         b: TClassify,
-        d: TAtomFeature
+        d: TAtomFeature,
+        e: TStoreStatisticsTotal
     ): SelectOnConditionStep<Record> {
         return dslContext.select(
-            a.ATOM_CODE.`as`("atomCode"),
-            a.VERSION.`as`("version"),
-            a.CLASS_TYPE.`as`("classType"),
-            a.NAME.`as`("name"),
-            a.OS.`as`("os"),
-            a.SERVICE_SCOPE.`as`("serviceScope"),
-            b.ID.`as`("classifyId"),
-            b.CLASSIFY_CODE.`as`("classifyCode"),
-            b.CLASSIFY_NAME.`as`("classifyName"),
-            a.LOGO_URL.`as`("logoUrl"),
-            a.ICON.`as`("icon"),
-            a.CATEGROY.`as`("category"),
-            a.SUMMARY.`as`("summary"),
-            a.DOCS_LINK.`as`("docsLink"),
-            a.ATOM_TYPE.`as`("atomType"),
-            a.ATOM_STATUS.`as`("atomStatus"),
-            a.DESCRIPTION.`as`("description"),
-            a.PUBLISHER.`as`("publisher"),
-            a.CREATOR.`as`("creator"),
-            a.CREATE_TIME.`as`("createTime"),
-            a.DEFAULT_FLAG.`as`("defaultFlag"),
-            a.LATEST_FLAG.`as`("latestFlag"),
-            a.BUILD_LESS_RUN_FLAG.`as`("buildLessRunFlag"),
-            a.WEIGHT.`as`("weight"),
-            a.HTML_TEMPLATE_VERSION.`as`("htmlTemplateVersion"),
-            d.RECOMMEND_FLAG.`as`("recommendFlag")
+            a.ATOM_CODE.`as`(KEY_ATOM_CODE),
+            a.VERSION.`as`(VERSION),
+            a.CLASS_TYPE.`as`(KEY_CLASS_TYPE),
+            a.NAME.`as`(NAME),
+            a.OS.`as`(KEY_OS),
+            a.SERVICE_SCOPE.`as`(KEY_SERVICE_SCOPE),
+            b.ID.`as`(KEY_CLASSIFY_ID),
+            b.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
+            b.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
+            a.LOGO_URL.`as`(KEY_LOGO_URL),
+            a.ICON.`as`(KEY_ICON),
+            a.CATEGROY.`as`(KEY_CATEGORY),
+            a.SUMMARY.`as`(KEY_SUMMARY),
+            a.DOCS_LINK.`as`(KEY_DOCSLINK),
+            a.ATOM_TYPE.`as`(KEY_ATOM_TYPE),
+            a.ATOM_STATUS.`as`(KEY_ATOM_STATUS),
+            a.DESCRIPTION.`as`(KEY_DESCRIPTION),
+            a.PUBLISHER.`as`(KEY_PUBLISHER),
+            a.CREATOR.`as`(KEY_CREATOR),
+            a.CREATE_TIME.`as`(KEY_CREATE_TIME),
+            a.DEFAULT_FLAG.`as`(KEY_DEFAULT_FLAG),
+            a.LATEST_FLAG.`as`(KEY_LATEST_FLAG),
+            a.BUILD_LESS_RUN_FLAG.`as`(KEY_BUILD_LESS_RUN_FLAG),
+            a.WEIGHT.`as`(KEY_WEIGHT),
+            a.HTML_TEMPLATE_VERSION.`as`(KEY_HTML_TEMPLATE_VERSION),
+            d.RECOMMEND_FLAG.`as`(KEY_RECOMMEND_FLAG),
+            e.SCORE_AVERAGE.`as`(KEY_AVG_SCORE),
+            e.RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM)
         )
             .from(a)
             .join(b)
             .on(a.CLASSIFY_ID.eq(b.ID))
             .leftJoin(d)
             .on(a.ATOM_CODE.eq(d.ATOM_CODE))
+            .leftJoin(e)
+            .on(a.ATOM_CODE.eq(e.STORE_CODE))
     }
 
     fun getPipelineAtomCount(
         dslContext: DSLContext,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
-        projectCode: String,
+        projectCode: String?,
         category: String?,
-        classifyId: String?
+        classifyId: String?,
+        recommendFlag: Boolean?
     ): Long {
         val a = TAtom.T_ATOM.`as`("a")
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")
+        val d = TAtomFeature.T_ATOM_FEATURE.`as`("d")
+        val e = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("e")
         val defaultAtomCondition = queryDefaultAtomCondition(
             a = a,
+            d = d,
+            e = e,
             serviceScope = serviceScope,
+            jobType = jobType,
             os = os,
             category = category,
-            classifyId = classifyId
+            classifyId = classifyId,
+            recommendFlag = recommendFlag
         ) // 默认插件查询条件组装
         val normalAtomConditions = queryNormalAtomCondition(
             a = a,
             c = c,
+            d = d,
+            e = e,
             serviceScope = serviceScope,
+            jobType = jobType,
             os = os,
             projectCode = projectCode,
             category = category,
-            classifyId = classifyId
+            classifyId = classifyId,
+            recommendFlag = recommendFlag
         ) // 普通插件查询条件组装
-        val initTestAtomCondition = queryTestAtomCondition(
-            a = a,
-            c = c,
-            serviceScope = serviceScope,
-            os = os,
-            projectCode = projectCode,
-            category = category,
-            classifyId = classifyId
-        ) // 开发者测试插件查询条件组装
-        // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
-        defaultAtomCondition.add(
-            a.ATOM_CODE.notIn(
-                dslContext.select(a.ATOM_CODE)
-                    .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)
-            )
-        )
-        normalAtomConditions.add(
-            a.ATOM_CODE.notIn(
-                dslContext.select(a.ATOM_CODE)
-                    .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)
-            )
-        )
+        var initTestAtomCondition: MutableList<Condition>? = null
+        if (!projectCode.isNullOrBlank()) {
+            initTestAtomCondition = queryTestAtomCondition(
+                a = a,
+                c = c,
+                d = d,
+                e = e,
+                serviceScope = serviceScope,
+                jobType = jobType,
+                os = os,
+                projectCode = projectCode,
+                category = category,
+                classifyId = classifyId,
+                recommendFlag = recommendFlag
+            ) // 开发者测试插件查询条件组装
+            // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
+            defaultAtomCondition.add(a.ATOM_CODE.notIn(dslContext.select(a.ATOM_CODE)
+                .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)))
+            normalAtomConditions.add(a.ATOM_CODE.notIn(dslContext.select(a.ATOM_CODE)
+                .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)))
+        }
         val defaultAtomCount = dslContext.selectCount().from(a)
             .where(defaultAtomCondition).fetchOne(0, Long::class.java)!!
         val normalAtomCount =
             dslContext.selectCount().from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(normalAtomConditions)
                 .fetchOne(0, Long::class.java)!!
-        val initTestAtomCount =
+        val initTestAtomCount = if (initTestAtomCondition != null) {
             dslContext.selectCount().from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)
                 .fetchOne(0, Long::class.java)!!
+        } else {
+            0
+        }
         return defaultAtomCount + normalAtomCount + initTestAtomCount
     }
 
     private fun queryDefaultAtomCondition(
         a: TAtom,
+        d: TAtomFeature,
+        e: TStoreStatisticsTotal,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
         category: String?,
-        classifyId: String?
+        classifyId: String?,
+        recommendFlag: Boolean?
     ): MutableList<Condition> {
-        val conditions = setQueryAtomBaseCondition(serviceScope, a, os, category, classifyId)
+        val conditions = setQueryAtomBaseCondition(
+            serviceScope = serviceScope,
+            a = a,
+            d = d,
+            e = e,
+            jobType = jobType,
+            os = os,
+            category = category,
+            classifyId = classifyId,
+            recommendFlag = recommendFlag)
         conditions.add(a.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 只查已发布的
         conditions.add(a.DEFAULT_FLAG.eq(true)) // 查默认插件（所有项目都可用）
         conditions.add(a.LATEST_FLAG.eq(true)) // 只查最新版本的插件
@@ -667,62 +738,91 @@ class AtomDao : AtomBaseDao() {
     private fun setQueryAtomBaseCondition(
         serviceScope: String?,
         a: TAtom,
+        d: TAtomFeature,
+        e: TStoreStatisticsTotal,
+        jobType: String?,
         os: String?,
         category: String?,
-        classifyId: String?
+        classifyId: String?,
+        recommendFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        serviceScope?.let {
-            if (!"all".equals(serviceScope, true)) {
-                conditions.add(a.SERVICE_SCOPE.contains(serviceScope))
-            }
+        if (!StringUtils.isEmpty(serviceScope) && !"all".equals(serviceScope, true)) {
+            conditions.add(a.SERVICE_SCOPE.contains(serviceScope))
         }
         // 当筛选有构建环境的插件时也需加上那些无构建环境插件可以在有构建环境运行的插件
-        os?.let {
-            if (!"all".equals(os, true)) {
-                conditions.add(a.OS.contains(os).or(a.BUILD_LESS_RUN_FLAG.eq(true)))
-            }
+        if (!jobType.isNullOrBlank()) {
+            conditions.add(a.JOB_TYPE.eq(jobType).or(a.BUILD_LESS_RUN_FLAG.eq(true)))
         }
-        category?.let { conditions.add(a.CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte())) }
-        classifyId?.let { conditions.add(a.CLASSIFY_ID.eq(classifyId)) }
+        if (!StringUtils.isEmpty(os) && !"all".equals(os, true)) {
+            conditions.add(a.OS.contains(os).or(a.BUILD_LESS_RUN_FLAG.eq(true)))
+        }
+        if (null != category) conditions.add(a.CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte()))
+        if (!StringUtils.isEmpty(classifyId)) conditions.add(a.CLASSIFY_ID.eq(classifyId))
+        if (null != recommendFlag) {
+            conditions.add(d.RECOMMEND_FLAG.eq(recommendFlag))
+        }
         conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
+        conditions.add(e.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         return conditions
     }
 
     private fun queryNormalAtomCondition(
         a: TAtom,
         c: TStoreProjectRel,
+        d: TAtomFeature,
+        e: TStoreStatisticsTotal,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
-        projectCode: String,
+        projectCode: String?,
         category: String?,
-        classifyId: String?
+        classifyId: String?,
+        recommendFlag: Boolean?
     ): MutableList<Condition> {
-        val conditions = setQueryAtomBaseCondition(serviceScope, a, os, category, classifyId)
+        val conditions = setQueryAtomBaseCondition(
+            serviceScope = serviceScope,
+            a = a,
+            d = d,
+            e = e,
+            jobType = jobType,
+            os = os,
+            category = category,
+            classifyId = classifyId,
+            recommendFlag = recommendFlag)
         conditions.add(a.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 只查已发布的
         conditions.add(a.DEFAULT_FLAG.eq(false)) // 查普通插件
         conditions.add(a.LATEST_FLAG.eq(true)) // 只查最新版本的插件
-        conditions.add(c.PROJECT_CODE.eq(projectCode))
-        conditions.add(c.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+        if (!projectCode.isNullOrBlank()) {
+            conditions.add(c.PROJECT_CODE.eq(projectCode))
+            conditions.add(c.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+        }
         return conditions
     }
 
     private fun queryTestAtomCondition(
         a: TAtom,
         c: TStoreProjectRel,
+        d: TAtomFeature,
+        e: TStoreStatisticsTotal,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
         projectCode: String,
         category: String?,
-        classifyId: String?
+        classifyId: String?,
+        recommendFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = setQueryAtomBaseCondition(
             serviceScope = serviceScope,
             a = a,
+            d = d,
+            e = e,
+            jobType = jobType,
             os = os,
             category = category,
-            classifyId = classifyId
-        )
+            classifyId = classifyId,
+            recommendFlag = recommendFlag)
         conditions.add(
             a.ATOM_STATUS.`in`(
                 listOf(
@@ -861,30 +961,28 @@ class AtomDao : AtomBaseDao() {
         val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, dslContext)
         val tc = TClassify.T_CLASSIFY.`as`("tc")
         // 查找每组atomCode最新的记录
-        val t = dslContext.select(ta.ATOM_CODE.`as`("atomCode"), DSL.max(ta.CREATE_TIME).`as`("createTime"))
+        val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
             .from(ta).groupBy(ta.ATOM_CODE)
 
         val sql = dslContext.select(
-            ta.ID.`as`("atomId"),
-            ta.ATOM_CODE.`as`("atomCode"),
-            ta.NAME.`as`("atomName"),
-            ta.LOGO_URL.`as`("logoUrl"),
-            ta.CATEGROY.`as`("category"),
-            ta.SUMMARY.`as`("summary"),
-            ta.PUBLISHER.`as`("publisher"),
-            tc.ID.`as`("classifyId"),
-            tc.CLASSIFY_CODE.`as`("classifyCode"),
-            tc.CLASSIFY_NAME.`as`("classifyName"),
-            tspr.CREATOR.`as`("installer"),
-            tspr.CREATE_TIME.`as`("installTime"),
-            tspr.TYPE.`as`("installType")
+            ta.ID.`as`(KEY_ID),
+            ta.ATOM_CODE.`as`(KEY_ATOM_CODE),
+            ta.NAME.`as`(NAME),
+            ta.LOGO_URL.`as`(KEY_LOGO_URL),
+            ta.CATEGROY.`as`(KEY_CATEGORY),
+            ta.SUMMARY.`as`(KEY_SUMMARY),
+            ta.PUBLISHER.`as`(KEY_PUBLISHER),
+            tc.ID.`as`(KEY_CLASSIFY_ID),
+            tc.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
+            tc.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
+            tspr.CREATOR.`as`(KEY_INSTALLER),
+            tspr.CREATE_TIME.`as`(KEY_INSTALL_TIME),
+            tspr.TYPE.`as`(KEY_INSTALL_TYPE)
         )
             .from(ta)
             .join(t)
-            .on(
-                ta.ATOM_CODE.eq(t.field("atomCode", String::class.java))
-                    .and(ta.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java)))
-            )
+            .on(ta.ATOM_CODE.eq(t.field(KEY_ATOM_CODE, String::class.java))
+                .and(ta.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java))))
             .join(tc)
             .on(ta.CLASSIFY_ID.eq(tc.ID))
             .join(tspr)

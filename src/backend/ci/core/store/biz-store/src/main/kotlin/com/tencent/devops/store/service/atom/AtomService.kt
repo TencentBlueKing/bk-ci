@@ -54,10 +54,12 @@ interface AtomService {
         accessToken: String,
         userId: String,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
-        projectCode: String,
+        projectCode: String?,
         category: String?,
         classifyId: String?,
+        recommendFlag: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?>
@@ -67,10 +69,12 @@ interface AtomService {
      */
     fun serviceGetPipelineAtoms(
         serviceScope: String?,
+        jobType: String?,
         os: String?,
-        projectCode: String,
+        projectCode: String?,
         category: String?,
         classifyId: String?,
+        recommendFlag: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?>

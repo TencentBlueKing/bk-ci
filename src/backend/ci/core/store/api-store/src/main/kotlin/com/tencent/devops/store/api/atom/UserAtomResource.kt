@@ -73,18 +73,24 @@ interface UserAtomResource {
         @ApiParam("支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
         @QueryParam("serviceScope")
         serviceScope: String?,
+        @ApiParam("job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+        @QueryParam("jobType")
+        jobType: String?,
         @ApiParam("操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
         @QueryParam("os")
         os: String?,
-        @ApiParam("项目编码", required = true)
+        @ApiParam("项目编码", required = false)
         @QueryParam("projectCode")
-        projectCode: String,
+        projectCode: String?,
         @ApiParam("插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
         @QueryParam("category")
         category: String?,
         @ApiParam("插件分类id", required = false)
         @QueryParam("classifyId")
         classifyId: String?,
+        @ApiParam("是否推荐", required = false)
+        @QueryParam("recommendFlag")
+        recommendFlag: Boolean?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
         page: Int?,
