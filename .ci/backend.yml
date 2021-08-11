@@ -33,6 +33,8 @@ stages:
           port: 3306
           # MYSQL登录密码, 必选
           mysqlPw: root
+          initCmd: |
+            initCmd: CREATE DATABASE IF NOT EXISTS `test_mysql` DEFAULT CHARACTER SET utf8mb4;
       - name: "代码编译和单元测试"
         id: "step_4"
         run: | 
