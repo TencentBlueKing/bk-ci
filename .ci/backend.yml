@@ -39,5 +39,5 @@ stages:
         id: "step_4"
         run: | 
           cd src/backend/ci/ext/tencent
-          mysql -h ${MYSQL_IP} -P ${MYSQL_PORT} -uroot -proot -e “select NOW()”
+          mysql -h ${MYSQL_IP} -P ${MYSQL_PORT} -uroot -proot -e "select now()"
 
