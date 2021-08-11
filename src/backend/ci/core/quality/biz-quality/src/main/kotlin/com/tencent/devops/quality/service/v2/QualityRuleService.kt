@@ -57,6 +57,7 @@ import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.dao.v2.QualityRuleMapDao
+import com.tencent.devops.quality.exception.QualityOpConfigException
 import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.RulePermission
 import com.tencent.devops.quality.pojo.enum.RuleOperation
@@ -175,6 +176,8 @@ class QualityRuleService @Autowired constructor(
         val size = qualityRuleDao.deleteByPipelineId(dslContext, projectId, pipelineId)
         logger.info("finish to clean pre rule: $projectId, $pipelineId, $size")
 
+        checkRuleRequest(ruleRequestList)
+
         return ruleRequestList.map { ruleRequest ->
             logger.info("start to create rule: $projectId, $pipelineId, ${ruleRequest.name}")
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
@@ -213,10 +216,32 @@ class QualityRuleService @Autowired constructor(
                 createAuth = false)
 
             logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
-            val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId,
+            qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId,
                 HashUtil.decodeIdToLong(ruleId), ruleRequest, indicatorIds)
 
-            RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, HashUtil.encodeLongId(id))
+            RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, ruleId)
+        }
+    }
+
+    private fun checkRuleRequest(ruleRequestList: List<RuleCreateRequestV3>) {
+        ruleRequestList.forEach { request ->
+            request.opList?.forEach { op ->
+                if (op.operation == RuleOperation.END) {
+                    if (op.notifyTypeList.isNullOrEmpty()) {
+                        throw QualityOpConfigException("notify type is empty for operation notify")
+                    }
+                    if (op.notifyGroupList.isNullOrEmpty() && op.notifyUserList.isNullOrEmpty()) {
+                        throw QualityOpConfigException("notifyGroupList and notifyUserList is empty for operation end")
+                    }
+                } else {
+                    if (op.auditTimeoutMinutes == null) {
+                        throw QualityOpConfigException("auditTimeoutMinutes is empty for operation audit")
+                    }
+                    if (op.auditUserList.isNullOrEmpty()) {
+                        throw QualityOpConfigException("auditUserList is empty for operation audit")
+                    }
+                }
+            }
         }
     }
 

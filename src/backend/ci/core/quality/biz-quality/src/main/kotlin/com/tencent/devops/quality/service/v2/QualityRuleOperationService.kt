@@ -89,6 +89,10 @@ class QualityRuleOperationService @Autowired constructor(
     }
 
     fun serviceGet(dslContext: DSLContext, ruleId: Long): Result<TQualityRuleOperationRecord> {
+        return serviceList(dslContext, listOf(ruleId))
+    }
+
+    fun serviceList(dslContext: DSLContext, ruleId: Collection<Long>): Result<TQualityRuleOperationRecord> {
         return ruleOperationDao.get(dslContext, ruleId)
     }
 }

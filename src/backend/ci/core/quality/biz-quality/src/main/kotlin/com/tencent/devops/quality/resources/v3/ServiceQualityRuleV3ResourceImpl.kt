@@ -45,7 +45,7 @@ class ServiceQualityRuleV3ResourceImpl @Autowired constructor(
     private val qualityRuleCheckService: QualityRuleCheckService
 ) : ServiceQualityRuleResource {
     override fun check(buildCheckParams: BuildCheckParamsV3): Result<RuleCheckResult> {
-        return Result(qualityRuleCheckService.check(buildCheckParams))
+        return Result(qualityRuleCheckService.checkV3(buildCheckParams))
     }
 
     override fun create(
