@@ -23,14 +23,14 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("人工TriggerBuild启动构建")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/startup")
+    @Path("/gitprojects/{gitProjectId}/pipelines/{pipelineId}/startup")
     fun triggerStartup(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
+        @ApiParam(value = "工蜂项目ID", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: String,
         @ApiParam(value = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
