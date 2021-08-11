@@ -1,11 +1,11 @@
 <template>
     <section>
-        <span class="review-title">人工审核</span>
-        <span class="review-subtitle">审核说明</span>
+        <span class="review-title">{{ $t('stageReview.manualApprovals') }}</span>
+        <span class="review-subtitle">{{ $t('stageReview.approvalDescription') }}</span>
         <section :class="{ 'review-desc': true, 'show-more': isShowMore }">{{ desc }}</section>
         <bk-button text title="primary" @click="isShowMore = !isShowMore" v-if="isShowMoreButton">
-            <span v-if="!isShowMore" class="opt-button">展开更多<i class="bk-icon icon-angle-down"></i></span>
-            <span v-else class="opt-button">收起更多<i class="bk-icon icon-angle-up"></i></span>
+            <span v-if="!isShowMore" class="opt-button">{{ $t('stageReview.showMore') }}<i class="bk-icon icon-angle-down"></i></span>
+            <span v-else class="opt-button">{{ $t('stageReview.hideMore') }}<i class="bk-icon icon-angle-up"></i></span>
         </bk-button>
     </section>
 </template>

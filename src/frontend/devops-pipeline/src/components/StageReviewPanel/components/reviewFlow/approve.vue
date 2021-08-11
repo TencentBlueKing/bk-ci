@@ -1,8 +1,8 @@
 <template>
     <section>
         <span class="review-subtitle">
-            审核流
-            <span class="review-clock" v-bk-tooltips="{ content: '请在本时间之前完成审核操作，逾期将取消执行，自动标记流水线为Stage成功状态' }">
+            {{ $t('stageReview.approvalFlow') }}
+            <span class="review-clock" v-bk-tooltips="{ content: $t('stageReview.timeOutTips', computedTime) }">
                 <i class="bk-icon icon-clock"></i>
                 {{ computedTime }}
             </span>
@@ -18,21 +18,21 @@
         <bk-divider></bk-divider>
 
         <span class="review-subtitle mt12">
-            当前状态<span class="gray-color ml20">{{ computedStatusTxt }}</span>
+            {{ $t('stageReview.currentStatus') }}<span class="gray-color ml20">{{ computedStatusTxt }}</span>
         </span>
         <bk-radio-group v-model="isCancel" class="review-result">
             <bk-radio :value="false" :disabled="disabled">
-                同意 <span class="gray-color">（继续执行流水线）</span>
+                {{ $t('stageReview.approve') }} <span class="gray-color">（{{ $t('stageReview.approveRes') }}）</span>
             </bk-radio>
             <bk-radio :value="true" :disabled="disabled" class="ml135">
-                驳回 <span class="gray-color">（取消执行，立即标记为Stage成功状态）</span>
+                {{ $t('stageReview.abort') }} <span class="gray-color">（{{ $t('stageReview.abortRes') }}）</span>
             </bk-radio>
         </bk-radio-group>
 
-        <span class="review-subtitle">审核意见</span>
+        <span class="review-subtitle">{{ $t('stageReview.approvalOpinion') }}</span>
         <bk-input
-            placeholder="请输入审核意见，驳回时必填"
             type="textarea"
+            :placeholder="$t('stageReview.opinionTips')"
             :rows="3"
             :maxlength="200"
             :disabled="disabled"
@@ -97,9 +97,9 @@
                 const curExecIndex = this.reviewGroups.findIndex(x => x.status === undefined) + 1
                 const { reviewers, operator } = this.showReviewGroup
 
-                let statusTxt = `已审批，处理人：${operator}`
-                if (curExecIndex < this.curStep) statusTxt = `待审批，处理人：${reviewers.join(', ')}`
-                if (curExecIndex === this.curStep) statusTxt = `审批中，处理人：${reviewers.join(', ')}`
+                let statusTxt = this.$t('stageReview.approved', [operator])
+                if (curExecIndex < this.curStep) statusTxt = this.$t('stageReview.waitApproval', [reviewers.join(', ')])
+                if (curExecIndex === this.curStep) statusTxt = this.$t('stageReview.pendingApproval', [reviewers.join(', ')])
 
                 return statusTxt
             }
@@ -125,7 +125,7 @@
             getApproveData () {
                 return new Promise((resolve, reject) => {
                     if (this.isCancel && this.suggest === '') {
-                        this.errMessage = '驳回时，审核意见必填'
+                        this.errMessage = this.$t('stageReview.opinionRequired')
                         reject(new Error(this.errMessage))
                     } else {
                         this.errMessage = ''

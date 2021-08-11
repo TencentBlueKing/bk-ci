@@ -18,19 +18,19 @@
                     <user-input
                         clearable
                         class="review-user"
-                        placeholder="请输入一个或多个审核人，支持输入变量"
+                        :placeholder="$t('stageReview.userInputTips')"
                         :value="reviewGroup.reviewers"
                         :disabled="disabled"
                         :handle-change="(name, value) => addReviewUser(reviewGroup, name, value)"
                     ></user-input>
 
-                    <bk-button text title="primary" @click="deleteReviewGroup(index)" :disabled="disabled" class="review-opt">删除</bk-button>
+                    <bk-button text title="primary" @click="deleteReviewGroup(index)" :disabled="disabled" class="review-opt">{{ $t('delete') }}</bk-button>
                 </section>
-                <span v-if="errorIndexs.includes(index)" class="bk-form-tip is-danger">审核名称和审核人必填</span>
+                <span v-if="errorIndexs.includes(index)" class="bk-form-tip is-danger">{{ $t('stageReview.reviewRequire') }}</span>
             </bk-form-item>
         </bk-form>
         <bk-button text title="primary" @click="addReviewGroup" :disabled="disabled || reviewGroups.length >= 5" class="review-opt mt3">
-            <i class="bk-icon icon-plus-circle"></i>添加审批步骤
+            <i class="bk-icon icon-plus-circle"></i>{{ $t('stageReview.addFlow') }}
         </bk-button>
     </section>
 </template>

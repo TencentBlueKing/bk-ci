@@ -1,6 +1,6 @@
 <template>
     <section>
-        <span class="review-subtitle">审核流</span>
+        <span class="review-subtitle">{{ $t('stageReview.approvalFlow') }}</span>
         <bk-timeline :list="computedReviewGroups"></bk-timeline>
     </section>
 </template>
@@ -39,12 +39,12 @@
                             <section class="stage-review-content">
                                 <p class="review-title">
                                     {item.name}
-                                    <span class="review-normal"> 由 {item.operator} 审批：</span>
-                                    <span class="review-process"> 同意（继续执行流水线） </span>
+                                    <span class="review-normal"> { this.$t('stageReview.approveBy', [item.operator]) } </span>
+                                    <span class="review-process"> { this.$t('stageReview.approve') }（{ this.$t('stageReview.approveRes') }） </span>
                                 </p>
-                                <p v-show={paramStr}>变更参数：{paramStr}</p>
-                                <p>审批意见：{item.suggest || '无'}</p>
-                                <p>审批时间：{convertTime(item.reviewTime)}</p>
+                                <p v-show={paramStr}>{ this.$t('stageReview.editVariable') }{paramStr}</p>
+                                <p>{ this.$t('stageReview.approveOpinion') }{item.suggest}</p>
+                                <p>{ this.$t('stageReview.approveTime') }{convertTime(item.reviewTime)}</p>
                             </section>
                         )
                         break
@@ -53,11 +53,11 @@
                             <section class="stage-review-content">
                                 <p class="review-title">
                                     {item.name}
-                                    <span class="review-normal"> 由 {item.operator} 审批：</span>
-                                    <span class="review-abort"> 驳回（取消执行，立即标记为Stage成功状态） </span>
+                                    <span class="review-normal"> { this.$t('stageReview.approveBy', [item.operator]) }</span>
+                                    <span class="review-abort">{ this.$t('stageReview.abort') }（{ this.$t('stageReview.abortRes') }） </span>
                                 </p>
-                                <p>审批意见：{item.suggest || '无'}</p>
-                                <p>审批时间：{convertTime(item.reviewTime)}</p>
+                                <p>{ this.$t('stageReview.approveOpinion') }{item.suggest}</p>
+                                <p>{ this.$t('stageReview.approveTime') }{convertTime(item.reviewTime)}</p>
                             </section>
                         )
                         break
@@ -66,7 +66,7 @@
                             <section class="stage-review-content">
                                 <p class="review-title">
                                     {item.name}
-                                    <span class="review-normal"> 处理人：{item.reviewers.join(',')}</span>
+                                    <span class="review-normal"> { this.$t('stageReview.approver') }{item.reviewers.join(',')}</span>
                                 </p>
                             </section>
                         )

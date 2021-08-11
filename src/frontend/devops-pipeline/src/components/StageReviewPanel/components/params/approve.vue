@@ -1,6 +1,6 @@
 <template>
     <section v-if="computedShowParam">
-        <span class="review-subtitle">自定义参数</span>
+        <span class="review-subtitle">{{ $t('stageReview.customVariables') }}</span>
         <ul>
             <li v-for="(param, index) in params" :key="index" class="review-params">
                 <bk-input disabled :value="param.key" class="review-param-item"></bk-input>
@@ -69,7 +69,7 @@
                             }
                         }
                     })
-                    if (errorKeys.length) this.errMessage = `${errorKeys.join(',')} 是必填项，请修改后再试`
+                    if (errorKeys.length) this.errMessage = this.$t('stageReview.requireRule', [errorKeys.join(',')])
                     else this.errMessage = ''
 
                     if (this.errMessage && !this.$parent.$refs.flowApprove.isCancel) reject(new Error(this.errMessage))

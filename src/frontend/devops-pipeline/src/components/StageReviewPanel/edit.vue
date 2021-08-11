@@ -1,6 +1,6 @@
 <template>
     <div class="pipeline-stage-review-control bk-form bk-form-vertical">
-        <form-field label="准入规则" class="stage-rule">
+        <form-field :label="$t('stageReview.stageInConditions')" class="stage-rule">
             <bk-radio-group class="stage-review-radio-group" v-model="manualTrigger">
                 <bk-radio :disabled="disabled" :value="false">{{ $t('disableStageReviewRadioLabel') }}</bk-radio>
                 <bk-radio :disabled="disabled" :value="true" style="marginLeft:82px">{{ $t('enableStageReviewRadioLabel') }}</bk-radio>
@@ -9,7 +9,7 @@
         <template v-if="manualTrigger">
             <bk-divider class="stage-divider"></bk-divider>
 
-            <form-field required label="审核流" :is-error="!hasTriggerMember" :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')">
+            <form-field required :label="$t('stageReview.approvalFlow')" :is-error="!hasTriggerMember" :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')">
                 <edit-review-flow
                     :review-groups="reviewGroups"
                     :disabled="disabled"

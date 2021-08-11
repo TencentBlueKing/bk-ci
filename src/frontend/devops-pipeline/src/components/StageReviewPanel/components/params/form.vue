@@ -10,13 +10,13 @@
         @confirm="confirm"
         @cancel="cancel">
         <bk-form form-type="vertical" :model="copyForm" ref="paramForm">
-            <bk-form-item label="参数名称" :rules="[requireRule('参数名称')]" property="key" :required="true" error-display-type="normal">
+            <bk-form-item :label="$t('stageReview.name')" :rules="[requireRule($t('stageReview.name'))]" property="key" :required="true" error-display-type="normal">
                 <bk-input v-model="copyForm.key"></bk-input>
             </bk-form-item>
-            <bk-form-item label="中文名">
+            <bk-form-item :label="$t('stageReview.alias')">
                 <bk-input v-model="copyForm.chineseName"></bk-input>
             </bk-form-item>
-            <bk-form-item label="参数类型" :rules="[requireRule('参数类型')]" property="valueType" :required="true" error-display-type="normal">
+            <bk-form-item :label="$t('stageReview.type')" :rules="[requireRule($t('stageReview.type'))]" property="valueType" :required="true" error-display-type="normal">
                 <bk-select v-model="copyForm.valueType" @selected="changeValueType" searchable>
                     <bk-option v-for="option in paramTypeList"
                         :key="option.id"
@@ -25,23 +25,23 @@
                     </bk-option>
                 </bk-select>
             </bk-form-item>
-            <bk-form-item label="下拉选项" v-if="isSelectorParam(copyForm.valueType)" :desc="$t('editPage.optionsDesc')">
+            <bk-form-item :label="$t('stageReview.listOptions')" v-if="isSelectorParam(copyForm.valueType)" :desc="$t('editPage.optionsDesc')">
                 <bk-input type="textarea" :value="getTextAreaValue()" @blur="changeOption" :placeholder="$t('editPage.optionTips')"></bk-input>
             </bk-form-item>
-            <bk-form-item label="默认值" v-if="copyForm.valueType" :key="copyForm.valueType">
+            <bk-form-item :label="$t('stageReview.defaultValue')" v-if="copyForm.valueType" :key="copyForm.valueType">
                 <param-value :form="copyForm"></param-value>
             </bk-form-item>
-            <bk-form-item label="是否必填">
+            <bk-form-item :label="$t('stageReview.required')">
                 <bk-radio-group v-model="copyForm.required">
                     <bk-radio :value="true">
-                        是
+                        {{ $t('stageReview.true') }}
                     </bk-radio>
                     <bk-radio :value="false" style="marginLeft:55px">
-                        否
+                        {{ $t('stageReview.false') }}
                     </bk-radio>
                 </bk-radio-group>
             </bk-form-item>
-            <bk-form-item label="描述">
+            <bk-form-item :label="$t('desc')">
                 <bk-input type="textarea" v-model="copyForm.desc"></bk-input>
             </bk-form-item>
         </bk-form>
@@ -88,7 +88,7 @@
         computed: {
             computedTitle () {
                 const keys = Object.keys(this.param)
-                return keys.length ? '编辑参数' : '添加参数'
+                return keys.length ? this.$t('stageReview.editVariables') : this.$t('stageReview.createVariables')
             }
         },
 
@@ -118,7 +118,7 @@
                     validator (val) {
                         return val.length
                     },
-                    message: label + '必填项',
+                    message: this.$t('stageReview.requireRule', [label]),
                     trigger: 'blur'
                 }
             },
