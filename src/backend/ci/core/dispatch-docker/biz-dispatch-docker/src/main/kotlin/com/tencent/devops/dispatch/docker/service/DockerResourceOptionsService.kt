@@ -214,8 +214,8 @@ class DockerResourceOptionsService constructor(
                 return UserDockerResourceOptionsVO(default, needShow, dockerResourceOptionsMaps)
             }
             else -> {
-                return extDockerResourceOptionsService.getDockerResourceConfigList(userId, projectId, buildType) ?:
-                        UserDockerResourceOptionsVO(
+                return extDockerResourceOptionsService.getDockerResourceConfigList(
+                    userId, projectId, buildType ?: BuildType.DOCKER.name) ?: UserDockerResourceOptionsVO(
                             default = "",
                             needShow = false,
                             dockerResourceOptionsMaps = emptyList()
