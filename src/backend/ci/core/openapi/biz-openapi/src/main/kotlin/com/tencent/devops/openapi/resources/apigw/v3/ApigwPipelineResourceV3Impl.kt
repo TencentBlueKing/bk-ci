@@ -26,35 +26,28 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v3
 
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwPipelineResourceV3
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.PipelineName
-import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
-import com.tencent.devops.process.service.PipelineInfoFacadeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwPipelineResourceV3Impl @Autowired constructor(
-    private val client: Client,
-    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
-    private val auditService: AuditService
+    private val client: Client
 ) :
     ApigwPipelineResourceV3 {
     override fun status(
@@ -202,29 +195,13 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         pipelineId: String,
         pipeline: PipelineCopy
     ): Result<PipelineId> {
-        checkParam(userId, projectId)
-        val pid = PipelineId(
-            pipelineInfoFacadeService.copyPipeline(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                name = pipeline.name,
-                desc = pipeline.desc,
-                channelCode = ChannelCode.BS
-            )
+        logger.info("copy pipelines by user, userId:$userId")
+        return client.get(ServicePipelineResource::class).copy(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipeline = pipeline
         )
-        auditService.createAudit(
-            Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceId = pid.id,
-                resourceName = pipeline.name,
-                userId = userId,
-                action = "copy",
-                actionContent = "复制流水线/Copy Pipeline from($pipelineId)",
-                projectId = projectId
-            )
-        )
-        return Result(pid)
     }
 
     override fun getListByUser(
@@ -285,15 +262,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             setting = setting
         )
-    }
-
-    private fun checkParam(userId: String, projectId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
     }
 
     companion object {
