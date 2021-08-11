@@ -205,7 +205,7 @@ class PipelineBuildStageDao {
                 val checkOutOption = if (!checkOut.isNullOrBlank()) {
                     JsonUtil.to(checkOut, StagePauseCheck::class.java)
                 } else {
-                    StagePauseCheck(timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS)
+                    null
                 }
 
                 PipelineBuildStage(
