@@ -42,7 +42,7 @@ enum class TriggerReason(val summary: String, val detail: String) {
         "The YAML file cannot be found in the .ci directory",
         "The YAML file cannot be found in the .ci directory"
     ),
-    CI_YAML_CONTENT_NULL("The YAML file is null", "The YAML file is null"),
+    CI_YAML_CONTENT_NULL("The YAML file is null", "The YAML file is null: %s"),
     CI_YAML_INVALID("YAML is invalid", "YAML is invalid: %s"),
     CI_YAML_NEED_MERGE_OR_REBASE(
         "The YAML is modified. " +
