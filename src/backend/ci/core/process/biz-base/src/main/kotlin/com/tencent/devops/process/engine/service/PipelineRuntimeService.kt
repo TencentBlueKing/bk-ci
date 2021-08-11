@@ -1064,7 +1064,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
 
             // TODO 只在第一次启动时刷新为QUEUE，后续只需保留兼容数据刷新
-            stage.refreshReviewOption()
+            stage.refreshReviewOption(true)
             if (stage.checkIn?.manualTrigger == true &&
                 stage.checkIn?.groupToReview() != null) {
                 stage.reviewStatus = BuildStatus.QUEUE.name
