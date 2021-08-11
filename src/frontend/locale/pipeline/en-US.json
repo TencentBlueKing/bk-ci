@@ -154,7 +154,7 @@
         "approve": "Approve",
         "approveRes": "Continue pipeline execution",
         "abort": "Reject",
-        "abortRes": "Set previous stage status as Stage Success",
+        "abortRes": "Reject, and set pipeline status as Stage Success",
         "approvalOpinion": "Approval opinion",
         "opinionTips": "Please enter approval opinion",
         "pendingApproval": "Pending approval. Approver: {0}",
