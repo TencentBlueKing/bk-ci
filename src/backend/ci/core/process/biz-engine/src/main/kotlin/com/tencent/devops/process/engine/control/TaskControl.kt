@@ -40,7 +40,7 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
-import com.tencent.devops.process.engine.control.lock.TaskIdLock
+import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -77,14 +77,14 @@ class TaskControl @Autowired constructor(
             id = "ENGINE|TaskControl|${event.traceId}|${event.buildId}|Job#${event.containerId}|Task#${event.taskId}"
         )
         with(event) {
-            val taskIdLock = TaskIdLock(redisOperation, buildId, taskId)
+            val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
             try {
                 watcher.start("lock")
-                taskIdLock.lock()
+                containerIdLock.lock()
                 watcher.start("execute")
                 execute()
             } finally {
-                taskIdLock.unlock()
+                containerIdLock.unlock()
                 watcher.stop()
                 LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 2000)
             }
@@ -190,7 +190,7 @@ class TaskControl @Autowired constructor(
             }
         }
         buildTask.status.isRunning() -> { // 运行中的，检查是否运行结束，以及决定是否强制终止
-            atomBuildStatus(taskAtomService.tryFinish(task = buildTask, force = actionType.isTerminate()))
+            atomBuildStatus(taskAtomService.tryFinish(task = buildTask, actionType = actionType))
         }
         else -> buildTask.status // 其他状态不做动作
     }

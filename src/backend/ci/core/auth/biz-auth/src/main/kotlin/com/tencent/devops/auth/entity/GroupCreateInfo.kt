@@ -29,7 +29,7 @@ package com.tencent.devops.auth.entity
 
 data class GroupCreateInfo(
     val groupCode: String,
-    val groupType: String,
+    val groupType: Boolean,
     val groupName: String,
     val displayName: String?,
     val relationId: String?,
