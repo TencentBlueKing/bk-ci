@@ -149,7 +149,7 @@
         "approvalDescription": "Approval description",
         "showMore": "More",
         "hideMore": "Collapse",
-        "timeOutTips": "Please approve before {0}. If overdued, pipeline status will be set as Stage Success automatically.",
+        "timeOutTips": "Please approve before time. If overdued, pipeline status will be set as Stage Success automatically.",
         "currentStatus": "Current status",
         "approve": "Approve",
         "approveRes": "Continue pipeline execution",
@@ -164,11 +164,11 @@
         "userInputTips": "Please enter approvers. Pipeline variable is supported.",
         "reviewRequire": "Name of approval flow and approvers are required",
         "addFlow": "Create approval step",
-        "approveBy": "Approval by {0}:",
-        "editVariable": "Edit variable:",
-        "approveOpinion": "Approval opinion:",
-        "approveTime": "Approval time:",
-        "approver": "Approver:"
+        "approveBy": "Approved by {0}: ",
+        "editVariable": "Edit variable: ",
+        "approveOpinion": "Approval opinion: ",
+        "approveTime": "Approval time: ",
+        "approver": "Approver: "
     },
     "execDetail": {
         "log": "Log",

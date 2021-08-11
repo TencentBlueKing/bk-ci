@@ -2,7 +2,7 @@
     <section>
         <span class="review-subtitle">
             {{ $t('stageReview.approvalFlow') }}
-            <span class="review-clock" v-bk-tooltips="{ content: $t('stageReview.timeOutTips', computedTime) }">
+            <span class="review-clock" v-bk-tooltips="{ content: $t('stageReview.timeOutTips') }">
                 <i class="bk-icon icon-clock"></i>
                 {{ computedTime }}
             </span>

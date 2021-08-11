@@ -93,7 +93,10 @@
                         suggest: flowData.suggest,
                         id: flowData.id,
                         reviewParams
-                    }).then(this.cancelApprove)
+                    }).then(() => {
+                        this.cancelApprove()
+                        this.$bkMessage({ theme: 'success', message: this.$t('editPage.operateSuc') })
+                    })
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {
