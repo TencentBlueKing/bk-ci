@@ -638,7 +638,9 @@ class PreBuildV2Service @Autowired constructor(
 
         preJobList.forEach { preJob ->
             // runs-on存在3种结构，String、标签的话是数组、T
-            if (preJob.runsOn == null || preJob.runsOn!! is String || preJob.runsOn!! is List<*>) {
+            if (preJob.runsOn == null || preJob.runsOn!! is String
+                || preJob.runsOn!! is Array<*> || preJob.runsOn!! is List<*>
+            ) {
                 return@forEach
             }
 
