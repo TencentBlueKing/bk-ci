@@ -227,6 +227,18 @@ class QualityRuleDao {
         }
     }
 
+    fun listByIds(
+        dslContext: DSLContext,
+        ruleIds: Set<String>
+    ): Result<TQualityRuleRecord> {
+        with(TQualityRule.T_QUALITY_RULE) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(ruleIds))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
+
     fun listByPosition(dslContext: DSLContext, projectId: String, position: String): Result<TQualityRuleRecord>? {
         with(TQualityRule.T_QUALITY_RULE) {
             val sql = dslContext.selectFrom(this)
@@ -238,6 +250,36 @@ class QualityRuleDao {
                     )
                 )
             return sql.fetch()
+        }
+    }
+
+    fun searchByIdLike(
+        dslContext: DSLContext,
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        name: String
+    ): List<TQualityRuleRecord>? {
+        return with(TQualityRule.T_QUALITY_RULE) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(NAME.like("%$name%")))
+                .orderBy(CREATE_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun countByIdLike(
+        dslContext: DSLContext,
+        projectId: String,
+        name: String
+    ): Long {
+        with(TQualityRule.T_QUALITY_RULE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NAME.like("%$name%"))
+                .fetchOne(0, kotlin.Long::class.java)!!
         }
     }
 

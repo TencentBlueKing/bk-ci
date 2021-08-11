@@ -438,13 +438,20 @@ class PipelineInfoFacadeService @Autowired constructor(
                 permission = AuthPermission.EDIT,
                 message = "用户无流水线编辑权限"
             )
-            pipelinePermissionService.validPipelinePermission(
+//            pipelinePermissionService.validPipelinePermission(
+//                userId = userId,
+//                projectId = projectId,
+//                pipelineId = "*",
+//                permission = AuthPermission.CREATE,
+//                message = "用户($userId)无权限在工程($projectId)下创建流水线"
+//            )
+            if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
-                pipelineId = "*",
-                permission = AuthPermission.CREATE,
-                message = "用户($userId)无权限在工程($projectId)下创建流水线"
-            )
+                permission = AuthPermission.CREATE
+            )) {
+                throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下创建流水线")
+            }
         }
 
         if (pipeline.channelCode != channelCode) {
@@ -703,6 +710,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagIds
+                it.refreshReviewOption()
             }
 
             // 部分老的模板实例没有templateId，需要手动加上
