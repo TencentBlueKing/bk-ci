@@ -91,6 +91,9 @@ interface UserAtomResource {
         @ApiParam("是否推荐", required = false)
         @QueryParam("recommendFlag")
         recommendFlag: Boolean?,
+        @ApiParam("搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
         page: Int?,

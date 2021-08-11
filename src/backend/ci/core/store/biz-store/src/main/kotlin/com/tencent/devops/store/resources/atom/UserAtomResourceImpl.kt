@@ -59,6 +59,7 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
+        keyword: String?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {

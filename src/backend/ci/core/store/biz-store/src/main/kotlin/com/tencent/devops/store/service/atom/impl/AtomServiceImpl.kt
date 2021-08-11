@@ -184,6 +184,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     category = null,
                     classifyId = null,
                     recommendFlag = null,
+                    keyword = null,
                     page = null,
                     pageSize = null
                 ).data
@@ -205,6 +206,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
+        keyword: String?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
@@ -237,8 +239,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
+            keyword = keyword,
             page = page,
-            pageSize = pageSize)
+            pageSize = pageSize
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -250,6 +254,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
+        keyword: String?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
@@ -263,8 +268,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
+            keyword = keyword,
             page = page,
-            pageSize = pageSize)
+            pageSize = pageSize
+        )
         pipelineAtoms?.forEach {
             val name = it[NAME] as String
             val atomCode = it[KEY_ATOM_CODE] as String
@@ -335,7 +342,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             projectCode = projectCode,
             category = category,
             classifyId = classifyId,
-            recommendFlag = recommendFlag)
+            recommendFlag = recommendFlag,
+            keyword = keyword
+        )
         val totalPage = PageUtil.calTotalPage(pageSize, totalSize)
         return Result(AtomResp(totalSize, page, pageSize, totalPage, dataList))
     }
