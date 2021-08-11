@@ -118,7 +118,7 @@
             var ifr = document.createElement("iframe");
             var validateParam = true;
             ifr.id = "ifr";
-            var flag = getQueryVariable("flag"); 	//体验版本=1;流水线=2；
+            var flag = getQueryVariable("flag");        //体验版本=1;流水线=2；
             var experienceId = getQueryVariable("experienceId");
             var projectId = getQueryVariable("projectId");
             var pipelineId = getQueryVariable("pipelineId");
@@ -152,7 +152,7 @@
                     break;
                 case "artifactoryDetail":
                     validateParam = projectId && artifactoryType && artifactoryPath;
-                    ifr.src = schemaPrefix + "artifactoryDetail/" + projectId + "/" + artifactoryType + "/" + artifactoryPath.replace(/\//g, '@@');
+                    ifr.src = schemaPrefix + "artifactoryDetail/" + projectId + "/" + artifactoryType + "/" + artifactoryPath.replace(/%2F/g, '@@');
                     break;
             }
 
