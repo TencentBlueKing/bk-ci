@@ -202,7 +202,7 @@ class QualityRuleCheckService @Autowired constructor(
             buildCheckParams.templateId,
             buildCheckParams.runtimeVariable
         )
-        return doCheckRules(buildCheckParams =  params, ruleList = ruleList)
+        return doCheckRules(buildCheckParams = params, ruleList = ruleList)
     }
 
     private fun doCheckRules(buildCheckParams: BuildCheckParams, ruleList: List<QualityRule>): RuleCheckResult {

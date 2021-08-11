@@ -55,7 +55,7 @@ class QualityRuleBuildHisService constructor(
         val opList = qualityRuleOperationService.serviceList(dslContext, ruleIds).map {
             QualityRule.RuleOp(
                 operation = RuleOperation.valueOf(it.type),
-                notifyTypeList = it.notifyTypes?.split(",")?.map {  type ->
+                notifyTypeList = it.notifyTypes?.split(",")?.map { type ->
                     NotifyType.valueOf(type)
                 },
                 notifyGroupList = it.notifyGroupId?.split(","),
