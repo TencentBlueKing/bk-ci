@@ -32,7 +32,7 @@ import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
 
 @MicroService
-@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.common")
+@ComponentScan("com.tencent.devops.plugin")
 class Application
 
 fun main(args: Array<String>) {

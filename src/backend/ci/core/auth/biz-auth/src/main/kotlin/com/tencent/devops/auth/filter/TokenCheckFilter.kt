@@ -53,13 +53,18 @@ class TokenCheckFilter @Autowired constructor(
         val httpServletRequest = request as HttpServletRequest
         val token = httpServletRequest.getHeader(AUTH_HEADER_DEVOPS_BK_TOKEN)
 
-        if (httpServletRequest.pathInfo == null) {
+        val pathInfo = httpServletRequest.pathInfo ?: return chain.doFilter(request, response)
+
+        if (!pathInfo.contains("/open/")) {
             return chain.doFilter(request, response)
         }
 
-        if (!httpServletRequest.pathInfo.contains("/open/")) {
+        // TODO: 配置化, 用于一些信任的第三方调用过来的特殊请求
+        if (pathInfo.contains("open/auth/resource/projects") ||
+            pathInfo.contains("open/auth/resource/instances/list")) {
             return chain.doFilter(request, response)
         }
+
         if (token != clientTokenService.getSystemToken(null)) {
             logger.warn("auth token fail: $token")
             throw TokenForbiddenException("token check fail")

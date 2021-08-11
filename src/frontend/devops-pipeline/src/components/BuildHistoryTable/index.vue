@@ -333,28 +333,31 @@
                 return ['QUEUE', 'RUNNING'].indexOf(row.status) < 0
             },
             async handleRemarkChange (row) {
+                if (this.isChangeRemark) return
+                const preRemark = row.remark
                 try {
                     const { $route: { params }, tempRemark } = this
                     if (tempRemark !== row.remark) {
                         this.isChangeRemark = true
-
+                        this.$set(row, 'remark', tempRemark)
+                        this.resetRemark()
                         await this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/${row.id}/updateRemark`, {
                             remark: tempRemark
                         })
-                        this.$emit('update-table')
                         this.$showTips({
                             theme: 'success',
                             message: this.$t('updateSuc')
                         })
-                        this.resetRemark()
                     } else {
                         this.resetRemark()
                     }
                 } catch (e) {
+                    console.log(e)
                     this.$showTips({
                         theme: 'error',
                         message: this.$t('updateFail')
                     })
+                    this.$set(row, 'remark', preRemark)
                 }
             },
             resetRemark () {

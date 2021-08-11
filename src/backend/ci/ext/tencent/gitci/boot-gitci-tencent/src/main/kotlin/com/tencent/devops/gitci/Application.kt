@@ -29,10 +29,8 @@ package com.tencent.devops.gitci
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
 
 @MicroService
-@ComponentScan("com.tencent.devops.gitci", "com.tencent.devops.common")
 
 class Application
 
