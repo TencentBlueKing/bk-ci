@@ -73,6 +73,7 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
+            keyword = keyword,
             page = page,
             pageSize = pageSize
         )
