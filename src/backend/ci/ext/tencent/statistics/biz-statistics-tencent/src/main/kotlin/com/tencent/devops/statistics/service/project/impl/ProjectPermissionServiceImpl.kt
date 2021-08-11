@@ -33,10 +33,10 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
@@ -56,7 +56,7 @@ import org.springframework.stereotype.Service
 class ProjectPermissionServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val authProperties: BkAuthProperties,
-    private val authProjectApi: BSAuthProjectApi,
+    private val authProjectApi: AuthProjectApi,
     private val authTokenApi: AuthTokenApi,
     private val bsProjectAuthServiceCode: BSProjectServiceCodec,
     private val authResourceApi: AuthResourceApi,

@@ -81,7 +81,9 @@ class OrganizationServiceImpl @Autowired constructor(
         if (cacheData != null) {
             return cacheData
         }
-        val deptInfo = client.get(ServiceProjectOrganizationResource::class).getDeptInfo("", organizationId.toInt()).data
+        val deptInfo = client.get(ServiceProjectOrganizationResource::class).getDeptInfo(
+            userId = null,
+            id = organizationId.toInt()).data
         logger.info("getOrganizationInfo $organizationId | $level | $deptInfo")
 
         if (deptInfo == null) {

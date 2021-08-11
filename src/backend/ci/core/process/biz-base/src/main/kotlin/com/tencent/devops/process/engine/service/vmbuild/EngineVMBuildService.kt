@@ -278,6 +278,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     fun buildClaimTask(buildId: String, vmSeqId: String, vmName: String): BuildTask {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
+            containerIdLock.lock()
             val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             if (buildInfo == null || buildInfo.status.isFinish()) {
                 LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId|$vmName|buildInfo ${buildInfo?.status}")
@@ -442,15 +443,18 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
         )
 
-        // 打印出失败继续的日志
-        if (buildStatus.isFailure() && ControlUtils.continueWhenFailure(task?.additionalOptions)) {
-            buildLogPrinter.addRedLine(
-                buildId = task!!.buildId,
-                message = "Plugin[${task.taskName}]: 失败自动跳过/continue when error",
-                tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
-            )
+        if (buildStatus.isFailure()) {
+            logTaskFailed(task, errorType)
+            // 打印出失败继续的日志
+            if (ControlUtils.continueWhenFailure(task?.additionalOptions)) {
+                buildLogPrinter.addRedLine(
+                    buildId = task!!.buildId,
+                    message = "Plugin[${task.taskName}]: 失败自动跳过/continue when error",
+                    tag = task.taskId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
+                )
+            }
         }
 
         pipelineEventDispatcher.dispatch(
@@ -509,6 +513,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     fun buildEndTask(buildId: String, vmSeqId: String, vmName: String): Boolean {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
+            containerIdLock.lock()
             val task = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
                 .firstOrNull { it.taskId == VMUtils.genEndPointTaskId(it.taskSeq) }
 
@@ -581,6 +586,34 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
         } catch (ignored: Throwable) {
             LOG.warn("ENGINE|$buildId|Agent|MEASURE|j(${result.containerId})|${result.taskId}|error=$ignored")
+        }
+    }
+
+    /**
+     *  #4191 输出失败任务流水线日志
+     */
+    private fun logTaskFailed(task: PipelineBuildTask?, errorType: ErrorType?) {
+        task?.run {
+            errorType?.also {
+                val errMsg = when (errorType) {
+                    ErrorType.USER ->
+                        "Error: Process completed with exit code $errorCode. Please check your input or service."
+                    ErrorType.THIRD_PARTY ->
+                        "Error: Process completed with exit code $errorCode." +
+                            " Please contact the third-party service provider."
+                    ErrorType.PLUGIN ->
+                        "Error: Process completed with exit code $errorCode. Please contact the plugin developer."
+                    ErrorType.SYSTEM ->
+                        "Error: Process completed with exit code $errorCode. Please contact DevOps-helper."
+                }
+                buildLogPrinter.addRedLine(
+                    buildId = buildId,
+                    message = errMsg,
+                    tag = taskId,
+                    jobId = containerHashId,
+                    executeCount = executeCount ?: 1
+                )
+            }
         }
     }
 

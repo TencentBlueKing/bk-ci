@@ -41,6 +41,7 @@ import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicBoolean
@@ -57,6 +58,9 @@ class PipelineQuartzService @Autowired constructor(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
+    @Value("\${timer.execute:#{null}}")
+    private val timeExecute: String? = null
+
     companion object {
         private val jobBeanClass = PipelineQuartzJob::class.java
         private val init = AtomicBoolean(false)
@@ -65,6 +69,12 @@ class PipelineQuartzService @Autowired constructor(
     @Suppress("ALL")
     @Scheduled(initialDelay = 20000, fixedDelay = 3000000)
     fun reloadTimer() {
+        // 通过配置决定对应的环境是否执行定时任务
+        if (!timeExecute.isNullOrEmpty()) {
+            logger.info("env can not execute timer plugin")
+            return
+        }
+
         logger.info("TIMER_RELOAD| start add timer pipeline to quartz queue!")
         var start = 0
         val limit = 200

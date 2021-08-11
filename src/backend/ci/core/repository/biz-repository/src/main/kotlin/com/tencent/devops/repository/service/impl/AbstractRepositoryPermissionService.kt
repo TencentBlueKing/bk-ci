@@ -28,7 +28,6 @@
 package com.tencent.devops.repository.service.impl
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
@@ -109,7 +108,7 @@ abstract class AbstractRepositoryPermissionService constructor(
                 serviceCode = codeAuthServiceCode,
                 resourceType = AuthResourceType.CODE_REPERTORY,
                 projectCode = projectId,
-                resourceCode = HashUtil.encodeOtherLongId(repositoryId),
+                resourceCode = repositoryId.toString(),
                 permission = authPermission
             )
         }

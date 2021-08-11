@@ -88,7 +88,7 @@ class ServiceGitCiResourceImpl @Autowired constructor(
     }
 
     override fun getGitCIFileContent(
-        gitProjectId: Long,
+        gitProjectId: String,
         filePath: String,
         token: String,
         ref: String,

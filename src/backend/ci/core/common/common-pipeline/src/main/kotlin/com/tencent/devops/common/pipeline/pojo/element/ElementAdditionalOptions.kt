@@ -59,5 +59,6 @@ enum class RunCondition {
     CUSTOM_VARIABLE_MATCH, // 自定义变量全部满足时运行
     CUSTOM_VARIABLE_MATCH_NOT_RUN, // 自定义变量全部满足时不运行
     CUSTOM_CONDITION_MATCH, // 满足以下自定义条件时运行 [未实现]
-    PARENT_TASK_CANCELED_OR_TIMEOUT // 父任务取消或者超时时才运行
+    PARENT_TASK_CANCELED_OR_TIMEOUT, // 父任务取消或者超时时才运行
+    PARENT_TASK_FINISH // 父任务结束就运行
 }
