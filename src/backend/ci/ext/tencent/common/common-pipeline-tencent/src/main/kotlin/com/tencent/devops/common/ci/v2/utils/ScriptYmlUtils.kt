@@ -47,7 +47,6 @@ import com.tencent.devops.common.ci.v2.Stage
 import com.tencent.devops.common.ci.v2.TagRule
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.ci.v2.YmlVersion
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
@@ -73,7 +72,6 @@ import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 object ScriptYmlUtils {
