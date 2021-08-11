@@ -33,4 +33,6 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:auth:api-auth"))
     api(project(":core:auth:model-auth"))
+    testImplementation(project(":core:common:common-test"))
+    api(project(":core:project:api-project"))
 }

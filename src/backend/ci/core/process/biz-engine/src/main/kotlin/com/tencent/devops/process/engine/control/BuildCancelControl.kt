@@ -34,6 +34,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
@@ -170,9 +171,13 @@ class BuildCancelControl @Autowired constructor(
         val stages = model.stages
         stages.forEachIndexed forEach@{ index, stage ->
             if (stage.finally && index > 1) {
-                // 当前stage为finallyStage且它前一个stage也已经运行过了，则finallyStage也能取消
+                // 当前stage为finallyStage且它前一个stage也已经运行过了或者还未运行业务逻辑，则finallyStage也能取消
                 val preStageStatus = BuildStatus.parse(stages[index - 1].status)
-                if (!preStageStatus.isFinish() && preStageStatus != BuildStatus.UNEXEC) {
+                val preStageNoExecuteBusFlag = !preStageStatus.isFinish() && preStageStatus != BuildStatus.UNEXEC
+                // 当触发器stage执行完成且业务stage还未执行，则不需要执行finallyStage
+                if (getStageExecuteBusFlag(stages[0]) &&
+                    (preStageNoExecuteBusFlag || !getStageExecuteBusFlag(stages[1]))
+                ) {
                     return@forEach
                 }
             }
@@ -183,11 +188,9 @@ class BuildCancelControl @Autowired constructor(
                 )
                 // 调整Container状态位
                 val containerBuildStatus = BuildStatus.parse(container.status)
-                // 获取当前job第一个插件
-                val firstElement = container.elements[0]
                 // 取消构建,当前运行的stage及当前stage下的job不能马上置为取消状态
                 if ((!containerBuildStatus.isFinish() && stageStatus != BuildStatus.RUNNING &&
-                        containerBuildStatus != BuildStatus.RUNNING) || firstElement.status.isNullOrBlank()
+                        containerBuildStatus != BuildStatus.RUNNING) || containerBuildStatus == BuildStatus.PREPARE_ENV
                 ) {
                     pipelineRuntimeService.updateContainerStatus(
                         buildId = event.buildId,
@@ -219,6 +222,21 @@ class BuildCancelControl @Autowired constructor(
                 }
             }
         }
+    }
+
+    private fun getStageExecuteBusFlag(tmpStage: Stage): Boolean {
+        val containers = tmpStage.containers
+        val containerSize = containers.size - 1
+        var flag = false
+        for (i in 0..containerSize) {
+            val container = containers[i]
+            if (!container.status.isNullOrBlank() && container.status != BuildStatus.UNEXEC.name) {
+                // stage下有容器执行过业务，跳出循环
+                flag = true
+                break
+            }
+        }
+        return flag
     }
 
     private fun NormalContainer.shutdown(event: PipelineBuildCancelEvent, executeCount: Int) {

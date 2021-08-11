@@ -74,14 +74,7 @@ data class Stage(
             return
         }
         val originControlOption = stageControlOption ?: return
-        if (originControlOption.manualTrigger != true) {
-            checkIn = StagePauseCheck(manualTrigger = stageControlOption?.manualTrigger)
-            checkOut = null
-            stageControlOption?.triggerUsers = null
-            stageControlOption?.triggered = null
-            stageControlOption?.reviewParams = null
-            stageControlOption?.reviewDesc = null
-        } else {
+        if (originControlOption.manualTrigger == true) {
             checkIn = StagePauseCheck.convertControlOption(originControlOption)
         }
         // TODO 在下一次发布中增加抹除旧数据逻辑
