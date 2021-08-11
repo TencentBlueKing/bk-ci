@@ -53,10 +53,12 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         accessToken: String,
         userId: String,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
-        projectCode: String,
+        projectCode: String?,
         category: String?,
         classifyId: String?,
+        recommendFlag: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
@@ -64,10 +66,12 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
             accessToken = accessToken,
             userId = userId,
             serviceScope = serviceScope,
+            jobType = jobType,
             os = os,
             projectCode = projectCode,
             category = category,
             classifyId = classifyId,
+            recommendFlag = recommendFlag,
             page = page,
             pageSize = pageSize
         )
