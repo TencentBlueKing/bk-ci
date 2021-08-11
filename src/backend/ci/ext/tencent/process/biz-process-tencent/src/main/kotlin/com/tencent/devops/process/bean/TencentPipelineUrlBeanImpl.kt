@@ -27,13 +27,9 @@
 
 package com.tencent.devops.process.bean
 
-import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
-import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Component
 
 class TencentPipelineUrlBeanImpl constructor(
     private val commonConfig: CommonConfig,
