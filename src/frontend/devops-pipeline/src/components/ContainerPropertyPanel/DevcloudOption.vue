@@ -20,6 +20,10 @@
             Selector
         },
         props: {
+            buildType: {
+                type: String,
+                default: 'DEVCLOUD'
+            },
             value: {
                 type: String,
                 default: ''
@@ -49,27 +53,16 @@
                 return this.$route.params.projectId
             }
         },
-        async created () {
-            this.selectValue = this.value
-            try {
-                this.isLoading = true
-                const res = await this.fetchDevcloudSettings({ projectId: this.projectId })
-                this.changeShowPerformance(res.data.needShow || false)
-                this.selectValue = this.value || res.data['default']
-                this.optionList = res.data.performanceMaps || []
-                this.optionList = this.optionList.map(item => {
-                    return {
-                        ...item,
-                        name: this.getShowOption(item.performanceConfigVO)
-                    }
-                })
-            } catch (err) {
-                this.$showTips({
-                    theme: 'error',
-                    message: err.message || err
+        watch: {
+            buildType (v) {
+                this.$nextTick(() => {
+                    this.getData()
                 })
             }
-            this.isLoading = false
+        },
+        async created () {
+            this.selectValue = this.value
+            this.getData()
         },
         methods: {
             ...mapActions('atom', [
@@ -80,6 +73,27 @@
             },
             getShowOption (obj) {
                 return `${obj.description} (${obj.cpu}${this.$t('editPage.cpuUnit')}/${obj.memory}/${obj.disk})`
+            },
+            async getData () {
+                try {
+                    this.isLoading = true
+                    const res = await this.fetchDevcloudSettings({ projectId: this.projectId, buildType: this.buildType })
+                    this.changeShowPerformance(res.data.needShow || false)
+                    this.selectValue = this.value || res.data['default']
+                    this.optionList = res.data.dockerResourceOptionsMaps || []
+                    this.optionList = this.optionList.map(item => {
+                        return {
+                            ...item,
+                            name: this.getShowOption(item.dockerResourceOptionsShow)
+                        }
+                    })
+                } catch (err) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: err.message || err
+                    })
+                }
+                this.isLoading = false
             }
         }
     }

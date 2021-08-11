@@ -117,6 +117,7 @@
                     <devcloud-option
                         :disabled="!editable"
                         :value="container.dispatchType.performanceConfigId"
+                        :build-type="buildResourceType"
                         :handle-change="changeBuildResourceWithoutEnv"
                         :change-show-performance="changeShowPerformance"
                     >
