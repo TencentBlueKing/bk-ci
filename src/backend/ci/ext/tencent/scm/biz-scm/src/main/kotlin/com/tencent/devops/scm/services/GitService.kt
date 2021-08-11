@@ -527,13 +527,13 @@ class GitService @Autowired constructor(
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
                 if (!it.isSuccessful) {
                     throw CustomException(
                         status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
                         message = "fail to get the git mrRequest info with: $url(${it.code()}): ${it.message()}"
                     )
                 }
+                val data = it.body()!!.string()
                 return JsonUtil.getObjectMapper().readValue(data) as GitCIMrInfo
             }
         } finally {
@@ -691,13 +691,13 @@ class GitService @Autowired constructor(
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
                 if (!it.isSuccessful) {
                     throw CustomException(
                         status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
                         message = "fail to get git file tree with: $url(${it.code()}): ${it.message()}"
                     )
                 }
+                val data = it.body()!!.string()
                 return JsonUtil.getObjectMapper().readValue(data) as List<GitFileInfo>
             }
         } finally {

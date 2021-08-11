@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.v2.utils
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.gitci.pojo.GitRequestEvent
@@ -53,6 +54,7 @@ class V2WebHookMatcher @Autowired constructor(
         private val matcher = AntPathMatcher()
     }
 
+    @Throws(ErrorCodeException::class)
     fun isMatch(
         triggerOn: TriggerOn,
         event: GitEvent,
@@ -340,7 +342,7 @@ class V2WebHookMatcher @Autowired constructor(
         if (pathList != null && pathList.isNotEmpty()) {
             logger.info("Mr Include path set($pathList)")
             val mrId = (event as GitMergeRequestEvent).object_attributes.id
-            val gitProjectId = event.object_attributes.source_project_id
+            val gitProjectId = gitRequestEvent.gitProjectId
             val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(
                 userId = event.user.name,
                 token = null,

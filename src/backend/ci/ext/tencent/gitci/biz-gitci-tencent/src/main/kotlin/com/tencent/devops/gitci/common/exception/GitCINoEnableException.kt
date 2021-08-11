@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.exception
+package com.tencent.devops.gitci.common.exception
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 

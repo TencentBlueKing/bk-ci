@@ -34,7 +34,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.GitCodeApiStatus
 import com.tencent.devops.gitci.utils.RetryUtils
-import com.tencent.devops.gitci.v2.exception.ErrorCodeEnum
+import com.tencent.devops.gitci.common.exception.ErrorCodeEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
@@ -66,11 +66,13 @@ class ScmService @Autowired constructor(
     }
 
     // 获取工蜂超级token
+    @Throws(ErrorCodeException::class)
     fun getToken(
         gitProjectId: String
     ): GitToken {
         return retryFun(
             log = "$gitProjectId get token fail",
+            apiErrorCode = ErrorCodeEnum.GET_TOKEN_ERROR,
             action = {
                 client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!
             }
@@ -85,8 +87,9 @@ class ScmService @Autowired constructor(
         useAccessToken: Boolean
     ): String {
         logger.info("getYamlFromGit: [$gitProjectId|$fileName|$token|$ref|$useAccessToken]")
-        val result = retryFun(
+        return retryFun(
             log = "$gitProjectId get yaml $fileName fail",
+            apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR,
             action = {
                 client.getScm(ServiceGitCiResource::class).getGitCIFileContent(
                     gitProjectId = gitProjectId,
@@ -94,13 +97,9 @@ class ScmService @Autowired constructor(
                     token = token,
                     ref = getTriggerBranch(ref),
                     useAccessToken = useAccessToken
-                )
+                ).data!!
             }
         )
-        if (result.data == null) {
-            throw RuntimeException("yaml $fileName is null")
-        }
-        return result.data!!
     }
 
     fun getProjectInfo(
@@ -117,7 +116,7 @@ class ScmService @Autowired constructor(
             )
             return result.data
         } catch (e: RemoteServiceException) {
-            logger.error("getProjectInfo RemoteServiceException|" +
+            logger.warn("getProjectInfo RemoteServiceException|" +
                 "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}")
             when (e.httpStatus) {
                 GitCodeApiStatus.NOT_FOUND.status -> {
@@ -186,7 +185,7 @@ class ScmService @Autowired constructor(
                 gitCICreateFile = gitCICreateFile
             ).data!!
         } catch (e: RemoteServiceException) {
-            logger.error("createNewFile RemoteServiceException|" +
+            logger.warn("createNewFile RemoteServiceException|" +
                 "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}")
             if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status ||
                 e.httpStatus == GitCodeApiStatus.UNAUTHORIZED.status) {
@@ -269,6 +268,7 @@ class ScmService @Autowired constructor(
         logger.info("getMergeRequestChangeInfo: [$gitProjectId|$mrId]")
         return retryFun(
             log = "$gitProjectId get mr $mrId changeInfo error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_CHANGE_INFO,
             action = {
                 client.getScm(ServiceGitCiResource::class).getMergeRequestChangeInfo(
                     token = if (userId == null) {
@@ -310,6 +310,7 @@ class ScmService @Autowired constructor(
         logger.info("getFileInfo: [$gitProjectId|$filePath][$ref]")
         return retryFun(
             log = "getFileInfo: [$gitProjectId|$filePath][$ref] error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR,
             action = {
                 client.getScm(ServiceGitCiResource::class).getGitFileInfo(
                     gitProjectId = gitProjectId,
@@ -326,15 +327,17 @@ class ScmService @Autowired constructor(
         gitProjectId: Long,
         mergeRequestId: Long,
         token: String
-    ): GitCIMrInfo? {
+    ): GitCIMrInfo {
         logger.info("getMergeInfo: [$gitProjectId|$mergeRequestId][$token]")
-        return retryFun(log = "$gitProjectId get mr $mergeRequestId info error",
+        return retryFun(
+            log = "$gitProjectId get mr $mergeRequestId info error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO,
             action = {
                 client.getScm(ServiceGitResource::class).getGitCIMrInfo(
                     gitProjectId = gitProjectId,
                     mergeRequestId = mergeRequestId,
                     token = token
-                ).data
+                ).data!!
             }
         )
     }
@@ -346,22 +349,18 @@ class ScmService @Autowired constructor(
         isMrEvent: Boolean = false
     ): List<GitFileInfo> {
         val gitProjectId = getProjectId(isMrEvent, gitRequestEvent)
-        return try {
-            val result = retryFun(log = "$gitProjectId get $filePath file tree error",
-                action = {
-                    client.getScm(ServiceGitResource::class).getGitCIFileTree(
-                        gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
-                        path = filePath,
-                        token = gitToken.accessToken,
-                        ref = getTriggerBranch(gitRequestEvent.branch)
-                    )
-                }
-            )
-            result.data!!
-        } catch (e: Throwable) {
-            logger.error("$gitProjectId get $filePath file tree error", e)
-            emptyList()
-        }
+        return retryFun(
+            log = "$gitProjectId get $filePath file tree error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
+            action = {
+                client.getScm(ServiceGitResource::class).getGitCIFileTree(
+                    gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
+                    path = filePath,
+                    token = gitToken.accessToken,
+                    ref = getTriggerBranch(gitRequestEvent.branch)
+                ).data ?: emptyList()
+            }
+        )
     }
 
     private fun getTriggerBranch(branch: String): String {
@@ -381,24 +380,39 @@ class ScmService @Autowired constructor(
         }
     }
 
-    @Throws(RuntimeException::class)
-    fun <T> retryFun(log: String, action: () -> T): T {
-        return try {
+    private fun <T> retryFun(log: String, apiErrorCode: ErrorCodeEnum, action: () -> T): T {
+        try {
             return RetryUtils.clientRetry {
                 action()
             }
         } catch (e: ClientException) {
-            logger.error("retry 10 times $log: ${e.message} ")
-            throw RuntimeException("$log | timeout ${e.message}")
-        } catch (e: Exception) {
-            logger.error("$log: ${e.message} ")
-            throw RuntimeException("$log ${e.message}")
+            logger.warn("retry 5 times $log: ${e.message} ")
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
+                defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
+            )
+        } catch (e: RemoteServiceException) {
+            logger.warn("GIT_API_ERROR $log: ${e.message} ")
+            throw ErrorCodeException(
+                errorCode = apiErrorCode.errorCode.toString(),
+                defaultMessage = "$log: ${e.errorMessage}"
+            )
+        } catch (e: Throwable) {
+            logger.error("retryFun error $log: ${e.message} ")
+            throw ErrorCodeException(
+                errorCode = apiErrorCode.errorCode.toString(),
+                defaultMessage = if (e.message.isNullOrBlank()) {
+                    "$log: ${apiErrorCode.formatErrorMessage}"
+                } else {
+                    "$log: ${e.message}"
+                }
+            )
         }
     }
 
     // 返回给前端错误码异常
     private fun error(logMessage: String, errorCode: ErrorCodeEnum, exceptionMessage: String? = null) {
-        logger.error(logMessage)
+        logger.warn(logMessage)
         throw ErrorCodeException(
             statusCode = 200,
             errorCode = errorCode.errorCode.toString(),
