@@ -3,7 +3,6 @@ package com.tencent.devops.auth.service.iam.impl
 import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
@@ -27,6 +26,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
+@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "NestedBlockDepth", "ForbiddenComment")
 abstract class AbsPermissionProjectService @Autowired constructor(
     open val permissionRoleService: PermissionRoleService,
     open val permissionRoleMemberService: PermissionRoleMemberService,
@@ -72,7 +72,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
                 // 如果为组织需要获取组织对应的用户
                 if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
                     logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id}| dept ${memberInfo.id}")
-                    val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null) ?: null
+                    val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null)
                     if (deptUsers != null) {
                         members.addAll(deptUsers)
                     }
@@ -184,14 +184,6 @@ abstract class AbsPermissionProjectService @Autowired constructor(
             throw RuntimeException()
         }
         return iamProjectId.toInt()
-    }
-
-    private fun buildInstance(id: String, type: String): InstanceDTO {
-        val instance = InstanceDTO()
-        instance.id = id
-        instance.system = iamConfiguration.systemId
-        instance.type = type
-        return instance
     }
 
     abstract fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String>
