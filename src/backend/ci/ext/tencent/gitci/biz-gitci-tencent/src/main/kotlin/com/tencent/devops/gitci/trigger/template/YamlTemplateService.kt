@@ -77,7 +77,7 @@ class YamlTemplateService @Autowired constructor(
                 ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
-            ).ifBlank { throw YamlBlankException() })
+            ).ifBlank { throw YamlBlankException(templateDirectory + fileName) })
         }
         if (personalAccessToken.isNullOrBlank()) {
             val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
@@ -87,7 +87,7 @@ class YamlTemplateService @Autowired constructor(
                 ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
-            ).ifBlank { throw YamlBlankException() })
+            ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) })
         } else {
             val (isTicket, key) = getKey(personalAccessToken)
             val personToken = if (isTicket) {
@@ -108,7 +108,7 @@ class YamlTemplateService @Autowired constructor(
                 ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = false
-            ).ifBlank { throw YamlBlankException() })
+            ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) })
         }
     }
 

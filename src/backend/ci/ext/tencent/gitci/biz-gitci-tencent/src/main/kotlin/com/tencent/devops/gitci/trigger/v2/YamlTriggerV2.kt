@@ -404,7 +404,7 @@ class YamlTriggerV2 @Autowired constructor(
             logger.info("event ${gitRequestEvent.id} yaml template replace error", e)
             val (block, message, reason) = when (e) {
                 is YamlBlankException -> {
-                    Triple(isMr, "", TriggerReason.CI_YAML_CONTENT_NULL)
+                    Triple(isMr, "${e.repo} ${e.filePath} is null", TriggerReason.CI_YAML_CONTENT_NULL)
                 }
                 is YamlFormatException, is JsonProcessingException, is CustomException -> {
                     Triple(isMr, e.message, TriggerReason.CI_YAML_TEMPLATE_ERROR)
