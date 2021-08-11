@@ -72,10 +72,12 @@ import com.tencent.devops.store.pojo.common.KEY_INSTALL_TIME
 import com.tencent.devops.store.pojo.common.KEY_INSTALL_TYPE
 import com.tencent.devops.store.pojo.common.KEY_LATEST_FLAG
 import com.tencent.devops.store.pojo.common.KEY_LOGO_URL
+import com.tencent.devops.store.pojo.common.KEY_MODIFIER
 import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
 import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -616,7 +618,9 @@ class AtomDao : AtomBaseDao() {
             a.DESCRIPTION.`as`(KEY_DESCRIPTION),
             a.PUBLISHER.`as`(KEY_PUBLISHER),
             a.CREATOR.`as`(KEY_CREATOR),
+            a.MODIFIER.`as`(KEY_MODIFIER),
             a.CREATE_TIME.`as`(KEY_CREATE_TIME),
+            a.UPDATE_TIME.`as`(KEY_UPDATE_TIME),
             a.DEFAULT_FLAG.`as`(KEY_DEFAULT_FLAG),
             a.LATEST_FLAG.`as`(KEY_LATEST_FLAG),
             a.BUILD_LESS_RUN_FLAG.`as`(KEY_BUILD_LESS_RUN_FLAG),

@@ -70,6 +70,12 @@ data class AtomRespItem(
     val publisher: String?,
     @ApiModelProperty("创建人", required = true)
     val creator: String,
+    @ApiModelProperty("修改人")
+    val modifier: String,
+    @ApiModelProperty("创建时间")
+    val createTime: String,
+    @ApiModelProperty("修改时间")
+    val updateTime: String,
     @ApiModelProperty("是否为默认原子（默认原子默认所有项目可见）true：默认原子 false：普通原子", required = true)
     val defaultFlag: Boolean,
     @ApiModelProperty("是否为最新版本原子 true：最新 false：非最新", required = true)

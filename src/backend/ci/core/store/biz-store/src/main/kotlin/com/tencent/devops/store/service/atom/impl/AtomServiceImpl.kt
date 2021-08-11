@@ -96,6 +96,7 @@ import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
 import com.tencent.devops.store.pojo.common.KEY_LATEST_FLAG
 import com.tencent.devops.store.pojo.common.KEY_LOGO_URL
+import com.tencent.devops.store.pojo.common.KEY_MODIFIER
 import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
 import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
@@ -311,6 +312,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 description = it[KEY_DESCRIPTION] as? String,
                 publisher = it[KEY_PUBLISHER] as? String,
                 creator = it[KEY_CREATOR] as String,
+                modifier = it[KEY_MODIFIER] as String,
+                createTime = DateTimeUtil.toDateTime(it[KEY_CREATE_TIME] as LocalDateTime),
+                updateTime = DateTimeUtil.toDateTime(it[KEY_UPDATE_TIME] as LocalDateTime),
                 defaultFlag = it[KEY_DEFAULT_FLAG] as Boolean,
                 latestFlag = it[KEY_LATEST_FLAG] as Boolean,
                 htmlTemplateVersion = it[KEY_HTML_TEMPLATE_VERSION] as String,
