@@ -112,11 +112,17 @@ data class StagePauseCheck(
     }
 
     /**
-     * 填充审核组ID
+     * 初始化状态并，填充审核组ID
      */
-    fun fixReviewGroups() {
+    fun fixReviewGroups(init: Boolean) {
         reviewGroups?.forEach { group ->
             if (group.id.isNullOrBlank()) group.id = UUIDUtil.generate()
+            if (init) {
+                group.status = null
+                group.reviewTime = null
+                group.operator = null
+                group.params = null
+            }
         }
     }
 
