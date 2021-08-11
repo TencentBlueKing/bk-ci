@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.trigger.v2
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
@@ -39,6 +40,7 @@ import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.common.exception.CommitCheck
+import com.tencent.devops.gitci.common.exception.TriggerBaseException
 import com.tencent.devops.gitci.common.exception.TriggerException.Companion.triggerError
 import com.tencent.devops.gitci.common.exception.YamlBlankException
 import com.tencent.devops.gitci.common.exception.Yamls
@@ -340,6 +342,10 @@ class YamlTriggerV2 @Autowired constructor(
                 is IOException -> {
                     Triple(isMr, e.message, TriggerReason.CI_YAML_INVALID)
                 }
+                // 指定异常直接扔出在外面统一处理
+                is TriggerBaseException, is ErrorCodeException -> {
+                    throw e
+                }
                 else -> {
                     logger.error("event: ${gitRequestEvent.id} unknow error: ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
@@ -405,6 +411,10 @@ class YamlTriggerV2 @Autowired constructor(
                 }
                 is StackOverflowError -> {
                     Triple(isMr, "Yaml file has circular dependency", TriggerReason.CI_YAML_TEMPLATE_ERROR)
+                }
+                // 指定异常直接扔出在外面统一处理
+                is TriggerBaseException, is ErrorCodeException -> {
+                    throw e
                 }
                 else -> {
                     logger.error("event: ${gitRequestEvent.id} unknow error: ${e.message}")

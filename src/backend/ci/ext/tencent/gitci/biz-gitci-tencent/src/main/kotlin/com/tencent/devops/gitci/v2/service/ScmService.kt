@@ -116,7 +116,7 @@ class ScmService @Autowired constructor(
             )
             return result.data
         } catch (e: RemoteServiceException) {
-            logger.error("getProjectInfo RemoteServiceException|" +
+            logger.warn("getProjectInfo RemoteServiceException|" +
                 "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}")
             when (e.httpStatus) {
                 GitCodeApiStatus.NOT_FOUND.status -> {
@@ -185,7 +185,7 @@ class ScmService @Autowired constructor(
                 gitCICreateFile = gitCICreateFile
             ).data!!
         } catch (e: RemoteServiceException) {
-            logger.error("createNewFile RemoteServiceException|" +
+            logger.warn("createNewFile RemoteServiceException|" +
                 "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}")
             if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status ||
                 e.httpStatus == GitCodeApiStatus.UNAUTHORIZED.status) {
@@ -386,25 +386,25 @@ class ScmService @Autowired constructor(
                 action()
             }
         } catch (e: ClientException) {
-            logger.error("retry 5 times $log: ${e.message} ")
+            logger.warn("retry 5 times $log: ${e.message} ")
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
                 defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
             )
         } catch (e: RemoteServiceException) {
-            logger.error("GIT_API_ERROR $log: ${e.message} ")
+            logger.warn("GIT_API_ERROR $log: ${e.message} ")
             throw ErrorCodeException(
                 errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = e.errorMessage.ifBlank { apiErrorCode.formatErrorMessage }
+                defaultMessage = "$log: ${e.errorMessage}"
             )
         } catch (e: Throwable) {
             logger.error("retryFun error $log: ${e.message} ")
             throw ErrorCodeException(
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = if (e.message.isNullOrBlank()) {
-                    apiErrorCode.formatErrorMessage
+                    "$log: ${apiErrorCode.formatErrorMessage}"
                 } else {
-                    e.message
+                    "$log: ${e.message}"
                 }
             )
         }
@@ -412,7 +412,7 @@ class ScmService @Autowired constructor(
 
     // 返回给前端错误码异常
     private fun error(logMessage: String, errorCode: ErrorCodeEnum, exceptionMessage: String? = null) {
-        logger.error(logMessage)
+        logger.warn(logMessage)
         throw ErrorCodeException(
             statusCode = 200,
             errorCode = errorCode.errorCode.toString(),

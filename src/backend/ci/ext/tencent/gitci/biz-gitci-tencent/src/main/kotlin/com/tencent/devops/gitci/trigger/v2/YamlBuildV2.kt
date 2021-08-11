@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -111,6 +112,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.common.exception.CommitCheck
 import com.tencent.devops.gitci.common.exception.QualityRulesException
+import com.tencent.devops.gitci.common.exception.TriggerBaseException
 import com.tencent.devops.gitci.common.exception.TriggerException
 import com.tencent.devops.gitci.common.exception.Yamls
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
@@ -253,6 +255,10 @@ class YamlBuildV2 @Autowired constructor(
                         e.message,
                         TriggerReason.CREATE_QUALITY_RULRS_ERROR
                     )
+                }
+                // 指定异常直接扔出在外面统一处理
+                is TriggerBaseException, is ErrorCodeException -> {
+                    throw e
                 }
                 else -> {
                     logger.error("event: ${event.id} unknow error: ${e.message}")
