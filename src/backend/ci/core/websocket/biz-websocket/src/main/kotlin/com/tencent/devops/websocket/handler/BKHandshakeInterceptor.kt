@@ -46,7 +46,7 @@ class BKHandshakeInterceptor @Autowired constructor(
     val websocketService: WebsocketService
 ) : HandshakeInterceptor {
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(BKHandshakeInterceptor::class.java)
     }
 
     override fun afterHandshake(

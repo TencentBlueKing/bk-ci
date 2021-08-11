@@ -59,6 +59,6 @@ class TraceFilter : Filter {
     override fun init(filterConfig: FilterConfig?) = Unit
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this:: class.java)
+        private val logger = LoggerFactory.getLogger(TraceFilter:: class.java)
     }
 }

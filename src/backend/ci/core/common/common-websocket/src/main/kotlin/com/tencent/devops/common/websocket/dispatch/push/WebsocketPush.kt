@@ -45,7 +45,7 @@ abstract class WebsocketPush(
     open var notifyPost: NotifyPost
 ) {
     companion object {
-        val logger = LoggerFactory.getLogger(this:: class.java)
+        val logger = LoggerFactory.getLogger(WebsocketPush:: class.java)
     }
 
     open fun findSession(page: String): List<String>?

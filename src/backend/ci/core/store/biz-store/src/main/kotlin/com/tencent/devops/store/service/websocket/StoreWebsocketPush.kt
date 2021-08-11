@@ -53,7 +53,7 @@ data class StoreWebsocketPush(
 ) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(StoreWebsocketPush::class.java)
         private val atomReleaseService = SpringContextUtil.getBean(AtomReleaseService::class.java, "atomReleaseService")
     }
 
