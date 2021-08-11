@@ -34,8 +34,8 @@ import io.swagger.annotations.ApiModelProperty
 data class GroupDTO(
     @ApiModelProperty("用户组编号, 内置用户组编号固定, 自定义组动态生成")
     val groupCode: String,
-    @ApiModelProperty("用户组分类")
-    val groupType: String,
+    @ApiModelProperty("默认分组类型 true:默认分组, false 非默认分组")
+    val groupType: Boolean,
     @ApiModelProperty("用户组名称")
     val groupName: String,
     @ApiModelProperty("用户组别名")

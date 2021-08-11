@@ -278,6 +278,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     fun buildClaimTask(buildId: String, vmSeqId: String, vmName: String): BuildTask {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
+            containerIdLock.lock()
             val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             if (buildInfo == null || buildInfo.status.isFinish()) {
                 LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId|$vmName|buildInfo ${buildInfo?.status}")
@@ -512,6 +513,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     fun buildEndTask(buildId: String, vmSeqId: String, vmName: String): Boolean {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
+            containerIdLock.lock()
             val task = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
                 .firstOrNull { it.taskId == VMUtils.genEndPointTaskId(it.taskSeq) }
 

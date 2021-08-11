@@ -38,9 +38,9 @@ import java.time.LocalDateTime
 @Repository
 class AuthGroupDao {
 
-    fun createGroup(dslContext: DSLContext, groupCreateInfo: GroupCreateInfo) {
+    fun createGroup(dslContext: DSLContext, groupCreateInfo: GroupCreateInfo): Int {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
-            dslContext.insertInto(
+            return dslContext.insertInto(
                 this,
                 GROUP_NAME,
                 GROUP_CODE,
@@ -63,15 +63,21 @@ class AuthGroupDao {
                 LocalDateTime.now(),
                 null,
                 null
-            ).execute()
+            ).returning(ID).fetchOne()!!.id
         }
-        return
     }
 
     fun getGroup(dslContext: DSLContext, projectCode: String, groupCode: String): TAuthGroupInfoRecord? {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode).and(GROUP_CODE.eq(groupCode).and(IS_DELETE.eq(false)))).fetchAny()
+        }
+    }
+
+    fun getGroupByProject(dslContext: DSLContext, projectCode: String): Result<TAuthGroupInfoRecord> {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode).and(IS_DELETE.eq(false))).fetch()
         }
     }
 
@@ -90,6 +96,25 @@ class AuthGroupDao {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(groupId)).fetchOne()
+        }
+    }
+
+    fun getGroupByRelationId(dslContext: DSLContext, relationId: Int): TAuthGroupInfoRecord? {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.selectFrom(this).where(RELATION_ID.eq(relationId.toString())).fetchAny()
+        }
+    }
+
+    fun getGroupByRelationIds(dslContext: DSLContext, relationIds: List<Int>): Result<TAuthGroupInfoRecord?> {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.selectFrom(this).where(RELATION_ID.`in`(relationIds).and(IS_DELETE.eq(false))).fetch()
+        }
+    }
+
+    fun getGroupByName(dslContext: DSLContext, projectCode: String, groupName: String): TAuthGroupInfoRecord? {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode)
+                .and(GROUP_NAME.eq(groupName))).fetchAny()
         }
     }
 
@@ -125,5 +150,45 @@ class AuthGroupDao {
                 )
             }
         }).execute()
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        id: Int,
+        groupName: String,
+        displayName: String,
+        userId: String
+    ): Int {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.update(this).set(GROUP_NAME, groupName)
+                .set(DISPLAY_NAME, displayName)
+                .set(UPDATE_USER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(id)).execute()
+        }
+    }
+
+    fun updateRelationId(dslContext: DSLContext, roleId: Int, relationId: String): Int {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.update(this).set(RELATION_ID, relationId).where(ID.eq(roleId)).execute()
+        }
+    }
+
+    fun getRelationId(dslContext: DSLContext, roleId: Int): TAuthGroupInfoRecord? {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.selectFrom(this).where(ID.eq(roleId)).fetchAny()
+        }
+    }
+
+    fun softDelete(dslContext: DSLContext, roleId: Int) {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            dslContext.update(this).set(IS_DELETE, true).where(ID.eq(roleId)).execute()
+        }
+    }
+
+    fun deleteRole(dslContext: DSLContext, roleId: Int) {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            dslContext.delete(this).where(ID.eq(roleId)).execute()
+        }
     }
 }
