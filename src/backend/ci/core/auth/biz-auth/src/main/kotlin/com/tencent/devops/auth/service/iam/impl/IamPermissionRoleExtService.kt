@@ -45,6 +45,7 @@ import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -54,7 +55,6 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.lang.RuntimeException
 
 open class IamPermissionRoleExtService @Autowired constructor(
     open val iamManagerService: ManagerService,
@@ -171,12 +171,18 @@ open class IamPermissionRoleExtService @Autowired constructor(
             // 若为默认分组,需校验提供用户组是否在默认分组内。
             if (!DefaultGroupType.contains(code)) {
                 // 不在默认分组内则直接报错
-                throw RuntimeException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.DEFAULT_GROUP_ERROR))
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.DEFAULT_GROUP_ERROR,
+                    defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.DEFAULT_GROUP_ERROR)
+                )
             }
         } else {
             // 非默认分组,不能使用默认分组组名
             if (DefaultGroupType.contains(code)) {
-                throw RuntimeException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.UN_DEFAULT_GROUP_ERROR))
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR,
+                    defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.UN_DEFAULT_GROUP_ERROR)
+                )
             }
         }
     }
@@ -187,12 +193,18 @@ open class IamPermissionRoleExtService @Autowired constructor(
             // 若为默认分组,需校验提供用户组是否在默认分组内。
             if (!DefaultGroupType.containsDisplayName(name)) {
                 // 不在默认分组内则直接报错
-                throw RuntimeException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.DEFAULT_GROUP_ERROR))
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.DEFAULT_GROUP_ERROR,
+                    defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.DEFAULT_GROUP_ERROR)
+                )
             }
         } else {
             // 非默认分组,不能使用默认分组组名
             if (DefaultGroupType.containsDisplayName(name)) {
-                throw RuntimeException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.UN_DEFAULT_GROUP_ERROR))
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR,
+                    defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.UN_DEFAULT_GROUP_ERROR)
+                )
             }
         }
     }

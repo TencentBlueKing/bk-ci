@@ -9,6 +9,7 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.common.Constants.ALL_ACTION
 import com.tencent.devops.auth.common.Constants.PROJECT_VIEW
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.DeptService
@@ -16,12 +17,14 @@ import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -181,17 +184,14 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         }
         if (iamProjectId.isNullOrEmpty()) {
             logger.warn("[IAM] $projectCode iamProject is empty")
-            throw RuntimeException()
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = AuthMessageCode.RELATED_RESOURCE_EMPTY
+                )
+            )
         }
         return iamProjectId.toInt()
-    }
-
-    private fun buildInstance(id: String, type: String): InstanceDTO {
-        val instance = InstanceDTO()
-        instance.id = id
-        instance.system = iamConfiguration.systemId
-        instance.type = type
-        return instance
     }
 
     abstract fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String>
