@@ -605,10 +605,9 @@ class GitRequestEventBuildDao {
 
     fun isBuildExist(dslContext: DSLContext, buildId: String): Boolean {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(BUILD_ID))
-                .fetch()
-                .isNotEmpty
+            return dslContext.selectCount().from(this)
+                .where(BUILD_ID.eq(buildId))
+                .fetchOne(0, Int::class.java)!! > 0
         }
     }
 }
