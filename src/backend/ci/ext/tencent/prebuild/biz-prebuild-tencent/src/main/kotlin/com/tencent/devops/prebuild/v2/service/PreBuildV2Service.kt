@@ -10,6 +10,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.image.BuildType
 import com.tencent.devops.common.ci.image.Credential
+import com.tencent.devops.common.ci.image.MacOS
 import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.image.PoolType
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
@@ -534,12 +535,19 @@ class PreBuildV2Service @Autowired constructor(
         if (job.runsOn.selfHosted == true) {
             return ThirdPartyAgentEnvDispatchType(
                 envName = job.runsOn.poolName,
-                workspace = "",
+                workspace = job.runsOn.workspace,
                 agentType = AgentType.NAME
             )
         }
 
         val containerPool = getContainerPool(job)
+
+        if (job.runsOn.poolName.startsWith("macos")) {
+            return PoolType.Macos.toDispatchType(
+                containerPool.copy(macOS = MacOS("Catalina10.15.4", "12.2"))
+            )
+        }
+
         return when (job.runsOn.poolName) {
             JobRunsOnType.DEV_CLOUD.type -> {
                 PoolType.DockerOnDevCloud.toDispatchType(containerPool)
@@ -563,7 +571,7 @@ class PreBuildV2Service @Autowired constructor(
         }
 
         if (job.runsOn.agentSelector.isNullOrEmpty()) {
-            return VMBaseOS.ALL
+            return VMBaseOS.LINUX
         }
 
         return when (job.runsOn.agentSelector!![0]) {
