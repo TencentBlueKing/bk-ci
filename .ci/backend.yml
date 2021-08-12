@@ -26,20 +26,26 @@ stages:
       steps:
       - checkout: self
       - uses: mysqlservice@1.*
+        id: mysqlservice
         name: Start MySQL
         with:
           imageName: mysql:5.7
           port: 3306
           mysqlPw: root
-          initCmd: SELECT NOW()
+          initCmd: SELECT NOW();
       - name: "init MySQL"
         run: |
+          set -x
           cd support-files/sql
           for i in *.sql; do 
-            echo $i;mysql -h ${MYSQL_IP} -P ${MYSQL_PORT} -uroot -proot < $i
+            echo $i;mysql -h ${{steps.mysqlservice.outputs.MYSQL_IP}} -P ${{steps.mysqlservice.outputs.MYSQL_PORT}} -uroot -proot < $i
           done
       - name: "Gradle Build"
+        env:
+          mysqlURL: "${{steps.mysqlservice.outputs.MYSQL_IP}}:${{steps.mysqlservice.outputs.MYSQL_PORT}}"
+          mysqlUser: root
+          mysqlPasswd: root
         run: | 
           cd src/backend/ci/ext/tencent
-          ../../gradlew -DmysqlURL=$mysqlURL -DenvironmentMysqlURL=$mysqlURL -DprojectMysqlURL=$mysqlURL test classes
+          ../../gradlew -DmysqlURL=$mysqlURL -DmysqlUser=$mysqlUser -DmysqlPasswd=$mysqlPasswd  -DenvironmentMysqlURL=$mysqlURL -DenvironmentMysqlUser=$mysqlUser -DenvironmentMysqlPasswd=$mysqlPasswd -DprojectMysqlURL=$mysqlURL -DprojectMysqlUser=$mysqlUser -DprojectMysqlPasswd=$mysqlPasswd -DmysqlPrefix=devops_ test classes
 
