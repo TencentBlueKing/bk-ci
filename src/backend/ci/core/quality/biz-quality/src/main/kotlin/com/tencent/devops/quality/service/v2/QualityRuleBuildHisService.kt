@@ -27,6 +27,7 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
@@ -108,8 +109,16 @@ class QualityRuleBuildHisService constructor(
                 controlPoint = QualityRule.RuleControlPoint(
                     "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
                 ),
-                range = it.pipelineRange?.split(",") ?: listOf(),
-                templateRange = it.templateRange?.split(",") ?: listOf(),
+                range = if (it.pipelineRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.pipelineRange.split(",")
+                },
+                templateRange = if (it.templateRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.templateRange.split(",")
+                },
                 operation = RuleOperation.END,
                 notifyTypeList = null,
                 notifyUserList = null,
@@ -120,7 +129,7 @@ class QualityRuleBuildHisService constructor(
                 opList = if (it.operationList.isNullOrBlank()) {
                     listOf()
                 } else {
-                    JsonUtil.to(it.operationList)
+                    JsonUtil.to(it.operationList, object : TypeReference<List<QualityRule.RuleOp>>(){})
                 }
             )
             rule
