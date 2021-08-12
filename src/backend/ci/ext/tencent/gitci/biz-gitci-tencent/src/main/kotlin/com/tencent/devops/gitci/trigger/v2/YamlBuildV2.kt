@@ -151,7 +151,6 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation.Companion.convertToSymbol
-import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
@@ -368,11 +367,11 @@ class YamlBuildV2 @Autowired constructor(
                     threshold = enNameAndthreshold.last().trim()
                 )
             }
-            val opList = mutableListOf<RuleCreateRequest.CreateRequestOp>()
+            val opList = mutableListOf<RuleCreateRequestV3.CreateRequestOp>()
             gate.notifyOnFail.forEach NotifyEach@{ notify ->
                 val type = GitCINotifyType.getNotifyByYaml(notify.type) ?: return@NotifyEach
                 opList.add(
-                    RuleCreateRequest.CreateRequestOp(
+                    RuleCreateRequestV3.CreateRequestOp(
                         operation = RuleOperation.END,
                         notifyTypeList = listOf(type),
                         // 通知接受人未填缺省触发人
@@ -395,12 +394,6 @@ class YamlBuildV2 @Autowired constructor(
                     position = position,
                     range = null,
                     templateRange = null,
-                    operation = RuleOperation.END,
-                    notifyTypeList = null,
-                    notifyGroupList = null,
-                    notifyUserList = null,
-                    auditUserList = null,
-                    auditTimeoutMinutes = null,
                     gatewayId = null,
                     opList = opList
                 )
