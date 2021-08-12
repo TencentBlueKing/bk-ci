@@ -561,16 +561,16 @@ class AtomDao : AtomBaseDao() {
             defaultAtomCondition.add(
                 ta.ATOM_CODE.notIn(
                     dslContext.select(ta.ATOM_CODE).from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-                        .join(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-                        .join(tst).on(ta.ATOM_CODE.eq(tst.STORE_CODE))
+                        .leftJoin(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
+                        .leftJoin(tst).on(ta.ATOM_CODE.eq(tst.STORE_CODE))
                         .where(initTestAtomCondition)
                 )
             )
             normalAtomConditions.add(
                 ta.ATOM_CODE.notIn(
                     dslContext.select(ta.ATOM_CODE).from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-                        .join(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-                        .join(tst).on(ta.ATOM_CODE.eq(tst.STORE_CODE))
+                        .leftJoin(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
+                        .leftJoin(tst).on(ta.ATOM_CODE.eq(tst.STORE_CODE))
                         .where(initTestAtomCondition)
                 )
             )
@@ -641,9 +641,9 @@ class AtomDao : AtomBaseDao() {
             .from(ta)
             .join(tc)
             .on(ta.CLASSIFY_ID.eq(tc.ID))
-            .join(taf)
+            .leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-            .join(tsst)
+            .leftJoin(tsst)
             .on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
     }
 
@@ -710,13 +710,13 @@ class AtomDao : AtomBaseDao() {
             // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
             defaultAtomCondition.add(ta.ATOM_CODE.notIn(dslContext.select(ta.ATOM_CODE)
                 .from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-                .join(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-                .join(tsst).on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
+                .leftJoin(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
+                .leftJoin(tsst).on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
                 .where(initTestAtomCondition)))
             normalAtomConditions.add(ta.ATOM_CODE.notIn(dslContext.select(ta.ATOM_CODE)
                 .from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-                .join(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-                .join(tsst).on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
+                .leftJoin(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
+                .leftJoin(tsst).on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
                 .where(initTestAtomCondition)))
             queryNormalAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
             queryInitTestAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
@@ -739,9 +739,9 @@ class AtomDao : AtomBaseDao() {
         tsst: TStoreStatisticsTotal
     ): SelectOnConditionStep<Record1<Int>> {
         return dslContext.selectCount().from(ta)
-            .join(taf)
+            .leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-            .join(tsst)
+            .leftJoin(tsst)
             .on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
     }
 
