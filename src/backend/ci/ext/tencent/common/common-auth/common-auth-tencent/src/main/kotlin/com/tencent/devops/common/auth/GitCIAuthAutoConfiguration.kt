@@ -29,11 +29,10 @@ package com.tencent.devops.common.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
-import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.gitci.GitCIAuthProjectApi
 import com.tencent.devops.common.auth.code.BSArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.code.BSBcsAuthServiceCode
 import com.tencent.devops.common.auth.code.BSCodeAuthServiceCode
@@ -47,6 +46,8 @@ import com.tencent.devops.common.auth.code.BSTicketAuthServiceCode
 import com.tencent.devops.common.auth.code.BSVSAuthServiceCode
 import com.tencent.devops.common.auth.code.BSWetestAuthServiceCode
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -94,12 +95,10 @@ class GitCIAuthAutoConfiguration {
     @Bean
     @Primary
     fun authProjectApi(
-        bkAuthProperties: BkAuthProperties,
-        objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        bsCCProjectApi: BSCCProjectApi
+        client: Client,
+        tokenService: ClientTokenService
     ) =
-        BSAuthProjectApi(bkAuthProperties, objectMapper, bsAuthTokenApi, bsCCProjectApi)
+        GitCIAuthProjectApi(client, tokenService)
 
     @Bean
     fun jmxAuthApi(mBeanExporter: MBeanExporter) = JmxAuthApi(mBeanExporter)

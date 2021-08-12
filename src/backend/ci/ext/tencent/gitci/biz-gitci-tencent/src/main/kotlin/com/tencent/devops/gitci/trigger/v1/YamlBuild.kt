@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.trigger.v1
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
@@ -85,7 +86,8 @@ import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
-import com.tencent.devops.gitci.trigger.GitCIEventSaveService
+import com.tencent.devops.gitci.trigger.GitCIEventService
+import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -125,7 +127,8 @@ class YamlBuild @Autowired constructor(
     private val buildConfig: BuildConfig,
     private val objectMapper: ObjectMapper,
     private val gitCIParameterUtils: GitCIParameterUtils,
-    gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventService,
+    private val gitPipelineBranchService: GitPipelineBranchService
 ) : YamlBaseBuild<CIBuildYaml>(
     client,
     scmClient,
@@ -133,7 +136,8 @@ class YamlBuild @Autowired constructor(
     redisOperation,
     gitPipelineResourceDao,
     gitRequestEventBuildDao,
-    gitCIEventSaveService
+    gitCIEventSaveService,
+    gitPipelineBranchService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(YamlBuild::class.java)
@@ -495,6 +499,7 @@ class YamlBuild @Autowired constructor(
         }
 
         val startParams = mutableMapOf<String, String>()
+        val parsedCommitMsg = EmojiUtil.removeAllEmoji(event.commitMsg ?: "")
 
         // 通用参数
         startParams[BK_CI_RUN] = "true"
@@ -506,13 +511,13 @@ class YamlBuild @Autowired constructor(
         startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = event.commitId
         startParams[BK_REPO_WEBHOOK_REPO_NAME] = gitProjectConf.name
         startParams[BK_REPO_WEBHOOK_REPO_URL] = gitProjectConf.url
-        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE] = event.commitMsg.toString()
+        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE] = parsedCommitMsg
         if (event.commitId.isNotBlank() && event.commitId.length >= 8) {
             startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT] = event.commitId.substring(0, 8)
         }
 
         // 替换BuildMessage为了展示commit信息
-        startParams[PIPELINE_BUILD_MSG] = event.commitMsg ?: ""
+        startParams[PIPELINE_BUILD_MSG] = parsedCommitMsg
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {

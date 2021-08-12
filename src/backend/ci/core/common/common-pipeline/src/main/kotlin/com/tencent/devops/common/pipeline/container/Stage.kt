@@ -68,20 +68,13 @@ data class Stage(
     /**
      * 兼容性逻辑 - 将原有的审核配置刷新到审核流中，并且补充审核组ID
      */
-    fun refreshReviewOption() {
+    fun refreshReviewOption(init: Boolean? = false) {
         if (checkIn != null) {
-            checkIn?.fixReviewGroups()
+            checkIn?.fixReviewGroups(init == true)
             return
         }
         val originControlOption = stageControlOption ?: return
-        if (originControlOption.manualTrigger != true) {
-            checkIn = StagePauseCheck(manualTrigger = stageControlOption?.manualTrigger)
-            checkOut = null
-            stageControlOption?.triggerUsers = null
-            stageControlOption?.triggered = null
-            stageControlOption?.reviewParams = null
-            stageControlOption?.reviewDesc = null
-        } else {
+        if (originControlOption.manualTrigger == true) {
             checkIn = StagePauseCheck.convertControlOption(originControlOption)
         }
         // TODO 在下一次发布中增加抹除旧数据逻辑

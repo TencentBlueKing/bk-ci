@@ -32,6 +32,7 @@ import com.tencent.devops.model.quality.tables.TQualityRuleOperation
 import com.tencent.devops.model.quality.tables.records.TQualityRuleOperationRecord
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -121,11 +122,11 @@ class QualityRuleOperationDao {
         }
     }
 
-    fun get(dslContext: DSLContext, ruleId: Long): TQualityRuleOperationRecord {
+    fun get(dslContext: DSLContext, ruleIds: Collection<Long>): Result<TQualityRuleOperationRecord> {
         return with(TQualityRuleOperation.T_QUALITY_RULE_OPERATION) {
             dslContext.selectFrom(this)
-                .where(RULE_ID.eq(ruleId))
-                .fetchOne()!!
+                .where(RULE_ID.`in`(ruleIds))
+                .fetch()
         }
     }
 }

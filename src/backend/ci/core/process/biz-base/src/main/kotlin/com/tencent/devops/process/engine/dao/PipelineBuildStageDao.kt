@@ -205,7 +205,7 @@ class PipelineBuildStageDao {
                 val checkOutOption = if (!checkOut.isNullOrBlank()) {
                     JsonUtil.to(checkOut, StagePauseCheck::class.java)
                 } else {
-                    StagePauseCheck(timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS)
+                    null
                 }
 
                 PipelineBuildStage(
@@ -254,6 +254,29 @@ class PipelineBuildStageDao {
                 update.set(START_TIME, LocalDateTime.now())
             }
             if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption))
+            if (checkIn != null) update.set(CHECK_IN, JsonUtil.toJson(checkIn))
+            if (checkOut != null) update.set(CHECK_OUT, JsonUtil.toJson(checkOut))
+            update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
+        }
+    }
+
+    fun updateOptions(
+        dslContext: DSLContext,
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption,
+        buildStatus: BuildStatus?,
+        checkIn: StagePauseCheck? = null,
+        checkOut: StagePauseCheck? = null
+    ): Int {
+        return with(T_PIPELINE_BUILD_STAGE) {
+            val update = dslContext.update(this)
+                .set(CONDITIONS, JsonUtil.toJson(controlOption))
+            if (buildStatus == null) {
+                update.setNull(STATUS)
+            } else {
+                update.set(STATUS, buildStatus.ordinal)
+            }
             if (checkIn != null) update.set(CHECK_IN, JsonUtil.toJson(checkIn))
             if (checkOut != null) update.set(CHECK_OUT, JsonUtil.toJson(checkOut))
             update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()

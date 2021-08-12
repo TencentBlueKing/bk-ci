@@ -28,6 +28,7 @@
 package com.tencent.devops.artifactory.util
 
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import java.net.URLEncoder
 import java.nio.file.Paths
 import javax.ws.rs.BadRequestException
 
@@ -51,6 +52,11 @@ object PathUtils {
 
     fun buildDetailLink(projectId: String, artifactoryType: String, path: String): String {
         return "${HomeHostUtil.outerServerHost()}/share/artifactoryDetail/?flag=artifactoryDetail" +
-                "&projectId=$projectId&artifactoryType=$artifactoryType&artifactoryPath=$path"
+                "&projectId=$projectId&artifactoryType=$artifactoryType&artifactoryPath=${
+                    URLEncoder.encode(
+                        path,
+                        "utf-8"
+                    )
+                }"
     }
 }

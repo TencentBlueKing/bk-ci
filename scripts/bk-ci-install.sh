@@ -105,6 +105,9 @@ install_ci__ms_common (){
     echo "install $BK_CI_SRC_DIR/$f to $BK_CI_HOME."
     rsync -ra "$BK_CI_SRC_DIR/${f%/}" "$BK_CI_HOME"
   done
+  echo "change mode for agent-package dir."
+  find "$BK_CI_HOME/agent-package/" -type d -exec chmod -c a+rx {} \;
+  find "$BK_CI_HOME/agent-package/" -type f -exec chmod -c a+r {} \;
   # 保持微服务部分子目录的强一致性.
   rsync -ra --del "$BK_CI_SRC_DIR/$MS_NAME/lib" "$BK_CI_SRC_DIR/$MS_NAME/com" "$BK_CI_HOME/$MS_NAME"
 }

@@ -36,6 +36,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
@@ -239,7 +240,12 @@ class BuildMonitorControl @Autowired constructor(
             pipelineStageService.cancelStage(
                 userId = userId,
                 buildStage = this,
-                groupId = checkIn?.groupToReview()?.id
+                reviewRequest = StageReviewRequest(
+                    reviewParams = listOf(),
+                    id = checkIn?.groupToReview()?.id,
+                    suggest = null
+                ),
+                timeout = true
             )
         }
 

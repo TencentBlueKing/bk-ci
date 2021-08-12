@@ -31,6 +31,7 @@ dependencies {
     api(project(":core:common:common-pipeline"))
     api(project(":core:common:common-notify"))
     api(project(":core:common:common-quality"))
+    api(project(":core:common:common-auth:common-auth-api"))
 }
 
 plugins {

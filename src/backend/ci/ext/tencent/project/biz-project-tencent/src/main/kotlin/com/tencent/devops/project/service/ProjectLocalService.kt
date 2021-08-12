@@ -266,9 +266,14 @@ class ProjectLocalService @Autowired constructor(
         if (userProjectRecord != null) {
             return ProjectUtils.packagingBean(userProjectRecord, setOf())
         }
+        var projectName = projectCode
+        var tmpProjectRecord = projectDao.getByCnName(dslContext, projectName)
+        if (tmpProjectRecord != null) {
+            projectName = "_$userId" + System.currentTimeMillis()
+        }
 
         val projectCreateInfo = ProjectCreateInfo(
-            projectName = projectCode,
+            projectName = projectName,
             englishName = projectCode,
             projectType = ProjectTypeEnum.SUPPORT_PRODUCT.index,
             description = "prebuild project for $userId",

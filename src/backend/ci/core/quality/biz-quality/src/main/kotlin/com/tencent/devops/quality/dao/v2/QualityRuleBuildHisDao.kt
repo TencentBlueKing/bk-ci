@@ -37,11 +37,18 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository@Suppress("ALL")
+@Repository
+@Suppress("ALL")
 class QualityRuleBuildHisDao {
-    fun create(dslContext: DSLContext, userId: String, projectId: String, pipelineId: String,
-               ruleId: Long, ruleRequest: RuleCreateRequestV3,
-               indicatorIds: List<RuleCreateRequest.CreateRequestIndicator>): Long {
+    fun create(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        ruleId: Long,
+        ruleRequest: RuleCreateRequestV3,
+        indicatorIds: List<RuleCreateRequest.CreateRequestIndicator>
+    ): Long {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             dslContext.insertInto(
                 this,
@@ -55,12 +62,6 @@ class QualityRuleBuildHisDao {
                 INDICATOR_IDS,
                 INDICATOR_OPERATIONS,
                 INDICATOR_THRESHOLDS,
-                OP_TYPE,
-                NOTIFY_USER,
-                NOTIFY_TYPE,
-                NOTIFY_GROUP_ID,
-                AUDIT_USER,
-                AUDIT_TIMEOUT,
                 CREATE_TIME,
                 CREATE_USER
             ).values(
@@ -74,12 +75,6 @@ class QualityRuleBuildHisDao {
                 indicatorIds.map { HashUtil.decodeIdToLong(it.hashId) }.joinToString(","),
                 indicatorIds.joinToString(",") { it.operation },
                 indicatorIds.joinToString(",") { it.threshold },
-                ruleRequest.operation.name,
-                ruleRequest.notifyUserList?.joinToString(","),
-                ruleRequest.notifyTypeList?.joinToString(","),
-                ruleRequest.notifyGroupList?.joinToString(","),
-                ruleRequest.auditUserList?.joinToString(","),
-                ruleRequest.auditTimeoutMinutes,
                 LocalDateTime.now(),
                 userId
             ).onDuplicateKeyUpdate()
@@ -92,7 +87,7 @@ class QualityRuleBuildHisDao {
     fun list(dslContext: DSLContext, ruleIds: Collection<Long>): Result<TQualityRuleBuildHisRecord> {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             dslContext.selectFrom(this)
-                .where(ID.`in`(ruleIds))
+                .where(RULE_ID.`in`(ruleIds))
                 .fetch()
         }
     }

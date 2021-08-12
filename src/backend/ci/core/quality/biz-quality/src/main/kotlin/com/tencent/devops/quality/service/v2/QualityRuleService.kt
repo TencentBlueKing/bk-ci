@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.model.quality.tables.records.TQualityRuleRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
@@ -57,6 +57,7 @@ import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.dao.v2.QualityRuleMapDao
+import com.tencent.devops.quality.exception.QualityOpConfigException
 import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.RulePermission
 import com.tencent.devops.quality.pojo.enum.RuleOperation
@@ -124,19 +125,21 @@ class QualityRuleService @Autowired constructor(
                 ruleRequest = ruleRequest
             )
 
-            if (ruleRequest.operation == RuleOperation.END) {
-                ruleOperationService.serviceSaveEndOperation(
-                    ruleId = ruleId,
-                    notifyUserList = ruleRequest.notifyUserList ?: listOf(),
-                    notifyGroupList = ruleRequest.notifyGroupList?.map { HashUtil.decodeIdToLong(it) } ?: listOf(),
-                    notifyTypeList = ruleRequest.notifyTypeList ?: listOf())
-            } else if (ruleRequest.operation == RuleOperation.AUDIT) {
-                ruleOperationService.serviceSaveAuditOperation(
-                    ruleId = ruleId,
-                    auditUserList = ruleRequest.auditUserList ?: listOf(),
-                    auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes ?: 15
-                )
+            if (ruleRequest.opList != null) {
+                ruleRequest.opList!!.forEach { ruleOp ->
+                    saveRuleOp(ruleId, ruleOp)
+                }
+            } else {
+                saveRuleOp(ruleId, RuleCreateRequest.CreateRequestOp(
+                    operation = ruleRequest.operation,
+                    notifyTypeList = ruleRequest.notifyTypeList,
+                    notifyGroupList = ruleRequest.notifyGroupList,
+                    notifyUserList = ruleRequest.notifyUserList,
+                    auditUserList = ruleRequest.auditUserList,
+                    auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes
+                ))
             }
+
             if (createAuth) {
                 qualityPermissionService.createRuleResource(
                     userId = userId,
@@ -151,9 +154,29 @@ class QualityRuleService @Autowired constructor(
         }
     }
 
+    private fun saveRuleOp(ruleId: Long, ruleOp: RuleCreateRequest.CreateRequestOp) {
+        if (ruleOp.operation == RuleOperation.END) {
+            ruleOperationService.serviceSaveEndOperation(
+                ruleId = ruleId,
+                notifyUserList = ruleOp.notifyUserList ?: listOf(),
+                notifyGroupList = ruleOp.notifyGroupList?.map {
+                    group -> HashUtil.decodeIdToLong(group)
+                } ?: listOf(),
+                notifyTypeList = ruleOp.notifyTypeList ?: listOf())
+        } else if (ruleOp.operation == RuleOperation.AUDIT) {
+            ruleOperationService.serviceSaveAuditOperation(
+                ruleId = ruleId,
+                auditUserList = ruleOp.auditUserList ?: listOf(),
+                auditTimeoutMinutes = ruleOp.auditTimeoutMinutes ?: 15
+            )
+        }
+    }
+
     fun serviceCreate(userId: String, projectId: String, pipelineId: String, ruleRequestList: List<RuleCreateRequestV3>): List<RuleCreateResponseV3> {
         val size = qualityRuleDao.deleteByPipelineId(dslContext, projectId, pipelineId)
         logger.info("finish to clean pre rule: $projectId, $pipelineId, $size")
+
+        checkRuleRequest(ruleRequestList)
 
         return ruleRequestList.map { ruleRequest ->
             logger.info("start to create rule: $projectId, $pipelineId, ${ruleRequest.name}")
@@ -187,15 +210,38 @@ class QualityRuleService @Autowired constructor(
                     notifyUserList = ruleRequest.notifyUserList,
                     auditUserList = ruleRequest.auditUserList,
                     auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes,
-                    gatewayId = ruleRequest.gatewayId ?: ""
+                    gatewayId = ruleRequest.gatewayId ?: "",
+                    opList = ruleRequest.opList
                 ),
                 createAuth = false)
 
             logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
-            val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId,
+            qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId,
                 HashUtil.decodeIdToLong(ruleId), ruleRequest, indicatorIds)
 
-            RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, HashUtil.encodeLongId(id))
+            RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, ruleId)
+        }
+    }
+
+    private fun checkRuleRequest(ruleRequestList: List<RuleCreateRequestV3>) {
+        ruleRequestList.forEach { request ->
+            request.opList?.forEach { op ->
+                if (op.operation == RuleOperation.END) {
+                    if (op.notifyTypeList.isNullOrEmpty()) {
+                        throw QualityOpConfigException("notify type is empty for operation notify")
+                    }
+                    if (op.notifyGroupList.isNullOrEmpty() && op.notifyUserList.isNullOrEmpty()) {
+                        throw QualityOpConfigException("notifyGroupList and notifyUserList is empty for operation end")
+                    }
+                } else {
+                    if (op.auditTimeoutMinutes == null) {
+                        throw QualityOpConfigException("auditTimeoutMinutes is empty for operation audit")
+                    }
+                    if (op.auditUserList.isNullOrEmpty()) {
+                        throw QualityOpConfigException("auditUserList is empty for operation audit")
+                    }
+                }
+            }
         }
     }
 
@@ -370,7 +416,8 @@ class QualityRuleService @Autowired constructor(
         )
 
         // 查询指标通知
-        val ruleOperation = ruleOperationService.serviceGet(dslContext, ruleId)
+        val ruleOperationList = ruleOperationService.serviceGet(dslContext, ruleId)
+        val ruleOperation = ruleOperationList.first()
 
         // 把指标的定义值换成实际的值
         val indicatorOperations = mapRecord.indicatorOperations.split(",")
@@ -428,6 +475,24 @@ class QualityRuleService @Autowired constructor(
                 listOf()
             } else ruleOperation.auditUser.split(","),
             auditTimeoutMinutes = ruleOperation.auditTimeout ?: 15,
+            opList = ruleOperationList.map {
+                QualityRule.RuleOp(
+                    operation = RuleOperation.valueOf(it.type),
+                    notifyTypeList = if (it.notifyTypes.isNullOrBlank()) {
+                        listOf()
+                    } else it.notifyTypes.split(",").map { type -> NotifyType.valueOf(type) },
+                    notifyGroupList = if (it.notifyGroupId.isNullOrBlank()) {
+                        listOf()
+                    } else it.notifyGroupId.split(","),
+                    notifyUserList = if (it.notifyUser.isNullOrBlank()) {
+                        listOf()
+                    } else it.notifyUser.split(","),
+                    auditUserList = if (it.auditUser.isNullOrBlank()) {
+                        listOf()
+                    } else it.auditUser.split(","),
+                    auditTimeoutMinutes = it.auditTimeout ?: 15
+                )
+            },
             gatewayId = record.gatewayId
         )
     }
@@ -669,7 +734,8 @@ class QualityRuleService @Autowired constructor(
                 notifyUserList = listOf(),
                 auditUserList = listOf(),
                 auditTimeoutMinutes = ruleData.auditTimeoutMinutes,
-                gatewayId = ruleData.gatewayId
+                gatewayId = ruleData.gatewayId,
+                opList = null
             )
             serviceCreate(request.userId, request.targetProjectId, createRequest)
         }

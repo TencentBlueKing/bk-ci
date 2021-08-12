@@ -31,18 +31,17 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
-import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.ci.image.BuildType
 import com.tencent.devops.common.ci.image.Credential
 import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
-import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
@@ -57,6 +56,7 @@ import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -65,12 +65,9 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.DependOnType
-import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.StageControlOption
@@ -134,8 +131,9 @@ import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BRANCH
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BUILD_URL
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_PIPELINE_NAME
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
-import com.tencent.devops.gitci.trigger.GitCIEventSaveService
+import com.tencent.devops.gitci.trigger.GitCIEventService
 import com.tencent.devops.gitci.v2.service.GitCIV2WebsocketService
+import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.pojo.BuildId
@@ -152,10 +150,11 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
+import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation.Companion.convertToSymbol
+import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
-import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -179,12 +178,13 @@ class YamlBuildV2 @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val oauthService: OauthService,
-    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val gitCIEventSaveService: GitCIEventService,
     private val websocketService: GitCIV2WebsocketService,
-    private val gitCISettingDao: GitCISettingDao
+    private val gitCISettingDao: GitCISettingDao,
+    private val gitPipelineBranchService: GitPipelineBranchService
 ) : YamlBaseBuildV2<ScriptBuildYaml>(
     client, scmClient, dslContext, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitCIEventSaveService, websocketService
+    gitRequestEventBuildDao, gitCIEventSaveService, websocketService, gitPipelineBranchService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -267,95 +267,54 @@ class YamlBuildV2 @Autowired constructor(
         val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
             ?: throw OperationException("git ci projectCode not exist")
 
-        val model = createPipelineModel(event, gitBasicSetting, yaml)
+        val model = createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
-
-        // 新增质量红线
-        yaml.stages.forEach {
-            val (checkInRuleIds, checkOutRuleIds) = createRules(it, event, pipeline)
-            logger.info("checkInId: $checkInRuleIds, checkOutId: $checkOutRuleIds")
-        }
 
         savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
     }
 
-    private fun createRules(
-        stage: GitCIV2Stage,
-        event: GitRequestEvent,
-        pipeline: GitProjectPipeline
-    ): Pair<StagePauseCheck?, StagePauseCheck?> {
-        val operations = QualityOperation.values().map { QualityOperation.convertToSymbol(it) }.toSet()
-        var checkIn: StagePauseCheck? = null
-        var checkOut: StagePauseCheck? = null
-        if (stage.checkIn != null) {
-            val check = StagePauseCheck()
-            if (stage.checkIn?.reviews?.flows?.isNotEmpty() == true) {
-                check.manualTrigger = true
-                check.reviewDesc = stage.checkIn?.reviews?.description
-                check.reviewParams = createReviewParams(stage.checkIn?.reviews?.variable)
-                check.timeout = stage.checkIn?.timeoutHours
-                check.reviewGroups = stage.checkIn?.reviews?.flows?.map { it ->
-                    StageReviewGroup(name = it.name, reviewers = it.reviewers)
-                }?.toMutableList()
-            }
-            if (stage.checkIn?.gates?.isNotEmpty() == true) {
-                check.ruleIds = createRules(
-                    stageCheck = stage.checkIn!!,
-                    operations = operations,
-                    event = event,
-                    position = ControlPointPosition.BEFORE_POSITION,
-                    pipeline = pipeline
-                )
-            }
-            checkIn = check
-        }
-        if (stage.checkOut != null) {
-            val check = StagePauseCheck()
-
-            checkOut = check
-        }
-        return Pair(checkIn, checkOut)
-    }
-
     private fun createStagePauseCheck(
         stageCheck: StageCheck?,
-        position: String
+        position: String,
+        event: GitRequestEvent,
+        pipeline: GitProjectPipeline
     ): StagePauseCheck? {
         if (stageCheck == null) return null
         val check = StagePauseCheck()
         if (stageCheck.reviews?.flows?.isNotEmpty() == true) {
-                check.manualTrigger = true
-                check.reviewDesc = stageCheck.reviews?.description
-                check.reviewParams = createReviewParams(stageCheck.reviews?.variable)
-                check.timeout = stageCheck.timeoutHours
-                check.reviewGroups = stageCheck.reviews?.flows?.map { it ->
-                    StageReviewGroup(name = it.name, reviewers = it.reviewers)
-                }?.toMutableList()
-            }
-            if (stageCheck.gates?.isNotEmpty() == true) {
-                check.ruleIds = createRules(
-                    stageCheck = stageCheck,
-                    operations = operations,
-                    event = event,
-                position = ControlPointPosition.AFTER_POSITION,
-                    pipeline = pipeline
-                )
-            }
+            check.manualTrigger = true
+            check.reviewDesc = stageCheck.reviews?.description
+            check.reviewParams = createReviewParams(stageCheck.reviews?.variables)
+            check.timeout = stageCheck.timeoutHours
+            check.reviewGroups = stageCheck.reviews?.flows?.map { it ->
+                StageReviewGroup(name = it.name, reviewers = it.reviewers)
+            }?.toMutableList()
+        }
+        if (stageCheck.gates?.isNotEmpty() == true) {
+            check.ruleIds = createRules(
+                stageCheck = stageCheck,
+                event = event,
+                position = position,
+                pipeline = pipeline
+            )
+        }
+        return check
     }
 
-    private fun createReviewParams(variable: Map<String, ReviewVariable>?): List<ManualReviewParam>? {
-        if (variable.isNullOrEmpty()) return null
+    private fun createReviewParams(variables: Map<String, ReviewVariable>?): List<ManualReviewParam>? {
+        if (variables.isNullOrEmpty()) return null
         val params = mutableListOf<ManualReviewParam>()
-        variable.forEach { (key, variable) ->
+        variables.forEach { (key, variable) ->
             params.add(ManualReviewParam(
                 key = key,
                 value = variable.default,
                 required = true,
                 valueType = when (variable.type) {
-                    "SELECTOR" -> ManualReviewParamType.BOOLEAN
-                    "RADIO" -> ManualReviewParamType.ENUM
-                    "CHECKBOX" -> ManualReviewParamType.MULTIPLE
+                    "TEXTAREA" -> ManualReviewParamType.TEXTAREA
+                    "SELECTOR" -> ManualReviewParamType.ENUM
+                    "SELECTOR-MULTIPLE" -> ManualReviewParamType.MULTIPLE
+                    "BOOL" -> ManualReviewParamType.BOOLEAN
                     else -> ManualReviewParamType.STRING
                 },
                 chineseName = variable.label,
@@ -372,25 +331,60 @@ class YamlBuildV2 @Autowired constructor(
      */
     private fun createRules(
         stageCheck: StageCheck,
-        operations: Set<String>,
         event: GitRequestEvent,
         position: String,
         pipeline: GitProjectPipeline
     ): List<String>? {
+        // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
+        val operations = mapOf(
+            convertToSymbol(QualityOperation.GE) to QualityOperation.GE,
+            convertToSymbol(QualityOperation.LE) to QualityOperation.LE,
+            convertToSymbol(QualityOperation.GT) to QualityOperation.GT,
+            convertToSymbol(QualityOperation.LT) to QualityOperation.LT,
+            convertToSymbol(QualityOperation.EQ) to QualityOperation.EQ
+        )
         val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
         stageCheck.gates?.forEach GateEach@{ gate ->
             val indicators = gate.rule.map { rule ->
                 val (atomCode, mid) = rule.split(".")
-                val op = operations.filter { mid.contains(it) }.toSet()
-                if (op.isEmpty() || op.size > 1) {
+                var op = ""
+                run breaking@{
+                    operations.keys.forEach {
+                        if (mid.contains(it)) {
+                            op = it
+                            return@breaking
+                        }
+                    }
+                }
+                if (op.isBlank()) {
+                    logger.warn("GitProject: ${event.gitProjectId} event: ${event.id} rule: $rule not find operations")
                     return@GateEach
                 }
-                val (enName, threshold) = mid.split(op.first())
+                val enNameAndthreshold = mid.split(op)
                 RuleCreateRequestV3.CreateRequestIndicator(
                     atomCode = atomCode,
-                    enName = enName.trim(),
-                    operation = op.first(),
-                    threshold = threshold.trim()
+                    enName = enNameAndthreshold.first().trim(),
+                    operation = operations[op]!!.name,
+                    threshold = enNameAndthreshold.last().trim()
+                )
+            }
+            val opList = mutableListOf<RuleCreateRequest.CreateRequestOp>()
+            gate.notifyOnFail.forEach NotifyEach@{ notify ->
+                val type = GitCINotifyType.getNotifyByYaml(notify.type) ?: return@NotifyEach
+                opList.add(
+                    RuleCreateRequest.CreateRequestOp(
+                        operation = RuleOperation.END,
+                        notifyTypeList = listOf(type),
+                        // 通知接受人未填缺省触发人
+                        notifyUserList = if (notify.receivers.isNullOrEmpty()) {
+                            listOf(event.userId)
+                        } else {
+                            notify.receivers?.toList()
+                        },
+                        notifyGroupList = null,
+                        auditUserList = null,
+                        auditTimeoutMinutes = null
+                    )
                 )
             }
             ruleList.add(
@@ -402,13 +396,13 @@ class YamlBuildV2 @Autowired constructor(
                     range = null,
                     templateRange = null,
                     operation = RuleOperation.END,
-                    notifyTypeList = GitCINotifyType.getNotifyListByYaml(gate.notifyOnFail?.map { it.type }),
+                    notifyTypeList = null,
                     notifyGroupList = null,
-                    // todo: 人和通知的方式不匹配
                     notifyUserList = null,
                     auditUserList = null,
                     auditTimeoutMinutes = null,
-                    gatewayId = null
+                    gatewayId = null,
+                    opList = opList
                 )
             )
         }
@@ -437,7 +431,7 @@ class YamlBuildV2 @Autowired constructor(
         val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
             ?: throw OperationException("git ci projectCode not exist")
 
-        val model = createPipelineModel(event, gitBasicSetting, yaml)
+        val model = createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request , pipeline:$pipeline, model: $model")
         savePipeline(pipeline, event, gitBasicSetting, model)
     }
@@ -459,7 +453,8 @@ class YamlBuildV2 @Autowired constructor(
     private fun createPipelineModel(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
-        yaml: ScriptBuildYaml
+        yaml: ScriptBuildYaml,
+        pipeline: GitProjectPipeline
     ): Model {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, gitBasicSetting, yaml)
@@ -512,7 +507,8 @@ class YamlBuildV2 @Autowired constructor(
                 stage = stage,
                 event = event,
                 gitBasicSetting = gitBasicSetting,
-                stageIndex = stageIndex + 1
+                stageIndex = stageIndex + 1,
+                pipeline = pipeline
             ))
         }
         // 添加finally
@@ -531,7 +527,9 @@ class YamlBuildV2 @Autowired constructor(
                     ),
                     event = event,
                     gitBasicSetting = gitBasicSetting,
-                    finalStage = true)
+                    finalStage = true,
+                    pipeline = pipeline
+                )
             )
         }
 
@@ -620,7 +618,8 @@ class YamlBuildV2 @Autowired constructor(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
         stageIndex: Int = 0,
-        finalStage: Boolean = false
+        finalStage: Boolean = false,
+        pipeline: GitProjectPipeline
     ): Stage {
         val containerList = mutableListOf<Container>()
         stage.jobs.forEachIndexed { jobIndex, job ->
@@ -659,7 +658,19 @@ class YamlBuildV2 @Autowired constructor(
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
             containers = containerList,
-            finally = finalStage
+            finally = finalStage,
+            checkIn = createStagePauseCheck(
+                stageCheck = stage.checkIn,
+                position = ControlPointPosition.BEFORE_POSITION,
+                event = event,
+                pipeline = pipeline
+            ),
+            checkOut = createStagePauseCheck(
+                stageCheck = stage.checkOut,
+                position = ControlPointPosition.AFTER_POSITION,
+                event = event,
+                pipeline = pipeline
+            )
         )
     }
 
@@ -726,7 +737,7 @@ class YamlBuildV2 @Autowired constructor(
         if (job.runsOn.selfHosted == true) {
             return ThirdPartyAgentEnvDispatchType(
                 envName = job.runsOn.poolName,
-                workspace = "",
+                workspace = job.runsOn.workspace,
                 agentType = AgentType.NAME
             )
         }
@@ -883,7 +894,7 @@ class YamlBuildV2 @Autowired constructor(
                 retryWhenFailed = step.retryTimes != null,
                 retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
-                customEnv = emptyList(),
+                customEnv = getElementEnv(step.env),
                 runCondition = if (step.ifFiled.isNullOrBlank()) {
                     RunCondition.PRE_TASK_SUCCESS
                 } else {
@@ -947,6 +958,23 @@ class YamlBuildV2 @Autowired constructor(
         return elementList
     }
 
+    private fun getElementEnv(env: Map<String, Any?>?): List<NameAndValue>? {
+        if (env == null) {
+            return null
+        }
+
+        val nameAndValueList = mutableListOf<NameAndValue>()
+        env.forEach {
+            nameAndValueList.add(
+                NameAndValue(
+                    key = it.key,
+                    value = it.value.toString()
+                ))
+        }
+
+        return nameAndValueList
+    }
+
     private fun makeCheckoutElement(
         step: Step,
         gitBasicSetting: GitCIBasicSetting,
@@ -959,14 +987,13 @@ class YamlBuildV2 @Autowired constructor(
         }
         // 非mr和tag触发下根据commitId拉取本地工程代码
         if (step.checkout == "self") {
-            inputMap["accessToken"] =
-                oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
+            inputMap["authUserId"] = gitBasicSetting.enableUserId
             inputMap["repositoryUrl"] = if (gitBasicSetting.gitHttpUrl.isBlank()) {
                 gitCISettingDao.getSetting(dslContext, gitBasicSetting.gitProjectId)?.gitHttpUrl
             } else {
                 gitBasicSetting.gitHttpUrl
             }
-            inputMap["authType"] = "ACCESS_TOKEN"
+            inputMap["authType"] = "AUTH_USER_TOKEN"
 
             when (event.objectKind) {
                 OBJECT_KIND_MERGE_REQUEST ->
@@ -992,9 +1019,8 @@ class YamlBuildV2 @Autowired constructor(
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
             if (step.with == null || (step.with != null && !step.with!!.containsKey("authType"))) {
-                inputMap["accessToken"] =
-                    oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
-                inputMap["authType"] = "ACCESS_TOKEN"
+                inputMap["authUserId"] = gitBasicSetting.enableUserId
+                inputMap["authType"] = "AUTH_USER_TOKEN"
             }
         }
 
@@ -1057,83 +1083,6 @@ class YamlBuildV2 @Autowired constructor(
         return elementList
     }
 
-    private fun createGitCodeElement(event: GitRequestEvent, gitBasicSetting: GitCIBasicSetting): Element {
-        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitBasicSetting.gitProjectId).data!!
-        logger.info("get token from scm success, gitToken: $gitToken")
-        val gitCiCodeRepoInput = when (event.objectKind) {
-            OBJECT_KIND_PUSH -> {
-                GitCiCodeRepoInput(
-                    repositoryName = gitBasicSetting.name,
-                    repositoryUrl = gitBasicSetting.gitHttpUrl,
-                    oauthToken = gitToken.accessToken,
-                    localPath = null,
-                    strategy = CodePullStrategy.REVERT_UPDATE,
-                    pullType = GitPullModeType.COMMIT_ID,
-                    refName = event.commitId
-                )
-            }
-            OBJECT_KIND_TAG_PUSH -> {
-                GitCiCodeRepoInput(
-                    repositoryName = gitBasicSetting.name,
-                    repositoryUrl = gitBasicSetting.gitHttpUrl,
-                    oauthToken = gitToken.accessToken,
-                    localPath = null,
-                    strategy = CodePullStrategy.REVERT_UPDATE,
-                    pullType = GitPullModeType.TAG,
-                    refName = event.branch.removePrefix("refs/tags/")
-                )
-            }
-            OBJECT_KIND_MERGE_REQUEST -> {
-                // MR时fork库的源仓库URL会不同，需要单独拿出来处理
-                val gitEvent = objectMapper.readValue<GitEvent>(event.event) as GitMergeRequestEvent
-                GitCiCodeRepoInput(
-                    repositoryName = gitBasicSetting.name,
-                    repositoryUrl = gitBasicSetting.gitHttpUrl,
-                    oauthToken = gitToken.accessToken,
-                    localPath = null,
-                    strategy = CodePullStrategy.REVERT_UPDATE,
-                    pullType = GitPullModeType.BRANCH,
-                    refName = "",
-                    pipelineStartType = StartType.WEB_HOOK,
-                    hookEventType = CodeEventType.MERGE_REQUEST.name,
-                    hookSourceBranch = event.branch,
-                    hookTargetBranch = event.targetBranch,
-                    hookSourceUrl = if (event.sourceGitProjectId != null &&
-                        event.sourceGitProjectId != event.gitProjectId) {
-                        gitEvent.object_attributes.source.http_url
-                    } else {
-                        gitBasicSetting.gitHttpUrl
-                    },
-                    hookTargetUrl = gitBasicSetting.gitHttpUrl
-                )
-            }
-            OBJECT_KIND_MANUAL -> {
-                GitCiCodeRepoInput(
-                    repositoryName = gitBasicSetting.name,
-                    repositoryUrl = gitBasicSetting.gitHttpUrl,
-                    oauthToken = gitToken.accessToken,
-                    localPath = null,
-                    strategy = CodePullStrategy.REVERT_UPDATE,
-                    pullType = GitPullModeType.BRANCH,
-                    refName = event.branch.removePrefix("refs/heads/")
-                )
-            }
-            else -> {
-                logger.error("event.objectKind invalid")
-                null
-            }
-        }
-
-        return MarketBuildAtomElement(
-            name = "拉代码",
-            id = null,
-            status = null,
-            atomCode = GitCiCodeRepoTask.atomCode,
-            version = "1.*",
-            data = mapOf("input" to gitCiCodeRepoInput!!)
-        )
-    }
-
     private fun createPipelineParams(
         yaml: ScriptBuildYaml,
         gitBasicSetting: GitCIBasicSetting,
@@ -1142,6 +1091,7 @@ class YamlBuildV2 @Autowired constructor(
         val result = mutableListOf<BuildFormProperty>()
 
         val startParams = mutableMapOf<String, String>()
+        val parsedCommitMsg = EmojiUtil.removeAllEmoji(event.commitMsg ?: "")
 
         // 通用参数
         startParams[CI_PIPELINE_NAME] = yaml.name ?: ""
@@ -1149,15 +1099,15 @@ class YamlBuildV2 @Autowired constructor(
         startParams[BK_CI_RUN] = "true"
         startParams[CI_ACTOR] = event.userId
         startParams[CI_BRANCH] = event.branch
-        startParams[PIPELINE_GIT_EVENT_CONTENT] = JsonUtil.toJson(event)
-        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = event.commitMsg ?: ""
+        startParams[PIPELINE_GIT_EVENT_CONTENT] = EmojiUtil.removeAllEmoji(JsonUtil.toJson(event))
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = parsedCommitMsg
         startParams[PIPELINE_GIT_SHA] = event.commitId
         if (!event.commitId.isBlank() && event.commitId.length >= 8) {
             startParams[PIPELINE_GIT_SHA_SHORT] = event.commitId.substring(0, 8)
         }
 
         // 替换BuildMessage为了展示commit信息
-        startParams[PIPELINE_BUILD_MSG] = event.commitMsg ?: ""
+        startParams[PIPELINE_BUILD_MSG] = parsedCommitMsg
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {

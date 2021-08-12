@@ -766,7 +766,7 @@ class PipelineBuildFacadeService(
         isCancel: Boolean,
         reviewRequest: StageReviewRequest?
     ) {
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
@@ -841,7 +841,7 @@ class PipelineBuildFacadeService(
                 pipelineStageService.cancelStage(
                     userId = userId,
                     buildStage = buildStage,
-                    groupId = reviewRequest?.id
+                    reviewRequest = reviewRequest
                 )
             } else {
                 // TODO 暂时兼容前端显示的变量刷新，下次发版去掉
@@ -955,18 +955,6 @@ class PipelineBuildFacadeService(
             }
 
             try {
-                val lastStage = pipelineStageService.getLastStage(buildId)
-                if (lastStage?.status?.isRunning() == true && lastStage.controlOption?.finally == true) {
-                    val message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_FINAL_STAGE_CANNOT_CANCEL)
-                    buildLogPrinter.addRedLine(
-                        buildId = buildId,
-                        message = message,
-                        tag = "startVM-0",
-                        jobId = "0",
-                        executeCount = lastStage.executeCount
-                    )
-                    return
-                }
                 pipelineRuntimeService.cancelBuild(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -1684,6 +1672,15 @@ class PipelineBuildFacadeService(
                 ?: return
             val alreadyCancelUser = modelDetail.cancelUserId
 
+            if (BuildStatus.parse(modelDetail.status).isFinish()) {
+                logger.warn("The build $buildId of project $projectId already finished ")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
+                    defaultMessage = "流水线已经被取消构建或已完成",
+                    params = arrayOf(alreadyCancelUser ?: "")
+                )
+            }
+
             if (modelDetail.pipelineId != pipelineId) {
                 logger.warn("shutdown error: input|$pipelineId| buildId-pipeline| ${modelDetail.pipelineId}| $buildId")
                 throw ErrorCodeException(
@@ -1718,24 +1715,6 @@ class PipelineBuildFacadeService(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                     defaultMessage = "构建任务${buildId}不存在",
-                    params = arrayOf(buildId)
-                )
-            }
-            val lastStage = pipelineStageService.getLastStage(buildId)
-            if (lastStage?.status?.isRunning() == true && lastStage.controlOption?.finally == true) {
-                val message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_FINAL_STAGE_CANNOT_CANCEL)
-                buildLogPrinter.addRedLine(
-                    buildId = buildId,
-                    message = "$message userId:$userId",
-                    tag = "startVM-0",
-                    jobId = "0",
-                    executeCount = lastStage.executeCount
-                )
-
-                throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_FINAL_STAGE_CANNOT_CANCEL,
-                    defaultMessage = "Cannot cancel the running [final stage]",
                     params = arrayOf(buildId)
                 )
             }

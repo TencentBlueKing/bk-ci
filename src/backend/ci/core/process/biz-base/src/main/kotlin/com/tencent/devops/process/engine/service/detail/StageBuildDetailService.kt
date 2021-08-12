@@ -37,12 +37,14 @@ import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 
 @Suppress("LongParameterList", "MagicNumber")
 @Service
 class StageBuildDetailService(
+    private val stageTagService: StageTagService,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
@@ -56,7 +58,13 @@ class StageBuildDetailService(
     redisOperation
 ) {
 
-    fun updateStageStatus(buildId: String, stageId: String, buildStatus: BuildStatus): List<BuildStageStatus> {
+    fun updateStageStatus(
+        buildId: String,
+        stageId: String,
+        buildStatus: BuildStatus,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
+    ): List<BuildStageStatus> {
         logger.info("[$buildId]|update_stage_status|stageId=$stageId|status=$buildStatus")
         var allStageStatus: List<BuildStageStatus>? = null
         update(buildId, object : ModelInterface {
@@ -71,6 +79,8 @@ class StageBuildDetailService(
                     } else if (buildStatus.isFinish() && stage.startEpoch != null) {
                         stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
                     }
+                    stage.checkIn = checkIn
+                    stage.checkOut = checkOut
                     allStageStatus = fetchHistoryStageStatus(model)
                     return Traverse.BREAK
                 }
@@ -174,6 +184,39 @@ class StageBuildDetailService(
         }, BuildStatus.STAGE_SUCCESS)
     }
 
+    fun stageCheckQualityFail(
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
+    ): List<BuildStageStatus> {
+        logger.info("[$buildId]|stage_cancel|stageId=$stageId")
+        var allStageStatus: List<BuildStageStatus>? = null
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindStage(stage: Stage, model: Model): Traverse {
+                if (stage.id == stageId) {
+                    update = true
+                    stage.status = null
+                    stage.reviewStatus = BuildStatus.QUALITY_CHECK_FAIL.name
+                    stage.stageControlOption = controlOption.stageControlOption
+                    stage.checkIn = checkIn
+                    stage.checkOut = checkOut
+                    allStageStatus = fetchHistoryStageStatus(model)
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.FAILED)
+        return allStageStatus ?: emptyList()
+    }
+
     fun stageReview(
         buildId: String,
         stageId: String,
@@ -220,6 +263,8 @@ class StageBuildDetailService(
                     stage.status = BuildStatus.QUEUE.name
                     stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
                     stage.stageControlOption = controlOption.stageControlOption
+                    stage.checkIn = checkIn
+                    stage.checkOut = checkOut
                     allStageStatus = fetchHistoryStageStatus(model)
                     return Traverse.BREAK
                 }
@@ -234,6 +279,8 @@ class StageBuildDetailService(
     }
 
     private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
+        val stageTagMap: Map<String, String>
+            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } ?: emptyMap() }
         // 更新Stage状态至BuildHistory
         return model.stages.map {
             BuildStageStatus(
@@ -241,7 +288,10 @@ class StageBuildDetailService(
                 name = it.name ?: it.id!!,
                 status = it.status,
                 startEpoch = it.startEpoch,
-                elapsed = it.elapsed
+                elapsed = it.elapsed,
+                tag = it.tag?.map { _it ->
+                    stageTagMap.getOrDefault(_it, "null")
+                }
             )
         }
     }

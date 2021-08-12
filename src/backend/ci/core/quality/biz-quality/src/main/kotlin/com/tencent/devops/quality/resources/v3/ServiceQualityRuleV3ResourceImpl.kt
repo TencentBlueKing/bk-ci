@@ -43,12 +43,17 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceQualityRuleV3ResourceImpl @Autowired constructor(
     private val qualityRuleService: QualityRuleService,
     private val qualityRuleCheckService: QualityRuleCheckService
-): ServiceQualityRuleResource {
+) : ServiceQualityRuleResource {
     override fun check(buildCheckParams: BuildCheckParamsV3): Result<RuleCheckResult> {
-        return Result(qualityRuleCheckService.check(buildCheckParams))
+        return Result(qualityRuleCheckService.checkV3(buildCheckParams))
     }
 
-    override fun create(userId: String, projectId: String, pipelineId: String, ruleList: List<RuleCreateRequestV3>): Result<List<RuleCreateResponseV3>> {
+    override fun create(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        ruleList: List<RuleCreateRequestV3>
+    ): Result<List<RuleCreateResponseV3>> {
         return Result(qualityRuleService.serviceCreate(userId, projectId, pipelineId, ruleList))
     }
 }

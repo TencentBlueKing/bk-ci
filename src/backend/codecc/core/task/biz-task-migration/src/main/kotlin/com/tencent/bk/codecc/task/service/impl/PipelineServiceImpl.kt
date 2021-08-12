@@ -1805,4 +1805,3 @@ open class PipelineServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineServiceImpl::class.java)
     }
 }
-

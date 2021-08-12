@@ -48,7 +48,7 @@ class YamlTemplateTest {
 
     @Test
     fun testExtendsTemplate() {
-//        replace("extends.yml")
+        replace("extends.yml")
     }
 
     private fun replace(testYaml: String) {

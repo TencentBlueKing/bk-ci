@@ -88,6 +88,8 @@ class UpdateStateForStageCmdFinally(
         } else if (commandContext.buildStatus.isFinish()) { // 当前Stage结束
             if (commandContext.buildStatus == BuildStatus.SKIP) { // 跳过
                 pipelineStageService.skipStage(userId = event.userId, buildStage = stage)
+            } else if (commandContext.buildStatus == BuildStatus.QUALITY_CHECK_FAIL) {
+                pipelineStageService.checkQualityFailStage(userId = event.userId, buildStage = stage)
             }
             nextOrFinish(event, stage, commandContext)
             sendStageEndCallBack(stage, event)
@@ -146,22 +148,31 @@ class UpdateStateForStageCmdFinally(
     private fun updateStageStatus(commandContext: StageContext) {
         val event = commandContext.event
         // 更新状态
-        pipelineStageService.updateStageStatus(event.buildId, event.stageId, buildStatus = commandContext.buildStatus)
+        pipelineStageService.updateStageStatus(
+            buildId = event.buildId,
+            stageId = event.stageId,
+            buildStatus = commandContext.buildStatus,
+            checkIn = commandContext.stage.checkIn,
+            checkOut = commandContext.stage.checkOut
+        )
 
         // 对未结束的Container进行强制更新[失败状态]
         if (commandContext.buildStatus.isFailure()) {
             forceFlushContainerStatus(commandContext = commandContext, stageStatus = commandContext.buildStatus)
         }
 
-        // stage第一次启动[isReadyToRun]或者准备结束[commandContext.buildStatus]，要刷新编排模型。 to do 改进
+        // stage第一次启动[isReadyToRun]或者准备结束[commandContext.buildStatus]，要刷新编排模型 TODO 改进
         if (commandContext.stage.status.isReadyToRun() || commandContext.buildStatus.isFinish()) {
 
             // 如果是因fastKill强制终止，流水线状态标记为失败
-            if (commandContext.fastKill) {
+            if (commandContext.fastKill || commandContext.buildStatus.isFailure()) {
                 commandContext.buildStatus = BuildStatus.FAILED
             }
             val allStageStatus = stageBuildDetailService.updateStageStatus(
-                buildId = event.buildId, stageId = event.stageId, buildStatus = commandContext.buildStatus
+                buildId = event.buildId, stageId = event.stageId,
+                buildStatus = commandContext.buildStatus,
+                checkIn = commandContext.stage.checkIn,
+                checkOut = commandContext.stage.checkOut
             )
             pipelineRuntimeService.updateBuildHistoryStageState(event.buildId, allStageStatus = allStageStatus)
         }

@@ -47,6 +47,7 @@ import com.tencent.devops.experience.service.ExperienceService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@SuppressWarnings("TooManyFunctions")
 class UserExperienceResourceImpl @Autowired constructor(
     private val experienceService: ExperienceService,
     private val experienceDownloadService: ExperienceDownloadService,
@@ -73,7 +74,7 @@ class UserExperienceResourceImpl @Autowired constructor(
 
     override fun get(userId: String, projectId: String, experienceHashId: String): Result<Experience> {
         checkParam(userId, projectId, experienceHashId)
-        return Result(experienceService.get(userId, projectId, experienceHashId))
+        return Result(experienceService.get(userId, experienceHashId))
     }
 
     override fun create(userId: String, projectId: String, experience: ExperienceCreate): Result<Boolean> {
@@ -123,13 +124,13 @@ class UserExperienceResourceImpl @Autowired constructor(
 
     override fun externalUrl(userId: String, projectId: String, experienceHashId: String): Result<Url> {
         checkParam(userId, projectId)
-        val url = experienceService.externalUrl(userId, projectId, experienceHashId)
+        val url = experienceService.externalUrl(userId, experienceHashId)
         return Result(Url(url))
     }
 
     override fun downloadUrl(userId: String, projectId: String, experienceHashId: String): Result<Url> {
         checkParam(userId, projectId)
-        val url = experienceService.downloadUrl(userId, projectId, experienceHashId)
+        val url = experienceService.downloadUrl(userId, experienceHashId)
         return Result(Url(url))
     }
 

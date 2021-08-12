@@ -72,6 +72,29 @@ class AuthUtilsTest {
         actionPolicy2.condition = expression2
         actionPolicys.add(actionPolicy2)
 
+        val actionPolicy3 = ActionPolicyDTO()
+        val expression3 = ExpressionDTO()
+        expression3.field = null
+        expression3.operator = ExpressionOperationEnum.OR
+        expression3.value = null
+        expression3.content = mutableListOf()
+        val expression31 = ExpressionDTO()
+        val expression32 = ExpressionDTO()
+        expression31.operator = ExpressionOperationEnum.ANY
+        expression31.field = "project.id"
+        expression31.value = "[]"
+        expression31.content = null
+
+        expression32.operator = ExpressionOperationEnum.IN
+        expression32.field = "project.id"
+        expression32.value = "[w1, dgm]"
+        expression32.content = null
+        expression3.content.add(expression31)
+        expression3.content.add(expression32)
+        actionPolicy3.actionId = null
+        actionPolicy3.condition = expression3
+        actionPolicys.add(actionPolicy3)
+
         buildExpression()
         buildNewExpression()
     }
@@ -224,6 +247,12 @@ class AuthUtilsTest {
     }
 
     @Test
+    fun getProjects3() {
+        val projectList = AuthUtils.getProjects(actionPolicys[3].condition)
+        print(projectList)
+    }
+
+    @Test
     fun getInstanceList1() {
         val instanceList = AuthUtils.getResourceInstance(expressionList, "demo", AuthResourceType.PIPELINE_DEFAULT)
         val mockList = mutableSetOf<String>()
@@ -253,7 +282,7 @@ class AuthUtilsTest {
 
     @Test
     fun getResourceInstanceTest1() {
-        val resourceType = AuthResourceType.PIPELINE_DEFAULT
+        val resourceType = AuthResourceType.PIPELINE_DEFAULT.value
         val mockList = mutableSetOf<String>()
         mockList.add("*")
         val emptyList = emptySet<String>()
@@ -263,7 +292,7 @@ class AuthUtilsTest {
 
     @Test
     fun getResourceInstanceTest2() {
-        val resourceType = AuthResourceType.PIPELINE_DEFAULT
+        val resourceType = AuthResourceType.PIPELINE_DEFAULT.value
         val mockList = mutableSetOf<String>()
         mockList.add("p-098b68a251ae4ec4b6f4fde87767387f")
         mockList.add("p-12b2c343109f43a58a79dcb9e3721c1b")
@@ -275,7 +304,7 @@ class AuthUtilsTest {
 
     @Test
     fun getResourceInstanceTest3() {
-        val resourceType = AuthResourceType.PIPELINE_DEFAULT
+        val resourceType = AuthResourceType.PIPELINE_DEFAULT.value
         val mockList = mutableSetOf<String>()
         mockList.add("p-098b68a251ae4ec4b6f4fde87767387f")
         mockList.add("p-12b2c343109f43a58a79dcb9e3721c1b")
@@ -289,7 +318,7 @@ class AuthUtilsTest {
 
     @Test
     fun getResourceInstanceTest4() {
-        val resourceType = AuthResourceType.PIPELINE_DEFAULT
+        val resourceType = AuthResourceType.PIPELINE_DEFAULT.value
         val mockList = mutableSetOf<String>()
         mockList.add("*")
         val mockList1 = mutableSetOf<String>()
@@ -301,7 +330,7 @@ class AuthUtilsTest {
 
     @Test
     fun getResourceInstanceTest5() {
-        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL.value
         val mockList = mutableSetOf<String>()
         mockList.add("test_3")
         val mockList1 = mutableSetOf<String>()
@@ -313,7 +342,7 @@ class AuthUtilsTest {
 
     @Test
     fun getResourceInstanceTest6() {
-        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL.value
         val mockList = mutableSetOf<String>()
         mockList.add("test_3")
         mockList.add("test")
@@ -344,7 +373,7 @@ class AuthUtilsTest {
         expression1Content.add(childExpression1)
         expression1Content.add(childExpression2)
         expression1.content = expression1Content
-        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL.value
         val mockList = mutableSetOf<String>()
         mockList.add("*")
         Assert.assertEquals(mockList, AuthUtils.getResourceInstance(expression1, "fitztest", resourceType))
@@ -413,7 +442,7 @@ class AuthUtilsTest {
         e1Content.add(e21)
         e1Content.add(e22)
         e1.content = e1Content
-        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL.value
         val mockList = mutableSetOf<String>()
         mockList.add("001")
         mockList.add("002")
@@ -459,11 +488,23 @@ class AuthUtilsTest {
         expression1Content.add(childExpression2)
         expression1.content = expression1Content
 
-        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL.value
         val mockList = mutableSetOf<String>()
         mockList.add("*")
         Assert.assertEquals(mockList, AuthUtils.getResourceInstance(expression1, "jttest", resourceType))
         print(AuthUtils.getResourceInstance(expression1, "jttest", resourceType))
+    }
+
+    @Test
+    fun getResourceInstanceTest10() {
+        val expression = ExpressionDTO()
+        expression.operator = ExpressionOperationEnum.EQUAL
+        expression.value = "testProject"
+        expression.field = "project.id"
+        val resourceType = AuthResourceType.PIPELINE_DEFAULT.value
+        val mockSet = mutableSetOf<String>()
+        mockSet.add("*")
+        Assert.assertEquals(mockSet, AuthUtils.getResourceInstance(expression, "testProject", resourceType))
     }
 
     private fun print(projectList: List<String>) {

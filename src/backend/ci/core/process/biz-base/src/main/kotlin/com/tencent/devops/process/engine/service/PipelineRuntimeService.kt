@@ -146,10 +146,12 @@ import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_COMMIT_MESSAGE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -1061,11 +1063,11 @@ class PipelineRuntimeService @Autowired constructor(
                 if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
             }
 
-            // 只在第一次启动时刷新为QUEUE，若重试则保持原审核状态
-            stage.refreshReviewOption()
+            // TODO 只在第一次启动时刷新为QUEUE，后续只需保留兼容数据刷新
+            stage.refreshReviewOption(true)
             if (stage.checkIn?.manualTrigger == true &&
                 stage.checkIn?.groupToReview() != null) {
-                stage.checkIn?.status = BuildStatus.QUEUE.name
+                stage.reviewStatus = BuildStatus.QUEUE.name
             }
 
             if (lastTimeBuildStageRecords.isNotEmpty()) {
@@ -1122,6 +1124,7 @@ class PipelineRuntimeService @Autowired constructor(
                 )
                 if (buildHistoryRecord != null) {
                     buildHistoryRecord.endTime = null
+                    buildHistoryRecord.queueTime = LocalDateTime.now() // for EPC
                     buildHistoryRecord.status = startBuildStatus.ordinal
                     transactionContext.batchStore(buildHistoryRecord).execute()
                     // 重置状态和人
@@ -1322,7 +1325,9 @@ class PipelineRuntimeService @Autowired constructor(
                     params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] as String?
                 } else {
                     params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
-                }
+                },
+                webhookCommitId = params[PIPELINE_WEBHOOK_REVISION] as String?,
+                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] as String?
             )
         )
     }

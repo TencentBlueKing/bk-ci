@@ -139,8 +139,12 @@
                 left: 180px;
                 top:77px;
                 &.retry-count-input {
-                    top: 118px;
-                    width: 154px;
+                    top: 117px;
+                    width: 260px;
+                    .bk-form-content {
+                        display: inline-block;
+                        width: 150px;
+                    };
                 }
             }
 

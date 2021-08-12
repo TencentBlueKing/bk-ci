@@ -51,6 +51,7 @@ class V2GitCIBuildQueueListener @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(V2GitCIBuildQueueListener::class.java)
         private const val ymlVersion = "v2.0"
+
         // 接受广播的队列
         private const val QUEUE_PIPELINE_BUILD_QUEUE_GITCI = "q.engine.pipeline.build.queue.gitci"
     }
@@ -78,12 +79,17 @@ class V2GitCIBuildQueueListener @Autowired constructor(
             return
         }
 
+        // 定时任务其他actionType也会受到消息，所以buildId存在时不新增
+        if (gitRequestEventBuildDao.isBuildExist(dslContext, buildQueueEvent.buildId)) {
+            return
+        }
+
         val records = gitRequestEventBuildDao.getLastEventByPipelineId(
             dslContext = dslContext,
             gitProjectId = projectId.removePrefix("git_").toLong(),
             pipelineId = buildQueueEvent.pipelineId
         )
-        if (records.isNullOrEmpty()) {
+        if (records.isEmpty()) {
             logger.error("can't find queueEvent: $buildQueueEvent pipeline in gitci")
             return
         }
@@ -99,7 +105,7 @@ class V2GitCIBuildQueueListener @Autowired constructor(
                 branch = branch,
                 objectKind = objectKind,
                 triggerUser = triggerUser,
-                description = description,
+                commitMsg = commitMessage,
                 sourceGitProjectId = sourceGitProjectId,
                 pipelineId = buildQueueEvent.pipelineId,
                 buildId = buildQueueEvent.buildId,

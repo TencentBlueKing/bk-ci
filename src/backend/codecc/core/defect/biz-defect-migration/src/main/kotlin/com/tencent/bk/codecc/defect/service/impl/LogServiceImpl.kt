@@ -213,4 +213,3 @@ class LogServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(LogServiceImpl::class.java)
     }
 }
-
