@@ -29,7 +29,7 @@ stages:
         id: mysqlservice
         name: Start MySQL
         with:
-          imageName: mysql:5.7
+          imageName: mysql:5
           port: 3306
           mysqlPw: root
           initCmd: show databases;
