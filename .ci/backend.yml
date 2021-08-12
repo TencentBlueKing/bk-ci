@@ -37,7 +37,7 @@ stages:
       - name: "init MySQL"
         run: |
           set -x
-          cd support-files/sql
+          cd support-files/sql/tencent
           for i in *.sql; do
             echo $i;mysql -h ${{steps.mysqlservice.outputs.MYSQL_IP}} -P ${{steps.mysqlservice.outputs.MYSQL_PORT}} -uroot -proot < $i
           done
