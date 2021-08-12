@@ -28,8 +28,18 @@
 package com.tencent.devops.quality
 
 import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.quality.dao.QualityNotifyGroupDao
+import com.tencent.devops.quality.dao.v2.QualityRuleDao
+import com.tencent.devops.quality.service.GitCIQualityPermissionService
+import com.tencent.devops.quality.service.TxQualityPermissionService
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -41,4 +51,30 @@ import org.springframework.core.Ordered
 class QualityConfiguration {
     @Bean
     fun managerService(client: Client) = ManagerService(client)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    fun txQualityPermissionService(
+        bkAuthPermissionApi: AuthPermissionApi,
+        bkAuthResourceApi: AuthResourceApi,
+        serviceCode: QualityAuthServiceCode,
+        managerService: ManagerService,
+        qualityRuleDao: QualityRuleDao,
+        qualityGroupDao: QualityRuleDao,
+        dslContext: DSLContext
+    ) = TxQualityPermissionService(
+        bkAuthPermissionApi, bkAuthResourceApi, serviceCode, managerService, qualityRuleDao, qualityGroupDao, dslContext
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    fun gitCIQualityPermissionService(
+        client: Client,
+        tokenCheckService: ClientTokenService,
+        ruleDao: QualityRuleDao,
+        groupDao: QualityNotifyGroupDao,
+        dslContext: DSLContext
+    ) = GitCIQualityPermissionService(
+        client, tokenCheckService, ruleDao, groupDao, dslContext
+    )
 }

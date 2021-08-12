@@ -61,7 +61,7 @@ data class QualityRule(
     @ApiModelProperty("审核超时时间", required = false)
     val auditTimeoutMinutes: Int?,
     @ApiModelProperty("操作类型列表", required = false)
-    val opList: List<RuleOp>?,
+    val opList: List<RuleOp>? = null,
     @ApiModelProperty("红线匹配的id", required = false)
     val gatewayId: String?
 ) {

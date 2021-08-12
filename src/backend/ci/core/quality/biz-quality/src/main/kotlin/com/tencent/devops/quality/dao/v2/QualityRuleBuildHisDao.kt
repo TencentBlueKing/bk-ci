@@ -28,23 +28,27 @@
 package com.tencent.devops.quality.dao.v2
 
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.quality.tables.TQualityRuleBuildHis
 import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository@Suppress("ALL")
-class QualityRuleBuildHisDao {
+@Repository
+@Suppress("ALL")
+class QualityRuleBuildHisDao @Autowired constructor(
+    private val innerDslContext: DSLContext
+) {
     fun create(
         dslContext: DSLContext,
         userId: String,
         projectId: String,
         pipelineId: String,
-        ruleId: Long,
         ruleRequest: RuleCreateRequestV3,
         indicatorIds: List<RuleCreateRequest.CreateRequestIndicator>
     ): Long {
@@ -53,45 +57,34 @@ class QualityRuleBuildHisDao {
                 this,
                 PROJECT_ID,
                 PIPELINE_ID,
-                RULE_ID,
                 RULE_POS,
                 RULE_NAME,
                 RULE_DESC,
                 GATEWAY_ID,
+                PIPELINE_RANGE,
+                TEMPLATE_RANGE,
                 INDICATOR_IDS,
                 INDICATOR_OPERATIONS,
                 INDICATOR_THRESHOLDS,
-                OP_TYPE,
-                NOTIFY_USER,
-                NOTIFY_TYPE,
-                NOTIFY_GROUP_ID,
-                AUDIT_USER,
-                AUDIT_TIMEOUT,
+                OPERATION_LIST,
                 CREATE_TIME,
                 CREATE_USER
             ).values(
                 projectId,
                 pipelineId,
-                ruleId,
                 ruleRequest.position,
                 ruleRequest.name,
                 ruleRequest.desc,
                 ruleRequest.gatewayId,
+                ruleRequest.range?.joinToString(","),
+                ruleRequest.templateRange?.joinToString(","),
                 indicatorIds.map { HashUtil.decodeIdToLong(it.hashId) }.joinToString(","),
                 indicatorIds.joinToString(",") { it.operation },
                 indicatorIds.joinToString(",") { it.threshold },
-                ruleRequest.operation.name,
-                ruleRequest.notifyUserList?.joinToString(","),
-                ruleRequest.notifyTypeList?.joinToString(","),
-                ruleRequest.notifyGroupList?.joinToString(","),
-                ruleRequest.auditUserList?.joinToString(","),
-                ruleRequest.auditTimeoutMinutes,
+                JsonUtil.toJson(ruleRequest.opList ?: listOf<RuleCreateRequestV3.CreateRequestOp>()),
                 LocalDateTime.now(),
                 userId
-            ).onDuplicateKeyUpdate()
-                .set(RULE_ID, ruleId)
-                .returning(ID)
-                .fetchOne()!!.id
+            ).returning(ID).fetchOne()!!.id
         }
     }
 
@@ -100,6 +93,15 @@ class QualityRuleBuildHisDao {
             dslContext.selectFrom(this)
                 .where(ID.`in`(ruleIds))
                 .fetch()
+        }
+    }
+
+    fun cleanQualityRule(daysAgo: Long): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            // delete data days ago
+            innerDslContext.deleteFrom(this)
+                .where(CREATE_TIME.lt(LocalDateTime.now().minusDays(daysAgo)))
+                .execute()
         }
     }
 }

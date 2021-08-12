@@ -25,15 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-quality"))
-    api(project(":core:common:common-auth:common-auth-api"))
-}
+package com.tencent.devops.gitci.utils
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.plugin.codecc.CodeccUtils
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+
+object ElementUtils {
+
+    fun getElementCnName(classType: String, projectId: String): String {
+        val map = getProjectElement(projectId)
+
+        if (CodeccUtils.isCodeccAtom(classType)) {
+            return map[CodeccUtils.BK_CI_CODECC_V3_ATOM] ?: ""
+        }
+
+        return map[classType] ?: ""
+    }
+
+    private fun getProjectElement(projectId: String): Map<String/* atomCode */, String/* cnName */> {
+        val client = SpringContextUtil.getBean(Client::class.java)
+        return client.get(ServiceMarketAtomResource::class).getProjectElements(projectId).data!!
+    }
 }
