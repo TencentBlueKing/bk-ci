@@ -51,7 +51,12 @@ class QualityRuleBuildHisService constructor(
 
     private val logger = LoggerFactory.getLogger(QualityRuleBuildHisService::class.java)
 
-    fun serviceCreate(userId: String, projectId: String, pipelineId: String, ruleRequestList: List<RuleCreateRequestV3>): List<RuleCreateResponseV3> {
+    fun serviceCreate(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        ruleRequestList: List<RuleCreateRequestV3>
+    ): List<RuleCreateResponseV3> {
         checkRuleRequest(ruleRequestList)
 
         return ruleRequestList.map { ruleRequest ->
