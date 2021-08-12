@@ -336,7 +336,7 @@ object ScriptYmlUtils {
                 Job(
                     id = t,
                     name = u.name,
-                    runsOn = formatRunsOn(u.runsOn, u.enableAgentLabel),
+                    runsOn = formatRunsOn(u.runsOn),
                     services = services,
                     ifField = u.ifField,
                     steps = formatSteps(u.steps),
@@ -352,35 +352,29 @@ object ScriptYmlUtils {
         return jobs
     }
 
-    private fun formatRunsOn(preRunsOn: Any?, enableAgentLabel: Boolean): RunsOn {
+    private fun formatRunsOn(preRunsOn: Any?): RunsOn {
         if (preRunsOn == null) {
             return RunsOn()
         }
 
         try {
-            val runsOn = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(preRunsOn), RunsOn::class.java)
+            val runsOn =
+                YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(preRunsOn), RunsOn::class.java)
+
             return if (runsOn.container != null) {
                 try {
-                    val container = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container::class.java)
+                    val container = YamlUtil.getObjectMapper()
+                        .readValue(JsonUtil.toJson(runsOn.container), Container::class.java)
                     runsOn.copy(container = container)
                 } catch (e: Exception) {
-                    val container = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container2::class.java)
+                    val container = YamlUtil.getObjectMapper()
+                        .readValue(JsonUtil.toJson(runsOn.container), Container2::class.java)
                     runsOn.copy(container = container)
                 }
             } else {
                 runsOn
             }
         } catch (e: Exception) {
-            if (enableAgentLabel) {
-                val preRunsOnArray = preRunsOn.toString().split(",")
-                if (preRunsOnArray.size == 2 &&
-                    preRunsOnArray.contains(JobRunsOnType.DOCKER.type)
-                    && preRunsOnArray.contains(JobRunsOnType.DEV_CLOUD.type)
-                ) {
-                    return RunsOn(poolName = JobRunsOnType.DEV_CLOUD.type)
-                }
-            }
-
             return RunsOn(
                 poolName = preRunsOn.toString()
             )
