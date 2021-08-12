@@ -424,7 +424,7 @@ class YamlBuildV2 @Autowired constructor(
                     desc = "",
                     indicators = indicators,
                     position = position,
-                    range = null,
+                    range = listOf(pipeline.pipelineId),
                     templateRange = null,
                     gatewayId = null,
                     opList = opList
