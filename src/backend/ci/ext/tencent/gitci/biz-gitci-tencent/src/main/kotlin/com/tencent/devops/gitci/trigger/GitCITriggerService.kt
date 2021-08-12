@@ -321,7 +321,7 @@ class GitCITriggerService @Autowired constructor(
         val isFork = isFork(mrEvent, gitRequestEvent)
         var forkGitToken: GitToken? = null
         if (isFork) {
-            forkGitToken = handleGetToken(gitRequestEvent)!!
+            forkGitToken = handleGetToken(gitRequestEvent, true)!!
             logger.info(
                 "get fork token for gitProject[${
                     getProjectId(
@@ -1000,10 +1000,10 @@ class GitCITriggerService @Autowired constructor(
         }
     }
 
-    private fun handleGetToken(gitRequestEvent: GitRequestEvent): GitToken? {
+    private fun handleGetToken(gitRequestEvent: GitRequestEvent, isMrEvent: Boolean = false): GitToken? {
         return triggerExceptionService.handleErrorCode(
             request = gitRequestEvent,
-            action = { scmService.getToken(gitRequestEvent.gitProjectId.toString()) }
+            action = { scmService.getToken(getProjectId(isMrEvent, gitRequestEvent).toString()) }
         )
     }
 
