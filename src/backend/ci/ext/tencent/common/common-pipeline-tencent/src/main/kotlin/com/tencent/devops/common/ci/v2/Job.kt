@@ -101,6 +101,6 @@ data class RunsOn(
 enum class JobRunsOnType(val type: String) {
     DOCKER("docker"),
     AGENT_LESS("agentless"),
-    DEV_CLOUD("devcloud"),
+    DEV_CLOUD("docker-on-devcloud"),
     LOCAL("local")
 }
