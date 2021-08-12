@@ -26,4 +26,13 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
             streamTriggerBuildReq = streamTriggerBuildReq
         )
     }
+
+    override fun getStreamProject(userId: String, gitProjectId: String): Result<String> {
+        val r1 = Regex("[0-9]+")
+        return if (r1.matches(gitProjectId)) {
+            Result("git_$gitProjectId")
+        } else {
+            Result(gitProjectId)
+        }
+    }
 }
