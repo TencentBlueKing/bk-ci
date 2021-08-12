@@ -27,34 +27,29 @@
 
 package com.tencent.devops.dispatch.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.dispatch.service.PipelineDispatchService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import feign.RetryableException
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.ExchangeTypes
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class AgentShutdownListener @Autowired
+class ThirdPartyAgentListener @Autowired
 constructor(private val pipelineDispatchService: PipelineDispatchService) {
+    fun listenAgentStartUpEvent(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
+        try {
+            pipelineDispatchService.startUp(pipelineAgentStartupEvent)
+        } catch (e: RetryableException) {
+            logger.warn("[${pipelineAgentStartupEvent.buildId}]|feign fail, do retry again", e)
+            pipelineDispatchService.reDispatch(pipelineAgentStartupEvent)
+        } catch (ignored: Throwable) {
+            logger.error("Fail to start the pipe build($pipelineAgentStartupEvent)", ignored)
+        }
+    }
 
-    @RabbitListener(
-        bindings = [(QueueBinding(
-            key = [MQ.ROUTE_AGENT_SHUTDOWN], value = Queue(value = MQ.QUEUE_AGENT_SHUTDOWN, durable = "true"),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_AGENT_LISTENER_DIRECT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.DIRECT
-            )
-        ))]
-    )
-    fun listenAgentStartUpEvent(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
+    fun listenAgentShutdownEvent(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
         try {
             pipelineDispatchService.shutdown(pipelineAgentShutdownEvent)
         } catch (ignored: Throwable) {
@@ -63,6 +58,6 @@ constructor(private val pipelineDispatchService: PipelineDispatchService) {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AgentShutdownListener::class.java)
+        private val logger = LoggerFactory.getLogger(ThirdPartyAgentListener::class.java)
     }
 }
