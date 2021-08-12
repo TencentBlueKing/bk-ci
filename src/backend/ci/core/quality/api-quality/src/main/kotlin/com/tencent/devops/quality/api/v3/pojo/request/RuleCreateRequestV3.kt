@@ -28,7 +28,6 @@
 package com.tencent.devops.quality.api.v3.pojo.request
 
 import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty

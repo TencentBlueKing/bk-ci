@@ -103,8 +103,8 @@ class QualityRuleBuildHisService constructor(
                 controlPoint = QualityRule.RuleControlPoint(
                     "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
                 ),
-                range = it.pipelineRange.split(","),
-                templateRange = it.templateRange.split(","),
+                range = it.pipelineRange?.split(",") ?: listOf(),
+                templateRange = it.templateRange?.split(",") ?: listOf(),
                 operation = RuleOperation.END,
                 notifyTypeList = null,
                 notifyUserList = null,
@@ -112,7 +112,11 @@ class QualityRuleBuildHisService constructor(
                 auditUserList = null,
                 auditTimeoutMinutes = null,
                 gatewayId = it.gatewayId,
-                opList = JsonUtil.to(it.operationList)
+                opList = if (it.operationList.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    JsonUtil.to(it.operationList)
+                }
             )
             rule
         }

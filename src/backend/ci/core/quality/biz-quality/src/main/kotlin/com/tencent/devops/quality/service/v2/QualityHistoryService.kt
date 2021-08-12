@@ -44,6 +44,7 @@ import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import com.tencent.devops.quality.util.ThresholdOperationUtil
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -60,6 +61,8 @@ class QualityHistoryService @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper
 ) {
+
+    private val logger = LoggerFactory.getLogger(QualityHistoryService::class.java)
 
     fun userGetRuleIntercept(
         userId: String,
@@ -356,6 +359,10 @@ class QualityHistoryService @Autowired constructor(
         ruleHashIds: Set<String>
     ): List<RuleInterceptHistory> {
         val ruleIds = ruleHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
+
+        logger.info("start to list intercept history for pipeline: " +
+            "$projectId, $pipelineId, $buildId, ${ruleIds.firstOrNull()}")
+
         val ruleIdToNameMap = ruleService.serviceListRuleByIds(projectId = projectId, ruleIds = ruleIds)
             .map { it.hashId to it.name }.toMap()
         val recordList = batchServiceList(projectId, pipelineId, buildId, ruleIds,
