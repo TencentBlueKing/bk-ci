@@ -32,7 +32,8 @@ stages:
           imageName: mysql:5.7
           port: 3306
           mysqlPw: root
-          initCmd: SELECT NOW();
+          initCmd: show databases;
+
       - name: "init MySQL"
         run: |
           set -x
@@ -40,6 +41,8 @@ stages:
           for i in *.sql; do
             echo $i;mysql -h ${{steps.mysqlservice.outputs.MYSQL_IP}} -P ${{steps.mysqlservice.outputs.MYSQL_PORT}} -uroot -proot < $i
           done
+          mysql -h ${{steps.mysqlservice.outputs.MYSQL_IP}} -P ${{steps.mysqlservice.outputs.MYSQL_PORT}} -uroot -proot -e "use devops_ci_artifactory; show tables;"
+
       - name: "Gradle Build"
         env:
           mysqlURL: "${{steps.mysqlservice.outputs.MYSQL_IP}}:${{steps.mysqlservice.outputs.MYSQL_PORT}}"
