@@ -37,7 +37,6 @@ import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.api.ServiceScmOauthResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest

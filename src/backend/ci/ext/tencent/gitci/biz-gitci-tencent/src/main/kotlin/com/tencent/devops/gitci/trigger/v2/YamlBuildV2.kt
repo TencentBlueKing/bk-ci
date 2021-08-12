@@ -30,7 +30,6 @@ package com.tencent.devops.gitci.trigger.v2
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
@@ -214,19 +213,31 @@ class YamlBuildV2 @Autowired constructor(
         )
         try {
             triggerLock.lock()
+            val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)!!
+            // 优先创建流水线为了绑定红线
+            if (pipeline.pipelineId.isBlank()) {
+                savePipeline(
+                    pipeline = pipeline,
+                    event = event,
+                    gitCIBasicSetting = gitBasicSetting,
+                    model = creatTriggerModel(gitBasicSetting)
+                )
+            }
             // 如果事件未传gitBuildId说明是不做触发只做流水线保存
             return if (gitBuildId != null) {
                 startBuildPipeline(
                     pipeline = pipeline,
                     event = event,
                     yaml = yaml,
-                    gitBuildId = gitBuildId
+                    gitBuildId = gitBuildId,
+                    gitBasicSetting = gitBasicSetting
                 )
             } else {
                 savePipelineModel(
                     pipeline = pipeline,
                     event = event,
-                    yaml = yaml
+                    yaml = yaml,
+                    gitBasicSetting = gitBasicSetting
                 )
                 null
             }
@@ -254,18 +265,39 @@ class YamlBuildV2 @Autowired constructor(
         }
     }
 
+    private fun creatTriggerModel(gitBasicSetting: GitCIBasicSetting) = Model(
+        name = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
+        desc = "",
+        stages = listOf(
+            Stage(
+                id = "stage-0",
+                name = "Stage-0",
+                containers = listOf(
+                    TriggerContainer(
+                        id = "0",
+                        name = "构建触发",
+                        elements = listOf(
+                            ManualTriggerElement(
+                                name = "手动触发",
+                                id = "T-1-1-1"
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+
     fun startBuildPipeline(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         yaml: ScriptBuildYaml,
-        gitBuildId: Long
+        gitBuildId: Long,
+        gitBasicSetting: GitCIBasicSetting
     ): BuildId? {
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
-        val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
-            ?: throw OperationException("git ci projectCode not exist")
-
         val model = createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
@@ -416,14 +448,12 @@ class YamlBuildV2 @Autowired constructor(
     fun savePipelineModel(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
-        yaml: ScriptBuildYaml
+        yaml: ScriptBuildYaml,
+        gitBasicSetting: GitCIBasicSetting
     ) {
         logger.info("Git request save pipeline, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
-        val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
-            ?: throw OperationException("git ci projectCode not exist")
-
         val model = createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request , pipeline:$pipeline, model: $model")
         savePipeline(pipeline, event, gitBasicSetting, model)
