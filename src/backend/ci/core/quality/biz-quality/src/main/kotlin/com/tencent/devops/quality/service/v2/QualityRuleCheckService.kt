@@ -183,7 +183,7 @@ class QualityRuleCheckService @Autowired constructor(
         return doCheckRules(buildCheckParams, ruleList)
     }
 
-    fun checkV3(buildCheckParams: BuildCheckParamsV3): RuleCheckResult {
+    fun checkBuildHis(buildCheckParams: BuildCheckParamsV3): RuleCheckResult {
         // 遍历项目下所有拦截规则
         val ruleList = qualityRuleBuildHisService.list(
             buildCheckParams.ruleBuildIds.map {
