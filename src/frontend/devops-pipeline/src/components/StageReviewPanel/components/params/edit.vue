@@ -115,7 +115,7 @@
             valFormatter (row, column, cellValue, index) {
                 let res = cellValue || '--'
                 if (Array.isArray(cellValue)) {
-                    res = `[${cellValue.join(', ')}]`
+                    res = cellValue.length ? `[${cellValue.join(', ')}]` : '--'
                 } else {
                     res = String(cellValue) || '--'
                 }
