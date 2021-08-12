@@ -30,6 +30,7 @@ package com.tencent.devops.process.service
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -96,7 +97,8 @@ class TXPipelineExportService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TXPipelineExportService::class.java)
-        private val yamlObjectMapper = ObjectMapper(YAMLFactory()).apply {
+        private val yamlObjectMapper = ObjectMapper(YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE))
+            .apply {
             registerModule(KotlinModule())
         }
     }
