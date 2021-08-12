@@ -64,7 +64,7 @@ class PipelineSubscriptionService constructor(
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId) ?: return
         var pipelineName = pipelineInfo.pipelineName
 
-        //判断codecc类型更改查看详情链接
+        // 判断codecc类型更改查看详情链接
         val detailUrl = if (pipelineInfo.channelCode == ChannelCode.CODECC) {
             val detail = pipelineBuildFacadeService.getBuildDetail(userId = buildInfo.startUser,
                 projectId = projectId,
@@ -259,7 +259,6 @@ class PipelineSubscriptionService constructor(
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         return current.format(formatter)
     }
-
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineSubscriptionService::class.java)
