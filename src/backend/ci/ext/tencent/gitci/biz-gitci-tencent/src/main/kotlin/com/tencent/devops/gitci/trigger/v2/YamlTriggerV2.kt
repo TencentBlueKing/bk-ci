@@ -122,6 +122,19 @@ class YamlTriggerV2 @Autowired constructor(
                         state = GitCICommitCheckState.FAILURE
                     )
                 )
+            } catch (e: TypeCastException) {
+                triggerError(
+                    request = gitRequestEvent,
+                    event = event,
+                    pipeline = gitProjectPipeline,
+                    reason = TriggerReason.CI_YAML_INVALID,
+                    reasonParams = listOf(e.message ?: ""),
+                    yamls = Yamls(originYaml, null, null),
+                    commitCheck = CommitCheck(
+                        block = event is GitMergeRequestEvent,
+                        state = GitCICommitCheckState.FAILURE
+                    )
+                )
             }
         )
 
@@ -339,7 +352,7 @@ class YamlTriggerV2 @Autowired constructor(
                 is YamlFormatException, is CustomException -> {
                     Triple(isMr, e.message, TriggerReason.CI_YAML_INVALID)
                 }
-                is IOException -> {
+                is IOException, is TypeCastException -> {
                     Triple(isMr, e.message, TriggerReason.CI_YAML_INVALID)
                 }
                 // 指定异常直接扔出在外面统一处理
@@ -406,7 +419,7 @@ class YamlTriggerV2 @Autowired constructor(
                 is YamlBlankException -> {
                     Triple(isMr, "${e.repo} ${e.filePath} is null", TriggerReason.CI_YAML_CONTENT_NULL)
                 }
-                is YamlFormatException, is JsonProcessingException, is CustomException -> {
+                is YamlFormatException, is JsonProcessingException, is CustomException, is TypeCastException -> {
                     Triple(isMr, e.message, TriggerReason.CI_YAML_TEMPLATE_ERROR)
                 }
                 is StackOverflowError -> {
