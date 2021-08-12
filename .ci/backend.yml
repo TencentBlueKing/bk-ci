@@ -37,7 +37,7 @@ stages:
         run: |
           set -x
           cd support-files/sql
-          for i in *.sql; do 
+          for i in *.sql; do
             echo $i;mysql -h ${{steps.mysqlservice.outputs.MYSQL_IP}} -P ${{steps.mysqlservice.outputs.MYSQL_PORT}} -uroot -proot < $i
           done
       - name: "Gradle Build"
@@ -47,5 +47,5 @@ stages:
           mysqlPasswd: root
         run: | 
           cd src/backend/ci/ext/tencent
-          ../../gradlew -DmysqlURL=$mysqlURL -DmysqlUser=$mysqlUser -DmysqlPasswd=$mysqlPasswd  -DenvironmentMysqlURL=$mysqlURL -DenvironmentMysqlUser=$mysqlUser -DenvironmentMysqlPasswd=$mysqlPasswd -DprojectMysqlURL=$mysqlURL -DprojectMysqlUser=$mysqlUser -DprojectMysqlPasswd=$mysqlPasswd -DmysqlPrefix=devops_ test classes
+          ../../gradlew -DmysqlURL=$mysqlURL -DmysqlUser=$mysqlUser -DmysqlPasswd=$mysqlPasswd  -DenvironmentMysqlURL=$mysqlURL -DenvironmentMysqlUser=$mysqlUser -DenvironmentMysqlPasswd=$mysqlPasswd -DprojectMysqlURL=$mysqlURL -DprojectMysqlUser=$mysqlUser -DprojectMysqlPasswd=$mysqlPasswd -DmysqlPrefix=devops_ci_ test classes
 
