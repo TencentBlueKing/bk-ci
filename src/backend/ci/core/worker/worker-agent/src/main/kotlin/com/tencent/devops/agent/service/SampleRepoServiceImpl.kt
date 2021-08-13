@@ -25,48 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.report
+package com.tencent.devops.agent.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.report.ReportEmail
-import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
-import java.io.File
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+import com.tencent.devops.worker.common.service.RepoService
 
-interface ReportSDKApi : WorkerRestApiSDK {
+class SampleRepoServiceImpl : RepoService {
 
-    /**
-     * 获取报告跟路径
-     * @param taskId 创建这个报告的任务插件id
-     * @return 链接地址
-     */
-    fun getRootUrl(taskId: String): Result<String>
-
-    /**
-     * 创建报告要上传的记录
-     */
-    fun createReportRecord(
-        taskId: String,
-        indexFile: String,
-        name: String,
-        reportType: String? = ReportTypeEnum.INTERNAL.name,
-        reportEmail: ReportEmail? = null
-    ): Result<Boolean>
-
-    /**
-     * 归档报告
-     * @param file 报告首页文件
-     * @param taskId 当前插件任务id
-     * @param relativePath 报告首页所在的本地文件相对路径
-     * @param buildVariables 构建变量
-     * @param token 令牌
-     */
-    fun uploadReport(
-        file: File,
-        taskId: String,
-        relativePath: String,
-        buildVariables: BuildVariables,
-        token: String? = null
-    )
+    override fun getRepoToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        type: TokenType,
+        expireSeconds: Long?
+    ): String? {
+        // 开源版暂不支持用token去上传或下载
+        return null
+    }
 }

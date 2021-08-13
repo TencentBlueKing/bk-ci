@@ -25,48 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.report
+package com.tencent.devops.worker.common.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.report.ReportEmail
-import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
-import java.io.File
+import java.util.Properties
+import java.util.concurrent.ConcurrentHashMap
 
-interface ReportSDKApi : WorkerRestApiSDK {
+object RepoServiceFactory {
 
-    /**
-     * 获取报告跟路径
-     * @param taskId 创建这个报告的任务插件id
-     * @return 链接地址
-     */
-    fun getRootUrl(taskId: String): Result<String>
+    private val repoServiceMap = ConcurrentHashMap<String, RepoService>()
 
-    /**
-     * 创建报告要上传的记录
-     */
-    fun createReportRecord(
-        taskId: String,
-        indexFile: String,
-        name: String,
-        reportType: String? = ReportTypeEnum.INTERNAL.name,
-        reportEmail: ReportEmail? = null
-    ): Result<Boolean>
+    private var property: Properties? = null
 
-    /**
-     * 归档报告
-     * @param file 报告首页文件
-     * @param taskId 当前插件任务id
-     * @param relativePath 报告首页所在的本地文件相对路径
-     * @param buildVariables 构建变量
-     * @param token 令牌
-     */
-    fun uploadReport(
-        file: File,
-        taskId: String,
-        relativePath: String,
-        buildVariables: BuildVariables,
-        token: String? = null
-    )
+    private const val REPO_CLASS_NAME = "repo.class.name"
+
+    fun getInstance(): RepoService {
+        // 从配置文件读取类名
+        if (property == null) {
+            val fileInputStream = RepoServiceFactory::class.java.getResourceAsStream("/.agent.properties")
+            property = Properties()
+            property!!.load(fileInputStream)
+        }
+        val className = property!![REPO_CLASS_NAME] as String
+        var repoService = repoServiceMap[className]
+        if (repoService == null) {
+            // 通过反射生成对象并放入缓存中
+            repoService = Class.forName(className).newInstance() as RepoService
+            repoServiceMap[className] = repoService
+        }
+        return repoService
+    }
 }
