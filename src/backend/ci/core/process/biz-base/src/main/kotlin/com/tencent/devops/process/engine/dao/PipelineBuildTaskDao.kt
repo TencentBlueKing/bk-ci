@@ -285,7 +285,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         dslContext: DSLContext,
         buildId: String,
         taskId: String,
-        userId: String?,
+        userId: String? = null,
         buildStatus: BuildStatus
     ) {
         with(T_PIPELINE_BUILD_TASK) {

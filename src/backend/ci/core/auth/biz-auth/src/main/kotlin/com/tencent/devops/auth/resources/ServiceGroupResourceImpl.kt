@@ -44,7 +44,8 @@ class ServiceGroupResourceImpl @Autowired constructor(
         projectCode: String,
         groupInfo: GroupDTO
     ): Result<Boolean> {
-        return authGroupService.createGroup(userId, projectCode, groupInfo)
+        authGroupService.createGroup(userId, projectCode, groupInfo)
+        return Result(true)
     }
 
     override fun batchCreateGroup(userId: String, projectCode: String, groupInfos: List<GroupDTO>): Result<Boolean> {

@@ -80,7 +80,7 @@ const optionConfigMixin = {
                 retryCount: {
                     rule: { 'numeric': true, 'max_value': 5, 'min_value': 1 },
                     component: 'vuex-input',
-                    // label: this.$t('storeMap.retryCount'),
+                    label: this.$t('storeMap.retryCount'),
                     placeholder: this.$t('storeMap.retryCountPlaceholder'),
                     default: '1',
                     extCls: 'retry-count-input',
@@ -141,6 +141,10 @@ const optionConfigMixin = {
                             name: this.$t('storeMap.atomEvenFail')
                         },
                         {
+                            id: 'PRE_TASK_FAILED_EVEN_CANCEL',
+                            name: this.$t('storeMap.atomEvenCancel')
+                        },
+                        {
                             id: 'PRE_TASK_FAILED_ONLY',
                             name: this.$t('storeMap.atomOnlyFail')
                         },
@@ -152,9 +156,13 @@ const optionConfigMixin = {
                             id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
                             name: this.$t('storeMap.varNotMatch')
                         },
+                        // {
+                        //     id: 'CUSTOM_CONDITION_MATCH',
+                        //     name: this.$t('storeMap.customCondition')
+                        // },
                         {
-                            id: 'CUSTOM_CONDITION_MATCH',
-                            name: this.$t('storeMap.customCondition')
+                            id: 'PARENT_TASK_CANCELED_OR_TIMEOUT',
+                            name: this.$t('storeMap.userCancelExec')
                         }
                     ]
                 },
