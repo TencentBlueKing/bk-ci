@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM` (
   `PUB_TIME` datetime DEFAULT NULL ,
   `PRIVATE_REASON` varchar(256) DEFAULT NULL ,
   `DELETE_FLAG` bit(1) DEFAULT b'0' ,
+  `BRANCH` varchar(128),
   PRIMARY KEY (`ID`),
   UNIQUE KEY `uni_inx_tpca_code_version` (`ATOM_CODE`,`VERSION`),
   KEY `inx_tpca_service_code` (`SERVICE_SCOPE`(255)),

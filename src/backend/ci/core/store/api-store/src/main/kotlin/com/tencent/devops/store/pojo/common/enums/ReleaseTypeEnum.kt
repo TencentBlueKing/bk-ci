@@ -33,7 +33,7 @@ enum class ReleaseTypeEnum(val releaseType: Int) {
     COMPATIBILITY_UPGRADE(2), // 兼容性功能更新
     COMPATIBILITY_FIX(3), // 兼容性问题修正
     CANCEL_RE_RELEASE(4), // 取消发布后重新发布
-    HIS_VERSION_UPGRADE(5); // 历史大版本问题修正
+    HIS_VERSION_UPGRADE(5); // 历史大版本下的小版本更新
 
     companion object {
 

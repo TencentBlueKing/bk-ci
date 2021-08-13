@@ -366,17 +366,17 @@ abstract class ImageReleaseService {
         val dbVersion = imageRecord.version
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = imageRecord.imageStatus == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val requireVersion =
+        val requireVersionList =
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-                dbVersion
+                listOf(dbVersion)
             } else storeCommonService.getRequireVersion(
                 dbVersion,
                 releaseType
             )
-        if (version != requireVersion) {
+        if (!requireVersionList.contains(version)) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
-                arrayOf(version, requireVersion)
+                arrayOf(version, requireVersionList.toString())
             )
         }
         // 判断最近一个镜像版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
@@ -481,14 +481,11 @@ abstract class ImageReleaseService {
     ): Result<Boolean> {
         logger.info("passTest, userId:$userId, imageId:$imageId, validateUserFlag:$validateUserFlag")
         val imageRecord = imageDao.getImage(dslContext, imageId)
-        logger.info("passTest imageRecord is:$imageRecord")
-        if (null == imageRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
                 arrayOf(imageId),
                 false
             )
-        }
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
         val imageCode = imageRecord.imageCode
         val isNormalUpgrade = getNormalUpgradeFlag(imageCode, imageRecord.imageStatus.toInt())

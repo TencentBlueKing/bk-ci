@@ -53,7 +53,7 @@ interface StoreCommonService {
     fun getRequireVersion(
         dbVersion: String,
         releaseType: ReleaseTypeEnum
-    ): String
+    ): List<String>
 
     /**
      * 设置进度
