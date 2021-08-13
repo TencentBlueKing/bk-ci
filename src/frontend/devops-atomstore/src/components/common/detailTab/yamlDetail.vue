@@ -14,7 +14,7 @@
             <bk-table-column :label="$t('store.指标名')" prop="cnName" show-overflow-tooltip></bk-table-column>
             <bk-table-column :label="$t('store.参数说明')" prop="desc" show-overflow-tooltip></bk-table-column>
             <bk-table-column :label="$t('store.值类型')" prop="type" show-overflow-tooltip></bk-table-column>
-            <bk-table-column :label="$t('store.支持的操作')" prop="operationList" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('store.支持的操作')" prop="operationList" show-overflow-tooltip :formatter="operationFormatter"></bk-table-column>
         </bk-table>
     </section>
 </template>
@@ -69,6 +69,10 @@
                 }).finally(() => {
                     this.isLoading = false
                 })
+            },
+
+            operationFormatter (row, column, cellValue, index) {
+                return (cellValue || []).join(', ')
             }
         }
     }
