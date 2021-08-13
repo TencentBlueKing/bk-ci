@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -40,14 +41,20 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
+import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
+import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.*
 
 /**
  * 流水线Stage相关的服务
@@ -60,6 +67,7 @@ class PipelineStageService @Autowired constructor(
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildStageDao: PipelineBuildStageDao,
+    private val buildVariableService: BuildVariableService,
     private val stageBuildDetailService: StageBuildDetailService
 ) {
     companion object {
@@ -226,7 +234,15 @@ class PipelineStageService @Autowired constructor(
                 controlOption = controlOption, checkIn = checkIn, checkOut = checkOut
             )
 
+            // 如果还有待审核的审核组，则直接通知并返回
             if (checkIn?.groupToReview() != null) {
+                val variables = buildVariableService.getAllVariable(buildId)
+                pauseStageNotify(
+                    userId = userId,
+                    stage = buildStage,
+                    pipelineName = variables[PIPELINE_NAME] ?: pipelineId,
+                    buildNum = variables[PIPELINE_BUILD_NUM] ?: "1"
+                )
                 return true
             }
             val allStageStatus = stageBuildDetailService.stageStart(
@@ -332,5 +348,36 @@ class PipelineStageService @Autowired constructor(
             pendingStage = pipelineBuildStageDao.getByStatus(dslContext, buildId, BuildStatus.QUEUE)
         }
         return pendingStage
+    }
+
+    fun pauseStageNotify(
+        userId: String,
+        stage: PipelineBuildStage,
+        pipelineName: String,
+        buildNum: String
+    ) {
+        val checkIn = stage.checkIn ?: return
+        val group = stage.checkIn?.groupToReview() ?: return
+
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildNotifyEvent(
+                notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE.name,
+                source = "s(${stage.stageId}) waiting for REVIEW",
+                projectId = stage.projectId, pipelineId = stage.pipelineId,
+                userId = userId, buildId = stage.buildId,
+                receivers = group.reviewers,
+                titleParams = mutableMapOf(
+                    "projectName" to "need to add in notifyListener",
+                    "pipelineName" to pipelineName,
+                    "buildNum" to buildNum
+                ),
+                bodyParams = mutableMapOf(
+                    "projectName" to "need to add in notifyListener",
+                    "pipelineName" to pipelineName,
+                    "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
+                    "reviewDesc" to (checkIn.reviewDesc ?: "")
+                )
+            )
+        )
     }
 }

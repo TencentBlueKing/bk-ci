@@ -169,7 +169,7 @@ open class DefaultModelCheckPlugin constructor(
 
     private fun checkStageReviewers(stage: Stage) {
         stage.refreshReviewOption()
-        if (stage.checkIn?.reviewGroups?.isEmpty() == true) {
+        if (stage.checkIn?.reviewGroups.isNullOrEmpty()) {
             throw ErrorCodeException(
                 defaultMessage = "手动触发的Stage未配置审核组",
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_REVIEW_GROUP
