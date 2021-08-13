@@ -549,16 +549,16 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         val dbVersion = atomRecord.version
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = atomRecord.atomStatus == IdeAtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val requireVersion =
-            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion
+        val requireVersionList =
+            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) listOf(dbVersion)
             else storeCommonService.getRequireVersion(
                 dbVersion = dbVersion,
                 releaseType = releaseType
             )
-        if (version != requireVersion) {
+        if (!requireVersionList.contains(version)) {
             return MessageCodeUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_VERSION_IS_INVALID,
-                params = arrayOf(version, requireVersion)
+                params = arrayOf(version, requireVersionList.toString())
             )
         }
         // 判断最近一个IDE插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本

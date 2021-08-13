@@ -210,17 +210,20 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         projectCode: String,
         atomCode: String,
         atomVersion: String,
-        repositoryHashId: String,
-        fileName: String
+        fileName: String,
+        repositoryHashId: String?,
+        branch: String?
     ): String? {
-        logger.info("getFileStr projectCode is:$projectCode,atomCode is:$atomCode,atomVersion is:$atomVersion")
-        logger.info("getFileStr repositoryHashId is:$repositoryHashId,fileName is:$fileName")
+        logger.info("getFileStr $projectCode|$atomCode|$atomVersion|$fileName|$repositoryHashId|$branch")
         val atomPackageSourceType = getAtomPackageSourceType(atomCode)
         val fileStr = if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
             // 从工蜂拉取文件
             client.get(ServiceGitRepositoryResource::class).getFileContent(
-                repositoryHashId,
-                fileName, null, null, null
+                repoId = repositoryHashId!!,
+                filePath = fileName,
+                reversion = null,
+                branch = branch,
+                repositoryType = null
             ).data
         } else {
             // 直接从仓库拉取文件
@@ -509,7 +512,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 "language" to language,
                 "script" to StringEscapeUtils.escapeJava(script),
                 "repositoryHashId" to atomRecord.repositoryHashId,
-                "repositoryPath" to (buildInfo.value2() ?: "")
+                "repositoryPath" to (buildInfo.value2() ?: ""),
+                "branch" to atomRecord.branch
             )
             // 将流水线模型中的变量替换成具体的值
             paramMap.forEach { (key, value) ->
@@ -547,6 +551,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             startParams["language"] = language
             startParams["script"] = script
             startParams["commitId"] = commitId
+            startParams["branch"] = atomRecord.branch
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode, atomPipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM
@@ -622,7 +627,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             // 把代码扫描构建ID存入redis
             redisOperation.set(
                 key = "$STORE_REPO_CODECC_BUILD_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomCode:$atomId",
-                value = buildId!!,
+                value = buildId,
                 expired = false
             )
         }

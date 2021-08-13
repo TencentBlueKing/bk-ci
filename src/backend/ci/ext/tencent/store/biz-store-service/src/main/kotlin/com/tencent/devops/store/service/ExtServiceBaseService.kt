@@ -329,16 +329,20 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val dbVersion = serviceRecord.version
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = serviceRecord.serviceStatus == ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val requireVersion =
-            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion else storeCommonService.getRequireVersion(
-                dbVersion,
-                releaseType!!
-            )
+        val requireVersionList =
+            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+                listOf(dbVersion)
+            } else {
+                storeCommonService.getRequireVersion(
+                    dbVersion,
+                    releaseType!!
+                )
+            }
 
-        if (version != requireVersion) {
+        if (!requireVersionList.contains(version)) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_SERVICE_VERSION_IS_INVALID,
-                arrayOf(version, requireVersion)
+                arrayOf(version, requireVersionList.toString())
             )
         }
 
