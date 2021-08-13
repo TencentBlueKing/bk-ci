@@ -184,12 +184,15 @@ class QualityRuleCheckService @Autowired constructor(
     }
 
     fun checkBuildHis(buildCheckParams: BuildCheckParamsV3): RuleCheckResult {
+        val ruleBuildId = buildCheckParams.ruleBuildIds.map {
+            HashUtil.decodeIdToLong(it)
+        }
+
         // 遍历项目下所有拦截规则
-        val ruleList = qualityRuleBuildHisService.list(
-            buildCheckParams.ruleBuildIds.map {
-                HashUtil.decodeIdToLong(it)
-            }
-        )
+        val ruleList = qualityRuleBuildHisService.list(ruleBuildId)
+
+        // 更新build id
+        qualityRuleBuildHisService.updateBuildId(ruleBuildId, buildCheckParams.buildId)
 
         val params = BuildCheckParams(
             buildCheckParams.projectId,
