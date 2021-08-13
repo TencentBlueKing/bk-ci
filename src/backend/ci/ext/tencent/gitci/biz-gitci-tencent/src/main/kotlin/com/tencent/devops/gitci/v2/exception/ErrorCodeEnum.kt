@@ -35,28 +35,42 @@ enum class ErrorCodeEnum(
     val errorCode: Int,
     val formatErrorMessage: String
 ) {
+    GITCI_NOT_ENABLE_ERROR(ErrorType.USER, 419, "[%s]CI is not enabled"),
     SYSTEM_ERROR(ErrorType.SYSTEM, 2129001, "gitci系统错误"),
     NO_REPORT_AUTH(ErrorType.SYSTEM, 2129002, "无权限查看报告"),
-    POOL_VM_ERROR(ErrorType.SYSTEM, 2129003, "容器并发池分配异常"),
-    NO_SPECIAL_VM_ERROR(
-        errorType = ErrorType.SYSTEM,
+
+    // 工蜂接口请求错误
+    GET_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129003, "获取工蜂项目TOKEN失败"),
+    GET_YAML_CONTENT_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
         errorCode = 2129004,
-        formatErrorMessage = "Start build Docker VM failed, no available Docker VM in specialIpList"),
-    NO_AVAILABLE_VM_ERROR(
-        errorType = ErrorType.SYSTEM,
-        errorCode = 2129005,
-        formatErrorMessage =
-        "Start build Docker VM failed, no available Docker VM. Please wait a moment and try again."),
-    DOCKER_IP_NOT_AVAILABLE(ErrorType.SYSTEM, 2129006, "Docker ip is not available."),
-    END_VM_ERROR(ErrorType.SYSTEM, 2129007, "End build Docker VM failed"),
-    START_VM_FAIL(ErrorType.SYSTEM, 2129008, "Start build Docker VM failed"),
-    RETRY_START_VM_FAIL(ErrorType.USER, 2129009, "Start build Docker VM failed, retry times."),
-    GET_VM_STATUS_FAIL(ErrorType.SYSTEM, 2129010, "Get container status failed"),
-    GET_CREDENTIAL_FAIL(ErrorType.USER, 2129011, "Get credential failed"),
-    IMAGE_ILLEGAL_EXCEPTION(
-        ErrorType.USER,
-        2129012,
-        "User Image illegal, not found or credential error"
+        formatErrorMessage = "获取工蜂仓库文件内容失败"
     ),
-    GITCI_NOT_ENABLE_ERROR(ErrorType.USER, 419, "[%s]CI is not enabled")
+    PROJECT_NOT_FOUND(
+        errorType = ErrorType.USER,
+        errorCode = 2129005,
+        formatErrorMessage = "Project [%s] not found. Please check your project name again."
+    ),
+    GET_PROJECT_INFO_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = 2129006,
+        formatErrorMessage = "Load project [%s] failed. Git api error: %s"
+    ),
+    GET_PROJECT_INFO_FORBIDDEN(ErrorType.USER, 2129007, "No access to project [%s]."),
+    GET_PROJECT_COMMITS_ERROR(ErrorType.THIRD_PARTY, 2129008, "获取仓库提交记录失败"),
+    CREATE_NEW_FILE_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = 2129009,
+        formatErrorMessage = "Create new pipeline failed. Git api error: %s"
+    ),
+    CREATE_NEW_FILE_ERROR_FORBIDDEN(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = 21290015,
+        formatErrorMessage = "Create new pipeline failed. User [%s] is not authorized to commit file to branch [%s]."
+    ),
+    GET_PROJECT_MEMBERS_ERROR(ErrorType.THIRD_PARTY, 2129010, "获取项目成员失败"),
+    GET_PROJECT_BRANCHES_ERROR(ErrorType.THIRD_PARTY, 2129011, "获取仓库分支列表失败"),
+    GET_GIT_MERGE_CHANGE_INFO(ErrorType.THIRD_PARTY, 2129012, "获取MERGE变更文件列表失败"),
+    GET_GIT_FILE_INFO_ERROR(ErrorType.THIRD_PARTY, 2129013, "获取仓库文件信息失败"),
+    GET_GIT_MERGE_INFO(ErrorType.THIRD_PARTY, 2129014, "获取MERGE提交信息失败")
 }

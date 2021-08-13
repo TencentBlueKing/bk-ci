@@ -34,6 +34,7 @@ import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -163,7 +164,7 @@ interface ServiceGitCiResource {
     fun getGitCIFileContent(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
-        gitProjectId: Long,
+        gitProjectId: String,
         @ApiParam(value = "文件路径")
         @QueryParam("filePath")
         filePath: String,
@@ -201,4 +202,64 @@ interface ServiceGitCiResource {
         @QueryParam("mrId")
         mrId: Long
     ): Result<GitMrChangeInfo?>
+
+    @ApiOperation("获取用户所有git项目，分页方式获取")
+    @GET
+    @Path("/getProjectList")
+    fun getProjectList(
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("第几页", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数据条数", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("搜索条件，模糊匹配path,name")
+        @QueryParam("searchName")
+        search: String?
+    ): Result<List<GitCodeProjectInfo>>
+
+    @ApiOperation("获取项目下具有权限的成员信息")
+    @GET
+    @Path("/projects/members/all")
+    fun getProjectMembersAll(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam(value = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20,
+        @ApiParam(value = "搜索用户关键字", required = true)
+        @QueryParam("search")
+        search: String?
+    ): Result<List<GitMember>>
+
+    @ApiOperation("文件内容和一些文件信息")
+    @GET
+    @Path("/getGitFileInfo")
+    fun getGitFileInfo(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String?,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "提交id 或者 分支")
+        @QueryParam("ref")
+        ref: String?,
+        @ApiParam("是否使用accessToken", required = true)
+        @QueryParam("useAccessToken")
+        useAccessToken: Boolean
+    ): Result<GitCodeFileInfo>
 }

@@ -205,7 +205,7 @@ class PipelineAtomService @Autowired constructor(
                 val pipelineInfoRecord = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
                 val pipelineBuildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, pipelineId)
                 val secrecyFlag = secrecyProjectSet?.contains(projectId) == true
-                val pipelineUrl = if (secrecyFlag) HIDDEN_SYMBOL else getPipelineUrl(projectId, pipelineId)
+                val pipelineUrl = if (secrecyFlag) HIDDEN_SYMBOL else getPipelineUrl(projectId, pipelineId, false)
                 PipelineAtomRel(
                     pipelineUrl = pipelineUrl,
                     atomVersion = pipelineModelTask[KEY_VERSION] as? String,
@@ -306,7 +306,7 @@ class PipelineAtomService @Autowired constructor(
                 val secrecyFlag = secrecyProjectSet?.contains(projectId) == true
                 pagePipelineIdList.add(pipelineId)
                 val dataArray = arrayOfNulls<String>(6)
-                dataArray[0] = if (secrecyFlag) HIDDEN_SYMBOL else getPipelineUrl(projectId, pipelineId)
+                dataArray[0] = if (secrecyFlag) HIDDEN_SYMBOL else getPipelineUrl(projectId, pipelineId, true)
                 dataArray[1] = pipelineAtomRel[KEY_VERSION] as? String
                 dataArray[3] = DateTimeUtil.toDateTime(pipelineAtomRel[KEY_UPDATE_TIME] as LocalDateTime)
                 pageDataList.add(dataArray)
@@ -346,10 +346,10 @@ class PipelineAtomService @Autowired constructor(
         CsvUtil.setCsvResponse(atomCode, bytes, response)
     }
 
-    private fun getPipelineUrl(projectId: String, pipelineId: String): String {
+    private fun getPipelineUrl(projectId: String, pipelineId: String, addDomain: Boolean): String {
         val mf = MessageFormat(pipelineEditPath)
         val convertPath = mf.format(arrayOf(projectId, pipelineId))
-        return "${HomeHostUtil.innerServerHost()}/$convertPath"
+        return if (addDomain) "${HomeHostUtil.innerServerHost()}/$convertPath" else "/$convertPath"
     }
 
     private fun validateUserAtomPermission(atomCode: String, userId: String) {

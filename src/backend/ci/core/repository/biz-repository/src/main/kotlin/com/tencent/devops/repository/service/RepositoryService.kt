@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
@@ -75,6 +76,7 @@ import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -181,6 +183,7 @@ class RepositoryService @Autowired constructor(
             logger.info("serviceCreate result>> $repositoryHashId")
             Result(
                 RepositoryInfo(
+                    repositoryId = null,
                     repositoryHashId = repositoryHashId,
                     aliasName = gitRepositoryResp.name,
                     url = gitRepositoryResp.repositoryUrl,
@@ -528,7 +531,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeGitDao.create(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        projectName = repository.projectName,
+                        projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
                         credentialId = repository.credentialId,
                         authType = repository.authType
@@ -547,7 +550,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeGitDao.create(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        projectName = repository.projectName,
+                        projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
                         credentialId = repository.credentialId,
                         authType = repository.authType
@@ -566,7 +569,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeGitLabDao.create(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        projectName = repository.projectName,
+                        projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
                         privateToken = repository.credentialId
                     )
@@ -710,6 +713,21 @@ class RepositoryService @Autowired constructor(
     }
 
     fun userEdit(userId: String, projectId: String, repositoryHashId: String, repository: Repository) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (repositoryHashId.isBlank()) {
+            throw ParamBlankException("Invalid repositoryHashId")
+        }
+        if (repository.aliasName.isBlank()) {
+            throw ParamBlankException("Invalid repository aliasName")
+        }
+        if (repository.url.isBlank()) {
+            throw ParamBlankException("Invalid repository url")
+        }
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         validatePermission(
             user = userId,
@@ -771,7 +789,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeGitDao.edit(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        projectName = repository.projectName,
+                        projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
                         credentialId = repository.credentialId,
                         authType = repository.authType
@@ -790,7 +808,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeGitDao.edit(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        projectName = repository.projectName,
+                        projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
                         credentialId = repository.credentialId,
                         authType = repository.authType
@@ -831,7 +849,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeGitLabDao.edit(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        projectName = repository.projectName,
+                        projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
                         credentialId = repository.credentialId
                     )
@@ -1015,6 +1033,7 @@ class RepositoryService @Autowired constructor(
             )
         val repositoryList = repositoryRecordList.map {
             RepositoryInfo(
+                repositoryId = null,
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
                 url = it.url,
@@ -1050,6 +1069,7 @@ class RepositoryService @Autowired constructor(
             )
         val repositoryList = repositoryRecordList.map {
             RepositoryInfo(
+                repositoryId = it.repositoryId,
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
                 url = it.url,
@@ -1086,6 +1106,7 @@ class RepositoryService @Autowired constructor(
             )
         val repositoryList = repositoryRecordList.map {
             RepositoryInfo(
+                repositoryId = it.repositoryId,
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
                 url = it.url,
@@ -1218,6 +1239,7 @@ class RepositoryService @Autowired constructor(
         repositoryInfos?.map {
             result.add(
                 RepositoryInfo(
+                    repositoryId = it.repositoryId,
                     repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                     aliasName = it.aliasName,
                     url = it.url,

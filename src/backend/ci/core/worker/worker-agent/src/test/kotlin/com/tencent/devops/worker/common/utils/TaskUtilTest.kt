@@ -33,9 +33,11 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.pojo.BuildTask
 import org.junit.Assert
 import org.junit.Test
+import java.util.concurrent.TimeUnit
 
 class TaskUtilTest {
 
@@ -62,7 +64,7 @@ class TaskUtilTest {
         val task = genTask(elementAdditionalOptions = elementAdditionalOptions)
         Assert.assertEquals(expect, TaskUtil.getTimeOut(task))
 
-        expect = 0L
+        expect = TimeUnit.DAYS.toMinutes(Timeout.MAX_JOB_RUN_DAYS)
         val nullElementAdditionalOptionsTask = genTask(elementAdditionalOptions = null)
         Assert.assertEquals(expect, TaskUtil.getTimeOut(nullElementAdditionalOptionsTask))
     }

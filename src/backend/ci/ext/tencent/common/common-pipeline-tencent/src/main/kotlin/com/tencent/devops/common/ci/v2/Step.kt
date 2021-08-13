@@ -42,7 +42,7 @@ data class Step(
     val continueOnError: Boolean?,
     @JsonProperty("retry-times")
     val retryTimes: Int?,
-    val env: Any?,
+    val env: Map<String, Any?>? = emptyMap(),
     val run: String?,
     val checkout: String?
 )

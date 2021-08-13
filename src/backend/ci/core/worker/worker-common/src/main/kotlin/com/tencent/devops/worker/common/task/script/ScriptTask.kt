@@ -93,7 +93,7 @@ open class ScriptTask : ITask() {
                 elementId = buildTask.elementId,
                 script = script,
                 taskParam = taskParams,
-                runtimeVariables = variables,
+                runtimeVariables = variables.plus(TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)),
                 projectId = projectId,
                 dir = workspace,
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),

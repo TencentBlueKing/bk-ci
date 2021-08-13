@@ -30,6 +30,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.lambda.listener.LambdaBuildTaskFinishListener
 import com.tencent.devops.lambda.listener.LambdaBuildFinishListener
+import com.tencent.devops.lambda.listener.LambdaPipelineModelListener
+import com.tencent.devops.lambda.listener.LambdaProjectListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
@@ -134,6 +136,132 @@ class LambdaMQConfiguration {
         container.setPrefetchCount(1)
 
         val adapter = MessageListenerAdapter(lambdaBuildTaskFinishListener, lambdaBuildTaskFinishListener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        container.setMessageListener(adapter)
+        return container
+    }
+
+    /**
+     * 构建project创建广播交换机
+     */
+    @Bean
+    fun projectCreateFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_CREATE_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun projectCreateLambdaQueue() = Queue(LambdaMQ.QUEUE_PROJECT_CREATE_LAMBDA_EVENT)
+
+    @Bean
+    fun projectCreateLambdaQueueBind(
+        @Autowired projectCreateLambdaQueue: Queue,
+        @Autowired projectCreateFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(projectCreateLambdaQueue).to(projectCreateFanoutExchange)
+    }
+
+    @Bean
+    fun projectCreateListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired projectCreateLambdaQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired lambdaProjectListener: LambdaProjectListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setQueueNames(projectCreateLambdaQueue.name)
+        container.setConcurrentConsumers(5)
+        container.setMaxConcurrentConsumers(10)
+        container.setAmqpAdmin(rabbitAdmin)
+        container.setPrefetchCount(1)
+
+        val adapter = MessageListenerAdapter(lambdaProjectListener, lambdaProjectListener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        container.setMessageListener(adapter)
+        return container
+    }
+
+    /**
+     * 构建project更新广播交换机
+     */
+    @Bean
+    fun projectUpdateFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_UPDATE_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun projectUpdateLambdaQueue() = Queue(LambdaMQ.QUEUE_PROJECT_UPDATE_LAMBDA_EVENT)
+
+    @Bean
+    fun projectUpdateLambdaQueueBind(
+        @Autowired projectUpdateLambdaQueue: Queue,
+        @Autowired projectUpdateFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(projectUpdateLambdaQueue).to(projectUpdateFanoutExchange)
+    }
+
+    @Bean
+    fun projectUpdateListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired projectUpdateLambdaQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired lambdaProjectListener: LambdaProjectListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setQueueNames(projectUpdateLambdaQueue.name)
+        container.setConcurrentConsumers(5)
+        container.setMaxConcurrentConsumers(10)
+        container.setAmqpAdmin(rabbitAdmin)
+        container.setPrefetchCount(1)
+
+        val adapter = MessageListenerAdapter(lambdaProjectListener, lambdaProjectListener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        container.setMessageListener(adapter)
+        return container
+    }
+
+    /**
+     * 构建model更新广播交换机
+     */
+    @Bean
+    fun pipelineModelAnalysisFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_EXTENDS_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun pipelineModelAnalysisLambdaQueue() = Queue(LambdaMQ.QUEUE_PIPELINE_EXTENDS_MODEL_LAMBDA)
+
+    @Bean
+    fun pipelineModelAnalysisLambdaQueueBind(
+        @Autowired pipelineModelAnalysisLambdaQueue: Queue,
+        @Autowired pipelineModelAnalysisFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineModelAnalysisLambdaQueue).to(pipelineModelAnalysisFanoutExchange)
+    }
+
+    @Bean
+    fun pipelineModelAnalysisListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired pipelineModelAnalysisLambdaQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired lambdaPipelineModelListener: LambdaPipelineModelListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setQueueNames(pipelineModelAnalysisLambdaQueue.name)
+        container.setConcurrentConsumers(5)
+        container.setMaxConcurrentConsumers(5)
+        container.setAmqpAdmin(rabbitAdmin)
+        container.setPrefetchCount(1)
+
+        val adapter = MessageListenerAdapter(lambdaPipelineModelListener, lambdaPipelineModelListener::execute.name)
         adapter.setMessageConverter(messageConverter)
         container.setMessageListener(adapter)
         return container

@@ -442,4 +442,36 @@ class ExperienceDao {
                 .fetchOne()
         }
     }
+
+    fun search(
+        dslContext: DSLContext,
+        projectId: String,
+        name: String?,
+        offset: Int,
+        limit: Int
+    ): Result<TExperienceRecord> {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .let {
+                    if (null == name) it else it.and(NAME.eq(name))
+                }
+                .orderBy(CREATE_TIME.desc())
+                .offset(offset)
+                .limit(limit)
+                .fetch()
+        }
+    }
+
+    fun countByProject(
+        dslContext: DSLContext,
+        projectId: String
+    ): Long {
+        with(TExperience.T_EXPERIENCE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
 }

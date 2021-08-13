@@ -84,9 +84,9 @@ object Runner {
                 LoggerService.addRedLine("Other unknown error has occurred: " + ignore.message)
             } finally {
                 LoggerService.stop()
-                Heartbeat.stop()
                 LoggerService.archiveLogFiles()
                 EngineService.endBuild()
+                Heartbeat.stop()
             }
         } catch (ignore: Exception) {
             failed = true

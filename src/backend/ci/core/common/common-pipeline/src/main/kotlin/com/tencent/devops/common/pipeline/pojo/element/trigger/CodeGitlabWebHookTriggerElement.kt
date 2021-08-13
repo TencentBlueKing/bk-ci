@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -53,10 +54,14 @@ data class CodeGitlabWebHookTriggerElement(
     val eventType: CodeEventType? = CodeEventType.PUSH,
     @ApiModelProperty("excludeBranch", required = false)
     val excludeBranchName: String?,
+    @ApiModelProperty("路径过滤类型", required = true)
+    val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
     @ApiModelProperty("includePaths", required = false)
     val includePaths: String?,
     @ApiModelProperty("excludePaths", required = false)
     val excludePaths: String?,
+    @ApiModelProperty("includeUsers", required = false)
+    val includeUsers: List<String>? = null,
     @ApiModelProperty("excludeUsers", required = false)
     val excludeUsers: List<String>?,
     @ApiModelProperty("block", required = false)
@@ -68,7 +73,11 @@ data class CodeGitlabWebHookTriggerElement(
     @ApiModelProperty("excludeSourceBranchName", required = false)
     val excludeSourceBranchName: String? = null,
     @ApiModelProperty("includeSourceBranchName", required = false)
-    val includeSourceBranchName: String? = null
+    val includeSourceBranchName: String? = null,
+    @ApiModelProperty("includeCommitMsg", required = false)
+    val includeCommitMsg: String? = null,
+    @ApiModelProperty("excludeCommitMsg", required = false)
+    val excludeCommitMsg: String? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitlabWebHookTrigger"

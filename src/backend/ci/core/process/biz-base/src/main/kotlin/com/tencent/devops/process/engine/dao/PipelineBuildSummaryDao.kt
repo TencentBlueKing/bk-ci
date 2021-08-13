@@ -440,6 +440,9 @@ class PipelineBuildSummaryDao {
                 PipelineSortType.UPDATE_TIME -> {
                     t.field("UPDATE_TIME")!!.desc()
                 }
+                PipelineSortType.LAST_EXEC_TIME -> {
+                    t.field("LATEST_START_TIME")!!.desc()
+                }
             }
             baseStep.orderBy(sortTypeField)
         }

@@ -58,6 +58,11 @@ data class Container(
     val credentials: Credentials?
 )
 
+data class Container2(
+    val image: String,
+    val credentials: String?
+)
+
 data class Credentials(
     val username: String,
     val password: String
@@ -85,12 +90,10 @@ data class RunsOn(
     val selfHosted: Boolean? = false,
     @JsonProperty("pool-name")
     val poolName: String = JobRunsOnType.DOCKER.type,
-    val container: Container? = Container(
-        image = "http://mirrors.tencent.com/ci/tlinux3_ci:1.2.2",
-        credentials = null
-    ),
+    val container: Any? = null,
     @JsonProperty("agent-selector")
-    val agentSelector: List<String>? = null
+    val agentSelector: List<String>? = null,
+    val workspace: String? = ""
 )
 
 enum class JobRunsOnType(val type: String) {

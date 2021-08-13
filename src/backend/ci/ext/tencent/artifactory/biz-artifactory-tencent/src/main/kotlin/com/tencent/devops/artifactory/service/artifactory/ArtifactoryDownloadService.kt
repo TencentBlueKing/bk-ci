@@ -62,6 +62,7 @@ import javax.ws.rs.BadRequestException
 import javax.ws.rs.core.Response
 
 @Service
+@Suppress("ALL", "UNUSED")
 class ArtifactoryDownloadService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val client: Client,
@@ -100,8 +101,16 @@ class ArtifactoryDownloadService @Autowired constructor(
         return Url(url)
     }
 
-    override fun getDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, channelCode: ChannelCode?): Url {
-        logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, channelCode: $channelCode")
+    override fun getDownloadUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        channelCode: ChannelCode?,
+        fullUrl: Boolean
+    ): Url {
+        logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+            "argPath: $argPath, channelCode: $channelCode")
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -119,7 +128,13 @@ class ArtifactoryDownloadService @Autowired constructor(
                     throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
                 }
                 val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
-                pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限")
+                pipelineService.validatePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = AuthPermission.DOWNLOAD,
+                    message = "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限"
+                )
             }
         }
         val url = RegionUtil.replaceRegionServer(jFrogApiService.downloadUrl(realPath), RegionUtil.IDC)

@@ -101,7 +101,7 @@ class CodeSvnScmImpl constructor(
         }
     }
 
-    override fun getBranches(search: String?, full: Boolean): List<String> {
+    override fun getBranches(search: String?): List<String> {
         val repository = getRepository()
         val branchNames = ArrayList<String>()
         branchNames.add("trunk")
@@ -109,7 +109,7 @@ class CodeSvnScmImpl constructor(
         return branchNames
     }
 
-    override fun getTags(search: String?, full: Boolean): List<String> {
+    override fun getTags(search: String?): List<String> {
         throw ScmException("SVN not support get tags", ScmType.CODE_SVN.name)
     }
 

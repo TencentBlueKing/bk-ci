@@ -200,14 +200,18 @@ object LoggerService {
     fun addNormalLine(message: String) {
         var subTag: String? = null
         var realMessage = message
-        if (message.startsWith(LOG_SUBTAG_FLAG)) {
-            val list = message.removePrefix(LOG_SUBTAG_FLAG).split(LOG_SUBTAG_FLAG)
-            subTag = list.first()
-            realMessage = list.last()
+        if (message.contains(LOG_SUBTAG_FLAG)) {
+            val prefix = message.substringBefore(LOG_SUBTAG_FLAG)
+            val list = message.substringAfter(LOG_SUBTAG_FLAG).split(LOG_SUBTAG_FLAG)
+            if (list.isNotEmpty()) {
+                subTag = list.first()
+                realMessage = list.last()
+            }
             if (realMessage.startsWith(LOG_SUBTAG_FINISH_FLAG)) {
                 finishLog(elementId, jobId, executeCount, subTag)
                 realMessage = realMessage.removePrefix(LOG_SUBTAG_FINISH_FLAG)
             }
+            realMessage = prefix + realMessage
         }
 
         val logType = when {

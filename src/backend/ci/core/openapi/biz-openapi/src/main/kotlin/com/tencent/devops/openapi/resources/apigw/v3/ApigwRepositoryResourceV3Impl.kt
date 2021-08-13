@@ -92,6 +92,25 @@ class ApigwRepositoryResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
+    override fun edit(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        repository: Repository
+    ): Result<Boolean> {
+        logger.info(
+            "edit repostitories in project:userId=$userId,projectId=$projectId,repositoryHashId:$repositoryHashId"
+        )
+        return client.get(ServiceRepositoryResource::class).edit(
+            userId = userId,
+            projectId = projectId,
+            repositoryHashId = repositoryHashId,
+            repository = repository
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwRepositoryResourceV3Impl::class.java)
     }

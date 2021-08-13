@@ -37,5 +37,7 @@ data class AppProjectVO(
     @ApiModelProperty("项目名称")
     val projectName: String,
     @ApiModelProperty("logo地址")
-    val logoUrl: String?
+    val logoUrl: String?,
+    @ApiModelProperty("项目来源 , 1--蓝盾CI , 2--工蜂CI")
+    val projectSource: Int
 )
