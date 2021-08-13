@@ -27,6 +27,7 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
@@ -51,7 +52,12 @@ class QualityRuleBuildHisService constructor(
 
     private val logger = LoggerFactory.getLogger(QualityRuleBuildHisService::class.java)
 
-    fun serviceCreate(userId: String, projectId: String, pipelineId: String, ruleRequestList: List<RuleCreateRequestV3>): List<RuleCreateResponseV3> {
+    fun serviceCreate(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        ruleRequestList: List<RuleCreateRequestV3>
+    ): List<RuleCreateResponseV3> {
         checkRuleRequest(ruleRequestList)
 
         return ruleRequestList.map { ruleRequest ->
@@ -76,7 +82,7 @@ class QualityRuleBuildHisService constructor(
         }
     }
 
-    fun list(ruleBuildIds: List<Long>): List<QualityRule> {
+    fun list(ruleBuildIds: Collection<Long>): List<QualityRule> {
         logger.info("start to check rule in his: $ruleBuildIds")
         val allRule = qualityRuleBuildHisDao.list(dslContext, ruleBuildIds)
 
@@ -103,8 +109,16 @@ class QualityRuleBuildHisService constructor(
                 controlPoint = QualityRule.RuleControlPoint(
                     "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
                 ),
-                range = it.pipelineRange.split(","),
-                templateRange = it.templateRange.split(","),
+                range = if (it.pipelineRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.pipelineRange.split(",")
+                },
+                templateRange = if (it.templateRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.templateRange.split(",")
+                },
                 operation = RuleOperation.END,
                 notifyTypeList = null,
                 notifyUserList = null,
@@ -112,7 +126,11 @@ class QualityRuleBuildHisService constructor(
                 auditUserList = null,
                 auditTimeoutMinutes = null,
                 gatewayId = it.gatewayId,
-                opList = JsonUtil.to(it.operationList)
+                opList = if (it.operationList.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    JsonUtil.to(it.operationList, object : TypeReference<List<QualityRule.RuleOp>>() {})
+                }
             )
             rule
         }

@@ -109,6 +109,16 @@ class TXPipelineExportService @Autowired constructor(
 
     // 导出工蜂CI-2.0的yml
     fun exportV2Yaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Response {
+        val pair = generateV2Yaml(userId, projectId, pipelineId, isGitCI)
+        return exportToFile(pair.first, pair.second.name)
+    }
+
+    fun exportV2YamlStr(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): String {
+        val pair = generateV2Yaml(userId, projectId, pipelineId, isGitCI)
+        return pair.first
+    }
+
+    fun generateV2Yaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Pair<String, Model> {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -199,7 +209,7 @@ class TXPipelineExportService @Autowired constructor(
         }
         val modelYaml = toYamlStr(yamlObj)
         yamlSb.append(modelYaml)
-        return exportToFile(yamlSb.toString(), model.name)
+        return Pair(yamlSb.toString(), model)
     }
 
     private fun getV2StageFromModel(

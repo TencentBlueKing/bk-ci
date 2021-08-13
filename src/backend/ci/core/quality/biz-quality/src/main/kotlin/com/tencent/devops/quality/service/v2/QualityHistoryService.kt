@@ -44,6 +44,7 @@ import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import com.tencent.devops.quality.util.ThresholdOperationUtil
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -56,10 +57,13 @@ import java.time.format.DateTimeFormatter
 class QualityHistoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val ruleService: QualityRuleService,
+    private val qualityRuleBuildHisService: QualityRuleBuildHisService,
     private val historyDao: HistoryDao,
     private val client: Client,
     private val objectMapper: ObjectMapper
 ) {
+
+    private val logger = LoggerFactory.getLogger(QualityHistoryService::class.java)
 
     fun userGetRuleIntercept(
         userId: String,
@@ -348,17 +352,21 @@ class QualityHistoryService @Autowired constructor(
         return Pair(count, list)
     }
 
-    fun listInterceptHistoryForPipeline(
+    fun listInterceptHistoryForBuildHis(
         userId: String,
         projectId: String,
         pipelineId: String?,
         buildId: String?,
         ruleHashIds: Set<String>
     ): List<RuleInterceptHistory> {
-        val ruleIds = ruleHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
-        val ruleIdToNameMap = ruleService.serviceListRuleByIds(projectId = projectId, ruleIds = ruleIds)
+        val ruleBuildIds = ruleHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
+
+        logger.info("start to list intercept history for pipeline: " +
+            "$projectId, $pipelineId, $buildId, ${ruleBuildIds.firstOrNull()}")
+
+        val ruleIdToNameMap = qualityRuleBuildHisService.list(ruleBuildIds)
             .map { it.hashId to it.name }.toMap()
-        val recordList = batchServiceList(projectId, pipelineId, buildId, ruleIds,
+        val recordList = batchServiceList(projectId, pipelineId, buildId, ruleBuildIds,
             null, null, null, null, null)
         return recordList.map {
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)

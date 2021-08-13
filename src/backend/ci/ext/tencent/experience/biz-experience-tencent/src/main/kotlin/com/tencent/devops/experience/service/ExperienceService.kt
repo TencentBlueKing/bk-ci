@@ -50,9 +50,6 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
-import com.tencent.devops.common.auth.api.BSAuthResourceApi
-import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -113,10 +110,8 @@ class ExperienceService @Autowired constructor(
     private val wechatWorkService: WechatWorkService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val bsAuthPermissionApi: BSAuthPermissionApi,
-    private val bsAuthResourceApi: BSAuthResourceApi,
-    private val experienceServiceCode: BSExperienceAuthServiceCode,
-    private val experienceBaseService: ExperienceBaseService
+    private val experienceBaseService: ExperienceBaseService,
+    private val experiencePermissionService: ExperiencePermissionService
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile("[,;]")
@@ -163,7 +158,11 @@ class ExperienceService @Autowired constructor(
 
         val experienceList = experienceDao.list(dslContext, projectId, searchTime, online)
         val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
-        val experiencePermissionListMap = filterExperience(userId, projectId, setOf(AuthPermission.EDIT))
+        val experiencePermissionListMap = experiencePermissionService.filterExperience(
+            user = userId,
+            projectId = projectId,
+            authPermissions = setOf(AuthPermission.EDIT)
+        )
 
         return experienceList.map {
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
@@ -250,26 +249,6 @@ class ExperienceService @Autowired constructor(
             categoryId = experienceRecord.category,
             productOwner = objectMapper.readValue(experienceRecord.productOwner)
         )
-    }
-
-    private fun filterExperience(
-        user: String,
-        projectId: String,
-        authPermissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<Long>> {
-        val permissionResourceMap = bsAuthPermissionApi.getUserResourcesByPermissions(
-            user = user,
-            serviceCode = experienceServiceCode,
-            resourceType = taskResourceType,
-            projectCode = projectId,
-            permissions = authPermissions,
-            supplier = null
-        )
-        val map = mutableMapOf<AuthPermission, List<Long>>()
-        permissionResourceMap.forEach { (key, value) ->
-            map[key] = value.map { HashUtil.decodeIdToLong(it) }
-        }
-        return map
     }
 
     fun create(userId: String, projectId: String, experience: ExperienceCreate) {
@@ -454,7 +433,12 @@ class ExperienceService @Autowired constructor(
             )
         }
 
-        createTaskResource(userId, projectId, experienceId, "${experience.name}（$appVersion）")
+        experiencePermissionService.createTaskResource(
+            userId,
+            projectId,
+            experienceId,
+            "${experience.name}（$appVersion）"
+        )
         sendNotification(experienceId)
 
         return experienceId
@@ -580,10 +564,11 @@ class ExperienceService @Autowired constructor(
         projectId: String
     ): TExperienceRecord {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        validateTaskPermission(
+        experiencePermissionService.validateTaskPermission(
             user = userId,
             projectId = projectId,
             experienceId = experienceId,
+            authPermission = AuthPermission.EDIT,
             message = "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限"
         )
         return experienceDao.getOrNull(dslContext, experienceId)
@@ -754,45 +739,6 @@ class ExperienceService @Autowired constructor(
                 wechatWorkService.sendRichText(message)
             }
         }
-    }
-
-    private fun validateTaskPermission(
-        user: String,
-        projectId: String,
-        experienceId: Long,
-        message: String
-    ) {
-        if (!bsAuthPermissionApi.validateUserResourcePermission(
-                user = user,
-                serviceCode = experienceServiceCode,
-                resourceType = taskResourceType,
-                projectCode = projectId,
-                resourceCode = HashUtil.encodeLongId(experienceId),
-                permission = AuthPermission.EDIT
-            )
-        ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.EDIT.value}",
-                defaultMessage = AuthPermission.EDIT.alias
-            )
-            throw ErrorCodeException(
-                statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION,
-                defaultMessage = message,
-                params = arrayOf(permissionMsg)
-            )
-        }
-    }
-
-    private fun createTaskResource(user: String, projectId: String, experienceId: Long, experienceName: String) {
-        bsAuthResourceApi.createResource(
-            user = user,
-            serviceCode = experienceServiceCode,
-            resourceType = taskResourceType,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(experienceId),
-            resourceName = experienceName
-        )
     }
 
     private fun makeSha1(artifactoryType: ArtifactoryType, path: String): String {

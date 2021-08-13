@@ -342,6 +342,7 @@ class V2WebHookMatcher @Autowired constructor(
         if (pathList != null && pathList.isNotEmpty()) {
             logger.info("Mr Include path set($pathList)")
             val mrId = (event as GitMergeRequestEvent).object_attributes.id
+            // 使用本次触发的项目ID，不然fork库过来的请求未开启CI无法触发
             val gitProjectId = gitRequestEvent.gitProjectId
             val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(
                 userId = event.user.name,

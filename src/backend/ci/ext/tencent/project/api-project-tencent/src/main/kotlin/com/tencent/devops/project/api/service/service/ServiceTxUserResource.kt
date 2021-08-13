@@ -70,4 +70,13 @@ interface ServiceTxUserResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<UserDeptDetail>
+
+    @GET
+    @Path("/users")
+    @ApiOperation("查询用户基本信息")
+    fun getUser(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<Boolean>
 }
