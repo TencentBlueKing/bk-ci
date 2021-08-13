@@ -22,6 +22,7 @@ import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -343,78 +344,9 @@ class PreBuildV2Service @Autowired constructor(
 
             // bash
             val element: Element = when {
-                step.run != null -> {
-                    val linuxScriptElement = LinuxScriptElement(
-                        name = step.name ?: "run",
-                        id = step.id,
-                        scriptType = BuildScriptType.SHELL,
-                        script = step.run!!,
-                        continueNoneZero = false,
-                        additionalOptions = additionalOptions
-                    )
-                    if (job.runsOn.agentSelector.isNullOrEmpty()) {
-                        linuxScriptElement
-                    } else {
-                        when (job.runsOn.agentSelector!!.first()) {
-                            "linux" -> linuxScriptElement
-                            "macos" -> linuxScriptElement
-                            "windows" -> WindowsScriptElement(
-                                name = step.name ?: "run",
-                                id = step.id,
-                                scriptType = BuildScriptType.BAT,
-                                script = step.run!!
-                            )
-                            else -> linuxScriptElement
-                        }
-                    }
-                }
-                else -> {
-                    val data = mutableMapOf<String, Any>()
-                    val atomCode = step.uses!!.split('@')[0]
-
-                    // 代码同步
-                    if (atomCode == "syncCodeToRemote") {
-                        // 确保同步代码插件安装
-                        installMarketAtom(userId, "syncCodeToRemote")
-                        val input = step.with?.toMutableMap() ?: mutableMapOf()
-                        input["agentId"] = input["agentId"] ?: agentInfo.agentId
-                        input["workspace"] = input["workspace"] ?: startUpReq.workspace
-                        input["useDelete"] = input["useDelete"] ?: true
-                        input["syncGitRepository"] = input["syncGitRepository"] ?: false
-                        data["input"] = input
-
-                        MarketBuildAtomElement(
-                            name = step.name ?: "同步本地代码",
-                            id = null,
-                            atomCode = "syncAgentCode",
-                            version = "3.*",
-                            data = data,
-                            additionalOptions = additionalOptions
-                        )
-                    } else {
-                        data["input"] = step.with ?: Any()
-
-                        // codecc插件路径转换
-                        if (atomCode == CodeCCScanInContainerTask.atomCode &&
-                            startUpReq.extraParam != null
-                        ) {
-                            val input = (data["input"] as Map<*, *>).toMutableMap()
-                            val isRunOnDocker =
-                                JobRunsOnType.DEV_CLOUD.type == job.runsOn.poolName ||
-                                        JobRunsOnType.DOCKER.type == job.runsOn.poolName
-                            input["path"] = getWhitePath(startUpReq, isRunOnDocker)
-                        }
-
-                        MarketBuildAtomElement(
-                            name = step.name ?: step.uses!!.split('@')[0],
-                            id = step.id,
-                            atomCode = step.uses!!.split('@')[0],
-                            version = step.uses!!.split('@')[1],
-                            data = data,
-                            additionalOptions = additionalOptions
-                        )
-                    }
-                }
+                step.run != null -> makeScriptElement(job, step, additionalOptions)
+                else ->
+                    makeNormalElement(job, step, startUpReq, agentInfo, userId, additionalOptions)
             }
 
             elementList.add(element)
@@ -426,6 +358,98 @@ class PreBuildV2Service @Autowired constructor(
         }
 
         return elementList
+    }
+
+    private fun makeScriptElement(
+        job: Job,
+        step: Step,
+        additionalOptions: ElementAdditionalOptions
+    ): Element {
+        val linuxScriptElement = LinuxScriptElement(
+            name = step.name ?: "run",
+            id = step.id,
+            scriptType = BuildScriptType.SHELL,
+            script = step.run!!,
+            continueNoneZero = false,
+            additionalOptions = additionalOptions
+        )
+
+        return if (job.runsOn.agentSelector.isNullOrEmpty()) {
+            linuxScriptElement
+        } else {
+            when (job.runsOn.agentSelector!!.first()) {
+                "linux" -> linuxScriptElement
+                "macos" -> linuxScriptElement
+                "windows" -> WindowsScriptElement(
+                    name = step.name ?: "run",
+                    id = step.id,
+                    scriptType = BuildScriptType.BAT,
+                    script = step.run!!
+                )
+                else -> linuxScriptElement
+            }
+        }
+    }
+
+    private fun makeNormalElement(
+        job: Job,
+        step: Step,
+        startUpReq: StartUpReq,
+        agentInfo: ThirdPartyAgentStaticInfo,
+        userId: String,
+        additionalOptions: ElementAdditionalOptions
+    ): Element {
+        val data = mutableMapOf<String, Any>()
+        val atomCode = step.uses!!.split('@')[0]
+        // 代码同步
+        return if (atomCode == "syncCodeToRemote") {
+            // 确保同步代码插件安装
+            installMarketAtom(userId, "syncCodeToRemote")
+            val input = step.with?.toMutableMap() ?: mutableMapOf()
+            input["agentId"] = input["agentId"] ?: agentInfo.agentId
+            input["workspace"] = input["workspace"] ?: startUpReq.workspace
+            input["useDelete"] = input["useDelete"] ?: true
+            input["syncGitRepository"] = input["syncGitRepository"] ?: false
+            data["input"] = input
+
+            MarketBuildAtomElement(
+                name = step.name ?: "同步本地代码",
+                id = null,
+                atomCode = "syncAgentCode",
+                version = "3.*",
+                data = data,
+                additionalOptions = additionalOptions
+            )
+        } else {
+            data["input"] = step.with ?: Any()
+            setWhitePathIfNeed(atomCode, startUpReq, data, job)
+
+            MarketBuildAtomElement(
+                name = step.name ?: step.uses!!.split('@')[0],
+                id = step.id,
+                atomCode = step.uses!!.split('@')[0],
+                version = step.uses!!.split('@')[1],
+                data = data,
+                additionalOptions = additionalOptions
+            )
+        }
+    }
+
+    private fun setWhitePathIfNeed(
+        atomCode: String,
+        startUpReq: StartUpReq,
+        data: MutableMap<String, Any>,
+        job: Job
+    ) {
+        if (atomCode == CodeCCScanInContainerTask.atomCode &&
+            startUpReq.extraParam != null
+        ) {
+            val input = (data["input"] as Map<*, *>).toMutableMap()
+            val isRunOnDocker =
+                JobRunsOnType.DEV_CLOUD.type == job.runsOn.poolName ||
+                        JobRunsOnType.DOCKER.type == job.runsOn.poolName
+            input["path"] = getWhitePath(startUpReq, isRunOnDocker)
+        }
     }
 
     private fun getJobControlOption(
@@ -654,10 +678,12 @@ class PreBuildV2Service @Autowired constructor(
 
         preJobList.forEach { preJob ->
             // runs-on存在3种结构，String、标签的话是数组、T
-            if (preJob.runsOn == null || preJob.runsOn!! is String ||
-                preJob.runsOn!! is Array<*> || preJob.runsOn!! is List<*>
+            if (preJob.runsOn == null
             ) {
-                return@forEach
+                if (preJob.runsOn!! is String ||
+                    preJob.runsOn!! is Array<*> || preJob.runsOn!! is List<*>
+                )
+                    return@forEach
             }
 
             val (passed, errMsg) = ScriptYmlUtils.validate(
@@ -675,9 +701,14 @@ class PreBuildV2Service @Autowired constructor(
     }
 
     private fun checkStage(preScriptBuildYaml: PreScriptBuildYaml) {
-        if ((preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null) ||
-            (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
-            (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null)
+        val stageAndJobNotNull =
+            preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null
+        val stageAndStepNotNull =
+            preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null
+        val jobAndStepNotNull =
+            preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null
+
+        if (stageAndJobNotNull || stageAndStepNotNull || jobAndStepNotNull
         ) {
             throw CustomException(
                 Response.Status.BAD_REQUEST, "stages, jobs, steps不能并列存在，只能存在其一"
@@ -706,9 +737,10 @@ class PreBuildV2Service @Autowired constructor(
             return
         }
         yamlMap.forEach { (t, _) ->
-            if (t != "triggerOn" && t != "extends" && t != "version" &&
-                t != "resources" && t != "name" && t != "on"
-            ) {
+            val exp1 = t != "triggerOn" && t != "extends" && t != "version"
+            val exp2 = t != "resources" && t != "name" && t != "on"
+
+            if (exp1 && exp2) {
                 throw CustomException(
                     status = Response.Status.BAD_REQUEST,
                     message = "使用 extends 时顶级关键字只能有触发器 on 与 resources"
