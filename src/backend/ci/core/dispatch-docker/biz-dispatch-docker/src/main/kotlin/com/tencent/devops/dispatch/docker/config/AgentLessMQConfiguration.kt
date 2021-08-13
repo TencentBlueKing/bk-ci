@@ -69,7 +69,7 @@ class AgentLessMQConfiguration @Autowired constructor() {
     fun agentLessDispatchStartQueue() = Queue(MQ.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
 
     @Bean
-    fun pipelineBuildDispatchStartQueueBind(
+    fun agentLessDispatchStartQueueBind(
         @Autowired agentLessDispatchStartQueue: Queue,
         @Autowired agentLessDispatchExchange: DirectExchange
     ): Binding {
@@ -104,7 +104,7 @@ class AgentLessMQConfiguration @Autowired constructor() {
     fun agentLessDispatchShutdownQueue() = Queue(MQ.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH)
 
     @Bean
-    fun pipelineBuildDispatchShutdownQueueBind(
+    fun agentLessDispatchShutdownQueueBind(
         @Autowired agentLessDispatchShutdownQueue: Queue,
         @Autowired agentLessDispatchExchange: DirectExchange
     ): Binding {

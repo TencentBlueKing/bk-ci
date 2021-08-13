@@ -69,7 +69,7 @@ class DispatchMQConfiguration @Autowired constructor() {
     fun agentDispatchStartQueue() = Queue(MQ.QUEUE_AGENT_STARTUP)
 
     @Bean
-    fun pipelineBuildDispatchStartQueueBind(
+    fun agentDispatchStartQueueBind(
         @Autowired agentDispatchStartQueue: Queue,
         @Autowired agentDispatchExchange: DirectExchange
     ): Binding {
@@ -78,7 +78,7 @@ class DispatchMQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun agentLessDispatchStartListenerContainer(
+    fun agentDispatchStartListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired agentDispatchStartQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
@@ -107,7 +107,7 @@ class DispatchMQConfiguration @Autowired constructor() {
     fun agentDispatchShutdownQueue() = Queue(MQ.QUEUE_AGENT_SHUTDOWN)
 
     @Bean
-    fun pipelineBuildDispatchShutdownQueueBind(
+    fun agentDispatchShutdownQueueBind(
         @Autowired agentDispatchShutdownQueue: Queue,
         @Autowired agentDispatchExchange: DirectExchange
     ): Binding {
@@ -116,7 +116,7 @@ class DispatchMQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun agentLessDispatchShutdownListenerContainer(
+    fun agentDispatchShutdownListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired agentDispatchShutdownQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
