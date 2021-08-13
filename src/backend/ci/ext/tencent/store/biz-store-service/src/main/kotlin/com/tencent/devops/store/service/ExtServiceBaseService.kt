@@ -334,8 +334,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 listOf(dbVersion)
             } else {
                 storeCommonService.getRequireVersion(
-                    dbVersion,
-                    releaseType!!
+                    reqVersion = version,
+                    dbVersion = dbVersion,
+                    releaseType = releaseType!!
                 )
             }
 
