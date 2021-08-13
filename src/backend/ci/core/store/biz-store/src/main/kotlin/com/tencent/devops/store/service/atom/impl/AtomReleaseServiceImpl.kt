@@ -316,8 +316,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             projectCode = projectCode,
             atomCode = atomCode,
             atomVersion = version,
+            userId = userId,
             repositoryHashId = atomRecord.repositoryHashId,
-            userId = userId
+            branch = marketAtomUpdateRequest.branch
         )
         if (getAtomConfResult.errorCode != "0") {
             return MessageCodeUtil.generateResponseDataObject(
@@ -362,8 +363,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomCode = atomCode,
             atomName = marketAtomUpdateRequest.name,
             atomVersion = version,
+            userId = userId,
             repositoryHashId = atomRecord.repositoryHashId,
-            userId = userId
+            branch = marketAtomUpdateRequest.branch
         )
         logger.info("update market atom, getAtomQualityResult: $getAtomQualityResult")
         if (getAtomQualityResult.errorCode == StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL) {
@@ -511,16 +513,18 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomCode: String,
         atomName: String,
         atomVersion: String,
-        repositoryHashId: String,
-        userId: String
+        userId: String,
+        repositoryHashId: String? = null,
+        branch: String? = null
     ): GetAtomQualityConfigResult {
         try {
             val qualityJsonStr = getFileStr(
                 projectCode = projectCode,
                 atomCode = atomCode,
                 atomVersion = atomVersion,
+                fileName = QUALITY_JSON_NAME,
                 repositoryHashId = repositoryHashId,
-                fileName = QUALITY_JSON_NAME
+                branch = branch
             )
             logger.info("the quality json str is :$qualityJsonStr")
             return if (!qualityJsonStr.isNullOrBlank()) {
@@ -599,8 +603,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         projectCode: String,
         atomCode: String,
         atomVersion: String,
-        repositoryHashId: String,
-        fileName: String
+        fileName: String,
+        repositoryHashId: String? = null,
+        branch: String? = null
     ): String?
 
     private fun registerControlPoint(
@@ -699,8 +704,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         projectCode: String,
         atomCode: String,
         atomVersion: String,
-        repositoryHashId: String,
-        userId: String
+        userId: String,
+        repositoryHashId: String? = null,
+        branch: String? = null
     ): GetAtomConfigResult {
         // 拉取task.json配置文件校验其合法性
         val taskJsonStr: String?
@@ -709,8 +715,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 projectCode = projectCode,
                 atomCode = atomCode,
                 atomVersion = atomVersion,
+                fileName = TASK_JSON_NAME,
                 repositoryHashId = repositoryHashId,
-                fileName = TASK_JSON_NAME
+                branch = branch
             )
         } catch (e: Exception) {
             logger.error("getFileContent error is :$e", e)
