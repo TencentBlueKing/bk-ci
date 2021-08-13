@@ -211,7 +211,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             id = deptId,
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
-            bk_username = ""
+            bk_username = userId
         )
         val userCenterResponse = callUserCenter(RETRIEVE_DEPARTMENT, parentSearch)
         return getParentDept(userCenterResponse)
