@@ -36,9 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceDeptResourceImpl @Autowired constructor(
     val deptService: DeptService
-): ServiceDeptResource {
-    override fun getDeptByLevel(userId: String): Result<Int> {
-        val parentDeptId = deptService.getUserParentDept(userId) ?: 0
-        return Result(parentDeptId)
+) : ServiceDeptResource {
+    override fun getParentDept(userId: String): Result<Int> {
+        return Result("", deptService.getUserParentDept(userId))
     }
 }

@@ -46,5 +46,5 @@ interface DeptService {
     fun getDeptUser(deptId: Int, accessToken: String?): List<String>?
 
     // 获取用户组织上一级组织
-    fun getUserParentDept(userId: String): Int?
+    fun getUserParentDept(userId: String): Int
 }

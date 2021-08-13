@@ -27,7 +27,7 @@
 
 package com.tencent.devops.auth.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -39,17 +39,17 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_DEPT"], description = "组织架构")
+@Api(tags = ["SERVICE_DEPT"], description = "权限校验--组织相关")
 @Path("/service/dept")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceDeptResource {
     @GET
     @Path("/parents")
-    @ApiOperation("获取用户的上一级组织")
-    fun getDeptByLevel(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
+    @ApiOperation("校验用户是否有action的权限")
+    fun getParentDept(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("用户ID", required = true)
         userId: String
     ): Result<Int>
 }
