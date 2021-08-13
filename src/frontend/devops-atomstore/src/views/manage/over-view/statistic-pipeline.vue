@@ -120,7 +120,7 @@
                     if (res.status >= 200 && res.status < 300) {
                         return res.blob()
                     } else {
-                        throw new Error(res.statusText)
+                        return res.json().then((result) => Promise.reject(result))
                     }
                 }).then((blob) => {
                     const a = document.createElement('a')

@@ -187,4 +187,34 @@ class QualityNotifyGroupDao {
                 .execute()
         }
     }
+
+    fun searchByNameLike(
+        dslContext: DSLContext,
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        name: String
+    ): List<TGroupRecord>? {
+        return with(TGroup.T_GROUP) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(NAME.like("%$name%")))
+                .orderBy(CREATE_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun countByIdLike(
+        dslContext: DSLContext,
+        projectId: String,
+        name: String
+    ): Long {
+        with(TGroup.T_GROUP) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NAME.like("%$name%"))
+                .fetchOne(0, kotlin.Long::class.java)!!
+        }
+    }
 }

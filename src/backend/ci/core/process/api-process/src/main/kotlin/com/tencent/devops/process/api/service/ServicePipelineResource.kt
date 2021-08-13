@@ -434,4 +434,16 @@ interface ServicePipelineResource {
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<PipelineIdInfo>>
+
+    @ApiOperation("获取项目下流水线Id")
+    @PUT
+    @Path("/projects/{projectCode}/pipelines/{pipelineId}/id")
+    fun getPipelineId(
+        @ApiParam("项目Id", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<PipelineIdInfo?>
 }

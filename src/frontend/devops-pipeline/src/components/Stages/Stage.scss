@@ -275,3 +275,34 @@ span.skip-name {
         }
     }
 }
+
+.editing {
+    .stage-connector {
+        background: $primaryColor;
+        color: $primaryColor;
+        &:before {
+            background: $primaryColor;
+        }
+    }
+    .connect-line {
+        &.left,
+        &.right {
+            stroke: $primaryColor;
+
+            &:before {
+                stroke: $primaryColor;
+            }
+            &:after {
+                stroke: $primaryColor;
+                background-color: $primaryColor;
+            }
+        }
+    }
+    &:after {
+        background: $primaryColor;
+    }
+    // 三角箭头
+    &:before {
+        color: $primaryColor;
+    }
+}

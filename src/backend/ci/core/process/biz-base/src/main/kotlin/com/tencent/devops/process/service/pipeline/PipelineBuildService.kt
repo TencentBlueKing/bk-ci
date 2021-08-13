@@ -404,6 +404,10 @@ class PipelineBuildService(
                         finallyStage = stage.finally
                     )
                 }
+                if (finalElementList.size > originalElementList.size) {
+                    // 最终生成的元素集合比原元素集合数量多，则说明包含post任务
+                    container.containPostTaskFlag = true
+                }
                 container.elements = finalElementList
             }
         }
