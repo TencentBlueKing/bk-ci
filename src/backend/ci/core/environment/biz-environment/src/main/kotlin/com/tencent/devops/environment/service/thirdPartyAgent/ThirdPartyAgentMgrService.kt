@@ -660,8 +660,14 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     }
 
     private fun getSharedThirdPartyAgentList(projectId: String, envName: String): List<ThirdPartyAgent> {
-        val sharedEnvRecord = envShareProjectDao.get(dslContext, envName, projectId)
+        val sharedProjEnv = envName.split("@") // sharedProjId@poolName
+        if (sharedProjEnv.size != 2 || sharedProjEnv[0].isNullOrBlank() || sharedProjEnv[1].isNullOrBlank()) {
+            return emptyList()
+        }
+        val sharedEnvRecord = envShareProjectDao.get(dslContext, envName, projectId, sharedProjEnv[0])
         if (sharedEnvRecord.isEmpty()) {
+            logger.info("env name not exists, envName: $envName, projectId：$projectId, " +
+                "mainProjectId: ${sharedProjEnv[0]}")
             return emptyList()
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
