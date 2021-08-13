@@ -44,8 +44,10 @@ open class CommonPreBuildService constructor(
     }
 
     protected fun installMarketAtom(userId: String, atomCode: String) {
-        val projectCodes = ArrayList<String>()
-        projectCodes.add(getUserProjectId(userId))
+        val projectCodes = ArrayList<String>().apply {
+            add(getUserProjectId(userId))
+        }
+
         try {
             client.get(ServiceMarketAtomResource::class).installAtom(
                 userId,

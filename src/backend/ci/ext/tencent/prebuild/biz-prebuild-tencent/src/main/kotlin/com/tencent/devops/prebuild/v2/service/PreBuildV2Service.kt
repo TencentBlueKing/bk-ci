@@ -319,6 +319,12 @@ class PreBuildV2Service @Autowired constructor(
     ): MutableList<Element> {
         val elementList = mutableListOf<Element>()
         job.steps!!.forEach { step ->
+            if (step.run != null && JobRunsOnType.AGENT_LESS.type == job.runsOn.poolName) {
+                throw CustomException(
+                    Response.Status.NOT_FOUND, "run命令不支持在agentless下执行，请检查yml配置."
+                )
+            }
+
             // service, checkOut 无需处理
             val additionalOptions = ElementAdditionalOptions(
                 continueWhenFailed = step.continueOnError ?: false,
@@ -338,7 +344,7 @@ class PreBuildV2Service @Autowired constructor(
             // bash
             val element: Element = when {
                 step.run != null -> {
-                    val linux = LinuxScriptElement(
+                    val linuxScriptElement = LinuxScriptElement(
                         name = step.name ?: "run",
                         id = step.id,
                         scriptType = BuildScriptType.SHELL,
@@ -347,18 +353,18 @@ class PreBuildV2Service @Autowired constructor(
                         additionalOptions = additionalOptions
                     )
                     if (job.runsOn.agentSelector.isNullOrEmpty()) {
-                        linux
+                        linuxScriptElement
                     } else {
                         when (job.runsOn.agentSelector!!.first()) {
-                            "linux" -> linux
-                            "macos" -> linux
+                            "linux" -> linuxScriptElement
+                            "macos" -> linuxScriptElement
                             "windows" -> WindowsScriptElement(
                                 name = step.name ?: "run",
                                 id = step.id,
                                 scriptType = BuildScriptType.BAT,
                                 script = step.run!!
                             )
-                            else -> linux
+                            else -> linuxScriptElement
                         }
                     }
                 }
@@ -389,8 +395,8 @@ class PreBuildV2Service @Autowired constructor(
                         data["input"] = step.with ?: Any()
 
                         // codecc插件路径转换
-                        if (startUpReq.extraParam != null
-                            && atomCode == CodeCCScanInContainerTask.atomCode
+                        if (atomCode == CodeCCScanInContainerTask.atomCode
+                            && startUpReq.extraParam != null
                         ) {
                             val input = (data["input"] as Map<*, *>).toMutableMap()
                             val isRunOnDocker = JobRunsOnType.DEV_CLOUD.type == job.runsOn.poolName
