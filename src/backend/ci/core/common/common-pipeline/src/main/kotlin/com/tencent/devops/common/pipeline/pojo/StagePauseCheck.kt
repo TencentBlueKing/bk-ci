@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -151,6 +152,21 @@ data class StagePauseCheck(
         } catch (ignore: Throwable) {
             return null
         }
+    }
+
+    /**
+     *  进入审核流程前完成所有审核人变量替换
+     */
+    fun parseReviewVariables(variables: Map<String, String>) {
+        reviewGroups?.forEach { group ->
+            if (group.status == null) {
+                val reviewers = group.reviewers.joinToString(",")
+                val realReviewers = EnvUtils.parseEnv(reviewers, variables)
+                    .split(",").toList()
+                group.reviewers = realReviewers
+            }
+        }
+        reviewDesc = EnvUtils.parseEnv(reviewDesc, variables)
     }
 
     companion object {

@@ -25,38 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.gitci.pojo.v2
 
-import com.tencent.devops.artifactory.api.service.ServiceImageManageResource
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import net.coobird.thumbnailator.Thumbnails
-import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Autowired
-import java.net.URL
-import java.nio.file.Files
-
-@RestResource
-class ServiceImageManageResourceImpl @Autowired constructor() :
-    ServiceImageManageResource {
-
-    /**
-     * 按照规定大小压缩图片
-     */
-    override fun compressImage(imageUrl: String, compressWidth: Int, compressHeight: Int): Result<String> {
-        val file = Files.createTempFile("random_" + System.currentTimeMillis(), ".png").toFile()
-        val url = URL(imageUrl)
-        val bytes: ByteArray?
-        try {
-            Thumbnails.of(url)
-                .size(compressWidth, compressHeight)
-                .outputFormat("png")
-                .toFile(file)
-            bytes = Files.readAllBytes(file.toPath())
-        } finally {
-            file.delete()
-        }
-        val data = "data:image/png;base64," + Base64.encodeBase64String(bytes)
-        return Result(data)
-    }
-}
+/**
+ * Stream构建信息
+ */
+data class StreamBuildInfo(
+    val buildId: String,
+    val streamYamlUrl: String,
+    val washTime: String
+)

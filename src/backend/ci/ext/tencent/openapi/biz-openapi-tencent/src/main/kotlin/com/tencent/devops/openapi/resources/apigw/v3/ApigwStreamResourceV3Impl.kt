@@ -15,15 +15,24 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
 
     override fun triggerStartup(
         userId: String,
-        projectId: String,
+        gitProjectId: String,
         pipelineId: String,
         streamTriggerBuildReq: StreamTriggerBuildReq
     ): Result<Boolean> {
         return client.get(ServiceStreamTriggerResource::class).triggerStartup(
             userId = userId,
-            projectId = projectId,
+            projectId = "git_$gitProjectId",
             pipelineId = pipelineId,
             streamTriggerBuildReq = streamTriggerBuildReq
         )
+    }
+
+    override fun getStreamProject(userId: String, gitProjectId: String): Result<String> {
+        val r1 = Regex("[0-9]+")
+        return if (r1.matches(gitProjectId)) {
+            Result("git_$gitProjectId")
+        } else {
+            Result(gitProjectId)
+        }
     }
 }

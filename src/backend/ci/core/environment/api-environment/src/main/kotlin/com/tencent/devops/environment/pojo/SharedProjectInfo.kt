@@ -25,38 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.environment.pojo
 
-import com.tencent.devops.artifactory.api.service.ServiceImageManageResource
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import net.coobird.thumbnailator.Thumbnails
-import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Autowired
-import java.net.URL
-import java.nio.file.Files
+import com.tencent.devops.environment.pojo.enums.SharedEnvType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceImageManageResourceImpl @Autowired constructor() :
-    ServiceImageManageResource {
-
-    /**
-     * 按照规定大小压缩图片
-     */
-    override fun compressImage(imageUrl: String, compressWidth: Int, compressHeight: Int): Result<String> {
-        val file = Files.createTempFile("random_" + System.currentTimeMillis(), ".png").toFile()
-        val url = URL(imageUrl)
-        val bytes: ByteArray?
-        try {
-            Thumbnails.of(url)
-                .size(compressWidth, compressHeight)
-                .outputFormat("png")
-                .toFile(file)
-            bytes = Files.readAllBytes(file.toPath())
-        } finally {
-            file.delete()
-        }
-        val data = "data:image/png;base64," + Base64.encodeBase64String(bytes)
-        return Result(data)
-    }
-}
+@ApiModel("VM虚拟机配额")
+data class SharedProjectInfo(
+    @ApiModelProperty("蓝盾项目Id", required = true)
+    val projectId: String,
+    @ApiModelProperty("工蜂项目ID", required = true)
+    val gitProjectId: String,
+    @ApiModelProperty("项目名称，工蜂项目则为groupName/projectName", required = true)
+    val name: String,
+    @ApiModelProperty("类型，预留", required = true)
+    val type: SharedEnvType,
+    @ApiModelProperty("导入服务器配额", required = true)
+    val creator: String,
+    @ApiModelProperty("允许使用DevCloud虚拟机功能", required = true)
+    val createTime: Long,
+    @ApiModelProperty("DevCloud虚拟机配额", required = true)
+    val updateTime: Long
+)

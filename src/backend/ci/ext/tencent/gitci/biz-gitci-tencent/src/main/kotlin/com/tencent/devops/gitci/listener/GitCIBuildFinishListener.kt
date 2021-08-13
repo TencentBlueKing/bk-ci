@@ -189,7 +189,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     if (isV2) {
                         scmClient.pushCommitCheck(
                             commitId = commitId,
-                            description = getDescByBuildStatus(description, buildStatus, pipeline.displayName),
+                            description = getDescByBuildStatus(buildStatus, pipeline.displayName),
                             mergeRequestId = mergeRequestId,
                             buildId = buildFinishEvent.buildId,
                             userId = buildFinishEvent.userId,
@@ -297,11 +297,8 @@ class GitCIBuildFinishListener @Autowired constructor(
     }
 
     // 根据状态切换描述
-    private fun getDescByBuildStatus(oldDesc: String?, buildStatus: BuildStatus, pipelineName: String): String {
+    private fun getDescByBuildStatus(buildStatus: BuildStatus, pipelineName: String): String {
         return when {
-            !oldDesc.isNullOrBlank() -> {
-                oldDesc
-            }
             buildStatus.isSuccess() -> {
                 buildSuccessDesc.format(pipelineName)
             }
