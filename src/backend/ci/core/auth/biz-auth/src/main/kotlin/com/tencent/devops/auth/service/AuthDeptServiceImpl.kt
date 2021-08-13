@@ -293,9 +293,13 @@ class AuthDeptServiceImpl @Autowired constructor(
         return dataMap["parent"]?.toString()?.toInt() ?: 0
     }
 
-    private fun getUserDept(responseData: String): Int {
-        val dataMap = JsonUtil.fromJson(responseData, Map::class.java)
-        return dataMap["id"].toString().toInt()
+    fun getUserDept(responseData: String): Int {
+        val deptInfo = JsonUtil.fromJson(responseData, List::class.java)
+        val any = deptInfo[0] as Any
+        if (any is Map<*, *>) {
+            return any["id"].toString().toInt()
+        }
+        return 0
     }
 
     /**
