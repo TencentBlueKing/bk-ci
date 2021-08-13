@@ -2,7 +2,7 @@ const Vue = window.Vue
 const vue = new Vue()
 const prefix = 'store/api'
 const processPerfix = 'process/api'
-const qualityPerfix = '/api/quality'
+const qualityPerfix = 'quality/api'
 
 export default {
     getMemberView (params) {
