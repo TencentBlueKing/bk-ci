@@ -119,17 +119,18 @@ class GitCIProjectService @Autowired constructor(
         ).associateBy { it.id }
         val result = gitProjects.map {
             val project = projectIdMap[it.id]
-            ProjectCIInfo(
-                id = it.id!!,
-                projectCode = project?.projectCode,
-                public = it.public,
-                name = it.name,
-                nameWithNamespace = it.nameWithNamespace,
-                httpsUrlToRepo = it.httpsUrlToRepo,
-                webUrl = it.webUrl,
-                avatarUrl = it.avatarUrl,
-                description = it.description,
-                ciInfo = CIInfo(
+            // 针对创建流水线异常时，现有代码会创建event记录
+            val ciInfo = if (lastBuildMap[it.id!!]?.pipelineId.isNullOrBlank() ||
+                lastBuildMap[it.id!!]?.buildId.isNullOrBlank()) {
+                CIInfo(
+                    enableCI = project?.enableCi ?: false,
+                    lastBuildId = null,
+                    lastBuildStatus = null,
+                    lastBuildPipelineId = null,
+                    lastBuildMessage = null
+                )
+            } else {
+                CIInfo(
                     enableCI = project?.enableCi ?: false,
                     lastBuildMessage = getEventMessage(
                         event = eventMap[lastBuildMap[it.id!!]?.eventId],
@@ -143,6 +144,18 @@ class GitCIProjectService @Autowired constructor(
                     lastBuildPipelineId = lastBuildMap[it.id!!]?.pipelineId,
                     lastBuildId = lastBuildMap[it.id!!]?.buildId
                 )
+            }
+            ProjectCIInfo(
+                id = it.id!!,
+                projectCode = project?.projectCode,
+                public = it.public,
+                name = it.name,
+                nameWithNamespace = it.nameWithNamespace,
+                httpsUrlToRepo = it.httpsUrlToRepo,
+                webUrl = it.webUrl,
+                avatarUrl = it.avatarUrl,
+                description = it.description,
+                ciInfo = ciInfo
             )
         }
         return Pagination(
