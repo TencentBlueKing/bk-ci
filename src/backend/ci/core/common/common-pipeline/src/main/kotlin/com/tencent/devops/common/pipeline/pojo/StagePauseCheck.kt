@@ -142,7 +142,7 @@ data class StagePauseCheck(
                 if (originMap[param.key]?.value.toString() != param.value.toString()) diff.add(param)
             }
             // 修改后的值传递到下一个审核组
-            val diffMap = diff.associateBy{ it.key }
+            val diffMap = diff.associateBy { it.key }
             reviewParams?.forEach {
                 if (diffMap[it.key] != null) it.value = diffMap[it.key]!!.value
             }
