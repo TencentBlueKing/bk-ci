@@ -34,6 +34,7 @@ import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
+import java.io.ByteArrayOutputStream
 import java.io.File
 
 object CommandLineUtils {
@@ -57,10 +58,16 @@ object CommandLineUtils {
         }
 
         val outputStream = object : LogOutputStream() {
+            override fun processBuffer() {
+                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
+                privateStringField.isAccessible = true;
+                val buffer = privateStringField.get(this) as ByteArrayOutputStream
+                processLine(buffer.toString("GBK"))
+                buffer.reset()
+            }
             override fun processLine(line: String?, level: Int) {
                 if (line == null)
                     return
-                val line = String(line.toByteArray(charset("UTF-8")))
 
                 val tmpLine: String = SensitiveLineParser.onParseLine(prefix + line)
                 if (print2Logger) {
@@ -71,11 +78,18 @@ object CommandLineUtils {
         }
 
         val errorStream = object : LogOutputStream() {
+            override fun processBuffer() {
+                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
+                privateStringField.isAccessible = true;
+                val buffer = privateStringField.get(this) as ByteArrayOutputStream
+                processLine(buffer.toString("GBK"))
+                buffer.reset()
+            }
+
             override fun processLine(line: String?, level: Int) {
                 if (line == null) {
                     return
                 }
-                val line = String(line.toByteArray(charset("UTF-8")))
 
                 val tmpLine: String = SensitiveLineParser.onParseLine(prefix + line)
                 if (print2Logger) {
