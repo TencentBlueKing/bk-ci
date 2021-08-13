@@ -27,11 +27,16 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
+import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
+import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
+import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
+import com.tencent.devops.quality.exception.QualityOpConfigException
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -41,14 +46,48 @@ import org.springframework.stereotype.Service
 class QualityRuleBuildHisService constructor(
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
     private val qualityIndicatorService: QualityIndicatorService,
+    private val indicatorService: QualityIndicatorService,
     private val dslContext: DSLContext
 ) {
 
     private val logger = LoggerFactory.getLogger(QualityRuleBuildHisService::class.java)
 
-    fun list(ruleIds: List<Long>): List<QualityRule> {
-        logger.info("start to check rule in his: $ruleIds")
-        val allRule = qualityRuleBuildHisDao.list(dslContext, ruleIds)
+    fun serviceCreate(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        ruleRequestList: List<RuleCreateRequestV3>
+    ): List<RuleCreateResponseV3> {
+        checkRuleRequest(ruleRequestList)
+
+        return ruleRequestList.map { ruleRequest ->
+            logger.info("start to create rule: $projectId, $pipelineId, ${ruleRequest.name}")
+            val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
+
+            ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
+                val indicatorMap = indicators.map { it.enName to it }.toMap()
+                indicatorService.serviceList(atomCode, indicators.map { it.enName }).forEach {
+                    indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
+                        it.hashId,
+                        indicatorMap[it.enName]!!.operation,
+                        indicatorMap[it.enName]!!.threshold
+                    ))
+                }
+            }
+
+            logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
+            val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId, ruleRequest, indicatorIds)
+
+            RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, HashUtil.encodeLongId(id))
+        }
+    }
+
+    fun list(ruleBuildIds: Collection<Long>): List<QualityRule> {
+        logger.info("start to check rule in his: $ruleBuildIds")
+        val allRule = qualityRuleBuildHisDao.list(dslContext, ruleBuildIds)
+
+        logger.info("start to check rule op list in his: ${allRule.size}")
+
         val allIndicatorIds = mutableSetOf<Long>()
         allRule.forEach {
             allIndicatorIds.addAll(it.indicatorIds.split(",").map { indicatorId -> indicatorId.toLong() })
@@ -60,24 +99,62 @@ class QualityRuleBuildHisService constructor(
         }.toMap()
         return allRule.map {
             val rule = QualityRule(
-                hashId = HashUtil.encodeLongId(it.ruleId),
+                hashId = HashUtil.encodeLongId(it.id),
                 name = it.ruleName,
                 desc = it.ruleDesc,
                 indicators = it.indicatorIds.split(",").map { indicatorId ->
-                    qualityIndicatorMap[indicatorId] ?: throw IllegalArgumentException("indicatorId not found in map: $indicatorId, $qualityIndicatorMap")
+                    qualityIndicatorMap[indicatorId]
+                        ?: throw IllegalArgumentException("indicatorId not found: $indicatorId, $qualityIndicatorMap")
                 },
-                controlPoint = QualityRule.RuleControlPoint("", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()),
-                range = listOf(it.pipelineId!!),
-                templateRange = listOf(),
-                operation = RuleOperation.valueOf(it.opType),
-                notifyTypeList = it.notifyType.split(",").map { NotifyType.valueOf(it) },
-                notifyUserList = it.notifyUser.split(","),
-                notifyGroupList = it.notifyGroupId.split(","),
-                auditUserList = it.auditUser.split(","),
-                auditTimeoutMinutes = it.auditTimeout,
-                gatewayId = it.gatewayId
+                controlPoint = QualityRule.RuleControlPoint(
+                    "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
+                ),
+                range = if (it.pipelineRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.pipelineRange.split(",")
+                },
+                templateRange = if (it.templateRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.templateRange.split(",")
+                },
+                operation = RuleOperation.END,
+                notifyTypeList = null,
+                notifyUserList = null,
+                notifyGroupList = null,
+                auditUserList = null,
+                auditTimeoutMinutes = null,
+                gatewayId = it.gatewayId,
+                opList = if (it.operationList.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    JsonUtil.to(it.operationList, object : TypeReference<List<QualityRule.RuleOp>>() {})
+                }
             )
             rule
+        }
+    }
+
+    private fun checkRuleRequest(ruleRequestList: List<RuleCreateRequestV3>) {
+        ruleRequestList.forEach { request ->
+            request.opList?.forEach { op ->
+                if (op.operation == RuleOperation.END) {
+                    if (op.notifyTypeList.isNullOrEmpty()) {
+                        throw QualityOpConfigException("notify type is empty for operation notify")
+                    }
+                    if (op.notifyGroupList.isNullOrEmpty() && op.notifyUserList.isNullOrEmpty()) {
+                        throw QualityOpConfigException("notifyGroupList and notifyUserList is empty for operation end")
+                    }
+                } else {
+                    if (op.auditTimeoutMinutes == null) {
+                        throw QualityOpConfigException("auditTimeoutMinutes is empty for operation audit")
+                    }
+                    if (op.auditUserList.isNullOrEmpty()) {
+                        throw QualityOpConfigException("auditUserList is empty for operation audit")
+                    }
+                }
+            }
         }
     }
 }

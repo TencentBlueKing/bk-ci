@@ -25,15 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-quality"))
-    api(project(":core:common:common-auth:common-auth-api"))
-}
+package com.tencent.devops.quality.exception
 
-plugins {
-    `task-deploy-to-maven`
-}
+import com.tencent.devops.common.api.exception.CustomException
+import javax.ws.rs.core.Response
+
+class QualityOpConfigException(
+    message: String
+) : CustomException(
+    Response.Status.BAD_REQUEST,
+    message
+)
