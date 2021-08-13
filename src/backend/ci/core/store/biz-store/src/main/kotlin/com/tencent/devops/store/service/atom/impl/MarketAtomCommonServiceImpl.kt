@@ -137,17 +137,17 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE // 最近的版本处于上架中止状态，重新升级版本号不变
             } else releaseType
         val cancelFlag = atomRecord.atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val requireVersion =
+        val requireVersionList =
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-                dbVersion
+                listOf(dbVersion)
             } else storeCommonService.getRequireVersion(
                 dbVersion = dbVersion,
                 releaseType = requireReleaseType
             )
-        if (version != requireVersion) {
+        if (!requireVersionList.contains(version)) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_ATOM_VERSION_IS_INVALID,
-                arrayOf(version, requireVersion)
+                arrayOf(version, requireVersionList.toString())
             )
         }
         if (dbVersion.isNotBlank()) {
