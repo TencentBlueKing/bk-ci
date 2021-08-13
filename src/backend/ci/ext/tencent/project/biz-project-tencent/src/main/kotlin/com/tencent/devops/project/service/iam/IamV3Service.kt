@@ -42,6 +42,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.api.ServiceGroupResource
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -134,8 +135,12 @@ class IamV3Service @Autowired constructor(
         }
     }
 
+    // 分级管理员操作的用户范围,只能是添加用户的最低一级组织往上推一级。如最低一级为组,则该项目操作用户范围只能是中心
     private fun createIamProject(userId: String, resourceRegisterInfo: ResourceRegisterInfo): String {
-        val subjectScopes = ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), "*")
+        val parentDeptId = client.get(ServiceDeptResource::class).getDeptByLevel(userId).data
+        val subjectScopes = ManagerScopes(
+            ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT),
+            parentDeptId.toString())
         val authorizationScopes = AuthorizationUtils.buildManagerResources(
             projectId = resourceRegisterInfo.resourceCode,
             projectName = resourceRegisterInfo.resourceName,
