@@ -253,8 +253,8 @@ class PreBuildV2Service @Autowired constructor(
                 containerList.add(normalContainer)
             } else {
                 // nfs挂载
-                val buildEnv = if (JobRunsOnType.DOCKER.type == job.runsOn.poolName
-                    || JobRunsOnType.DEV_CLOUD.type == job.runsOn.poolName
+                val buildEnv = if (JobRunsOnType.DOCKER.type == job.runsOn.poolName ||
+                    JobRunsOnType.DEV_CLOUD.type == job.runsOn.poolName
                 ) {
                     job.runsOn.nfsMount
                 } else {
@@ -395,12 +395,13 @@ class PreBuildV2Service @Autowired constructor(
                         data["input"] = step.with ?: Any()
 
                         // codecc插件路径转换
-                        if (atomCode == CodeCCScanInContainerTask.atomCode
-                            && startUpReq.extraParam != null
+                        if (atomCode == CodeCCScanInContainerTask.atomCode &&
+                            startUpReq.extraParam != null
                         ) {
                             val input = (data["input"] as Map<*, *>).toMutableMap()
-                            val isRunOnDocker = JobRunsOnType.DEV_CLOUD.type == job.runsOn.poolName
-                                    || JobRunsOnType.DOCKER.type == job.runsOn.poolName
+                            val isRunOnDocker =
+                                JobRunsOnType.DEV_CLOUD.type == job.runsOn.poolName ||
+                                        JobRunsOnType.DOCKER.type == job.runsOn.poolName
                             input["path"] = getWhitePath(startUpReq, isRunOnDocker)
                         }
 
@@ -653,8 +654,8 @@ class PreBuildV2Service @Autowired constructor(
 
         preJobList.forEach { preJob ->
             // runs-on存在3种结构，String、标签的话是数组、T
-            if (preJob.runsOn == null || preJob.runsOn!! is String
-                || preJob.runsOn!! is Array<*> || preJob.runsOn!! is List<*>
+            if (preJob.runsOn == null || preJob.runsOn!! is String ||
+                preJob.runsOn!! is Array<*> || preJob.runsOn!! is List<*>
             ) {
                 return@forEach
             }
@@ -705,8 +706,8 @@ class PreBuildV2Service @Autowired constructor(
             return
         }
         yamlMap.forEach { (t, _) ->
-            if (t != "triggerOn" && t != "extends" && t != "version"
-                && t != "resources" && t != "name" && t != "on"
+            if (t != "triggerOn" && t != "extends" && t != "version" &&
+                t != "resources" && t != "name" && t != "on"
             ) {
                 throw CustomException(
                     status = Response.Status.BAD_REQUEST,

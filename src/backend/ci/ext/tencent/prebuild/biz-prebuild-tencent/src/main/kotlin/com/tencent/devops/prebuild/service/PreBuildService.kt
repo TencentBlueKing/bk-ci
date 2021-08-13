@@ -320,9 +320,9 @@ class PreBuildService @Autowired constructor(
         job: Job
     ): AbstractTask {
         var step = oldStep
-        val isRunOnDocker = job.job.resourceType == ResourceType.REMOTE
-                && (job.job.pool?.type == PoolType.DockerOnDevCloud
-                || job.job.pool?.type == PoolType.DockerOnVm)
+        val isRunOnDocker = job.job.resourceType == ResourceType.REMOTE &&
+                (job.job.pool?.type == PoolType.DockerOnDevCloud ||
+                        job.job.pool?.type == PoolType.DockerOnVm)
         if (step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) {
             val whitePath = getWhitePath(startUpReq, isRunOnDocker)
             val data = step.inputs.data.toMutableMap()
