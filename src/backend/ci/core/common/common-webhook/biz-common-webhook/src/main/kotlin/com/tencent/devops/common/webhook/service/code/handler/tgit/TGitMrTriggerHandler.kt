@@ -30,11 +30,12 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
-import com.tencent.devops.common.webhook.service.code.filter.PathPrefixFilter
+import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
@@ -42,6 +43,7 @@ import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHand
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
+import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
@@ -196,15 +198,24 @@ class TGitMrTriggerHandler(
                             it.newPath
                         }
                     } ?: emptyList()
-                    return PathPrefixFilter(
-                        pipelineId = pipelineId,
-                        triggerOnPath = changeFiles,
-                        includedPaths = convert(includePaths),
-                        excludedPaths = convert(excludePaths)
+                    return PathFilterFactory.newPathFilter(
+                        PathFilterConfig(
+                            pathFilterType = pathFilterType,
+                            pipelineId = pipelineId,
+                            triggerOnPath = changeFiles,
+                            includedPaths = convert(includePaths),
+                            excludedPaths = convert(excludePaths)
+                        )
                     ).doFilter(response)
                 }
             }
-            return listOf(sourceBranchFilter, skipCiFilter, pathFilter)
+            val commitMessageFilter = CommitMessageFilter(
+                includeCommitMsg,
+                excludeCommitMsg,
+                event.object_attributes.last_commit.message,
+                pipelineId
+            )
+            return listOf(sourceBranchFilter, skipCiFilter, pathFilter, commitMessageFilter)
         }
     }
 

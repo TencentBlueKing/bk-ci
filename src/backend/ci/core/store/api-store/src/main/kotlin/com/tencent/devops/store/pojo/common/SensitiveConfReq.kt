@@ -27,15 +27,21 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("新增敏感数据请求包体")
 data class SensitiveConfReq(
     @ApiModelProperty("字段名称", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val fieldName: String,
     @ApiModelProperty("字段值", required = true)
     val fieldValue: String,
+    @ApiModelProperty("字段类型 BACKEND:后端使用，FRONTEND:前端使用，ALL:前后端使用", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.STORE_FIELD_TYPE_STYLE)
+    val fieldType: String,
     @ApiModelProperty("字段描述", required = false)
     val fieldDesc: String?
 )

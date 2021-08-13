@@ -38,6 +38,8 @@ data class BuildStageStatus(
     val name: String,
     @ApiModelProperty("阶段状态", required = false, hidden = true)
     var status: String? = null,
+    @ApiModelProperty("阶段标签", required = false, hidden = true)
+    var tag: List<String>? = null,
     @ApiModelProperty("阶段启动时间", required = false, hidden = true)
     var startEpoch: Long? = null,
     @ApiModelProperty("容器运行时间", required = false, hidden = true)

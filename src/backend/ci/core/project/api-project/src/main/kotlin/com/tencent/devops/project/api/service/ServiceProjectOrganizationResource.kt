@@ -54,7 +54,7 @@ interface ServiceProjectOrganizationResource {
     fun getDeptInfo(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        userId: String?,
         @ApiParam("机构ID")
         @PathParam("id")
         id: Int

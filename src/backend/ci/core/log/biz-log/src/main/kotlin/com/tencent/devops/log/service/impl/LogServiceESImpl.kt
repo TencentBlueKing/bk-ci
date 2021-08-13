@@ -271,14 +271,14 @@ class LogServiceESImpl constructor(
                 if (!fromStart) {
                     queryLogs.logs.reverse()
                 }
-                if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+                if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
                 success = true
             } catch (e: ElasticsearchStatusException) {
                 e.status()
                 val exString = e.toString()
                 if (exString.contains("index_closed_exception")) {
                     logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                    queryLogs.status = LogStatus.CLOSED
+                    queryLogs.status = LogStatus.CLOSED.status
                 }
             } catch (e: Exception) {
                 logger.error("Query more logs between lines failed because of ${e.javaClass}. buildId: $buildId", e)
@@ -536,16 +536,16 @@ class LogServiceESImpl constructor(
                 executeCount = executeCount
             )
             success = logStatusSuccess(queryLogs.status)
-            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED
+                queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (e: Exception) {
             logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
         } finally {
             logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
@@ -571,8 +571,8 @@ class LogServiceESImpl constructor(
         return openIndex(buildId, index)
     }
 
-    private fun logStatusSuccess(logStatus: LogStatus) =
-        (logStatus == LogStatus.EMPTY || logStatus == LogStatus.SUCCEED)
+    private fun logStatusSuccess(logStatus: Int) =
+        (LogStatus.parse(logStatus) == LogStatus.EMPTY || LogStatus.parse(logStatus) == LogStatus.SUCCEED)
 
     private fun openIndex(buildId: String, index: String): Boolean {
         logger.info("[$buildId|$index] Start to open the index")
@@ -655,7 +655,7 @@ class LogServiceESImpl constructor(
             )
         } while (searchResponse.hits.hits.isNotEmpty())
 
-        if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+        if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         return queryLogs
     }
 
@@ -745,11 +745,11 @@ class LogServiceESImpl constructor(
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED
+                queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (e: Exception) {
             logger.error("Query end logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
     }
@@ -838,17 +838,17 @@ class LogServiceESImpl constructor(
                 queryLogs.logs.add(logLine)
             }
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
-            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
             queryLogs.hasMore = logSize > queryLogs.logs.size
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED
+                queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (e: Exception) {
             logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
     }
@@ -965,11 +965,11 @@ class LogServiceESImpl constructor(
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED
+                queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (e: Exception) {
             logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
         }
@@ -1083,11 +1083,11 @@ class LogServiceESImpl constructor(
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED
+                queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (e: Exception) {
             logger.error("Query before logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
         }

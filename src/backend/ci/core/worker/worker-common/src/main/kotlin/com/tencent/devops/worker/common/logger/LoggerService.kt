@@ -63,6 +63,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
+@Suppress("MagicNumber", "TooManyFunctions")
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
@@ -137,8 +138,8 @@ object LoggerService {
             if (logMessages.isNotEmpty()) {
                 flush()
             }
-        } catch (t: Throwable) {
-            logger.warn("Fail to send the logger", t)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to send the logger", ignored)
         }
         logger.info("Finish the sending thread - (${uploadQueue.size})")
         true
@@ -173,6 +174,7 @@ object LoggerService {
         return future.get()
     }
 
+    @Suppress("NestedBlockDepth")
     fun stop() {
         try {
             logger.info("Start to stop the log service")
@@ -190,8 +192,8 @@ object LoggerService {
                 }
             }
             logger.info("Finish stopping the log service")
-        } catch (e: Exception) {
-            logger.error("Fail to stop log service for build", e)
+        } catch (ignored: Exception) {
+            logger.error("Fail to stop log service for build", ignored)
         }
     }
 
@@ -200,14 +202,18 @@ object LoggerService {
     fun addNormalLine(message: String) {
         var subTag: String? = null
         var realMessage = message
-        if (message.startsWith(LOG_SUBTAG_FLAG)) {
-            val list = message.removePrefix(LOG_SUBTAG_FLAG).split(LOG_SUBTAG_FLAG)
-            subTag = list.first()
-            realMessage = list.last()
+        if (message.contains(LOG_SUBTAG_FLAG)) {
+            val prefix = message.substringBefore(LOG_SUBTAG_FLAG)
+            val list = message.substringAfter(LOG_SUBTAG_FLAG).split(LOG_SUBTAG_FLAG)
+            if (list.isNotEmpty()) {
+                subTag = list.first()
+                realMessage = list.last()
+            }
             if (realMessage.startsWith(LOG_SUBTAG_FINISH_FLAG)) {
                 finishLog(elementId, jobId, executeCount, subTag)
                 realMessage = realMessage.removePrefix(LOG_SUBTAG_FINISH_FLAG)
             }
+            realMessage = prefix + realMessage
         }
 
         val logType = when {
