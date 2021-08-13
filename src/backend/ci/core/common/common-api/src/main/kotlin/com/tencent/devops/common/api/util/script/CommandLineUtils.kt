@@ -60,6 +60,7 @@ object CommandLineUtils {
             override fun processLine(line: String?, level: Int) {
                 if (line == null)
                     return
+                val line = String(line.toByteArray(charset("UTF-8")))
 
                 val tmpLine: String = SensitiveLineParser.onParseLine(prefix + line)
                 if (print2Logger) {
@@ -74,6 +75,7 @@ object CommandLineUtils {
                 if (line == null) {
                     return
                 }
+                val line = String(line.toByteArray(charset("UTF-8")))
 
                 val tmpLine: String = SensitiveLineParser.onParseLine(prefix + line)
                 if (print2Logger) {
