@@ -37,6 +37,7 @@ dependencies {
     api(project(":core:common:common-db"))
     api(project(":core:common:common-scm"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
+    api(project(":ext:tencent:common:common-kafka-tencent"))
     api(project(":ext:tencent:common:common-wechatwork"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":ext:tencent:gitci:api-gitci-tencent"))

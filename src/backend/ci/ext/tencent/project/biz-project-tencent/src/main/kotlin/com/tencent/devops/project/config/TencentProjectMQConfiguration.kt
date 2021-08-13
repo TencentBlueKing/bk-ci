@@ -32,6 +32,7 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.project.listener.ProjectEventListener
 import com.tencent.devops.project.listener.TencentProjectEventListener
 import com.tencent.devops.project.service.ProjectPaasCCService
+import com.tencent.devops.project.service.iam.IamV3Service
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -49,10 +50,12 @@ class TencentProjectMQConfiguration {
     fun projectEventListener(
         @Autowired projectPaasCCService: ProjectPaasCCService,
         @Autowired bsAuthTokenApi: BSAuthTokenApi,
-        @Autowired bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
+        @Autowired bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+        @Autowired(required = false) iamV3Service: IamV3Service?
     ): ProjectEventListener = TencentProjectEventListener(
         projectPaasCCService = projectPaasCCService,
         bsAuthTokenApi = bsAuthTokenApi,
-        bsPipelineAuthServiceCode = bsPipelineAuthServiceCode
+        bsPipelineAuthServiceCode = bsPipelineAuthServiceCode,
+        iamV3Service = iamV3Service
     )
 }

@@ -57,6 +57,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
+import com.tencent.devops.environment.dao.EnvShareProjectDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.AgentPipelineRefDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
@@ -117,7 +118,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val environmentPermissionService: EnvironmentPermissionService,
     private val upgradeService: UpgradeService,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val websocketService: NodeWebsocketService
+    private val websocketService: NodeWebsocketService,
+    private val envShareProjectDao: EnvShareProjectDao
 ) {
     fun getAgentDetail(userId: String, projectId: String, nodeHashId: String): ThirdPartyAgentDetail? {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
@@ -641,12 +643,35 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
     fun getAgnetByEnvName(projectId: String, envName: String): List<ThirdPartyAgent> {
         logger.info("[$projectId|$envName] Get the agents by env name")
+        // get shared project first
+        val sharedThridPartyAgentList = getSharedThirdPartyAgentList(projectId, envName)
+
         val envRecord = envDao.getByEnvName(dslContext = dslContext, projectId = projectId, envName = envName)
-        if (envRecord == null) {
+        if (envRecord == null && sharedThridPartyAgentList.isEmpty()) {
             logger.warn("[$projectId|$envName] The env is not exist")
             return emptyList()
         }
-        return getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId))
+
+        return (if (envRecord != null) {
+            getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId))
+        } else {
+            emptyList()
+        }).plus(sharedThridPartyAgentList)
+    }
+
+    private fun getSharedThirdPartyAgentList(projectId: String, envName: String): List<ThirdPartyAgent> {
+        val sharedEnvRecord = envShareProjectDao.get(dslContext, envName, projectId)
+        if (sharedEnvRecord.isEmpty()) {
+            return emptyList()
+        }
+        logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
+        val sharedThirdPartyAgents = mutableListOf<ThirdPartyAgent>()
+        sharedEnvRecord.forEach {
+            val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, envName) ?: return@forEach
+            sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(envRecord.envId)))
+        }
+        logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
+        return sharedThirdPartyAgents
     }
 
     fun getAgentByEnvId(projectId: String, envHashId: String): List<ThirdPartyAgent> {

@@ -27,14 +27,11 @@
 
 package com.tencent.devops.experience.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
@@ -61,14 +58,12 @@ import javax.ws.rs.core.Response
 class GroupService @Autowired constructor(
     private val dslContext: DSLContext,
     private val groupDao: GroupDao,
-    private val objectMapper: ObjectMapper,
-    private val bsAuthPermissionApi: AuthPermissionApi,
-    private val bsAuthResourceApi: AuthResourceApi,
     private val bsAuthProjectApi: AuthProjectApi,
     private val experienceServiceCode: ExperienceAuthServiceCode,
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val experienceGroupOuterDao: ExperienceGroupOuterDao,
-    private val experienceBaseService: ExperienceBaseService
+    private val experienceBaseService: ExperienceBaseService,
+    private val experiencePermissionService: ExperiencePermissionService
 ) {
 
     private val resourceType = AuthResourceType.EXPERIENCE_GROUP
@@ -80,7 +75,7 @@ class GroupService @Autowired constructor(
         limit: Int,
         returnPublic: Boolean
     ): Pair<Long, List<GroupSummaryWithPermission>> {
-        val groupPermissionListMap = filterGroup(
+        val groupPermissionListMap = experiencePermissionService.filterGroup(
             user = userId,
             projectId = projectId,
             authPermissions = setOf(AuthPermission.EDIT, AuthPermission.DELETE)
@@ -190,7 +185,12 @@ class GroupService @Autowired constructor(
             experienceGroupOuterDao.create(dslContext, groupId, it)
         }
 
-        createResource(userId = userId, projectId = projectId, groupId = groupId, groupName = group.name)
+        experiencePermissionService.createGroupResource(
+            userId = userId,
+            projectId = projectId,
+            groupId = groupId,
+            groupName = group.name
+        )
     }
 
     fun get(userId: String, projectId: String, groupHashId: String): Group {
@@ -226,7 +226,7 @@ class GroupService @Autowired constructor(
 
     fun edit(userId: String, projectId: String, groupHashId: String, group: GroupUpdate) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
-        validatePermission(
+        experiencePermissionService.validateGroupPermission(
             userId = userId,
             projectId = projectId,
             groupId = groupId,
@@ -271,12 +271,16 @@ class GroupService @Autowired constructor(
             experienceGroupOuterDao.create(dslContext, groupId, it)
         }
 
-        modifyResource(projectId = projectId, groupId = groupId, groupName = group.name)
+        experiencePermissionService.modifyGroupResource(
+            projectId = projectId,
+            groupId = groupId,
+            groupName = group.name
+        )
     }
 
     fun delete(userId: String, projectId: String, groupHashId: String) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
-        validatePermission(
+        experiencePermissionService.validateGroupPermission(
             userId = userId,
             projectId = projectId,
             groupId = groupId,
@@ -284,87 +288,8 @@ class GroupService @Autowired constructor(
             message = "用户在项目($projectId)没有体验组($groupHashId)的删除权限"
         )
 
-        deleteResource(projectId, groupId)
+        experiencePermissionService.deleteGroupResource(projectId, groupId)
         groupDao.delete(dslContext, groupId)
         experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
-    }
-
-    private fun validatePermission(
-        userId: String,
-        projectId: String,
-        groupId: Long,
-        authPermission: AuthPermission,
-        message: String
-    ) {
-        if (!bsAuthPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = experienceServiceCode,
-                resourceType = resourceType,
-                projectCode = projectId,
-                resourceCode = HashUtil.encodeLongId(groupId),
-                permission = authPermission
-            )
-        ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias
-            )
-            throw ErrorCodeException(
-                statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ExperienceMessageCode.USER_NEED_EXP_GROUP_X_PERMISSION,
-                defaultMessage = message,
-                params = arrayOf(permissionMsg)
-            )
-        }
-    }
-
-    private fun createResource(userId: String, projectId: String, groupId: Long, groupName: String) {
-        bsAuthResourceApi.createResource(
-            user = userId,
-            serviceCode = experienceServiceCode,
-            resourceType = resourceType,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(groupId),
-            resourceName = groupName
-        )
-    }
-
-    private fun modifyResource(projectId: String, groupId: Long, groupName: String) {
-        bsAuthResourceApi.modifyResource(
-            serviceCode = experienceServiceCode,
-            resourceType = resourceType,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(groupId),
-            resourceName = groupName
-        )
-    }
-
-    private fun deleteResource(projectId: String, groupId: Long) {
-        bsAuthResourceApi.deleteResource(
-            serviceCode = experienceServiceCode,
-            resourceType = resourceType,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(groupId)
-        )
-    }
-
-    fun filterGroup(
-        user: String,
-        projectId: String,
-        authPermissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<Long>> {
-        val permissionResourceMap = bsAuthPermissionApi.getUserResourcesByPermissions(
-            user = user,
-            serviceCode = experienceServiceCode,
-            resourceType = resourceType,
-            projectCode = projectId,
-            permissions = authPermissions,
-            supplier = null
-        )
-        val map = mutableMapOf<AuthPermission, List<Long>>()
-        permissionResourceMap.forEach { (key, value) ->
-            map[key] = value.map { HashUtil.decodeIdToLong(it) }
-        }
-        return map
     }
 }

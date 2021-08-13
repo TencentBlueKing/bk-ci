@@ -23,27 +23,42 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.common.auth.api
+package com.tencent.devops.process.api.service
 
-enum class AuthV3ResourceApi(val value: String, val oldType: AuthResourceType) {
-    PIPELINE("pipeline", AuthResourceType.PIPELINE_DEFAULT),
-    ENV_NODE("env_node", AuthResourceType.ENVIRONMENT_ENV_NODE),
-    EXPERIENCE_TASK("experience_task", AuthResourceType.EXPERIENCE_TASK),
-    EXPERIENCE_GROUP("experience_group", AuthResourceType.EXPERIENCE_GROUP),
-    QUALITY_RULE("quality_rule", AuthResourceType.QUALITY_RULE),
-    QUALITY_GROUP("quality_group", AuthResourceType.QUALITY_GROUP),
-    WETEST_TASK("wetest_task", AuthResourceType.WETEST_TASK),
-    WETEST_EMAIL_GROUP("wetest_group", AuthResourceType.WETEST_EMAIL_GROUP);
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-    companion object {
-        fun get(value: String): AuthResourceType {
-            AuthV3ResourceApi.values().forEach {
-                if (value == it.value) return it.oldType
-            }
-            throw IllegalArgumentException("No enum for constant $value")
-        }
-    }
+@Api(tags = ["SERVICE_PIPELINE"], description = "服务-流水线资源")
+@Path("/service/pipelines/stream")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceTXPipelineResource {
+
+    @ApiOperation("导出流水线yaml,gitci")
+    @GET
+    @Path("/pipeline/{pipelineId}/projects/{projectId}/yaml/gitci")
+    fun exportPipelineGitCI(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<String>
 }

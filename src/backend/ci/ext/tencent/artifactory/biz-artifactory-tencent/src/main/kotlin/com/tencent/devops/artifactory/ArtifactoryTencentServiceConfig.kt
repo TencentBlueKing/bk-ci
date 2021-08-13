@@ -33,9 +33,10 @@ import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.service.bkrepo.GitCIBkRepoDownloadService
-import com.tencent.devops.artifactory.service.permission.DefaultPipelineService
-import com.tencent.devops.artifactory.service.permission.GitCIPipelineService
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.artifactory.service.permission.DefaultPipelineServiceImpl
+import com.tencent.devops.artifactory.service.permission.GitCIPipelineServiceImpl
+import com.tencent.devops.artifactory.service.permission.TxV3ArtPipelineServiceImpl
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
@@ -50,7 +51,7 @@ import org.springframework.context.annotation.Primary
 
 @Suppress("ALL")
 @Configuration
-class TencentServiceConfig {
+class ArtifactoryTencentServiceConfig {
 
     /**
      *  下载链接服务
@@ -105,12 +106,8 @@ class TencentServiceConfig {
         bkAuthPermissionApi: BSAuthPermissionApi,
         authProjectApi: BSAuthProjectApi,
         artifactoryAuthServiceCode: BSRepoAuthServiceCode
-    ) = DefaultPipelineService(
-        client = client,
-        pipelineAuthServiceCode = pipelineAuthServiceCode,
-        bkAuthPermissionApi = bkAuthPermissionApi,
-        authProjectApi = authProjectApi,
-        artifactoryAuthServiceCode = artifactoryAuthServiceCode
+    ) = DefaultPipelineServiceImpl(
+        client, pipelineAuthServiceCode, bkAuthPermissionApi, authProjectApi, artifactoryAuthServiceCode
     )
 
     @Bean
@@ -118,5 +115,12 @@ class TencentServiceConfig {
     fun gitCIPipelineService(
         client: Client,
         tokenCheckService: ClientTokenService
-    ) = GitCIPipelineService(client, tokenCheckService)
+    ) = GitCIPipelineServiceImpl(client, tokenCheckService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun txV3ArtPipelineServiceImpl(
+        client: Client,
+        tokenCheckService: ClientTokenService
+    ) = TxV3ArtPipelineServiceImpl(client, tokenCheckService)
 }
