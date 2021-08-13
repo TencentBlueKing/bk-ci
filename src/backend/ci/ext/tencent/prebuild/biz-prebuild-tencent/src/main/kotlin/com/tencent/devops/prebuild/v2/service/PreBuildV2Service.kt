@@ -680,10 +680,13 @@ class PreBuildV2Service @Autowired constructor(
             // runs-on存在3种结构，String、标签的话是数组、T
             if (preJob.runsOn == null
             ) {
-                if (preJob.runsOn!! is String ||
-                    preJob.runsOn!! is Array<*> || preJob.runsOn!! is List<*>
-                )
-                    return@forEach
+                return@forEach
+            }
+
+            if (preJob.runsOn!! is String ||
+                preJob.runsOn!! is Array<*> || preJob.runsOn!! is List<*>
+            ) {
+                return@forEach
             }
 
             val (passed, errMsg) = ScriptYmlUtils.validate(
