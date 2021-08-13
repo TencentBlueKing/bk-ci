@@ -180,22 +180,21 @@ class ExperienceBaseService @Autowired constructor(
      * 判断用户是否能体验
      */
     fun userCanExperience(userId: String, experienceId: Long, isOuter: Boolean = false): Boolean {
-        val isPublic = lazy { isPublic(experienceId) }
+        val isPublic = lazy { isPublic(experienceId, isOuter) }
         val isInPrivate = lazy { isInPrivate(experienceId, userId, isOuter) }
 
         return isPublic.value || isInPrivate.value
     }
 
-    fun isPublic(experienceId: Long) =
-        experiencePublicDao.countByRecordId(dslContext, experienceId, true, LocalDateTime.now())?.value1() ?: 0 > 0
+    fun isPublic(experienceId: Long, isOuter: Boolean) = !isOuter &&
+            (experiencePublicDao.countByRecordId(dslContext, experienceId, true, LocalDateTime.now())?.value1()
+                ?: 0) > 0
 
     fun isPrivate(experienceId: Long, isOuter: Boolean = false): Boolean {
         return experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId)
-            .filterNot { it.value1() == ExperienceConstant.PUBLIC_GROUP }.count() > 0 ||
-                (if (isOuter) experienceOuterDao.countByRecordId(
-                    dslContext,
-                    experienceId
-                ) else experienceInnerDao.countByRecordId(dslContext, experienceId)) > 0
+            .filterNot { it.value1() == ExperienceConstant.PUBLIC_GROUP }.isNotEmpty() ||
+                (if (isOuter) experienceOuterDao.countByRecordId(dslContext, experienceId)
+                else experienceInnerDao.countByRecordId(dslContext, experienceId)) > 0
     }
 
     fun isInPrivate(experienceId: Long, userId: String, isOuter: Boolean = false): Boolean {

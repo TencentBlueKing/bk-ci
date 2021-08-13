@@ -42,9 +42,21 @@ class GitCIPermissionProjectServiceImpl @Autowired constructor(
     val projectInfoService: GitCiProjectInfoService
 ) : PermissionProjectService {
 
-    // GitCI权限场景不会出现次调用, 故做默认实现
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
-        return emptyList()
+        val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
+
+        val gitProjectMembers = client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
+            gitProjectId = gitProjectId,
+            page = 0,
+            pageSize = 1000,
+            search = ""
+        ).data
+        logger.info("$projectCode project member  $gitProjectMembers")
+        if (gitProjectMembers.isNullOrEmpty()) {
+            return emptyList()
+        }
+
+        return gitProjectMembers.map { it.username }
     }
 
     override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {

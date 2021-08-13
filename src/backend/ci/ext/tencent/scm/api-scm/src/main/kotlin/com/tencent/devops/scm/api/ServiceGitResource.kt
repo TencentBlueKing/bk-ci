@@ -46,7 +46,6 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
@@ -55,6 +54,7 @@ import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
 import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

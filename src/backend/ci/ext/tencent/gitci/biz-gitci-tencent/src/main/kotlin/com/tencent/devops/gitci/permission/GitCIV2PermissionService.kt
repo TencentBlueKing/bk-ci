@@ -78,7 +78,7 @@ class GitCIV2PermissionService @Autowired constructor(
         val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(null) ?: "",
-            action = WEB_CHECK,
+            action = AuthPermission.WEB_CHECK.value,
             projectCode = projectId,
             resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
         ).data ?: false
@@ -127,6 +127,5 @@ class GitCIV2PermissionService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIV2PermissionService::class.java)
-        const val WEB_CHECK = "webcheck"
     }
 }

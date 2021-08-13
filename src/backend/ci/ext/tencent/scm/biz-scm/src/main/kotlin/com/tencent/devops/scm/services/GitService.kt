@@ -392,8 +392,14 @@ class GitService @Autowired constructor(
                     MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), "")
                 )
                 .build()
-
             OkhttpUtils.doHttp(request).use { response ->
+                logger.info("[url=$tokenUrl]|getToken($gitProjectId) with response=$response")
+                if (!response.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${response.code()})${response.message()}"
+                    )
+                }
                 val data = response.body()!!.string()
                 return objectMapper.readValue(data, GitToken::class.java)
             }
@@ -630,11 +636,10 @@ class GitService @Autowired constructor(
             .build()
         logger.info("request: $request Start to create file")
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
             if (!it.isSuccessful) {
                 throw CustomException(
                     status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "fail to create file with: $url(${it.code()}): ${it.message()}"
+                    message = "(${it.code()})${it.message()}"
                 )
             }
             return true

@@ -50,9 +50,6 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
-import com.tencent.devops.common.auth.api.BSAuthResourceApi
-import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -99,6 +96,7 @@ import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
 @Service
+@SuppressWarnings("LongParameterList", "LargeClass", "TooManyFunctions", "LongMethod", "TooGenericExceptionThrown")
 class ExperienceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experienceDao: ExperienceDao,
@@ -112,10 +110,8 @@ class ExperienceService @Autowired constructor(
     private val wechatWorkService: WechatWorkService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val bsAuthPermissionApi: BSAuthPermissionApi,
-    private val bsAuthResourceApi: BSAuthResourceApi,
-    private val experienceServiceCode: BSExperienceAuthServiceCode,
-    private val experienceBaseService: ExperienceBaseService
+    private val experienceBaseService: ExperienceBaseService,
+    private val experiencePermissionService: ExperiencePermissionService
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile("[,;]")
@@ -162,7 +158,11 @@ class ExperienceService @Autowired constructor(
 
         val experienceList = experienceDao.list(dslContext, projectId, searchTime, online)
         val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
-        val experiencePermissionListMap = filterExperience(userId, projectId, setOf(AuthPermission.EDIT))
+        val experiencePermissionListMap = experiencePermissionService.filterExperience(
+            user = userId,
+            projectId = projectId,
+            authPermissions = setOf(AuthPermission.EDIT)
+        )
 
         return experienceList.map {
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
@@ -185,7 +185,7 @@ class ExperienceService @Autowired constructor(
         }
     }
 
-    fun get(userId: String, projectId: String, experienceHashId: String, checkPermission: Boolean = true): Experience {
+    fun get(userId: String, experienceHashId: String, checkPermission: Boolean = true): Experience {
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
 
@@ -249,26 +249,6 @@ class ExperienceService @Autowired constructor(
             categoryId = experienceRecord.category,
             productOwner = objectMapper.readValue(experienceRecord.productOwner)
         )
-    }
-
-    private fun filterExperience(
-        user: String,
-        projectId: String,
-        authPermissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<Long>> {
-        val permissionResourceMap = bsAuthPermissionApi.getUserResourcesByPermissions(
-            user = user,
-            serviceCode = experienceServiceCode,
-            resourceType = taskResourceType,
-            projectCode = projectId,
-            permissions = authPermissions,
-            supplier = null
-        )
-        val map = mutableMapOf<AuthPermission, List<Long>>()
-        permissionResourceMap.forEach { (key, value) ->
-            map[key] = value.map { HashUtil.decodeIdToLong(it) }
-        }
-        return map
     }
 
     fun create(userId: String, projectId: String, experience: ExperienceCreate) {
@@ -391,6 +371,11 @@ class ExperienceService @Autowired constructor(
             }
         }
 
+        val endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault())
+            .withHour(23)
+            .withMinute(59)
+            .withSecond(0)
+
         val experienceId = experienceDao.create(
             dslContext = dslContext,
             projectId = projectId,
@@ -402,7 +387,7 @@ class ExperienceService @Autowired constructor(
             bundleIdentifier = appBundleIdentifier,
             version = appVersion,
             remark = experience.remark,
-            endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
+            endDate = endDate,
             experienceGroups = "[]",
             innerUsers = "[]",
             notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
@@ -448,7 +433,12 @@ class ExperienceService @Autowired constructor(
             )
         }
 
-        createTaskResource(userId, projectId, experienceId, "${experience.name}（$appVersion）")
+        experiencePermissionService.createTaskResource(
+            userId,
+            projectId,
+            experienceId,
+            "${experience.name}（$appVersion）"
+        )
         sendNotification(experienceId)
 
         return experienceId
@@ -486,12 +476,17 @@ class ExperienceService @Autowired constructor(
         val experienceRecord = getExperienceId4Update(experienceHashId, userId, projectId)
         val isPublic = isPublicGroupAndCheck(experience.experienceGroups)
 
+        val endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault())
+            .withHour(23)
+            .withMinute(59)
+            .withSecond(0)
+
         experienceDao.update(
             dslContext = dslContext,
             id = experienceRecord.id,
             name = experience.name,
             remark = experience.remark,
-            endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
+            endDate = endDate,
             experienceGroups = "[]",
             innerUsers = "[]",
             notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
@@ -569,7 +564,7 @@ class ExperienceService @Autowired constructor(
         projectId: String
     ): TExperienceRecord {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        validateTaskPermission(
+        experiencePermissionService.validateTaskPermission(
             user = userId,
             projectId = projectId,
             experienceId = experienceId,
@@ -585,12 +580,12 @@ class ExperienceService @Autowired constructor(
             )
     }
 
-    fun externalUrl(userId: String, projectId: String, experienceHashId: String): String {
+    fun externalUrl(userId: String, experienceHashId: String): String {
         checkExperienceAndGetId(experienceHashId, userId)
         return experienceDownloadService.getQrCodeUrl(experienceHashId)
     }
 
-    fun downloadUrl(userId: String, projectId: String, experienceHashId: String): String {
+    fun downloadUrl(userId: String, experienceHashId: String): String {
         val experienceId = checkExperienceAndGetId(experienceHashId, userId)
         return experienceDownloadService.getInnerDownloadUrl(userId, experienceId)
     }
@@ -658,7 +653,8 @@ class ExperienceService @Autowired constructor(
         )
 
         return ExperienceCreateResp(
-            url = getShortExternalUrl(experienceId)
+            url = getShortExternalUrl(experienceId),
+            experienceHashId = HashUtil.encodeLongId(experienceId)
         )
     }
 
@@ -743,46 +739,6 @@ class ExperienceService @Autowired constructor(
                 wechatWorkService.sendRichText(message)
             }
         }
-    }
-
-    private fun validateTaskPermission(
-        user: String,
-        projectId: String,
-        experienceId: Long,
-        authPermission: AuthPermission,
-        message: String
-    ) {
-        if (!bsAuthPermissionApi.validateUserResourcePermission(
-                user = user,
-                serviceCode = experienceServiceCode,
-                resourceType = taskResourceType,
-                projectCode = projectId,
-                resourceCode = HashUtil.encodeLongId(experienceId),
-                permission = authPermission
-            )
-        ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias
-            )
-            throw ErrorCodeException(
-                statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION,
-                defaultMessage = message,
-                params = arrayOf(permissionMsg)
-            )
-        }
-    }
-
-    private fun createTaskResource(user: String, projectId: String, experienceId: Long, experienceName: String) {
-        bsAuthResourceApi.createResource(
-            user = user,
-            serviceCode = experienceServiceCode,
-            resourceType = taskResourceType,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(experienceId),
-            resourceName = experienceName
-        )
     }
 
     private fun makeSha1(artifactoryType: ArtifactoryType, path: String): String {

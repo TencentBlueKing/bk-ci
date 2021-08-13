@@ -106,7 +106,7 @@ jooq {
                         }
 
                         if (mysqlURL == null) {
-                            println("use default properties.")
+                            println("use default mysql database.")
                             mysqlURL = project.extra["DB_HOST"]?.toString()
                             mysqlUser = project.extra["DB_USERNAME"]?.toString()
                             mysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
