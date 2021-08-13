@@ -93,8 +93,8 @@ class AgentLessMQConfiguration @Autowired constructor() {
             rabbitAdmin = rabbitAdmin,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 50,
+            concurrency = 50,
+            maxConcurrency = 100,
             adapter = adapter,
             prefetchCount = 1
         )
@@ -128,8 +128,8 @@ class AgentLessMQConfiguration @Autowired constructor() {
             rabbitAdmin = rabbitAdmin,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 50,
+            concurrency = 50,
+            maxConcurrency = 100,
             adapter = adapter,
             prefetchCount = 1
         )
