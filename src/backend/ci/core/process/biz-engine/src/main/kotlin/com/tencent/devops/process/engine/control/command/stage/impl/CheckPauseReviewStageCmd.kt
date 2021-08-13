@@ -95,10 +95,8 @@ class CheckPauseReviewStageCmd(
     private fun saveStageReviewParams(stage: PipelineBuildStage) {
         val reviewVariables = mutableMapOf<String, String>()
         // # 4531 遍历全部审核组的参数，后序覆盖前序的同名变量
-        stage.checkIn?.reviewGroups?.forEach { group ->
-            group.params?.forEach {
-                reviewVariables[it.key] = it.value.toString()
-            }
+        stage.checkIn?.reviewParams?.forEach {
+            reviewVariables[it.key] = it.value.toString()
         }
         if (stage.checkIn?.reviewParams?.isNotEmpty() == true) {
             buildVariableService.batchUpdateVariable(
