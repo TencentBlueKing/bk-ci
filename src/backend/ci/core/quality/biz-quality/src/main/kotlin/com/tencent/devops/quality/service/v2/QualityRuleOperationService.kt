@@ -31,7 +31,6 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.quality.tables.records.TQualityRuleOperationRecord
 import com.tencent.devops.quality.dao.v2.QualityRuleOperationDao
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -88,11 +87,7 @@ class QualityRuleOperationService @Autowired constructor(
         )
     }
 
-    fun serviceGet(dslContext: DSLContext, ruleId: Long): Result<TQualityRuleOperationRecord> {
-        return serviceList(dslContext, listOf(ruleId))
-    }
-
-    fun serviceList(dslContext: DSLContext, ruleId: Collection<Long>): Result<TQualityRuleOperationRecord> {
+    fun serviceGet(dslContext: DSLContext, ruleId: Long): TQualityRuleOperationRecord {
         return ruleOperationDao.get(dslContext, ruleId)
     }
 }

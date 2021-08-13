@@ -160,7 +160,6 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation.Companion.convertToSymbol
-import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
@@ -224,19 +223,31 @@ class YamlBuildV2 @Autowired constructor(
         )
         try {
             triggerLock.lock()
+            val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)!!
+            // 优先创建流水线为了绑定红线
+            if (pipeline.pipelineId.isBlank()) {
+                savePipeline(
+                    pipeline = pipeline,
+                    event = event,
+                    gitCIBasicSetting = gitBasicSetting,
+                    model = creatTriggerModel(gitBasicSetting)
+                )
+            }
             // 如果事件未传gitBuildId说明是不做触发只做流水线保存
             return if (gitBuildId != null) {
                 startBuildPipeline(
                     pipeline = pipeline,
                     event = event,
                     yaml = yaml,
-                    gitBuildId = gitBuildId
+                    gitBuildId = gitBuildId,
+                    gitBasicSetting = gitBasicSetting
                 )
             } else {
                 savePipelineModel(
                     pipeline = pipeline,
                     event = event,
-                    yaml = yaml
+                    yaml = yaml,
+                    gitBasicSetting = gitBasicSetting
                 )
                 null
             }
@@ -283,17 +294,39 @@ class YamlBuildV2 @Autowired constructor(
         }
     }
 
+    private fun creatTriggerModel(gitBasicSetting: GitCIBasicSetting) = Model(
+        name = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
+        desc = "",
+        stages = listOf(
+            Stage(
+                id = "stage-0",
+                name = "Stage-0",
+                containers = listOf(
+                    TriggerContainer(
+                        id = "0",
+                        name = "构建触发",
+                        elements = listOf(
+                            ManualTriggerElement(
+                                name = "手动触发",
+                                id = "T-1-1-1"
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+
     fun startBuildPipeline(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         yaml: ScriptBuildYaml,
-        gitBuildId: Long
+        gitBuildId: Long,
+        gitBasicSetting: GitCIBasicSetting
     ): BuildId? {
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
-        val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)!!
-
         val model = createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
@@ -395,11 +428,11 @@ class YamlBuildV2 @Autowired constructor(
                     threshold = enNameAndthreshold.last().trim()
                 )
             }
-            val opList = mutableListOf<RuleCreateRequest.CreateRequestOp>()
+            val opList = mutableListOf<RuleCreateRequestV3.CreateRequestOp>()
             gate.notifyOnFail.forEach NotifyEach@{ notify ->
                 val type = GitCINotifyType.getNotifyByYaml(notify.type) ?: return@NotifyEach
                 opList.add(
-                    RuleCreateRequest.CreateRequestOp(
+                    RuleCreateRequestV3.CreateRequestOp(
                         operation = RuleOperation.END,
                         notifyTypeList = listOf(type),
                         // 通知接受人未填缺省触发人
@@ -420,14 +453,8 @@ class YamlBuildV2 @Autowired constructor(
                     desc = "",
                     indicators = indicators,
                     position = position,
-                    range = null,
+                    range = listOf(pipeline.pipelineId),
                     templateRange = null,
-                    operation = RuleOperation.END,
-                    notifyTypeList = null,
-                    notifyGroupList = null,
-                    notifyUserList = null,
-                    auditUserList = null,
-                    auditTimeoutMinutes = null,
                     gatewayId = null,
                     opList = opList
                 )
@@ -455,13 +482,12 @@ class YamlBuildV2 @Autowired constructor(
     fun savePipelineModel(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
-        yaml: ScriptBuildYaml
+        yaml: ScriptBuildYaml,
+        gitBasicSetting: GitCIBasicSetting
     ) {
         logger.info("Git request save pipeline, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
-        val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)!!
-
         val model = createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request , pipeline:$pipeline, model: $model")
         savePipeline(pipeline, event, gitBasicSetting, model)
