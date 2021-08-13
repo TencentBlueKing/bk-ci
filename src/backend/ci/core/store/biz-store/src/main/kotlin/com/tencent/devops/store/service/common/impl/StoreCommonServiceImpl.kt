@@ -109,14 +109,19 @@ class StoreCommonServiceImpl @Autowired constructor(
      * 获取正确的升级版本号
      */
     override fun getRequireVersion(
+        reqVersion: String,
         dbVersion: String,
         releaseType: ReleaseTypeEnum
     ): List<String> {
         var requireVersionList = listOf(INIT_VERSION)
-        val dbVersionParts = dbVersion.split(".")
-        val firstVersionPart = dbVersionParts[0]
-        val secondVersionPart = dbVersionParts[1]
-        val thirdVersionPart = dbVersionParts[2]
+        if (dbVersion.isBlank()) {
+            return requireVersionList
+        }
+        val version = if (releaseType != ReleaseTypeEnum.HIS_VERSION_UPGRADE) dbVersion else reqVersion
+        val versionParts = version.split(".")
+        val firstVersionPart = versionParts[0]
+        val secondVersionPart = versionParts[1]
+        val thirdVersionPart = versionParts[2]
         when (releaseType) {
             ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE -> {
                 requireVersionList = listOf("${firstVersionPart.toInt() + 1}.0.0")
@@ -131,9 +136,10 @@ class StoreCommonServiceImpl @Autowired constructor(
                 requireVersionList = listOf(dbVersion)
             }
             ReleaseTypeEnum.HIS_VERSION_UPGRADE -> {
+                val dbVersionParts = dbVersion.split(".")
                 requireVersionList = listOf(
-                    "$firstVersionPart.${secondVersionPart.toInt() + 1}.0",
-                    "$firstVersionPart.$secondVersionPart.${thirdVersionPart.toInt() + 1}"
+                    "${dbVersionParts[0]}.${secondVersionPart.toInt() + 1}.0",
+                    "${dbVersionParts[0]}.$secondVersionPart.${thirdVersionPart.toInt() + 1}"
                 )
             }
             else -> {

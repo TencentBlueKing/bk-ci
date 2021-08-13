@@ -51,6 +51,7 @@ interface StoreCommonService {
      * 获取正确的升级版本号
      */
     fun getRequireVersion(
+        reqVersion: String,
         dbVersion: String,
         releaseType: ReleaseTypeEnum
     ): List<String>

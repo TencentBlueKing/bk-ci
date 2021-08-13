@@ -141,6 +141,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                 listOf(dbVersion)
             } else storeCommonService.getRequireVersion(
+                reqVersion = version,
                 dbVersion = dbVersion,
                 releaseType = requireReleaseType
             )

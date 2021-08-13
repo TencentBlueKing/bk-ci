@@ -369,10 +369,13 @@ abstract class ImageReleaseService {
         val requireVersionList =
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                 listOf(dbVersion)
-            } else storeCommonService.getRequireVersion(
-                dbVersion,
-                releaseType
-            )
+            } else {
+                storeCommonService.getRequireVersion(
+                    reqVersion = version,
+                    dbVersion = dbVersion,
+                    releaseType = releaseType
+                )
+            }
         if (!requireVersionList.contains(version)) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
