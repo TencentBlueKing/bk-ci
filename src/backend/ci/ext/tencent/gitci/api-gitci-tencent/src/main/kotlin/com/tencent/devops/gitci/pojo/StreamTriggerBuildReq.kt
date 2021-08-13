@@ -25,23 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-util"))
-    api(project(":core:quality:api-quality"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:openapi:api-openapi"))
-    api(project(":core:store:api-store"))
-    api(project(":core:store:api-store"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":core:process:api-process"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":core:artifactory:api-artifactory-push"))
-    api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
-    api(project(":ext:tencent:gitci:api-gitci-tencent"))
-    api(project(":core:auth:api-auth"))
-}
+package com.tencent.devops.gitci.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("StreamTriggerBuild请求")
+data class StreamTriggerBuildReq(
+    @ApiModelProperty("分支")
+    val branch: String,
+    @ApiModelProperty("Custom commit message")
+    val customCommitMsg: String?,
+    @ApiModelProperty("yaml")
+    val yaml: String?,
+    @ApiModelProperty("描述")
+    val description: String?,
+    @ApiModelProperty("用户选择的触发CommitId")
+    val commitId: String? = null
+)

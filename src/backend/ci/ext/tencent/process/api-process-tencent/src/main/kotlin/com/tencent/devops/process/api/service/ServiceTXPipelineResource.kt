@@ -25,23 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-util"))
-    api(project(":core:quality:api-quality"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:openapi:api-openapi"))
-    api(project(":core:store:api-store"))
-    api(project(":core:store:api-store"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":core:process:api-process"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":core:artifactory:api-artifactory-push"))
-    api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
-    api(project(":ext:tencent:gitci:api-gitci-tencent"))
-    api(project(":core:auth:api-auth"))
+package com.tencent.devops.process.api.service
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_PIPELINE"], description = "服务-流水线资源")
+@Path("/service/pipelines/stream")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceTXPipelineResource {
+
+    @ApiOperation("导出流水线yaml,gitci")
+    @GET
+    @Path("/pipeline/{pipelineId}/projects/{projectId}/yaml/gitci")
+    fun exportPipelineGitCI(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<String>
 }
