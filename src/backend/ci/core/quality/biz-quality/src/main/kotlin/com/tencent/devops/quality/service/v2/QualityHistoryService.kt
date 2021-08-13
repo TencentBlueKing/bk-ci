@@ -57,6 +57,7 @@ import java.time.format.DateTimeFormatter
 class QualityHistoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val ruleService: QualityRuleService,
+    private val qualityRuleBuildHisService: QualityRuleBuildHisService,
     private val historyDao: HistoryDao,
     private val client: Client,
     private val objectMapper: ObjectMapper
@@ -351,21 +352,21 @@ class QualityHistoryService @Autowired constructor(
         return Pair(count, list)
     }
 
-    fun listInterceptHistoryForPipeline(
+    fun listInterceptHistoryForBuildHis(
         userId: String,
         projectId: String,
         pipelineId: String?,
         buildId: String?,
         ruleHashIds: Set<String>
     ): List<RuleInterceptHistory> {
-        val ruleIds = ruleHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
+        val ruleBuildIds = ruleHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
 
         logger.info("start to list intercept history for pipeline: " +
-            "$projectId, $pipelineId, $buildId, ${ruleIds.firstOrNull()}")
+            "$projectId, $pipelineId, $buildId, ${ruleBuildIds.firstOrNull()}")
 
-        val ruleIdToNameMap = ruleService.serviceListRuleByIds(projectId = projectId, ruleIds = ruleIds)
+        val ruleIdToNameMap = qualityRuleBuildHisService.list(ruleBuildIds)
             .map { it.hashId to it.name }.toMap()
-        val recordList = batchServiceList(projectId, pipelineId, buildId, ruleIds,
+        val recordList = batchServiceList(projectId, pipelineId, buildId, ruleBuildIds,
             null, null, null, null, null)
         return recordList.map {
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)

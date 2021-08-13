@@ -82,7 +82,7 @@ class QualityRuleBuildHisService constructor(
         }
     }
 
-    fun list(ruleBuildIds: List<Long>): List<QualityRule> {
+    fun list(ruleBuildIds: Collection<Long>): List<QualityRule> {
         logger.info("start to check rule in his: $ruleBuildIds")
         val allRule = qualityRuleBuildHisDao.list(dslContext, ruleBuildIds)
 
@@ -129,7 +129,7 @@ class QualityRuleBuildHisService constructor(
                 opList = if (it.operationList.isNullOrBlank()) {
                     listOf()
                 } else {
-                    JsonUtil.to(it.operationList, object : TypeReference<List<QualityRule.RuleOp>>(){})
+                    JsonUtil.to(it.operationList, object : TypeReference<List<QualityRule.RuleOp>>() {})
                 }
             )
             rule

@@ -85,7 +85,7 @@ class UserQualityInterceptResourceImpl @Autowired constructor(
         buildId: String?,
         ruleHashIds: Set<String>
     ): Result<List<RuleInterceptHistory>> {
-        return Result(historyService.listInterceptHistoryForPipeline(
+        return Result(historyService.listInterceptHistoryForBuildHis(
             userId, projectId, pipelineId, buildId, ruleHashIds)
         )
     }
