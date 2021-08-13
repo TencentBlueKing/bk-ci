@@ -54,7 +54,7 @@ class DefaultDeptServiceImpl : DeptService {
         return emptyList()
     }
 
-    override fun getUserParentDept(userId: String): Int? {
+    override fun getUserParentDept(userId: String): Int {
         return 0
     }
 }

@@ -197,7 +197,7 @@ class AuthDeptServiceImpl @Autowired constructor(
         }
     }
 
-    override fun getUserParentDept(userId: String): Int? {
+    override fun getUserParentDept(userId: String): Int {
         val deptSearch = SearchProfileDeptEntity(
             id = userId,
             with_family = true,
