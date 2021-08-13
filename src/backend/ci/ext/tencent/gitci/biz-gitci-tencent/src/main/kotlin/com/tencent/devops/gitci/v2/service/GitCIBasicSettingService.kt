@@ -192,6 +192,19 @@ class GitCIBasicSettingService @Autowired constructor(
         return count
     }
 
+    fun refreshSetting(gitProjectId: Long) {
+        val projectInfo = requestGitProjectInfo(gitProjectId)
+        if (projectInfo != null) gitCIBasicSettingDao.updateInfoSetting(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            gitProjectName = projectInfo.name,
+            url = projectInfo.gitSshUrl ?: "",
+            homePage = projectInfo.homepage ?: "",
+            httpUrl = projectInfo.gitHttpsUrl ?: "",
+            sshUrl = projectInfo.gitSshUrl ?: ""
+        )
+    }
+
     private fun refresh(it: TGitBasicSettingRecord) {
         try {
             val projectResult = requestGitProjectInfo(it.id)
@@ -213,13 +226,14 @@ class GitCIBasicSettingService @Autowired constructor(
     }
 
     private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
-        val accessToken = try {
-            client.getScm(ServiceGitCiResource::class).getToken(gitProjectId.toString()).data!!.accessToken
-        } catch (e: Exception) {
+        return try {
+            val accessToken =
+                client.getScm(ServiceGitCiResource::class).getToken(gitProjectId.toString()).data!!.accessToken
+            client.getScm(ServiceGitCiResource::class)
+                .getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true).data
+        } catch (e: Throwable) {
             logger.error("requestGitProjectInfo, msg: ${e.message}")
             return null
         }
-        return client.getScm(ServiceGitCiResource::class)
-            .getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true).data
     }
 }
