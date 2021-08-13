@@ -184,7 +184,7 @@ class DockerHostClient @Autowired constructor(
             pipelineId = dispatchMessage.pipelineId,
             vmSeq = dispatchMessage.vmSeqId,
             dockerIp = dockerIp,
-            dockerResourceOptionsId = dispatchType.dockerResourceOptionId
+            dockerResourceOptionsId = dispatchType.performanceConfigId
         )
 
         dockerBuildStart(dockerIp, dockerHostPort, requestBody, driftIpInfo)
@@ -500,10 +500,10 @@ class DockerHostClient @Autowired constructor(
     }
 
     private fun getDockerResource(dockerDispatchType: DockerDispatchType): DockerResourceOptionsVO {
-        if (dockerDispatchType.dockerResourceOptionId != 0) {
+        if (dockerDispatchType.performanceConfigId != 0) {
             val dockerResourceOptionRecord = dockerResourceOptionsDao.get(
                 dslContext = dslContext,
-                id = dockerDispatchType.dockerResourceOptionId.toLong()
+                id = dockerDispatchType.performanceConfigId.toLong()
             )
 
             if (dockerResourceOptionRecord != null) {

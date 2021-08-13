@@ -45,7 +45,7 @@ data class DockerDispatchType(
     // 商店镜像名称
     override var imageName: String? = "",
     // docker资源配置ID
-    var dockerResourceOptionId: Int = 0
+    var performanceConfigId: Int = 0
 ) : StoreDispatchType(dockerBuildVersion = if (dockerBuildVersion.isNullOrBlank()) {
     imageCode
 } else {
