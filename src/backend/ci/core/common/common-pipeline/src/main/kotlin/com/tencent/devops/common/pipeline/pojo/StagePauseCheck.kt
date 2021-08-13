@@ -139,14 +139,12 @@ data class StagePauseCheck(
             params.forEach { param ->
                 // 如果原变量里没有该key值则跳过
                 if (!originMap.containsKey(param.key)) return@forEach
-                if (originMap[param.key]?.value.toString() != param.value.toString()) {
-                    diff.add(param)
-                    originMap[param.key]?.value = param.value
-                }
+                if (originMap[param.key]?.value.toString() != param.value.toString()) diff.add(param)
             }
             // 修改后的值传递到下一个审核组
+            val diffMap = diff.associateBy { it.key }
             reviewParams?.forEach {
-                it.value = originMap[it.key]?.value
+                if (diffMap[it.key] != null) it.value = diffMap[it.key]!!.value
             }
             return diff
         } catch (ignore: Throwable) {
