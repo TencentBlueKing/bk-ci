@@ -323,7 +323,7 @@ class LogServiceLuceneImpl constructor(
             queryLogs.timeUsed = System.currentTimeMillis() - startEpoch
         } catch (e: Exception) {
             logger.error("Query end logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
         } finally {
             logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
@@ -358,7 +358,7 @@ class LogServiceLuceneImpl constructor(
             queryLogs.timeUsed = System.currentTimeMillis() - startEpoch
         } catch (e: Exception) {
             logger.error("Query bottom logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
         } finally {
             logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
@@ -421,8 +421,8 @@ class LogServiceLuceneImpl constructor(
         return true
     }
 
-    private fun logStatusSuccess(logStatus: LogStatus) =
-        (logStatus == LogStatus.EMPTY || logStatus == LogStatus.SUCCEED)
+    private fun logStatusSuccess(logStatus: Int) =
+        (LogStatus.parse(logStatus) == LogStatus.EMPTY || LogStatus.parse(logStatus) == LogStatus.SUCCEED)
 
     private fun doQueryInitLogsPage(
         buildId: String,
@@ -454,10 +454,10 @@ class LogServiceLuceneImpl constructor(
                 pageSize = pageSize
             )
             queryLogs.logs.addAll(logs)
-            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (e: Exception) {
             logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
         }
         return queryLogs
@@ -556,11 +556,11 @@ class LogServiceLuceneImpl constructor(
             )
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             queryLogs.logs.addAll(logs)
-            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
             queryLogs.hasMore = size > logs.size
         } catch (e: Exception) {
             logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
         }
@@ -617,7 +617,7 @@ class LogServiceLuceneImpl constructor(
             moreLogs.hasMore = moreLogs.logs.size >= Constants.SCROLL_MAX_LINES * Constants.SCROLL_MAX_TIMES
         } catch (e: Exception) {
             logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            moreLogs.status = LogStatus.FAIL
+            moreLogs.status = LogStatus.FAIL.status
             moreLogs.finished = true
             moreLogs.hasMore = false
         }
@@ -683,7 +683,7 @@ class LogServiceLuceneImpl constructor(
             queryLogs.hasMore = queryLogs.logs.size >= logSize
         } catch (e: Exception) {
             logger.error("Query before logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
         }

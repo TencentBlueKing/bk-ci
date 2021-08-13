@@ -28,6 +28,7 @@
 package com.tencent.devops.scm.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -35,6 +36,7 @@ import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -220,8 +222,20 @@ interface ServiceGitCiResource {
         @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam("搜索条件，模糊匹配path,name")
-        @QueryParam("searchName")
-        search: String?
+        @QueryParam("search")
+        search: String?,
+        @ApiParam("排序字段")
+        @QueryParam("orderBy")
+        orderBy: GitCodeProjectsOrder?,
+        @ApiParam("排序方式")
+        @QueryParam("sort")
+        sort: GitCodeBranchesSort?,
+        @ApiParam("若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
+        @QueryParam("owned")
+        owned: Boolean?,
+        @ApiParam("指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
+        @QueryParam("minAccessLevel")
+        minAccessLevel: GitAccessLevelEnum?
     ): Result<List<GitCodeProjectInfo>>
 
     @ApiOperation("获取项目下具有权限的成员信息")

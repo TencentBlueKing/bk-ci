@@ -25,30 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.gitci.resources.user
 
-import com.tencent.devops.common.log.pojo.enums.LogStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.gitci.api.user.UserGitCIProjectResource
+import com.tencent.devops.gitci.pojo.enums.GitCIProjectType
+import com.tencent.devops.gitci.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.gitci.v2.service.GitCIProjectService
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- *
- * Powered By Tencent
- */
-@ApiModel("日志查询模型")
-data class QueryLogs(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("是否结束", required = true)
-    var finished: Boolean,
-    @ApiModelProperty("是否有后续日志", required = false)
-    var hasMore: Boolean? = false,
-    @ApiModelProperty("日志列表", required = true)
-    var logs: MutableList<LogLine> = mutableListOf(),
-    @ApiModelProperty("所用时间", required = false)
-    var timeUsed: Long = 0,
-    @ApiModelProperty("日志查询状态", required = false)
-    var status: Int = LogStatus.SUCCEED.status,
-    @ApiModelProperty("日志子tag列表", required = true)
-    var subTags: List<String>? = null
-)
+@RestResource
+class UserGitCIProjectResourceImpl @Autowired constructor(
+    private val gitCIProjectService: GitCIProjectService
+) : UserGitCIProjectResource {
+    override fun getProjects(
+        userId: String,
+        type: GitCIProjectType?,
+        search: String?,
+        page: Int?,
+        pageSize: Int?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?
+    ): Pagination<ProjectCIInfo> {
+        return gitCIProjectService.getProjectList(
+            userId = userId,
+            type = type,
+            search = search,
+            page = page,
+            pageSize = pageSize,
+            orderBy = orderBy,
+            sort = sort
+        )
+    }
+}

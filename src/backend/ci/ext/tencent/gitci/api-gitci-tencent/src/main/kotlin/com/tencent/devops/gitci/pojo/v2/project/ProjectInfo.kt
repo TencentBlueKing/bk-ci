@@ -25,30 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.gitci.pojo.v2.project
 
-import com.tencent.devops.common.log.pojo.enums.LogStatus
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-/**
- *
- * Powered By Tencent
- */
-@ApiModel("日志查询模型")
-data class QueryLogs(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("是否结束", required = true)
-    var finished: Boolean,
-    @ApiModelProperty("是否有后续日志", required = false)
-    var hasMore: Boolean? = false,
-    @ApiModelProperty("日志列表", required = true)
-    var logs: MutableList<LogLine> = mutableListOf(),
-    @ApiModelProperty("所用时间", required = false)
-    var timeUsed: Long = 0,
-    @ApiModelProperty("日志查询状态", required = false)
-    var status: Int = LogStatus.SUCCEED.status,
-    @ApiModelProperty("日志子tag列表", required = true)
-    var subTags: List<String>? = null
+@ApiModel("工蜂和GTICI项目详细信息")
+data class ProjectCIInfo(
+    @ApiModelProperty("工蜂项目ID")
+    val id: Long,
+    @ApiModelProperty("蓝盾项目id")
+    val projectCode: String?,
+    @ApiModelProperty("是否为工蜂公共项目")
+    val public: Boolean?,
+    @ApiModelProperty("工蜂项目名称")
+    val name: String?,
+    @ApiModelProperty("工蜂项目名称带有路径")
+    val nameWithNamespace: String?,
+    @ApiModelProperty("https-git链接")
+    val httpsUrlToRepo: String?,
+    @ApiModelProperty("项目网页链接")
+    val webUrl: String?,
+    @ApiModelProperty("项目头像")
+    val avatarUrl: String?,
+    @ApiModelProperty("项目描述")
+    val description: String?,
+    @ApiModelProperty("CI相关信息")
+    val ciInfo: CIInfo
+)
+
+@ApiModel("CI相关信息")
+data class CIInfo(
+    @ApiModelProperty("是否开启GITCI")
+    val enableCI: Boolean,
+    @ApiModelProperty("最后一次构建信息")
+    val lastBuildMessage: String?,
+    @ApiModelProperty("最后一次构建状态")
+    val lastBuildStatus: BuildStatus?,
+    @ApiModelProperty("流水线ID")
+    val lastBuildPipelineId: String?,
+    @ApiModelProperty("构建ID")
+    val lastBuildId: String?
 )
