@@ -76,5 +76,7 @@ data class MarketAtomUpdateRequest(
     @ApiModelProperty(value = "前端UI渲染方式", required = true)
     val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL,
     @ApiModelProperty(value = "插件字段校验确认标识", required = false)
-    val fieldCheckConfirmFlag: Boolean? = false
+    val fieldCheckConfirmFlag: Boolean? = false,
+    @ApiModelProperty("分支", required = false)
+    val branch: String? = null
 )

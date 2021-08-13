@@ -75,11 +75,11 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         projectCode: String,
         atomCode: String,
         atomVersion: String,
-        repositoryHashId: String,
-        fileName: String
+        fileName: String,
+        repositoryHashId: String?,
+        branch: String?
     ): String? {
-        logger.info("getFileStr projectCode is:$projectCode,atomCode is:$atomCode,atomVersion is:$atomVersion")
-        logger.info("getFileStr repositoryHashId is:$repositoryHashId,fileName is:$fileName")
+        logger.info("getFileStr $projectCode|$atomCode|$atomVersion|$fileName|$repositoryHashId|$branch")
         val fileStr = marketAtomArchiveService.getFileStr(projectCode, atomCode, atomVersion, fileName)
         logger.info("getFileStr fileStr is:$fileStr")
         return fileStr
