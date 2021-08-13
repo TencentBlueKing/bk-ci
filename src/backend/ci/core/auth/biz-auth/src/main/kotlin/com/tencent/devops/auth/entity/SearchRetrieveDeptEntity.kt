@@ -25,36 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.entity
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
+import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class DefaultDeptServiceImpl : DeptService {
-
-    override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo? {
-        return null
-    }
-
-    override fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo? {
-        return null
-    }
-
-    override fun getUserAndDeptByName(
-        name: String,
-        accessToken: String?,
-        userId: String,
-        type: ManagerScopesEnum
-    ): List<UserAndDeptInfoVo?> {
-        return emptyList()
-    }
-
-    override fun getDeptUser(deptId: Int, accessToken: String?): List<String> {
-        return emptyList()
-    }
-
-    override fun getUserParentDept(userId: String): Int? {
-        return 0
-    }
-}
+@ApiModel
+data class SearchRetrieveDeptEntity(
+    @ApiModelProperty("部门 ID")
+    val id: Int,
+    override var bk_app_code: String,
+    override var bk_app_secret: String,
+    override var bk_username: String,
+    override val bk_token: String = ""
+) : EsbBaseReq(bk_app_code, bk_app_secret, bk_username, bk_token)
