@@ -171,13 +171,14 @@ open class DefaultModelCheckPlugin constructor(
         stage.refreshReviewOption()
         if (stage.checkIn?.reviewGroups.isNullOrEmpty()) {
             throw ErrorCodeException(
-                defaultMessage = "手动触发的Stage未配置审核组",
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_REVIEW_GROUP
+                defaultMessage = "Stage(${stage.name})准入配置不正确",
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_REVIEW_GROUP,
+                params = arrayOf(stage.name ?: stage.id ?: "")
             )
         }
         stage.checkIn?.reviewGroups?.forEach { group ->
             if (group.reviewers.isEmpty()) throw ErrorCodeException(
-                defaultMessage = "手动触发的Stage未配置审核组",
+                defaultMessage = "Stage(${stage.name})中审核组(${group.name})未配置审核人",
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER,
                 params = arrayOf(stage.name!!, group.name)
             )
