@@ -124,9 +124,9 @@ class GitUserMessageDao {
         with(TGitUserMessage.T_GIT_USER_MESSAGE) {
             val dsl = dslContext.update(this)
                 .set(HAVE_READ, true)
-                .where(USER_ID.eq(projectId))
+                .where(USER_ID.eq(userId))
             if (!projectId.isNullOrBlank()) {
-                dsl.and(USER_ID.eq(userId))
+                dsl.and(PROJECT_ID.eq(projectId))
             }
             return dsl.execute()
         }
