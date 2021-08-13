@@ -25,30 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.environment.pojo
 
-import com.tencent.devops.common.log.pojo.enums.LogStatus
+import com.tencent.devops.environment.pojo.enums.SharedEnvType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-/**
- *
- * Powered By Tencent
- */
-@ApiModel("日志查询模型")
-data class QueryLogs(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("是否结束", required = true)
-    var finished: Boolean,
-    @ApiModelProperty("是否有后续日志", required = false)
-    var hasMore: Boolean? = false,
-    @ApiModelProperty("日志列表", required = true)
-    var logs: MutableList<LogLine> = mutableListOf(),
-    @ApiModelProperty("所用时间", required = false)
-    var timeUsed: Long = 0,
-    @ApiModelProperty("日志查询状态", required = false)
-    var status: Int = LogStatus.SUCCEED.status,
-    @ApiModelProperty("日志子tag列表", required = true)
-    var subTags: List<String>? = null
+@ApiModel("VM虚拟机配额")
+data class SharedProjectInfo(
+    @ApiModelProperty("蓝盾项目Id", required = true)
+    val projectId: String,
+    @ApiModelProperty("工蜂项目ID", required = true)
+    val gitProjectId: String,
+    @ApiModelProperty("项目名称，工蜂项目则为groupName/projectName", required = true)
+    val name: String,
+    @ApiModelProperty("类型，预留", required = true)
+    val type: SharedEnvType,
+    @ApiModelProperty("导入服务器配额", required = true)
+    val creator: String,
+    @ApiModelProperty("允许使用DevCloud虚拟机功能", required = true)
+    val createTime: Long,
+    @ApiModelProperty("DevCloud虚拟机配额", required = true)
+    val updateTime: Long
 )
