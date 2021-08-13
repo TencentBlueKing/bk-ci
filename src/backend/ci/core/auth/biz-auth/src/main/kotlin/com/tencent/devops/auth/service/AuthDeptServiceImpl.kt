@@ -267,15 +267,14 @@ class AuthDeptServiceImpl @Autowired constructor(
                     "call user center fail: $responseStr"
                 )
             }
-            return responseDTO.data.toString()
+            logger.info("user center response：${objectMapper.writeValueAsString(responseDTO.data)}")
+            return objectMapper.writeValueAsString(responseDTO.data)
         }
     }
 
 
     fun findUserName(str: String): List<String> {
-        val responseDTO = JsonUtil.fromJson(str, ResponseDTO::class.java)
-        val responseData = JsonUtil.toJson(responseDTO.data)
-        val dataMap = JsonUtil.fromJson(responseData, Map::class.java)
+        val dataMap = JsonUtil.fromJson(str, Map::class.java)
         val userInfoList = JsonUtil.fromJson(JsonUtil.toJson(dataMap[HTTP_RESULT]), List::class.java)
         val users = mutableListOf<String>()
         userInfoList.forEach {
