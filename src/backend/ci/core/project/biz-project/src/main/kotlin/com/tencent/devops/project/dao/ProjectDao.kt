@@ -424,6 +424,12 @@ class ProjectDao {
         }
     }
 
+    fun updateProjectId(dslContext: DSLContext, projectId: String, projectCode: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this).set(PROJECT_ID, projectId).where(ENGLISH_NAME.eq(projectCode)).execute()
+        }
+    }
+
     fun updateLogoAddress(dslContext: DSLContext, userId: String, projectId: String, logoAddress: String): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)

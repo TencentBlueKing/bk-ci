@@ -26,6 +26,7 @@
  */
 
 dependencies {
+    api(project(":core:common:common-api"))
     api("com.fasterxml.jackson.core:jackson-databind")
     api("com.fasterxml.jackson.core:jackson-core")
     api("com.fasterxml.jackson.core:jackson-annotations")
@@ -33,6 +34,8 @@ dependencies {
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
     api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
+    api("org.apache.commons:commons-collections4")
+//    implementation(group = "org.apache.commons", name = "commons-collections4", version = "4.4")
 
     api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
 }

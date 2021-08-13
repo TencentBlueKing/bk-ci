@@ -98,7 +98,8 @@ auth:
   appSecret: __BK_CI_APP_TOKEN__
   bkloginUrl: __BK_PAAS_PRIVATE_URL__/login/api/v2
   iamCallBackUser: __BK_CI_IAM_CALLBACK_USER__
-
+  # 用户组权限申请前端跳转页面HOST
+  webHost: __BK_CI_IAM_WEB_URL__
 
 #bk esb config for cd plugin in pipeline
 esb:

@@ -361,7 +361,11 @@ class ServicePipelineResourceImpl @Autowired constructor(
     }
 
     override fun getProjectPipelineIds(projectCode: String): Result<List<PipelineIdInfo>> {
-        return Result(pipelineListFacadeService.getPipelineId(projectCode))
+        return Result(pipelineListFacadeService.getProjectPipelineId(projectCode))
+    }
+
+    override fun getPipelineId(projectCode: String, pipelineId: String): Result<PipelineIdInfo?> {
+        return Result(pipelineListFacadeService.getPipelineId(projectCode, pipelineId))
     }
 
     private fun checkParams(userId: String, projectId: String) {
