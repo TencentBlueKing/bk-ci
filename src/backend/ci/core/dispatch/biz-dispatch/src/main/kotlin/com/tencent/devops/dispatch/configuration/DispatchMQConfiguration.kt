@@ -85,7 +85,10 @@ class DispatchMQConfiguration @Autowired constructor() {
         @Autowired thirdPartyAgentListener: ThirdPartyAgentListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(thirdPartyAgentListener, thirdPartyAgentListener::listenAgentStartUpEvent.name)
+        val adapter = MessageListenerAdapter(
+            thirdPartyAgentListener,
+            thirdPartyAgentListener::listenAgentStartUpEvent.name
+        )
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
@@ -120,7 +123,9 @@ class DispatchMQConfiguration @Autowired constructor() {
         @Autowired thirdPartyAgentListener: ThirdPartyAgentListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(thirdPartyAgentListener, thirdPartyAgentListener::listenAgentShutdownEvent.name)
+        val adapter = MessageListenerAdapter(
+            thirdPartyAgentListener,
+            thirdPartyAgentListener::listenAgentShutdownEvent.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
