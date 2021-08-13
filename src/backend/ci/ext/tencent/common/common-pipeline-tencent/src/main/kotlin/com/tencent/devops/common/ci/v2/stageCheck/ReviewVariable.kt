@@ -6,6 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 data class ReviewVariable(
     val label: String?,
     val type: String,
-    val default: String?,
+    val default: Any?,
     val values: List<String>?
 )
