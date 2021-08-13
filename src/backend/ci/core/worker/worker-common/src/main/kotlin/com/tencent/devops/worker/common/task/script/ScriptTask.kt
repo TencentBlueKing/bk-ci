@@ -37,8 +37,11 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
@@ -101,7 +104,20 @@ open class ScriptTask : ITask() {
             logger.warn("Fail to run the script task", ignore)
             if (!archiveFileIfExecFail.isNullOrBlank()) {
                 LoggerService.addRedLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
-                val count = ArchiveUtils.archivePipelineFiles(archiveFileIfExecFail!!, workspace, buildVariables)
+                val token = RepoServiceFactory.getInstance().getRepoToken(
+                    userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                    projectId = buildVariables.projectId,
+                    repoName = "pipeline",
+                    path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+                    type = TokenType.UPLOAD,
+                    expireSeconds = TaskUtil.getTimeOut(buildTask)?.times(60)
+                )
+                val count = ArchiveUtils.archivePipelineFiles(
+                    filePath = archiveFileIfExecFail,
+                    workspace = workspace,
+                    buildVariables = buildVariables,
+                    token = token
+                )
                 if (count == 0) {
                     LoggerService.addRedLine("脚本执行失败之后没有匹配到任何待归档文件")
                 }
