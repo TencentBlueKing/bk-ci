@@ -29,15 +29,12 @@ package com.tencent.devops.quality.cron
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.quality.dao.v2.QualityHisMetadataDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 @Component
@@ -64,7 +61,6 @@ class QualityBuildHisJob @Autowired constructor(
             logger.info("start to clean quality build history data: $cleanTimeGapDay")
             val count = qualityRuleBuildHisDao.cleanQualityRule(cleanTimeGapDay)
             logger.info("finish clean quality build history data: $cleanTimeGapDay, $count")
-
         } finally {
             lock.unlock()
         }
