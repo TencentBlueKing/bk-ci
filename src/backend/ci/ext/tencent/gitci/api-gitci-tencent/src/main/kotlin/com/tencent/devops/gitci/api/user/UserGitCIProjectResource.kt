@@ -29,89 +29,53 @@ package com.tencent.devops.gitci.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.gitci.pojo.v2.message.UserMessageRecord
-import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
+import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.gitci.pojo.enums.GitCIProjectType
+import com.tencent.devops.gitci.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_GIT_CI_USER_MESSAGE"], description = "user-消息中心页面")
-@Path("/user/messages")
+@Api(tags = ["USER_GIT_CI_PROJECT"], description = "user-项目资源")
+@Path("/user/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserGitCIUserMessageResource {
+interface UserGitCIProjectResource {
 
-    @ApiOperation("获取用户消息")
+    @ApiOperation("获取工蜂项目与GITCI关联列表")
     @GET
-    @Path("")
-    fun getUserMessages(
+    @Path("/{type}/list")
+    fun getProjects(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = false)
-        @QueryParam("projectId")
-        projectId: String?,
-        @ApiParam(value = "消息类型")
-        @QueryParam("messageType")
-        messageType: UserMessageType?,
-        @ApiParam(value = "是否已读")
-        @QueryParam("haveRead")
-        haveRead: Boolean?,
-        @ApiParam(value = "页码")
+        @ApiParam("项目列表类型", required = false)
+        @PathParam("type")
+        type: GitCIProjectType?,
+        @ApiParam("搜索条件，模糊匹配path,name", required = false)
+        @QueryParam("search")
+        search: String?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam(value = "每页数量")
+        @ApiParam("每页多少条", required = false, defaultValue = "10")
         @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<UserMessageRecord>>
-
-    @ApiOperation("获取用户未读消息数量")
-    @GET
-    @Path("/noread")
-    fun getUserMessagesNoreadCount(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = false)
-        @QueryParam("projectId")
-        projectId: String?
-    ): Result<Int>
-
-    @ApiOperation("读取消息")
-    @PUT
-    @Path("/{id}/read")
-    fun readMessage(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "消息ID")
-        @PathParam("id")
-        id: Int,
-        @ApiParam(value = "蓝盾项目ID", required = false)
-        @QueryParam("projectId")
-        projectId: String?
-    ): Result<Boolean>
-
-    @ApiOperation("读取所有消息")
-    @PUT
-    @Path("/read")
-    fun readAllMessages(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = false)
-        @QueryParam("projectId")
-        projectId: String?
-    ): Result<Boolean>
+        pageSize: Int?,
+        @ApiParam("排序条件", required = false)
+        @QueryParam("orderBy")
+        orderBy: GitCodeProjectsOrder?,
+        @ApiParam("排序类型", required = false)
+        @QueryParam("sort")
+        sort: GitCodeBranchesSort?
+    ): Pagination<ProjectCIInfo>
 }

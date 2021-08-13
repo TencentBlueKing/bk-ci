@@ -25,32 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.gitci.resources.user
 
-import com.google.gson.annotations.SerializedName
+import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.gitci.api.user.UserGitCIProjectResource
+import com.tencent.devops.gitci.pojo.enums.GitCIProjectType
+import com.tencent.devops.gitci.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.gitci.v2.service.GitCIProjectService
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import org.springframework.beans.factory.annotation.Autowired
 
-enum class GitCodeFileEncoding {
-    @SerializedName("text")
-    TEXT,
-    @SerializedName("base64")
-    BASE64
-}
-
-enum class GitCodeBranchesOrder(val value: String) {
-    NAME("name"),
-    UPDATE("update")
-}
-
-enum class GitCodeBranchesSort(val value: String) {
-    ASC("asc"),
-    DESC("desc")
-}
-
-enum class GitCodeProjectsOrder(val value: String) {
-    ID("id"),
-    NAME("name"),
-    PATH("path"),
-    CREATED("created_at"),
-    UPDATE("updated_at"),
-    ACTIVITY("activity")
+@RestResource
+class UserGitCIProjectResourceImpl @Autowired constructor(
+    private val gitCIProjectService: GitCIProjectService
+) : UserGitCIProjectResource {
+    override fun getProjects(
+        userId: String,
+        type: GitCIProjectType?,
+        search: String?,
+        page: Int?,
+        pageSize: Int?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?
+    ): Pagination<ProjectCIInfo> {
+        return gitCIProjectService.getProjectList(
+            userId = userId,
+            type = type,
+            search = search,
+            page = page,
+            pageSize = pageSize,
+            orderBy = orderBy,
+            sort = sort
+        )
+    }
 }

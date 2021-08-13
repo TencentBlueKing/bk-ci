@@ -35,12 +35,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -250,16 +252,22 @@ class GitCiService {
         userId: String,
         page: Int?,
         pageSize: Int?,
-        search: String?
+        search: String?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
     ): List<GitCodeProjectInfo> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        val url = "$gitCIUrl/api/v3/projects?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull" +
-            if (search != null) {
-                "&search=$search"
-            } else {
-                ""
-            }
+        val url = "$gitCIUrl/api/v3/projects?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+            .addParams(mapOf(
+                "search" to search,
+                "order_by" to orderBy?.value,
+                "sort" to sort?.value,
+                "owned" to owned?.toString(),
+                "min_access_level" to minAccessLevel?.level.toString()
+            ))
         val res = mutableListOf<GitCodeProjectInfo>()
         val request = Request.Builder()
             .url(url)
@@ -344,5 +352,15 @@ class GitCiService {
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
         }
+    }
+
+    private fun String.addParams(args: Map<String, String?>): String {
+        val sb = StringBuilder(this)
+        args.forEach { (name, value) ->
+            if (value != null) {
+                sb.append("&$name=$value")
+            }
+        }
+        return sb.toString()
     }
 }

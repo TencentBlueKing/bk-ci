@@ -25,32 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.gitci.pojo.enums
 
-import com.google.gson.annotations.SerializedName
-
-enum class GitCodeFileEncoding {
-    @SerializedName("text")
-    TEXT,
-    @SerializedName("base64")
-    BASE64
-}
-
-enum class GitCodeBranchesOrder(val value: String) {
-    NAME("name"),
-    UPDATE("update")
-}
-
-enum class GitCodeBranchesSort(val value: String) {
-    ASC("asc"),
-    DESC("desc")
-}
-
-enum class GitCodeProjectsOrder(val value: String) {
-    ID("id"),
-    NAME("name"),
-    PATH("path"),
-    CREATED("created_at"),
-    UPDATE("updated_at"),
-    ACTIVITY("activity")
+enum class GitCIProjectType {
+    MY_PROJECT,
+    WATCHED,
+    STARRED
 }
