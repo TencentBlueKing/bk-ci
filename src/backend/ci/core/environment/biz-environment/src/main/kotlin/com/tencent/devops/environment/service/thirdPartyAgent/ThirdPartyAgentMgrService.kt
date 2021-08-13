@@ -666,7 +666,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
         val sharedEnvRecord = envShareProjectDao.get(dslContext, sharedProjEnv[1], projectId, sharedProjEnv[0])
         if (sharedEnvRecord.isEmpty()) {
-            logger.info("env name not exists, envName: ${sharedProjEnv[0]}, projectId：$projectId, " +
+            logger.info("env name not exists, envName: ${sharedProjEnv[1]}, projectId：$projectId, " +
                 "mainProjectId: ${sharedProjEnv[0]}")
             return emptyList()
         }
