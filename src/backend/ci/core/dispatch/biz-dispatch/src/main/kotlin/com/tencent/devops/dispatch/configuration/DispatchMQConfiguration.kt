@@ -59,28 +59,28 @@ class DispatchMQConfiguration @Autowired constructor() {
      * 第三方构建机启动交换机
      */
     @Bean
-    fun agentDispatchExchange(): DirectExchange {
+    fun thirdAgentDispatchExchange(): DirectExchange {
         val directExchange = DirectExchange(MQ.EXCHANGE_AGENT_LISTENER_DIRECT, true, false)
         directExchange.isDelayed = true
         return directExchange
     }
 
     @Bean
-    fun agentDispatchStartQueue() = Queue(MQ.QUEUE_AGENT_STARTUP)
+    fun thirdAgentDispatchStartQueue() = Queue(MQ.QUEUE_AGENT_STARTUP)
 
     @Bean
-    fun agentDispatchStartQueueBind(
-        @Autowired agentDispatchStartQueue: Queue,
-        @Autowired agentDispatchExchange: DirectExchange
+    fun thirdAgentDispatchStartQueueBind(
+        @Autowired thirdAgentDispatchStartQueue: Queue,
+        @Autowired thirdAgentDispatchExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(agentDispatchStartQueue).to(agentDispatchExchange)
+        return BindingBuilder.bind(thirdAgentDispatchStartQueue).to(thirdAgentDispatchExchange)
             .with(MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
     }
 
     @Bean
-    fun agentDispatchStartListenerContainer(
+    fun thirdAgentDispatchStartListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired agentDispatchStartQueue: Queue,
+        @Autowired thirdAgentDispatchStartQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired thirdPartyAgentListener: ThirdPartyAgentListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
@@ -92,7 +92,7 @@ class DispatchMQConfiguration @Autowired constructor() {
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
-            queue = agentDispatchStartQueue,
+            queue = thirdAgentDispatchStartQueue,
             rabbitAdmin = rabbitAdmin,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
@@ -104,21 +104,21 @@ class DispatchMQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun agentDispatchShutdownQueue() = Queue(MQ.QUEUE_AGENT_SHUTDOWN)
+    fun thirdAgentDispatchShutdownQueue() = Queue(MQ.QUEUE_AGENT_SHUTDOWN)
 
     @Bean
-    fun agentDispatchShutdownQueueBind(
-        @Autowired agentDispatchShutdownQueue: Queue,
-        @Autowired agentDispatchExchange: DirectExchange
+    fun thirdAgentDispatchShutdownQueueBind(
+        @Autowired thirdAgentDispatchShutdownQueue: Queue,
+        @Autowired thirdAgentDispatchExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(agentDispatchShutdownQueue).to(agentDispatchExchange)
+        return BindingBuilder.bind(thirdAgentDispatchShutdownQueue).to(thirdAgentDispatchExchange)
             .with(MQ.ROUTE_AGENT_SHUTDOWN)
     }
 
     @Bean
-    fun agentDispatchShutdownListenerContainer(
+    fun thirdAgentDispatchShutdownListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired agentDispatchShutdownQueue: Queue,
+        @Autowired thirdAgentDispatchShutdownQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired thirdPartyAgentListener: ThirdPartyAgentListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
@@ -129,7 +129,7 @@ class DispatchMQConfiguration @Autowired constructor() {
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
-            queue = agentDispatchShutdownQueue,
+            queue = thirdAgentDispatchShutdownQueue,
             rabbitAdmin = rabbitAdmin,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
