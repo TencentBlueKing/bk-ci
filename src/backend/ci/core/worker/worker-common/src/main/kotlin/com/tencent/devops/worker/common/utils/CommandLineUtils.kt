@@ -40,6 +40,7 @@ import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.charset.Charset
 import java.util.regex.Pattern
 
 object CommandLineUtils {
@@ -72,11 +73,7 @@ object CommandLineUtils {
                 val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
                 privateStringField.isAccessible = true;
                 val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                if (print2Logger) {
-                    LoggerService.addNormalLine("buffer.toByteArray ${buffer.toByteArray()}")
-                    LoggerService.addNormalLine("buffer.toString $buffer")
-                }
-                processLine(String(buffer.toByteArray(), charset("GBK")))
+                processLine(String(buffer.toByteArray(), Charset.forName("GBK")))
                 buffer.reset()
             }
             override fun processLine(line: String?, level: Int) {
@@ -102,11 +99,7 @@ object CommandLineUtils {
                 val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
                 privateStringField.isAccessible = true;
                 val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                if (print2Logger) {
-                    LoggerService.addNormalLine("buffer.toByteArray ${buffer.toByteArray()}")
-                    LoggerService.addNormalLine("buffer.toString $buffer")
-                }
-                processLine(String(buffer.toByteArray(), charset("GBK")))
+                processLine(String(buffer.toByteArray(),Charset.forName("GBK")))
                 buffer.reset()
             }
             override fun processLine(line: String?, level: Int) {
