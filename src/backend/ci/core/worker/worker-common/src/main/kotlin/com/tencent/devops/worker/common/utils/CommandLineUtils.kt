@@ -73,7 +73,8 @@ object CommandLineUtils {
                 val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
                 privateStringField.isAccessible = true;
                 val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                processLine(String(buffer.toByteArray(), Charset.forName("GBK")))
+                processLine(buffer.toString("GBK"))
+//                processLine(String(buffer.toByteArray(), Charset.forName("GBK")))
                 buffer.reset()
             }
             override fun processLine(line: String?, level: Int) {
@@ -99,7 +100,8 @@ object CommandLineUtils {
                 val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
                 privateStringField.isAccessible = true;
                 val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                processLine(String(buffer.toByteArray(),Charset.forName("GBK")))
+                processLine(buffer.toString("GBK"))
+//                processLine(String(buffer.toString().toByteArray(),Charset.forName("GBK")))
                 buffer.reset()
             }
             override fun processLine(line: String?, level: Int) {
