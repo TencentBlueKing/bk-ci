@@ -82,7 +82,7 @@ object BatScriptUtil {
                 workspace = workspace
             )
             return CommandLineUtils.execute(
-                command = "cmd.exe /C \"chcp 936 && ${file.canonicalPath}\"",
+                command = "cmd.exe /C \"${file.canonicalPath}\"",
                 workspace = dir,
                 print2Logger = print2Logger,
                 prefix = prefix,
