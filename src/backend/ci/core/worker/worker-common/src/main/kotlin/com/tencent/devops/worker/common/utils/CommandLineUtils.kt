@@ -131,8 +131,6 @@ object CommandLineUtils {
         }
         executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
         try {
-            val cl = CommandLine("chcp 936")
-            executor.execute(cl)
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
                 throw TaskExecuteException(
