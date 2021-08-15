@@ -81,7 +81,7 @@ class HistoryDao {
                 .set(PROJECT_NUM, projectNum)
                 .where(ID.eq(record.id))
                 .execute()
-            return record.id
+            return projectNum
         }
     }
 
