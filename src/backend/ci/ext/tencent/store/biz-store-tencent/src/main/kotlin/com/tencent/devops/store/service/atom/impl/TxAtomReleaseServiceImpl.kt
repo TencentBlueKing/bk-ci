@@ -50,6 +50,7 @@ import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -71,6 +72,7 @@ import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
+import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
@@ -96,7 +98,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
+import java.util.*
 import java.util.concurrent.Executors
+import javax.ws.rs.core.Response
 
 @Service
 @RefreshScope
@@ -354,6 +358,30 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
     }
 
+    override fun doAtomReleaseBus(userId: String, atomReleaseRequest: AtomReleaseRequest) {
+        try {
+            val date = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
+            val tagName = "prod-v${atomReleaseRequest.version}-$date"
+            val createGitTagResult = client.get(ServiceGitRepositoryResource::class).createGitTag(
+                userId = userId,
+                repoId = atomReleaseRequest.repositoryHashId!!,
+                tagName = tagName,
+                ref = atomReleaseRequest.branch ?: "master",
+                tokenType = TokenTypeEnum.PRIVATE_KEY
+            )
+            logger.info("createGitTagResult is :$createGitTagResult")
+            if (createGitTagResult.isNotOk() || createGitTagResult.data == false) {
+                throw ErrorCodeException(
+                    errorCode = createGitTagResult.status.toString(),
+                    defaultMessage = createGitTagResult.message
+                )
+            }
+        } catch (ignore: Exception) {
+            logger.warn("createGitTag error:", ignore)
+            throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     override fun rebuild(
         projectCode: String,
@@ -486,7 +514,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             userId = userId,
             repositoryHashId = repositoryHashId,
             atomCode = atomCode,
-            atomId = atomId
+            atomId = atomId,
+            branch = atomRecord.branch
         )
         val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(context, atomId)
         logger.info("the buildInfo is:$buildInfo")
@@ -588,13 +617,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         userId: String,
         repositoryHashId: String,
         atomCode: String,
-        atomId: String
+        atomId: String,
+        branch: String?
     ): String {
         // 获取插件代码库最新提交记录
         val getRepoRecentCommitInfoResult = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
             userId = userId,
             repoId = repositoryHashId,
-            sha = "master",
+            sha = branch ?: "master",
             tokenType = TokenTypeEnum.PRIVATE_KEY
         )
         logger.info("handleCodeccTask  atomId:$atomId,getRepoRecentCommitInfoResult: $getRepoRecentCommitInfoResult")

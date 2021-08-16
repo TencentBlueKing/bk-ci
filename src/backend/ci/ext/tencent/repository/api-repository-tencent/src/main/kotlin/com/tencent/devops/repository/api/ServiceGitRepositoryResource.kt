@@ -283,4 +283,25 @@ interface ServiceGitRepositoryResource {
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitCommit?>
+
+    @ApiOperation("创建tag")
+    @POST
+    @Path("/git/tag/create")
+    fun createGitTag(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "仓库id", required = true)
+        @QueryParam("repoId")
+        repoId: String,
+        @ApiParam(value = "tag名称", required = true)
+        @QueryParam("tagName")
+        tagName: String,
+        @ApiParam(value = "关联项", required = true)
+        @QueryParam("ref")
+        ref: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
 }

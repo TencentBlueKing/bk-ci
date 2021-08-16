@@ -27,9 +27,13 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -48,9 +52,14 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
+import okhttp3.MediaType
+import okhttp3.Request
+import okhttp3.RequestBody
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import org.springframework.util.StringUtils
+import java.net.URLEncoder
 import javax.servlet.http.HttpServletResponse
 
 @Primary
@@ -333,5 +342,21 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             repoName = repoName,
             mrId = mrId
         ).data!!
+    }
+
+    override fun createGitTag(
+        repoName: String,
+        tagName: String,
+        ref: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return client.getScm(ServiceGitResource::class).createGitTag(
+            repoName = repoName,
+            tagName = tagName,
+            ref = ref,
+            token = token,
+            tokenType = tokenType
+        )
     }
 }

@@ -415,4 +415,20 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun createGitTag(
+        repoName: String,
+        tagName: String,
+        ref: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return gitService.createGitTag(
+            repoName = repoName,
+            tagName = tagName,
+            ref = ref,
+            token = token,
+            tokenType = tokenType
+        )
+    }
 }
