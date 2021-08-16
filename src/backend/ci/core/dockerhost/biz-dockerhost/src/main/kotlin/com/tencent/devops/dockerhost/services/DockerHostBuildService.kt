@@ -57,7 +57,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.common.DockerExitCodeEnum
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
@@ -495,7 +494,7 @@ class DockerHostBuildService(
                 buildId = buildId,
                 vmSeqId = vmSeqId.toInt(),
                 secretKey = "",
-                status = PipelineTaskStatus.RUNNING.status,
+                status = 0,
                 imageName = imageName,
                 containerId = "",
                 wsInHost = true,
