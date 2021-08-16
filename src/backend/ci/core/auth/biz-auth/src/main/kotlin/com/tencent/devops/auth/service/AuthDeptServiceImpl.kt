@@ -267,7 +267,6 @@ class AuthDeptServiceImpl @Autowired constructor(
         }
     }
 
-
     fun findUserName(str: String): List<String> {
         val dataMap = JsonUtil.fromJson(str, Map::class.java)
         val userInfoList = JsonUtil.fromJson(JsonUtil.toJson(dataMap[HTTP_RESULT]), List::class.java)
