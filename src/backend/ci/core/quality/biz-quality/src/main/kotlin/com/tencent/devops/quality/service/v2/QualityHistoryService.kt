@@ -164,6 +164,7 @@ class QualityHistoryService @Autowired constructor(
                 pipelineName = pipelineIdToNameMap[it.pipelineId] ?: "",
                 buildId = it.buildId,
                 buildNo = buildIdToNameMap[it.buildId] ?: "",
+                checkTimes = it.projectNum,
                 remark = remark,
                 pipelineIsDelete = false
             )
@@ -345,6 +346,7 @@ class QualityHistoryService @Autowired constructor(
                 pipelineName = pipeline?.pipelineName ?: "",
                 buildId = it.buildId,
                 buildNo = buildIdToNameMap[it.buildId] ?: "",
+                checkTimes = it.projectNum,
                 remark = remark,
                 pipelineIsDelete = pipeline?.isDelete ?: false
             )
@@ -382,6 +384,7 @@ class QualityHistoryService @Autowired constructor(
                 pipelineName = "",
                 buildId = it.buildId,
                 buildNo = "",
+                checkTimes = it.projectNum,
                 remark = "",
                 interceptList = interceptList
             )
@@ -443,8 +446,8 @@ class QualityHistoryService @Autowired constructor(
         interceptList: String,
         createTime: LocalDateTime,
         updateTime: LocalDateTime
-    ) {
-        historyDao.create(
+    ): Long {
+        return historyDao.create(
             dslContext = dslContext,
             projectId = projectId,
             ruleId = ruleId,

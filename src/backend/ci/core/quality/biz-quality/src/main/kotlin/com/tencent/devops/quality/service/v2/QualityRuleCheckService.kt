@@ -184,12 +184,15 @@ class QualityRuleCheckService @Autowired constructor(
     }
 
     fun checkBuildHis(buildCheckParams: BuildCheckParamsV3): RuleCheckResult {
+        val ruleBuildId = buildCheckParams.ruleBuildIds.map {
+            HashUtil.decodeIdToLong(it)
+        }
+
         // 遍历项目下所有拦截规则
-        val ruleList = qualityRuleBuildHisService.list(
-            buildCheckParams.ruleBuildIds.map {
-                HashUtil.decodeIdToLong(it)
-            }
-        )
+        val ruleList = qualityRuleBuildHisService.list(ruleBuildId)
+
+        // 更新build id
+        qualityRuleBuildHisService.updateBuildId(ruleBuildId, buildCheckParams.buildId)
 
         val params = BuildCheckParams(
             buildCheckParams.projectId,
@@ -231,9 +234,9 @@ class QualityRuleCheckService @Autowired constructor(
             executors.execute { checkPostHandle(buildCheckParams, ruleInterceptList, resultList) }
 
             // 记录结果
-            recordHistory(buildCheckParams, ruleInterceptList)
+            val checkTimes = recordHistory(buildCheckParams, ruleInterceptList)
 
-            return genResult(projectId, pipelineId, buildId, resultList, ruleInterceptList)
+            return genResult(projectId, pipelineId, buildId, checkTimes, resultList, ruleInterceptList)
         }
     }
 
@@ -275,6 +278,7 @@ class QualityRuleCheckService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
+        checkTimes: Long,
         resultList: List<RuleCheckSingleResult>,
         ruleInterceptList: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
     ): RuleCheckResult {
@@ -287,7 +291,7 @@ class QualityRuleCheckService @Autowired constructor(
         } else DEFAULT_TIMEOUT_MINUTES
         logger.info("check result allPass($allPass) allEnd($allEnd) auditTimeoutMinutes($auditTimeOutMinutes)")
         logger.info("end check pipeline build: $projectId, $pipelineId, $buildId")
-        return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60, resultList)
+        return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60, checkTimes, resultList)
     }
 
     private fun checkPostHandle(
@@ -575,10 +579,10 @@ class QualityRuleCheckService @Autowired constructor(
     private fun recordHistory(
         buildCheckParams: BuildCheckParams,
         result: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
-    ) {
+    ): Long {
         val time = LocalDateTime.now()
 
-        with(buildCheckParams) {
+        return with(buildCheckParams) {
             result.forEach {
                 val rule = it.first
                 val ruleId = HashUtil.decodeIdToLong(rule.hashId)

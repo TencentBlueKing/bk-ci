@@ -25,21 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.quality.pojo
+package com.tencent.devops.quality.api.v2
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("质量红线-拦截检测结果")
-data class RuleCheckResult(
-    @ApiModelProperty("是否通过", required = true)
-    val success: Boolean,
-    @ApiModelProperty("失败后是否结束", required = true)
-    val failEnd: Boolean,
-    @ApiModelProperty("审核超时时间", required = true)
-    val auditTimeoutSeconds: Int,
-    @ApiModelProperty("第几次检查", required = true)
-    val checkTimes: Long,
-    @ApiModelProperty("失败信息", required = true)
-    val resultList: List<RuleCheckSingleResult>
-)
+@Api(tags = ["USER_METADATA_MARKET"], description = "用户-质量红线-插件市场")
+@Path("/user/metadata/market")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserQualityMarketResource {
+
+    @ApiOperation("获取插件的质量红线")
+    @Path("/atom/{atomCode}/indicator/list")
+    @GET
+    fun getAuditUserList(
+        @ApiParam("atomCode", required = true)
+        @PathParam("atomCode")
+        atomCode: String
+    ): Result<List<QualityIndicator>>
+}

@@ -54,6 +54,8 @@ data class RuleInterceptHistory(
     val buildId: String,
     @ApiModelProperty("构建号", required = true)
     val buildNo: String,
+    @ApiModelProperty("检查次数", required = true)
+    val checkTimes: Long,
     @ApiModelProperty("描述", required = true)
     val remark: String,
     @ApiModelProperty("描述列表", required = true)

@@ -25,21 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.quality.pojo
+package com.tencent.devops.quality.resources.v2
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.quality.api.v2.UserQualityMarketResource
+import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
+import com.tencent.devops.quality.service.v2.QualityIndicatorService
 
-@ApiModel("质量红线-拦截检测结果")
-data class RuleCheckResult(
-    @ApiModelProperty("是否通过", required = true)
-    val success: Boolean,
-    @ApiModelProperty("失败后是否结束", required = true)
-    val failEnd: Boolean,
-    @ApiModelProperty("审核超时时间", required = true)
-    val auditTimeoutSeconds: Int,
-    @ApiModelProperty("第几次检查", required = true)
-    val checkTimes: Long,
-    @ApiModelProperty("失败信息", required = true)
-    val resultList: List<RuleCheckSingleResult>
-)
+@RestResource
+class UserQualityMarketResourceImpl constructor(
+    private val qualityIndicatorService: QualityIndicatorService
+): UserQualityMarketResource {
+    override fun getAuditUserList(atomCode: String): Result<List<QualityIndicator>> {
+        return Result(qualityIndicatorService.serviceList(atomCode, listOf()))
+    }
+}
