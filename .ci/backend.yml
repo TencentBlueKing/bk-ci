@@ -26,11 +26,12 @@ stages:
         env:
           MYSQL_IP: ${{steps.mysqlservice.outputs.MYSQL_IP}}
           MYSQL_PORT: ${{steps.mysqlservice.outputs.MYSQL_PORT}}
+          MYSQL_PWD: root
         run: |
           cd support-files/sql/tencent
           for i in *.sql; do
             echo import $i start
-            mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot -proot < $i
+            mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot < $i
             echo import $i done..
             echo 
           done
