@@ -52,6 +52,8 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.pipeline.SimplePipeline
+import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -61,7 +63,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val engineVMBuildService: EngineVMBuildService,
     private val vmBuildService: PipelineVMBuildService,
-    private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
+    private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
+    private val pipelineListFacadeService: PipelineListFacadeService
 ) : ServiceBuildResource {
 
     override fun setVMStatus(
@@ -535,6 +538,14 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 containerId = taskPauseExecute.containerId
             )
         )
+    }
+
+    override fun getPipelineNameByIds(pipelineId: String): Result<SimplePipeline?>? {
+        val pipelineInfos = pipelineListFacadeService.getByPipelineIds(setOf(pipelineId))
+        if (pipelineInfos.isNotEmpty()) {
+            return Result(pipelineInfos[0])
+        }
+        return null
     }
 
     private fun checkParam(projectId: String, pipelineId: String) {
