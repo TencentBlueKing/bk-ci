@@ -278,7 +278,7 @@ class QualityRuleCheckService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        checkTimes: Long,
+        checkTimes: Int,
         resultList: List<RuleCheckSingleResult>,
         ruleInterceptList: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
     ): RuleCheckResult {
@@ -291,7 +291,7 @@ class QualityRuleCheckService @Autowired constructor(
         } else DEFAULT_TIMEOUT_MINUTES
         logger.info("check result allPass($allPass) allEnd($allEnd) auditTimeoutMinutes($auditTimeOutMinutes)")
         logger.info("end check pipeline build: $projectId, $pipelineId, $buildId")
-        return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60L, checkTimes.toInt(), resultList)
+        return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60L, checkTimes, resultList)
     }
 
     private fun checkPostHandle(
@@ -579,7 +579,7 @@ class QualityRuleCheckService @Autowired constructor(
     private fun recordHistory(
         buildCheckParams: BuildCheckParams,
         result: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
-    ): Long {
+    ): Int {
         val time = LocalDateTime.now()
 
         return with(buildCheckParams) {

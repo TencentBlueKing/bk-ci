@@ -449,7 +449,7 @@ class QualityHistoryService @Autowired constructor(
         interceptList: String,
         createTime: LocalDateTime,
         updateTime: LocalDateTime
-    ): Long {
+    ): Int {
         return historyDao.create(
             dslContext = dslContext,
             projectId = projectId,

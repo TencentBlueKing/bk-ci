@@ -32,6 +32,7 @@ import com.tencent.devops.model.quality.tables.records.THistoryRecord
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL.max
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -47,7 +48,7 @@ class HistoryDao {
         interceptList: String,
         createTime: LocalDateTime,
         updateTime: LocalDateTime
-    ): Long {
+    ): Int {
         with(THistory.T_HISTORY) {
             val record = dslContext.insertInto(
                 this,
@@ -81,7 +82,18 @@ class HistoryDao {
                 .set(PROJECT_NUM, projectNum)
                 .where(ID.eq(record.id))
                 .execute()
-            return projectNum
+
+            // 更新checkTimes
+            val checkTimes = dslContext.select(max(this.CHECK_TIMES) + 1)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId))))
+                .fetchOne(0, Int::class.java)!!
+            dslContext.update(this)
+                .set(CHECK_TIMES, checkTimes)
+                .where(ID.eq(record.id))
+                .execute()
+
+            return checkTimes
         }
     }
 
