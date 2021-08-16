@@ -147,7 +147,7 @@ object BatScriptUtil {
         val charset = Charset.defaultCharset()
         logger.info("The default charset is $charset")
 
-        file.writeText(command.toString(), charset)
+        file.writeText(command.toString(), Charsets.UTF_8)
         logger.info("start to run windows script - ($command)")
         return file
     }
