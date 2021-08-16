@@ -42,6 +42,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.api.ServiceGroupResource
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -138,8 +139,9 @@ class IamV3Service @Autowired constructor(
 
     // 分级管理员操作的用户范围,只能添加用户所在bg组织. 此处直接从project本地拿,最真实数据在用户中心
     private fun createIamProject(userId: String, resourceRegisterInfo: ResourceRegisterInfo): String {
-        val bgId = userDao.get(dslContext, userId)?.bgId
-        logger.info("user $userId bg: $bgId")
+        val bgName = userDao.get(dslContext, userId)?.bgName
+        val bgId = client.get(ServiceDeptResource::class).getDeptByName(userId, bgName).data
+        logger.info("user $userId bg: $bgId bgName: $bgName")
         val subjectScopes = ManagerScopes(
             ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT),
             bgId.toString())
