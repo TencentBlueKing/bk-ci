@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceDeptResource
+import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -39,5 +40,9 @@ class ServiceDeptResourceImpl @Autowired constructor(
 ) : ServiceDeptResource {
     override fun getParentDept(userId: String): Result<Int> {
         return Result("", deptService.getUserParentDept(userId))
+    }
+
+    override fun getDeptByName(deptName: String, userId: String): Result<DeptInfoVo?> {
+        return Result(deptService.getDeptByName(deptName, userId))
     }
 }

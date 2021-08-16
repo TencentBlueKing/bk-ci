@@ -47,4 +47,6 @@ interface DeptService {
 
     // 获取用户组织上一级组织
     fun getUserParentDept(userId: String): Int
+
+    fun getDeptByName(deptName: String, userId: String): DeptInfoVo?
 }
