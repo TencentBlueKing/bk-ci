@@ -99,8 +99,8 @@ class TXPipelineExportService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TXPipelineExportService::class.java)
         private val yamlObjectMapper = ObjectMapper(YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE))
             .apply {
-            registerModule(KotlinModule())
-        }
+                registerModule(KotlinModule())
+            }
     }
 
     private val checkoutAtomCodeSet = listOf(
@@ -796,7 +796,9 @@ class TXPipelineExportService @Autowired constructor(
                             "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
                         }
                     } + ":" + imageRepoInfo.repoTag
-                    return Pair(completeImageName, Credentials(
+                    return if (imageRepoInfo.publicFlag) {
+                        Pair(completeImageName, null)
+                    } else Pair(completeImageName, Credentials(
                         "### 重新配置凭据(${imageRepoInfo.ticketId})后填入 ###",
                         "### 重新配置凭据(${imageRepoInfo.ticketId})后填入 ###"
                     ))
