@@ -140,6 +140,7 @@ class HistoryDao {
         result: String?,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
+        checkTimes: Int?,
         offset: Int?,
         limit: Int?
     ): Result<THistoryRecord> {
@@ -151,7 +152,8 @@ class HistoryDao {
             val step5 = if (result == null) step4 else step4.and(RESULT.eq(result))
             val step6 = if (startTime == null) step5 else step5.and(CREATE_TIME.gt(startTime))
             val step7 = if (endTime == null) step6 else step6.and(CREATE_TIME.lt(endTime))
-            val sql = step7.orderBy(PROJECT_NUM.desc())
+            val step8 = if (checkTimes == null) step7 else step7.and(PROJECT_NUM.eq(checkTimes.toLong()))
+            val sql = step8.orderBy(PROJECT_NUM.desc())
             if (offset != null) {
                 sql.offset(offset)
             }

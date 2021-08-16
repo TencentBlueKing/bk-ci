@@ -264,6 +264,7 @@ class QualityHistoryService @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String?,
+        checkTimes: Int?,
         ruleIds: Set<Long>?,
         result: String?,
         startTime: LocalDateTime?,
@@ -276,6 +277,7 @@ class QualityHistoryService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
+            checkTimes = checkTimes,
             ruleIds = ruleIds,
             result = result,
             startTime = startTime,
@@ -359,6 +361,7 @@ class QualityHistoryService @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String?,
+        checkTimes: Int?,
         ruleHashIds: Set<String>
     ): List<RuleInterceptHistory> {
         val ruleBuildIds = ruleHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
@@ -368,7 +371,7 @@ class QualityHistoryService @Autowired constructor(
 
         val ruleIdToNameMap = qualityRuleBuildHisService.list(ruleBuildIds)
             .map { it.hashId to it.name }.toMap()
-        val recordList = batchServiceList(projectId, pipelineId, buildId, ruleBuildIds,
+        val recordList = batchServiceList(projectId, pipelineId, buildId, checkTimes, ruleBuildIds,
             null, null, null, null, null)
         return recordList.map {
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)

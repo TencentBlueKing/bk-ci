@@ -101,6 +101,9 @@ interface UserQualityInterceptResource {
         @ApiParam("构建ID", required = false)
         @QueryParam("buildId")
         buildId: String?,
+        @ApiParam("第几次检查", required = false)
+        @QueryParam("checkTimes")
+        checkTimes: Int?,
         @ApiParam("规则ID", required = false)
         ruleHashIds: Set<String>
     ): Result<List<RuleInterceptHistory>>
