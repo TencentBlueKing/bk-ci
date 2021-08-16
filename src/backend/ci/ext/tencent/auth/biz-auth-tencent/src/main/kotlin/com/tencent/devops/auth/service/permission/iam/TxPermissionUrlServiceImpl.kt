@@ -158,7 +158,7 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
                 actions.add(
                     UrlAction(
                         TActionUtils.buildAction(it.actionId, it.resourceId),
-                        emptyList()
+                        relatedResourceTypes
                     )
                 )
             }
