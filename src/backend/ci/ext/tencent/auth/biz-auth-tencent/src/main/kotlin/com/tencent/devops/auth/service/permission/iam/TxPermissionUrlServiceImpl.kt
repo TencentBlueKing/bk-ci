@@ -37,6 +37,8 @@ import com.tencent.devops.auth.service.iam.PermissionUrlService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.common.auth.utils.TActionUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,11 +47,13 @@ import org.springframework.beans.factory.annotation.Value
 class TxPermissionUrlServiceImpl @Autowired constructor(
     private val iamConfiguration: IamConfiguration,
     private val managerService: ManagerService,
-    private val permissionProjectService: TxPermissionProjectServiceImpl
+    private val permissionProjectService: TxPermissionProjectServiceImpl,
+    private val client: Client
 ) : PermissionUrlService {
 
     @Value("\${auth.webHost:#{null}}")
     val permissionCenterHost: String? = null
+
     /**
     {
     "system": "bk_job",  # 权限的系统
@@ -128,13 +132,17 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
             } else {
                 val relatedInstanceInfos = mutableListOf<RelationResourceInstance>()
 
-                it.instanceId?.forEach {
+                it.instanceId?.forEach { instance ->
+                    var instanceId = instance.id
+                    if (instance.type == AuthResourceType.PIPELINE_DEFAULT.value) {
+                        instanceId = getPipelineAutoId(instance.id)
+                    }
+
                     val relatedInstance = RelationResourceInstance(
                         iamConfiguration.systemId,
-                        it.type,
-                        it.id,
-                        ""
-                    )
+                        instance.type,
+                        instanceId,
+                        "")
                     relatedInstanceInfos.add(relatedInstance)
                 }
 
@@ -185,6 +193,12 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
         } else {
             "$permissionCenterHost/$rolePermissionUrl"
         }
+    }
+
+    private fun getPipelineAutoId(pipelineId: String): String {
+        val pipelineInfo = client.get(ServiceBuildResource::class).getPipelineNameByIds(pipelineId)?.data
+            ?: return pipelineId
+        return pipelineInfo.id.toString()
     }
 
     companion object {

@@ -79,12 +79,13 @@ class IamAuthConfiguration {
     fun permissionUrlService(
         iamConfiguration: IamConfiguration,
         managerService: com.tencent.bk.sdk.iam.service.ManagerService,
-        permissionProjectService: TxPermissionProjectServiceImpl
+        permissionProjectService: TxPermissionProjectServiceImpl,
+        client: Client
     ) = TxPermissionUrlServiceImpl(
         iamConfiguration = iamConfiguration,
         managerService = managerService,
-        permissionProjectService = permissionProjectService
-
+        permissionProjectService = permissionProjectService,
+        client = client
     )
 
     @Bean
