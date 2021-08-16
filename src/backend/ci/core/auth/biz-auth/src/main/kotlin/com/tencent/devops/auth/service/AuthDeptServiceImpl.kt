@@ -217,6 +217,20 @@ class AuthDeptServiceImpl @Autowired constructor(
         return getParentDept(userCenterResponse)
     }
 
+    override fun getDeptByName(deptName: String, userId: String): DeptInfoVo? {
+        val search = SearchUserAndDeptEntity(
+            bk_app_code = appCode!!,
+            bk_app_secret = appSecret!!,
+            bk_username = userId,
+            fields = null,
+            lookupField = NAME,
+            exactLookups = deptName,
+            fuzzyLookups = null,
+            accessToken = null
+        )
+        return getDeptInfo(search)
+    }
+
     private fun getAndRefreshDeptUser(deptId: Int, accessToken: String?): List<String> {
         val search = SearchDeptUserEntity(
             id = deptId,
