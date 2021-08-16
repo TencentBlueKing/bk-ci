@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
@@ -121,6 +122,8 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
     override fun getPreValidatePassTestStatus(atomCode: String, atomId: String, atomStatus: Byte): Byte {
         return AtomStatusEnum.RELEASED.status.toByte()
     }
+
+    override fun doAtomReleaseBus(userId: String, atomReleaseRequest: AtomReleaseRequest) = Unit
 
     /**
      * 初始化插件版本进度

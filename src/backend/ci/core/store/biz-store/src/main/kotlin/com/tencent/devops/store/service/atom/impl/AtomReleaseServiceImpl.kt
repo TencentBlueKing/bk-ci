@@ -66,6 +66,7 @@ import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
+import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.GetAtomQualityConfigResult
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
@@ -934,24 +935,30 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val version = atomRecord.version
         val releaseFlag = atomStatus == AtomStatusEnum.RELEASED.status.toByte()
         return handleAtomRelease(
+            userId = userId,
             releaseFlag = releaseFlag,
-            atomId = atomId,
-            atomCode = atomCode,
-            atomStatus = atomStatus,
-            version = version,
-            userId = userId
+            atomReleaseRequest = AtomReleaseRequest(
+                atomId = atomId,
+                atomCode = atomCode,
+                atomStatus = atomStatus,
+                version = version,
+                repositoryHashId = atomRecord.repositoryHashId,
+                branch = atomRecord.branch
+            )
         )
     }
 
     override fun handleAtomRelease(
+        userId: String,
         releaseFlag: Boolean,
-        atomId: String,
-        atomCode: String,
-        version: String,
-        atomStatus: Byte,
-        userId: String
+        atomReleaseRequest: AtomReleaseRequest
     ): Result<Boolean> {
+        val atomId = atomReleaseRequest.atomId
+        val atomCode = atomReleaseRequest.atomCode
+        val atomStatus = atomReleaseRequest.atomStatus
         if (releaseFlag) {
+            // 处理插件发布逻辑
+            doAtomReleaseBus(userId, atomReleaseRequest)
             // 更新质量红线信息
             atomQualityService.updateQualityInApprove(atomCode, atomStatus)
             dslContext.transaction { t ->
@@ -984,7 +991,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 marketAtomCommonService.handleAtomCache(
                     atomId = atomId,
                     atomCode = atomCode,
-                    version = version,
+                    version = atomReleaseRequest.version,
                     releaseFlag = true
                 )
                 // 通过websocket推送状态变更消息
@@ -1005,6 +1012,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         return Result(true)
     }
+
+    abstract fun doAtomReleaseBus(
+        userId: String,
+        atomReleaseRequest: AtomReleaseRequest
+    )
 
     /**
      * 检查版本发布过程中的操作权限

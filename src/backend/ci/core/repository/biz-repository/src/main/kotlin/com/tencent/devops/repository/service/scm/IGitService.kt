@@ -179,4 +179,12 @@ interface IGitService {
         repoName: String,
         mrId: Long
     )
+
+    fun createGitTag(
+        repoName: String,
+        tagName: String,
+        ref: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
 }
