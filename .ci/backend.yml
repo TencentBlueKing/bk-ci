@@ -27,7 +27,7 @@ stages:
           MYSQL_IP: ${{steps.mysqlservice.outputs.MYSQL_IP}}
           MYSQL_PORT: ${{steps.mysqlservice.outputs.MYSQL_PORT}}
         run: |
-          cd support-files/sql/
+          cd support-files/sql/tencent
           for i in *.sql; do
             echo import $i start
             mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot -proot < $i
