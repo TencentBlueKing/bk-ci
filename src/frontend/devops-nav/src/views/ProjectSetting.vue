@@ -70,7 +70,7 @@
                 this.activeChildTab = 'member'
                 const memberComponent = this.$refs.member || {}
                 const params = {
-                    projectId: memberComponent.projectId,
+                    projectId: memberComponent.projectCode,
                     roleId: memberComponent.curRole.id
                 }
                 this.getV3UserGroupUrl(params).then((res) => {
