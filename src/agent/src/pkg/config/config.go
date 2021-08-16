@@ -135,7 +135,7 @@ func DetectAgentVersion() string {
 
 func DetectWorkerVersion() string {
 	output, err := command.RunCommand(GetJava(),
-		[]string{"-Dfile.encoding=UTF-8", "-cp", BuildAgentJarPath(), "com.tencent.devops.agent.AgentVersionKt"}, systemutil.GetWorkDir(), nil)
+		[]string{"-cp", BuildAgentJarPath(), "com.tencent.devops.agent.AgentVersionKt"}, systemutil.GetWorkDir(), nil)
 
 	if err != nil {
 		logs.Warn("detect worker version failed: ", err.Error())
