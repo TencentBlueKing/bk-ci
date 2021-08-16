@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
@@ -71,7 +72,8 @@ object BatScriptUtil {
         errorMessage: String? = null,
         workspace: File = dir,
         print2Logger: Boolean = true,
-        elementId: String? = null
+        elementId: String? = null,
+        charSetType: String? = CharSetType.UTF_8.name
     ): String {
         try {
             val file = getCommandFile(
@@ -79,7 +81,8 @@ object BatScriptUtil {
                 script = script,
                 runtimeVariables = runtimeVariables,
                 dir = dir,
-                workspace = workspace
+                workspace = workspace,
+                charSetType = charSetType
             )
             return CommandLineUtils.execute(
                 command = "cmd.exe /C \"${file.canonicalPath}\"",
@@ -88,7 +91,8 @@ object BatScriptUtil {
                 prefix = prefix,
                 executeErrorMessage = "",
                 buildId = buildId,
-                elementId = elementId
+                elementId = elementId,
+                charSetType = charSetType
             )
         } catch (ignore: Throwable) {
             val errorInfo = errorMessage ?: "Fail to execute bat script $script"
@@ -103,7 +107,8 @@ object BatScriptUtil {
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
-        workspace: File = dir
+        workspace: File = dir,
+        charSetType: String? = CharSetType.UTF_8.name
     ): File {
         val tmpDir = System.getProperty("java.io.tmpdir")
         val file = if (tmpDir.isNullOrBlank()) {
@@ -144,10 +149,14 @@ object BatScriptUtil {
                 newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
             ))
 
-        val charset = Charset.defaultCharset()
+        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
+            CharSetType.UTF_8 -> Charsets.UTF_8
+            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
+            else -> Charsets.UTF_8
+        }
         logger.info("The default charset is $charset")
 
-        file.writeText(command.toString(), Charsets.UTF_8)
+        file.writeText(command.toString(), charset)
         logger.info("start to run windows script - ($command)")
         return file
     }

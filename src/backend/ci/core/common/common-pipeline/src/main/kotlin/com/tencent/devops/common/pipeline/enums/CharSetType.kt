@@ -25,38 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task.script.bat
+package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.pipeline.enums.CharSetType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.worker.common.task.script.ICommand
-import com.tencent.devops.worker.common.utils.BatScriptUtil
-import java.io.File
-
-class CommandBatImpl : ICommand {
-
-    override fun execute(
-        buildId: String,
-        script: String,
-        taskParam: Map<String, String>,
-        runtimeVariables: Map<String, String>,
-        projectId: String,
-        dir: File,
-        buildEnvs: List<BuildEnv>,
-        continueNoneZero: Boolean,
-        errorMessage: String?,
-        elementId: String?,
-        charSetType: String?
-    ) {
-        val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables), dir)
-        BatScriptUtil.execute(
-            buildId = buildId,
-            script = realCommand,
-            runtimeVariables = runtimeVariables,
-            dir = dir,
-            errorMessage = errorMessage,
-            elementId = elementId,
-            charSetType = charSetType
-        )
-    }
+enum class CharSetType {
+    UTF_8,
+    GBK
 }
