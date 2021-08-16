@@ -657,9 +657,9 @@ class YamlBuildV2 @Autowired constructor(
             if (it.name == poolName) {
                 try {
                     val repoNameAndPool = it.from!!.split("@")
-                    if (repoNameAndPool.size != 2
-                        || repoNameAndPool[0].isNullOrBlank()
-                        || repoNameAndPool[1].isNullOrBlank()) {
+                    if (repoNameAndPool.size != 2 ||
+                        repoNameAndPool[0].isNullOrBlank() ||
+                        repoNameAndPool[1].isNullOrBlank()) {
                         return@label
                     }
 
