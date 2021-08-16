@@ -232,13 +232,13 @@ class AuthDeptServiceImpl @Autowired constructor(
 
     private fun getDeptInfo(searchDeptEnity: SearchUserAndDeptEntity): DeptInfoVo {
         val responseDTO = callUserCenter(LIST_DEPARTMENTS, searchDeptEnity)
-        return objectMapper.readValue<DeptInfoVo>(JsonUtil.toJson(responseDTO))
+        return objectMapper.readValue<DeptInfoVo>(responseDTO)
     }
 
     private fun getUserInfo(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo {
         val responseDTO = callUserCenter(USER_INFO, searchUserEntity)
 
-        return objectMapper.readValue<BkUserInfoVo>(JsonUtil.toJson(responseDTO))
+        return objectMapper.readValue<BkUserInfoVo>(responseDTO)
     }
 
     private fun callUserCenter(url: String, searchEntity: EsbBaseReq): String {
