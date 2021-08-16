@@ -226,21 +226,17 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_username = "",
             accessToken = accessToken
         )
-        val url = getAuthRequestUrl(LIST_DEPARTMENT_PROFILES)
-        val responseStr = callUserCenter(url, search)
+        val responseStr = callUserCenter(LIST_DEPARTMENT_PROFILES, search)
         return findUserName(responseStr)
     }
 
     private fun getDeptInfo(searchDeptEnity: SearchUserAndDeptEntity): DeptInfoVo {
-        val url = getAuthRequestUrl(LIST_DEPARTMENTS)
-        val responseDTO = callUserCenter(url, searchDeptEnity)
+        val responseDTO = callUserCenter(LIST_DEPARTMENTS, searchDeptEnity)
         return objectMapper.readValue<DeptInfoVo>(JsonUtil.toJson(responseDTO))
     }
 
     private fun getUserInfo(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo {
-        val url = getAuthRequestUrl(USER_INFO)
-
-        val responseDTO = callUserCenter(url, searchUserEntity)
+        val responseDTO = callUserCenter(USER_INFO, searchUserEntity)
 
         return objectMapper.readValue<BkUserInfoVo>(JsonUtil.toJson(responseDTO))
     }
