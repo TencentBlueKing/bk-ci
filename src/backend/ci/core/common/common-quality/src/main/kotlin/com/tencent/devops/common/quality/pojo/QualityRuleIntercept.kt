@@ -25,41 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.pojo
+package com.tencent.devops.common.quality.pojo
 
-import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("质量红线-拦截记录")
-data class RuleInterceptHistory(
-    @ApiModelProperty("hashId", required = true)
-    val hashId: String,
-    @ApiModelProperty("项目里的序号", required = true)
-    val num: Long,
-    @ApiModelProperty("时间戳(秒)", required = true)
-    val timestamp: Long,
-    @ApiModelProperty("拦截结果", required = true)
-    val interceptResult: RuleInterceptResult,
-    @ApiModelProperty("规则HashId", required = true)
-    val ruleHashId: String,
-    @ApiModelProperty("规则名称", required = true)
-    val ruleName: String,
+@ApiModel("质量红线-规则拦截数")
+data class QualityRuleIntercept(
     @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,
     @ApiModelProperty("流水线名称", required = true)
     val pipelineName: String,
     @ApiModelProperty("构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("构建号", required = true)
-    val buildNo: String,
-    @ApiModelProperty("检查次数", required = true)
+    @ApiModelProperty("规则ID", required = true)
+    val ruleHashId: String,
+    @ApiModelProperty("规则名称", required = true)
+    val ruleName: String,
+    @ApiModelProperty("拦截时间", required = true)
+    val interceptTime: Long,
+    @ApiModelProperty("拦截结果", required = true)
+    val result: RuleInterceptResult,
+    @ApiModelProperty("拦截次数", required = true)
     val checkTimes: Int,
-    @ApiModelProperty("描述", required = true)
-    val remark: String,
-    @ApiModelProperty("描述列表", required = true)
-    val interceptList: List<QualityRuleInterceptRecord>? = null,
-    @ApiModelProperty("流水线是否已删除", required = true)
-    val pipelineIsDelete: Boolean = false
+    @ApiModelProperty("拦截结果信息列表", required = true)
+    val resultMsg: List<QualityRuleInterceptRecord>
 )

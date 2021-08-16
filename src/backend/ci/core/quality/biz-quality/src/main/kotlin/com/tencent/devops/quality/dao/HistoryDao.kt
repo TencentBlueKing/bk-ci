@@ -29,7 +29,7 @@ package com.tencent.devops.quality.dao
 
 import com.tencent.devops.model.quality.tables.THistory
 import com.tencent.devops.model.quality.tables.records.THistoryRecord
-import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL.max
@@ -86,7 +86,8 @@ class HistoryDao {
             // 更新checkTimes
             val checkTimes = dslContext.select(max(this.CHECK_TIMES) + 1)
                 .from(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId))))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)
+                    .and(BUILD_ID.eq(buildId)).and(RULE_ID.eq(ruleId))))
                 .fetchOne(0, Int::class.java)!!
             dslContext.update(this)
                 .set(CHECK_TIMES, checkTimes)
@@ -152,7 +153,6 @@ class HistoryDao {
         result: String?,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
-        checkTimes: Int?,
         offset: Int?,
         limit: Int?
     ): Result<THistoryRecord> {
@@ -164,8 +164,7 @@ class HistoryDao {
             val step5 = if (result == null) step4 else step4.and(RESULT.eq(result))
             val step6 = if (startTime == null) step5 else step5.and(CREATE_TIME.gt(startTime))
             val step7 = if (endTime == null) step6 else step6.and(CREATE_TIME.lt(endTime))
-            val step8 = if (checkTimes == null) step7 else step7.and(PROJECT_NUM.eq(checkTimes.toLong()))
-            val sql = step8.orderBy(PROJECT_NUM.desc())
+            val sql = step7.orderBy(PROJECT_NUM.desc())
             if (offset != null) {
                 sql.offset(offset)
             }

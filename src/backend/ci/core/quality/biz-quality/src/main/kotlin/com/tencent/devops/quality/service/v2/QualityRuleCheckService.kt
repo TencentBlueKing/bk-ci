@@ -47,7 +47,8 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleInterceptRecord
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
+import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.AtomRuleResponse
@@ -57,7 +58,7 @@ import com.tencent.devops.quality.bean.QualityUrlBean
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.pojo.RefreshType
-import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.QualityNotifyGroupService
 import com.tencent.devops.quality.util.ThresholdOperationUtil
@@ -234,9 +235,9 @@ class QualityRuleCheckService @Autowired constructor(
             executors.execute { checkPostHandle(buildCheckParams, ruleInterceptList, resultList) }
 
             // 记录结果
-            val checkTimes = recordHistory(buildCheckParams, ruleInterceptList)
+            val historyList = recordHistory(buildCheckParams, ruleInterceptList)
 
-            return genResult(projectId, pipelineId, buildId, checkTimes, resultList, ruleInterceptList)
+            return genResult(projectId, pipelineId, buildId, historyList, resultList, ruleInterceptList)
         }
     }
 
@@ -278,7 +279,7 @@ class QualityRuleCheckService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        checkTimes: Int,
+        historyList: List<QualityRuleIntercept>,
         resultList: List<RuleCheckSingleResult>,
         ruleInterceptList: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
     ): RuleCheckResult {
@@ -291,7 +292,7 @@ class QualityRuleCheckService @Autowired constructor(
         } else DEFAULT_TIMEOUT_MINUTES
         logger.info("check result allPass($allPass) allEnd($allEnd) auditTimeoutMinutes($auditTimeOutMinutes)")
         logger.info("end check pipeline build: $projectId, $pipelineId, $buildId")
-        return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60L, checkTimes, resultList)
+        return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60L, historyList, resultList)
     }
 
     private fun checkPostHandle(
@@ -579,7 +580,7 @@ class QualityRuleCheckService @Autowired constructor(
     private fun recordHistory(
         buildCheckParams: BuildCheckParams,
         result: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
-    ): Int {
+    ): List<QualityRuleIntercept> {
         val time = LocalDateTime.now()
 
         return with(buildCheckParams) {
@@ -590,7 +591,7 @@ class QualityRuleCheckService @Autowired constructor(
                 val interceptRecordList = it.third
 
                 val interceptList = objectMapper.writeValueAsString(interceptRecordList)
-                if (pass) {
+                val checkTimes = if (pass) {
                     historyService.serviceCreate(projectId = projectId,
                         ruleId = ruleId,
                         pipelineId = pipelineId,
@@ -609,7 +610,22 @@ class QualityRuleCheckService @Autowired constructor(
                         createTime = time,
                         updateTime = time)
                 }
-            }.firstOrNull() ?: 0
+                QualityRuleIntercept(
+                    pipelineId,
+                    "",
+                    buildId,
+                    rule.hashId,
+                    rule.name,
+                    System.currentTimeMillis(),
+                    if (pass) {
+                        RuleInterceptResult.PASS
+                    } else {
+                        RuleInterceptResult.FAIL
+                    },
+                    checkTimes,
+                    listOf()
+                )
+            }
         }
     }
 

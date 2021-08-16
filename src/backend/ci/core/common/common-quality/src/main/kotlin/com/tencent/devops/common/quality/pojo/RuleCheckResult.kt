@@ -39,7 +39,7 @@ data class RuleCheckResult(
     @ApiModelProperty("审核超时时间", required = true)
     val auditTimeoutSeconds: Long,
     @ApiModelProperty("第几次检查", required = true)
-    val checkTimes: Int,
+    val historyList: List<QualityRuleIntercept>,
     @ApiModelProperty("失败信息", required = true)
     val resultList: List<RuleCheckSingleResult>
 )

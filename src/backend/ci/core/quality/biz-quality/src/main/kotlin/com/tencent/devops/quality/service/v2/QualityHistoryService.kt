@@ -36,11 +36,12 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.quality.tables.records.THistoryRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleInterceptRecord
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
+import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
-import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.common.quality.pojo.request.QualityHistoryListRequest
 import com.tencent.devops.quality.util.ThresholdOperationUtil
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -109,6 +110,7 @@ class QualityHistoryService @Autowired constructor(
                 ruleName = ruleIdMap[hashId]?.name ?: "",
                 interceptTime = it.createTime.timestampmilli(),
                 result = RuleInterceptResult.valueOf(it.result),
+                checkTimes = it.checkTimes,
                 resultMsg = objectMapper.readValue(it.interceptList)
             )
         }
@@ -164,7 +166,7 @@ class QualityHistoryService @Autowired constructor(
                 pipelineName = pipelineIdToNameMap[it.pipelineId] ?: "",
                 buildId = it.buildId,
                 buildNo = buildIdToNameMap[it.buildId] ?: "",
-                checkTimes = it.projectNum,
+                checkTimes = it.checkTimes,
                 remark = remark,
                 pipelineIsDelete = false
             )
@@ -212,6 +214,7 @@ class QualityHistoryService @Autowired constructor(
                 ruleName = "",
                 interceptTime = it.createTime.timestampmilli(),
                 result = RuleInterceptResult.valueOf(it.result),
+                checkTimes = it.checkTimes,
                 resultMsg = objectMapper.readValue(it.interceptList)
             )
         }
@@ -264,7 +267,6 @@ class QualityHistoryService @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String?,
-        checkTimes: Int?,
         ruleIds: Set<Long>?,
         result: String?,
         startTime: LocalDateTime?,
@@ -277,7 +279,6 @@ class QualityHistoryService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            checkTimes = checkTimes,
             ruleIds = ruleIds,
             result = result,
             startTime = startTime,
@@ -348,7 +349,7 @@ class QualityHistoryService @Autowired constructor(
                 pipelineName = pipeline?.pipelineName ?: "",
                 buildId = it.buildId,
                 buildNo = buildIdToNameMap[it.buildId] ?: "",
-                checkTimes = it.projectNum,
+                checkTimes = it.checkTimes,
                 remark = remark,
                 pipelineIsDelete = pipeline?.isDelete ?: false
             )
@@ -361,19 +362,21 @@ class QualityHistoryService @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String?,
-        checkTimes: Int?,
-        ruleHashIds: Set<String>
+        request: List<QualityHistoryListRequest>
     ): List<RuleInterceptHistory> {
-        val ruleBuildIds = ruleHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
+        val ruleBuildIds = request.map { HashUtil.decodeIdToLong(it.ruleHashId) }.toSet()
+        val requestMap = request.map { HashUtil.decodeIdToLong(it.ruleHashId) to it.checkTimes }.toMap()
 
         logger.info("start to list intercept history for pipeline: " +
             "$projectId, $pipelineId, $buildId, ${ruleBuildIds.firstOrNull()}")
 
         val ruleIdToNameMap = qualityRuleBuildHisService.list(ruleBuildIds)
             .map { it.hashId to it.name }.toMap()
-        val recordList = batchServiceList(projectId, pipelineId, buildId, checkTimes, ruleBuildIds,
+        val recordList = batchServiceList(projectId, pipelineId, buildId, ruleBuildIds,
             null, null, null, null, null)
-        return recordList.map {
+        return recordList.filter {
+            it.checkTimes == requestMap[it.ruleId]
+        }.map {
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
             val hisRuleHashId = HashUtil.encodeLongId(it.ruleId)
             RuleInterceptHistory(
@@ -387,7 +390,7 @@ class QualityHistoryService @Autowired constructor(
                 pipelineName = "",
                 buildId = it.buildId,
                 buildNo = "",
-                checkTimes = it.projectNum,
+                checkTimes = it.checkTimes,
                 remark = "",
                 interceptList = interceptList
             )

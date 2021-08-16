@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2.pojo.enums
+package com.tencent.devops.common.quality.pojo.enums
 
 enum class QualityOperation {
     GT,

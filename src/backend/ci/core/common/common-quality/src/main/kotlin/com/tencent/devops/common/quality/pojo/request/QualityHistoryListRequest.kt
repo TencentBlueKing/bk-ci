@@ -25,9 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.pojo.enum
+package com.tencent.devops.common.quality.pojo.request
 
-enum class RuleInterceptResult {
-    PASS,
-    FAIL
-}
+data class QualityHistoryListRequest(
+    val ruleHashId: String,
+    val checkTimes: Int
+)
