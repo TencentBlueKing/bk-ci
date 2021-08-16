@@ -31,9 +31,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.quality.pojo.RuleInterceptHistory
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
-import com.tencent.devops.common.quality.pojo.request.QualityHistoryListRequest
+import com.tencent.devops.quality.pojo.RuleInterceptHistory
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -102,8 +101,11 @@ interface UserQualityInterceptResource {
         @ApiParam("构建ID", required = false)
         @QueryParam("buildId")
         buildId: String?,
-        @ApiParam("请求体", required = false)
-        request: List<QualityHistoryListRequest>
+        @ApiParam("第几次检查", required = false)
+        @QueryParam("checkTimes")
+        checkTimes: Int?,
+        @ApiParam("规则ID", required = false)
+        ruleHashIds: Set<String>
     ): Result<List<RuleInterceptHistory>>
 
     @ApiOperation("获取审核用户列表")

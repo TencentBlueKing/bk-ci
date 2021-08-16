@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
-import com.tencent.devops.common.quality.pojo.request.QualityHistoryListRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.quality.api.v2.UserQualityInterceptResource
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
@@ -84,9 +83,12 @@ class UserQualityInterceptResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String?,
-        request: List<QualityHistoryListRequest>
+        checkTimes: Int?,
+        ruleHashIds: Set<String>
     ): Result<List<RuleInterceptHistory>> {
-        return Result(historyService.listInterceptHistoryForBuildHis(userId, projectId, pipelineId, buildId, request))
+        return Result(historyService.listInterceptHistoryForBuildHis(
+            userId, projectId, pipelineId, buildId, checkTimes, ruleHashIds)
+        )
     }
 
     override fun getAuditUserList(

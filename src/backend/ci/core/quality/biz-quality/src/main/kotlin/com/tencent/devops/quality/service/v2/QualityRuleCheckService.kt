@@ -33,8 +33,11 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
+import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.common.quality.pojo.RuleCheckSingleResult
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE
 import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -47,18 +50,15 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
-import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
-import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.AtomRuleResponse
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.bean.QualityUrlBean
-import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
+import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RefreshType
-import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.QualityNotifyGroupService
 import com.tencent.devops.quality.util.ThresholdOperationUtil
@@ -69,7 +69,7 @@ import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Collections
+import java.util.*
 import java.util.concurrent.Executors
 
 @Service
@@ -235,9 +235,9 @@ class QualityRuleCheckService @Autowired constructor(
             executors.execute { checkPostHandle(buildCheckParams, ruleInterceptList, resultList) }
 
             // 记录结果
-            val historyList = recordHistory(buildCheckParams, ruleInterceptList)
+            val checkTimes = recordHistory(buildCheckParams, ruleInterceptList)
 
-            return genResult(projectId, pipelineId, buildId, historyList, resultList, ruleInterceptList)
+            return genResult(projectId, pipelineId, buildId, checkTimes, resultList, ruleInterceptList)
         }
     }
 
@@ -279,7 +279,7 @@ class QualityRuleCheckService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        historyList: List<QualityRuleIntercept>,
+        checkTimes: Int,
         resultList: List<RuleCheckSingleResult>,
         ruleInterceptList: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
     ): RuleCheckResult {
@@ -292,7 +292,7 @@ class QualityRuleCheckService @Autowired constructor(
         } else DEFAULT_TIMEOUT_MINUTES
         logger.info("check result allPass($allPass) allEnd($allEnd) auditTimeoutMinutes($auditTimeOutMinutes)")
         logger.info("end check pipeline build: $projectId, $pipelineId, $buildId")
-        return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60L, historyList, resultList)
+        return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60L, checkTimes, resultList)
     }
 
     private fun checkPostHandle(
@@ -580,7 +580,7 @@ class QualityRuleCheckService @Autowired constructor(
     private fun recordHistory(
         buildCheckParams: BuildCheckParams,
         result: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
-    ): List<QualityRuleIntercept> {
+    ): Int {
         val time = LocalDateTime.now()
 
         return with(buildCheckParams) {
@@ -591,7 +591,7 @@ class QualityRuleCheckService @Autowired constructor(
                 val interceptRecordList = it.third
 
                 val interceptList = objectMapper.writeValueAsString(interceptRecordList)
-                val checkTimes = if (pass) {
+                if (pass) {
                     historyService.serviceCreate(projectId = projectId,
                         ruleId = ruleId,
                         pipelineId = pipelineId,
@@ -610,22 +610,7 @@ class QualityRuleCheckService @Autowired constructor(
                         createTime = time,
                         updateTime = time)
                 }
-                QualityRuleIntercept(
-                    pipelineId,
-                    "",
-                    buildId,
-                    rule.hashId,
-                    rule.name,
-                    System.currentTimeMillis(),
-                    if (pass) {
-                        RuleInterceptResult.PASS
-                    } else {
-                        RuleInterceptResult.FAIL
-                    },
-                    checkTimes,
-                    listOf()
-                )
-            }
+            }.firstOrNull() ?: 1
         }
     }
 
