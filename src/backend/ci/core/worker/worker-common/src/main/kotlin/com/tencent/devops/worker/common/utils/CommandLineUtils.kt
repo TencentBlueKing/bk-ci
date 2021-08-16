@@ -73,15 +73,7 @@ object CommandLineUtils {
                 val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
                 privateStringField.isAccessible = true;
                 val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                if (print2Logger) {
-                    LoggerService.addNormalLine("buffer.toString(\"GBK\") --${buffer.toString("GBK")}--")
-                    LoggerService.addNormalLine("buffer.toString(\"UTF-8\") --${buffer.toString("UTF-8")}--")
-                    LoggerService.addNormalLine("GBK-->UTF-8  --${String(buffer.toString()
-                        .toByteArray(Charset.forName("GBK")), Charset.forName("UTF-8"))}--")
-                    LoggerService.addNormalLine("Charset.defaultCharset() --${Charset.defaultCharset()}--")
-                }
-                processLine(buffer.toString())
-//                processLine(String(buffer.toByteArray(), Charset.forName("GBK")))
+                processLine(buffer.toString("UTF-8"))
                 buffer.reset()
             }
             override fun processLine(line: String?, level: Int) {
@@ -107,8 +99,7 @@ object CommandLineUtils {
                 val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
                 privateStringField.isAccessible = true;
                 val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                processLine(buffer.toString())
-//                processLine(String(buffer.toString().toByteArray(),Charset.forName("GBK")))
+                processLine(buffer.toString("UTF-8"))
                 buffer.reset()
             }
             override fun processLine(line: String?, level: Int) {
