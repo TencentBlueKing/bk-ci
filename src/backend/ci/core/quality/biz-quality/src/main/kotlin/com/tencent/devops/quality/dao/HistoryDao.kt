@@ -58,6 +58,7 @@ class HistoryDao {
                 BUILD_ID,
                 RESULT,
                 INTERCEPT_LIST,
+                CHECK_TIMES,
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
@@ -67,6 +68,7 @@ class HistoryDao {
                 buildId,
                 result,
                 interceptList,
+                0,
                 createTime,
                 updateTime
             )
