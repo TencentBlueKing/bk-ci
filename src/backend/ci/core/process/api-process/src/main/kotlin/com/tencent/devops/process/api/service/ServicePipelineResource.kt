@@ -452,6 +452,7 @@ interface ServicePipelineResource {
     @Path("/pipelines/{pipelineId}")
     fun getPipelineInfoByPipelineId(
         @ApiParam("流水线id列表", required = true)
+        @PathParam("pipelineId")
         pipelineId: String
     ): Result<SimplePipeline?>?
 }
