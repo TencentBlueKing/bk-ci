@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.common.auth.utils.TActionUtils
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -196,7 +197,8 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
     }
 
     private fun getPipelineAutoId(pipelineId: String): String {
-        val pipelineInfo = client.get(ServiceBuildResource::class).getPipelineNameByIds(pipelineId)?.data
+        val pipelineInfo = client.get(ServicePipelineResource::class)
+            .getPipelineInfoByPipelineId(pipelineId)?.data
             ?: return pipelineId
         return pipelineInfo.id.toString()
     }
