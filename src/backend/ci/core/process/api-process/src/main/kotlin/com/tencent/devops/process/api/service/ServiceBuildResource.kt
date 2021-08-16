@@ -47,7 +47,6 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
-import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -571,12 +570,4 @@ interface ServiceBuildResource {
         buildId: String,
         taskPauseExecute: BuildTaskPauseInfo
     ): Result<Boolean>
-
-    @ApiOperation("根据流水线id获取流水线信息")
-    @GET
-    @Path("/pipelines/{pipelineId}")
-    fun getPipelineNameByIds(
-        @ApiParam("流水线id列表", required = true)
-        pipelineId: String
-    ): Result<SimplePipeline?>?
 }
