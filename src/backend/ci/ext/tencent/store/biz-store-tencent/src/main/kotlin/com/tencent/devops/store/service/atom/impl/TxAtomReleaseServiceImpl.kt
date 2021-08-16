@@ -100,7 +100,6 @@ import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 import java.util.*
 import java.util.concurrent.Executors
-import javax.ws.rs.core.Response
 
 @Service
 @RefreshScope
@@ -359,26 +358,21 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     }
 
     override fun doAtomReleaseBus(userId: String, atomReleaseRequest: AtomReleaseRequest) {
-        try {
-            val date = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
-            val tagName = "prod-v${atomReleaseRequest.version}-$date"
-            val createGitTagResult = client.get(ServiceGitRepositoryResource::class).createGitTag(
-                userId = userId,
-                repoId = atomReleaseRequest.repositoryHashId!!,
-                tagName = tagName,
-                ref = atomReleaseRequest.branch ?: "master",
-                tokenType = TokenTypeEnum.PRIVATE_KEY
+        val date = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
+        val tagName = "prod-v${atomReleaseRequest.version}-$date"
+        val createGitTagResult = client.get(ServiceGitRepositoryResource::class).createGitTag(
+            userId = userId,
+            repoId = atomReleaseRequest.repositoryHashId!!,
+            tagName = tagName,
+            ref = atomReleaseRequest.branch ?: "master",
+            tokenType = TokenTypeEnum.PRIVATE_KEY
+        )
+        logger.info("createGitTagResult is :$createGitTagResult")
+        if (createGitTagResult.isNotOk() || createGitTagResult.data == false) {
+            throw ErrorCodeException(
+                errorCode = createGitTagResult.status.toString(),
+                defaultMessage = createGitTagResult.message
             )
-            logger.info("createGitTagResult is :$createGitTagResult")
-            if (createGitTagResult.isNotOk() || createGitTagResult.data == false) {
-                throw ErrorCodeException(
-                    errorCode = createGitTagResult.status.toString(),
-                    defaultMessage = createGitTagResult.message
-                )
-            }
-        } catch (ignore: Exception) {
-            logger.warn("createGitTag error:", ignore)
-            throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
         }
     }
 
