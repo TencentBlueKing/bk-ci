@@ -77,6 +77,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
+import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
@@ -381,7 +382,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             atomCode = atomCode,
             atomVersion = atomVersion,
             repositoryHashId = repoId,
-            userId = userId
+            userId = userId,
+            branch = atomRecord.branch
         )
         logger.info("rebuild, getAtomConfResult: $getAtomConfResult")
         if (getAtomConfResult.errorCode != "0") {
@@ -403,7 +405,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             fieldCheckConfirmFlag = atomRebuildRequest.fieldCheckConfirmFlag
         )
         val atomEnvRequest = getAtomConfResult.atomEnvRequest ?: return MessageCodeUtil.generateResponseDataObject(
-            StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf("execution")
+            StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf(KEY_EXECUTION)
         )
         // 解析quality.json
         val getAtomQualityResult = getAtomQualityConfig(
@@ -412,7 +414,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             atomName = atomName,
             atomVersion = atomVersion,
             repositoryHashId = atomRecord.repositoryHashId,
-            userId = userId
+            userId = userId,
+            branch = atomRecord.branch
         )
         logger.info("rebuild, getAtomQualityResult: $getAtomQualityResult")
         if (getAtomQualityResult.errorCode == StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL) {
