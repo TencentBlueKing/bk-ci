@@ -237,7 +237,6 @@ class AuthDeptServiceImpl @Autowired constructor(
 
     private fun getUserInfo(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo {
         val responseDTO = callUserCenter(USER_INFO, searchUserEntity)
-
         return objectMapper.readValue<BkUserInfoVo>(responseDTO)
     }
 
