@@ -1174,7 +1174,7 @@ class GitService @Autowired constructor(
         params["ref"] = ref
         val request = Request.Builder()
             .url(url.toString())
-            .put(
+            .post(
                 RequestBody.create(
                     MediaType.parse("application/json;charset=utf-8"),
                     JsonUtil.toJson(params)
