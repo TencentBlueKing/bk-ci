@@ -52,6 +52,6 @@ stages:
                         -DprojectMysqlURL=$mysqlURL \
                         -DprojectMysqlUser=$mysqlUser \
                         -DprojectMysqlPasswd=$mysqlPasswd \
-                        -DmysqlPrefix=devops_ci_ 
+                        -DmysqlPrefix=devops_ci_ \
                         test classes
 
