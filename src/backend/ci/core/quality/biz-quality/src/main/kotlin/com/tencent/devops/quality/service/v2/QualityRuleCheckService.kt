@@ -291,7 +291,7 @@ class QualityRuleCheckService @Autowired constructor(
         } else DEFAULT_TIMEOUT_MINUTES
         logger.info("check result allPass($allPass) allEnd($allEnd) auditTimeoutMinutes($auditTimeOutMinutes)")
         logger.info("end check pipeline build: $projectId, $pipelineId, $buildId")
-        return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60, checkTimes, resultList)
+        return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60L, checkTimes.toInt(), resultList)
     }
 
     private fun checkPostHandle(
@@ -583,7 +583,7 @@ class QualityRuleCheckService @Autowired constructor(
         val time = LocalDateTime.now()
 
         return with(buildCheckParams) {
-            result.forEach {
+            result.map {
                 val rule = it.first
                 val ruleId = HashUtil.decodeIdToLong(rule.hashId)
                 val pass = it.second
@@ -609,7 +609,7 @@ class QualityRuleCheckService @Autowired constructor(
                         createTime = time,
                         updateTime = time)
                 }
-            }
+            }.firstOrNull() ?: 0
         }
     }
 
