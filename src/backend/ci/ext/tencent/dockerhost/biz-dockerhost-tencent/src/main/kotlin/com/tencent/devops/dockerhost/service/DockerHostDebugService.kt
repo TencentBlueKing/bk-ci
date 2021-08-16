@@ -40,7 +40,7 @@ import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.dispatch.pojo.ContainerInfo
+import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
