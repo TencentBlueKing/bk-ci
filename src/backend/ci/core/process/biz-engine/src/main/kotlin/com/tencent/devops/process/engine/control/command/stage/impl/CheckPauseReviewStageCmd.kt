@@ -142,9 +142,9 @@ class CheckPauseReviewStageCmd(
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
                 "request=$request|ruleIds=${stage.checkIn?.ruleIds}")
             val result = client.get(ServiceQualityRuleResource::class).check(request).data!!
-            stage.checkIn?.checkTimes = result.checkTimes
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
                 "response=$result|ruleIds=${stage.checkIn?.ruleIds}")
+            stage.checkIn!!.checkTimes = result.checkTimes
             return !result.success
         } catch (ignore: Throwable) {
             LOG.error("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)
