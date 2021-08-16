@@ -368,7 +368,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineListFacadeService.getPipelineId(projectCode, pipelineId))
     }
 
-    override fun getPipelineNameByIds(pipelineId: String): Result<SimplePipeline?>? {
+    override fun getPipelineInfoByPipelineId(pipelineId: String): Result<SimplePipeline?>? {
         val pipelineInfos = pipelineListFacadeService.getByPipelineIds(setOf(pipelineId))
         if (pipelineInfos.isNotEmpty()) {
             return Result(pipelineInfos[0])
