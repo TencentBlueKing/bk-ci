@@ -104,4 +104,13 @@ class QualityRuleBuildHisDao @Autowired constructor(
                 .execute()
         }
     }
+
+    fun updateBuildId(ruleBuildIds: Collection<Long>, buildId: String): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(BUILD_ID, buildId)
+                .where(ID.`in`(ruleBuildIds))
+                .execute()
+        }
+    }
 }

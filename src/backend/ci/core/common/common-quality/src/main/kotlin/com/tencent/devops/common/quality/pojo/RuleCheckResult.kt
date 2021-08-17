@@ -37,7 +37,9 @@ data class RuleCheckResult(
     @ApiModelProperty("失败后是否结束", required = true)
     val failEnd: Boolean,
     @ApiModelProperty("审核超时时间", required = true)
-    val auditTimeoutSeconds: Int,
+    val auditTimeoutSeconds: Long,
+    @ApiModelProperty("第几次检查", required = true)
+    val checkTimes: Int,
     @ApiModelProperty("失败信息", required = true)
     val resultList: List<RuleCheckSingleResult>
 )
