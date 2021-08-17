@@ -105,7 +105,11 @@ class DockerResourceOptionsService constructor(
         return true
     }
 
-    fun updateDockerResourceOptions(userId: String, id: Long, dockerResourceOptionsVO: DockerResourceOptionsVO): Boolean {
+    fun updateDockerResourceOptions(
+        userId: String,
+        id: Long,
+        dockerResourceOptionsVO: DockerResourceOptionsVO
+    ): Boolean {
         logger.info("$userId update resourceOptionsVO: $dockerResourceOptionsVO")
 
         try {
@@ -131,7 +135,10 @@ class DockerResourceOptionsService constructor(
             pipelineId = pipelineId,
             vmSeq = vmSeqId
         )?.dockerResourceOption ?: 0
-        val dockerResourceOptions = dockerResourceOptionsDao.get(dslContext, dockerResourceOptionId.toLong())
+        val dockerResourceOptions = dockerResourceOptionsDao.get(
+            dslContext = dslContext,
+            id = dockerResourceOptionId.toLong()
+        )
         if (dockerResourceOptions != null) {
             return DockerResourceOptionsVO(
                 cpuPeriod = dockerResourceOptions["CPU_PERIOD"] as Int,
@@ -155,75 +162,83 @@ class DockerResourceOptionsService constructor(
         }
     }
 
-    fun getDcPerformanceConfigList(
+    fun getDockerResourceConfigList(
         userId: String,
         projectId: String,
         buildType: String? = BuildType.DOCKER.name
     ): UserDockerResourceOptionsVO {
-        when (buildType) {
+        return when (buildType) {
             BuildType.DOCKER.name -> {
-                var default = "0"
-                var needShow = false
-                val dockerResourceOptionsMaps = mutableListOf<DockerResourceOptionsMap>()
+                getDockerResourceOptions(projectId)
+            }
+            else -> {
+                extDockerResourceOptionsService.getDockerResourceConfigList(
+                    userId, projectId, buildType ?: BuildType.DOCKER.name
+                ) ?: UserDockerResourceOptionsVO(
+                    default = "",
+                    needShow = false,
+                    dockerResourceOptionsMaps = emptyList()
+                )
+            }
+        }
+    }
 
-                if (dockerResourceWhitelistService.checkDockerResourceWhitelist(projectId)) {
-                    needShow = true
+    private fun getDockerResourceOptions(projectId: String): UserDockerResourceOptionsVO {
+        var default = "0"
+        var needShow = false
+        val dockerResourceOptionsMaps = mutableListOf<DockerResourceOptionsMap>()
 
-                    val optionList = dockerResourceOptionsDao.getList(dslContext)
-                    if (optionList.size == 0) {
-                        dockerResourceOptionsMaps.add(
-                            DockerResourceOptionsMap("0", DockerResourceOptionsShow(
-                                cpu = (defaultImageConfig.cpuQuota / defaultImageConfig.cpuPeriod).toString(),
-                                memory = (defaultImageConfig.memory / (1024 * 1024 * 1024)).toString().plus("G"),
-                                disk = (100).toString().plus("G"),
-                                description = "Basic"
-                            )
-                            )
-                        )
-                    } else {
-                        optionList.forEach {
-                            if (it.memoryLimitBytes == defaultImageConfig.memory) {
-                                default = it.id.toString()
-                            }
-                            dockerResourceOptionsMaps.add(
-                                DockerResourceOptionsMap(it.id.toString(), DockerResourceOptionsShow(
-                                    cpu = (it.cpuQuota / it.cpuPeriod).toString(),
-                                    memory = "${it.memoryLimitBytes / (1024 * 1024 * 1024)}G",
-                                    disk = "${it.disk}G",
-                                    description = it.description
-                                )
-                                )
-                            )
-                        }
+        if (dockerResourceWhitelistService.checkDockerResourceWhitelist(projectId)) {
+            needShow = true
 
-                        // 没有默认的配置，默认第一个
-                        if (default == "0") {
-                            default = optionList[0].id.toString()
-                        }
-                    }
-                } else {
-                    dockerResourceOptionsMaps.add(
-                        DockerResourceOptionsMap("0", DockerResourceOptionsShow(
+            val optionList = dockerResourceOptionsDao.getList(dslContext)
+            if (optionList.size == 0) {
+                dockerResourceOptionsMaps.add(
+                    DockerResourceOptionsMap(
+                        "0", DockerResourceOptionsShow(
                             cpu = (defaultImageConfig.cpuQuota / defaultImageConfig.cpuPeriod).toString(),
                             memory = (defaultImageConfig.memory / (1024 * 1024 * 1024)).toString().plus("G"),
                             disk = (100).toString().plus("G"),
                             description = "Basic"
                         )
+                    )
+                )
+            } else {
+                optionList.forEach {
+                    if (it.memoryLimitBytes == defaultImageConfig.memory) {
+                        default = it.id.toString()
+                    }
+                    dockerResourceOptionsMaps.add(
+                        DockerResourceOptionsMap(
+                            it.id.toString(), DockerResourceOptionsShow(
+                                cpu = (it.cpuQuota / it.cpuPeriod).toString(),
+                                memory = "${it.memoryLimitBytes / (1024 * 1024 * 1024)}G",
+                                disk = "${it.disk}G",
+                                description = it.description
+                            )
                         )
                     )
                 }
 
-                return UserDockerResourceOptionsVO(default, needShow, dockerResourceOptionsMaps)
+                // 没有默认的配置，默认第一个
+                if (default == "0") {
+                    default = optionList[0].id.toString()
+                }
             }
-            else -> {
-                return extDockerResourceOptionsService.getDockerResourceConfigList(
-                    userId, projectId, buildType ?: BuildType.DOCKER.name) ?: UserDockerResourceOptionsVO(
-                            default = "",
-                            needShow = false,
-                            dockerResourceOptionsMaps = emptyList()
-                        )
-            }
+        } else {
+            dockerResourceOptionsMaps.add(
+                DockerResourceOptionsMap(
+                    "0", DockerResourceOptionsShow(
+                        cpu = (defaultImageConfig.cpuQuota / defaultImageConfig.cpuPeriod).toString(),
+                        memory = (defaultImageConfig.memory / (1024 * 1024 * 1024)).toString().plus("G"),
+                        disk = (100).toString().plus("G"),
+                        description = "Basic"
+                    )
+                )
+            )
         }
+
+        return UserDockerResourceOptionsVO(default, needShow, dockerResourceOptionsMaps)
     }
 
     private fun checkParameter(userId: String, projectId: String) {
