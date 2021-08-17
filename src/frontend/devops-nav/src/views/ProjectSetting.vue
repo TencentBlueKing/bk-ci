@@ -69,9 +69,10 @@
             if (name === 'userGroup') {
                 this.activeChildTab = 'member'
                 const memberComponent = this.$refs.member || {}
+                const roleId = memberComponent.curRole.id !== 'bkAllMember' ? memberComponent.curRole.id : null
                 const params = {
                     projectId: memberComponent.projectCode,
-                    roleId: memberComponent.curRole.id
+                    roleId
                 }
                 this.getV3UserGroupUrl(params).then((res) => {
                     window.open(res, '_blank')
