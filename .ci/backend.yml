@@ -45,7 +45,7 @@ stages:
             echo import $i done..
             echo
           done
-          mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot -proot -e "show databases;"
+          mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot -e "show databases;"
 
       - name: "Gradle Build"
         env:
