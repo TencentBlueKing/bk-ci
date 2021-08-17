@@ -54,13 +54,18 @@ interface ICommand {
 
     fun parseTemplate(buildId: String, command: String, data: Map<String, String>, dir: File): String {
         return ReplacementUtils.replace(command, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String): String? = if (data[key] != null) {
+            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? = if (data[key] != null) {
                 data[key]!!
             } else {
                 try {
                     CredentialUtils.getCredential(buildId, key, false)[0]
-                } catch (ignore: Exception) {
-                    CredentialUtils.getCredentialContextValue(key)
+                } catch (e: Exception) {
+                    CredentialUtils.getCredentialContextValue(key) ?: if (doubleCurlyBraces) {
+                        "\${{$key}}"
+                    } else {
+                        "\${$key}"
+                    }
+
                 }
             }
         }, mapOf(
