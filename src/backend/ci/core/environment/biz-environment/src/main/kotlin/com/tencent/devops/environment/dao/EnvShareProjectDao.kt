@@ -73,10 +73,16 @@ class EnvShareProjectDao {
         }
     }
 
-    fun get(dslContext: DSLContext, envName: String, sharedProjectId: String): List<TEnvShareProjectRecord> {
+    fun get(
+        dslContext: DSLContext,
+        envName: String,
+        sharedProjectId: String,
+        mainProjectId: String
+    ): List<TEnvShareProjectRecord> {
         with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(ENV_NAME.eq(envName))
+                .and(MAIN_PROJECT_ID.eq(mainProjectId))
                 .and(SHARED_PROJECT_ID.eq(sharedProjectId))
                 .fetch()
         }
