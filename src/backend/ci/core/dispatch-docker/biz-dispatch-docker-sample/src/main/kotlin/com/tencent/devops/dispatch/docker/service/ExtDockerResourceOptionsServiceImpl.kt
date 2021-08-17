@@ -32,8 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
-) : ExtDockerResourceOptionsService {
+class ExtDockerResourceOptionsServiceImpl : ExtDockerResourceOptionsService {
 
     override fun getDockerResourceConfigList(
         userId: String,

@@ -49,5 +49,4 @@ class OpDockerResourceWhiteListResourceImpl @Autowired constructor(
     override fun deleteResourceWhitelist(userId: String, projectId: String): Result<Boolean> {
         return Result(dockerResourceWhitelistService.deleteDockerResourceWhiteList(userId, projectId))
     }
-
 }
