@@ -151,8 +151,6 @@ class DockerHostClient @Autowired constructor(
             }
         }
 
-
-
         val requestBody = DockerHostBuildInfo(
             projectId = dispatchMessage.projectId,
             agentId = dispatchMessage.id,

@@ -31,7 +31,6 @@ import com.tencent.devops.model.dispatch.tables.TDockerResourceConfig
 import com.tencent.devops.model.dispatch.tables.TDockerResourceOptions
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record7
 import org.jooq.Record8
 import org.jooq.Result
 import org.springframework.stereotype.Repository

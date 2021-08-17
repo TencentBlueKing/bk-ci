@@ -51,7 +51,6 @@ class DockerResourceWhitelistService constructor(
         } else {
             emptyList()
         }
-
     }
 
     fun addDockerResourceWhiteList(userId: String, projectId: String): Boolean {

@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.op.OPDockerResourceOptionsResource
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
-import com.tencent.devops.dispatch.docker.service.DockerHostZoneTaskService
 import com.tencent.devops.dispatch.docker.service.DockerResourceOptionsService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -58,5 +57,4 @@ class OpDockerResourceOptionResourceImpl @Autowired constructor(
     override fun deleteResourceOptions(userId: String, projectId: Long): Result<Boolean> {
         return Result(dockerResourceOptionsService.deleteDockerResourceOptions(userId, projectId))
     }
-
 }

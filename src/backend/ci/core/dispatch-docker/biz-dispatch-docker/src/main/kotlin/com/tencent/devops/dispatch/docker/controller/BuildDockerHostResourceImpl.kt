@@ -37,7 +37,6 @@ import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.service.DispatchDockerService
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerResourceOptionsService
-import com.tencent.devops.dispatch.docker.service.DockerResourceWhitelistService
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import org.springframework.beans.factory.annotation.Autowired
 
