@@ -169,7 +169,7 @@ object PipelineVarUtil {
             // 如果新旧key同时存在，则保留原value
             if (varMaps[it.key] != null && varMaps[it.value] == null) {
                 varMaps[it.value] = varMaps[it.key]!!
-                if (replace) {
+                if (replace && it.key != "BuildNo") { // 不要问，问就是不知道，怒了，这个类必须在github上消失，内部版不管了
                     varMaps.remove(it.key)
                 }
             }
