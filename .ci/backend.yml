@@ -28,12 +28,22 @@ stages:
           MYSQL_PORT: ${{steps.mysqlservice.outputs.MYSQL_PORT}}
           MYSQL_PWD: root
         run: |
-          cd support-files/sql/tencent
+          cd support-files/sql
+          echo "import support-files/sql"
           for i in *.sql; do
             echo import $i start
             mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot < $i
             echo import $i done..
             echo 
+          done
+          
+          cd tencent
+          echo "import support-files/sql/tencent"
+          for i in *.sql; do
+            echo import $i start
+            mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot < $i
+            echo import $i done..
+            echo
           done
           mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot -proot -e "show databases;"
 
