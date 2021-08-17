@@ -25,32 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api("javax.ws.rs:javax.ws.rs-api")
-    api("io.swagger:swagger-annotations")
-    api("org.hashids:hashids")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin")
-    api("com.fasterxml.jackson.core:jackson-databind")
-    api("com.fasterxml.jackson.core:jackson-core")
-    api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("org.bouncycastle:bcprov-jdk16")
-    compile("com.github.fge:json-schema-validator") {
-        exclude(group = "javax.mail", module = "mailapi")
-        exclude(group = "com.google.guava", module = "guava")
+package com.tencent.devops.common.api.util
+
+import com.github.luben.zstd.Zstd
+import java.util.Base64
+
+object ZstdUtil {
+    fun compressToBase64(input: ByteArray): ByteArray {
+        return Base64.getEncoder().encode(Zstd.compress(input))
     }
-    compile("com.google.guava:guava")
-    api("com.squareup.okhttp3:okhttp")
-    api("commons-codec:commons-codec:1.9")
-    api("org.springframework.boot:spring-boot-starter-data-redis")
-    api("org.apache.commons:commons-compress")
-    api("org.apache.commons:commons-exec")
-    api("javax.servlet:javax.servlet-api")
-    api("javax.validation:validation-api")
-    api("com.vdurmont:emoji-java:5.1.1")
-    api("org.apache.lucene:lucene-core")
-    api("org.apache.commons:commons-csv:1.8")
-    api("com.github.luben:zstd-jni")
+
+    fun compressToBase64(input: String): String {
+        return String(compressToBase64(input.toByteArray()))
+    }
+
+    fun deCompressFromBase64(compressFile: ByteArray): ByteArray {
+        val input = Base64.getDecoder().decode(compressFile)
+        return Zstd.decompress(input, Zstd.decompressedSize(input).toInt())
+    }
+
+    fun deCompressFromBase64(compressFile: String): String {
+        return String(deCompressFromBase64(compressFile.toByteArray()))
+    }
 }
