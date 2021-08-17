@@ -499,9 +499,6 @@ class PipelineBuildQualityService(
                             errorMsg = "quality review abort"
                         )
                     }
-                    else -> {
-                        AtomResponse(buildStatus = BuildStatus.REVIEWING)
-                    }
                 }
             } else {
                 AtomResponse(BuildStatus.REVIEWING)
