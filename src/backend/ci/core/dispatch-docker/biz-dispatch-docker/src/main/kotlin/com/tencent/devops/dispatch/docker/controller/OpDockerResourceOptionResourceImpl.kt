@@ -42,7 +42,10 @@ class OpDockerResourceOptionResourceImpl @Autowired constructor(
         return Result(dockerResourceOptionsService.listDockerResourceConfig(userId))
     }
 
-    override fun createResourceOptions(userId: String, dockerResourceOptionsVO: DockerResourceOptionsVO): Result<Boolean> {
+    override fun createResourceOptions(
+        userId: String,
+        dockerResourceOptionsVO: DockerResourceOptionsVO
+    ): Result<Boolean> {
         return Result(dockerResourceOptionsService.createDockerResourceOptions(userId, dockerResourceOptionsVO))
     }
 

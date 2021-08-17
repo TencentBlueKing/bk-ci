@@ -45,6 +45,6 @@ class UserDockerResourceConfigResourceImpl @Autowired constructor(
         projectId: String,
         buildType: String?
     ): Result<UserDockerResourceOptionsVO> {
-        return Result(dockerResourceOptionsService.getDcPerformanceConfigList(userId, projectId, buildType))
+        return Result(dockerResourceOptionsService.getDockerResourceConfigList(userId, projectId, buildType))
     }
 }
