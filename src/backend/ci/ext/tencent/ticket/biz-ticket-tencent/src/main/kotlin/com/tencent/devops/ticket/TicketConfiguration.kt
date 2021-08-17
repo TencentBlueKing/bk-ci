@@ -30,6 +30,7 @@ package com.tencent.devops.ticket
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -39,6 +40,8 @@ import com.tencent.devops.ticket.service.CertPermissionServiceImpl
 import com.tencent.devops.ticket.service.CredentialPermissionServiceImpl
 import com.tencent.devops.ticket.service.GitCICertPermissionServiceImpl
 import com.tencent.devops.ticket.service.GitCICredentialPermissionServiceImpl
+import com.tencent.devops.ticket.service.TxV3CertPermissionServiceImpl
+import com.tencent.devops.ticket.service.TxV3CredentialPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -106,5 +109,37 @@ class TicketConfiguration {
         managerService = managerService,
         credentialDao = credentialDao,
         dslContext = dslContext
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun txV3CertPermissionServiceImpl(
+        client: Client,
+        certDao: CertDao,
+        dslContext: DSLContext,
+        tokenService: ClientTokenService,
+        authResourceApi: AuthResourceApiStr
+    ) = TxV3CertPermissionServiceImpl(
+        client = client,
+        certDao = certDao,
+        dslContext = dslContext,
+        tokenService = tokenService,
+        authResourceApi = authResourceApi
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun txV3CredentialPermissionServiceImpl(
+        client: Client,
+        credentialDao: CredentialDao,
+        dslContext: DSLContext,
+        tokenService: ClientTokenService,
+        authResourceApi: AuthResourceApiStr
+    ) = TxV3CredentialPermissionServiceImpl(
+        client = client,
+        credentialDao = credentialDao,
+        dslContext = dslContext,
+        tokenService = tokenService,
+        authResourceApi = authResourceApi
     )
 }

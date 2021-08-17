@@ -51,10 +51,10 @@ class GitRequestEventBuildDao {
         branch: String,
         objectKind: String,
         triggerUser: String,
-        description: String?,
+        commitMsg: String?,
         sourceGitProjectId: Long?,
         buildStatus: BuildStatus,
-        version: String? = null
+        version: String?
     ): Long {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val record = dslContext.insertInto(
@@ -66,7 +66,7 @@ class GitRequestEventBuildDao {
                 GIT_PROJECT_ID,
                 BRANCH,
                 OBJECT_KIND,
-                DESCRIPTION,
+                COMMIT_MESSAGE,
                 TRIGGER_USER,
                 CREATE_TIME,
                 SOURCE_GIT_PROJECT_ID,
@@ -80,7 +80,7 @@ class GitRequestEventBuildDao {
                 gitProjectId,
                 branch,
                 objectKind,
-                description,
+                commitMsg,
                 triggerUser,
                 LocalDateTime.now(),
                 sourceGitProjectId,
@@ -102,12 +102,12 @@ class GitRequestEventBuildDao {
         branch: String,
         objectKind: String,
         triggerUser: String,
-        description: String?,
+        commitMsg: String?,
         sourceGitProjectId: Long?,
         pipelineId: String,
         buildId: String,
         buildStatus: BuildStatus,
-        version: String? = null
+        version: String?
     ) {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             dslContext.insertInto(
@@ -119,7 +119,7 @@ class GitRequestEventBuildDao {
                 GIT_PROJECT_ID,
                 BRANCH,
                 OBJECT_KIND,
-                DESCRIPTION,
+                COMMIT_MESSAGE,
                 TRIGGER_USER,
                 SOURCE_GIT_PROJECT_ID,
                 PIPELINE_ID,
@@ -134,7 +134,7 @@ class GitRequestEventBuildDao {
                 gitProjectId,
                 branch,
                 objectKind,
-                description,
+                commitMsg,
                 triggerUser,
                 sourceGitProjectId,
                 pipelineId,
@@ -177,7 +177,7 @@ class GitRequestEventBuildDao {
         gitBuildId: Long,
         pipelineId: String,
         buildId: String,
-        version: String? = null
+        version: String?
     ) {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             dslContext.update(this)
@@ -208,7 +208,7 @@ class GitRequestEventBuildDao {
         val t2 = TGitRequestEvent.T_GIT_REQUEST_EVENT.`as`("t2")
         return dslContext.select(
             t2.OBJECT_KIND, t2.COMMIT_ID, t2.GIT_PROJECT_ID, t2.MERGE_REQUEST_ID, t2
-            .DESCRIPTION, t2.EVENT, t2.SOURCE_GIT_PROJECT_ID, t1.PIPELINE_ID, t1.ID
+            .COMMIT_MESSAGE, t2.EVENT, t2.SOURCE_GIT_PROJECT_ID, t1.PIPELINE_ID, t1.ID
         )
             .from(t2).leftJoin(t1).on(t1.EVENT_ID.eq(t2.ID))
             .where(t1.BUILD_ID.eq(buildId))
@@ -570,12 +570,23 @@ class GitRequestEventBuildDao {
                 dsl.and(OBJECT_KIND.`in`(event))
             }
             if (!commitMsg.isNullOrBlank()) {
-                dsl.and(DESCRIPTION.like("%$commitMsg%"))
+                dsl.and(COMMIT_MESSAGE.like("%$commitMsg%"))
             }
             if (!buildStatus.isNullOrEmpty()) {
                 dsl.and(BUILD_STATUS.`in`(buildStatus))
             }
             return dsl
+        }
+    }
+
+    fun deleteBuildByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>
+    ): Int {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
         }
     }
 
@@ -590,5 +601,13 @@ class GitRequestEventBuildDao {
 
     fun batchUpdateBuild(dslContext: DSLContext, builds: List<TGitRequestEventBuildRecord>) {
         dslContext.batchUpdate(builds).execute()
+    }
+
+    fun isBuildExist(dslContext: DSLContext, buildId: String): Boolean {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectCount().from(this)
+                .where(BUILD_ID.eq(buildId))
+                .fetchOne(0, Int::class.java)!! > 0
+        }
     }
 }

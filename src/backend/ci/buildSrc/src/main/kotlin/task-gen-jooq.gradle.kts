@@ -54,8 +54,6 @@ val moduleNames = when (val moduleName = name.split("-")[1]) {
     else -> listOf(moduleName)
 }
 
-val specialDbName = listOf("environment", "project")
-
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")
 
 jooq {
@@ -75,30 +73,21 @@ jooq {
                 srcDir("build/generated-src/jooq/$taskName")
             }
 
-            val mysqlURLKey =
-                if (specialModule && specialDbName.contains(moduleName)) "${moduleName}MysqlURL" else "mysqlURL"
-            val mysqlUserKey =
-                if (specialModule && specialDbName.contains(moduleName)) "${moduleName}MysqlUser" else "mysqlUser"
-            val mysqlPasswordKey =
-                if (specialModule && specialDbName.contains(moduleName)) "${moduleName}MysqlPasswd" else "mysqlPasswd"
-
             create(taskName) {
                 jooqConfiguration.apply {
                     jdbc.apply {
-                        var mysqlURL = System.getProperty(mysqlURLKey)
-                        var mysqlUser = System.getProperty(mysqlUserKey)
-                        var mysqlPasswd = System.getProperty(mysqlPasswordKey)
+                        var mysqlURL = System.getProperty("${moduleName}MysqlURL") ?: System.getProperty("mysqlURL")
+                        var mysqlUser = System.getProperty("${moduleName}MysqlUser") ?: System.getProperty("mysqlUser")
+                        var mysqlPasswd =
+                            System.getProperty("${moduleName}MysqlPasswd") ?: System.getProperty("mysqlPasswd")
 
                         if (mysqlURL == null) {
-                            mysqlURL = System.getenv(mysqlURLKey)
-                            mysqlUser = System.getenv(mysqlUserKey)
-                            mysqlPasswd = System.getenv(mysqlPasswordKey)
+                            mysqlURL = System.getenv("${moduleName}MysqlURL") ?: System.getenv("mysqlURL")
+                            mysqlUser =
+                                System.getenv("${moduleName}MysqlUser") ?: System.getenv("mysqlUser")
+                            mysqlPasswd =
+                                System.getenv("${moduleName}MysqlPasswd") ?: System.getenv("mysqlPasswd")
                         }
-
-                        println("moduleName : $moduleName")
-                        println("mysqlURL : $mysqlURL")
-                        println("mysqlUser : $mysqlUser")
-                        println("mysqlPasswd : ${mysqlPasswd?.substring(0, 3)}****")
 
                         if (mysqlURL == null) {
                             println("use default mysql database.")
@@ -106,6 +95,11 @@ jooq {
                             mysqlUser = project.extra["DB_USERNAME"]?.toString()
                             mysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
                         }
+
+                        println("moduleName : $moduleName")
+                        println("mysqlURL : $mysqlURL")
+                        println("mysqlUser : $mysqlUser")
+                        println("mysqlPasswd : ${mysqlPasswd?.substring(0, 3)}****")
 
                         driver = "com.mysql.jdbc.Driver"
                         url = "jdbc:mysql://$mysqlURL/$databaseName?useSSL=false"

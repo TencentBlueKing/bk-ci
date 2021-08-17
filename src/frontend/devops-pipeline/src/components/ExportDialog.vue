@@ -13,7 +13,7 @@
                 </svg>
                 <h5 class="export-title">{{ exportItem.title }}</h5>
                 <p class="export-tip">{{ exportItem.tips }}<a :href="exportItem.tipsLink" v-if="exportItem.tipsLink" target="_blank">{{ $t('newlist.knowMore') }}</a></p>
-                <a download :href="exportItem.exportUrl" class="export-button">{{ $t('newlist.exportPipelineJson') }}</a>
+                <bk-button class="export-button" @click="downLoadFromApi(exportItem.exportUrl, exportItem.name)" :loading="isDownLoading">{{ $t('newlist.exportPipelineJson') }}</bk-button>
             </li>
         </ul>
     </bk-dialog>
@@ -21,13 +21,24 @@
 
 <script>
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         props: {
             isShow: Boolean
         },
 
+        data () {
+            return {
+                isDownLoading: false
+            }
+        },
+
         computed: {
+            ...mapGetters({
+                curPipeline: 'pipelines/getCurPipeline'
+            }),
+
             projectId () {
                 return this.$route.params.projectId
             },
@@ -36,11 +47,17 @@
                 return this.$route.params.pipelineId
             },
 
+            pipelineName () {
+                const pipeline = this.curPipeline || {}
+                return pipeline.pipelineName
+            },
+
             exportList () {
                 return [
                     {
                         title: 'Pipeline Json',
                         icon: 'export-pipeline',
+                        name: `${this.pipelineName}.json`,
                         tips: this.$t('newlist.exportJsonTip'),
                         exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/export`
                     }
@@ -49,8 +66,19 @@
         },
 
         methods: {
+            ...mapActions('atom', ['download']),
+
             handleCancel () {
                 this.$emit('update:isShow', false)
+            },
+
+            downLoadFromApi (url, name) {
+                this.isDownLoading = true
+                this.download({ url, name }).catch((err) => {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                }).finally(() => {
+                    this.isDownLoading = false
+                })
             }
         }
     }

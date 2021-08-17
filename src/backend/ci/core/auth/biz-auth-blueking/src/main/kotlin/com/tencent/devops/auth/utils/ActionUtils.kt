@@ -31,7 +31,7 @@ object ActionUtils {
 
     fun actionType(action: String): String {
         return if (action.contains("_")) {
-            action.substringBefore("_")
+            action.substringBeforeLast("_")
         } else {
             action
         }

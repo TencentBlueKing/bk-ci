@@ -29,7 +29,7 @@ package com.tencent.devops.support.services
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -73,7 +73,7 @@ class WechatWorkCallbackService @Autowired constructor(
     private val dslContext: DSLContext,
     private val wechatWorkProjectDAO: WechatWorkProjectDAO,
     private val wechatWorkMessageDAO: WechatWorkMessageDAO,
-    private val bsAuthProjectApi: BSAuthProjectApi,
+    private val bsAuthProjectApi: AuthProjectApi,
     private val wechatWorkService: WechatWorkService,
     private val pipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val client: Client

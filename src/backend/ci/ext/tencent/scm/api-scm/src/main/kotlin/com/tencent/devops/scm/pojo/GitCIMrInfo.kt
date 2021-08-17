@@ -92,5 +92,7 @@ data class GitCIMrInfo(
     @JsonProperty("merge_status")
     val mergeStatus: String = "",
     val labels: List<String>,
-    val description: String? = ""
+    val description: String? = "",
+    @JsonProperty("base_commit")
+    val baseCommit: String?
 )

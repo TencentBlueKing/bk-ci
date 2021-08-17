@@ -35,4 +35,6 @@ object GitCIPipelineUtils {
 
     fun genGitCIV2BuildUrl(homePage: String, projectName: String, pipelineId: String, buildId: String) =
         "$homePage/pipeline/$pipelineId/detail/$buildId/#$projectName"
+
+    fun genGitCIV1RequestUrl(homePage: String) = "$homePage/ci/pipelines#/request"
 }
