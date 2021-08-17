@@ -25,16 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.worker.common.service
 
-/**
- * 运行选项
- * @version 1.0
- */
-enum class StageRunCondition {
-    AFTER_LAST_FINISHED, // 上个阶段执行结束
-    CUSTOM_VARIABLE_MATCH, // 自定义变量全部满足时运行
-    CUSTOM_VARIABLE_MATCH_NOT_RUN, // 自定义变量全部满足时不运行
-    CUSTOM_CONDITION_MATCH // 满足以下自定义条件时运行
-    ;
+import java.util.Properties
+import java.util.concurrent.ConcurrentHashMap
+
+object RepoServiceFactory {
+
+    private val repoServiceMap = ConcurrentHashMap<String, RepoService>()
+
+    private var property: Properties? = null
+
+    private const val REPO_CLASS_NAME = "repo.class.name"
+
+    fun getInstance(): RepoService {
+        // 从配置文件读取类名
+        if (property == null) {
+            val fileInputStream = RepoServiceFactory::class.java.getResourceAsStream("/.agent.properties")
+            property = Properties()
+            property!!.load(fileInputStream)
+        }
+        val className = property!![REPO_CLASS_NAME] as String
+        var repoService = repoServiceMap[className]
+        if (repoService == null) {
+            // 通过反射生成对象并放入缓存中
+            repoService = Class.forName(className).newInstance() as RepoService
+            repoServiceMap[className] = repoService
+        }
+        return repoService
+    }
 }

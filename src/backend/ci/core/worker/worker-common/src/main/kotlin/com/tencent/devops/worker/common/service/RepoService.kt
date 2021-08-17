@@ -25,16 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.worker.common.service
 
-/**
- * 运行选项
- * @version 1.0
- */
-enum class StageRunCondition {
-    AFTER_LAST_FINISHED, // 上个阶段执行结束
-    CUSTOM_VARIABLE_MATCH, // 自定义变量全部满足时运行
-    CUSTOM_VARIABLE_MATCH_NOT_RUN, // 自定义变量全部满足时不运行
-    CUSTOM_CONDITION_MATCH // 满足以下自定义条件时运行
-    ;
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+
+interface RepoService {
+
+    /**
+     * 获取仓库token
+     */
+    fun getRepoToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        type: TokenType,
+        expireSeconds: Long?
+    ): String?
 }

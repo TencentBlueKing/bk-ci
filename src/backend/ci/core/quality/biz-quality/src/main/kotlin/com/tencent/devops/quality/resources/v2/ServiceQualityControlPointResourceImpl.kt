@@ -25,16 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.quality.resources.v2
 
-/**
- * 运行选项
- * @version 1.0
- */
-enum class StageRunCondition {
-    AFTER_LAST_FINISHED, // 上个阶段执行结束
-    CUSTOM_VARIABLE_MATCH, // 自定义变量全部满足时运行
-    CUSTOM_VARIABLE_MATCH_NOT_RUN, // 自定义变量全部满足时不运行
-    CUSTOM_CONDITION_MATCH // 满足以下自定义条件时运行
-    ;
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.quality.api.v2.ServiceQualityControlPointResource
+import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
+import com.tencent.devops.quality.service.v2.QualityControlPointService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceQualityControlPointResourceImpl @Autowired constructor(
+    private val qualityControlPointService: QualityControlPointService
+) : ServiceQualityControlPointResource {
+    override fun listByTypes(elementTypes: Collection<String>): Result<List<QualityControlPoint>> {
+        return Result(qualityControlPointService.serviceList(elementTypes))
+    }
 }

@@ -157,4 +157,9 @@ class QualityRuleBuildHisService constructor(
             }
         }
     }
+
+    fun updateBuildId(ruleBuildIds: Collection<Long>, buildId: String) {
+        val count = qualityRuleBuildHisDao.updateBuildId(ruleBuildIds, buildId)
+        logger.info("finish to update rule build his build id: $count")
+    }
 }

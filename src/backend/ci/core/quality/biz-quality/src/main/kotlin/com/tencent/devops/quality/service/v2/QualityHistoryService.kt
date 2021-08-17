@@ -33,14 +33,14 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
+import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.model.quality.tables.records.THistoryRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
-import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import com.tencent.devops.quality.util.ThresholdOperationUtil
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -109,6 +109,7 @@ class QualityHistoryService @Autowired constructor(
                 ruleName = ruleIdMap[hashId]?.name ?: "",
                 interceptTime = it.createTime.timestampmilli(),
                 result = RuleInterceptResult.valueOf(it.result),
+                checkTimes = it.checkTimes,
                 resultMsg = objectMapper.readValue(it.interceptList)
             )
         }
@@ -164,6 +165,7 @@ class QualityHistoryService @Autowired constructor(
                 pipelineName = pipelineIdToNameMap[it.pipelineId] ?: "",
                 buildId = it.buildId,
                 buildNo = buildIdToNameMap[it.buildId] ?: "",
+                checkTimes = it.checkTimes,
                 remark = remark,
                 pipelineIsDelete = false
             )
@@ -211,6 +213,7 @@ class QualityHistoryService @Autowired constructor(
                 ruleName = "",
                 interceptTime = it.createTime.timestampmilli(),
                 result = RuleInterceptResult.valueOf(it.result),
+                checkTimes = it.checkTimes,
                 resultMsg = objectMapper.readValue(it.interceptList)
             )
         }
@@ -263,6 +266,7 @@ class QualityHistoryService @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String?,
+        checkTimes: Int?,
         ruleIds: Set<Long>?,
         result: String?,
         startTime: LocalDateTime?,
@@ -275,6 +279,7 @@ class QualityHistoryService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
+            checkTimes = checkTimes,
             ruleIds = ruleIds,
             result = result,
             startTime = startTime,
@@ -345,6 +350,7 @@ class QualityHistoryService @Autowired constructor(
                 pipelineName = pipeline?.pipelineName ?: "",
                 buildId = it.buildId,
                 buildNo = buildIdToNameMap[it.buildId] ?: "",
+                checkTimes = it.checkTimes,
                 remark = remark,
                 pipelineIsDelete = pipeline?.isDelete ?: false
             )
@@ -357,6 +363,7 @@ class QualityHistoryService @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String?,
+        checkTimes: Int?,
         ruleHashIds: Set<String>
     ): List<RuleInterceptHistory> {
         val ruleBuildIds = ruleHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
@@ -366,7 +373,7 @@ class QualityHistoryService @Autowired constructor(
 
         val ruleIdToNameMap = qualityRuleBuildHisService.list(ruleBuildIds)
             .map { it.hashId to it.name }.toMap()
-        val recordList = batchServiceList(projectId, pipelineId, buildId, ruleBuildIds,
+        val recordList = batchServiceList(projectId, pipelineId, buildId, checkTimes, ruleBuildIds,
             null, null, null, null, null)
         return recordList.map {
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
@@ -382,6 +389,7 @@ class QualityHistoryService @Autowired constructor(
                 pipelineName = "",
                 buildId = it.buildId,
                 buildNo = "",
+                checkTimes = it.checkTimes,
                 remark = "",
                 interceptList = interceptList
             )
@@ -443,8 +451,8 @@ class QualityHistoryService @Autowired constructor(
         interceptList: String,
         createTime: LocalDateTime,
         updateTime: LocalDateTime
-    ) {
-        historyDao.create(
+    ): Int {
+        return historyDao.create(
             dslContext = dslContext,
             projectId = projectId,
             ruleId = ruleId,
