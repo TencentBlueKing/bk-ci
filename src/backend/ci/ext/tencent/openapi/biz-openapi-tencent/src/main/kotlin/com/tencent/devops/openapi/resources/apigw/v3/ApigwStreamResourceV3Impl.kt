@@ -1,9 +1,12 @@
 package com.tencent.devops.openapi.resources.apigw.v3
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.gitci.api.GitCIPipelineResource
 import com.tencent.devops.gitci.api.service.ServiceStreamTriggerResource
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.StreamTriggerBuildReq
 import com.tencent.devops.openapi.api.apigw.v3.ApigwStreamResourceV3
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,5 +37,33 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         } else {
             Result(gitProjectId)
         }
+    }
+
+    override fun getPipelineList(
+        userId: String,
+        gitProjectId: Long,
+        keyword: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<GitProjectPipeline>> {
+        return client.get(GitCIPipelineResource::class).getPipelineList(
+            userId = userId,
+            gitProjectId = gitProjectId,
+            keyword = keyword,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun getPipeline(userId: String, gitProjectId: Long, pipelineId: String): Result<GitProjectPipeline?> {
+        TODO("Not yet implemented")
+    }
+
+    override fun enablePipeline(userId: String, gitProjectId: Long, pipelineId: String, enabled: Boolean): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun listPipelineNames(userId: String, gitProjectId: Long): Result<List<GitProjectPipeline>> {
+        TODO("Not yet implemented")
     }
 }
