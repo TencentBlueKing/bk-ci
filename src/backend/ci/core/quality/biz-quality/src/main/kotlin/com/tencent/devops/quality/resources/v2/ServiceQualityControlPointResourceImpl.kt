@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceQualityControlPointResourceImpl @Autowired constructor(
     private val qualityControlPointService: QualityControlPointService
-): ServiceQualityControlPointResource {
+) : ServiceQualityControlPointResource {
     override fun listByTypes(elementTypes: Collection<String>): Result<List<QualityControlPoint>> {
         return Result(qualityControlPointService.serviceList(elementTypes))
     }
