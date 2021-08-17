@@ -44,6 +44,7 @@ import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.api.ServiceGroupResource
 import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -51,6 +52,8 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -140,7 +143,12 @@ class IamV3Service @Autowired constructor(
     // 分级管理员操作的用户范围,只能添加用户所在bg组织. 此处直接从project本地拿,最真实数据在用户中心
     private fun createIamProject(userId: String, resourceRegisterInfo: ResourceRegisterInfo): String {
         val bgName = userDao.get(dslContext, userId)?.bgName!!
-        val bgId = client.get(ServiceDeptResource::class).getDeptByName(userId, bgName).data
+        val deptInfo = client.get(ServiceDeptResource::class).getDeptByName(userId, bgName).data
+            ?: throw ErrorCodeException(
+                errorCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL)
+            )
+        val bgId = deptInfo.results[0].id
         logger.info("user $userId bg: $bgId bgName: $bgName")
         val subjectScopes = ManagerScopes(
             ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT),
