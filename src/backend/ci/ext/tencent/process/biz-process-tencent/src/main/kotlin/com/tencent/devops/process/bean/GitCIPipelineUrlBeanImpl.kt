@@ -40,7 +40,7 @@ class GitCIPipelineUrlBeanImpl constructor(
     private val client: Client
 ) : PipelineUrlBean {
 
-    @Value("\${rtx.v2GitUrl:#{null}}")
+    @Value("\${gitci.v2GitUrl:#{null}}")
     private val v2GitUrl: String? = null
 
     override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {

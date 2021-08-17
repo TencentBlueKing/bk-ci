@@ -25,24 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2.pojo.enums
+package com.tencent.devops.agent.service
 
-enum class QualityOperation {
-    GT,
-    GE,
-    LT,
-    LE,
-    EQ;
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+import com.tencent.devops.worker.common.service.RepoService
 
-    companion object {
-        fun convertToSymbol(operation: QualityOperation): String {
-            return when (operation) {
-                GT -> ">"
-                GE -> ">="
-                LT -> "<"
-                LE -> "<="
-                EQ -> "="
-            }
-        }
+class SampleRepoServiceImpl : RepoService {
+
+    override fun getRepoToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        type: TokenType,
+        expireSeconds: Long?
+    ): String? {
+        // 开源版暂不支持用token去上传或下载
+        return null
     }
 }

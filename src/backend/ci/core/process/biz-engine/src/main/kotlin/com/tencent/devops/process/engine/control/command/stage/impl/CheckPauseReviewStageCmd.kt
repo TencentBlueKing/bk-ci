@@ -113,10 +113,8 @@ class CheckPauseReviewStageCmd(
     private fun saveStageReviewParams(stage: PipelineBuildStage) {
         val reviewVariables = mutableMapOf<String, String>()
         // # 4531 遍历全部审核组的参数，后序覆盖前序的同名变量
-        stage.checkIn?.reviewGroups?.forEach { group ->
-            group.params?.forEach {
-                reviewVariables[it.key] = it.value.toString()
-            }
+        stage.checkIn?.reviewParams?.forEach {
+            reviewVariables[it.key] = it.value.toString()
         }
         if (stage.checkIn?.reviewParams?.isNotEmpty() == true) {
             buildVariableService.batchUpdateVariable(
@@ -146,6 +144,7 @@ class CheckPauseReviewStageCmd(
             val result = client.get(ServiceQualityRuleResource::class).check(request).data!!
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
                 "response=$result|ruleIds=${stage.checkIn?.ruleIds}")
+            stage.checkIn!!.checkTimes = result.checkTimes
             return !result.success
         } catch (ignore: Throwable) {
             LOG.error("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)

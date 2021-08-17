@@ -15,6 +15,7 @@ internal class StagePauseCheckTest {
                 ManualReviewParam(key = "p2", value = "222")
             )
         )
+        val originKeys = check.reviewParams?.map { it.key }?.toList()
         val params = mutableListOf(
             ManualReviewParam(key = "p1", value = "123"),
             ManualReviewParam(key = "p2", value = "222")
@@ -22,6 +23,10 @@ internal class StagePauseCheckTest {
         Assert.assertEquals(
             mutableListOf(ManualReviewParam(key = "p1", value = "123")),
             check.parseReviewParams(params)
+        )
+        Assert.assertEquals(
+            check.reviewParams?.map { it.key }?.toList(),
+            originKeys
         )
     }
 }

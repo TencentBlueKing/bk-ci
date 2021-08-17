@@ -90,7 +90,7 @@ import java.util.Date
 
 @Suppress("ALL")
 @Service
-class PipelineSubscriptionService @Autowired(required = false) constructor(
+class TxPipelineSubscriptionService @Autowired(required = false) constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
     private val pipelineSubscriptionDao: PipelineSubscriptionDao,
@@ -480,7 +480,7 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineSubscriptionService::class.java)
+        private val logger = LoggerFactory.getLogger(TxPipelineSubscriptionService::class.java)
         const val TYPE_STARTUP = 1
         const val TYPE_SHUTDOWN_SUCCESS = 2
         const val TYPE_SHUTDOWN_FAILURE = 3

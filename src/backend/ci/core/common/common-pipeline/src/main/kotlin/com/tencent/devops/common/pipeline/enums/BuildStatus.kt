@@ -83,6 +83,8 @@ enum class BuildStatus(val statusName: String, val visible: Boolean) {
 
     fun isPause(): Boolean = this == PAUSE
 
+    fun isStageFinish(): Boolean = this == STAGE_SUCCESS
+
     fun isTimeout(): Boolean = this == QUEUE_TIMEOUT || this == EXEC_TIMEOUT || this == HEARTBEAT_TIMEOUT
 
     companion object {

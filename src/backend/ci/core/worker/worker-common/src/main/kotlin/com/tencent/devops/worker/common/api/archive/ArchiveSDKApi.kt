@@ -41,20 +41,22 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @param file 构件
      * @param destPath 要上传的文件而指定的自定义路径
      * @param buildVariables 构建变量
+     * @param token 令牌
      */
-    fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables)
+    fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables, token: String? = null)
 
     /**
      * 归档构件到流水线仓库
      * @param file 构件
      * @param buildVariables 构建变量
+     * @param token 令牌
      */
-    fun uploadPipeline(file: File, buildVariables: BuildVariables)
+    fun uploadPipeline(file: File, buildVariables: BuildVariables, token: String? = null)
 
     /**
      * 上传日志文件
      */
-    fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables)
+    fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables, token: String? = null)
 
     /**
      * 下载仓库中指定路径的文件
@@ -62,13 +64,15 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @param uri 下载路径
      * @param destPath 下载后存放的文件
      * @param isVmBuildEnv 是否是有编译环境
+     * @param token 令牌
      */
     fun downloadCustomizeFile(
         userId: String,
         projectId: String,
         uri: String,
         destPath: File,
-        isVmBuildEnv: Boolean
+        isVmBuildEnv: Boolean,
+        token: String? = null
     )
 
     /**
@@ -78,6 +82,7 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @param uri 下载uri
      * @param destPath 下载后存放的文件
      * @param isVmBuildEnv 是否是有编译环境
+     * @param token 令牌
      */
     fun downloadPipelineFile(
         userId: String,
@@ -86,7 +91,8 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
         buildId: String,
         uri: String,
         destPath: File,
-        isVmBuildEnv: Boolean
+        isVmBuildEnv: Boolean,
+        token: String? = null
     )
 
     /**
