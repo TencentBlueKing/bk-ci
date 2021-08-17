@@ -25,35 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2
+package com.tencent.devops.agent.service
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+import com.tencent.devops.worker.common.service.RepoService
+import com.tencent.devops.worker.common.utils.BkRepoUtil
 
-/**
- * model
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Resources(
-    val repositories: List<Repositories>?,
-    val pools: List<ResourcesPools>?
-)
+class BkRepoServiceImpl : RepoService {
 
-data class Repositories(
-    val repository: String,
-    val name: String,
-    val ref: String? = "master",
-    val credentials: ResCredentials?
-)
-
-data class ResCredentials(
-    @JsonProperty("personal-access-token")
-    val personalAccessToken: String?
-)
-
-data class ResourcesPools(
-    val from: String?,
-    val name: String?
-)
+    override fun getRepoToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        type: TokenType,
+        expireSeconds: Long?
+    ): String? {
+        return BkRepoUtil.createBkRepoTemporaryToken(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            path = path,
+            type = type,
+            expireSeconds = expireSeconds
+        )
+    }
+}

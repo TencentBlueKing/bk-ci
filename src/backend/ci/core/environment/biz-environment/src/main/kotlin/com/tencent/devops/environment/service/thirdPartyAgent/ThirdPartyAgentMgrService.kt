@@ -659,15 +659,23 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }).plus(sharedThridPartyAgentList)
     }
 
-    private fun getSharedThirdPartyAgentList(projectId: String, envName: String): List<ThirdPartyAgent> {
-        val sharedEnvRecord = envShareProjectDao.get(dslContext, envName, projectId)
+    private fun getSharedThirdPartyAgentList(projectId: String, projectEnvName: String): List<ThirdPartyAgent> {
+        val sharedProjEnv = projectEnvName.split("@") // sharedProjId@poolName
+        if (sharedProjEnv.size != 2 || sharedProjEnv[0].isNullOrBlank() || sharedProjEnv[1].isNullOrBlank()) {
+            return emptyList()
+        }
+        val sharedProjectId = sharedProjEnv[0]
+        val sharedEnvName = sharedProjEnv[1]
+        val sharedEnvRecord = envShareProjectDao.get(dslContext, sharedEnvName, projectId, sharedProjectId)
         if (sharedEnvRecord.isEmpty()) {
+            logger.info("env name not exists, envName: $sharedEnvName, projectId：$projectId, " +
+                "mainProjectId: $sharedProjectId")
             return emptyList()
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
         val sharedThirdPartyAgents = mutableListOf<ThirdPartyAgent>()
         sharedEnvRecord.forEach {
-            val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, envName) ?: return@forEach
+            val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, sharedEnvName) ?: return@forEach
             sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(envRecord.envId)))
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
