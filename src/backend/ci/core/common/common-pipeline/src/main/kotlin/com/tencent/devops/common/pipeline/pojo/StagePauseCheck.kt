@@ -44,7 +44,7 @@ data class StagePauseCheck(
     var reviewParams: List<ManualReviewParam>? = null, // 审核变量
     var timeout: Int? = 24, // 等待审核的超时时间，默认24小时兜底
     var ruleIds: List<String>? = null, // 质量红线规则ID集合
-    var checkTimes: Int? = null     // 记录本次构建质量红线规则的检查次数
+    var checkTimes: Int? = null // 记录本次构建质量红线规则的检查次数
 ) {
 
     /**
