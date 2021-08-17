@@ -29,17 +29,12 @@ package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.docker.common.Constants
-import com.tencent.devops.dispatch.docker.dao.DockerResourceConfigDao
-import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class DockerResourceWhitelistService constructor(
-    private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation,
-    private val dockerResourceConfigDao: DockerResourceConfigDao
+    private val redisOperation: RedisOperation
 ) {
     private val logger = LoggerFactory.getLogger(DockerResourceWhitelistService::class.java)
 

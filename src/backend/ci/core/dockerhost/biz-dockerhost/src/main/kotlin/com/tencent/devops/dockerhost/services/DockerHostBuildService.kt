@@ -537,18 +537,16 @@ class DockerHostBuildService(
 
             val dockerResource = dockerHostBuildApi.getResourceConfig(pipelineId, vmSeqId)
 
-            val blkioRateDeviceWirte = BlkioRateDevice()
-                .withPath("/dev/sda")
-                .withRate(dockerResource.blkioDeviceWriteBps)
-            val blkioRateDeviceRead = BlkioRateDevice()
-                .withPath("/dev/sda")
-                .withRate(dockerResource.blkioDeviceReadBps)
+            var hostConfig: HostConfig
+            if (dockerResource != null) {
+                val blkioRateDeviceWirte = BlkioRateDevice()
+                    .withPath("/dev/sda")
+                    .withRate(dockerResource.blkioDeviceWriteBps)
+                val blkioRateDeviceRead = BlkioRateDevice()
+                    .withPath("/dev/sda")
+                    .withRate(dockerResource.blkioDeviceReadBps)
 
-            val createContainerCmd = httpLongDockerCli.createContainerCmd(imageName)
-                .withName(containerName)
-                .withEnv(env)
-                .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                .withHostConfig(HostConfig()
+                hostConfig = HostConfig()
                     .withCapAdd(Capability.SYS_PTRACE)
                     .withBinds(binds)
                     .withMemory(dockerResource.memoryLimitBytes)
@@ -559,7 +557,19 @@ class DockerHostBuildService(
                         .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
                     .withNetworkMode("bridge")
                     .withPortBindings(portBindings)
-                )
+            } else {
+                hostConfig = HostConfig()
+                    .withCapAdd(Capability.SYS_PTRACE)
+                    .withBinds(binds)
+                    .withNetworkMode("bridge")
+                    .withPortBindings(portBindings)
+            }
+
+            val createContainerCmd = httpLongDockerCli.createContainerCmd(imageName)
+                .withName(containerName)
+                .withEnv(env)
+                .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
+                .withHostConfig(hostConfig)
                 .withWorkingDir(dockerHostConfig.volumeWorkspace)
 
             if (dockerRunParam.command.isEmpty() || dockerRunParam.command.equals("[]")) {
