@@ -934,14 +934,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         val version = atomRecord.version
         val releaseFlag = atomStatus == AtomStatusEnum.RELEASED.status.toByte()
+        val atomReleaseRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         return handleAtomRelease(
             userId = userId,
             releaseFlag = releaseFlag,
             atomReleaseRequest = AtomReleaseRequest(
                 atomId = atomId,
                 atomCode = atomCode,
-                atomStatus = atomStatus,
                 version = version,
+                atomStatus = atomStatus,
+                releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomReleaseRecord.releaseType.toInt())!!,
                 repositoryHashId = atomRecord.repositoryHashId,
                 branch = atomRecord.branch
             )
@@ -963,8 +965,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomQualityService.updateQualityInApprove(atomCode, atomStatus)
             dslContext.transaction { t ->
                 val context = DSL.using(t)
-                // 清空旧版本LATEST_FLAG
-                marketAtomDao.cleanLatestFlag(context, atomCode)
                 // 记录发布信息
                 val pubTime = LocalDateTime.now()
                 storeReleaseDao.addStoreReleaseInfo(
@@ -977,13 +977,21 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         latestUpgradeTime = pubTime
                     )
                 )
+                val latestFlag = if (atomReleaseRequest.releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+                    // 历史大版本下的小版本更新不把latestFlag置为true
+                    null
+                } else {
+                    // 清空旧版本LATEST_FLAG
+                    marketAtomDao.cleanLatestFlag(context, atomCode)
+                    true
+                }
                 marketAtomDao.updateAtomInfoById(
                     dslContext = context,
                     userId = userId,
                     atomId = atomId,
                     updateAtomInfo = UpdateAtomInfo(
                         atomStatus = atomStatus,
-                        latestFlag = true,
+                        latestFlag = latestFlag,
                         pubTime = pubTime
                     )
                 )

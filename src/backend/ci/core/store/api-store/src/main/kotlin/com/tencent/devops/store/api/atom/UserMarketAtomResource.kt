@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
@@ -129,12 +131,13 @@ interface UserMarketAtomResource {
         @ApiParam("插件名称", required = false)
         @QueryParam("atomName")
         atomName: String?,
-        @ApiParam("页码", required = false)
+        @ApiParam("页码", required = true)
         @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数量", required = false)
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        pageSize: Int = 10
     ): Result<MyAtomResp?>
 
     @ApiOperation("根据插件版本ID获取插件详情")
@@ -179,6 +182,7 @@ interface UserMarketAtomResource {
         page: Int = 1,
         @ApiParam("每页数量", required = true)
         @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int = 10
     ): Result<Page<AtomVersionListItem>>
 
