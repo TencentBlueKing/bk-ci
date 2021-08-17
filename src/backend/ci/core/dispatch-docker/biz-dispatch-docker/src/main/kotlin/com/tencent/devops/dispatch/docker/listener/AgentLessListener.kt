@@ -31,44 +31,25 @@ import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.service.PipelineAgentLessDispatchService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.ExchangeTypes
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 
-@Service
-class AgentLessStartupListener @Autowired
-constructor(
+@Component
+class AgentLessListener @Autowired constructor(
     private val pipelineAgentLessDispatchService: PipelineAgentLessDispatchService,
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter
 ) {
 
-    @RabbitListener(
-        bindings = [(QueueBinding(
-            key = [MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH], value = Queue(
-                value = MQ.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH, durable = "true"
-            ),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.DIRECT
-            )
-        ))]
-    )
     fun listenAgentStartUpEvent(event: PipelineBuildLessStartupDispatchEvent) {
         try {
             logger.info("start build less($event)")
@@ -110,7 +91,15 @@ constructor(
         }
     }
 
+    fun listenAgentShutdownEvent(pipelineBuildLessDockerAgentShutdownEvent: PipelineBuildLessShutdownDispatchEvent) {
+        try {
+            pipelineAgentLessDispatchService.shutdown(pipelineBuildLessDockerAgentShutdownEvent)
+        } catch (ignored: Throwable) {
+            logger.error("Fail to start the pipe build($pipelineBuildLessDockerAgentShutdownEvent)", ignored)
+        }
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(AgentLessStartupListener::class.java)
+        private val logger = LoggerFactory.getLogger(AgentLessListener::class.java)
     }
 }
