@@ -113,7 +113,7 @@ class DockerHostBuildAgentLessService(
         secretKey: String,
         buildType: BuildType
     ): String {
-        val hostWorkspace = getWorkspace(pipelineId, vmSeqId.trim())
+        val hostWorkspace = getWorkspace(pipelineId, buildId, vmSeqId.trim())
         val linkPath = dockerHostWorkSpaceService.createSymbolicLink(hostWorkspace)
 
         // docker run
@@ -197,8 +197,12 @@ class DockerHostBuildAgentLessService(
         }
     }
 
-    private fun getWorkspace(pipelineId: String, vmSeqId: String): String {
-        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId/"
+    private fun getWorkspace(
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String
+    ): String {
+        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$buildId/$vmSeqId/"
     }
 
     companion object {

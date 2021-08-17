@@ -49,6 +49,7 @@ import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
+import java.nio.file.Paths
 
 /**
  * 构建脚本任务
@@ -82,11 +83,14 @@ open class ScriptTask : ITask() {
         ScriptEnvUtils.cleanEnv(buildId, workspace)
         ScriptEnvUtils.cleanContext(buildId, workspace)
 
-        val variables = if (buildTask.buildVariable == null) {
+        var variables = if (buildTask.buildVariable == null) {
             runtimeVariables
         } else {
             runtimeVariables.plus(buildTask.buildVariable!!)
         }
+        // #4812 提供给git插件使用
+        variables = variables.plus(XDG_CONFIG_HOME to getXdgConfigHomePath(buildVariables.pipelineId))
+
         try {
             command.execute(
                 buildId = buildId,
@@ -175,7 +179,20 @@ open class ScriptTask : ITask() {
         }
     }
 
+    private fun getXdgConfigHomePath(pipelineId: String): String {
+        try {
+            return System.getenv(XDG_CONFIG_HOME) ?: Paths.get(
+                System.getProperty("user.home"),
+                ".checkout", pipelineId
+            ).normalize().toString()
+        } catch (ignore: Exception) {
+            logger.error("get xdg_config_home error", ignore)
+        }
+        return ""
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ScriptTask::class.java)
+        private const val XDG_CONFIG_HOME = "XDG_CONFIG_HOME"
     }
 }
