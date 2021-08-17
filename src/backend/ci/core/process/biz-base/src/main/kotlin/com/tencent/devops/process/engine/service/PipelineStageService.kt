@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
@@ -341,5 +342,12 @@ class PipelineStageService @Autowired constructor(
                 )
             )
         )
+    }
+
+    fun retryRefreshStage(model: Model) {
+        model.stages.forEach { stage ->
+            stage.checkIn?.retryRefresh()
+            stage.checkOut?.retryRefresh()
+        }
     }
 }

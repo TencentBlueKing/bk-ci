@@ -48,5 +48,5 @@ data class StageReviewGroup(
     @ApiModelProperty("审核建议", required = false)
     var suggest: String? = null,
     @ApiModelProperty("审核传入变量", required = false)
-    var params: MutableList<ManualReviewParam>? = null
+    var params: List<ManualReviewParam>? = null
 )

@@ -171,6 +171,20 @@ data class StagePauseCheck(
         reviewDesc = EnvUtils.parseEnv(reviewDesc, variables)
     }
 
+    /**
+     *  重新恢复所有准入/准出状态
+     */
+    fun retryRefresh() {
+        status = null
+        reviewGroups?.forEach { group ->
+            group.status = null
+            group.params = null
+            group.operator = null
+            group.reviewTime = null
+            group.suggest = null
+        }
+    }
+
     companion object {
         fun convertControlOption(stageControlOption: StageControlOption): StagePauseCheck {
             return StagePauseCheck(
@@ -184,7 +198,7 @@ data class StagePauseCheck(
                     status = if (stageControlOption.triggered == true) {
                         ManualReviewAction.PROCESS.name
                     } else null,
-                    params = stageControlOption.reviewParams?.toMutableList()
+                    params = stageControlOption.reviewParams
                 )),
                 reviewDesc = stageControlOption.reviewDesc,
                 reviewParams = stageControlOption.reviewParams,
