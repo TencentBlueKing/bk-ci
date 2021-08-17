@@ -29,7 +29,7 @@ plugins {
     `task-shadow-jar`
 }
 
-application.mainClass.set("com.tencent.devops.agent.ApplicationKt")
+application.mainClassName = "com.tencent.devops.agent.ApplicationKt"
 
 dependencies {
     api(project(":core:worker:worker-common"))
