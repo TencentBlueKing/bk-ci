@@ -40,6 +40,7 @@ import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
+import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
@@ -52,6 +53,7 @@ import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
@@ -78,6 +80,7 @@ class OpAtomServiceImpl @Autowired constructor(
     private val atomDao: AtomDao,
     private val marketAtomDao: MarketAtomDao,
     private val atomFeatureDao: MarketAtomFeatureDao,
+    private val marketAtomVersionLogDao: MarketAtomVersionLogDao,
     private val atomQualityService: AtomQualityService,
     private val atomNotifyService: AtomNotifyService,
     private val atomReleaseService: AtomReleaseService,
@@ -229,15 +232,22 @@ class OpAtomServiceImpl @Autowired constructor(
             )
         }
         val atomCode = atom.atomCode
+        val passFlag = approveReq.result == PASS
         val atomStatus =
-            if (approveReq.result == PASS) {
+            if (passFlag) {
                 AtomStatusEnum.RELEASED.status.toByte()
             } else {
                 AtomStatusEnum.AUDIT_REJECT.status.toByte()
             }
-        val type = if (approveReq.result == PASS) AuditTypeEnum.AUDIT_SUCCESS else AuditTypeEnum.AUDIT_REJECT
-        val latestFlag = approveReq.result == PASS
-        if (latestFlag) {
+        val atomReleaseRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
+        val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomReleaseRecord.releaseType.toInt())!!
+        val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+            // 历史大版本下的小版本更新不把latestFlag置为true
+            null
+        } else {
+            approveReq.result == PASS
+        }
+        if (passFlag) {
             atomReleaseService.handleAtomRelease(
                 userId = userId,
                 releaseFlag = true,
@@ -246,6 +256,7 @@ class OpAtomServiceImpl @Autowired constructor(
                     atomCode = atomCode,
                     version = atom.version,
                     atomStatus = atom.atomStatus,
+                    releaseType = releaseType,
                     repositoryHashId = atom.repositoryHashId,
                     branch = atom.branch
                 )
@@ -254,7 +265,7 @@ class OpAtomServiceImpl @Autowired constructor(
             // 更新质量红线信息
             atomQualityService.updateQualityInApprove(approveReq.atomCode, atomStatus)
             // 发送通知消息
-            atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, type)
+            atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_REJECT)
         }
         // 入库信息，并设置当前版本的LATEST_FLAG
         marketAtomDao.approveAtomFromOp(

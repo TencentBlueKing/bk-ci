@@ -522,6 +522,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 atomId = atomId,
                 atomCode = atomCode,
                 version = atomRecord.version,
+                atomStatus = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt()),
                 language = language,
                 commitId = commitId
             )
