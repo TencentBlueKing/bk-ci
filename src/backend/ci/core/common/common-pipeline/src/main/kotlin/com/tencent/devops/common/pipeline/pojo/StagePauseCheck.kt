@@ -81,8 +81,8 @@ data class StagePauseCheck(
         params: List<ManualReviewParam>? = null,
         suggest: String? = null
     ): Boolean {
-        val group = getReviewGroupById(groupId) ?: return false
-        if (group.status == null) {
+        val group = getReviewGroupById(groupId)
+        if (group != null && group.status == null) {
             group.status = action.name
             group.operator = userId
             group.reviewTime = LocalDateTime.now().timestampmilli()
@@ -105,12 +105,13 @@ data class StagePauseCheck(
     fun getReviewGroupById(groupId: String?): StageReviewGroup? {
         // #4531 兼容旧的前端交互，如果是不带ID审核参数则默认返回第一个审核组（旧数据）
         if (groupId.isNullOrBlank()) return reviewGroups?.first()
-        reviewGroups?.forEach { group ->
-            if (group.id == groupId) {
-                return group
+        var group: StageReviewGroup? = null
+        reviewGroups?.forEach { it ->
+            if (it.id == groupId) {
+                group = it
             }
         }
-        return null
+        return group
     }
 
     /**
@@ -132,7 +133,7 @@ data class StagePauseCheck(
      * 处理审核参数 - 与默认值相同的变量不显示
      */
     fun parseReviewParams(params: List<ManualReviewParam>?): MutableList<ManualReviewParam>? {
-        try {
+        return try {
             // #4531 只显示有相比默认有修改的部分
             if (reviewParams.isNullOrEmpty() || params.isNullOrEmpty()) return null
             val originMap = reviewParams!!.associateBy { it.key }
@@ -149,9 +150,9 @@ data class StagePauseCheck(
             reviewParams?.forEach {
                 it.value = originMap[it.key]?.value
             }
-            return diff
+            diff
         } catch (ignore: Throwable) {
-            return null
+            null
         }
     }
 
