@@ -212,8 +212,6 @@ class QualityControlPointDao {
                     transactionContext.update(this)
                         .set(NAME, testControlPoint.name)
                         .set(STAGE, testControlPoint.stage)
-                        .set(AVAILABLE_POSITION, testControlPoint.availablePosition)
-                        .set(DEFAULT_POSITION, testControlPoint.defaultPosition)
                         .set(UPDATE_TIME, LocalDateTime.now())
                         .where(ID.eq(prodControlPoint.id))
                         .execute()
