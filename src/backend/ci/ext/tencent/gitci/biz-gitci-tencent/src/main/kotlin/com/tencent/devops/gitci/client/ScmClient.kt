@@ -28,14 +28,12 @@
 package com.tencent.devops.gitci.client
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
-import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -96,50 +94,6 @@ class ScmClient @Autowired constructor(
      * V2版本的同名方法，因为表结构发生了改变，所以数据结构变化
      * 有回填信息
      */
-    fun pushCommitCheck(
-        commitId: String,
-        description: String,
-        mergeRequestId: Long,
-        buildId: String,
-        userId: String,
-        status: GitCICommitCheckState,
-        context: String,
-        gitCIBasicSetting: GitCIBasicSetting,
-        pipelineId: String,
-        block: Boolean
-    ) = try {
-        val titleData = mutableListOf<String>()
-        val resultMap = mutableMapOf<String, MutableList<List<String>>>()
-
-        val token = getAccessToken(gitCIBasicSetting.gitProjectId).first
-        val buildNum = getBuildNum(gitCIBasicSetting.projectCode.toString(), buildId)
-        val request = CommitCheckRequest(
-            projectName = gitCIBasicSetting.gitProjectId.toString(),
-            url = gitCIBasicSetting.gitHttpUrl,
-            type = ScmType.CODE_GIT,
-            privateKey = null,
-            passPhrase = null,
-            token = token,
-            region = null,
-            commitId = commitId,
-            state = status.value,
-            targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
-                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                projectName = getProjectName(gitCIBasicSetting),
-                pipelineId = pipelineId,
-                buildId = buildId
-            ),
-            context = context,
-            description = description,
-            block = block,
-            mrRequestId = mergeRequestId,
-            reportData = Pair(titleData, resultMap)
-        )
-        logger.info("user $userId buildId $buildId pushCommitCheck: $request")
-        client.getScm(ServiceGitResource::class).addCommitCheck(request)
-    } catch (e: Exception) {
-        logger.error("user $userId buildId $buildId pushCommitCheck error.", e)
-    }
 
     // 用来进行锁定提交的CommitCheck，无回填信息
     fun pushCommitCheckWithBlock(
@@ -199,21 +153,6 @@ class ScmClient @Autowired constructor(
             ""
         } else {
             buildHistoryList[0].buildNum.toString()
-        }
-    }
-
-    private fun getProjectName(conf: GitCIBasicSetting): String {
-        return try {
-            GitCommonUtils.getRepoName(
-                httpUrl = if (conf.gitHttpUrl.isBlank()) {
-                    conf.homepage
-                } else {
-                    conf.gitHttpUrl
-                },
-                name = conf.name
-            )
-        } catch (e: java.lang.Exception) {
-            conf.name
         }
     }
 

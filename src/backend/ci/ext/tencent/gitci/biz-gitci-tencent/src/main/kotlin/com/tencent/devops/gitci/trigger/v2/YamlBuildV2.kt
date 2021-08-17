@@ -123,6 +123,7 @@ import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BUILD_URL
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_PIPELINE_NAME
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.gitci.trigger.GitCIEventService
+import com.tencent.devops.gitci.trigger.GitCheckService
 import com.tencent.devops.gitci.v2.service.GitCIV2WebsocketService
 import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.gitci.v2.service.OauthService
@@ -165,10 +166,12 @@ class YamlBuildV2 @Autowired constructor(
     private val gitCIEventSaveService: GitCIEventService,
     private val websocketService: GitCIV2WebsocketService,
     private val gitCISettingDao: GitCISettingDao,
-    private val gitPipelineBranchService: GitPipelineBranchService
+    private val gitPipelineBranchService: GitPipelineBranchService,
+    private val gitCheckService: GitCheckService
 ) : YamlBaseBuildV2<ScriptBuildYaml>(
     client, scmClient, dslContext, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitCIEventSaveService, websocketService, gitPipelineBranchService
+    gitRequestEventBuildDao, gitCIEventSaveService, websocketService, gitPipelineBranchService,
+    gitCheckService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
