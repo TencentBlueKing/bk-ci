@@ -72,7 +72,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("获取指定Stream流水线信息")
     @GET
-    @Path("/{gitProjectId}/{pipelineId}/info")
+    @Path("/pipelines/{pipelineId}/info")
     fun getPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
