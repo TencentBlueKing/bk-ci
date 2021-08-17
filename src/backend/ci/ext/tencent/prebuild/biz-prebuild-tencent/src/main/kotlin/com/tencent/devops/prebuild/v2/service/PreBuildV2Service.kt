@@ -85,7 +85,7 @@ class PreBuildV2Service @Autowired constructor(
         }
     }
 
-    fun checkYamlSchemaCore(originYaml: String): PreScriptBuildYaml {
+    private fun checkYamlSchemaCore(originYaml: String): PreScriptBuildYaml {
         val formatYamlStr = ScriptYmlUtils.formatYaml(originYaml)
         val yamlJsonStr = ScriptYmlUtils.convertYamlToJson(formatYamlStr)
         val yamlSchema = getYamlSchema()
@@ -319,7 +319,7 @@ class PreBuildV2Service @Autowired constructor(
         userId: String
     ): MutableList<Element> {
         val elementList = mutableListOf<Element>()
-        job.steps!!.forEach { step ->
+        job.steps?.forEach { step ->
             if (step.run != null && JobRunsOnType.AGENT_LESS.type == job.runsOn.poolName) {
                 throw CustomException(
                     Response.Status.NOT_FOUND, "run命令不支持在agentless下执行，请检查yml配置."
