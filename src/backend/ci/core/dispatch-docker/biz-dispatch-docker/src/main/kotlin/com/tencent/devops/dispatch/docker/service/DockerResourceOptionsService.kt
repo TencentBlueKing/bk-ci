@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.dispatch.docker.config.DefaultImageConfig
 import com.tencent.devops.dispatch.docker.dao.DockerResourceOptionsDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsMap
@@ -41,6 +42,7 @@ import org.springframework.stereotype.Service
 @Service
 class DockerResourceOptionsService constructor(
     private val dslContext: DSLContext,
+    private val defaultImageConfig: DefaultImageConfig,
     private val dockerResourceOptionsDao: DockerResourceOptionsDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val dockerResourceWhitelistService: DockerResourceWhitelistService,
@@ -142,11 +144,11 @@ class DockerResourceOptionsService constructor(
             )
         } else {
             return DockerResourceOptionsVO(
-                memoryLimitBytes = 34359738368L,
-                cpuPeriod = 10000,
-                cpuQuota = 160000,
-                blkioDeviceReadBps = 125829120,
-                blkioDeviceWriteBps = 125829120,
+                memoryLimitBytes = defaultImageConfig.memory,
+                cpuPeriod = defaultImageConfig.cpuPeriod,
+                cpuQuota = defaultImageConfig.cpuQuota,
+                blkioDeviceReadBps = defaultImageConfig.blkioDeviceReadBps,
+                blkioDeviceWriteBps = defaultImageConfig.blkioDeviceWriteBps,
                 disk = 100,
                 description = ""
             )
@@ -171,8 +173,8 @@ class DockerResourceOptionsService constructor(
                     if (optionList.size == 0) {
                         dockerResourceOptionsMaps.add(
                             DockerResourceOptionsMap("0", DockerResourceOptionsShow(
-                                cpu = (16000 / 10000).toString(),
-                                memory = (34359738368 / (1024 * 1024 * 1024)).toString().plus("G"),
+                                cpu = (defaultImageConfig.cpuQuota / defaultImageConfig.cpuPeriod).toString(),
+                                memory = (defaultImageConfig.memory / (1024 * 1024 * 1024)).toString().plus("G"),
                                 disk = (100).toString().plus("G"),
                                 description = "Basic"
                             )
@@ -180,7 +182,7 @@ class DockerResourceOptionsService constructor(
                         )
                     } else {
                         optionList.forEach {
-                            if (it.memoryLimitBytes == 34359738368) {
+                            if (it.memoryLimitBytes == defaultImageConfig.memory) {
                                 default = it.id.toString()
                             }
                             dockerResourceOptionsMaps.add(
@@ -202,8 +204,8 @@ class DockerResourceOptionsService constructor(
                 } else {
                     dockerResourceOptionsMaps.add(
                         DockerResourceOptionsMap("0", DockerResourceOptionsShow(
-                            cpu = (16000 / 10000).toString(),
-                            memory = (34359738368 / (1024 * 1024 * 1024)).toString().plus("G"),
+                            cpu = (defaultImageConfig.cpuQuota / defaultImageConfig.cpuPeriod).toString(),
+                            memory = (defaultImageConfig.memory / (1024 * 1024 * 1024)).toString().plus("G"),
                             disk = (100).toString().plus("G"),
                             description = "Basic"
                         )

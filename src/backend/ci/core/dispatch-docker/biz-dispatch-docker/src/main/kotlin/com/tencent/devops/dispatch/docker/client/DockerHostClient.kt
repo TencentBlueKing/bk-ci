@@ -518,22 +518,22 @@ class DockerHostClient @Autowired constructor(
                 )
             } else {
                 return DockerResourceOptionsVO(
-                    memoryLimitBytes = 34359738368L,
-                    cpuPeriod = 10000,
-                    cpuQuota = 160000,
-                    blkioDeviceReadBps = 125829120,
-                    blkioDeviceWriteBps = 125829120,
+                    memoryLimitBytes = defaultImageConfig.memory,
+                    cpuPeriod = defaultImageConfig.cpuPeriod,
+                    cpuQuota = defaultImageConfig.cpuQuota,
+                    blkioDeviceReadBps = defaultImageConfig.blkioDeviceReadBps,
+                    blkioDeviceWriteBps = defaultImageConfig.blkioDeviceWriteBps,
                     disk = 100,
                     description = ""
                 )
             }
         } else {
             return DockerResourceOptionsVO(
-                memoryLimitBytes = 34359738368L,
-                cpuPeriod = 10000,
-                cpuQuota = 160000,
-                blkioDeviceReadBps = 125829120,
-                blkioDeviceWriteBps = 125829120,
+                memoryLimitBytes = defaultImageConfig.memory,
+                cpuPeriod = defaultImageConfig.cpuPeriod,
+                cpuQuota = defaultImageConfig.cpuQuota,
+                blkioDeviceReadBps = defaultImageConfig.blkioDeviceReadBps,
+                blkioDeviceWriteBps = defaultImageConfig.blkioDeviceWriteBps,
                 disk = 100,
                 description = ""
             )
