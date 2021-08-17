@@ -92,8 +92,8 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         accessToken: String,
         userId: String,
         atomName: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<MyAtomResp?> {
         return marketAtomService.getMyAtoms(accessToken, userId, atomName, page, pageSize)
     }

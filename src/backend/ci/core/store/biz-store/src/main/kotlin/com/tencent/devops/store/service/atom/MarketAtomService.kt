@@ -81,8 +81,8 @@ interface MarketAtomService {
         accessToken: String,
         userId: String,
         atomName: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<MyAtomResp?>
 
     /**

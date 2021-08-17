@@ -281,6 +281,7 @@ class MarketAtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
+        conditions.add(a.LATEST_FLAG.eq(true))
         conditions.add(b.USERNAME.eq(userId))
         conditions.add(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         if (null != atomName) {
@@ -578,6 +579,21 @@ class MarketAtomDao : AtomBaseDao() {
             } else {
                 baseStep.fetch()
             }
+        }
+    }
+
+    fun getAtomsByConditions(
+        dslContext: DSLContext,
+        atomCodeList: List<String>,
+        atomStatusList: List<Byte>? = null
+    ): Result<TAtomRecord>? {
+        return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.`in`(atomCodeList))
+            if (atomStatusList != null) {
+                conditions.add(ATOM_STATUS.`in`(atomStatusList))
+            }
+            dslContext.selectFrom(this).where(conditions).orderBy(CREATE_TIME.desc()).fetch()
         }
     }
 
