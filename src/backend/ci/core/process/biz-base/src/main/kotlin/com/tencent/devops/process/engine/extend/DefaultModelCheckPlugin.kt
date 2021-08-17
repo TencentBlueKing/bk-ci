@@ -183,7 +183,7 @@ open class DefaultModelCheckPlugin constructor(
                 params = arrayOf(stage.name!!, group.name)
             )
         }
-        stage.checkIn?.timeout = if (stage.checkIn?.timeout in 1..720) {
+        stage.checkIn?.timeout = if (stage.checkIn?.timeout in 1..(Timeout.DEFAULT_STAGE_TIMEOUT_HOURS * 30)) {
             stage.checkIn?.timeout
         } else {
             Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
