@@ -24,142 +24,142 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.common.api.util
-
-import org.junit.Assert
-import org.junit.Test
-
-class ReplacementUtilsTest {
-    class Replacement(
-        private val data: Map<String, String>
-    ) : ReplacementUtils.KeyReplacement {
-        override fun getReplacement(key: String): String? = data[key]
-    }
-
-    @Test
-    fun parseTwice() {
-        val map = mutableMapOf<String, String>()
-        map["GDP"] = "10000000"
-        map["People"] = "1400000000"
-        map["Country"] = "中华人民共和国"
-        map["twice"] = "\${Country}" // twice 二次解析
-
-        parseAndEquals(
-            data = map,
-            template = "{\"GDP\": \"\${{GDP}}亿\", \"People\": \${{People}} \"Country\": \"\${twice}\"}",
-            expect = "{\"GDP\": \"${map["GDP"]}亿\", \"People\": ${map["People"]} \"Country\": \"${map["Country"]}\"}"
-        )
-
-        val data = HashMap<String, String>()
-        data["ab3c"] = "123"
-        data["ab.cd"] = "5678"
-        data["t.cd"] = "\${ab.cd}"
-
-        val template2 = "abcd_\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
-        val buff = EnvUtils.parseEnv(template2, data)
-        Assert.assertEquals(template2, buff)
-
-        parseAndEquals(
-            data = data,
-            template = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end",
-            expect = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
-        )
-
-        parseAndEquals(
-            data = data,
-            template = "abcd_\${abc}_ffs_\${{ce}}_\${{t.cd}}_ end结束%\n # 这是注释行a1\$ab_^%!#@",
-            expect = "abcd_\${abc}_ffs_twice_${data["ab.cd"]}_ end结束%\n # 这是注释行a1\$ab_^%!#@",
-            contextMap = mapOf("ce" to "twice")
-        )
-
-        data["c_e"] = "\${none}"
-        parseAndEquals(
-            data = data,
-            template = "abcd_\${abc}_ffs_\${{c_e}}_\${{t.cd}}_ end",
-            expect = "abcd_\${abc}_ffs_\${none}_${data["ab.cd"]}_ end"
-        )
-
-        data["center中"] = "中国"
-        parseAndEquals(data = data, template = "abcd_\${center中}_ffs", expect = "abcd_中国_ffs")
-
-        data["blank"] = ""
-        parseAndEquals(data = data, template = "\${blank}", expect = "")
-    }
-
-    private fun parseAndEquals(
-        data: Map<String, String>,
-        template: String,
-        expect: String,
-        contextMap: Map<String, String>? = null
-    ) {
-        val buff = ReplacementUtils.replace(template, Replacement(data), contextMap)
-        println("template=$template\nreplaced=$buff\n")
-        Assert.assertEquals(expect, buff)
-    }
-
-    @Test
-    fun replaceVar() {
-        val command1 = "hello \${{variables.abc}} world"
-        val command2 = "\${{variables.abc}}world"
-        val command3 = "hello\${{variables.abc}}"
-        val command4 = "hello\${{variables.abc"
-        val command5 = "hello\${{variables.abc}"
-        val command6 = "hello\${variables.abc}}"
-        val command7 = "hello\$variables.abc}}"
-        val command8 = "echo \${{ context.hello }}"
-        val command9 = "echo \${variables.abc}"
-        val varData = mapOf(
-            "variables.abc" to "variables.value",
-            "variables.hello" to "hahahahaha"
-        )
-
-        Assert.assertEquals("hello variables.value world", ReplacementUtils.replace(command1, Replacement(varData)))
-        Assert.assertEquals("variables.valueworld", ReplacementUtils.replace(command2, Replacement(varData)))
-        Assert.assertEquals("hellovariables.value", ReplacementUtils.replace(command3, Replacement(varData)))
-        Assert.assertEquals(command4, ReplacementUtils.replace(command4, Replacement(varData)))
-        Assert.assertEquals(command5, ReplacementUtils.replace(command5, Replacement(varData)))
-        Assert.assertEquals("hellovariables.value}", ReplacementUtils.replace(command6, Replacement(varData)))
-        Assert.assertEquals(command7, ReplacementUtils.replace(command7, Replacement(varData)))
-        Assert.assertEquals("echo context.value", ReplacementUtils.replace(command8,
-            Replacement(varData), mapOf("context.hello" to "context.value")))
-        Assert.assertEquals("echo variables.value", ReplacementUtils.replace(command9, Replacement(varData)))
-    }
-
-    @Test
-    fun replaceContext() {
-        val command1 = "hello \${{variables.abc}} world"
-        val command2 = "\${{variables.abc}}world"
-        val command3 = "hello\${{variables.abc}}"
-        val command4 = "hello\${{variables.abc"
-        val command5 = "hello\${{variables.abc}"
-        val command6 = "hello\${variables.abc}}"
-        val command7 = "hello\$variables.abc}}"
-        val command8 = "echo \${{ context.hello }}"
-        val command9 = "echo \${variables.abc}"
-        val contextData = mapOf(
-            "variables.abc" to "variables.value",
-            "variables.hello" to "hahahahaha",
-            "context.hello" to "context.value"
-        )
-
-        Assert.assertEquals("hello variables.value world",
-            ReplacementUtils.replace(command1, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("variables.valueworld",
-            ReplacementUtils.replace(command2, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hellovariables.value",
-            ReplacementUtils.replace(command3, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hello\${{variables.abc",
-            ReplacementUtils.replace(command4, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hello\${{variables.abc}",
-            ReplacementUtils.replace(command5, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hellovariables.value}",
-            ReplacementUtils.replace(command6, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hello\$variables.abc}}",
-            ReplacementUtils.replace(command7, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("echo context.value",
-            ReplacementUtils.replace(command8, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("echo variables.value",
-            ReplacementUtils.replace(command9, Replacement(emptyMap()), contextData))
-    }
-}
+//
+// package com.tencent.devops.common.api.util
+//
+// import org.junit.Assert
+// import org.junit.Test
+//
+// class ReplacementUtilsTest {
+//    class Replacement(
+//        private val data: Map<String, String>
+//    ) : ReplacementUtils.KeyReplacement {
+//        override fun getReplacement(key: String): String? = data[key]
+//    }
+//
+//    @Test
+//    fun parseTwice() {
+//        val map = mutableMapOf<String, String>()
+//        map["GDP"] = "10000000"
+//        map["People"] = "1400000000"
+//        map["Country"] = "中华人民共和国"
+//        map["twice"] = "\${Country}" // twice 二次解析
+//
+//        parseAndEquals(
+//            data = map,
+//            template = "{\"GDP\": \"\${{GDP}}亿\", \"People\": \${{People}} \"Country\": \"\${twice}\"}",
+//            expect = "{\"GDP\": \"${map["GDP"]}亿\", \"People\": ${map["People"]} \"Country\": \"${map["Country"]}\"}"
+//        )
+//
+//        val data = HashMap<String, String>()
+//        data["ab3c"] = "123"
+//        data["ab.cd"] = "5678"
+//        data["t.cd"] = "\${ab.cd}"
+//
+//        val template2 = "abcd_\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
+//        val buff = EnvUtils.parseEnv(template2, data)
+//        Assert.assertEquals(template2, buff)
+//
+//        parseAndEquals(
+//            data = data,
+//            template = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end",
+//            expect = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
+//        )
+//
+//        parseAndEquals(
+//            data = data,
+//            template = "abcd_\${abc}_ffs_\${{ce}}_\${{t.cd}}_ end结束%\n # 这是注释行a1\$ab_^%!#@",
+//            expect = "abcd_\${abc}_ffs_twice_${data["ab.cd"]}_ end结束%\n # 这是注释行a1\$ab_^%!#@",
+//            contextMap = mapOf("ce" to "twice")
+//        )
+//
+//        data["c_e"] = "\${none}"
+//        parseAndEquals(
+//            data = data,
+//            template = "abcd_\${abc}_ffs_\${{c_e}}_\${{t.cd}}_ end",
+//            expect = "abcd_\${abc}_ffs_\${none}_${data["ab.cd"]}_ end"
+//        )
+//
+//        data["center中"] = "中国"
+//        parseAndEquals(data = data, template = "abcd_\${center中}_ffs", expect = "abcd_中国_ffs")
+//
+//        data["blank"] = ""
+//        parseAndEquals(data = data, template = "\${blank}", expect = "")
+//    }
+//
+//    private fun parseAndEquals(
+//        data: Map<String, String>,
+//        template: String,
+//        expect: String,
+//        contextMap: Map<String, String>? = null
+//    ) {
+//        val buff = ReplacementUtils.replace(template, Replacement(data), contextMap)
+//        println("template=$template\nreplaced=$buff\n")
+//        Assert.assertEquals(expect, buff)
+//    }
+//
+//    @Test
+//    fun replaceVar() {
+//        val command1 = "hello \${{variables.abc}} world"
+//        val command2 = "\${{variables.abc}}world"
+//        val command3 = "hello\${{variables.abc}}"
+//        val command4 = "hello\${{variables.abc"
+//        val command5 = "hello\${{variables.abc}"
+//        val command6 = "hello\${variables.abc}}"
+//        val command7 = "hello\$variables.abc}}"
+//        val command8 = "echo \${{ context.hello }}"
+//        val command9 = "echo \${variables.abc}"
+//        val varData = mapOf(
+//            "variables.abc" to "variables.value",
+//            "variables.hello" to "hahahahaha"
+//        )
+//
+//        Assert.assertEquals("hello variables.value world", ReplacementUtils.replace(command1, Replacement(varData)))
+//        Assert.assertEquals("variables.valueworld", ReplacementUtils.replace(command2, Replacement(varData)))
+//        Assert.assertEquals("hellovariables.value", ReplacementUtils.replace(command3, Replacement(varData)))
+//        Assert.assertEquals(command4, ReplacementUtils.replace(command4, Replacement(varData)))
+//        Assert.assertEquals(command5, ReplacementUtils.replace(command5, Replacement(varData)))
+//        Assert.assertEquals("hellovariables.value}", ReplacementUtils.replace(command6, Replacement(varData)))
+//        Assert.assertEquals(command7, ReplacementUtils.replace(command7, Replacement(varData)))
+//        Assert.assertEquals("echo context.value", ReplacementUtils.replace(command8,
+//            Replacement(varData), mapOf("context.hello" to "context.value")))
+//        Assert.assertEquals("echo variables.value", ReplacementUtils.replace(command9, Replacement(varData)))
+//    }
+//
+//    @Test
+//    fun replaceContext() {
+//        val command1 = "hello \${{variables.abc}} world"
+//        val command2 = "\${{variables.abc}}world"
+//        val command3 = "hello\${{variables.abc}}"
+//        val command4 = "hello\${{variables.abc"
+//        val command5 = "hello\${{variables.abc}"
+//        val command6 = "hello\${variables.abc}}"
+//        val command7 = "hello\$variables.abc}}"
+//        val command8 = "echo \${{ context.hello }}"
+//        val command9 = "echo \${variables.abc}"
+//        val contextData = mapOf(
+//            "variables.abc" to "variables.value",
+//            "variables.hello" to "hahahahaha",
+//            "context.hello" to "context.value"
+//        )
+//
+//        Assert.assertEquals("hello variables.value world",
+//            ReplacementUtils.replace(command1, Replacement(emptyMap()), contextData))
+//        Assert.assertEquals("variables.valueworld",
+//            ReplacementUtils.replace(command2, Replacement(emptyMap()), contextData))
+//        Assert.assertEquals("hellovariables.value",
+//            ReplacementUtils.replace(command3, Replacement(emptyMap()), contextData))
+//        Assert.assertEquals("hello\${{variables.abc",
+//            ReplacementUtils.replace(command4, Replacement(emptyMap()), contextData))
+//        Assert.assertEquals("hello\${{variables.abc}",
+//            ReplacementUtils.replace(command5, Replacement(emptyMap()), contextData))
+//        Assert.assertEquals("hellovariables.value}",
+//            ReplacementUtils.replace(command6, Replacement(emptyMap()), contextData))
+//        Assert.assertEquals("hello\$variables.abc}}",
+//            ReplacementUtils.replace(command7, Replacement(emptyMap()), contextData))
+//        Assert.assertEquals("echo context.value",
+//            ReplacementUtils.replace(command8, Replacement(emptyMap()), contextData))
+//        Assert.assertEquals("echo variables.value",
+//            ReplacementUtils.replace(command9, Replacement(emptyMap()), contextData))
+//    }
+// }
