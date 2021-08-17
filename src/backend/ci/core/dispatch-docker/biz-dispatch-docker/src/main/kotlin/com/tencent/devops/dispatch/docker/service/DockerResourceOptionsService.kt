@@ -35,7 +35,9 @@ import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsMap
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsShow
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import com.tencent.devops.model.dispatch.tables.records.TDockerResourceOptionsRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -204,26 +206,9 @@ class DockerResourceOptionsService constructor(
                     )
                 )
             } else {
-                optionList.forEach {
-                    if (it.memoryLimitBytes == defaultImageConfig.memory) {
-                        default = it.id.toString()
-                    }
-                    dockerResourceOptionsMaps.add(
-                        DockerResourceOptionsMap(
-                            it.id.toString(), DockerResourceOptionsShow(
-                                cpu = (it.cpuQuota / it.cpuPeriod).toString(),
-                                memory = "${it.memoryLimitBytes / (1024 * 1024 * 1024)}G",
-                                disk = "${it.disk}G",
-                                description = it.description
-                            )
-                        )
-                    )
-                }
-
-                // 没有默认的配置，默认第一个
-                if (default == "0") {
-                    default = optionList[0].id.toString()
-                }
+                val (dockerResourceOptionsMapsPair, defaultPair) = getDockerResourceOptionsMaps(optionList)
+                dockerResourceOptionsMaps.addAll(dockerResourceOptionsMapsPair)
+                default = defaultPair
             }
         } else {
             dockerResourceOptionsMaps.add(
@@ -239,6 +224,36 @@ class DockerResourceOptionsService constructor(
         }
 
         return UserDockerResourceOptionsVO(default, needShow, dockerResourceOptionsMaps)
+    }
+
+    private fun getDockerResourceOptionsMaps(
+        optionList: Result<TDockerResourceOptionsRecord>
+    ): Pair<MutableList<DockerResourceOptionsMap>, String> {
+        var default = "0"
+        val dockerResourceOptionsMaps = mutableListOf<DockerResourceOptionsMap>()
+
+        optionList.forEach {
+            if (it.memoryLimitBytes == defaultImageConfig.memory) {
+                default = it.id.toString()
+            }
+            dockerResourceOptionsMaps.add(
+                DockerResourceOptionsMap(
+                    it.id.toString(), DockerResourceOptionsShow(
+                        cpu = (it.cpuQuota / it.cpuPeriod).toString(),
+                        memory = "${it.memoryLimitBytes / (1024 * 1024 * 1024)}G",
+                        disk = "${it.disk}G",
+                        description = it.description
+                    )
+                )
+            )
+        }
+
+        // 没有默认的配置，默认第一个
+        if (default == "0") {
+            default = optionList[0].id.toString()
+        }
+
+        return Pair(dockerResourceOptionsMaps, default)
     }
 
     private fun checkParameter(userId: String, projectId: String) {
