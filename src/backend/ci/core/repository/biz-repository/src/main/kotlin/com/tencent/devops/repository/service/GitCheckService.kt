@@ -21,6 +21,7 @@ class GitCheckService @Autowired constructor(
     ): RepositoryGitCheck? {
         val result = gitCheckDao.getOrNull(dslContext, pipelineId, repositoryConfig, commitId, context) ?: return null
         return RepositoryGitCheck(
+            gitCheckId = result.id,
             pipelineId = result.pipelineId,
             buildNumber = result.buildNumber,
             repositoryId = result.repoId,
