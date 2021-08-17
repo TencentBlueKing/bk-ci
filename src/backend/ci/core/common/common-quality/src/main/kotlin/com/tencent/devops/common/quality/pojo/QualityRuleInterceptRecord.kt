@@ -25,41 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.pojo
+package com.tencent.devops.common.quality.pojo
 
-import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
-import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("质量红线-拦截记录")
-data class RuleInterceptHistory(
-    @ApiModelProperty("hashId", required = true)
-    val hashId: String,
-    @ApiModelProperty("项目里的序号", required = true)
-    val num: Long,
-    @ApiModelProperty("时间戳(秒)", required = true)
-    val timestamp: Long,
-    @ApiModelProperty("拦截结果", required = true)
-    val interceptResult: RuleInterceptResult,
-    @ApiModelProperty("规则HashId", required = true)
-    val ruleHashId: String,
-    @ApiModelProperty("规则名称", required = true)
-    val ruleName: String,
-    @ApiModelProperty("流水线ID", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("流水线名称", required = true)
-    val pipelineName: String,
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("构建号", required = true)
-    val buildNo: String,
-    @ApiModelProperty("检查次数", required = true)
-    val checkTimes: Int,
-    @ApiModelProperty("描述", required = true)
-    val remark: String,
-    @ApiModelProperty("描述列表", required = true)
-    val interceptList: List<QualityRuleInterceptRecord>? = null,
-    @ApiModelProperty("流水线是否已删除", required = true)
-    val pipelineIsDelete: Boolean = false
+@ApiModel("质量红线-拦截规则拦截记录")
+data class QualityRuleInterceptRecord(
+    @ApiModelProperty("指标ID", required = true)
+    val indicatorId: String,
+    @ApiModelProperty("指标名称", required = true)
+    val indicatorName: String,
+    @ApiModelProperty("指标插件类型", required = false)
+    val indicatorType: String?,
+    @ApiModelProperty("关系", required = true)
+    val operation: QualityOperation,
+    @ApiModelProperty("阈值值大小", required = true)
+    val value: String?,
+    @ApiModelProperty("实际值", required = true)
+    val actualValue: String?,
+    @ApiModelProperty("控制点", required = true)
+    val controlPoint: String,
+    @ApiModelProperty("是否通过", required = true)
+    val pass: Boolean,
+    @ApiModelProperty("指标详情", required = true)
+    val detail: String?,
+    @ApiModelProperty("指标日志输出详情", required = false)
+    val logPrompt: String?
 )

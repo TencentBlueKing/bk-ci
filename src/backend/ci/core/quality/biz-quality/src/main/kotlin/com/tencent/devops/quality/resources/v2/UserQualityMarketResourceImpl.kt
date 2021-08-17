@@ -36,7 +36,7 @@ import com.tencent.devops.quality.service.v2.QualityIndicatorService
 @RestResource
 class UserQualityMarketResourceImpl constructor(
     private val qualityIndicatorService: QualityIndicatorService
-): UserQualityMarketResource {
+) : UserQualityMarketResource {
     override fun getAuditUserList(atomCode: String): Result<List<QualityIndicator>> {
         return Result(qualityIndicatorService.serviceList(atomCode, listOf()))
     }

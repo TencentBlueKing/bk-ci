@@ -25,20 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.pojo
+package com.tencent.devops.quality.resources.v2
 
-import com.tencent.devops.common.quality.pojo.enums.QualityOperation
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.quality.api.v2.ServiceQualityControlPointResource
+import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
+import com.tencent.devops.quality.service.v2.QualityControlPointService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("质量红线-拦截规则阈值")
-data class RuleThreshold(
-    @ApiModelProperty("指标ID", required = true)
-    val metadataId: String,
-    @ApiModelProperty("指标名称", required = true)
-    val metadataName: String,
-    @ApiModelProperty("关系", required = true)
-    val operation: QualityOperation,
-    @ApiModelProperty("阈值值大小", required = true)
-    val value: String
-)
+@RestResource
+class ServiceQualityControlPointResourceImpl @Autowired constructor(
+    private val qualityControlPointService: QualityControlPointService
+) : ServiceQualityControlPointResource {
+    override fun listByTypes(elementTypes: Collection<String>): Result<List<QualityControlPoint>> {
+        return Result(qualityControlPointService.serviceList(elementTypes))
+    }
+}

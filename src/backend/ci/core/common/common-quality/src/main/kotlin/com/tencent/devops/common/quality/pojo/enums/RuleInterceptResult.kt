@@ -25,24 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2.pojo.enums
+package com.tencent.devops.common.quality.pojo.enums
 
-enum class QualityOperation {
-    GT,
-    GE,
-    LT,
-    LE,
-    EQ;
-
-    companion object {
-        fun convertToSymbol(operation: QualityOperation): String {
-            return when (operation) {
-                GT -> ">"
-                GE -> ">="
-                LT -> "<"
-                LE -> "<="
-                EQ -> "="
-            }
-        }
-    }
+enum class RuleInterceptResult {
+    PASS,
+    FAIL
 }
