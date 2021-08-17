@@ -318,6 +318,8 @@ export default {
             name: insertStageIsFinally === true ? 'Final' : `stage-${insertStageIndex + 1}`,
             tag: [...state.defaultStageTags],
             containers: [],
+            checkIn: { timeout: 24 },
+            checkOut: { timeout: 24 },
             finally: insertStageIsFinally === true || undefined
         })
         return state
