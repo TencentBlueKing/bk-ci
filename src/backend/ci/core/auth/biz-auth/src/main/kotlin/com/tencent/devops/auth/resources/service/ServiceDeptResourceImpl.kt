@@ -42,7 +42,7 @@ class ServiceDeptResourceImpl @Autowired constructor(
         return Result("", deptService.getUserParentDept(userId))
     }
 
-    override fun getDeptByName(deptName: String, userId: String): Result<DeptInfoVo?> {
+    override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
         return Result(deptService.getDeptByName(deptName, userId))
     }
 }
