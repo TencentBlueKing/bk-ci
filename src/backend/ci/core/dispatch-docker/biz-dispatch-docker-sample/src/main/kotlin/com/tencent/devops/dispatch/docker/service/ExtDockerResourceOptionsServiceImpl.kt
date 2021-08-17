@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
