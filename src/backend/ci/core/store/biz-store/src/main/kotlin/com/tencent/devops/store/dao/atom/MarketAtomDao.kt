@@ -765,24 +765,35 @@ class MarketAtomDao : AtomBaseDao() {
         atomId: String,
         atomStatus: Byte,
         approveReq: ApproveReq,
-        latestFlag: Boolean,
+        latestFlag: Boolean? = null,
         pubTime: LocalDateTime? = null
     ) {
         with(TAtom.T_ATOM) {
-            dslContext.update(this)
+            val baseStep = dslContext.update(this)
                 .set(ATOM_STATUS, atomStatus)
                 .set(ATOM_STATUS_MSG, approveReq.message)
                 .set(ATOM_TYPE, approveReq.atomType.type.toByte())
                 .set(DEFAULT_FLAG, approveReq.defaultFlag)
-                .set(WEIGHT, approveReq.weight)
                 .set(BUILD_LESS_RUN_FLAG, approveReq.buildLessRunFlag)
                 .set(SERVICE_SCOPE, JsonUtil.getObjectMapper().writeValueAsString(approveReq.serviceScope))
                 .set(LATEST_FLAG, latestFlag)
-                .set(PUB_TIME, pubTime)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(ID.eq(atomId))
-                .execute()
+            val weight = approveReq.weight
+            if (null != weight) {
+                baseStep.set(WEIGHT, weight)
+            }
+            val buildLessRunFlag = approveReq.buildLessRunFlag
+            if (null != buildLessRunFlag) {
+                baseStep.set(BUILD_LESS_RUN_FLAG, buildLessRunFlag)
+            }
+            if (null != latestFlag) {
+                baseStep.set(LATEST_FLAG, latestFlag)
+            }
+            if (null != pubTime) {
+                baseStep.set(PUB_TIME, pubTime)
+            }
+            baseStep.where(ID.eq(atomId)).execute()
         }
     }
 
