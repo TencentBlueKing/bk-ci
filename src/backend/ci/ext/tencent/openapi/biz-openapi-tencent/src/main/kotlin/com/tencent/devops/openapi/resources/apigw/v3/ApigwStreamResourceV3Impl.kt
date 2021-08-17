@@ -4,8 +4,12 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.gitci.api.GitCIDetailResource
+import com.tencent.devops.gitci.api.GitCIHistoryResource
 import com.tencent.devops.gitci.api.GitCIPipelineResource
 import com.tencent.devops.gitci.api.service.ServiceStreamTriggerResource
+import com.tencent.devops.gitci.pojo.GitCIBuildHistory
+import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.StreamTriggerBuildReq
 import com.tencent.devops.openapi.api.apigw.v3.ApigwStreamResourceV3
@@ -56,14 +60,67 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
     }
 
     override fun getPipeline(userId: String, gitProjectId: Long, pipelineId: String): Result<GitProjectPipeline?> {
-        TODO("Not yet implemented")
+        return client.get(GitCIPipelineResource::class).getPipeline(
+            userId = userId,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId
+        )
     }
 
-    override fun enablePipeline(userId: String, gitProjectId: Long, pipelineId: String, enabled: Boolean): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun enablePipeline(
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String,
+        enabled: Boolean
+    ): Result<Boolean> {
+        return client.get(GitCIPipelineResource::class).enablePipeline(
+            userId = userId,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId,
+            enabled = enabled
+        )
     }
 
     override fun listPipelineNames(userId: String, gitProjectId: Long): Result<List<GitProjectPipeline>> {
-        TODO("Not yet implemented")
+        return client.get(GitCIPipelineResource::class).listPipelineNames(
+            userId = userId,
+            gitProjectId = gitProjectId
+        )
+    }
+
+    override fun getLatestBuildDetail(
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String?,
+        buildId: String?
+    ): Result<GitCIModelDetail?> {
+        return client.get(GitCIDetailResource::class).getLatestBuildDetail(
+            userId = userId,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+    }
+
+    override fun getHistoryBuildList(
+        userId: String,
+        gitProjectId: Long,
+        page: Int?,
+        pageSize: Int?,
+        branch: String?,
+        sourceGitProjectId: Long?,
+        triggerUser: String?,
+        pipelineId: String?
+    ): Result<Page<GitCIBuildHistory>> {
+        return client.get(GitCIHistoryResource::class).getHistoryBuildList(
+            userId = userId,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId,
+            triggerUser = triggerUser,
+            branch = branch,
+            sourceGitProjectId = sourceGitProjectId,
+            page = page,
+            pageSize = pageSize
+        )
     }
 }

@@ -4,6 +4,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.gitci.pojo.GitCIBuildHistory
+import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.StreamTriggerBuildReq
 import io.swagger.annotations.Api
@@ -47,7 +49,7 @@ interface ApigwStreamResourceV3 {
         gitProjectId: String
     ): Result<String>
 
-    @ApiOperation("项目下所有流水线概览")
+    @ApiOperation("项目下所有Stream流水线概览")
     @GET
     @Path("/pipelines/list")
     fun getPipelineList(
@@ -68,7 +70,7 @@ interface ApigwStreamResourceV3 {
         pageSize: Int?
     ): Result<Page<GitProjectPipeline>>
 
-    @ApiOperation("获取指定流水线信息")
+    @ApiOperation("获取指定Stream流水线信息")
     @GET
     @Path("/{gitProjectId}/{pipelineId}/info")
     fun getPipeline(
@@ -83,7 +85,7 @@ interface ApigwStreamResourceV3 {
         pipelineId: String
     ): Result<GitProjectPipeline?>
 
-    @ApiOperation("开启或关闭流水线")
+    @ApiOperation("开启或关闭Stream流水线")
     @POST
     @Path("/pipelines/{pipelineId}/enable")
     fun enablePipeline(
@@ -101,9 +103,9 @@ interface ApigwStreamResourceV3 {
         enabled: Boolean
     ): Result<Boolean>
 
-    @ApiOperation("获取流水线列表")
+    @ApiOperation("获取Stream流水线列表")
     @GET
-    @Path("/listInfo")
+    @Path("/pipelines/listInfo")
     fun listPipelineNames(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -112,4 +114,52 @@ interface ApigwStreamResourceV3 {
         @PathParam("gitProjectId")
         gitProjectId: Long
     ): Result<List<GitProjectPipeline>>
+
+    @ApiOperation("查看项目下的指定构建详情")
+    @GET
+    @Path("/builds/detail")
+    fun getLatestBuildDetail(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "gitProjectId", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "pipelineId", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @ApiParam(value = "buildId", required = false)
+        @QueryParam("buildId")
+        buildId: String?
+    ): Result<GitCIModelDetail?>
+
+    @ApiOperation("可选条件检索Stream构建历史")
+    @GET
+    @Path("/builds/history")
+    fun getHistoryBuildList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "gitProjectId", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("分支", required = false)
+        @QueryParam("branch")
+        branch: String?,
+        @ApiParam("源仓库ID", required = false)
+        @QueryParam("sourceGitProjectId")
+        sourceGitProjectId: Long?,
+        @ApiParam("触发人", required = false)
+        @QueryParam("triggerUser")
+        triggerUser: String?,
+        @ApiParam("流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<Page<GitCIBuildHistory>>
 }
