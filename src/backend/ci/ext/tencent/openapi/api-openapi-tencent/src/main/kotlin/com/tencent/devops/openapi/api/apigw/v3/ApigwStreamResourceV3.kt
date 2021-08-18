@@ -1,6 +1,9 @@
 package com.tencent.devops.openapi.api.apigw.v3
 
-import com.tencent.devops.common.api.auth.*
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
