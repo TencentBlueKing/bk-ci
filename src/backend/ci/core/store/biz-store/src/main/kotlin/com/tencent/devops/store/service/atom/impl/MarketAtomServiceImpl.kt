@@ -1208,7 +1208,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
 
         val list = paramValueMap["list"]
-        if (null != options) {
+        if (null != list) {
             try {
                 list as List<Map<String, Any>>
                 builder.append(", $optionsName:")
