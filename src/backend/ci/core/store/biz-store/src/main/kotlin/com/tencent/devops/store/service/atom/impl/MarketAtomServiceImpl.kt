@@ -1175,8 +1175,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             try {
                 rely as Map<String, Any>
                 if (null != rely["expression"]) {
-                    val expression = rely["expression"] as List<Map<String, String>>
-                    builder.append(dang)
+                    val expression = rely["expression"] as List<Map<String, Any>>
+                    builder.append(", $dang")
                     val link = if (rely["operation"] == "AND") and else or
                     expression.map { " [${it["key"]}] = [${it["value"]}] " }.forEachIndexed { index, value ->
                         builder.append(value)
@@ -1194,7 +1194,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val options = paramValueMap["options"]
         if (null != options) {
             try {
-                options as List<Map<String, String>>
+                options as List<Map<String, Any>>
                 builder.append(", $selectorTypeName")
                 builder.append(", $optionsName:")
                 options.forEachIndexed { index, map ->
@@ -1210,7 +1210,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val list = paramValueMap["list"]
         if (null != options) {
             try {
-                list as List<Map<String, String>>
+                list as List<Map<String, Any>>
                 builder.append(", $optionsName:")
                 list.forEachIndexed { index, map ->
                     val key = if (null != map["label"]) map["label"] else if (null != map["id"]) map["id"] else
