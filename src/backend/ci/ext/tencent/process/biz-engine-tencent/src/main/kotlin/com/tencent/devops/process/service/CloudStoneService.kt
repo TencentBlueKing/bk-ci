@@ -28,7 +28,9 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.process.util.cloudStone.CloudStoneSignUtils
 import net.sf.json.JSONObject
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -41,15 +43,16 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.util.TreeMap
 
+@Suppress("UNCHECKED_CAST", "NestedBlockDepth", "LongParameterList", "TooGenericExceptionThrown")
 @Service
 class CloudStoneService {
     private val logger = LoggerFactory.getLogger(CloudStoneService::class.java)
 
     @Value("\${cloudStone.appCode}")
-    private lateinit var ESB_APP_CODE: String
+    private lateinit var esbAppCode: String
 
     @Value("\${cloudStone.appToken}")
-    private lateinit var ESB_APP_TOKEN: String
+    private lateinit var esbAppToken: String
 
     @Value("\${cloudStone.passPwd}")
     private lateinit var cloudStonePwd: String
@@ -64,7 +67,6 @@ class CloudStoneService {
     private lateinit var userName: String
 
     fun postFile(
-        userId: String,
         appId: Int,
         pipelineId: String,
         buildNo: Int,
@@ -75,44 +77,46 @@ class CloudStoneService {
         fileType: String,
         customFiled: String
     ): Pair<Boolean, String> {
-        val uploadTicket = getUploadTicket(userId, appId)
+        val uploadTicket = getUploadTicket(appId)
         val finalTargetPath = "/" + targetPath.removePrefix("/").removeSuffix("/") + "/"
         try {
             logger.info("post file url: $fileUploadUrl")
             val body = MultipartBody.Builder()
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart("file", file.name, RequestBody.create(MediaType.parse("application/octet-stream"), file.inputStream().readBytes()))
-                    .addFormDataPart("ticket_id", uploadTicket.ticketId.toString())
-                    .addFormDataPart("random_key", uploadTicket.randomKey.toString())
-                    .addFormDataPart("file_type", fileType)
-                    .addFormDataPart("release_note", releaseNote) // 发布说明
-                    .addFormDataPart("target_path", finalTargetPath + file.name)
-                    .addFormDataPart("md5", FileUtil.getMD5(file))
-                    .addFormDataPart("cc_id", appId.toString())
-                    .addFormDataPart("custom_filed", customFiled)
-                    .addFormDataPart("version_id", versionId)
-                    .addFormDataPart("pipeline_id", pipelineId)
-                    .addFormDataPart("build_number", buildNo.toString())
-                    .build()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", file.name,
+                    RequestBody.create(MediaType.parse("application/octet-stream"),
+                        file.inputStream().readBytes())
+                )
+                .addFormDataPart("ticket_id", uploadTicket.ticketId.toString())
+                .addFormDataPart("random_key", uploadTicket.randomKey.toString())
+                .addFormDataPart("file_type", fileType)
+                .addFormDataPart("release_note", releaseNote) // 发布说明
+                .addFormDataPart("target_path", finalTargetPath + file.name)
+                .addFormDataPart("md5", FileUtil.getMD5(file))
+                .addFormDataPart("cc_id", appId.toString())
+                .addFormDataPart("custom_filed", customFiled)
+                .addFormDataPart("version_id", versionId)
+                .addFormDataPart("pipeline_id", pipelineId)
+                .addFormDataPart("build_number", buildNo.toString())
+                .build()
 
             val request = Request.Builder()
-                    .url(fileUploadUrl)
-                    .post(body)
-                    .build()
+                .url(fileUploadUrl)
+                .post(body)
+                .build()
             OkhttpUtils.doHttp(request).use { response ->
-//            OkhttpUtils.okHttpClient.newCall(request).execute().use { response ->
                 val responseStr = response.body()!!.string()
                 logger.info("post file response: $responseStr")
-                val responseJsonObject = JSONObject.fromObject(responseStr)
-                val result = responseJsonObject.optBoolean("result")
+                val responseJsonObject = JsonUtil.toMap(responseStr)
+                val result = responseJsonObject["result"]?.toString()?.toBoolean() ?: false
                 return if (result) {
-                    val dataObj = responseJsonObject.optJSONObject("data")
-                    val taskId = dataObj.optInt("task_id", 0)
+                    val dataObj = responseJsonObject["data"] as Map<String, Any>
+                    val taskId = dataObj.getOrDefault("task_id", 0)
                     logger.info("success[$taskId]")
                     Pair(true, "$finalTargetPath${file.name}($taskId)")
                 } else {
                     logger.info("post file failed")
-                    var msg = responseJsonObject.optString("message")
+                    var msg = responseJsonObject["message"]?.toString()
                     if (StringUtils.isBlank(msg)) {
                         msg = "post file failed"
                     }
@@ -120,27 +124,27 @@ class CloudStoneService {
                     Pair(false, "上传云石失败($finalTargetPath${file.name})，失败详情：$msg")
                 }
             }
-        } catch (e: Exception) {
-            throw RuntimeException("post file exception: ${e.message}")
+        } catch (ignored: Exception) {
+            throw RuntimeException("post file exception: ${ignored.message}")
         }
     }
 
     /**
      * 获取文件上传凭证
      */
-    private fun getUploadTicket(userId: String, appId: Int): com.tencent.devops.process.util.cloudStone.UploadTicket {
+    private fun getUploadTicket(appId: Int): com.tencent.devops.process.util.cloudStone.UploadTicket {
         val data = TreeMap<String, String>()
-        data["app_code"] = ESB_APP_CODE
+        data["app_code"] = esbAppCode
         data["username"] = userName
         data["ts"] = System.currentTimeMillis().toString()
 
         val reqUri = "/web_disk/apply_ticket/$appId/"
 
-        val strToSign = com.tencent.devops.process.util.cloudStone.CloudStoneSignUtils.getStringForSign("POST", reqUri, data)
-        val signature = com.tencent.devops.process.util.cloudStone.CloudStoneSignUtils.sign(strToSign, cloudStonePwd)
+        val strToSign = CloudStoneSignUtils.getStringForSign("POST", reqUri, data)
+        val signature = CloudStoneSignUtils.sign(strToSign, cloudStonePwd)
         data["fw_signature"] = signature
 
-        data["app_secret"] = ESB_APP_TOKEN
+        data["app_secret"] = esbAppToken
 
         val reqUrl = cloudStoneEsbUrl + reqUri
         logger.info("get ticket url: $reqUrl")
@@ -153,7 +157,6 @@ class CloudStoneService {
                 .build()
             OkhttpUtils.doHttp(httpReq).use { resp ->
                 val responseStr = resp.body()!!.string()
-//            val responseStr = HttpUtils.postJson(reqUrl, reqBody)
                 logger.info("get ticket response: $responseStr")
 
                 val responseJsonObject = JSONObject.fromObject(responseStr)
@@ -171,9 +174,9 @@ class CloudStoneService {
                     throw RuntimeException("get ticket failed: $msg")
                 }
             }
-        } catch (e: Exception) {
+        } catch (ignored: Exception) {
             logger.info("error occur")
-            throw RuntimeException("push file error: ${e.message}")
+            throw RuntimeException("push file error: ${ignored.message}")
         }
     }
 }

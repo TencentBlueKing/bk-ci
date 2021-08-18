@@ -106,7 +106,7 @@ class CloudStoneTaskAtom @Autowired constructor(
                 return defaultFailAtomResponse
             }
         matchFiles.forEach { file ->
-            val result = cloudStoneService.postFile(userId,
+            val result = cloudStoneService.postFile(
                 appId, pipelineId, buildNo, releaseNote, file, targetPath, versionId, fileType, customFiled)
             if (result.first) {
                 logger.info("Upload to cloudStone success. file:${file.name}")
