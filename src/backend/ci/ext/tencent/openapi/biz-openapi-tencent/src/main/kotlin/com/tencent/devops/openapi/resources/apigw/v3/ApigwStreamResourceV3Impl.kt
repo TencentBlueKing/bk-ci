@@ -21,6 +21,8 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
 ) : ApigwStreamResourceV3 {
 
     override fun triggerStartup(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         gitProjectId: String,
         pipelineId: String,
@@ -34,7 +36,12 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         )
     }
 
-    override fun getStreamProject(userId: String, gitProjectId: String): Result<String> {
+    override fun getStreamProject(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        gitProjectId: String
+    ): Result<String> {
         val r1 = Regex("[0-9]+")
         return if (r1.matches(gitProjectId)) {
             Result("git_$gitProjectId")
@@ -44,6 +51,8 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
     }
 
     override fun getPipelineList(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         gitProjectId: Long,
         keyword: String?,
@@ -59,7 +68,13 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         )
     }
 
-    override fun getPipeline(userId: String, gitProjectId: Long, pipelineId: String): Result<GitProjectPipeline?> {
+    override fun getPipeline(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String
+    ): Result<GitProjectPipeline?> {
         return client.get(GitCIPipelineResource::class).getPipeline(
             userId = userId,
             gitProjectId = gitProjectId,
@@ -68,6 +83,8 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
     }
 
     override fun enablePipeline(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         gitProjectId: Long,
         pipelineId: String,
@@ -81,7 +98,12 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         )
     }
 
-    override fun listPipelineNames(userId: String, gitProjectId: Long): Result<List<GitProjectPipeline>> {
+    override fun listPipelineNames(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        gitProjectId: Long
+    ): Result<List<GitProjectPipeline>> {
         return client.get(GitCIPipelineResource::class).listPipelineNames(
             userId = userId,
             gitProjectId = gitProjectId
@@ -89,6 +111,8 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
     }
 
     override fun getLatestBuildDetail(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         gitProjectId: Long,
         pipelineId: String?,
@@ -103,6 +127,8 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
     }
 
     override fun getHistoryBuildList(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         gitProjectId: Long,
         page: Int?,
