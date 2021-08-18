@@ -30,13 +30,17 @@ package com.tencent.devops.store.service.atom.impl
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DANG
 import com.tencent.devops.common.api.constant.DEFAULT
 import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
 import com.tencent.devops.common.api.constant.NO_LABEL
 import com.tencent.devops.common.api.constant.OPTIONS
+import com.tencent.devops.common.api.constant.OR
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
+import com.tencent.devops.common.api.constant.TIMETOSELECT
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -1161,8 +1165,29 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
             builder.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
         }
-        val options = paramValueMap["options"] ?: return
-        try {
+
+        val rely = paramValueMap["rely"]
+        if (null != rely) {
+            val dang = MessageCodeUtil.getCodeLanMessage(DANG)
+            val and = MessageCodeUtil.getCodeLanMessage(AND)
+            val or = MessageCodeUtil.getCodeLanMessage(OR)
+            val timetoSelect = MessageCodeUtil.getCodeLanMessage(TIMETOSELECT)
+            builder.append(dang)
+            rely as Map<String, Any>
+            val expression = rely["expression"] as List<Map<String, String>>
+            val link = if (rely["operation"] == "AND") and else or
+            expression.map { " [${it["key"]}] = [${it["value"]}] " }.forEachIndexed { index, value ->
+                builder.append(value)
+                if (index < expression.size - 1) {
+                    builder.append(link)
+                }
+            }
+            builder.append(timetoSelect)
+
+        }
+
+        val options = paramValueMap["options"]
+        if (null != options) {
             options as List<Map<String, String>>
             builder.append(", $selectorTypeName")
             builder.append(", $optionsName:")
@@ -1171,8 +1196,21 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 else builder.append(" ${map["id"]}[${map["name"]}] |")
             }
             builder.removeSuffix("|")
-        } catch (e: Exception) {
-            logger.error("load atom input[$paramKey] with error: ${e.message}")
+        }
+
+        val list = paramValueMap["list"]
+        if (null != options) {
+            list as List<Map<String, String>>
+            builder.append(", $optionsName:")
+            list.forEachIndexed { index, map ->
+                val key = if (null != map["label"]) map["label"] else if (null != map["id"]) map["id"] else
+                    null ?: return
+                val value = if (null != map["value"]) map["value"] else if (null != map["name"]) map["name"] else
+                    null ?: return
+                if (index == list.size - 1) builder.append(" $key[$value]")
+                else builder.append(" $key[$value] |")
+            }
+            builder.removeSuffix("|")
         }
     }
 }
