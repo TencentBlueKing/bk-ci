@@ -105,7 +105,7 @@ class YamlTrigger @Autowired constructor(
                 gitProjectId = gitRequestEvent.gitProjectId,
                 branch = gitRequestEvent.branch,
                 objectKind = gitRequestEvent.objectKind,
-                description = gitRequestEvent.commitMsg,
+                commitMsg = gitRequestEvent.commitMsg,
                 triggerUser = gitRequestEvent.userId,
                 sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
                 buildStatus = BuildStatus.RUNNING,
