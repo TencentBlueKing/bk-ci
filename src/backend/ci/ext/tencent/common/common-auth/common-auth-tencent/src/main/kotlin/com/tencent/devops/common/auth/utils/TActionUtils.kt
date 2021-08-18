@@ -25,12 +25,12 @@ object TActionUtils {
         }
     }
 
-    fun extResourceTypeCheck(authResourceType: AuthResourceType): Boolean {
-        val extResourceTypeList = mutableListOf<AuthResourceType>()
-        extResourceTypeList.add(AuthResourceType.QUALITY_GROUP)
-        extResourceTypeList.add(AuthResourceType.QUALITY_RULE)
-        extResourceTypeList.add(AuthResourceType.EXPERIENCE_TASK)
-        extResourceTypeList.add(AuthResourceType.EXPERIENCE_GROUP)
+    fun extResourceTypeCheck(authResourceType: String): Boolean {
+        val extResourceTypeList = mutableListOf<String>()
+        extResourceTypeList.add(AuthResourceType.QUALITY_GROUP.value)
+        extResourceTypeList.add(AuthResourceType.QUALITY_RULE.value)
+        extResourceTypeList.add(AuthResourceType.EXPERIENCE_TASK.value)
+        extResourceTypeList.add(AuthResourceType.EXPERIENCE_GROUP.value)
         if (extResourceTypeList.contains(authResourceType)) {
             return true
         }

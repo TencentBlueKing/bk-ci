@@ -138,7 +138,7 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
                         instanceId = getPipelineAutoId(instance.id)
                     }
 
-                    val instanceType = if (TActionUtils.extResourceTypeCheck(it.resourceId)) {
+                    val instanceType = if (TActionUtils.extResourceTypeCheck(instance.type)) {
                         TActionUtils.extResourceType(it.resourceId)
                     } else instance.type
 
