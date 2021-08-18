@@ -2,6 +2,7 @@ package com.tencent.devops.quality.service
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -32,7 +33,7 @@ class TxV3QualityPermissionService @Autowired constructor(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
-            resourceCode = groupId.toString(),
+            resourceCode = HashUtil.encodeLongId(groupId),
             action = TActionUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP),
             relationResourceType = null,
             resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_GROUP)
@@ -48,7 +49,7 @@ class TxV3QualityPermissionService @Autowired constructor(
             serviceCode = null,
             resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_GROUP),
             projectCode = projectId,
-            resourceCode = groupId.toString(),
+            resourceCode = HashUtil.encodeLongId(groupId),
             resourceName = groupName
         )
     }
@@ -85,7 +86,7 @@ class TxV3QualityPermissionService @Autowired constructor(
                 groupDao.list(dslContext, projectId, 0, count.toInt())?.map { instanceLongIds.add(it.id) }
             } else {
                 value.forEach {
-                    instanceLongIds.add(it.toString().toLong())
+                    instanceLongIds.add(HashUtil.decodeIdToLong(it.toString()))
                 }
             }
             resultMap[key] = instanceLongIds
@@ -129,7 +130,7 @@ class TxV3QualityPermissionService @Autowired constructor(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
-            resourceCode = ruleId.toString(),
+            resourceCode = HashUtil.encodeLongId(ruleId),
             action = TActionUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE),
             resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_RULE),
             relationResourceType = null
@@ -145,7 +146,7 @@ class TxV3QualityPermissionService @Autowired constructor(
             serviceCode = null,
             resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_RULE),
             projectCode = projectId,
-            resourceCode = ruleId.toString(),
+            resourceCode = HashUtil.encodeLongId(ruleId),
             resourceName = ruleName
         )
     }
@@ -181,7 +182,7 @@ class TxV3QualityPermissionService @Autowired constructor(
                 ruleDao.list(dslContext, projectId)?.map { instanceLongIds.add(it.id) }
             } else {
                 value.forEach {
-                    instanceLongIds.add(it.toString().toLong())
+                    instanceLongIds.add(HashUtil.decodeIdToLong(it.toString()))
                 }
             }
             resultMap[key] = instanceLongIds
