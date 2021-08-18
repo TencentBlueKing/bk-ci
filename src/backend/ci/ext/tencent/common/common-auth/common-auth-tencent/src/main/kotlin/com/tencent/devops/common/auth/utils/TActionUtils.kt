@@ -25,6 +25,18 @@ object TActionUtils {
         }
     }
 
+    fun extResourceTypeCheck(authResourceType: AuthResourceType): Boolean {
+        val extResourceTypeList = mutableListOf<AuthResourceType>()
+        extResourceTypeList.add(AuthResourceType.QUALITY_GROUP)
+        extResourceTypeList.add(AuthResourceType.QUALITY_RULE)
+        extResourceTypeList.add(AuthResourceType.EXPERIENCE_TASK)
+        extResourceTypeList.add(AuthResourceType.EXPERIENCE_GROUP)
+        if (extResourceTypeList.contains(authResourceType)) {
+            return true
+        }
+        return false
+    }
+
     fun buildActionList(authPermissions: Set<AuthPermission>, authResourceType: AuthResourceType): List<String> {
         val actions = mutableListOf<String>()
         authPermissions.forEach {
