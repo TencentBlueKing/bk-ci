@@ -49,6 +49,8 @@ import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
+import com.tencent.devops.common.ci.v2.Resources
+import com.tencent.devops.common.ci.v2.ResourcesPools
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -141,6 +143,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
+import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -346,7 +349,8 @@ class YamlBuildV2 @Autowired constructor(
                 stage = stage,
                 event = event,
                 gitBasicSetting = gitBasicSetting,
-                stageIndex = stageIndex + 1
+                stageIndex = stageIndex + 1,
+                resources = yaml.resource
             ))
         }
         // 添加finally
@@ -363,7 +367,9 @@ class YamlBuildV2 @Autowired constructor(
                     ),
                     event = event,
                     gitBasicSetting = gitBasicSetting,
-                    finalStage = true)
+                    finalStage = true,
+                    resources = yaml.resource
+                )
             )
         }
 
@@ -452,7 +458,8 @@ class YamlBuildV2 @Autowired constructor(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
         stageIndex: Int = 0,
-        finalStage: Boolean = false
+        finalStage: Boolean = false,
+        resources: Resources? = null
     ): Stage {
         val containerList = mutableListOf<Container>()
         stage.jobs.forEachIndexed { jobIndex, job ->
@@ -466,7 +473,8 @@ class YamlBuildV2 @Autowired constructor(
                     containerList = containerList,
                     jobIndex = jobIndex,
                     projectCode = gitBasicSetting.projectCode!!,
-                    finalStage = finalStage
+                    finalStage = finalStage,
+                    resources = resources
                 )
             }
         }
@@ -501,7 +509,8 @@ class YamlBuildV2 @Autowired constructor(
         containerList: MutableList<Container>,
         jobIndex: Int,
         projectCode: String,
-        finalStage: Boolean = false
+        finalStage: Boolean = false,
+        resources: Resources? = null
     ) {
         val vmContainer = VMBuildContainer(
             jobId = job.id,
@@ -523,7 +532,7 @@ class YamlBuildV2 @Autowired constructor(
             dockerBuildVersion = null,
             tstackAgentId = null,
             jobControlOption = getJobControlOption(job, finalStage),
-            dispatchType = getDispatchType(job, projectCode)
+            dispatchType = getDispatchType(job, projectCode, resources)
         )
         containerList.add(vmContainer)
     }
@@ -544,7 +553,11 @@ class YamlBuildV2 @Autowired constructor(
         }
     }
 
-    fun getDispatchType(job: Job, projectCode: String): DispatchType {
+    fun getDispatchType(
+        job: Job,
+        projectCode: String,
+        resources: Resources? = null
+    ): DispatchType {
         // macos构建机
         if (job.runsOn.poolName.startsWith("macos")) {
             return MacOSDispatchType(
@@ -556,8 +569,9 @@ class YamlBuildV2 @Autowired constructor(
 
         // 第三方构建机
         if (job.runsOn.selfHosted == true) {
+            val envName = getEnvName(job.runsOn.poolName, resources?.pools)
             return ThirdPartyAgentEnvDispatchType(
-                envName = job.runsOn.poolName,
+                envName = envName,
                 workspace = job.runsOn.workspace,
                 agentType = AgentType.NAME
             )
@@ -632,6 +646,36 @@ class YamlBuildV2 @Autowired constructor(
         }
 
         throw CustomException(Response.Status.NOT_FOUND, "公共构建资源池不存在，请检查yml配置.")
+    }
+
+    private fun getEnvName(poolName: String, pools: List<ResourcesPools>?): String {
+        if (pools.isNullOrEmpty()) {
+            return poolName
+        }
+
+        pools.filter { !it.from.isNullOrBlank() && !it.name.isNullOrBlank() }.forEach label@{
+            if (it.name == poolName) {
+                try {
+                    val repoNameAndPool = it.from!!.split("@")
+                    if (repoNameAndPool.size != 2 ||
+                        repoNameAndPool[0].isNullOrBlank() ||
+                        repoNameAndPool[1].isNullOrBlank()) {
+                        return@label
+                    }
+
+                    val gitProjectInfo =
+                        client.getScm(ServiceGitCiResource::class).getGitCodeProjectInfo(repoNameAndPool[0]).data
+                    val result = "git_${gitProjectInfo!!.id}@${repoNameAndPool[1]}"
+                    logger.info("Get envName from Resource.pools success. envName: $result")
+                    return result
+                } catch (e: Exception) {
+                    logger.error("Get projectInfo from git failed, envName: $poolName. exception:", e)
+                    return poolName
+                }
+            }
+        }
+        logger.info("Get envName from Resource.pools no match. envName: $poolName")
+        return poolName
     }
 
     private fun addNormalContainer(

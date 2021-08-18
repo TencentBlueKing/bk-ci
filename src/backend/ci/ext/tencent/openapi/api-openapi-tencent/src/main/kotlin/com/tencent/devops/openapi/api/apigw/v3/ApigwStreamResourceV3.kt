@@ -11,14 +11,13 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.PathParam
-import javax.ws.rs.GET
+import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
-
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_STREAM"], description = "OPEN-API-构建资源")
@@ -97,7 +96,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("获取指定Stream流水线信息")
     @GET
-    @Path("/{gitProjectId}/{pipelineId}/info")
+    @Path("/pipelines/{pipelineId}/info")
     fun getPipeline(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
