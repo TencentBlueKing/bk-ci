@@ -154,6 +154,10 @@ class QualityRuleBuildHisService constructor(
                         throw QualityOpConfigException("auditUserList is empty for operation audit")
                     }
                 }
+
+                if (request.indicators.isEmpty()) {
+                    throw QualityOpConfigException("quality rule indicators is empty")
+                }
             }
         }
     }
