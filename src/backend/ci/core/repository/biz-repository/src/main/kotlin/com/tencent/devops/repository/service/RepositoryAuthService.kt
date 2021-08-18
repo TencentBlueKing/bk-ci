@@ -67,7 +67,7 @@ class RepositoryAuthService @Autowired constructor(
     fun getRepositoryInfo(hashId: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
         authTokenApi.checkToken(token)
         val repositoryInfos =
-            repositoryService.getInfoByHashIds(hashId as List<String>)
+            repositoryService.getInfoByIds(hashId as List<Long>)
         val result = FetchInstanceInfo()
         if (repositoryInfos == null || repositoryInfos.isEmpty()) {
             logger.info("$hashId 未匹配到代码库")
