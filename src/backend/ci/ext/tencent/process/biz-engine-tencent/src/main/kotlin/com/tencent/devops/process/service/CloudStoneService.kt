@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.process.util.cloudStone.CloudStoneSignUtils
-import net.sf.json.JSONObject
+import com.tencent.devops.process.util.cloudStone.UploadTicket
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.Request
@@ -132,7 +132,7 @@ class CloudStoneService {
     /**
      * 获取文件上传凭证
      */
-    private fun getUploadTicket(appId: Int): com.tencent.devops.process.util.cloudStone.UploadTicket {
+    private fun getUploadTicket(appId: Int): UploadTicket {
         val data = TreeMap<String, String>()
         data["app_code"] = esbAppCode
         data["username"] = userName
@@ -148,7 +148,7 @@ class CloudStoneService {
 
         val reqUrl = cloudStoneEsbUrl + reqUri
         logger.info("get ticket url: $reqUrl")
-        val reqBody = JSONObject.fromObject(data).toString()
+        val reqBody = JsonUtil.toJson(data)
         logger.info("get ticket req: $reqBody")
         try {
             val httpReq = Request.Builder()
@@ -159,15 +159,15 @@ class CloudStoneService {
                 val responseStr = resp.body()!!.string()
                 logger.info("get ticket response: $responseStr")
 
-                val responseJsonObject = JSONObject.fromObject(responseStr)
-                val result = responseJsonObject.optBoolean("result")
+                val responseJsonObject = JsonUtil.toMap(responseStr)
+                val result = responseJsonObject["result"]?.toString()?.toBoolean() ?: false
                 if (result) {
-                    val dataObj = responseJsonObject.optJSONObject("data")
-                    val ticketId = dataObj.optInt("ticket_id")
-                    val randomKey = dataObj.optString("random_key")
-                    return com.tencent.devops.process.util.cloudStone.UploadTicket(ticketId, randomKey)
+                    val dataObj = responseJsonObject["data"] as Map<String, Any>
+                    val ticketId = dataObj["ticket_id"]?.toString()?.toInt() ?: -1
+                    val randomKey = dataObj["random_key"]?.toString() ?: ""
+                    return UploadTicket(ticketId, randomKey)
                 } else {
-                    var msg = responseJsonObject.optString("message")
+                    var msg = responseJsonObject["message"]?.toString()
                     if (StringUtils.isBlank(msg)) {
                         msg = "get ticket failed"
                     }
