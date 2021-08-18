@@ -28,24 +28,27 @@
 package com.tencent.devops.worker.common.logger
 
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.LOG_DEBUG_FLAG
 import com.tencent.devops.worker.common.LOG_ERROR_FLAG
+import com.tencent.devops.worker.common.LOG_FILE_LENGTH_LIMIT
+import com.tencent.devops.worker.common.LOG_MESSAGE_LENGTH_LIMIT
 import com.tencent.devops.worker.common.LOG_SUBTAG_FINISH_FLAG
 import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
 import com.tencent.devops.worker.common.LOG_TASK_LINE_LIMIT
+import com.tencent.devops.worker.common.LOG_UPLOAD_BUFFER_SIZE
 import com.tencent.devops.worker.common.LOG_WARN_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.worker.common.LOG_FILE_LENGTH_LIMIT
-import com.tencent.devops.worker.common.LOG_MESSAGE_LENGTH_LIMIT
-import com.tencent.devops.worker.common.LOG_UPLOAD_BUFFER_SIZE
+import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
@@ -60,6 +63,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
+@Suppress("MagicNumber", "TooManyFunctions")
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
@@ -134,8 +138,8 @@ object LoggerService {
             if (logMessages.isNotEmpty()) {
                 flush()
             }
-        } catch (t: Throwable) {
-            logger.warn("Fail to send the logger", t)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to send the logger", ignored)
         }
         logger.info("Finish the sending thread - (${uploadQueue.size})")
         true
@@ -170,6 +174,7 @@ object LoggerService {
         return future.get()
     }
 
+    @Suppress("NestedBlockDepth")
     fun stop() {
         try {
             logger.info("Start to stop the log service")
@@ -187,8 +192,8 @@ object LoggerService {
                 }
             }
             logger.info("Finish stopping the log service")
-        } catch (e: Exception) {
-            logger.error("Fail to stop log service for build", e)
+        } catch (ignored: Exception) {
+            logger.error("Fail to stop log service for build", ignored)
         }
     }
 
@@ -283,6 +288,15 @@ object LoggerService {
     fun archiveLogFiles() {
         logger.info("Start to archive log files with LogMode[${AgentEnv.getLogMode()}]")
         try {
+            val expireSeconds = buildVariables!!.timeoutMills / 1000
+            val token = RepoServiceFactory.getInstance().getRepoToken(
+                userId = buildVariables!!.variables[PIPELINE_START_USER_ID] ?: "",
+                projectId = buildVariables!!.projectId,
+                repoName = "log",
+                path = "/",
+                type = TokenType.UPLOAD,
+                expireSeconds = expireSeconds
+            )
             var archivedCount = 0
             // 将所有日志存储状态为LOCAL的插件进行文件归档
             elementId2LogProperty.forEach { (elementId, property) ->
@@ -304,7 +318,12 @@ object LoggerService {
 
                 // 开始归档符合归档条件的日志文件
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
-                ArchiveUtils.archiveLogFile(property.logFile, property.childPath, buildVariables!!)
+                ArchiveUtils.archiveLogFile(
+                    file = property.logFile,
+                    destFullPath = property.childPath,
+                    buildVariables = buildVariables!!,
+                    token = token
+                )
                 property.logStorageMode = LogStorageMode.ARCHIVED
                 archivedCount++
             }
