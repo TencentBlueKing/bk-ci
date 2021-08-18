@@ -1076,6 +1076,12 @@ class PipelineRuntimeService @Autowired constructor(
                                 it.startTime = null
                                 it.endTime = null
                                 it.executeCount += 1
+                                it.checkIn = if (stage.checkIn != null) {
+                                    JsonUtil.toJson(stage.checkIn!!)
+                                } else null
+                                it.checkOut = if (stage.checkOut != null) {
+                                    JsonUtil.toJson(stage.checkOut!!)
+                                } else null
                                 updateStageExistsRecord.add(it)
                                 return@findHistoryStage
                             }
