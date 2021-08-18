@@ -1172,18 +1172,19 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val and = MessageCodeUtil.getCodeLanMessage(AND)
             val or = MessageCodeUtil.getCodeLanMessage(OR)
             val timetoSelect = MessageCodeUtil.getCodeLanMessage(TIMETOSELECT)
-            builder.append(dang)
             rely as Map<String, Any>
-            val expression = rely["expression"] as List<Map<String, String>>
-            val link = if (rely["operation"] == "AND") and else or
-            expression.map { " [${it["key"]}] = [${it["value"]}] " }.forEachIndexed { index, value ->
-                builder.append(value)
-                if (index < expression.size - 1) {
-                    builder.append(link)
+            if (null != rely["expression"]) {
+                builder.append(dang)
+                val expression = rely["expression"] as List<Map<String, String>>
+                val link = if (rely["operation"] == "AND") and else or
+                expression.map { " [${it["key"]}] = [${it["value"]}] " }.forEachIndexed { index, value ->
+                    builder.append(value)
+                    if (index < expression.size - 1) {
+                        builder.append(link)
+                    }
                 }
+                builder.append(timetoSelect)
             }
-            builder.append(timetoSelect)
-
         }
 
         val options = paramValueMap["options"]
