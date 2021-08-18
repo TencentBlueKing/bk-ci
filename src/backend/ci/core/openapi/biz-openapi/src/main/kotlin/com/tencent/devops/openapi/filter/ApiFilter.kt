@@ -171,7 +171,7 @@ class ApiFilter(
             val user = jwt["user"] as Map<String, Any>
             // 用户身份登录
             if (user.contains("username")) {
-                val username = user["username"]?.toString()
+                val username = user["username"]?.toString() ?: ""
                 val verified = user["verified"].toString().toBoolean()
                 // 名字为空或者没有通过认证的时候，直接失败
                 if (username.isNullOrBlank() && verified) {
