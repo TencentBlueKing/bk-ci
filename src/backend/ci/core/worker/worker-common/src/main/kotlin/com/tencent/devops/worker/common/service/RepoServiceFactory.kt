@@ -25,30 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.worker.common.service
 
-import com.tencent.devops.common.log.pojo.enums.LogStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import java.util.Properties
+import java.util.concurrent.ConcurrentHashMap
 
-/**
- *
- * Powered By Tencent
- */
-@ApiModel("日志查询模型")
-data class QueryLogs(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("是否结束", required = true)
-    var finished: Boolean,
-    @ApiModelProperty("是否有后续日志", required = false)
-    var hasMore: Boolean? = false,
-    @ApiModelProperty("日志列表", required = true)
-    var logs: MutableList<LogLine> = mutableListOf(),
-    @ApiModelProperty("所用时间", required = false)
-    var timeUsed: Long = 0,
-    @ApiModelProperty("日志查询状态", required = false)
-    var status: Int = LogStatus.SUCCEED.status,
-    @ApiModelProperty("日志子tag列表", required = true)
-    var subTags: List<String>? = null
-)
+object RepoServiceFactory {
+
+    private val repoServiceMap = ConcurrentHashMap<String, RepoService>()
+
+    private var property: Properties? = null
+
+    private const val REPO_CLASS_NAME = "repo.class.name"
+
+    fun getInstance(): RepoService {
+        // 从配置文件读取类名
+        if (property == null) {
+            val fileInputStream = RepoServiceFactory::class.java.getResourceAsStream("/.agent.properties")
+            property = Properties()
+            property!!.load(fileInputStream)
+        }
+        val className = property!![REPO_CLASS_NAME] as String
+        var repoService = repoServiceMap[className]
+        if (repoService == null) {
+            // 通过反射生成对象并放入缓存中
+            repoService = Class.forName(className).newInstance() as RepoService
+            repoServiceMap[className] = repoService
+        }
+        return repoService
+    }
+}
