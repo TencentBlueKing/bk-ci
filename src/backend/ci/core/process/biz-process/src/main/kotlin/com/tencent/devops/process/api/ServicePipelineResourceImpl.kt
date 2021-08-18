@@ -41,6 +41,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
@@ -124,6 +125,37 @@ class ServicePipelineResourceImpl @Autowired constructor(
             checkPermission = ChannelCode.isNeedAuth(channelCode)
         )
         return Result(true)
+    }
+
+    override fun copy(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipeline: PipelineCopy
+    ): Result<PipelineId> {
+        checkParam(userId, projectId)
+        val pid = PipelineId(
+            pipelineInfoFacadeService.copyPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                name = pipeline.name,
+                desc = pipeline.desc,
+                channelCode = ChannelCode.BS
+            )
+        )
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pid.id,
+                resourceName = pipeline.name,
+                userId = userId,
+                action = "copy",
+                actionContent = "复制流水线/Copy Pipeline from($pipelineId)",
+                projectId = projectId
+            )
+        )
+        return Result(pid)
     }
 
     override fun uploadPipeline(
@@ -402,6 +434,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
     private fun checkPipelineId(pipelineId: String) {
         if (pipelineId.isBlank()) {
             throw ParamBlankException("Invalid pipelineId")
+        }
+    }
+
+    private fun checkParam(userId: String, projectId: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
         }
     }
 

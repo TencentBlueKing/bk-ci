@@ -12,6 +12,7 @@ import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("LongParameterList")
 @Service
 class BkPermissionProjectService @Autowired constructor(
     override val permissionRoleService: PermissionRoleService,

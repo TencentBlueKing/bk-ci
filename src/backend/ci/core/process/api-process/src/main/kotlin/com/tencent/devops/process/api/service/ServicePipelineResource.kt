@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
@@ -107,6 +108,23 @@ interface ServicePipelineResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
+
+    @ApiOperation("复制流水线编排")
+    @POST
+    @Path("/{projectId}/{pipelineId}/copy")
+    fun copy(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线模型", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "流水线COPY", required = true)
+        pipeline: PipelineCopy
+    ): Result<PipelineId>
 
     @ApiOperation("导入新流水线, 包含流水线编排和设置")
     @POST
