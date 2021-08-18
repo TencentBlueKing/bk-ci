@@ -30,13 +30,13 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_SECRET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_JWT_PARSE_FAIL
 import com.tencent.devops.openapi.utils.ApiGatewayPubFile
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import io.jsonwebtoken.Jwts
-import net.sf.json.JSONObject
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.jce.provider.JCERSAPublicKey
 import org.bouncycastle.openssl.PEMReader
@@ -53,7 +53,7 @@ import javax.ws.rs.ext.Provider
 @Provider
 @PreMatching
 @RequestFilter
-@Suppress("ALL")
+@Suppress("UNUSED")
 class ApiFilter(
     private val apiGatewayUtil: ApiGatewayUtil
 ) : ContainerRequestFilter {
@@ -127,6 +127,7 @@ class ApiFilter(
         }
     }
 
+    @Suppress("UNCHECKED_CAST", "ComplexMethod", "NestedBlockDepth", "ReturnCount")
     fun verifyJWT(requestContext: ContainerRequestContext, apiType: ApiType): Boolean {
         val bkApiJwt = requestContext.getHeaderString(jwtHeader)
         if (bkApiJwt.isNullOrBlank()) {
@@ -143,12 +144,12 @@ class ApiFilter(
         logger.debug("Get the bkApiJwt header|X-Bkapi-JWT={}|jwt={}", bkApiJwt, jwt)
 
         // 验证应用身份信息
-        if (jwt.has("app")) {
-            val app = jwt.getJSONObject("app")
+        if (jwt.contains("app")) {
+            val app = jwt["app"] as Map<String, Any>
             // 应用身份登录
-            if (app.has(appCodeHeader)) {
-                val appCode = app.getString(appCodeHeader)
-                val verified = app.get("verified") as Boolean
+            if (app.contains(appCodeHeader)) {
+                val appCode = app[appCodeHeader]?.toString()
+                val verified = app["verified"].toString().toBoolean()
                 if (apiType == ApiType.APP && (appCode.isNullOrEmpty() || !verified)) {
                     return false
                 } else {
@@ -165,15 +166,15 @@ class ApiFilter(
             }
         }
         // 在验证应用身份信息
-        if (jwt.has("user")) {
+        if (jwt.contains("user")) {
             // 先做app的验证再做
-            val user = jwt.getJSONObject("user")
+            val user = jwt["user"] as Map<String, Any>
             // 用户身份登录
-            if (user.has("username")) {
-                val username = user.getString("username")
-                val verified = user.get("verified") as Boolean
+            if (user.contains("username")) {
+                val username = user["username"]?.toString()
+                val verified = user["verified"].toString().toBoolean()
                 // 名字为空或者没有通过认证的时候，直接失败
-                if (username.isNotBlank() && verified) {
+                if (username.isNullOrBlank() && verified) {
                     // 将user头部置空
                     requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
                     if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
@@ -193,7 +194,7 @@ class ApiFilter(
         return true
     }
 
-    private fun parseJwt(bkApiJwt: String, apigwtType: String?): JSONObject {
+    private fun parseJwt(bkApiJwt: String, apigwtType: String?): Map<String, Any> {
         var reader: PEMReader? = null
         try {
             val key = if (!apigwtType.isNullOrEmpty() && apigwtType == "outer") {
@@ -208,9 +209,9 @@ class ApiFilter(
             val jwtParser = Jwts.parser().setSigningKey(keyPair)
             val parse = jwtParser.parse(bkApiJwt)
             logger.info("Get the parse body(${parse.body}) and header(${parse.header})")
-            return JSONObject.fromObject(parse.body)
-        } catch (e: Exception) {
-            logger.error("Parse jwt failed.", e)
+            return JsonUtil.toMap(parse.body)
+        } catch (ignored: Exception) {
+            logger.error("BKSystemErrorMonitor| Parse jwt failed.", ignored)
             throw ErrorCodeException(
                 errorCode = ERROR_OPENAPI_JWT_PARSE_FAIL,
                 defaultMessage = "Parse jwt failed",
