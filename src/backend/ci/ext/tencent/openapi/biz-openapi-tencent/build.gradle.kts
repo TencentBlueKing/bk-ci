@@ -37,7 +37,5 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.10.8")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.10.8")
 
-    api("net.sf.json-lib:json-lib")
     api("org.springframework.boot:spring-boot-starter-aop")
 }
-
