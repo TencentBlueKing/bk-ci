@@ -44,7 +44,8 @@ class RepositoryAuthService @Autowired constructor(
     val authTokenApi: AuthTokenApi
 ) {
 
-    fun getRepository(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+    fun getRepository(
+        projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
         authTokenApi.checkToken(token)
         val repositoryInfos =
             repositoryService.listByProject(setOf(projectId), null, offset, limit)
@@ -64,10 +65,11 @@ class RepositoryAuthService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, repositoryInfos.count)
     }
 
+    // 此处用户iam无权限跳转回调，已页面拿到的id透传。 此处页面拿到的为hashId
     fun getRepositoryInfo(hashId: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
         authTokenApi.checkToken(token)
         val repositoryInfos =
-            repositoryService.getInfoByIds(hashId as List<Long>)
+            repositoryService.getInfoByHashIds(hashId as List<String>)
         val result = FetchInstanceInfo()
         if (repositoryInfos == null || repositoryInfos.isEmpty()) {
             logger.info("$hashId 未匹配到代码库")
