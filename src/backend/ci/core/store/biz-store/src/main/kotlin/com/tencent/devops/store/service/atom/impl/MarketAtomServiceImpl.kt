@@ -1172,46 +1172,58 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val and = MessageCodeUtil.getCodeLanMessage(AND)
             val or = MessageCodeUtil.getCodeLanMessage(OR)
             val timetoSelect = MessageCodeUtil.getCodeLanMessage(TIMETOSELECT)
-            rely as Map<String, Any>
-            if (null != rely["expression"]) {
-                builder.append(dang)
-                val expression = rely["expression"] as List<Map<String, String>>
-                val link = if (rely["operation"] == "AND") and else or
-                expression.map { " [${it["key"]}] = [${it["value"]}] " }.forEachIndexed { index, value ->
-                    builder.append(value)
-                    if (index < expression.size - 1) {
-                        builder.append(link)
+            try {
+                rely as Map<String, Any>
+                if (null != rely["expression"]) {
+                    val expression = rely["expression"] as List<Map<String, String>>
+                    builder.append(dang)
+                    val link = if (rely["operation"] == "AND") and else or
+                    expression.map { " [${it["key"]}] = [${it["value"]}] " }.forEachIndexed { index, value ->
+                        builder.append(value)
+                        if (index < expression.size - 1) {
+                            builder.append(link)
+                        }
                     }
+                    builder.append(timetoSelect)
                 }
-                builder.append(timetoSelect)
+            }catch (e: Exception) {
+                println("load atom input[rely] with error: ${e.message}")
             }
         }
 
         val options = paramValueMap["options"]
         if (null != options) {
-            options as List<Map<String, String>>
-            builder.append(", $selectorTypeName")
-            builder.append(", $optionsName:")
-            options.forEachIndexed { index, map ->
-                if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
-                else builder.append(" ${map["id"]}[${map["name"]}] |")
+            try {
+                options as List<Map<String, String>>
+                builder.append(", $selectorTypeName")
+                builder.append(", $optionsName:")
+                options.forEachIndexed { index, map ->
+                    if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
+                    else builder.append(" ${map["id"]}[${map["name"]}] |")
+                }
+                builder.removeSuffix("|")
+            } catch (e: Exception) {
+                println("load atom input[options] with error: ${e.message}")
             }
-            builder.removeSuffix("|")
         }
 
         val list = paramValueMap["list"]
         if (null != options) {
-            list as List<Map<String, String>>
-            builder.append(", $optionsName:")
-            list.forEachIndexed { index, map ->
-                val key = if (null != map["label"]) map["label"] else if (null != map["id"]) map["id"] else
-                    null ?: return
-                val value = if (null != map["value"]) map["value"] else if (null != map["name"]) map["name"] else
-                    null ?: return
-                if (index == list.size - 1) builder.append(" $key[$value]")
-                else builder.append(" $key[$value] |")
+            try {
+                list as List<Map<String, String>>
+                builder.append(", $optionsName:")
+                list.forEachIndexed { index, map ->
+                    val key = if (null != map["label"]) map["label"] else if (null != map["id"]) map["id"] else
+                        null ?: return
+                    val value = if (null != map["value"]) map["value"] else if (null != map["name"]) map["name"] else
+                        null ?: return
+                    if (index == list.size - 1) builder.append(" $key[$value]")
+                    else builder.append(" $key[$value] |")
+                }
+                builder.removeSuffix("|")
+            } catch (e: Exception) {
+                println("load atom input[list] with error: ${e.message}")
             }
-            builder.removeSuffix("|")
         }
     }
 }
