@@ -30,6 +30,7 @@ package com.tencent.devops.sign.utils
 import com.dd.plist.NSDictionary
 import com.dd.plist.NSObject
 import com.dd.plist.PropertyListParser
+import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import org.slf4j.LoggerFactory
@@ -70,7 +71,8 @@ object SignUtils {
     fun resignAppWildcard(
         appDir: File,
         certId: String,
-        wildcardInfo: MobileProvisionInfo
+        wildcardInfo: MobileProvisionInfo,
+        replaceKeyList: Map<String, String>?
     ): Boolean {
         if (!appDir.isDirectory || !appDir.extension.contains("app")) {
             logger.error("App directory $appDir is invalid.")
@@ -78,7 +80,7 @@ object SignUtils {
         }
         try {
             // 通配符签名统一不做Bundle替换
-            overwriteInfo(appDir, wildcardInfo, false)
+            overwriteInfo(appDir, wildcardInfo, false, replaceKeyList)
 
             // 扫描是否有其他待签目录
             val needResignDirs = scanNeedResignFiles(appDir)
@@ -87,7 +89,7 @@ object SignUtils {
                     when {
                         // 如果是个拓展则递归进入进行重签
                         subFile.isDirectory && subFile.extension.contains("app") -> {
-                            resignAppWildcard(subFile, certId, wildcardInfo)
+                            resignAppWildcard(subFile, certId, wildcardInfo, replaceKeyList)
                         }
 
                         // 如果是个framework则在做一次下层目录扫描
@@ -95,13 +97,14 @@ object SignUtils {
                             resignFramework(
                                 frameworkDir = subFile,
                                 certId = certId,
-                                info = wildcardInfo
+                                info = wildcardInfo,
+                                replaceKeyList = replaceKeyList
                             )
                         }
 
                         // 如果不是app或framework目录，则使用主描述文件进行重签
                         else -> {
-                            overwriteInfo(subFile, wildcardInfo, false)
+                            overwriteInfo(subFile, wildcardInfo, false, replaceKeyList)
                             codesignFile(certId, subFile.absolutePath)
                         }
                     }
@@ -133,9 +136,9 @@ object SignUtils {
         infoMap: Map<String, MobileProvisionInfo>,
         appName: String,
         replaceBundleId: Boolean,
+        replaceKeyList: Map<String, String>?,
         keychainAccessGroups: List<String>? = null,
-        universalLinks: List<String>? = null,
-        replaceKeyList: Map<String, String>? = null
+        universalLinks: List<String>? = null
     ): Boolean {
         val info = infoMap[appName]
         if (info == null) {
@@ -214,7 +217,7 @@ object SignUtils {
         frameworkDir: File,
         certId: String,
         info: MobileProvisionInfo,
-        replaceKeyList: Map<String, String>? = null
+        replaceKeyList: Map<String, String>?
     ): Boolean {
         if (!frameworkDir.isDirectory || !frameworkDir.extension.contains("framework")) {
             logger.error("The framework directory $frameworkDir is invalid.")
@@ -241,9 +244,9 @@ object SignUtils {
     }
 
     fun unzipIpa(ipaFile: File, unzipIpaDir: File) {
-        val cmd = "/usr/bin/unzip -o ${ipaFile.canonicalPath} -d ${unzipIpaDir.canonicalPath}"
+        val cmd = "/usr/bin/jar -xvf ${ipaFile.canonicalPath}"
         logger.info("[unzipIpa] $cmd")
-        runtimeExec(cmd)
+        CommandLineUtils.execute(cmd, unzipIpaDir, true)
     }
 
     fun zipIpaFile(unzipDir: File, ipaPath: String): File? {
@@ -265,7 +268,7 @@ object SignUtils {
         resignDir: File,
         info: MobileProvisionInfo,
         replaceBundle: Boolean,
-        replaceKeyList: Map<String, String>? = null
+        replaceKeyList: Map<String, String>?
     ) {
         if (!resignDir.exists()) return
 
