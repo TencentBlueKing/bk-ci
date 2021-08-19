@@ -25,35 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
+package com.tencent.devops.gitci.pojo.v2
 
 /**
- * model
+ * Stream构建信息
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Resources(
-    val repositories: List<Repositories>?,
-    val pools: List<ResourcesPools>?
-)
-
-data class Repositories(
-    val repository: String,
-    val name: String,
-    val ref: String? = "master",
-    val credentials: ResCredentials?
-)
-
-data class ResCredentials(
-    @JsonProperty("personal-access-token")
-    val personalAccessToken: String?
-)
-
-data class ResourcesPools(
-    val from: String?,
-    val name: String?
+data class StreamBuildInfo(
+    val buildId: String,
+    val streamYamlUrl: String,
+    val washTime: String
 )

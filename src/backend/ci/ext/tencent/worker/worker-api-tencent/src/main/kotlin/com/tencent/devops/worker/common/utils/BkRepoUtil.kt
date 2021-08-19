@@ -25,35 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2
+package com.tencent.devops.worker.common.utils
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 
-/**
- * model
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Resources(
-    val repositories: List<Repositories>?,
-    val pools: List<ResourcesPools>?
-)
+object BkRepoUtil {
 
-data class Repositories(
-    val repository: String,
-    val name: String,
-    val ref: String? = "master",
-    val credentials: ResCredentials?
-)
+    private val bkRepoResourceApi = BkRepoResourceApi()
+    private const val DEFAULT_EXPIRE_SECONDS = 86400L
 
-data class ResCredentials(
-    @JsonProperty("personal-access-token")
-    val personalAccessToken: String?
-)
-
-data class ResourcesPools(
-    val from: String?,
-    val name: String?
-)
+    /**
+     * 创建仓库token
+     */
+    fun createBkRepoTemporaryToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        type: TokenType,
+        expireSeconds: Long? = DEFAULT_EXPIRE_SECONDS
+    ): String? {
+        return if (bkRepoResourceApi.tokenAccess()) bkRepoResourceApi.createBkRepoTemporaryToken(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            path = path,
+            type = type,
+            expireSeconds = expireSeconds ?: DEFAULT_EXPIRE_SECONDS
+        ) else null
+    }
+}

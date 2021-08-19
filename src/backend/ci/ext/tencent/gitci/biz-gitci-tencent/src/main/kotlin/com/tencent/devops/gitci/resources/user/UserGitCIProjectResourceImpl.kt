@@ -25,35 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2
+package com.tencent.devops.gitci.resources.user
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.gitci.api.user.UserGitCIProjectResource
+import com.tencent.devops.gitci.pojo.enums.GitCIProjectType
+import com.tencent.devops.gitci.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.gitci.v2.service.GitCIProjectService
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * model
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Resources(
-    val repositories: List<Repositories>?,
-    val pools: List<ResourcesPools>?
-)
-
-data class Repositories(
-    val repository: String,
-    val name: String,
-    val ref: String? = "master",
-    val credentials: ResCredentials?
-)
-
-data class ResCredentials(
-    @JsonProperty("personal-access-token")
-    val personalAccessToken: String?
-)
-
-data class ResourcesPools(
-    val from: String?,
-    val name: String?
-)
+@RestResource
+class UserGitCIProjectResourceImpl @Autowired constructor(
+    private val gitCIProjectService: GitCIProjectService
+) : UserGitCIProjectResource {
+    override fun getProjects(
+        userId: String,
+        type: GitCIProjectType?,
+        search: String?,
+        page: Int?,
+        pageSize: Int?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?
+    ): Pagination<ProjectCIInfo> {
+        return gitCIProjectService.getProjectList(
+            userId = userId,
+            type = type,
+            search = search,
+            page = page,
+            pageSize = pageSize,
+            orderBy = orderBy,
+            sort = sort
+        )
+    }
+}
