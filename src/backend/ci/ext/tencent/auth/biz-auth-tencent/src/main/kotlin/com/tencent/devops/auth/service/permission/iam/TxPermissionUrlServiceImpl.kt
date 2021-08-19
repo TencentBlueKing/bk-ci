@@ -134,10 +134,12 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
 
                 it.instanceId?.forEach { instance ->
                     var instanceId = instance.id
+                    // 如果是流水线, 需要将pipelineId转为自增Id
                     if (instance.type == AuthResourceType.PIPELINE_DEFAULT.value) {
                         instanceId = getPipelineAutoId(instance.id)
                     }
 
+                    // 如果instance.type为质量红线、版本体验。因为历史问题，需要特殊处理。取最上层的资源类型作为type
                     val instanceType = if (TActionUtils.extResourceTypeCheck(instance.type)) {
                         TActionUtils.extResourceType(it.resourceId)
                     } else instance.type

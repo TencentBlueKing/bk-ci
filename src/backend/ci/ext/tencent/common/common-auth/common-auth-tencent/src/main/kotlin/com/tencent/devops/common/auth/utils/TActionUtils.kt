@@ -31,6 +31,9 @@ object TActionUtils {
         extResourceTypeList.add(AuthResourceType.QUALITY_RULE.value)
         extResourceTypeList.add(AuthResourceType.EXPERIENCE_TASK.value)
         extResourceTypeList.add(AuthResourceType.EXPERIENCE_GROUP.value)
+        // 前端experience的枚举值为EXPERIENCE_TASK: experience, EXPERIENCE_GROUP: experienceGroup
+        extResourceTypeList.add("experience")
+        extResourceTypeList.add("experienceGroup")
         if (extResourceTypeList.contains(authResourceType)) {
             return true
         }
