@@ -28,9 +28,9 @@
 rootProject.name = "bk-ci-backend"
 
 pluginManagement {
-    val DEVOPS_BOOT_VERSION: String by settings
+    val devopsBootVersion: String by settings
     plugins {
-        id("com.tencent.devops.boot") version DEVOPS_BOOT_VERSION
+        id("com.tencent.devops.boot") version devopsBootVersion
     }
     repositories {
         mavenLocal()
