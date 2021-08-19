@@ -50,6 +50,7 @@ import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
+import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -331,6 +332,7 @@ object LoggerService {
 
             // 同步所有存储状态到
             logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), executeCount)
+            FileUtils.deleteRecursivelyOnExit(pipelineLogDir!!)
             logger.info("Finished update mode to log service.")
         } catch (ignored: Throwable) {
             logger.warn("Fail to archive log files", ignored)
