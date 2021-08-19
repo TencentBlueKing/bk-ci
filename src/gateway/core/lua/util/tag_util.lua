@@ -139,7 +139,7 @@ function _M:get_frontend_path(tag, project)
         return suffix
     end
 
-    return suffix .. "_" .. frontend_path
+    return suffix .. "-" .. frontend_path
 end
 
 -- 获取tag对应的下载路径
