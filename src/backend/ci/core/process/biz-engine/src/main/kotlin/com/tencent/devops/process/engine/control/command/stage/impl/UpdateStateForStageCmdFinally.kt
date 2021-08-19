@@ -73,7 +73,9 @@ class UpdateStateForStageCmdFinally(
         }
 
         // #3138 stage cancel 不在此处理 更新状态&模型 @see PipelineStageService.cancelStage
-        if (event.source != BS_STAGE_CANCELED_END_SOURCE) {
+        // #4732 stage 准入准出的质量红线失败时不需要刷新当前 stage 的状态
+        if (event.source != BS_STAGE_CANCELED_END_SOURCE &&
+            commandContext.buildStatus != BuildStatus.QUALITY_CHECK_FAIL) {
             updateStageStatus(commandContext = commandContext)
         }
 
@@ -148,23 +150,13 @@ class UpdateStateForStageCmdFinally(
     private fun updateStageStatus(commandContext: StageContext) {
         val event = commandContext.event
         // 更新状态
-        val checkFailed = commandContext.buildStatus == BuildStatus.QUALITY_CHECK_FAIL
-        if (checkFailed) {
-            pipelineStageService.updateStageStatus(
-                buildId = event.buildId,
-                stageId = event.stageId,
-                buildStatus = commandContext.buildStatus,
-                checkIn = commandContext.stage.checkIn,
-                checkOut = commandContext.stage.checkOut
-            )
-        } else {
-            pipelineStageService.updateStageOptions(
-                buildId = event.buildId,
-                stageId = event.stageId,
-                stage = commandContext.stage
-            )
-            return
-        }
+        pipelineStageService.updateStageStatus(
+            buildId = event.buildId,
+            stageId = event.stageId,
+            buildStatus = commandContext.buildStatus,
+            checkIn = commandContext.stage.checkIn,
+            checkOut = commandContext.stage.checkOut
+        )
 
         // 对未结束的Container进行强制更新[失败状态]
         if (commandContext.buildStatus.isFailure()) {
@@ -180,9 +172,7 @@ class UpdateStateForStageCmdFinally(
             }
             val allStageStatus = stageBuildDetailService.updateStageStatus(
                 buildId = event.buildId, stageId = event.stageId,
-                buildStatus = commandContext.buildStatus,
-                checkIn = commandContext.stage.checkIn,
-                checkOut = commandContext.stage.checkOut
+                buildStatus = commandContext.buildStatus
             )
             pipelineRuntimeService.updateBuildHistoryStageState(event.buildId, allStageStatus = allStageStatus)
         }

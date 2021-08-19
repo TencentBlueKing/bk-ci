@@ -61,9 +61,7 @@ class StageBuildDetailService(
     fun updateStageStatus(
         buildId: String,
         stageId: String,
-        buildStatus: BuildStatus,
-        checkIn: StagePauseCheck?,
-        checkOut: StagePauseCheck?
+        buildStatus: BuildStatus
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|update_stage_status|stageId=$stageId|status=$buildStatus")
         var allStageStatus: List<BuildStageStatus>? = null
@@ -79,8 +77,6 @@ class StageBuildDetailService(
                     } else if (buildStatus.isFinish() && stage.startEpoch != null) {
                         stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
                     }
-                    stage.checkIn = checkIn
-                    stage.checkOut = checkOut
                     allStageStatus = fetchHistoryStageStatus(model)
                     return Traverse.BREAK
                 }
