@@ -778,9 +778,9 @@ class PipelineRuntimeService @Autowired constructor(
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
             var needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
-            // #2318 如果是stage重试不是当前stage，并且当前stage已经是完成状态，则直接跳过
-            if (context.needSkipWhenStageFailRetry(stage)) {
-                logger.info("[$buildId|RETRY|#${stage.id!!}|${stage.status}|NOT_RETRY_STAGE")
+            // #2318 如果是stage重试不是当前stage且当前stage已经是完成状态，或者该stage被禁用，则直接跳过
+            if (context.needSkipWhenStageFailRetry(stage) || stage.stageControlOption?.enable == false) {
+                logger.info("[$buildId|EXECUTE|#${stage.id!!}|${stage.status}|NOT_EXECUTE_STAGE")
                 context.containerSeq += stage.containers.size // Job跳过计数也需要增加
                 return@nextStage
             }
