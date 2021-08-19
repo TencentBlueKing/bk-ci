@@ -100,7 +100,7 @@ class QualityRuleBuildHisService constructor(
         }.toMap()
         return allRule.map {
             val thresholdList = it.indicatorThresholds.split(",")
-            val opList = it.operationList.split(",")
+            val opList = it.indicatorOperations.split(",")
             val ruleIndicatorIdMap = it.indicatorIds.split(",").mapIndexed { index, id ->
                 id.toLong() to Pair(opList[index], thresholdList[index])
             }.toMap()
