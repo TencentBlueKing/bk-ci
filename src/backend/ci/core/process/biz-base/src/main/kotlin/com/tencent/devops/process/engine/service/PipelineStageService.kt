@@ -42,6 +42,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
@@ -110,6 +111,20 @@ class PipelineStageService @Autowired constructor(
         )
     }
 
+    fun updateStageOptions(
+        buildId: String,
+        stageId: String,
+        stage: PipelineBuildStage
+    ) {
+        logger.info("[$buildId]|updateStageOptions|stageId=$stageId|controlOption=${stage.controlOption}" +
+            "|checkIn=${stage.checkIn}|checkOut=${stage.checkOut}")
+        pipelineBuildStageDao.updateOptions(
+            dslContext = dslContext, buildId = buildId,
+            stageId = stageId, controlOption = stage.controlOption,
+            checkIn = stage.checkIn, checkOut = stage.checkOut
+        )
+    }
+
     fun listStages(buildId: String): List<PipelineBuildStage> {
         val list = pipelineBuildStageDao.listByBuildId(dslContext, buildId)
         val result = mutableListOf<PipelineBuildStage>()
@@ -158,10 +173,9 @@ class PipelineStageService @Autowired constructor(
                 val context = DSL.using(configuration)
                 pipelineBuildStageDao.updateOptions(
                     dslContext = context, buildId = buildId,
-                    stageId = stageId, buildStatus = null,
-                    controlOption = controlOption!!, checkIn = checkIn, checkOut = checkOut
+                    stageId = stageId, controlOption = controlOption!!,
+                    checkIn = checkIn, checkOut = checkOut
                 )
-
                 pipelineBuildDao.updateBuildStageStatus(
                     dslContext = context, buildId = buildId, stageStatus = allStageStatus
                 )
@@ -216,7 +230,6 @@ class PipelineStageService @Autowired constructor(
         reviewRequest: StageReviewRequest?
     ): Boolean {
         with(buildStage) {
-            // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
             val success = checkIn?.reviewGroup(
                 userId = userId, groupId = reviewRequest?.id,
                 action = ManualReviewAction.PROCESS, params = reviewRequest?.reviewParams,

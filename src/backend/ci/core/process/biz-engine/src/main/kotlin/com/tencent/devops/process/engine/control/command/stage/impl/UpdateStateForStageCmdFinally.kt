@@ -73,8 +73,7 @@ class UpdateStateForStageCmdFinally(
         }
 
         // #3138 stage cancel 不在此处理 更新状态&模型 @see PipelineStageService.cancelStage
-        if (event.source != BS_STAGE_CANCELED_END_SOURCE &&
-            commandContext.buildStatus != BuildStatus.QUALITY_CHECK_FAIL) {
+        if (event.source != BS_STAGE_CANCELED_END_SOURCE) {
             updateStageStatus(commandContext = commandContext)
         }
 
@@ -149,13 +148,23 @@ class UpdateStateForStageCmdFinally(
     private fun updateStageStatus(commandContext: StageContext) {
         val event = commandContext.event
         // 更新状态
-        pipelineStageService.updateStageStatus(
-            buildId = event.buildId,
-            stageId = event.stageId,
-            buildStatus = commandContext.buildStatus,
-            checkIn = commandContext.stage.checkIn,
-            checkOut = commandContext.stage.checkOut
-        )
+        val checkFailed = commandContext.buildStatus == BuildStatus.QUALITY_CHECK_FAIL
+        if (checkFailed) {
+            pipelineStageService.updateStageStatus(
+                buildId = event.buildId,
+                stageId = event.stageId,
+                buildStatus = commandContext.buildStatus,
+                checkIn = commandContext.stage.checkIn,
+                checkOut = commandContext.stage.checkOut
+            )
+        } else {
+            pipelineStageService.updateStageOptions(
+                buildId = event.buildId,
+                stageId = event.stageId,
+                stage = commandContext.stage
+            )
+            return
+        }
 
         // 对未结束的Container进行强制更新[失败状态]
         if (commandContext.buildStatus.isFailure()) {
