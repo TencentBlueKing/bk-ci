@@ -50,9 +50,9 @@ abstract class AbsPermissionProjectService @Autowired constructor(
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
         val allGroupAndUser = getProjectGroupAndUserList(projectCode)
         return if (group == null) {
-            val allMembers = mutableListOf<String>()
+            val allMembers = mutableSetOf<String>()
             allGroupAndUser.map { allMembers.addAll(it.userIdList) }
-            allMembers
+            allMembers.toList()
         } else {
             // 获取扩展系统内项目下的用户
             getUserByExt(group, projectCode)
