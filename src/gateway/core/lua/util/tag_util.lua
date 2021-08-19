@@ -103,7 +103,46 @@ function _M:set_header(tag)
     ngx.var.route_tag = tag
 end
 
--- 获取tag对应的路径
+-- 获取前端目录
+function _M:get_frontend_path(tag, project)
+    local frontend_path_cache = ngx.shared.tag_frontend_path_store
+    local local_cache_key = "ci_" .. tag
+    if project == "codecc" then
+        local_cache_key = "codecc_" .. tag
+    end
+    local frontend_path = frontend_path_cache:get(local_cache_key)
+    if frontend_path == nil then
+        -- 从redis获取
+        local red, err = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "tag failed to new redis ", err)
+            return tag
+        end
+        local red_key = "ci:frontend:path:" .. tag
+        if project == "codecc" then
+            red_key = "codecc:frontend:path:" .. tag
+        end
+        frontend_path = red:get(red_key)
+        if not frontend_path or frontend_path == ngx.null then
+            frontend_path = ""
+        end
+        frontend_path_cache:set(local_cache_key, frontend_path, 30)
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+    end
+
+    local suffix = config.static_dir
+    if project == "codecc" then
+        suffix = config.static_dir_codecc
+    end
+
+    if frontend_path == nil or frontend_path == "" then
+        return suffix
+    end
+
+    return suffix .. "_" .. frontend_path
+end
+
+-- 获取tag对应的下载路径
 function _M:get_sub_path(tag)
     -- 从缓存获取
     local sub_path_cache = ngx.shared.tag_sub_path_store
