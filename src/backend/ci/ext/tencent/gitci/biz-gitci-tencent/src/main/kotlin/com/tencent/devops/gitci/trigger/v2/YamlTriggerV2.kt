@@ -171,6 +171,9 @@ class YamlTriggerV2 @Autowired constructor(
         gitProjectPipeline.displayName =
             if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
 
+        // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
+            gitBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
+
         if (isTrigger) {
             // 正常匹配仓库操作触发
             logger.info(
@@ -192,8 +195,6 @@ class YamlTriggerV2 @Autowired constructor(
                 buildStatus = BuildStatus.RUNNING,
                 version = ymlVersion
             )
-            // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
-            gitBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
             yamlBuildV2.gitStartBuild(
                 pipeline = gitProjectPipeline,
                 event = gitRequestEvent,
