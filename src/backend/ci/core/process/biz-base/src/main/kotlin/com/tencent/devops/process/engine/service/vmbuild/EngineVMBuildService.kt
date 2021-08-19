@@ -406,12 +406,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val taskStatus = buildTask?.status
         if (taskStatus == null || taskStatus.isFinish()) {
             // 当上报的任务不存在或者状态已经结束，则直接返回
-            LOG.error("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|${result.taskId}|invalid or finish")
+            LOG.warn("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|${result.taskId}|invalid or finish")
             return
         }
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: run {
-            LOG.error("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|buildInfo is null")
+            LOG.warn("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|buildInfo is null")
             return // 数据为空是平台异常，正常情况不应该出现
         }
 
