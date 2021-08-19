@@ -170,8 +170,10 @@ data class StagePauseCheck(
         }
         reviewDesc = EnvUtils.parseEnv(reviewDesc, variables)
         reviewParams?.forEach {
-            if (variables.containsKey(it.key)) {
-                it.value = variables[it.key]
+            it.value = if (variables.containsKey(it.key)) {
+                variables[it.key]
+            } else {
+                EnvUtils.parseEnv(it.value.toString(), variables)
             }
         }
     }
