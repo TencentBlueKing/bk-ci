@@ -34,12 +34,14 @@ import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.quality.bean.GitCIQualityPipelineUrlBeanImpl
 import com.tencent.devops.quality.dao.QualityNotifyGroupDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.service.GitCIQualityPermissionService
 import com.tencent.devops.quality.service.TxQualityPermissionService
 import com.tencent.devops.quality.service.TxV3QualityPermissionService
 import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -50,7 +52,7 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class QualityConfiguration {
+class TxQualityConfiguration {
     @Bean
     fun managerService(client: Client) = ManagerService(client)
 
@@ -92,4 +94,10 @@ class QualityConfiguration {
     ) = GitCIQualityPermissionService(
         client, tokenCheckService, ruleDao, groupDao, dslContext
     )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    fun qualityUrlBean(
+        @Autowired client: Client
+    ) = GitCIQualityPipelineUrlBeanImpl(client)
 }

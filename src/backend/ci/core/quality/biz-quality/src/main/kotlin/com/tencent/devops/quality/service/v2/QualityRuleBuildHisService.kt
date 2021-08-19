@@ -30,6 +30,7 @@ package com.tencent.devops.quality.service.v2
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
@@ -98,13 +99,28 @@ class QualityRuleBuildHisService constructor(
             HashUtil.decodeIdToLong(it.hashId).toString() to it
         }.toMap()
         return allRule.map {
+            val thresholdList = it.indicatorThresholds.split(",")
+            val opList = it.indicatorOperations.split(",")
+            val ruleIndicatorIdMap = it.indicatorIds.split(",").mapIndexed { index, id ->
+                id.toLong() to Pair(opList[index], thresholdList[index])
+            }.toMap()
+
             val rule = QualityRule(
                 hashId = HashUtil.encodeLongId(it.id),
                 name = it.ruleName,
                 desc = it.ruleDesc,
-                indicators = it.indicatorIds.split(",").map { indicatorId ->
-                    qualityIndicatorMap[indicatorId]
+                indicators = it.indicatorIds.split(",").map INDICATOR@{ indicatorId ->
+                    val indicator = qualityIndicatorMap[indicatorId]
                         ?: throw IllegalArgumentException("indicatorId not found: $indicatorId, $qualityIndicatorMap")
+
+                    val indicatorCopy = indicator.clone()
+
+                    val item = ruleIndicatorIdMap[indicatorId.toLong()]
+
+                    indicatorCopy.operation = QualityOperation.valueOf(item?.first ?: indicator.operation.name)
+                    indicatorCopy.threshold = item?.second ?: indicator.threshold
+
+                    return@INDICATOR indicatorCopy
                 },
                 controlPoint = QualityRule.RuleControlPoint(
                     "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
@@ -153,6 +169,10 @@ class QualityRuleBuildHisService constructor(
                     if (op.auditUserList.isNullOrEmpty()) {
                         throw QualityOpConfigException("auditUserList is empty for operation audit")
                     }
+                }
+
+                if (request.indicators.isEmpty()) {
+                    throw QualityOpConfigException("quality rule indicators is empty")
                 }
             }
         }
