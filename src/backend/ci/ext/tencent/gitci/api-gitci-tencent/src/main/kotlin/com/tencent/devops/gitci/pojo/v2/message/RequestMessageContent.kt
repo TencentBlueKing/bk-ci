@@ -5,5 +5,6 @@ data class RequestMessageContent(
     val pipelineName: String?,
     val buildBum: Int?,
     val triggerReasonName: String?,
-    val triggerReasonDetail: String?
+    val triggerReasonDetail: String?,
+    val filePathUrl: String?
 )

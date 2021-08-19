@@ -32,6 +32,7 @@ import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.jmx.SignBean
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.io.File
@@ -48,13 +49,19 @@ class AsyncSignService(
     private val signBean: SignBean
 ) : DisposableBean {
 
+    @Value("\${bkci.sign.taskPoolSize:#{null}}")
+    private val taskPoolSize: Int? = null
+
+    @Value("\${bkci.sign.taskQueueSize:#{null}}")
+    private val taskQueueSize: Int? = null
+
     // 线程池队列和线程上限保持一致，并保持有一个活跃线程
     private val signExecutorService = ThreadPoolExecutor(
-        10,
-        10,
+        taskPoolSize ?: 10,
+        taskPoolSize ?: 10,
         0L,
         TimeUnit.MILLISECONDS,
-        LinkedBlockingQueue(100)
+        LinkedBlockingQueue(taskQueueSize ?: 5)
     )
 
     fun asyncSign(
@@ -105,8 +112,10 @@ class AsyncSignService(
         }
     }
 
-    @Scheduled(cron = "0/10 * *  * * ? ")
+    @Scheduled(cron = "0/30 * *  * * ? ")
     fun flushTaskStatus() {
+        logger.info("SIGN|signExecutorService|activeCount=${signExecutorService.activeCount}" +
+            "|taskCount=${signExecutorService.taskCount}|queueSize=${signExecutorService.queue.size}")
         signBean.flushStatus(
             activeCount = signExecutorService.activeCount,
             taskCount = signExecutorService.taskCount,

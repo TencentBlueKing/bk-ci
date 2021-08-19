@@ -34,9 +34,10 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwPipelineResourceV3
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -45,7 +46,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Client) :
+class ApigwPipelineResourceV3Impl @Autowired constructor(
+    private val client: Client
+) :
     ApigwPipelineResourceV3 {
     override fun status(
         appCode: String?,
@@ -183,6 +186,21 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             projectId = projectId,
             pipelineId = pipelineId,
             channelCode = channelCode ?: ChannelCode.BS
+        )
+    }
+
+    override fun copy(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipeline: PipelineCopy
+    ): Result<PipelineId> {
+        logger.info("copy pipelines by user, userId:$userId")
+        return client.get(ServicePipelineResource::class).copy(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipeline = pipeline
         )
     }
 

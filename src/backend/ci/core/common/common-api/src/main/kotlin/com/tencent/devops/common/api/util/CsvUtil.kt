@@ -50,6 +50,7 @@ object CsvUtil {
      * @param cellList 表数据
      * @return
      */
+    @Suppress("SpreadOperator")
     fun writeCsv(
         headers: Array<String>,
         cellList: List<Array<String?>>

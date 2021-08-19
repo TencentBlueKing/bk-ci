@@ -43,7 +43,6 @@ import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.v2.YamlObjects
-import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.trigger.YamlTriggerInterface
 import com.tencent.devops.gitci.v2.common.CommonConst
 import com.tencent.devops.gitci.trigger.GitCIEventService
@@ -52,6 +51,7 @@ import com.tencent.devops.gitci.trigger.template.YamlTemplate
 import com.tencent.devops.gitci.trigger.template.YamlTemplateService
 import com.tencent.devops.gitci.trigger.template.pojo.NoReplaceTemplate
 import com.tencent.devops.gitci.trigger.template.pojo.TemplateGraph
+import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.gitci.v2.utils.V2WebHookMatcher
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
@@ -65,7 +65,7 @@ class YamlTriggerV2 @Autowired constructor(
     private val dslContext: DSLContext,
     private val scmService: ScmService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitBasicSettingService: GitRepositoryConfService,
+    private val gitBasicSettingService: GitCIBasicSettingService,
     private val gitCIEventSaveService: GitCIEventService,
     private val yamlTemplateService: YamlTemplateService,
     private val v2WebHookMatcher: V2WebHookMatcher,
@@ -158,6 +158,8 @@ class YamlTriggerV2 @Autowired constructor(
                 buildStatus = BuildStatus.RUNNING,
                 version = ymlVersion
             )
+            // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
+            gitBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
             yamlBuildV2.gitStartBuild(
                 pipeline = gitProjectPipeline,
                 event = gitRequestEvent,
@@ -167,7 +169,6 @@ class YamlTriggerV2 @Autowired constructor(
                 normalizedYaml = normalizedYaml,
                 gitBuildId = gitBuildId
             )
-            gitBasicSettingService.updateGitCISetting(gitRequestEvent.gitProjectId)
             return true
         }
 
