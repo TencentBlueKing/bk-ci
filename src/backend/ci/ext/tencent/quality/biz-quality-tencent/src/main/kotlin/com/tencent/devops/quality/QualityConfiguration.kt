@@ -98,7 +98,7 @@ class QualityConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
-    fun pipelineUrlBeanGitCI(
+    fun qualityUrlBean(
         @Autowired client: Client
     ) = QualityPipelineUrlBeanImpl(client)
 }
