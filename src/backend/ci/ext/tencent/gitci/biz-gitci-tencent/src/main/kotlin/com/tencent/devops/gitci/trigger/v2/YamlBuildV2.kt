@@ -340,7 +340,7 @@ class YamlBuildV2 @Autowired constructor(
         val params = mutableListOf<ManualReviewParam>()
         variables.forEach { (key, variable) ->
             params.add(ManualReviewParam(
-                key = key,
+                key = "variables.$key",
                 value = variable.default,
                 required = true,
                 valueType = when (variable.type) {
