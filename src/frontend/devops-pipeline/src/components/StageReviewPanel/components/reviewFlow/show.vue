@@ -29,7 +29,7 @@
                 const type = typeMap[item.status] || 'default'
 
                 const paramStr = (item.params || []).map(({ key, value }) => {
-                    return `${key}=${JSON.stringify(value)}`
+                    return `${(key || '').replace(/^variables\./, '')}=${JSON.stringify(value)}`
                 }).join(' | ')
 
                 let content
