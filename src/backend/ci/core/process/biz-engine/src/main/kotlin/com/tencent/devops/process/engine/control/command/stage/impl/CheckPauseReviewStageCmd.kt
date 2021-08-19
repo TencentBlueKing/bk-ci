@@ -74,7 +74,7 @@ class CheckPauseReviewStageCmd(
         } else if (commandContext.buildStatus.isReadyToRun()) {
 
             // 质量红线
-            if (checkQualityFailed(event, stage)) {
+            if (checkQualityFailed(event, stage, commandContext.variables)) {
                 // #4732 优先判断是否能通过质量红线检查
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_FAILED|${event.stageId}")
                 // TODO 暂时只处理准入，后续需要兼容准出
@@ -126,7 +126,11 @@ class CheckPauseReviewStageCmd(
         }
     }
 
-    private fun checkQualityFailed(event: PipelineBuildStageEvent, stage: PipelineBuildStage): Boolean {
+    private fun checkQualityFailed(
+        event: PipelineBuildStageEvent,
+        stage: PipelineBuildStage,
+        variables: Map<String, String>
+    ): Boolean {
         if (stage.checkIn?.ruleIds.isNullOrEmpty()) return false
         try {
             val request = BuildCheckParamsV3(
@@ -137,7 +141,7 @@ class CheckPauseReviewStageCmd(
                 templateId = null,
                 interceptName = null,
                 ruleBuildIds = stage.checkIn?.ruleIds!!.toSet(),
-                runtimeVariable = null
+                runtimeVariable = variables
             )
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
                 "request=$request|ruleIds=${stage.checkIn?.ruleIds}")
