@@ -78,7 +78,7 @@ class RepositoryAuthService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         repositoryInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.repositoryId!!.toString()
+            entity.id = it.repositoryHashId
             entity.displayName = it.aliasName
             entityInfo.add(entity)
         }
