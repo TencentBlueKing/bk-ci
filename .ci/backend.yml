@@ -3,8 +3,6 @@ name: "Backend"
 on:
   mr: [ integration ]
 
-variables:
-  var_1: 123
 stages:
 - name: "PreMR"
   label:
@@ -30,7 +28,6 @@ stages:
           MYSQL_PORT: ${{steps.mysqlservice.outputs.MYSQL_PORT}}
           MYSQL_PWD: root
         run: |
-          echo "var_1=${variables.var_1}"
           cd support-files/sql
           echo "import support-files/sql"
           for i in *.sql; do
@@ -48,6 +45,16 @@ stages:
             echo import $i done..
             echo
           done
+
+          cd changeLog
+           echo "import support-files/sql/tencent/changeLog"
+           for i in *.sql; do
+             echo import $i start
+             mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot < $i
+             echo import $i done..
+             echo
+           done
+
           mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot -e "show databases;"
 
       - name: "Gradle Build"
