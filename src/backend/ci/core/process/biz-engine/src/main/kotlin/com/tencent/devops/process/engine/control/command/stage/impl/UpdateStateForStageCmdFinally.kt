@@ -73,14 +73,15 @@ class UpdateStateForStageCmdFinally(
         }
 
         // #3138 stage cancel 不在此处理 更新状态&模型 @see PipelineStageService.cancelStage
-        if (event.source != BS_STAGE_CANCELED_END_SOURCE) {
+        if (event.source != BS_STAGE_CANCELED_END_SOURCE &&
+            commandContext.buildStatus != BuildStatus.QUALITY_CHECK_FAIL) {
             updateStageStatus(commandContext = commandContext)
         }
 
         // Stage 暂停
         if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
             if (event.source != BS_STAGE_CANCELED_END_SOURCE) { // 不是 stage cancel，暂停
-                pipelineStageService.pauseStage(userId = event.userId, buildStage = stage)
+                pipelineStageService.pauseStage(stage)
             } else {
                 nextOrFinish(event, stage, commandContext)
                 sendStageEndCallBack(stage, event)
