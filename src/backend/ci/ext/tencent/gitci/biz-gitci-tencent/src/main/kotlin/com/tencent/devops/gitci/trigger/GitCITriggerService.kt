@@ -81,6 +81,7 @@ import com.tencent.devops.gitci.trigger.exception.TriggerExceptionService
 import com.tencent.devops.gitci.trigger.v1.YamlBuild
 import com.tencent.devops.gitci.trigger.v2.YamlBuildV2
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
@@ -113,6 +114,7 @@ class GitCITriggerService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitCISettingDao: GitCIBasicSettingDao,
+    private val gitCIBasicSettingService: GitCIBasicSettingService,
     private val gitCIV1SettingDao: GitCISettingDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
@@ -248,6 +250,8 @@ class GitCITriggerService @Autowired constructor(
                 buildStatus = BuildStatus.RUNNING,
                 version = "v2.0"
             )
+            // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
+            gitCIBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
             yamlBuildV2.gitStartBuild(
                 pipeline = buildPipeline,
                 event = gitRequestEvent,
