@@ -343,7 +343,7 @@ class PipelineBuildFacadeService(
                     params = arrayOf(buildId)
                 )
 
-            if (!buildInfo.status.isFinish() && !buildInfo.status.isStageFinish()) {
+            if (!buildInfo.status.isFinish() && buildInfo.status != BuildStatus.STAGE_SUCCESS) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
                     defaultMessage = "重试已经启动，忽略重复的请求"
@@ -444,6 +444,8 @@ class PipelineBuildFacadeService(
                             }
                         )
                     }
+                    // #4531 重试完整构建时将所有stage的审核状态恢复
+                    pipelineStageService.retryRefreshStage(model)
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }

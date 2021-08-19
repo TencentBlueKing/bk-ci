@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
@@ -41,6 +42,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
@@ -109,6 +111,20 @@ class PipelineStageService @Autowired constructor(
         )
     }
 
+    fun updateStageOptions(
+        buildId: String,
+        stageId: String,
+        stage: PipelineBuildStage
+    ) {
+        logger.info("[$buildId]|updateStageOptions|stageId=$stageId|controlOption=${stage.controlOption}" +
+            "|checkIn=${stage.checkIn}|checkOut=${stage.checkOut}")
+        pipelineBuildStageDao.updateOptions(
+            dslContext = dslContext, buildId = buildId,
+            stageId = stageId, controlOption = stage.controlOption,
+            checkIn = stage.checkIn, checkOut = stage.checkOut
+        )
+    }
+
     fun listStages(buildId: String): List<PipelineBuildStage> {
         val list = pipelineBuildStageDao.listByBuildId(dslContext, buildId)
         val result = mutableListOf<PipelineBuildStage>()
@@ -157,10 +173,9 @@ class PipelineStageService @Autowired constructor(
                 val context = DSL.using(configuration)
                 pipelineBuildStageDao.updateOptions(
                     dslContext = context, buildId = buildId,
-                    stageId = stageId, buildStatus = null,
-                    controlOption = controlOption!!, checkIn = checkIn, checkOut = checkOut
+                    stageId = stageId, controlOption = controlOption!!,
+                    checkIn = checkIn, checkOut = checkOut
                 )
-
                 pipelineBuildDao.updateBuildStageStatus(
                     dslContext = context, buildId = buildId, stageStatus = allStageStatus
                 )
@@ -174,7 +189,7 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun pauseStage(userId: String, buildStage: PipelineBuildStage) {
+    fun pauseStage(buildStage: PipelineBuildStage) {
         with(buildStage) {
             // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
             checkIn?.status = BuildStatus.REVIEWING.name
@@ -215,7 +230,6 @@ class PipelineStageService @Autowired constructor(
         reviewRequest: StageReviewRequest?
     ): Boolean {
         with(buildStage) {
-            // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
             val success = checkIn?.reviewGroup(
                 userId = userId, groupId = reviewRequest?.id,
                 action = ManualReviewAction.PROCESS, params = reviewRequest?.reviewParams,
@@ -233,7 +247,6 @@ class PipelineStageService @Autowired constructor(
                 stageId = stageId, buildStatus = BuildStatus.PAUSE,
                 controlOption = controlOption, checkIn = checkIn, checkOut = checkOut
             )
-
             // 如果还有待审核的审核组，则直接通知并返回
             if (checkIn?.groupToReview() != null) {
                 val variables = buildVariableService.getAllVariable(buildId)
@@ -243,42 +256,37 @@ class PipelineStageService @Autowired constructor(
                     pipelineName = variables[PIPELINE_NAME] ?: pipelineId,
                     buildNum = variables[PIPELINE_BUILD_NUM] ?: "1"
                 )
-                return true
-            }
-            val allStageStatus = stageBuildDetailService.stageStart(
-                buildId = buildId, stageId = stageId,
-                controlOption = controlOption!!,
-                checkIn = checkIn, checkOut = checkOut
-            )
-
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                pipelineBuildStageDao.updateStatus(
-                    dslContext = context, buildId = buildId,
-                    stageId = stageId, buildStatus = BuildStatus.QUEUE,
-                    controlOption = controlOption, checkIn = checkIn, checkOut = checkOut
-                )
-                pipelineBuildDao.updateStatus(
-                    dslContext = context, buildId = buildId,
-                    oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
-                )
-                pipelineBuildDao.updateBuildStageStatus(
-                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
-                )
-                pipelineBuildSummaryDao.updateRunningCount(
-                    dslContext = context, pipelineId = pipelineId, buildId = buildId, runningIncrement = 1
-                )
-            }
-
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildStageEvent(
-                    source = BS_MANUAL_START_STAGE, projectId = projectId,
-                    pipelineId = pipelineId, userId = userId,
+            } else {
+                val allStageStatus = stageBuildDetailService.stageStart(
                     buildId = buildId, stageId = stageId,
-                    actionType = ActionType.REFRESH
+                    controlOption = controlOption!!,
+                    checkIn = checkIn, checkOut = checkOut
                 )
-                // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
-            )
+                dslContext.transaction { configuration ->
+                    val context = DSL.using(configuration)
+                    pipelineBuildStageDao.updateStatus(
+                        dslContext = context, buildId = buildId, stageId = stageId, buildStatus = BuildStatus.QUEUE,
+                        controlOption = controlOption, checkIn = checkIn, checkOut = checkOut
+                    )
+                    pipelineBuildDao.updateStatus(
+                        dslContext = context, buildId = buildId,
+                        oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
+                    )
+                    pipelineBuildDao.updateBuildStageStatus(
+                        dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                    )
+                    pipelineBuildSummaryDao.updateRunningCount(
+                        dslContext = context, pipelineId = pipelineId, buildId = buildId, runningIncrement = 1
+                    )
+                }
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildStageEvent(
+                        source = BS_MANUAL_START_STAGE, projectId = projectId, pipelineId = pipelineId,
+                        userId = userId, buildId = buildId, stageId = stageId, actionType = ActionType.REFRESH
+                    )
+                    // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
+                )
+            }
             return true
         }
     }
@@ -379,5 +387,12 @@ class PipelineStageService @Autowired constructor(
                 )
             )
         )
+    }
+
+    fun retryRefreshStage(model: Model) {
+        model.stages.forEach { stage ->
+            stage.checkIn?.retryRefresh()
+            stage.checkOut?.retryRefresh()
+        }
     }
 }

@@ -73,14 +73,16 @@ class UpdateStateForStageCmdFinally(
         }
 
         // #3138 stage cancel 不在此处理 更新状态&模型 @see PipelineStageService.cancelStage
-        if (event.source != BS_STAGE_CANCELED_END_SOURCE) {
+        // #4732 stage 准入准出的质量红线失败时不需要刷新当前 stage 的状态
+        if (event.source != BS_STAGE_CANCELED_END_SOURCE &&
+            commandContext.buildStatus != BuildStatus.QUALITY_CHECK_FAIL) {
             updateStageStatus(commandContext = commandContext)
         }
 
         // Stage 暂停
         if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
             if (event.source != BS_STAGE_CANCELED_END_SOURCE) { // 不是 stage cancel，暂停
-                pipelineStageService.pauseStage(userId = event.userId, buildStage = stage)
+                pipelineStageService.pauseStage(stage)
             } else {
                 nextOrFinish(event, stage, commandContext)
                 sendStageEndCallBack(stage, event)
@@ -170,9 +172,7 @@ class UpdateStateForStageCmdFinally(
             }
             val allStageStatus = stageBuildDetailService.updateStageStatus(
                 buildId = event.buildId, stageId = event.stageId,
-                buildStatus = commandContext.buildStatus,
-                checkIn = commandContext.stage.checkIn,
-                checkOut = commandContext.stage.checkOut
+                buildStatus = commandContext.buildStatus
             )
             pipelineRuntimeService.updateBuildHistoryStageState(event.buildId, allStageStatus = allStageStatus)
         }

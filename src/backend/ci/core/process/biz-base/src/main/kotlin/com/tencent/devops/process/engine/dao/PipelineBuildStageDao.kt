@@ -264,19 +264,14 @@ class PipelineBuildStageDao {
         dslContext: DSLContext,
         buildId: String,
         stageId: String,
-        controlOption: PipelineBuildStageControlOption,
-        buildStatus: BuildStatus?,
+        controlOption: PipelineBuildStageControlOption?,
         checkIn: StagePauseCheck? = null,
         checkOut: StagePauseCheck? = null
     ): Int {
         return with(T_PIPELINE_BUILD_STAGE) {
+            val option = if (controlOption != null) JsonUtil.toJson(controlOption) else null
             val update = dslContext.update(this)
-                .set(CONDITIONS, JsonUtil.toJson(controlOption))
-            if (buildStatus == null) {
-                update.setNull(STATUS)
-            } else {
-                update.set(STATUS, buildStatus.ordinal)
-            }
+                .set(CONDITIONS, option)
             if (checkIn != null) update.set(CHECK_IN, JsonUtil.toJson(checkIn))
             if (checkOut != null) update.set(CHECK_OUT, JsonUtil.toJson(checkOut))
             update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
