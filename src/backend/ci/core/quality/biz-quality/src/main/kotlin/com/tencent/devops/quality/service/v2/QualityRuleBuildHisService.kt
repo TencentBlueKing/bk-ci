@@ -30,6 +30,7 @@ package com.tencent.devops.quality.service.v2
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
@@ -98,13 +99,25 @@ class QualityRuleBuildHisService constructor(
             HashUtil.decodeIdToLong(it.hashId).toString() to it
         }.toMap()
         return allRule.map {
+            val thresholdList = it.indicatorThresholds.split(",")
+            val opList = it.operationList.split(",")
+            val ruleIndicatorIdMap = it.indicatorIds.split(",").mapIndexed { index, id ->
+                id.toLong() to Pair(opList[index], thresholdList[index])
+            }.toMap()
+
             val rule = QualityRule(
                 hashId = HashUtil.encodeLongId(it.id),
                 name = it.ruleName,
                 desc = it.ruleDesc,
                 indicators = it.indicatorIds.split(",").map { indicatorId ->
-                    qualityIndicatorMap[indicatorId]
+                    val indicator = qualityIndicatorMap[indicatorId]
                         ?: throw IllegalArgumentException("indicatorId not found: $indicatorId, $qualityIndicatorMap")
+
+                    val item = ruleIndicatorIdMap[HashUtil.decodeIdToLong(indicatorId)]
+                    indicator.operation = QualityOperation.valueOf(item?.first ?: indicator.operation.name)
+                    indicator.threshold = item?.second ?: indicator.threshold
+
+                    return@map indicator
                 },
                 controlPoint = QualityRule.RuleControlPoint(
                     "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
