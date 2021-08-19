@@ -3,7 +3,7 @@
         <span class="review-subtitle">{{ $t('stageReview.customVariables') }}</span>
         <ul>
             <li v-for="(param, index) in params" :key="index" class="review-params">
-                <bk-input disabled :value="param.key" class="review-param-item"></bk-input>
+                <bk-input disabled :value="getParamKey(param)" class="review-param-item"></bk-input>
                 <span :class="{ 'review-param-gap': true, 'param-require': param.required }"></span>
                 <param-value :form="param" :disabled="disabled" class="review-param-item"></param-value>
                 <i class="bk-icon icon-info" v-bk-tooltips="param.desc" v-if="param.desc"></i>
@@ -75,6 +75,10 @@
                     if (this.errMessage && !this.$parent.$refs.flowApprove.isCancel) reject(new Error(this.errMessage))
                     else resolve(this.params)
                 })
+            },
+
+            getParamKey (param) {
+                return param.chineseName || (param.key || '').replace(/^variables\./, '')
             }
         }
     }
