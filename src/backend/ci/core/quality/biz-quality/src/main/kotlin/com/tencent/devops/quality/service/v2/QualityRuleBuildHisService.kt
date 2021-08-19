@@ -113,7 +113,7 @@ class QualityRuleBuildHisService constructor(
                     val indicator = qualityIndicatorMap[indicatorId]
                         ?: throw IllegalArgumentException("indicatorId not found: $indicatorId, $qualityIndicatorMap")
 
-                    val item = ruleIndicatorIdMap[HashUtil.decodeIdToLong(indicatorId)]
+                    val item = ruleIndicatorIdMap[indicatorId.toLong()]
                     indicator.operation = QualityOperation.valueOf(item?.first ?: indicator.operation.name)
                     indicator.threshold = item?.second ?: indicator.threshold
 
