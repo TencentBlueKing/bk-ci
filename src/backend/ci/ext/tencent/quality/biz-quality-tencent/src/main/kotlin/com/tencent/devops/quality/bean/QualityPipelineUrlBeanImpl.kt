@@ -27,7 +27,10 @@
 
 package com.tencent.devops.quality.bean
 
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.springframework.beans.factory.annotation.Value
 
 class QualityPipelineUrlBeanImpl constructor(
@@ -55,6 +58,4 @@ class QualityPipelineUrlBeanImpl constructor(
         private val logger = org.slf4j.LoggerFactory.getLogger(QualityPipelineUrlBeanImpl::class.java)
         private const val TTL = 24 * 3600 * 3
     }
-
-
 }
