@@ -42,7 +42,7 @@
                                     <span class="review-normal"> { this.$t('stageReview.approveBy', [item.operator]) } </span>
                                     <span class="review-process"> { this.$t('stageReview.approve') }（{ this.$t('stageReview.approveRes') }） </span>
                                 </p>
-                                <p v-show={paramStr}>{ this.$t('stageReview.editVariable') }{paramStr}</p>
+                                <p v-show={paramStr}><span class="mr8 max-width">{ this.$t('stageReview.editVariable') }</span>{paramStr}</p>
                                 <p><span class="mr8 max-width">{ this.$t('stageReview.approveOpinion') }</span>{item.suggest}</p>
                                 <p><span class="mr8 max-width">{ this.$t('stageReview.approveTime') }</span>{convertTime(item.reviewTime)}</p>
                             </section>
