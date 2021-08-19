@@ -394,6 +394,7 @@ class ScmService @Autowired constructor(
         } catch (e: RemoteServiceException) {
             logger.warn("GIT_API_ERROR $log: ${e.message} ")
             throw ErrorCodeException(
+                statusCode = e.httpStatus,
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = "$log: ${e.errorMessage}"
             )

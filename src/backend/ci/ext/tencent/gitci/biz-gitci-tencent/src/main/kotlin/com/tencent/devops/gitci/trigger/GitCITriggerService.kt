@@ -86,6 +86,7 @@ import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import org.joda.time.DateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -853,7 +854,7 @@ class GitCITriggerService @Autowired constructor(
         filePath: String,
         changeSet: Set<String>
     ): Pair<Boolean, String> {
-        val targetFile = scmService.getFileInfo(
+        val targetFile = getFileInfo(
             token = targetGitToken.accessToken,
             ref = mrEvent.object_attributes.target_branch,
             filePath = filePath,
@@ -868,7 +869,7 @@ class GitCITriggerService @Autowired constructor(
             }
         }
 
-        val sourceFile = scmService.getFileInfo(
+        val sourceFile = getFileInfo(
             token = sourceGitToken?.accessToken ?: targetGitToken.accessToken,
             ref = mrEvent.object_attributes.source_branch,
             filePath = filePath,
@@ -894,7 +895,7 @@ class GitCITriggerService @Autowired constructor(
             mergeRequestId = mrEvent.object_attributes.id,
             token = targetGitToken.accessToken
         )
-        val baseTargetFile = scmService.getFileInfo(
+        val baseTargetFile = getFileInfo(
             token = targetGitToken.accessToken,
             ref = mergeRequest!!.baseCommit,
             filePath = filePath,
@@ -906,6 +907,29 @@ class GitCITriggerService @Autowired constructor(
         }
 
         return Pair(false, "")
+    }
+
+    private fun getFileInfo(
+        token: String,
+        gitProjectId: String,
+        filePath: String?,
+        ref: String?,
+        useAccessToken: Boolean
+    ): GitCodeFileInfo? {
+        return try {
+            scmService.getFileInfo(
+                token = token,
+                ref = ref,
+                filePath = filePath,
+                gitProjectId = gitProjectId,
+                useAccessToken = useAccessToken
+            )
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == 404) {
+                return null
+            }
+            throw e
+        }
     }
 
     private fun isFork(isMrEvent: Boolean, gitRequestEvent: GitRequestEvent): Boolean {
