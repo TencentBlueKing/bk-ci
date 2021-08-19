@@ -33,7 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.springframework.beans.factory.annotation.Value
 
-class QualityPipelineUrlBeanImpl constructor(
+class GitCIQualityPipelineUrlBeanImpl constructor(
     private val client: Client
 ) : QualityUrlBean {
 
@@ -55,7 +55,7 @@ class QualityPipelineUrlBeanImpl constructor(
     }
 
     companion object {
-        private val logger = org.slf4j.LoggerFactory.getLogger(QualityPipelineUrlBeanImpl::class.java)
+        private val logger = org.slf4j.LoggerFactory.getLogger(GitCIQualityPipelineUrlBeanImpl::class.java)
         private const val TTL = 24 * 3600 * 3
     }
 }
