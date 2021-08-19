@@ -465,6 +465,7 @@ class YamlBuildV2 @Autowired constructor(
                 )
             )
         }
+        logger.info("GitProject: ${event.gitProjectId} event: ${event.id} ruleList: $ruleList creat gates")
         try {
             val resultList = client.get(ServiceQualityRuleResource::class).create(
                 userId = event.userId,
