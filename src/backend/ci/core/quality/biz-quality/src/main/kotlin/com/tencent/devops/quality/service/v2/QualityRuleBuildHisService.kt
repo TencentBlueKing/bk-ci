@@ -109,15 +109,18 @@ class QualityRuleBuildHisService constructor(
                 hashId = HashUtil.encodeLongId(it.id),
                 name = it.ruleName,
                 desc = it.ruleDesc,
-                indicators = it.indicatorIds.split(",").map { indicatorId ->
+                indicators = it.indicatorIds.split(",").map INDICATOR@{ indicatorId ->
                     val indicator = qualityIndicatorMap[indicatorId]
                         ?: throw IllegalArgumentException("indicatorId not found: $indicatorId, $qualityIndicatorMap")
 
-                    val item = ruleIndicatorIdMap[indicatorId.toLong()]
-                    indicator.operation = QualityOperation.valueOf(item?.first ?: indicator.operation.name)
-                    indicator.threshold = item?.second ?: indicator.threshold
+                    val indicatorCopy = indicator.clone()
 
-                    return@map indicator
+                    val item = ruleIndicatorIdMap[indicatorId.toLong()]
+
+                    indicatorCopy.operation = QualityOperation.valueOf(item?.first ?: indicator.operation.name)
+                    indicatorCopy.threshold = item?.second ?: indicator.threshold
+
+                    return@INDICATOR indicatorCopy
                 },
                 controlPoint = QualityRule.RuleControlPoint(
                     "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()

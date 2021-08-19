@@ -63,4 +63,25 @@ data class QualityIndicator(
     fun isScriptElementIndicator(): Boolean {
         return elementType in SCRIPT_ELEMENT
     }
+
+    fun clone(): QualityIndicator {
+        return QualityIndicator(
+            hashId = this.hashId,
+            elementType = this.elementType,
+            elementDetail = this.elementDetail,
+            enName = this.enName,
+            cnName = this.cnName,
+            stage = this.stage,
+            operation = this.operation,
+            operationList = this.operationList,
+            threshold = this.threshold,
+            thresholdType = this.thresholdType,
+            readOnly = this.readOnly,
+            type = this.type,
+            tag = this.tag,
+            metadataList = this.metadataList,
+            desc = this.desc,
+            logPrompt = this.logPrompt
+        )
+    }
 }
