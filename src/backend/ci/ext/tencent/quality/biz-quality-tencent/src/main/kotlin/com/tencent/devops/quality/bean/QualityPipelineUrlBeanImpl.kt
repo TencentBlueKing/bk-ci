@@ -25,13 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:quality:biz-quality"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:scm:api-scm"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
+package com.tencent.devops.quality.bean
+
+import com.tencent.devops.common.client.Client
+import org.springframework.beans.factory.annotation.Value
+
+class QualityPipelineUrlBeanImpl constructor(
+    private val client: Client
+) : QualityUrlBean {
+
+    @Value("\${gitci.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
+
+    override fun genBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        runtimeVariable: Map<String, String>?
+    ): String {
+        logger.info("[$buildId]|genGitCIBuildDetailUrl| host=$v2GitUrl")
+        val project = client.getScm(ServiceGitCiResource::class)
+            .getGitCodeProjectInfo(projectCode.removePrefix("git_"))
+            .data ?: return ""
+        val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId/#${project.pathWithNamespace}"
+        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+    }
+
+    companion object {
+        private val logger = org.slf4j.LoggerFactory.getLogger(QualityPipelineUrlBeanImpl::class.java)
+        private const val TTL = 24 * 3600 * 3
+    }
+
+
 }
