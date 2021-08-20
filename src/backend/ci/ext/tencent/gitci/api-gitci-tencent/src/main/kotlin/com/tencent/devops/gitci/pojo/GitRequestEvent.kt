@@ -59,6 +59,7 @@ data class GitRequestEvent(
     val userId: String,
     @ApiModelProperty("TOTAL_COMMIT_COUNT")
     val totalCommitCount: Long,
+    // todo: 这里保存的是MR 的 iid 不是 mrId
     @ApiModelProperty("MERGE_REQUEST_ID")
     val mergeRequestId: Long?,
     @ApiModelProperty("EVENT")
