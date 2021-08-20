@@ -36,6 +36,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCast
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
@@ -477,20 +478,39 @@ class BuildStartControl @Autowired constructor(
             )
         }
 
-        if (model.stages.size == 1) { // 空节点
+        val stages = model.stages
+        val firstValidStage = getFirstValidStage(stages)
+        if (stages.size == 1 || firstValidStage == null) { // 空节点或者没有可用的stage
             pipelineEventDispatcher.dispatch(
                 PipelineBuildFinishEvent(source = TAG,
                     projectId = projectId, pipelineId = pipelineId, userId = userId,
                     buildId = buildId, status = BuildStatus.SUCCEED
                 )
             )
-        } else { // 对第一个Stage下发指令
+        } else { // 对第一个可用的Stage下发指令
             pipelineEventDispatcher.dispatch(
                 PipelineBuildStageEvent(source = TAG,
                     projectId = projectId, pipelineId = pipelineId, userId = userId,
-                    buildId = buildId, stageId = model.stages[1].id!!, actionType = actionType
+                    buildId = buildId, stageId = firstValidStage.id!!, actionType = actionType
                 )
             )
         }
+    }
+
+    private fun getFirstValidStage(stages: List<Stage>): Stage? {
+        var firstValidStage: Stage? = null
+        val stageSize = stages.size
+        if (stageSize == 1) {
+            return null
+        }
+        val endIndex = stageSize - 1
+        for (i in 1..endIndex) {
+            val stage = stages[i]
+            if (stage.stageControlOption?.enable != false) {
+                firstValidStage = stage
+                break
+            }
+        }
+        return firstValidStage
     }
 }
