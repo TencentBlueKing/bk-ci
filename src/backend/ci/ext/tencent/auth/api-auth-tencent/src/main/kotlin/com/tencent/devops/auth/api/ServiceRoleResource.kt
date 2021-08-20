@@ -25,12 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.auth.api
 
-interface TxProjectPermissionService {
+import com.tencent.devops.auth.pojo.vo.GroupInfoVo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-    /**
-     * 校验用户是否有这个项目的权限
-     */
-    fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Boolean
+@Api(tags = ["SERVICE_PROJECT_ROLE"], description = "项目-用户组")
+@Path("/service/project/roles")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceRoleResource {
+    @GET
+    @Path("/projectIds/{projectId}")
+    @ApiOperation("获取用户组")
+    fun getProjectRoles(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "项目标识", required = true)
+        @PathParam("projectId")
+        projectId: Int
+    ): Result<List<GroupInfoVo>>
 }

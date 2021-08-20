@@ -35,8 +35,10 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.iam.IamV3Service
 import com.tencent.devops.project.service.impl.TxV3ProjectPermissionServiceImpl
+import com.tencent.devops.project.service.impl.V3ProjectExtPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -76,5 +78,14 @@ class TxV3ProjectInitConfiguration {
         client: Client
     ) = IamV3Service(
         iamManagerService, iamConfiguration, projectDao, dslContext, projectDispatcher, client
+    )
+
+    @Bean
+    fun v3ProjectExtPermissionServiceImpl(
+        client: Client,
+        projectService: ProjectService,
+        tokenService: ClientTokenService
+    ) = V3ProjectExtPermissionServiceImpl(
+        client, projectService, tokenService
     )
 }

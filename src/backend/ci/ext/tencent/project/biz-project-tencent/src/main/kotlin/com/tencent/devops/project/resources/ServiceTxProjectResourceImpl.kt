@@ -50,7 +50,7 @@ import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectMemberService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
-import com.tencent.devops.project.service.TxProjectPermissionService
+import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,12 +59,12 @@ import org.springframework.beans.factory.annotation.Value
 @RestResource
 class ServiceTxProjectResourceImpl @Autowired constructor(
     private val bsAuthPermissionApi: AuthPermissionApi,
-    private val projectPermissionService: TxProjectPermissionService,
+    private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectLocalService: ProjectLocalService,
     private val projectService: ProjectService,
     private val projectMemberService: ProjectMemberService,
     private val projectIamV0Service: ProjectIamV0Service,
-    private val projectTagService: ProjectTagService
+    private val projectTagService: ProjectTagService,
 ) : ServiceTxProjectResource {
 
     @Value("\${auto.tag:#{null}}")
@@ -253,7 +253,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         projectCode: String,
         userId: String
     ): Result<Boolean> {
-        return Result(projectPermissionService.verifyUserProjectPermission(
+        return Result(projectExtPermissionService.verifyUserProjectPermission(
             accessToken = accessToken,
             projectCode = projectCode,
             userId = userId
@@ -288,13 +288,23 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         createUser: String,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean> {
-        return Result(projectIamV0Service.createUser2Project(
-            createUser = createUser,
-            userIds = createInfo.userIds!!,
-            projectCode = createInfo.projectId,
-            roleId = createInfo.roleId,
-            roleName = createInfo.roleName
-        ))
+        return Result(
+            projectExtPermissionService.createUser2Project(
+                createUser = createUser,
+                userIds = createInfo.userIds ?: emptyList(),
+                projectCode = createInfo.projectId,
+                roleId = createInfo.roleId,
+                roleName = createInfo.roleName,
+                checkManager = true
+            )
+        )
+//        return Result(projectIamV0Service.createUser2Project(
+//            createUser = createUser,
+//            userIds = createInfo.userIds!!,
+//            projectCode = createInfo.projectId,
+//            roleId = createInfo.roleId,
+//            roleName = createInfo.roleName
+//        ))
     }
 
     override fun createProjectUserByApp(

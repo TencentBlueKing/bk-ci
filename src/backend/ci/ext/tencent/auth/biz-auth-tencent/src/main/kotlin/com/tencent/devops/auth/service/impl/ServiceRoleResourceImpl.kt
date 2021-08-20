@@ -25,8 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:auth:api-auth"))
+package com.tencent.devops.auth.service.impl
+
+import com.tencent.devops.auth.api.ServiceRoleResource
+import com.tencent.devops.auth.pojo.vo.GroupInfoVo
+import com.tencent.devops.auth.service.iam.PermissionRoleService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceRoleResourceImpl @Autowired constructor(
+    val permissionRoleService: PermissionRoleService,
+): ServiceRoleResource {
+    override fun getProjectRoles(
+        userId: String,
+        projectId: Int
+    ): Result<List<GroupInfoVo>> {
+        return Result(permissionRoleService.getPermissionRole(projectId))
+    }
 }

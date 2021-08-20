@@ -25,8 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:auth:api-auth"))
+package com.tencent.devops.auth.service.impl
+
+import com.tencent.devops.auth.api.ServiceRoleMemberResource
+import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceRoleMemberResourceImpl @Autowired constructor(
+    val permissionRoleMemberService: PermissionRoleMemberService
+): ServiceRoleMemberResource {
+    override fun createRoleMember(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        managerGroup: Boolean,
+        members: List<RoleMemberDTO>,
+        checkGradeManager: Boolean?
+    ): Result<Boolean> {
+        permissionRoleMemberService.createRoleMember(
+            userId = userId,
+            projectId = projectId,
+            roleId = roleId,
+            members = members,
+            managerGroup = managerGroup,
+            checkAGradeManager = checkGradeManager
+        )
+        return Result(true)
+    }
 }
