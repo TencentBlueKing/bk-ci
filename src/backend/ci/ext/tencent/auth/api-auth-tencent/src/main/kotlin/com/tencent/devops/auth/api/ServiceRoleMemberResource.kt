@@ -66,6 +66,7 @@ interface ServiceRoleMemberResource {
         @ApiParam("添加用户集合", required = true)
         members: List<RoleMemberDTO>,
         @ApiParam("是否需要分级管理员校验")
+        @QueryParam("managerGroup")
         checkGradeManager: Boolean? = false
     ): Result<Boolean>
 }
