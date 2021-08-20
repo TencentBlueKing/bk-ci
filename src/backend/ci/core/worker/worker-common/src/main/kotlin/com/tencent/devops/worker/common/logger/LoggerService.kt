@@ -337,7 +337,7 @@ object LoggerService {
         } catch (ignored: Throwable) {
             logger.warn("Fail to archive log files", ignored)
         } finally {
-            logger.info("Remove temp log files in [${pipelineLogDir}].")
+            logger.info("Remove temp log files in [$pipelineLogDir].")
             FileUtils.deleteRecursivelyOnExit(pipelineLogDir!!)
         }
     }
