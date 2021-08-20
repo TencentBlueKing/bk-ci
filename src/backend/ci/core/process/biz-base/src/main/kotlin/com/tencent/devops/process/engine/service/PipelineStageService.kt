@@ -110,20 +110,6 @@ class PipelineStageService @Autowired constructor(
         )
     }
 
-    fun updateStageOptions(
-        buildId: String,
-        stageId: String,
-        stage: PipelineBuildStage
-    ) {
-        logger.info("[$buildId]|updateStageOptions|stageId=$stageId|controlOption=${stage.controlOption}" +
-            "|checkIn=${stage.checkIn}|checkOut=${stage.checkOut}")
-        pipelineBuildStageDao.updateOptions(
-            dslContext = dslContext, buildId = buildId,
-            stageId = stageId, controlOption = stage.controlOption,
-            checkIn = stage.checkIn, checkOut = stage.checkOut
-        )
-    }
-
     fun listStages(buildId: String): List<PipelineBuildStage> {
         val list = pipelineBuildStageDao.listByBuildId(dslContext, buildId)
         val result = mutableListOf<PipelineBuildStage>()
@@ -170,9 +156,10 @@ class PipelineStageService @Autowired constructor(
             )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                pipelineBuildStageDao.updateOptions(
+                pipelineBuildStageDao.updateStatus(
                     dslContext = context, buildId = buildId,
                     stageId = stageId, controlOption = controlOption!!,
+                    buildStatus = BuildStatus.QUALITY_CHECK_FAIL,
                     checkIn = checkIn, checkOut = checkOut
                 )
                 pipelineBuildDao.updateBuildStageStatus(

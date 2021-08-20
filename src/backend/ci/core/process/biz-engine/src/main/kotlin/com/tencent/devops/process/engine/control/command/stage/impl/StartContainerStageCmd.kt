@@ -94,11 +94,6 @@ class StartContainerStageCmd(
         if (stageStatus.isFinish() || stageStatus == BuildStatus.STAGE_SUCCESS) {
             commandContext.buildStatus = stageStatus // 已经是结束或者是STAGE_SUCCESS就直接返回
         } else {
-            // 查找最后一个结束状态的Stage (排除Finally）
-            if (commandContext.stage.controlOption?.finally == true) {
-                commandContext.previousStageStatus = fetchPreviousStageStatus(commandContext)
-            }
-
             stageStatus = pickJob(commandContext, actionType = newActionType, userId = event.userId)
 
             if (commandContext.skipContainerNum == commandContext.containers.size) {
@@ -137,6 +132,14 @@ class StartContainerStageCmd(
         var fail: BuildStatus? = null
         var cancel: BuildStatus? = null
 
+        // 查找最后一个结束状态的Stage (排除Finally）
+        if (commandContext.stage.controlOption?.finally == true) {
+            commandContext.previousStageStatus = pipelineStageService.listStages(commandContext.stage.buildId)
+                .lastOrNull {
+                    it.stageId != commandContext.stage.stageId &&
+                        (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS)
+                }?.status
+        }
         // 同一Stage下的多个Container是并行
         commandContext.containers.forEach { container ->
             if (container.status.isCancel()) {
@@ -161,19 +164,6 @@ class StartContainerStageCmd(
 
         // 如果有运行态,否则返回失败，如无失败，则返回取消，最后是成功
         return running ?: fail ?: cancel ?: BuildStatus.SUCCEED
-    }
-
-    /**
-     * 获取前序已完成的stage状态
-     * 如果前序stageStatus是完成状态或[BuildStatus.STAGE_SUCCESS]则直接取用
-     * 如果前序stage是因为质量红线准入准出而被直接终止，则取用[BuildStatus.QUALITY_CHECK_FAIL]
-     */
-    private fun fetchPreviousStageStatus(commandContext: StageContext): BuildStatus? {
-        return pipelineStageService.listStages(commandContext.stage.buildId)
-            .lastOrNull {
-                it.stageId != commandContext.stage.stageId &&
-                    (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS || it.checkQualityFailed())
-            }?.status
     }
 
     private fun sendBuildContainerEvent(
