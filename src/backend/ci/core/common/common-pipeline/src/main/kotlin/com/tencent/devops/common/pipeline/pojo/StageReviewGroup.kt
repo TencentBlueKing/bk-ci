@@ -25,16 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.common.pipeline.pojo
 
-/**
- * 运行选项
- * @version 1.0
- */
-enum class StageRunCondition {
-    AFTER_LAST_FINISHED, // 上个阶段执行结束
-    CUSTOM_VARIABLE_MATCH, // 自定义变量全部满足时运行
-    CUSTOM_VARIABLE_MATCH_NOT_RUN, // 自定义变量全部满足时不运行
-    CUSTOM_CONDITION_MATCH // 满足以下自定义条件时运行
-    ;
-}
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("Stage审核组信息")
+data class StageReviewGroup(
+    @ApiModelProperty("审核组ID(后台生成)", required = false)
+    var id: String? = null,
+    @ApiModelProperty("审核组名称", required = true)
+    val name: String = "default",
+    @ApiModelProperty("审核人员", required = true)
+    var reviewers: List<String> = listOf(),
+    @ApiModelProperty("审核结果（枚举）", required = false)
+    var status: String? = null,
+    @ApiModelProperty("审核操作人", required = false)
+    var operator: String? = null,
+    @ApiModelProperty("审核操作时间", required = false)
+    var reviewTime: Long? = null,
+    @ApiModelProperty("审核建议", required = false)
+    var suggest: String? = null,
+    @ApiModelProperty("审核传入变量", required = false)
+    var params: List<ManualReviewParam>? = null
+)
