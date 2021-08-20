@@ -59,7 +59,7 @@ import com.tencent.devops.gitci.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
-import com.tencent.devops.gitci.utils.QualityUtils
+import com.tencent.devops.gitci.v2.service.QualityService
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
@@ -90,7 +90,8 @@ class GitCIBuildFinishListener @Autowired constructor(
     private val client: Client,
     private val scmClient: ScmClient,
     private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val qualityService: QualityService
 ) {
 
     @Value("\${rtx.corpid:#{null}}")
@@ -194,7 +195,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                         // gitRequestEvent中存的为mriid不是mrid
                         val mrEvent = if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
                             try {
-                                objectMapper.readValue<GitMergeRequestEvent>(record["event"] as String)
+                                objectMapper.readValue<GitMergeRequestEvent>(record["EVENT"] as String)
                             } catch (e: Throwable) {
                                 logger.error("push commit check get mergeId error ${e.message}")
                                 null
@@ -215,7 +216,12 @@ class GitCIBuildFinishListener @Autowired constructor(
                             pipelineId = buildFinishEvent.pipelineId,
                             block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess() &&
                                 v2GitSetting.enableMrBlock),
-                            reportData = QualityUtils.getQualityGitMrResult(client = client, event = buildFinishEvent)
+                            reportData = qualityService.getQualityGitMrResult(
+                                client = client,
+                                projectName = getProjectName(gitProjectConf!!.gitHttpUrl, gitProjectConf.name),
+                                pipelineName = pipeline.displayName,
+                                event = buildFinishEvent
+                            )
                         )
                     } else {
                         scmClient.pushCommitCheck(

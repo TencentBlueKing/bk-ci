@@ -137,7 +137,7 @@ class StartContainerStageCmd(
             commandContext.previousStageStatus = pipelineStageService.listStages(commandContext.stage.buildId)
                 .lastOrNull {
                     it.stageId != commandContext.stage.stageId &&
-                        (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS || it.checkQualityFailed())
+                        (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS)
                 }?.status
         }
         // 同一Stage下的多个Container是并行
