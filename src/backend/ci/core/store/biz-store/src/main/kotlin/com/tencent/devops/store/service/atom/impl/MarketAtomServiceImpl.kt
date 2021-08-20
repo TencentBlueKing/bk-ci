@@ -72,6 +72,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
+import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MarketMainItem
@@ -916,6 +917,40 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         } else {
             ""
         }
+    }
+
+    override fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>> {
+        val atomList = marketAtomDao.getLatestAtomListByCodes(
+            dslContext = dslContext,
+            atomCodes = getRelyAtom.thirdPartyElementList.map { it.atomCode }
+        )
+        val getMap = getRelyAtom.thirdPartyElementList.map { it.atomCode to it.version }.toMap()
+        val result = mutableMapOf<String, Map<String, Any>>()
+        logger.info("getAtomsRely atomList : $atomList")
+        atomList.forEach lit@{
+            if (it != null) {
+                var value = it
+                if (getMap[it.atomCode]!!.contains("*") &&
+                    !it.version.startsWith(getMap[it.atomCode]!!.replace("*", ""))) {
+                    value = atomDao.getPipelineAtom(dslContext, it.atomCode, getMap[it.atomCode]) ?: return@lit
+                }
+                val itemMap = mutableMapOf<String, Any>()
+                val props: Map<String, Any> = jacksonObjectMapper().readValue(value.props)
+                if (null != props["input"]) {
+                    val input = props["input"] as Map<String, Any>
+                    input.forEach { inputIt ->
+                        val paramKey = inputIt.key
+                        val paramValueMap = inputIt.value as Map<String, Any>
+                        val rely = paramValueMap["rely"]
+                        if (rely != null) {
+                            itemMap[paramKey] = rely
+                        }
+                    }
+                }
+                result[it.atomCode] = itemMap
+            }
+        }
+        return result
     }
 
     @Suppress("UNCHECKED_CAST")
