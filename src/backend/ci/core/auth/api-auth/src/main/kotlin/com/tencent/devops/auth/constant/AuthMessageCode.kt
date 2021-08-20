@@ -62,6 +62,7 @@ object AuthMessageCode {
     const val HOST_CHECKOU_FAIL = "2121110" // 权限系统：iam回调域名校验失败
     const val PATH_CHECK_FAIL = "2121111" // 权限系统：iam回调路径校验失败
     const val RELATED_RESOURCE_CHECK_FAIL = "2121112" // 权限系统：iam回调关联资源不存在
+    const val RELATED_RESOURCE_EMPTY = "2121113" // 权限系统：绑定系统资源为空
 
     const val STRATEGT_CHECKOUT_FAIL = "2121201" // 权限系统： 权限集合校验失败
     const val MANAGER_ORG_CHECKOUT_FAIL = "2121202" // 权限系统： 权限授权校验失败
