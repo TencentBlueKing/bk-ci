@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -38,6 +39,9 @@ import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
+import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -47,7 +51,8 @@ import org.springframework.stereotype.Service
 @Service
 class CheckPauseReviewStageCmd(
     private val buildVariableService: BuildVariableService,
-    private val pipelineStageService: PipelineStageService
+    private val pipelineStageService: PipelineStageService,
+    private val client: Client
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -68,6 +73,19 @@ class CheckPauseReviewStageCmd(
             commandContext.cmdFlowState = CmdFlowState.BREAK
         } else if (commandContext.buildStatus.isReadyToRun()) {
 
+            // 质量红线
+            if (checkQualityFailed(event, stage, commandContext.variables)) {
+                // #4732 优先判断是否能通过质量红线检查
+                LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_FAILED|${event.stageId}")
+                // TODO 暂时只处理准入，后续需要兼容准出
+                commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_FAIL.name
+                commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
+                commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_IN"
+                commandContext.cmdFlowState = CmdFlowState.FINALLY
+                return
+            }
+
+            // 人工审核
             if (needPause(event, stage)) {
                 // #3742 进入暂停状态则刷新完状态后直接返回，等待手动触发
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_PAUSE|${event.stageId}")
@@ -105,6 +123,36 @@ class CheckPauseReviewStageCmd(
                 buildId = stage.buildId,
                 variables = reviewVariables
             )
+        }
+    }
+
+    private fun checkQualityFailed(
+        event: PipelineBuildStageEvent,
+        stage: PipelineBuildStage,
+        variables: Map<String, String>
+    ): Boolean {
+        if (stage.checkIn?.ruleIds.isNullOrEmpty()) return false
+        return try {
+            val request = BuildCheckParamsV3(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                position = ControlPointPosition.BEFORE_POSITION,
+                templateId = null,
+                interceptName = null,
+                ruleBuildIds = stage.checkIn?.ruleIds!!.toSet(),
+                runtimeVariable = variables
+            )
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
+                "request=$request|ruleIds=${stage.checkIn?.ruleIds}")
+            val result = client.get(ServiceQualityRuleResource::class).check(request).data!!
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
+                "response=$result|ruleIds=${stage.checkIn?.ruleIds}")
+            stage.checkIn!!.checkTimes = result.checkTimes
+            !result.success
+        } catch (ignore: Throwable) {
+            LOG.error("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)
+            true
         }
     }
 
