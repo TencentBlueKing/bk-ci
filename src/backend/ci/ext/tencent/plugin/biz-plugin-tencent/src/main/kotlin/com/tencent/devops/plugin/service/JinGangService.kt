@@ -86,7 +86,6 @@ class JinGangService @Autowired constructor(
     private val jinGangAppDao: JinGangAppDao,
     private val jinGangAppMetaDao: JinGangAppMetaDao,
     private val authPermissionApi: BSAuthPermissionApi,
-    private val bkAuthProjectApi: BSAuthProjectApi,
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
@@ -448,7 +447,7 @@ class JinGangService @Autowired constructor(
 
         // 权限校验
         val projectId = recordTask?.projectId ?: ""
-        if (!bkAuthProjectApi.getUserProjects(pipelineServiceCode, userId, null).contains(projectId)) {
+        if (!authProjectApi.getUserProjects(pipelineServiceCode, userId, null).contains(projectId)) {
             throw PermissionForbiddenException("user($userId) does not has permission for project: $projectId")
         }
 
