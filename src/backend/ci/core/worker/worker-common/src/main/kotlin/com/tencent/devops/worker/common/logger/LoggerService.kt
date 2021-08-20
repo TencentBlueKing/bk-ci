@@ -330,12 +330,14 @@ object LoggerService {
             }
             logger.info("Finished archiving log $archivedCount files")
 
-            // 同步所有存储状态到
+            // 同步所有存储状态到log服务端
             logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), executeCount)
-            FileUtils.deleteRecursivelyOnExit(pipelineLogDir!!)
             logger.info("Finished update mode to log service.")
         } catch (ignored: Throwable) {
             logger.warn("Fail to archive log files", ignored)
+        } finally {
+            logger.info("Remove temp log files in [${pipelineLogDir}].")
+            FileUtils.deleteRecursivelyOnExit(pipelineLogDir!!)
         }
     }
 
