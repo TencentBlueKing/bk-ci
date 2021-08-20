@@ -61,11 +61,11 @@ function _M:get_tag(ns_config)
                 local redRes = red:hget(redis_key, hash_key)
                 if redRes and redRes ~= ngx.null then
                     local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
-                    tag_cache:set(devops_project, hash_val, 60)
+                    tag_cache:set(devops_project, hash_val, 5)
                     tag = hash_val
                     useProjectTag = true
                 else
-                    tag_cache:set(devops_project, '-1', 60)
+                    tag_cache:set(devops_project, '-1', 5)
                 end
             end
         end
@@ -80,10 +80,10 @@ function _M:get_tag(ns_config)
         else
             local service_redis_cache_value = red:get("project:setting:service:tag:" .. devops_service)
             if service_redis_cache_value and service_redis_cache_value ~= ngx.null then
-                tag_cache:set(service_local_cache_key, service_redis_cache_value, 60)
+                tag_cache:set(service_local_cache_key, service_redis_cache_value, 5)
                 tag = service_redis_cache_value
             else
-                tag_cache:set(service_local_cache_key, default_tag, 60)
+                tag_cache:set(service_local_cache_key, default_tag, 5)
             end
         end
     end
