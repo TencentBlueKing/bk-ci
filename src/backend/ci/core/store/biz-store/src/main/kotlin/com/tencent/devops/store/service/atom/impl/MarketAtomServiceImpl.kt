@@ -928,27 +928,27 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val result = mutableMapOf<String, Map<String, Any>>()
         logger.info("getAtomsRely atomList : $atomList")
         atomList.forEach lit@{
-            if (it != null) {
-                var value = it
-                if (getMap[it.atomCode]!!.contains("*") &&
-                    !it.version.startsWith(getMap[it.atomCode]!!.replace("*", ""))) {
-                    value = atomDao.getPipelineAtom(dslContext, it.atomCode, getMap[it.atomCode]) ?: return@lit
-                }
-                val itemMap = mutableMapOf<String, Any>()
-                val props: Map<String, Any> = jacksonObjectMapper().readValue(value.props)
-                if (null != props["input"]) {
-                    val input = props["input"] as Map<String, Any>
-                    input.forEach { inputIt ->
-                        val paramKey = inputIt.key
-                        val paramValueMap = inputIt.value as Map<String, Any>
-                        val rely = paramValueMap["rely"]
-                        if (rely != null) {
-                            itemMap[paramKey] = rely
-                        }
+            if (it == null)  return@lit
+            var value = it
+            val atom = getMap[it.atomCode]
+            if (atom?.contains("*") == true &&
+                !it.version.startsWith(atom.replace("*", ""))) {
+                value = atomDao.getPipelineAtom(dslContext, it.atomCode, atom) ?: return@lit
+            }
+            val itemMap = mutableMapOf<String, Any>()
+            val props: Map<String, Any> = jacksonObjectMapper().readValue(value.props)
+            if (null != props["input"]) {
+                val input = props["input"] as Map<String, Any>
+                input.forEach { inputIt ->
+                    val paramKey = inputIt.key
+                    val paramValueMap = inputIt.value as Map<String, Any>
+                    val rely = paramValueMap["rely"]
+                    if (rely != null) {
+                        itemMap[paramKey] = rely
                     }
                 }
-                result[it.atomCode] = itemMap
             }
+            result[it.atomCode] = itemMap
         }
         return result
     }
