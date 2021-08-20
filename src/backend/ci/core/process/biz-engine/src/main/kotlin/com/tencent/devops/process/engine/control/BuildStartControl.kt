@@ -485,6 +485,7 @@ class BuildStartControl @Autowired constructor(
                 break
             }
         }
+        LOG.info("ENGINE|$buildId|$source|firstValidStage#${firstValidStage?.name}")
         if (stageSize == 1 || firstValidStage == null) { // 空节点或者没有可用的stage
             pipelineEventDispatcher.dispatch(
                 PipelineBuildFinishEvent(source = TAG,
