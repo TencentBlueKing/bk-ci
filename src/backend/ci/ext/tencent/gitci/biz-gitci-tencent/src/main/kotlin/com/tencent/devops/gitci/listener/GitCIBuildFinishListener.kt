@@ -218,7 +218,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                                 v2GitSetting.enableMrBlock),
                             reportData = qualityService.getQualityGitMrResult(
                                 client = client,
-                                projectName = getProjectName(gitProjectConf!!.gitHttpUrl, gitProjectConf.name),
+                                projectName = getProjectName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
                                 pipelineName = pipeline.displayName,
                                 event = buildFinishEvent
                             )
