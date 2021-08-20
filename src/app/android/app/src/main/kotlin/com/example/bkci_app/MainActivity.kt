@@ -30,9 +30,6 @@ class MainActivity: FlutterActivity(), ITLoginAuthListener, ITLoginListener {
     lateinit var appInstallReceiver: AppInstallReceiver;
     lateinit var itloginInstance: ITLoginBaseActivityManager;
     private var itloginInited: Boolean = false;
-//    private var fetch: Fetch? = null
-//    private val requestIdToConfig: HashMap<Int, DownloadTaskConfig> = hashMapOf()
-//    private val progressReports: HashMap<String, Object> = HashMap()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -122,7 +119,11 @@ class MainActivity: FlutterActivity(), ITLoginAuthListener, ITLoginListener {
             }
             val intent = Intent(Intent.ACTION_VIEW)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) { // 7.0+以上版本
-                val apkUri: Uri = FileProvider.getUriForFile(this.applicationContext, this.packageName + ".fileprovider", apkfile)
+                val apkUri: Uri = FileProvider.getUriForFile(
+                    this.applicationContext,
+                    this.packageName + ".fileprovider",
+                    apkfile
+                );
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 intent.setDataAndType(apkUri, "application/vnd.android.package-archive")
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -135,52 +136,6 @@ class MainActivity: FlutterActivity(), ITLoginAuthListener, ITLoginListener {
             e.printStackTrace()
         }
     }
-
-//    private fun download (options: Map<String, Any>, result: MethodChannel.Result) {
-//        print("call download");
-//        val id: String = options.get("id") as String;
-//        val url: String = options.get("url") as String
-//        val destination: String = options.get("destination") as String
-//        val logoUrl: String = options.get("logoUrl") as String
-//        val name: String = options.get("name") as String
-//        val version: String = options.get("version") as String
-//        val size: Double = options.get("size") as Double
-//        val buildNum: String = options.get("buildNum") as String
-//        val bundleIdentifier: String = options.get("bundleIdentifier") as String
-//        val projectName: String = options.get("projectName") as String
-//        val headers: Map<String, String> = options.get("headers") as Map<String, String>
-//        println(id)
-//        println(url)
-//        println(destination)
-//        if (id == null || url == null || destination == null) {
-//            println("id, url and destination must be set")
-//            result.error("invalid args", "invalid args", "id, url and destination must be set")
-//            return;
-//        }
-//
-//        val request = Request(url, destination)
-//        val requestId: Int = request.id
-//
-//        val config = DownloadTaskConfig(requestId, id, name, url, size, version, logoUrl, destination, projectName, buildNum, bundleIdentifier)
-//        if (headers != null) {
-//            headers.mapKeys {
-//                request.addHeader(it.key, it.value);
-//            }
-//
-//        }
-//        request.priority = Priority.HIGH;
-//        request.networkType = NetworkType.ALL;
-//
-//        fetch!!.getDownload(requestId, Func2 { download ->
-//            if (download != null) {
-//                fetch!!.delete(download.id)
-//            }
-//            fetch!!.enqueue(request, null, null)
-//            requestIdToConfig.put(requestId, config)
-//        })
-//
-//
-//    }
 
     override fun onResume() {
         super.onResume()

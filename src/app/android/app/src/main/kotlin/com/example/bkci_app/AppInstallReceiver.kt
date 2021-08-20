@@ -27,5 +27,4 @@ class AppInstallReceiver(val methodChannel: MethodChannel) : BroadcastReceiver()
                 methodChannel.invokeMethod(method, packageName, null);
             }
     }
-
 }
