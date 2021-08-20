@@ -39,9 +39,9 @@ data class QualityIndicator(
     val enName: String,
     val cnName: String,
     val stage: String,
-    val operation: QualityOperation,
+    var operation: QualityOperation,
     val operationList: List<QualityOperation>,
-    val threshold: String,
+    var threshold: String,
     val thresholdType: QualityDataType,
     val readOnly: Boolean,
     val type: String,
@@ -62,5 +62,26 @@ data class QualityIndicator(
 
     fun isScriptElementIndicator(): Boolean {
         return elementType in SCRIPT_ELEMENT
+    }
+
+    fun clone(): QualityIndicator {
+        return QualityIndicator(
+            hashId = this.hashId,
+            elementType = this.elementType,
+            elementDetail = this.elementDetail,
+            enName = this.enName,
+            cnName = this.cnName,
+            stage = this.stage,
+            operation = this.operation,
+            operationList = this.operationList,
+            threshold = this.threshold,
+            thresholdType = this.thresholdType,
+            readOnly = this.readOnly,
+            type = this.type,
+            tag = this.tag,
+            metadataList = this.metadataList,
+            desc = this.desc,
+            logPrompt = this.logPrompt
+        )
     }
 }

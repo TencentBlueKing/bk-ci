@@ -178,8 +178,7 @@ class MarketAtomDao : AtomBaseDao() {
             storeType = storeType,
             score = score,
             yamlFlag = yamlFlag,
-            recommendFlag = recommendFlag,
-            atomCodes = listOf()
+            recommendFlag = recommendFlag
         )
 
         if (null != sortType) {
@@ -230,7 +229,7 @@ class MarketAtomDao : AtomBaseDao() {
         score: Int?,
         yamlFlag: Boolean?,
         recommendFlag: Boolean?,
-        atomCodes: Collection<String>
+        atomCodes: Collection<String>? = null
     ) {
         if (labelCodeList != null && labelCodeList.isNotEmpty()) {
             val c = TLabel.T_LABEL.`as`("c")
@@ -261,7 +260,7 @@ class MarketAtomDao : AtomBaseDao() {
         if (null != recommendFlag) {
             conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag))
         }
-        if (atomCodes.isNotEmpty()) {
+        if (!atomCodes.isNullOrEmpty()) {
             conditions.add(taf.ATOM_CODE.`in`(atomCodes))
         }
     }

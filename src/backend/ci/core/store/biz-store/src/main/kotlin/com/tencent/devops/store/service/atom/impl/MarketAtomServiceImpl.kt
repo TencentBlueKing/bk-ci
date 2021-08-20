@@ -242,7 +242,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 it["ATOM_CODE"] as String
             }.toList()
 
-            if (qualityFlag != null && qualityFlag) {
+            if (true == qualityFlag) {
                 val controlPoints = client.get(ServiceQualityControlPointResource::class)
                     .listByTypes(atomCodeList).data?.map { it.type } ?: listOf()
                 atomCodeList = atomCodeList.intersect(controlPoints).toList()
