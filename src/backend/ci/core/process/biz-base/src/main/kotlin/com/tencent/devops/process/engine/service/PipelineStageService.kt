@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
@@ -61,6 +62,7 @@ import java.util.Date
  * @version 1.0
  */
 @Service
+@Suppress("TooManyFunctions", "LongParameterList")
 class PipelineStageService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
@@ -94,11 +96,18 @@ class PipelineStageService @Autowired constructor(
         return null
     }
 
-    fun updateStageStatus(buildId: String, stageId: String, buildStatus: BuildStatus) {
+    fun updateStageStatus(
+        buildId: String,
+        stageId: String,
+        buildStatus: BuildStatus,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
+    ) {
         logger.info("[$buildId]|updateStageStatus|status=$buildStatus|stageId=$stageId")
         pipelineBuildStageDao.updateStatus(
             dslContext = dslContext, buildId = buildId,
-            stageId = stageId, buildStatus = buildStatus
+            stageId = stageId, buildStatus = buildStatus,
+            checkIn = checkIn, checkOut = checkOut
         )
     }
 
@@ -131,6 +140,36 @@ class PipelineStageService @Autowired constructor(
             pipelineEventDispatcher.dispatch(
                 PipelineBuildWebSocketPushEvent(
                     source = "skipStage", projectId = projectId, pipelineId = pipelineId,
+                    userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
+                )
+            )
+        }
+    }
+
+    fun checkQualityFailStage(userId: String, buildStage: PipelineBuildStage) {
+        with(buildStage) {
+            val allStageStatus = stageBuildDetailService.stageCheckQualityFail(
+                buildId = buildId,
+                stageId = stageId,
+                controlOption = controlOption!!,
+                checkIn = checkIn,
+                checkOut = checkOut
+            )
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                pipelineBuildStageDao.updateStatus(
+                    dslContext = context, buildId = buildId,
+                    stageId = stageId, controlOption = controlOption!!,
+                    buildStatus = BuildStatus.QUALITY_CHECK_FAIL,
+                    checkIn = checkIn, checkOut = checkOut
+                )
+                pipelineBuildDao.updateBuildStageStatus(
+                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                )
+            }
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildWebSocketPushEvent(
+                    source = "checkQualityFailStage", projectId = projectId, pipelineId = pipelineId,
                     userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
                 )
             )
@@ -178,7 +217,6 @@ class PipelineStageService @Autowired constructor(
         reviewRequest: StageReviewRequest?
     ): Boolean {
         with(buildStage) {
-            // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
             val success = checkIn?.reviewGroup(
                 userId = userId, groupId = reviewRequest?.id,
                 action = ManualReviewAction.PROCESS, params = reviewRequest?.reviewParams,
