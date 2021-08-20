@@ -27,6 +27,8 @@
 
 package com.tencent.devops.gitci.listener
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -51,6 +53,7 @@ import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyTemplateEnum
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
+import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.rtxCustom.MessageType
 import com.tencent.devops.gitci.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
@@ -86,7 +89,8 @@ class GitCIBuildFinishListener @Autowired constructor(
     private val gitCIBasicSettingDao: GitCIBasicSettingDao,
     private val client: Client,
     private val scmClient: ScmClient,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper
 ) {
 
     @Value("\${rtx.corpid:#{null}}")
@@ -187,10 +191,22 @@ class GitCIBuildFinishListener @Autowired constructor(
                 // 推送结束构建消息,当人工触发时不推送CommitCheck消息
                 if (objectKind != OBJECT_KIND_MANUAL) {
                     if (isV2) {
+                        // gitRequestEvent中存的为mriid不是mrid
+                        val mrEvent = if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
+                            try {
+                                objectMapper.readValue<GitMergeRequestEvent>(record["event"] as String)
+                            } catch (e: Throwable) {
+                                logger.error("push commit check get mergeId error ${e.message}")
+                                null
+                            }
+                        } else {
+                            null
+                        }
+
                         scmClient.pushCommitCheck(
                             commitId = commitId,
                             description = getDescByBuildStatus(buildStatus, pipeline.displayName),
-                            mergeRequestId = mergeRequestId,
+                            mergeRequestId = mrEvent?.object_attributes?.id ?: 0L,
                             buildId = buildFinishEvent.buildId,
                             userId = buildFinishEvent.userId,
                             status = state,
