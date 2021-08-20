@@ -90,20 +90,21 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             )
         }
         logger.info("getProject role $projectCode $projectRelationId")
-        // 获取目标用户组在iam内用户组id
-        val groupInfos = client.get(ServiceRoleResource::class).getProjectRoles(
-            userId = createUser,
-            projectId = projectRelationId.toInt()).data
-        if (groupInfos == null) {
-            logger.warn("$projectCode $projectRelationId group is empty")
-            return false
-        }
 
         // 应用态checkManager为false，且操作人为“”,需替换为项目的修改人(修改人肯定有权限)
         val currencyCreateUser = if (!checkManager || createUser.isNullOrBlank()) {
             projectInfo.updator
         } else {
             createUser
+        }
+
+        // 获取目标用户组在iam内用户组id
+        val groupInfos = client.get(ServiceRoleResource::class).getProjectRoles(
+            userId = currencyCreateUser,
+            projectId = projectRelationId.toInt()).data
+        if (groupInfos == null) {
+            logger.warn("$projectCode $projectRelationId group is empty")
+            return false
         }
 
         var managerFlag = false
