@@ -513,7 +513,7 @@ class DockerHostBuildService(
             dockerRunParam.env?.forEach {
                 env.add("${it.key}=${it.value ?: ""}")
             }
-            logger.info("env is $env")
+            logger.info("[$buildId]|[$vmSeqId] env is $env")
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
             val dockerRunPortBindingList = mutableListOf<DockerRunPortBinding>()
@@ -537,8 +537,9 @@ class DockerHostBuildService(
 
             val dockerResource = dockerHostBuildApi.getResourceConfig(pipelineId, vmSeqId)
 
-            var hostConfig: HostConfig
+            val hostConfig: HostConfig
             if (dockerResource != null) {
+                logger.info("[$buildId]|[$vmSeqId] dockerRun dockerResource: ${JsonUtil.toJson(dockerResource)}")
                 val blkioRateDeviceWirte = BlkioRateDevice()
                     .withPath("/dev/sda")
                     .withRate(dockerResource.blkioDeviceWriteBps)
@@ -558,6 +559,7 @@ class DockerHostBuildService(
                     .withNetworkMode("bridge")
                     .withPortBindings(portBindings)
             } else {
+                logger.info("[$buildId]|[$vmSeqId] dockerRun not config dockerResource.")
                 hostConfig = HostConfig()
                     .withCapAdd(Capability.SYS_PTRACE)
                     .withBinds(binds)
