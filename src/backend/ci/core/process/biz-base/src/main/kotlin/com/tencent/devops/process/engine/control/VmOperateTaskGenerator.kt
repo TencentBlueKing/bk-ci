@@ -96,7 +96,7 @@ class VmOperateTaskGenerator {
             taskAtom = START_NORMAL_TASK_ATOM
         }
         val additionalOptions = ElementAdditionalOptions(
-            runCondition = RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+            runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
         )
         return PipelineBuildTask(
             projectId = projectId,
