@@ -38,15 +38,17 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectExtPermissionService
-import com.tencent.devops.project.service.ProjectService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class V3ProjectExtPermissionServiceImpl @Autowired constructor(
     val client: Client,
-    val projectService: ProjectService,
-    val tokenService: ClientTokenService
+    val tokenService: ClientTokenService,
+    val projectDao: ProjectDao,
+    val dslContext: DSLContext
 ): ProjectExtPermissionService {
     override fun verifyUserProjectPermission(
         accessToken: String,
@@ -68,7 +70,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         roleName: String?,
         checkManager: Boolean
     ): Boolean {
-        val projectInfo = projectService.getByEnglishName(projectCode) ?:
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?:
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
                 defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST)
@@ -81,6 +83,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
                 defaultMessage = "关联系统未绑定"
             )
         }
+        logger.info("getProject role $projectCode $projectRelationId")
         // 获取目标用户组在iam内用户组id
         val groupInfos = client.get(ServiceRoleResource::class).getProjectRoles(
             userId = createUser,
@@ -98,6 +101,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
                 groupMap["ci_manager"] = it.id
                 managerFlag = true
             }
+            logger.info("project role ${it.code} ${it.name} ${it.id}")
         }
         var relationGroupId : Int? = null
         if (!roleName.isNullOrEmpty()) {
@@ -112,7 +116,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
                 )
             )
         }
-
+        logger.info("add project $projectCode group $relationGroupId $userIds $checkManager")
         // 添加用户到用户组
         client.get(ServiceRoleMemberResource::class).createRoleMember(
             createUser,

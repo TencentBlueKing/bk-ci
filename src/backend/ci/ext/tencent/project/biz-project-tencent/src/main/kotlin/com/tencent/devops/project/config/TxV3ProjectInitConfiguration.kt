@@ -83,9 +83,9 @@ class TxV3ProjectInitConfiguration {
     @Bean
     fun v3ProjectExtPermissionServiceImpl(
         client: Client,
-        projectService: ProjectService,
-        tokenService: ClientTokenService
+        tokenService: ClientTokenService,
+        projectDao: ProjectDao
     ) = V3ProjectExtPermissionServiceImpl(
-        client, projectService, tokenService
+        client, tokenService, projectDao
     )
 }
