@@ -475,18 +475,9 @@ class BuildStartControl @Autowired constructor(
             )
         }
 
-        var firstValidStage: Stage? = null
         val stages = model.stages
-        val stageSize = stages.size - 1
-        for (i in 1..stageSize) {
-            val stage = stages[i]
-            if (stage.stageControlOption?.enable != false) {
-                firstValidStage = stage
-                break
-            }
-        }
-        LOG.info("ENGINE|$buildId|$source|firstValidStage#${firstValidStage?.name}")
-        if (stageSize == 1 || firstValidStage == null) { // 空节点或者没有可用的stage
+        val firstValidStage = getFirstValidStage(stages)
+        if (stages.size == 1 || getFirstValidStage(stages) == null) { // 空节点或者没有可用的stage
             pipelineEventDispatcher.dispatch(
                 PipelineBuildFinishEvent(source = TAG,
                     projectId = projectId, pipelineId = pipelineId, userId = userId,
@@ -501,5 +492,22 @@ class BuildStartControl @Autowired constructor(
                 )
             )
         }
+    }
+
+    private fun getFirstValidStage(stages: List<Stage>): Stage? {
+        var firstValidStage: Stage? = null
+        val stageSize = stages.size
+        if (stageSize == 1) {
+            return null
+        }
+        val endIndex = stageSize - 1
+        for (i in 1..endIndex) {
+            val stage = stages[i]
+            if (stage.stageControlOption?.enable != false) {
+                firstValidStage = stage
+                break
+            }
+        }
+        return firstValidStage
     }
 }
