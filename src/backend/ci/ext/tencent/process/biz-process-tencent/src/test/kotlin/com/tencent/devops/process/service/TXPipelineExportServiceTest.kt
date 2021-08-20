@@ -2,7 +2,6 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.nhaarman.mockito_kotlin.mock
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
@@ -19,7 +18,6 @@ class TXPipelineExportServiceTest {
     private val pipelineRepositoryService: PipelineRepositoryService = mock()
     private val storeImageHelper: StoreImageHelper = mock()
     private val scmProxyService: ScmProxyService = mock()
-    private val client: Client = mock()
 
     private val txPipelineExportService = TXPipelineExportService(
         stageTagService = stageTagService,
@@ -27,8 +25,7 @@ class TXPipelineExportServiceTest {
         pipelinePermissionService = pipelinePermissionService,
         pipelineRepositoryService = pipelineRepositoryService,
         storeImageHelper = storeImageHelper,
-        scmProxyService = scmProxyService,
-        client = client
+        scmProxyService = scmProxyService
     )
 
     @Test
@@ -133,7 +130,16 @@ class TXPipelineExportServiceTest {
             variables = variables
         )
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
-        println(resultMap)
-
+        println(result)
+        Assert.assertEquals(resultMap, "# 您可以通过setEnv函数设置插件间传递的参数\n# echo \"::set-output " +
+            "name=FILENAME::package.zip\"\n# 然后在后续的插件的表单中使用\${{ FILENAME }}引用这个变量\n\n#" +
+            " 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" " +
+            "\$myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd \${{ WORKSPACE }} " +
+            "可进入当前工作空间目录\n\nset -x\n\n# 编译镜像\necho \"::set-output name=compile_img_str::trpc-golang-compile" +
+            ":0.1.2:tlinux:common\"\n# 运行镜像\necho \"::set-output name=img_str::trpc-golang-runtime:0.1.0\"\necho " +
+            "\"::set-output name=img_str2::trpc-golang-runtime:0.1.1\"\n# something\necho \"::set-output " +
+            "name=TestDir::src/go-test\"\n# something\nrm \${{ TestDir }} -rf\n\n\necho \"::set-output " +
+            "name=user::\${{ default_user }}\"\n"
+        )
     }
 }
