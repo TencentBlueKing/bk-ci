@@ -93,7 +93,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
 
         // 应用态checkManager为false，且操作人为“”,需替换为项目的修改人(修改人肯定有权限)
         val currencyCreateUser = if (!checkManager || createUser.isNullOrBlank()) {
-            projectInfo.updator
+            projectInfo.creator
         } else {
             createUser
         }
