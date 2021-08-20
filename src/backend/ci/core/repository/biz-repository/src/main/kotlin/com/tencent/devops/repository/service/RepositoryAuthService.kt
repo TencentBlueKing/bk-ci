@@ -45,7 +45,11 @@ class RepositoryAuthService @Autowired constructor(
 ) {
 
     fun getRepository(
-        projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        token: String
+    ): ListInstanceResponseDTO? {
         authTokenApi.checkToken(token)
         val repositoryInfos =
             repositoryService.listByProject(setOf(projectId), null, offset, limit)
