@@ -3,7 +3,6 @@ package com.tencent.devops.openapi.api.apigw.v3
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -71,5 +70,4 @@ interface ApigwAuthResourceV3 {
         @ApiParam("资源编码", required = false)
         resourceType: String
     ): Result<Boolean>
-
 }
