@@ -43,6 +43,7 @@ import com.tencent.devops.process.engine.pojo.PipelinePauseValue
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -59,7 +60,8 @@ class PipelinePauseBuildFacadeService(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineTaskPauseService: PipelineTaskPauseService
+    private val pipelineTaskPauseService: PipelineTaskPauseService,
+    private val buildVariableService: BuildVariableService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelinePauseBuildFacadeService::class.java)
@@ -116,6 +118,20 @@ class PipelinePauseBuildFacadeService(
             actionType = ActionType.END // END才会对应成取消状态
         }
 
+        // 有暂停审核人就校验
+        val pauseReviewers = taskRecord.pauseReviewers?.flatMap { reviewUser ->
+            buildVariableService.replaceTemplate(buildId, reviewUser).split(",")
+        }
+        if (pauseReviewers != null && pauseReviewers.isNotEmpty() && !pauseReviewers.contains(userId)) {
+            val message = "用户（$userId) 无权限执行暂停流水线($pipelineId)"
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                defaultMessage = message,
+                params = arrayOf(message)
+            )
+        }
+
         if (element != null) {
             findAndSaveDiff(
                 element = element,
@@ -161,12 +177,12 @@ class PipelinePauseBuildFacadeService(
             isDiff = true
         }
 
-        if (newInputData!!.keys != oldInputData.keys) {
+        if (newInputData.keys != oldInputData.keys) {
             logger.info("pause continue keys diff,new| ${newInputData.keys}, old|${oldInputData.keys}")
             isDiff = true
         }
 
-        newInputData?.keys?.forEach {
+        newInputData.keys.forEach {
             val oldData = oldInputData[it]
             val newData = newInputData[it]
             if (oldData != newData) {
@@ -223,13 +239,15 @@ class PipelinePauseBuildFacadeService(
         )
 
         if (isDiff) {
-            pipelineTaskPauseService.savePauseValue(PipelinePauseValue(
-                projectId = projectId,
-                buildId = buildId,
-                taskId = taskId,
-                newValue = newElementStr,
-                defaultValue = JsonUtil.toJson(taskRecord.taskParams, formatted = false)
-            ))
+            pipelineTaskPauseService.savePauseValue(
+                PipelinePauseValue(
+                    projectId = projectId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    newValue = newElementStr,
+                    defaultValue = JsonUtil.toJson(taskRecord.taskParams, formatted = false)
+                )
+            )
         }
     }
 }

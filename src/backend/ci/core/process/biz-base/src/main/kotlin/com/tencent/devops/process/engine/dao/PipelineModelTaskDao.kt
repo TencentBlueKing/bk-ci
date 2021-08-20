@@ -54,7 +54,7 @@ import java.time.LocalDateTime
 class PipelineModelTaskDao {
 
     fun batchSave(dslContext: DSLContext, modelTasks: Collection<PipelineModelTask>) {
-        val records = mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineModelTaskRecord>>()
+        val records = ArrayList<InsertOnDuplicateSetMoreStep<TPipelineModelTaskRecord>>(modelTasks.size)
         with(T_PIPELINE_MODEL_TASK) {
             modelTasks.forEach { modelTask ->
                 val taskParamJson = JsonUtil.toJson(modelTask.taskParams, formatted = false)
@@ -85,6 +85,7 @@ class PipelineModelTaskDao {
                     .set(TASK_PARAMS, taskParamJson)
                     .set(ADDITIONAL_OPTIONS, additionalOptionsJson)
                     .set(UPDATE_TIME, currentTime)
+                    .set(PAUSE_REVIEWERS, modelTask.pauseReviewers?.let(JsonUtil::toJson))
                 records.add(set)
             }
         }

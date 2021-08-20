@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -80,7 +81,8 @@ class PipelineBuildTaskDao {
                     END_TIME,
                     APPROVER,
                     ADDITIONAL_OPTIONS,
-                    ATOM_CODE
+                    ATOM_CODE,
+                    PAUSE_REVIEWERS
                 )
                     .values(
                         buildTask.projectId,
@@ -103,7 +105,8 @@ class PipelineBuildTaskDao {
                         buildTask.endTime,
                         buildTask.approver,
                         buildTask.additionalOptions?.let { self -> JsonUtil.toJson(self, formatted = false) },
-                        buildTask.atomCode
+                        buildTask.atomCode,
+                        buildTask.pauseReviewers?.let { self -> JsonUtil.toJson(self, formatted = false) }
                     )
                     .execute()
             }
@@ -112,7 +115,7 @@ class PipelineBuildTaskDao {
 
     fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildTask>) {
         val records =
-            mutableListOf<InsertSetMoreStep<TPipelineBuildTaskRecord>>()
+            ArrayList<InsertSetMoreStep<TPipelineBuildTaskRecord>>(taskList.size)
         with(T_PIPELINE_BUILD_TASK) {
             taskList.forEach {
                 val sql = dslContext.insertInto(this)
@@ -156,7 +159,7 @@ class PipelineBuildTaskDao {
                     )
                     .set(CONTAINER_HASH_ID, it.containerHashId)
                     .set(ATOM_CODE, it.atomCode)
-
+                    .set(PAUSE_REVIEWERS, it.pauseReviewers?.let { self -> JsonUtil.toJson(self, formatted = false) })
                 records.add(sql)
             }
             dslContext.batch(records).execute()
@@ -164,7 +167,7 @@ class PipelineBuildTaskDao {
     }
 
     fun batchUpdate(dslContext: DSLContext, taskList: List<TPipelineBuildTaskRecord>) {
-        val records = mutableListOf<Query>()
+        val records = ArrayList<Query>(taskList.size)
         with(T_PIPELINE_BUILD_TASK) {
             taskList.forEach {
                 records.add(
@@ -193,6 +196,7 @@ class PipelineBuildTaskDao {
                         .set(ERROR_CODE, it.errorCode)
                         .set(CONTAINER_HASH_ID, it.containerHashId)
                         .set(ATOM_CODE, it.atomCode)
+                        .set(PAUSE_REVIEWERS, it.pauseReviewers)
                         .where(BUILD_ID.eq(it.buildId).and(TASK_ID.eq(it.taskId)))
                 )
             }
@@ -282,7 +286,8 @@ class PipelineBuildTaskDao {
                 errorType = if (errorType == null) null else ErrorType.values()[errorType],
                 errorCode = errorCode,
                 errorMsg = errorMsg,
-                atomCode = atomCode
+                atomCode = atomCode,
+                pauseReviewers = JsonUtil.toOrNull(pauseReviewers, jacksonTypeRef())
             )
         }
     }

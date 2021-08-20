@@ -99,13 +99,15 @@ class PipelineElementService @Autowired constructor(
                 val atomPostInfoMap = JsonUtil.toMap(atomPostInfo)
                 val postFlag = atomPostInfoMap[ATOM_POST_FLAG] as? Boolean
                 if (postFlag == true) {
-                    allPostElements.add(ElementPostInfo(
-                        postEntryParam = atomPostInfoMap[ATOM_POST_ENTRY_PARAM] as String,
-                        postCondition = atomPostInfoMap[ATOM_POST_CONDITION] as String,
-                        parentElementId = elementId,
-                        parentElementName = elementItem.elementName,
-                        parentElementJobIndex = elementItem.elementJobIndex
-                    ))
+                    allPostElements.add(
+                        ElementPostInfo(
+                            postEntryParam = atomPostInfoMap[ATOM_POST_ENTRY_PARAM] as String,
+                            postCondition = atomPostInfoMap[ATOM_POST_CONDITION] as String,
+                            parentElementId = elementId,
+                            parentElementName = elementItem.elementName,
+                            parentElementJobIndex = elementItem.elementJobIndex
+                        )
+                    )
                 }
             }
         }
@@ -237,7 +239,8 @@ class PipelineElementService @Autowired constructor(
                 status = elementStatus,
                 atomCode = originAtomElement.getAtomCode(),
                 version = originAtomElement.version,
-                data = originAtomElement.data
+                data = originAtomElement.data,
+                pauseReviewers = originAtomElement.pauseReviewers
             )
             marketBuildAtomElement.additionalOptions = additionalOptions
             finalElementList.add(marketBuildAtomElement)
@@ -248,7 +251,8 @@ class PipelineElementService @Autowired constructor(
                 status = elementStatus,
                 atomCode = originAtomElement.getAtomCode(),
                 version = originAtomElement.version,
-                data = originAtomElement.data
+                data = originAtomElement.data,
+                pauseReviewers = originAtomElement.pauseReviewers
             )
             marketBuildLessAtomElement.additionalOptions = additionalOptions
             finalElementList.add(marketBuildLessAtomElement)

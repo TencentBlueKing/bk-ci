@@ -63,6 +63,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -279,7 +280,8 @@ class PipelineRepositoryService constructor(
                     classType = e.getClassType(),
                     taskAtom = e.getTaskAtom(),
                     taskParams = e.genTaskParams(),
-                    additionalOptions = e.additionalOptions
+                    additionalOptions = e.additionalOptions,
+                    pauseReviewers = null
                 )
             )
         }
@@ -374,7 +376,8 @@ class PipelineRepositoryService constructor(
                         classType = e.getClassType(),
                         taskAtom = e.getTaskAtom(),
                         taskParams = e.genTaskParams(),
-                        additionalOptions = e.additionalOptions
+                        additionalOptions = e.additionalOptions,
+                        pauseReviewers = PipelineUtils.getPauseReviewers(e)
                     )
                 )
             }

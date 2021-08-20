@@ -112,11 +112,13 @@ import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -124,7 +126,6 @@ import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.service.BuildStartupParamService
@@ -866,7 +867,8 @@ class PipelineRuntimeService @Autowired constructor(
                     if (null == findTaskRecord(
                             lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                             container = container,
-                            retryStartTaskId = context.retryStartTaskId)) {
+                            retryStartTaskId = context.retryStartTaskId
+                        )) {
 
                         logger.info("[$buildId|RETRY_SKIP_JOB|j(${container.id!!})|${container.name}")
                         context.containerSeq++
@@ -932,7 +934,8 @@ class PipelineRuntimeService @Autowired constructor(
                                 approver = null,
                                 subProjectId = null,
                                 subBuildId = null,
-                                atomCode = atomElement.getAtomCode()
+                                atomCode = atomElement.getAtomCode(),
+                                pauseReviewers = PipelineUtils.getPauseReviewers(atomElement)
                             )
                         )
                         needUpdateContainer = true
@@ -1989,7 +1992,8 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 taskId = taskId,
                 additionalOptions = additionalOptions,
-                executeCount = executeCount)
+                executeCount = executeCount
+            )
         ) {
             // 如果是自动重试则不重置task的时间
             startTime = LocalDateTime.now()

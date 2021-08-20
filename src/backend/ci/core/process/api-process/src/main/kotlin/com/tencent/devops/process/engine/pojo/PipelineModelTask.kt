@@ -46,7 +46,8 @@ data class PipelineModelTask(
     val taskAtom: String,
     val taskParams: MutableMap<String, Any>,
     val additionalOptions: ElementAdditionalOptions?,
-    val os: String? = "linux"
+    val os: String? = "linux",
+    val pauseReviewers: List<String>? = null
 ) {
     fun getTaskParam(paramName: String): String {
         return if (taskParams[paramName] != null) {

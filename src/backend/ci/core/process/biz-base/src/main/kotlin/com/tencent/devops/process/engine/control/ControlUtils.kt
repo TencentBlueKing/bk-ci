@@ -42,7 +42,6 @@ import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.slf4j.LoggerFactory
 
-@Suppress("ALL")
 object ControlUtils {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -82,8 +81,14 @@ object ControlUtils {
     }
 
     // 需要暂停，且没有暂停过
-    fun pauseBeforeExec(additionalOptions: ElementAdditionalOptions?, alreadyPauseFlag: String?): Boolean {
-        return pauseFlag(additionalOptions) && alreadyPauseFlag.isNullOrEmpty()
+    fun pauseBeforeExec(
+        additionalOptions: ElementAdditionalOptions?,
+        alreadyPauseFlag: String?,
+        pauseReviewers: List<String>? = null
+    ): Boolean {
+        return alreadyPauseFlag.isNullOrEmpty() &&
+            // 有暂停审核用户，自动进入暂停
+            (pauseFlag(additionalOptions) || (pauseReviewers != null && pauseReviewers.isNotEmpty()))
     }
 
     // 暂停标识位
@@ -265,8 +270,10 @@ object ControlUtils {
         return if (!customCondition.isNullOrBlank()) {
             try {
                 val expressionResult = EvalExpress.eval(buildId, customCondition, variables)
-                logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                    "|result=$expressionResult")
+                logger.info(
+                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
+                        "|result=$expressionResult"
+                )
                 val logMessage = "Custom condition($customCondition) result is $expressionResult. " +
                     if (!expressionResult) {
                         " will be skipped! "
@@ -277,8 +284,10 @@ object ControlUtils {
                 expressionResult
             } catch (ignore: Exception) {
                 // 异常，则任务表达式为false
-                logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                    "|result=exception: ${ignore.message}", ignore)
+                logger.info(
+                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
+                        "|result=exception: ${ignore.message}", ignore
+                )
                 val logMessage =
                     "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
                 buildLogPrinter?.addRedLine(buildId, logMessage, "", "", 1)

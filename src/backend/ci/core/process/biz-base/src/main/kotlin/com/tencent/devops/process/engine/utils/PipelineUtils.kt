@@ -34,10 +34,14 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
+import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
@@ -141,5 +145,32 @@ object PipelineUtils {
             labels = labels ?: templateModel.labels,
             instanceFromTemplate = instanceFromTemplate
         )
+    }
+
+    fun getPauseReviewers(e: Element): List<String>? {
+        return when (e) {
+            is MarketBuildAtomElement -> {
+                e.pauseReviewers
+            }
+            is MarketBuildLessAtomElement -> {
+                e.pauseReviewers
+            }
+            else -> null
+        }
+    }
+
+    fun parsePauseReviewersWithTemplate(
+        buildId: String,
+        e: Element,
+        buildVariableService: BuildVariableService
+    ) {
+        when (e) {
+            is MarketBuildAtomElement -> e.pauseReviewers = e.pauseReviewers?.flatMap { reviewUser ->
+                buildVariableService.replaceTemplate(buildId, reviewUser).split(",")
+            }
+            is MarketBuildLessAtomElement -> e.pauseReviewers = e.pauseReviewers?.flatMap { reviewUser ->
+                buildVariableService.replaceTemplate(buildId, reviewUser).split(",")
+            }
+        }
     }
 }

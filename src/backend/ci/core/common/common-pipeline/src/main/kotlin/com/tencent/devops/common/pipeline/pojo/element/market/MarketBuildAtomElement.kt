@@ -44,7 +44,8 @@ data class MarketBuildAtomElement(
     @ApiModelProperty("插件版本", required = false)
     override var version: String = "1.*",
     @ApiModelProperty("插件参数数据", required = true)
-    val data: Map<String, Any> = mapOf()
+    val data: Map<String, Any> = mapOf(),
+    var pauseReviewers: List<String>? = null
 ) : Element(name, id, status) {
 
     companion object {

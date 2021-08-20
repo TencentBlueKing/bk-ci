@@ -46,6 +46,7 @@ import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
@@ -74,12 +75,15 @@ class TaskBuildDetailService(
 ) {
 
     fun taskPause(buildId: String, stageId: String, containerId: String, taskId: String, buildStatus: BuildStatus) {
-        update(buildId = buildId, modelInterface = object : ModelInterface {
+        update(
+            buildId = buildId, modelInterface = object : ModelInterface {
             var update = false
 
             override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                 if (c.id.equals(containerId)) {
                     if (e.id.equals(taskId)) {
+                        // 替换暂停审核人变量
+                        PipelineUtils.parsePauseReviewersWithTemplate(buildId, e, buildVariableService)
                         logger.info("ENGINE|$buildId|pauseTask|$stageId|j($containerId)|t($taskId)|${buildStatus.name}")
                         update = true
                         e.status = buildStatus.name
@@ -218,7 +222,8 @@ class TaskBuildDetailService(
         errorMsg: String? = null
     ): List<PipelineTaskStatusInfo> {
         val updateTaskStatusInfos = mutableListOf<PipelineTaskStatusInfo>()
-        update(buildId, object : ModelInterface {
+        update(
+            buildId, object : ModelInterface {
 
             var update = false
             override fun onFindElement(index: Int, e: Element, c: Container): Traverse {

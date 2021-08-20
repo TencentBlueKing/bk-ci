@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -99,7 +100,8 @@ class PipelineTaskService @Autowired constructor(
                 } else {
                     objectMapper.readValue(it.additionalOptions, ElementAdditionalOptions::class.java)
                 },
-                os = it.os
+                os = it.os,
+                pauseReviewers = JsonUtil.toOrNull(it.pauseReviewers, jacksonTypeRef())
             )
         }?.groupBy { it.pipelineId } ?: mapOf()
     }
@@ -202,7 +204,7 @@ class PipelineTaskService @Autowired constructor(
 
     fun isNeedPause(taskId: String, buildId: String, taskRecord: PipelineBuildTask): Boolean {
         val alreadyPause = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId = buildId, taskId = taskId))
-        return ControlUtils.pauseBeforeExec(taskRecord.additionalOptions, alreadyPause)
+        return ControlUtils.pauseBeforeExec(taskRecord.additionalOptions, alreadyPause, taskRecord.pauseReviewers)
     }
 
     fun executePause(taskId: String, buildId: String, taskRecord: PipelineBuildTask) {
