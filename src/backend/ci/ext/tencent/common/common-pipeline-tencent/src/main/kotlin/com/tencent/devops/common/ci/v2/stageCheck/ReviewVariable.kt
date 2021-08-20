@@ -7,5 +7,6 @@ data class ReviewVariable(
     val label: String?,
     val type: String,
     val default: Any?,
-    val values: List<String>?
+    val values: List<String>?,
+    val description: String
 )
