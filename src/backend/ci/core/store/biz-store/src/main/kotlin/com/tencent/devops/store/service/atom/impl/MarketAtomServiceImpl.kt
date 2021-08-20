@@ -928,7 +928,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val result = mutableMapOf<String, Map<String, Any>>()
         logger.info("getAtomsRely atomList : $atomList")
         atomList.forEach lit@{
-            if (it == null)  return@lit
+            if (it == null) return@lit
             var value = it
             val atom = getMap[it.atomCode]
             if (atom?.contains("*") == true &&
