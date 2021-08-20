@@ -84,8 +84,9 @@ class TxV3ProjectInitConfiguration {
     fun v3ProjectExtPermissionServiceImpl(
         client: Client,
         tokenService: ClientTokenService,
-        projectDao: ProjectDao
+        projectDao: ProjectDao,
+        dslContext: DSLContext
     ) = V3ProjectExtPermissionServiceImpl(
-        client, tokenService, projectDao
+        client, tokenService, projectDao, dslContext
     )
 }
