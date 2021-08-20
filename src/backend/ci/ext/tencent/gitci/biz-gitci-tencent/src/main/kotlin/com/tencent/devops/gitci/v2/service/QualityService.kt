@@ -25,47 +25,57 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.utils
+package com.tencent.devops.gitci.v2.service
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
-import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.plugin.api.ServiceCodeccElementResource
-import com.tencent.devops.plugin.codecc.CodeccUtils
-import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.api.service.ServiceVarResource
+import com.tencent.devops.gitci.utils.ElementUtils
+import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
-import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import org.slf4j.LoggerFactory
-import java.lang.Exception
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
-object QualityUtils {
+@Service
+class QualityService {
 
-    private val logger = LoggerFactory.getLogger(QualityUtils::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(QualityService::class.java)
+        private const val PIPELINE_NAME_TITLE = "Stream流水线"
+    }
+
+    @Value("\${rtx.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
 
     fun getQualityGitMrResult(
         client: Client,
+        projectName: String,
+        pipelineName: String,
         event: PipelineBuildFinishBroadCastEvent
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
         try {
             val projectId = event.projectId
             val pipelineId = event.pipelineId
             val buildId = event.buildId
-            val pipelineName = client.get(ServicePipelineResource::class)
-                .getPipelineNameByIds(projectId, setOf(pipelineId))
-                .data?.get(pipelineId) ?: ""
 
             val titleData = listOf(
                 event.status,
                 DateTimeUtil.formatMilliTime(System.currentTimeMillis() - (event.startTime ?: 0L)),
-                StartType.toReadableString(event.triggerType, null),
+                CodeEventType.MERGE_REQUEST.name,
                 pipelineName,
-                "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+                GitCIPipelineUtils.genGitCIV2BuildUrl(
+                    homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                    projectName = projectName,
+                    pipelineId = pipelineId,
+                    buildId = buildId
+                ),
+                PIPELINE_NAME_TITLE
             )
 
             // key：质量红线产出插件
@@ -79,18 +89,7 @@ object QualityUtils {
                         val indicatorElementName = indicator?.elementType ?: ""
                         val elementCnName = ElementUtils.getElementCnName(indicatorElementName, projectId)
                         val resultList = resultMap[elementCnName] ?: mutableListOf()
-                        val actualValue = if (CodeccUtils.isCodeccAtom(indicatorElementName)) {
-                            getActualValue(
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                buildId = buildId,
-                                detail = indicator?.elementDetail,
-                                value = interceptItem.actualValue ?: "null",
-                                client = client
-                            )
-                        } else {
-                            interceptItem.actualValue ?: "null"
-                        }
+                        val actualValue = interceptItem.actualValue ?: ""
                         resultList.add(
                             listOf(
                                 interceptItem.indicatorName,
@@ -107,33 +106,5 @@ object QualityUtils {
             logger.error("get quality result failed ${ignore.message}")
         }
         return Pair(listOf(), mutableMapOf())
-    }
-
-    // codecc要跳转到具体详情
-    private fun getActualValue(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        detail: String?,
-        value: String,
-        client: Client
-    ): String {
-        val variable = client.get(ServiceVarResource::class).getBuildVar(
-            buildId = buildId,
-            varName = CodeccUtils.BK_CI_CODECC_TASK_ID
-        ).data
-        var taskId = variable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID)
-        if (taskId.isNullOrBlank()) {
-            taskId = client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
-        }
-
-        return if (detail.isNullOrBlank() || detail!!.split(",").size > 1) {
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/" +
-                "console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
-        } else {
-            val detailValue = codeccToolUrlPathMap[detail] ?: "defect/lint"
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/" +
-                "codecc/$projectId/task/$taskId/$detailValue/$detail/list?buildId=$buildId'>$value</a>"
-        }
     }
 }
