@@ -477,7 +477,7 @@ class BuildStartControl @Autowired constructor(
 
         val stages = model.stages
         val firstValidStage = getFirstValidStage(stages)
-        if (stages.size == 1 || getFirstValidStage(stages) == null) { // 空节点或者没有可用的stage
+        if (stages.size == 1 || firstValidStage == null) { // 空节点或者没有可用的stage
             pipelineEventDispatcher.dispatch(
                 PipelineBuildFinishEvent(source = TAG,
                     projectId = projectId, pipelineId = pipelineId, userId = userId,
