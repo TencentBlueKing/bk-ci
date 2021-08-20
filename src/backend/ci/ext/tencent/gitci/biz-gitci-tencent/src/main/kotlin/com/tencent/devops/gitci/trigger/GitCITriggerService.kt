@@ -1017,6 +1017,7 @@ class GitCITriggerService @Autowired constructor(
                 redisLock.lock()
                 gitPipelineBranchService.deleteBranch(pipelineId, gitRequestEvent.branch)
                 if (!gitPipelineBranchService.hasBranchExist(pipelineId)) {
+                    logger.info("event: ${gitRequestEvent.id} delete file: $filePath with pipeline: $pipelineId ")
                     gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
                     processClient.delete(gitRequestEvent.userId, gitProjectConf.projectCode!!, pipelineId, channelCode)
                     // 删除相关的构建记录

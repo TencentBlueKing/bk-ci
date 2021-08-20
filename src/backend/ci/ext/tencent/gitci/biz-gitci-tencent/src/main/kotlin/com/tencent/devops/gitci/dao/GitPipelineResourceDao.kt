@@ -250,7 +250,7 @@ class GitPipelineResourceDao {
         pipelineId: String
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            return dslContext.delete(this)
+            return dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
