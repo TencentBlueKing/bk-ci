@@ -149,10 +149,13 @@ class PipelineBuildStageDao {
         }
     }
 
-    fun getBySeq(dslContext: DSLContext, buildId: String, stageSeq: Int): TPipelineBuildStageRecord? {
+    fun getNextStage(dslContext: DSLContext, buildId: String, currentStageSeq: Int): TPipelineBuildStageRecord? {
         return with(T_PIPELINE_BUILD_STAGE) {
             dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId)).and(SEQ.eq(stageSeq)).fetchAny()
+                .where(BUILD_ID.eq(buildId)).and(SEQ.gt(currentStageSeq))
+                .orderBy(SEQ.asc())
+                .limit(1)
+                .fetchAny()
         }
     }
 

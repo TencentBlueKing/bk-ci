@@ -123,7 +123,7 @@ class UpdateStateForStageCmdFinally(
                 return finishBuild(commandContext = commandContext)
             }
         } else {
-            nextStage = pipelineStageService.getStageBySeq(buildId = event.buildId, stageSeq = stage.seq + 1)
+            nextStage = pipelineStageService.getNextStage(buildId = event.buildId, currentStageSeq = stage.seq)
         }
 
         if (nextStage != null) {
