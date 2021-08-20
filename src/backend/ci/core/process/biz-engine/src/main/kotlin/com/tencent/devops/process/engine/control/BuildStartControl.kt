@@ -77,6 +77,7 @@ import java.time.LocalDateTime
  * @version 1.0
  */
 @Service
+@Suppress("TooManyFunctions", "LongParameterList")
 class BuildStartControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
