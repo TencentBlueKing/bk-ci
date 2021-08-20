@@ -132,7 +132,7 @@ class CheckPauseReviewStageCmd(
         variables: Map<String, String>
     ): Boolean {
         if (stage.checkIn?.ruleIds.isNullOrEmpty()) return false
-        try {
+        return try {
             val request = BuildCheckParamsV3(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
@@ -149,10 +149,10 @@ class CheckPauseReviewStageCmd(
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
                 "response=$result|ruleIds=${stage.checkIn?.ruleIds}")
             stage.checkIn!!.checkTimes = result.checkTimes
-            return !result.success
+            !result.success
         } catch (ignore: Throwable) {
             LOG.error("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)
-            return true
+            true
         }
     }
 

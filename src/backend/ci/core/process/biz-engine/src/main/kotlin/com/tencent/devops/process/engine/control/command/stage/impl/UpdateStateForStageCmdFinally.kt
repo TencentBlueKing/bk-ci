@@ -92,6 +92,8 @@ class UpdateStateForStageCmdFinally(
                 pipelineStageService.skipStage(userId = event.userId, buildStage = stage)
             } else if (commandContext.buildStatus == BuildStatus.QUALITY_CHECK_FAIL) {
                 pipelineStageService.checkQualityFailStage(userId = event.userId, buildStage = stage)
+                // #4732 如果存在红线准入准出失败则构建整体直接失败
+                commandContext.buildStatus = BuildStatus.FAILED
             }
             nextOrFinish(event, stage, commandContext)
             sendStageEndCallBack(stage, event)
