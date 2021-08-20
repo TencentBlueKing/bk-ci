@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.trigger.template.pojo
+package com.tencent.devops.common.ci.v2
 
 data class Parameters(
     val name: String,
@@ -38,6 +38,7 @@ enum class ParametersType(val value: String) {
     STRING("string"),
     NUMBER("number"),
     BOOLEAN("boolean"),
+    ARRAY("array")
 //    OBJECT("object"),
 //    TASK("task"),
 //    TASKLIST("taskList"),

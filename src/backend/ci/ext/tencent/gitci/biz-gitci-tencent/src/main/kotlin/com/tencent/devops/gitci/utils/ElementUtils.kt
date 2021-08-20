@@ -25,13 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.exception
+package com.tencent.devops.gitci.utils
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.plugin.codecc.CodeccUtils
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 
-class GitCINoEnableException(project: String) : ErrorCodeException(
-    statusCode = ErrorCodeEnum.GITCI_NOT_ENABLE_ERROR.errorCode,
-    errorCode = ErrorCodeEnum.GITCI_NOT_ENABLE_ERROR.errorCode.toString(),
-    defaultMessage = ErrorCodeEnum.GITCI_NOT_ENABLE_ERROR.formatErrorMessage.format(project),
-    params = null
-)
+object ElementUtils {
+
+    fun getElementCnName(classType: String, projectId: String): String {
+        val map = getProjectElement(projectId)
+
+        if (CodeccUtils.isCodeccAtom(classType)) {
+            return map[CodeccUtils.BK_CI_CODECC_V3_ATOM] ?: ""
+        }
+
+        return map[classType] ?: ""
+    }
+
+    private fun getProjectElement(projectId: String): Map<String/* atomCode */, String/* cnName */> {
+        val client = SpringContextUtil.getBean(Client::class.java)
+        return client.get(ServiceMarketAtomResource::class).getProjectElements(projectId).data!!
+    }
+}

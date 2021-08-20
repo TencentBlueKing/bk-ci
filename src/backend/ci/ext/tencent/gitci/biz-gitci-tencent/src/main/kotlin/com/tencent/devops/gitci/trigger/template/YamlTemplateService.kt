@@ -27,14 +27,16 @@
 
 package com.tencent.devops.gitci.trigger.template
 
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.gitci.common.exception.YamlBlankException
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.RuntimeException
 
 @Service
 class YamlTemplateService @Autowired constructor(
@@ -59,6 +61,7 @@ class YamlTemplateService @Autowired constructor(
      * 3、如果是fork库，凭证系统使用目标库的蓝盾项目的凭证系统
      * 注：gitProjectId: fork库为主库ID
      */
+    @Throws(YamlBlankException::class, YamlFormatException::class, JsonProcessingException::class)
     fun getTemplate(
         token: String?,
         gitProjectId: Long,
@@ -74,7 +77,7 @@ class YamlTemplateService @Autowired constructor(
                 ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
-            ))
+            ).ifBlank { throw YamlBlankException(templateDirectory + fileName) })
         }
         if (personalAccessToken.isNullOrBlank()) {
             val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
@@ -84,7 +87,7 @@ class YamlTemplateService @Autowired constructor(
                 ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
-            ))
+            ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) })
         } else {
             val (isTicket, key) = getKey(personalAccessToken)
             val personToken = if (isTicket) {
@@ -93,7 +96,7 @@ class YamlTemplateService @Autowired constructor(
                     credentialId = key
                 )
                 if (ticket["type"] != CredentialType.ACCESSTOKEN.name) {
-                    throw RuntimeException(UN_SUPPORT_TICKET_ERROR.format(ticket["type"]))
+                    throw YamlFormatException(UN_SUPPORT_TICKET_ERROR.format(ticket["type"]))
                 }
                 ticket["v1"]!!
             } else {
@@ -105,7 +108,7 @@ class YamlTemplateService @Autowired constructor(
                 ref = ref,
                 fileName = templateDirectory + fileName,
                 useAccessToken = false
-            ))
+            ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) })
         }
     }
 
@@ -115,7 +118,7 @@ class YamlTemplateService @Autowired constructor(
             if (str.startsWith("settings.")) {
                 Pair(true, str.removePrefix("settings."))
             } else {
-                throw RuntimeException(ONLY_SUPPORT_ERROR)
+                throw YamlFormatException(ONLY_SUPPORT_ERROR)
             }
         } else {
             Pair(false, personalAccessToken)

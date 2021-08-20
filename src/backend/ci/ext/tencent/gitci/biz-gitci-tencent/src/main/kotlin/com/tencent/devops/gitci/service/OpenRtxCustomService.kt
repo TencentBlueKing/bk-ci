@@ -130,8 +130,8 @@ class OpenRtxCustomService constructor(
                 val content = (callbackElement.msgElement.elementIterator("Content").next() as Element).text
                 // 针对文本内容的@情况进行处理
 
-                // 当被@到,但没有@到机器人的名字的时候也不做处理。 @工蜂CI消息通知
-                if (receiverType == ReceiverType.group && !content.contains("@工蜂CI消息通知")) {
+                // 当被@到,但没有@到机器人的名字的时候也不做处理。 @Stream消息通知
+                if (receiverType == ReceiverType.group && !content.contains("@Stream消息通知")) {
                     return true
                 }
                 logger.info("content = $content")

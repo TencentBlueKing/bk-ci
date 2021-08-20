@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.exception
+package com.tencent.devops.gitci.common.exception
 
 import com.tencent.devops.common.api.pojo.ErrorType
 
@@ -40,6 +40,7 @@ enum class ErrorCodeEnum(
     NO_REPORT_AUTH(ErrorType.SYSTEM, 2129002, "无权限查看报告"),
 
     // 工蜂接口请求错误
+    DEVNET_TIMEOUT_ERROR(ErrorType.THIRD_PARTY, 2129003, "请求DEVNET网关超时"),
     GET_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129003, "获取工蜂项目TOKEN失败"),
     GET_YAML_CONTENT_ERROR(
         errorType = ErrorType.THIRD_PARTY,
@@ -72,5 +73,17 @@ enum class ErrorCodeEnum(
     GET_PROJECT_BRANCHES_ERROR(ErrorType.THIRD_PARTY, 2129011, "获取仓库分支列表失败"),
     GET_GIT_MERGE_CHANGE_INFO(ErrorType.THIRD_PARTY, 2129012, "获取MERGE变更文件列表失败"),
     GET_GIT_FILE_INFO_ERROR(ErrorType.THIRD_PARTY, 2129013, "获取仓库文件信息失败"),
-    GET_GIT_MERGE_INFO(ErrorType.THIRD_PARTY, 2129014, "获取MERGE提交信息失败")
+    GET_GIT_MERGE_INFO(ErrorType.THIRD_PARTY, 2129014, "获取MERGE提交信息失败"),
+    GET_GIT_FILE_TREE_ERROR(ErrorType.THIRD_PARTY, 2129015, "获取仓库CI文件列表失败");
+
+    companion object {
+
+        fun get(errorCode: Int): ErrorCodeEnum? {
+            return try {
+                values().first { it.errorCode == errorCode }
+            } catch (e: NoSuchElementException) {
+                null
+            }
+        }
+    }
 }
