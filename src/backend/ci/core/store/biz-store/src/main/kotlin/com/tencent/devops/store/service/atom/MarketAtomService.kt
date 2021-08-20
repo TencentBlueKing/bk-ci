@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
+import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MarketMainItem
