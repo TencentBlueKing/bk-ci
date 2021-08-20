@@ -351,7 +351,7 @@ class YamlBuildV2 @Autowired constructor(
                     else -> ManualReviewParamType.STRING
                 },
                 chineseName = variable.label,
-                desc = variable.label,
+                desc = variable.description,
                 options = variable.values?.map { ManualReviewParamPair(it, it) }
             ))
         }
