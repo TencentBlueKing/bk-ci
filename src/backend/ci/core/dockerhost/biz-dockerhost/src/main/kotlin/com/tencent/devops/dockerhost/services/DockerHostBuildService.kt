@@ -572,7 +572,7 @@ class DockerHostBuildService(
                 .withHostConfig(hostConfig)
                 .withWorkingDir(dockerHostConfig.volumeWorkspace)
 
-            if (dockerRunParam.command.isEmpty() || dockerRunParam.command.equals("[]")) {
+            if (!(dockerRunParam.command.isEmpty() || dockerRunParam.command.equals("[]"))) {
                 createContainerCmd.withCmd(dockerRunParam.command)
             }
 
