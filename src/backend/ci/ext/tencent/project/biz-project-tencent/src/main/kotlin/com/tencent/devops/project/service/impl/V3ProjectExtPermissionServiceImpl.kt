@@ -31,8 +31,10 @@ import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.api.ServiceRoleMemberResource
 import com.tencent.devops.auth.api.ServiceRoleResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -40,6 +42,8 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectExtPermissionService
+import com.tencent.devops.project.service.iam.ProjectIamV0Service
+import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,7 +52,8 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val tokenService: ClientTokenService,
     val projectDao: ProjectDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val tofService: TOFService
 ): ProjectExtPermissionService {
     override fun verifyUserProjectPermission(
         accessToken: String,
@@ -76,6 +81,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
                 defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST)
             )
         val projectRelationId = projectInfo.relationId
+
         if (projectRelationId.isNullOrEmpty()) {
             logger.warn("create V3 project user, not binding $projectCode iamV3")
             throw ErrorCodeException(
@@ -109,6 +115,15 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         }
         val memberList = mutableListOf<RoleMemberDTO>()
         userIds.map {
+            // 校验用户是否为真实用户
+            try {
+                tofService.getStaffInfo(it)
+            }catch (ope: OperationException) {
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
+            } catch (e: Exception) {
+                logger.warn("createUser2Project fail, userId[$it]", e)
+                return false
+            }
             memberList.add(
                 RoleMemberDTO(
                     id = it,
@@ -116,6 +131,15 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
                 )
             )
         }
+
+        if (relationGroupId == null) {
+            logger.warn("create group user fail, $projectCode $roleName not find relationGroup")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.RELATED_RESOURCE_EMPTY)
+            )
+        }
+
         logger.info("add project $projectCode group $relationGroupId $userIds $checkManager")
         // 添加用户到用户组
         client.get(ServiceRoleMemberResource::class).createRoleMember(
