@@ -25,24 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2.pojo.enums
+package com.tencent.devops.common.quality.pojo
 
-enum class QualityOperation {
-    GT,
-    GE,
-    LT,
-    LE,
-    EQ;
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    companion object {
-        fun convertToSymbol(operation: QualityOperation): String {
-            return when (operation) {
-                GT -> ">"
-                GE -> ">="
-                LT -> "<"
-                LE -> "<="
-                EQ -> "="
-            }
-        }
-    }
-}
+@ApiModel("质量红线-拦截检测结果")
+data class RuleCheckResult(
+    @ApiModelProperty("是否通过", required = true)
+    val success: Boolean,
+    @ApiModelProperty("失败后是否结束", required = true)
+    val failEnd: Boolean,
+    @ApiModelProperty("审核超时时间", required = true)
+    val auditTimeoutSeconds: Long,
+    @ApiModelProperty("第几次检查", required = true)
+    val checkTimes: Int,
+    @ApiModelProperty("失败信息", required = true)
+    val resultList: List<RuleCheckSingleResult>
+)
