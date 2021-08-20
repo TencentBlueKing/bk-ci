@@ -61,11 +61,11 @@ function _M:get_tag(ns_config)
                 local redRes = red:hget(redis_key, hash_key)
                 if redRes and redRes ~= ngx.null then
                     local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
-                    tag_cache:set(devops_project, hash_val, 60)
+                    tag_cache:set(devops_project, hash_val, 5)
                     tag = hash_val
                     useProjectTag = true
                 else
-                    tag_cache:set(devops_project, '-1', 60)
+                    tag_cache:set(devops_project, '-1', 5)
                 end
             end
         end
@@ -80,10 +80,10 @@ function _M:get_tag(ns_config)
         else
             local service_redis_cache_value = red:get("project:setting:service:tag:" .. devops_service)
             if service_redis_cache_value and service_redis_cache_value ~= ngx.null then
-                tag_cache:set(service_local_cache_key, service_redis_cache_value, 60)
+                tag_cache:set(service_local_cache_key, service_redis_cache_value, 5)
                 tag = service_redis_cache_value
             else
-                tag_cache:set(service_local_cache_key, default_tag, 60)
+                tag_cache:set(service_local_cache_key, default_tag, 5)
             end
         end
     end
@@ -103,7 +103,46 @@ function _M:set_header(tag)
     ngx.var.route_tag = tag
 end
 
--- 获取tag对应的路径
+-- 获取前端目录
+function _M:get_frontend_path(tag, project)
+    local frontend_path_cache = ngx.shared.tag_frontend_path_store
+    local local_cache_key = "ci_" .. tag
+    if project == "codecc" then
+        local_cache_key = "codecc_" .. tag
+    end
+    local frontend_path = frontend_path_cache:get(local_cache_key)
+    if frontend_path == nil then
+        -- 从redis获取
+        local red, err = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "tag failed to new redis ", err)
+            return tag
+        end
+        local red_key = "ci:frontend:path:" .. tag
+        if project == "codecc" then
+            red_key = "codecc:frontend:path:" .. tag
+        end
+        frontend_path = red:get(red_key)
+        if not frontend_path or frontend_path == ngx.null then
+            frontend_path = ""
+        end
+        frontend_path_cache:set(local_cache_key, frontend_path, 30)
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+    end
+
+    local suffix = config.static_dir
+    if project == "codecc" then
+        suffix = config.static_dir_codecc
+    end
+
+    if frontend_path == nil or frontend_path == "" then
+        return suffix
+    end
+
+    return suffix .. "-" .. frontend_path
+end
+
+-- 获取tag对应的下载路径
 function _M:get_sub_path(tag)
     -- 从缓存获取
     local sub_path_cache = ngx.shared.tag_sub_path_store
