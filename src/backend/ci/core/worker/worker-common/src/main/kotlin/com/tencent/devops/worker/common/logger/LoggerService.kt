@@ -247,7 +247,8 @@ object LoggerService {
                 logger.warn("The number of Task[$elementId] log lines exceeds the limit, " +
                     "the log file will be archived.")
                 this.uploadQueue.put(logMessage.copy(
-                    message = "The number of log lines printed by the task exceeds the limit"
+                    message = "Printed logs cannot exceed 1 million lines. " +
+                        "Please download logs to view."
                 ))
                 elementId2LogProperty[elementId]?.logStorageMode = LogStorageMode.LOCAL
             }
