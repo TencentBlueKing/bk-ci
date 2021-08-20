@@ -162,6 +162,11 @@ interface MarketAtomService {
     ): String
 
     /**
+     * 获得插件依赖关系
+     */
+    fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>>
+
+    /**
      * 查找带post属性的插件
      */
     fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp>
