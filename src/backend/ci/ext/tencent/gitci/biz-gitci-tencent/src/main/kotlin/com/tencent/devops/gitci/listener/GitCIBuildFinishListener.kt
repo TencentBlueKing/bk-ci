@@ -194,7 +194,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                         // gitRequestEvent中存的为mriid不是mrid
                         val mrEvent = if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
                             try {
-                                objectMapper.readValue<GitMergeRequestEvent>(record["event"] as String)
+                                objectMapper.readValue<GitMergeRequestEvent>(record["EVENT"] as String)
                             } catch (e: Throwable) {
                                 logger.error("push commit check get mergeId error ${e.message}")
                                 null
