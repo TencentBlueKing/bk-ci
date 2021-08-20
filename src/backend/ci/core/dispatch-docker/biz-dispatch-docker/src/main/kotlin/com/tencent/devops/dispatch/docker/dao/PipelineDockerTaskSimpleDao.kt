@@ -61,6 +61,7 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
                 LocalDateTime.now()
             ).onDuplicateKeyUpdate()
                 .set(DOCKER_IP, dockerIp)
+                .set(DOCKER_RESOURCE_OPTION, dockerResourceOptionsId)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .execute()
         }
