@@ -29,7 +29,6 @@ package com.tencent.devops.gitci.listener
 
 import com.tencent.devops.gitci.constant.MQ
 import com.tencent.devops.gitci.trigger.GitCITriggerService
-import com.tencent.devops.gitci.trigger.exception.TriggerExceptionService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
 import org.springframework.amqp.rabbit.annotation.Exchange
@@ -44,8 +43,7 @@ import org.springframework.stereotype.Service
 class GitCIMrConflictCheckListener @Autowired
 constructor(
     private val gitCITriggerService: GitCITriggerService,
-    private val rabbitTemplate: RabbitTemplate,
-    private val triggerExceptionService: TriggerExceptionService
+    private val rabbitTemplate: RabbitTemplate
 ) {
 
     @RabbitListener(

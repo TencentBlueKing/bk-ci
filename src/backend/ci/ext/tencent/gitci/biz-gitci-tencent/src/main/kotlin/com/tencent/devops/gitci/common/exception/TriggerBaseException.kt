@@ -16,7 +16,7 @@ open class TriggerBaseException(
     val yamls: Yamls? = null,
     val version: String? = null,
     val filePath: String? = null
-) : Throwable()
+) : Exception()
 
 data class CommitCheck(
     val isNoPipelineCheck: Boolean = false,

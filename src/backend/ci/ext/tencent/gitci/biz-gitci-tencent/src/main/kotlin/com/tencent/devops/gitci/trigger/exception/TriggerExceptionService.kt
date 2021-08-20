@@ -17,7 +17,6 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.trigger.GitCIEventService
 import com.tencent.devops.gitci.trigger.GitCITriggerService
-import com.tencent.devops.gitci.v2.service.ScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Service
 @Service
 class TriggerExceptionService @Autowired constructor(
     private val scmClient: ScmClient,
-    private val scmService: ScmService,
     private val gitCIEventService: GitCIEventService
 ) {
     companion object {
