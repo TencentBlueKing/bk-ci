@@ -45,17 +45,4 @@ data class PipelineBuildStage(
     val controlOption: PipelineBuildStageControlOption?,
     var checkIn: StagePauseCheck? = null,
     var checkOut: StagePauseCheck? = null
-) {
-
-    /**
-     * 判断是否已经被质量红线拦截，仅用于 finally 前序 stage 判断，其他地方请勿使用
-     */
-    fun checkQualityFailed(): Boolean {
-        return if (checkIn?.status == BuildStatus.QUALITY_CHECK_FAIL.name ||
-            checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name) {
-            // #4732 如果判断是已拦截的状态，则忽略原状态，将 stage 状态刷新为 QUALITY_CHECK_FAIL
-            status = BuildStatus.QUALITY_CHECK_FAIL
-            true
-        } else false
-    }
-}
+)
