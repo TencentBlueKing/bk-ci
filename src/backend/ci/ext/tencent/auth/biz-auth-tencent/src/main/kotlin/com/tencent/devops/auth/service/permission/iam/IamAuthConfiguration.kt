@@ -53,13 +53,15 @@ class IamAuthConfiguration {
         policyService: PolicyService,
         iamConfiguration: IamConfiguration,
         managerService: ManagerService,
-        iamCacheService: IamCacheService
+        iamCacheService: IamCacheService,
+        client: Client
     ) = TxPermissionServiceImpl(
         authHelper = authHelper,
         policyService = policyService,
         iamConfiguration = iamConfiguration,
         managerService = managerService,
-        iamCacheService = iamCacheService
+        iamCacheService = iamCacheService,
+        client = client
     )
 
     @Bean
