@@ -99,6 +99,13 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             return false
         }
 
+        // 应用态checkManager为false，且操作人为“”,需替换为项目的修改人(修改人肯定有权限)
+        val currencyCreateUser = if (!checkManager || createUser.isNullOrBlank()) {
+            projectInfo.updator
+        } else {
+            createUser
+        }
+
         var managerFlag = false
         val groupMap = mutableMapOf<String, Int>()
         groupInfos.map {
@@ -143,12 +150,12 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         logger.info("add project $projectCode group $relationGroupId $userIds $checkManager")
         // 添加用户到用户组
         client.get(ServiceRoleMemberResource::class).createRoleMember(
-            createUser,
-            projectRelationId!!.toInt(),
-            relationGroupId!!,
-            managerFlag,
-            memberList,
-            checkManager
+            userId = currencyCreateUser,
+            projectId = projectRelationId!!.toInt(),
+            roleId = relationGroupId!!,
+            managerGroup = managerFlag,
+            members = memberList,
+            checkGradeManager = checkManager
         )
         return true
     }

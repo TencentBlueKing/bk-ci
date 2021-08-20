@@ -53,7 +53,7 @@ interface ServiceRoleMemberResource {
     fun createRoleMember(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String?,
+        userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
