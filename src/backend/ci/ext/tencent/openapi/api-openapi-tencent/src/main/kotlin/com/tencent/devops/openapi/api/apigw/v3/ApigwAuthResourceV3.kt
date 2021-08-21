@@ -60,7 +60,7 @@ interface ApigwAuthResourceV3 {
         @QueryParam("action")
         @ApiParam("资源类型", required = true)
         action: String,
-        @QueryParam("projectCode")
+        @PathParam("projectCode")
         @ApiParam("项目编码", required = true)
         projectCode: String,
         @QueryParam("resourceCode")
