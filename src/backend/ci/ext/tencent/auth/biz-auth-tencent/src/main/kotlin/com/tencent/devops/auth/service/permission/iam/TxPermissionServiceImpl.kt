@@ -93,9 +93,16 @@ class TxPermissionServiceImpl @Autowired constructor(
         // 如果校验的资源为pipeline,需要兼容repo传pipelineId的情况
         val useResourceCode = findPipelineAutoId(resourceType, resourceCode)
 
+        // action需要兼容repo只传AuthPermission的情况,需要组装为V3的action
+        val useAction = if (!action.contains("_")) {
+            TActionUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
+        } else {
+            action
+        }
+
         return super.validateUserResourcePermissionByRelation(
             userId = userId,
-            action = action,
+            action = useAction,
             projectCode = projectCode,
             resourceCode = useResourceCode,
             resourceType = resourceType,

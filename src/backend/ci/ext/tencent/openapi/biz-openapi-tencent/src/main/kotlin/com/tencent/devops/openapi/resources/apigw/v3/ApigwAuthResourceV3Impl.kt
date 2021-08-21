@@ -78,7 +78,7 @@ class ApigwAuthResourceV3Impl @Autowired constructor(
             resourceCode = resourceCode,
             resourceType = resourceType,
             relationResourceType = null,
-            action = TActionUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
+            action = action
         ).data ?: false
         )
     }
