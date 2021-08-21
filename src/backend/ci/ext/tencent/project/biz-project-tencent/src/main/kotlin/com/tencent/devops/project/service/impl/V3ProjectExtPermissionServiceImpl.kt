@@ -42,7 +42,6 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectExtPermissionService
-import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -54,7 +53,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
     val projectDao: ProjectDao,
     val dslContext: DSLContext,
     val tofService: TOFService
-): ProjectExtPermissionService {
+) : ProjectExtPermissionService {
     override fun verifyUserProjectPermission(
         accessToken: String,
         projectCode: String,
@@ -75,11 +74,10 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         roleName: String?,
         checkManager: Boolean
     ): Boolean {
-        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?:
-            throw ErrorCodeException(
-                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST)
-            )
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+            defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST)
+        )
         val projectRelationId = projectInfo.relationId
 
         if (projectRelationId.isNullOrEmpty()) {
@@ -117,7 +115,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             }
             logger.info("project role ${it.code} ${it.name} ${it.id}")
         }
-        var relationGroupId : Int? = null
+        var relationGroupId: Int? = null
         if (!roleName.isNullOrEmpty()) {
             relationGroupId = groupMap[roleName!!]
         }
@@ -126,7 +124,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             // 校验用户是否为真实用户
             try {
                 tofService.getStaffInfo(it)
-            }catch (ope: OperationException) {
+            } catch (ope: OperationException) {
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
             } catch (e: Exception) {
                 logger.warn("createUser2Project fail, userId[$it]", e)

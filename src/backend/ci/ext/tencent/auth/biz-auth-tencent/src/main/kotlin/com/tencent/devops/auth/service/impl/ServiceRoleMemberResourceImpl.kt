@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceRoleMemberResourceImpl @Autowired constructor(
     val permissionRoleMemberService: PermissionRoleMemberService
-): ServiceRoleMemberResource {
+) : ServiceRoleMemberResource {
     override fun createRoleMember(
         userId: String,
         projectId: Int,

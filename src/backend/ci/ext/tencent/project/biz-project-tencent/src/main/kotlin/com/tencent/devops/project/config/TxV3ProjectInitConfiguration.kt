@@ -35,7 +35,6 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
-import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.iam.IamV3Service
 import com.tencent.devops.project.service.impl.TxV3ProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.V3ProjectExtPermissionServiceImpl

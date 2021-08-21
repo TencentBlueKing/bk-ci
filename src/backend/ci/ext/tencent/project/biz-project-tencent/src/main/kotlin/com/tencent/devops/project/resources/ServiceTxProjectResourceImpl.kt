@@ -64,7 +64,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectService: ProjectService,
     private val projectMemberService: ProjectMemberService,
     private val projectIamV0Service: ProjectIamV0Service,
-    private val projectTagService: ProjectTagService,
+    private val projectTagService: ProjectTagService
 ) : ServiceTxProjectResource {
 
     @Value("\${auto.tag:#{null}}")
