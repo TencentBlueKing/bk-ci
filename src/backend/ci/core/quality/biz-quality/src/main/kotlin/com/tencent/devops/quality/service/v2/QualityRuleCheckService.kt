@@ -44,7 +44,6 @@ import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
@@ -555,7 +554,7 @@ class QualityRuleCheckService @Autowired constructor(
                 "buildNo" to buildNo
             ),
             bodyParams = mapOf(
-                "title" to "${pipelineName}(${buildNo})被拦截，待审核(审核人${notifyUserSet})",
+                "title" to "$pipelineName($buildNo)被拦截，待审核(审核人$notifyUserSet)",
                 "projectName" to projectName,
                 "cc" to triggerUserId,
                 "time" to time,
@@ -597,7 +596,7 @@ class QualityRuleCheckService @Autowired constructor(
         notifyUserSet.addAll(endNotifyUserList)
 
         // 获取拦截列表
-        //val interceptList = getInterceptList(interceptRecordList)
+        // val interceptList = getInterceptList(interceptRecordList)
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()
         resultList.forEach { r ->
@@ -619,7 +618,7 @@ class QualityRuleCheckService @Autowired constructor(
             notifyType = endNotifyTypeList.map { it.name }.toMutableSet(),
             titleParams = mapOf(),
             bodyParams = mapOf(
-                "title" to "${pipelineName}(#${buildNo})被拦截，已终止",
+                "title" to "$pipelineName(#$buildNo)被拦截，已终止",
                 "projectName" to projectName,
                 "cc" to triggerUserId,
                 "time" to time,
@@ -675,7 +674,8 @@ class QualityRuleCheckService @Autowired constructor(
     }
 
     private fun getBuildDetail(projectId: String, pipelineId: String, buildNum: String): BuildHistory {
-        return client.get(ServiceBuildResource::class).getSingleHistoryBuild(projectId,pipelineId,buildNum, ChannelCode.BS).data!!
+        return client.get(ServiceBuildResource::class)
+                .getSingleHistoryBuild(projectId, pipelineId, buildNum, ChannelCode.BS).data!!
     }
 
     companion object {
