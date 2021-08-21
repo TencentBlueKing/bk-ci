@@ -55,7 +55,8 @@ class UserProjectMemberResourceImpl @Autowired constructor(
             projectId = projectId,
             roleId = roleId,
             members = members,
-            managerGroup = managerGroup
+            managerGroup = managerGroup,
+            checkAGradeManager = true
         )
         return Result(true)
     }
