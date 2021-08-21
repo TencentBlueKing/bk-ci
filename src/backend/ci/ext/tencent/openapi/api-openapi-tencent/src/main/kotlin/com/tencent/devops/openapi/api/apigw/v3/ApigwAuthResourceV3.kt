@@ -45,7 +45,7 @@ interface ApigwAuthResourceV3 {
     ): Result<Boolean>
 
     @GET
-    @Path("/projects/{projectCode}/resource/validate")
+    @Path("/projects/{projectId}/resource/validate")
     @ApiOperation("校验用户是否有action的权限")
     fun validateUserResourcePermission(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -60,9 +60,9 @@ interface ApigwAuthResourceV3 {
         @QueryParam("action")
         @ApiParam("资源类型", required = true)
         action: String,
-        @PathParam("projectCode")
+        @PathParam("projectId")
         @ApiParam("项目编码", required = true)
-        projectCode: String,
+        projectId: String,
         @QueryParam("resourceCode")
         @ApiParam("资源编码", required = false)
         resourceCode: String,

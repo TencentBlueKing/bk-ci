@@ -67,14 +67,14 @@ class ApigwAuthResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         action: String,
-        projectCode: String,
+        projectId: String,
         resourceCode: String,
         resourceType: String
     ): Result<Boolean> {
         return Result(client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
-            projectCode = projectCode,
+            projectCode = projectId,
             resourceCode = resourceCode,
             resourceType = resourceType,
             relationResourceType = null,
