@@ -46,7 +46,8 @@ dependencies {
     api(group = "org.glassfish.jersey.core", name = "jersey-common", version = "2.25.1")
     api("org.slf4j:slf4j-api")
     api("com.squareup.okhttp3:okhttp")
-    api(group = "com.tencent.devops.ci-plugins", name = "sigar")
+    //api(group = "com.tencent.devops.ci-plugins", name = "sigar")
+    api("com.fasterxml.jackson.module:jackson-module-jsonSchema")
 
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
