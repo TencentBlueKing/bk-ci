@@ -42,7 +42,7 @@ enum class TriggerReason(val summary: String, val detail: String) {
         "The YAML file cannot be found in the .ci directory",
         "The YAML file cannot be found in the .ci directory"
     ),
-    CI_YAML_CONTENT_NULL("The YAML file is null", "The YAML file is null"),
+    CI_YAML_CONTENT_NULL("The YAML file is null", "The YAML file is null: %s"),
     CI_YAML_INVALID("YAML is invalid", "YAML is invalid: %s"),
     CI_YAML_NEED_MERGE_OR_REBASE(
         "The YAML is modified. " +
@@ -67,6 +67,7 @@ enum class TriggerReason(val summary: String, val detail: String) {
     PIPELINE_DISABLE("Pipeline is disabled", "Pipeline is disabled"),
     CI_YAML_TEMPLATE_ERROR("YAML template parse error", "YAML template parse error: %s"),
     PIPELINE_PREPARE_ERROR("Pipeline prepare error", "Pipeline prepare error: %s"),
+    CREATE_QUALITY_RULRS_ERROR("Create quality rules error", "Create quality rules error: %s"),
     UNKNOWN_ERROR(
         "Unknown error, please contact DevOps-helper",
         "Unknown error, please contact DevOps-helper. %s"

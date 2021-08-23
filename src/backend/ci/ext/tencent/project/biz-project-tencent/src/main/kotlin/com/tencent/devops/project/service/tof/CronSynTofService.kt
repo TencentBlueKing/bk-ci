@@ -111,7 +111,7 @@ class CronSynTofService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(CronSynTofService::class.java)
         const val lastTimeLockKey = "project:tof:syn:lastTime"
         const val instanceLockKey = "project:syn:tof:instance:lock"
     }

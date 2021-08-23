@@ -120,17 +120,15 @@ class GitCIBasicSettingDao {
         homePage: String
     ) {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
-            dslContext.transaction { configuration ->
-                DSL.using(configuration).update(this)
-                    .set(NAME, gitProjectName)
-                    .set(URL, url)
-                    .set(HOME_PAGE, homePage)
-                    .set(GIT_HTTP_URL, httpUrl)
-                    .set(GIT_SSH_URL, sshUrl)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(gitProjectId))
-                    .execute()
-            }
+            dslContext.update(this)
+                .set(NAME, gitProjectName)
+                .set(URL, url)
+                .set(HOME_PAGE, homePage)
+                .set(GIT_HTTP_URL, httpUrl)
+                .set(GIT_SSH_URL, sshUrl)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(gitProjectId))
+                .execute()
         }
     }
 

@@ -245,7 +245,7 @@ open class MarketAtomTask : ITask() {
 
         printInput(atomData, atomParams, inputTemplate)
 
-        if (atomData.target.isNullOrBlank()) {
+        if (atomData.target?.isBlank() == true) {
             throw TaskExecuteException(
                 errorMsg = "can not found any plugin cmd",
                 errorType = ErrorType.SYSTEM,
@@ -712,14 +712,19 @@ open class MarketAtomTask : ITask() {
             repoName = if (customFlag) "custom" else "pipeline",
             path = if (customFlag) "/" else "/${buildVariables.pipelineId}/${buildVariables.buildId}",
             type = TokenType.UPLOAD,
-            expireSeconds = TaskUtil.getTimeOut(buildTask)?.times(60)
+            expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
         )
         try {
             val artifacts = output[VALUE] as List<String>
             artifacts.forEach { artifact ->
                 oneArtifact = artifact
                 if (artifactoryType == ArtifactoryType.PIPELINE.name) {
-                    ArchiveUtils.archivePipelineFiles(artifact, atomWorkspace, buildVariables)
+                    ArchiveUtils.archivePipelineFiles(
+                        filePath = artifact,
+                        workspace = atomWorkspace,
+                        buildVariables = buildVariables,
+                        token = token
+                    )
                 } else if (artifactoryType == ArtifactoryType.CUSTOM_DIR.name) {
                     output[PATH] ?: throw TaskExecuteException(
                         errorMsg = "$varKey.$PATH cannot be empty",
