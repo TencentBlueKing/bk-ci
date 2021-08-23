@@ -41,7 +41,13 @@ class BuildStoreResourceImpl @Autowired constructor(
     private val sensitiveConfService: UserSensitiveConfService
 ) : BuildStoreResource {
 
-    override fun getSensitiveConf(storeType: StoreTypeEnum, storeCode: String): Result<List<SensitiveConfResp>?> {
+    override fun getSensitiveConf(
+        buildId: String,
+        vmSeqId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<List<SensitiveConfResp>?> {
+        sensitiveConfService.checkOperationAuthority(buildId, vmSeqId, storeType, storeCode)
         val types = FieldTypeEnum.BACKEND.name + "," + FieldTypeEnum.ALL.name
         return sensitiveConfService.list(
             userId = "",

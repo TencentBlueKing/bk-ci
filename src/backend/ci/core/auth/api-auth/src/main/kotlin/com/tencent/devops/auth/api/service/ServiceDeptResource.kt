@@ -25,19 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.pojo.cos
+package com.tencent.devops.auth.api.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@ApiModel("CDN上传文件")
-data class CdnUploadFileInfo(
-    @ApiModelProperty("文件上传路径（多个路径中间逗号隔开），支持正则表达式", required = true)
-    val regexPaths: String,
-    @ApiModelProperty("是否自定义归档", required = true)
-    val customize: Boolean,
-    @ApiModelProperty("凭证ID", required = true)
-    val ticketId: String,
-    @ApiModelProperty("路径前缀", required = true)
-    val cdnPathPrefix: String
-)
+@Api(tags = ["SERVICE_DEPT"], description = "权限校验--组织相关")
+@Path("/service/dept")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceDeptResource {
+    @GET
+    @Path("/parents")
+    @ApiOperation("获取组织父级")
+    fun getParentDept(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("用户ID", required = true)
+        userId: String
+    ): Result<Int>
+
+    @GET
+    @Path("/get/byName")
+    @ApiOperation("根据组织名称获取组织id")
+    fun getDeptByName(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("用户ID", required = true)
+        userId: String,
+        @QueryParam("deptName")
+        @ApiParam("组织名称", required = true)
+        deptName: String
+    ): Result<DeptInfoVo?>
+}

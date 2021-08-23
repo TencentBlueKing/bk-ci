@@ -174,6 +174,6 @@ class V3CertPermissionService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(V3CertPermissionService::class.java)
     }
 }

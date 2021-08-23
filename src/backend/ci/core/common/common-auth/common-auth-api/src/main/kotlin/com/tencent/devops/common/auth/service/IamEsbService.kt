@@ -124,7 +124,7 @@ class IamEsbService {
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(IamEsbService::class.java)
         val objectMapper = ObjectMapper()
     }
 }

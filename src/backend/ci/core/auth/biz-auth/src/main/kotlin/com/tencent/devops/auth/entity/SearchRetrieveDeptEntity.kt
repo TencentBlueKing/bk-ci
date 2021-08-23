@@ -25,20 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.resources.v2
+package com.tencent.devops.auth.entity
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.quality.api.v2.ServiceQualityControlPointResource
-import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
-import com.tencent.devops.quality.service.v2.QualityControlPointService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceQualityControlPointResourceImpl @Autowired constructor(
-    private val qualityControlPointService: QualityControlPointService
-) : ServiceQualityControlPointResource {
-    override fun listByTypes(elementTypes: Collection<String>): Result<List<QualityControlPoint>> {
-        return Result(qualityControlPointService.serviceList(elementTypes))
-    }
-}
+@ApiModel
+data class SearchRetrieveDeptEntity(
+    @ApiModelProperty("部门 ID")
+    val id: Int,
+    override var bk_app_code: String,
+    override var bk_app_secret: String,
+    override var bk_username: String,
+    override val bk_token: String = ""
+) : EsbBaseReq(bk_app_code, bk_app_secret, bk_username, bk_token)

@@ -147,7 +147,6 @@ subprojects {
             dependency("org.apache.lucene:lucene-core:${Versions.Lucene}")
             dependency("io.jsonwebtoken:jjwt:${Versions.Jjwt}")
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
-            dependency("net.sf.json-lib:json-lib:${Versions.JsonLib}")
             dependency("com.cronutils:cron-utils:${Versions.CronUtils}")
             dependency("com.amazonaws:aws-java-sdk-s3:${Versions.AwsS3}")
             dependency("org.asynchttpclient:async-http-client:${Versions.AsyncHttpClient}")

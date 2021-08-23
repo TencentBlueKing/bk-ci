@@ -25,21 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.pojo.cos
+package com.tencent.devops.store.pojo.atom
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("COS上传文件")
-data class CosUploadFileInfo(
-    @ApiModelProperty("bucket", required = true)
-    val bucket: String,
-    @ApiModelProperty("凭证ID", required = true)
-    val ticketId: String,
-    @ApiModelProperty("文件上传路径（多个路径中间逗号隔开），支持正则表达式", required = true)
-    val regexPaths: String,
-    @ApiModelProperty("是否自定义归档", required = true)
-    val customize: Boolean,
-    @ApiModelProperty("下载URL过期时间", required = false)
-    val expireSeconds: Long
+@ApiModel("批量获取插件依赖关系")
+data class GetRelyAtom(
+    @ApiModelProperty("请求所需参数", required = true)
+    val thirdPartyElementList: List<ElementThirdPartySearchParam>
 )

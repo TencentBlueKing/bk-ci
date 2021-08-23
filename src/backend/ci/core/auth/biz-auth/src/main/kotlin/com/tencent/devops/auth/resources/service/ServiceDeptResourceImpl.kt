@@ -25,28 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2
+package com.tencent.devops.auth.resources.service
 
+import com.tencent.devops.auth.api.service.ServiceDeptResource
+import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["SERVICE_CONTROL_POINT"], description = "服务-质量红线")
-@Path("/service/controlPoint")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceQualityControlPointResource {
+@RestResource
+class ServiceDeptResourceImpl @Autowired constructor(
+    val deptService: DeptService
+) : ServiceDeptResource {
+    override fun getParentDept(userId: String): Result<Int> {
+        return Result("", deptService.getUserParentDept(userId))
+    }
 
-    @ApiOperation("")
-    @Path("/listByTypes")
-    @POST
-    fun listByTypes(
-        elementTypes: Collection<String>
-    ): Result<List<QualityControlPoint>>
+    override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
+        return Result(deptService.getDeptByName(deptName, userId))
+    }
 }

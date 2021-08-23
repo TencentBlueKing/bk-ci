@@ -127,6 +127,18 @@ class ProjectDao {
         }
     }
 
+    fun listByChannel(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int,
+        channelCode: ProjectChannelCode
+    ): Result<TProjectRecord> {
+        return with(TProject.T_PROJECT) {
+            dslContext.selectFrom(this).where(ENABLED.eq(true).and(CHANNEL.eq(channelCode.name)))
+                .limit(limit).offset(offset).fetch()
+        }
+    }
+
     fun getCount(dslContext: DSLContext): Long {
         return with(TProject.T_PROJECT) {
             dslContext.selectCount().from(this).where(ENABLED.eq(true)).fetchOne(0, Long::class.java)!!
