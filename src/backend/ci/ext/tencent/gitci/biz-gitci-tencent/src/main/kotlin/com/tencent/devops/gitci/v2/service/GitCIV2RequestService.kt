@@ -37,10 +37,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitRequestHistory
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
-import com.tencent.devops.gitci.pojo.v2.message.RequestMessageContent
 import com.tencent.devops.gitci.utils.GitCommonUtils
-import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
-import com.tencent.devops.model.gitci.tables.records.TGitRequestEventNotBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
@@ -137,7 +134,7 @@ class GitCIV2RequestService @Autowired constructor(
                     } catch (e: Exception) {
                         logger.error(
                             "Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId:" +
-                                    " ${it.pipelineId} failed with error: ",
+                                " ${it.pipelineId} failed with error: ",
                             e
                         )
                         return@nextBuild
@@ -188,72 +185,6 @@ class GitCIV2RequestService @Autowired constructor(
         )
     }
 
-    fun getRequestMap(
-        gitProjectId: Long,
-        userId: String,
-        requestIds: Set<Int>
-    ): Map<Long, List<RequestMessageContent>> {
-        val eventList = gitRequestEventDao.getRequestsById(
-            dslContext = dslContext,
-            requestIds = requestIds
-        )
-        if (eventList.isNullOrEmpty()) {
-            return emptyMap()
-        }
-        val eventIds = eventList.map { it.id!! }.toSet()
-        val resultMap = mutableMapOf<Long, List<RequestMessageContent>>()
-        val pipelineMap = pipelineResourceDao.getPipelines(dslContext, gitProjectId).associateBy { it.pipelineId }
-        // 未触发的所有记录
-        val noBuildMap = getNoBuildEventMap(gitRequestEventNotBuildDao.getListByEventIds(dslContext, eventIds))
-        // 触发的所有记录
-        val buildList = gitRequestEventBuildDao.getByEventIds(dslContext, eventIds)
-        val buildMap = getBuildEventMap(buildList)
-        val processBuildList = client.get(ServiceBuildResource::class)
-            .getBatchBuildStatus(
-                projectId = "git_$gitProjectId",
-                buildId = buildList.map { it.buildId }.toSet(),
-                channelCode = channelCode
-            ).data?.associateBy { it.id }
-
-        eventList.forEach { event ->
-            val eventId = event.id!!
-            val records = mutableListOf<RequestMessageContent>()
-            // 添加未构建的记录
-            noBuildMap[eventId]?.forEach nextBuild@{
-                val pipeline = if (it.pipelineId.isNullOrBlank()) {
-                    null
-                } else {
-                    pipelineMap[it.pipelineId]
-                }
-                records.add(
-                    RequestMessageContent(
-                        id = it.id,
-                        pipelineName = pipeline?.displayName ?: it.filePath,
-                        buildBum = null,
-                        triggerReasonName = it.reason,
-                        triggerReasonDetail = it.reasonDetail
-                    )
-                )
-            }
-            // 添加构建的记录
-            buildMap[eventId]?.forEach nextBuild@{
-                val buildNum = processBuildList?.get(it.buildId)?.buildNum
-                val pipeline = pipelineMap[it.pipelineId]
-                records.add(
-                    RequestMessageContent(
-                        id = it.id,
-                        pipelineName = pipeline?.displayName,
-                        buildBum = buildNum,
-                        triggerReasonName = TriggerReason.TRIGGER_SUCCESS.name,
-                        triggerReasonDetail = null
-                    )
-                )
-            }
-            resultMap[eventId] = records
-        }
-        return resultMap
-    }
-
     private fun getBuildHistory(buildHistoryList: List<BuildHistory>, buildIdIt: String): BuildHistory? {
         buildHistoryList.forEach {
             if (it.id == buildIdIt) {
@@ -261,33 +192,5 @@ class GitCIV2RequestService @Autowired constructor(
             }
         }
         return null
-    }
-
-    private fun getBuildEventMap(
-        buildList: List<TGitRequestEventBuildRecord>
-    ): MutableMap<Long, MutableList<TGitRequestEventBuildRecord>> {
-        val resultMap = mutableMapOf<Long, MutableList<TGitRequestEventBuildRecord>>()
-        buildList.forEach {
-            if (resultMap[it.eventId].isNullOrEmpty()) {
-                resultMap[it.eventId] = mutableListOf(it)
-            } else {
-                resultMap[it.eventId]!!.add(it)
-            }
-        }
-        return resultMap
-    }
-
-    private fun getNoBuildEventMap(
-        noBuildList: List<TGitRequestEventNotBuildRecord>
-    ): MutableMap<Long, MutableList<TGitRequestEventNotBuildRecord>> {
-        val resultMap = mutableMapOf<Long, MutableList<TGitRequestEventNotBuildRecord>>()
-        noBuildList.forEach {
-            if (resultMap[it.eventId].isNullOrEmpty()) {
-                resultMap[it.eventId] = mutableListOf(it)
-            } else {
-                resultMap[it.eventId]!!.add(it)
-            }
-        }
-        return resultMap
     }
 }

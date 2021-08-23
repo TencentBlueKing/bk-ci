@@ -38,7 +38,7 @@ import java.io.File
 
 interface ICommand {
 
-    @Suppress("ALL")
+    @Suppress("LongParameterList")
     fun execute(
         buildId: String,
         script: String,
@@ -59,13 +59,12 @@ interface ICommand {
             } else {
                 try {
                     CredentialUtils.getCredential(buildId, key, false)[0]
-                } catch (e: Exception) {
+                } catch (ignored: Exception) {
                     CredentialUtils.getCredentialContextValue(key) ?: if (doubleCurlyBraces) {
                         "\${{$key}}"
                     } else {
                         "\${$key}"
                     }
-
                 }
             }
         }, mapOf(

@@ -156,9 +156,13 @@ class GitCIBuildFinishListener @Autowired constructor(
                     throw OperationException("git ci all projectCode not exist")
                 }
 
-                val description = if (record["DESCRIPTION"] != null) {
-                    record["DESCRIPTION"] as String
-                } else ""
+                val description = try {
+                    if (record["COMMIT_MESSAGE"] != null) {
+                        record["COMMIT_MESSAGE"] as String
+                    } else ""
+                } catch (ignore: Throwable) {
+                    ""
+                }
 
                 val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
                     ?: throw OperationException("git ci pipeline not exist")
@@ -184,7 +188,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     if (isV2) {
                         scmClient.pushCommitCheck(
                             commitId = commitId,
-                            description = getDescByBuildStatus(description, buildStatus, pipeline.displayName),
+                            description = getDescByBuildStatus(buildStatus, pipeline.displayName),
                             mergeRequestId = mergeRequestId,
                             buildId = buildFinishEvent.buildId,
                             userId = buildFinishEvent.userId,
@@ -192,7 +196,8 @@ class GitCIBuildFinishListener @Autowired constructor(
                             context = pipeline.filePath,
                             gitCIBasicSetting = v2GitSetting!!,
                             pipelineId = buildFinishEvent.pipelineId,
-                            block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess())
+                            block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess() &&
+                                v2GitSetting.enableMrBlock)
                         )
                     } else {
                         scmClient.pushCommitCheck(
@@ -290,11 +295,8 @@ class GitCIBuildFinishListener @Autowired constructor(
     }
 
     // 根据状态切换描述
-    private fun getDescByBuildStatus(oldDesc: String?, buildStatus: BuildStatus, pipelineName: String): String {
+    private fun getDescByBuildStatus(buildStatus: BuildStatus, pipelineName: String): String {
         return when {
-            !oldDesc.isNullOrBlank() -> {
-                oldDesc
-            }
             buildStatus.isSuccess() -> {
                 buildSuccessDesc.format(pipelineName)
             }

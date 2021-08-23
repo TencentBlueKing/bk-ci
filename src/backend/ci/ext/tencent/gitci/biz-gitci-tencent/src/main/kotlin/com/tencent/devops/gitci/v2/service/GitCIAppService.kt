@@ -34,7 +34,8 @@ class GitCIAppService @Autowired constructor(
             userId = userId,
             page = page,
             pageSize = pageSize,
-            search = searchName
+            search = searchName,
+            orderBy = null, sort = null, owned = null, minAccessLevel = null
         )?.associateBy { it.id!! }?.toMap()
         val hasNext = projectIdMap?.values?.size == pageSize
         if (projectIdMap.isNullOrEmpty()) {

@@ -200,32 +200,7 @@ class GitCIEventService @Autowired constructor(
         var messageId = -1L
         val event = gitEvent ?: (gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId"))
-        val messageTitle = when (event.objectKind) {
-            OBJECT_KIND_MERGE_REQUEST -> {
-                val branch = GitCommonUtils.checkAndGetForkBranchName(
-                    gitProjectId = gitProjectId,
-                    sourceGitProjectId = event.sourceGitProjectId,
-                    branch = event.branch,
-                    client = client
-                )
-                "[$branch] Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
-            }
-            OBJECT_KIND_MANUAL -> {
-                "[${event.branch}] Manual Triggered by ${event.userId}"
-            }
-            OBJECT_KIND_TAG_PUSH -> {
-                val eventMap = try {
-                    objectMapper.readValue<GitTagPushEvent>(event.event)
-                } catch (e: Exception) {
-                    logger.error("event as GitTagPushEvent error ${e.message}")
-                    null
-                }
-                "[${eventMap?.create_from}] Tag [${event.branch}] pushed by ${event.userId}"
-            }
-            else -> {
-                "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
-            }
-        }
+        val messageTitle = getEventMessage(event, gitProjectId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             messageId = gitRequestEventNotBuildDao.save(
@@ -263,5 +238,35 @@ class GitCIEventService @Autowired constructor(
         val notBuildcnt = gitRequestEventNotBuildDao.deleteNotBuildByPipelineIds(dslContext, pipelineIds)
         val buildcnt = gitRequestEventBuildDao.deleteBuildByPipelineIds(dslContext, pipelineIds)
         return Pair(buildcnt, notBuildcnt)
+    }
+
+    private fun getEventMessage(event: GitRequestEvent, gitProjectId: Long): String {
+        val messageTitle = when (event.objectKind) {
+            OBJECT_KIND_MERGE_REQUEST -> {
+                val branch = GitCommonUtils.checkAndGetForkBranchName(
+                    gitProjectId = gitProjectId,
+                    sourceGitProjectId = event.sourceGitProjectId,
+                    branch = event.branch,
+                    client = client
+                )
+                "[$branch] Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
+            }
+            OBJECT_KIND_MANUAL -> {
+                "[${event.branch}] Manual Triggered by ${event.userId}"
+            }
+            OBJECT_KIND_TAG_PUSH -> {
+                val eventMap = try {
+                    objectMapper.readValue<GitTagPushEvent>(event.event)
+                } catch (e: Exception) {
+                    logger.error("event as GitTagPushEvent error ${e.message}")
+                    null
+                }
+                "[${eventMap?.create_from}] Tag [${event.branch}] pushed by ${event.userId}"
+            }
+            else -> {
+                "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
+            }
+        }
+        return messageTitle
     }
 }

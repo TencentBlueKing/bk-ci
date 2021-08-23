@@ -245,7 +245,7 @@ open class MarketAtomTask : ITask() {
 
         printInput(atomData, atomParams, inputTemplate)
 
-        if (atomData.target.isNullOrBlank()) {
+        if (atomData.target?.isBlank() == true) {
             throw TaskExecuteException(
                 errorMsg = "can not found any plugin cmd",
                 errorType = ErrorType.SYSTEM,

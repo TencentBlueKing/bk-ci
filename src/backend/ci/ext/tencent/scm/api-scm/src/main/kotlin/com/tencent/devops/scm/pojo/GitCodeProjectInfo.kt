@@ -172,5 +172,7 @@ data class GitCodeProjectInfo(
     @JsonProperty("forks_count")
     val forksCount: Long?,
     @JsonProperty("push_reset_enabled")
-    val pushResetEnabled: Boolean?
+    val pushResetEnabled: Boolean?,
+    @JsonProperty("description")
+    val description: String?
 )

@@ -27,6 +27,15 @@
 
 package com.tencent.devops.common.api.util
 
+/**
+ * 注意：这是腾讯特供版本，与开源版完全不一样，被用户历史流水线绑架，用户会使用${{a}}的嵌套写法，问题有:
+ * 1、代码较恶心，变量名存在与{}混用情况。 比如 ${{xxx} 变量名会是 {xxx
+ *
+ * 2、 二次替换 只能 对应处理 一直是双括号或者一直是单括号 ，不支持两级变量单双括号混排
+ *
+ * 3、replaceWithEmpty = true 会将找不到变量的置空，对于像${{xxx}}，会先被单引号模板语法识别到 ${{xxx} 并替换为空格，无法正常识别 ${{}}
+ */
+@Suppress("MagicNumber")
 object EnvUtils {
     fun parseEnv(
         command: String?,
@@ -54,16 +63,17 @@ object EnvUtils {
             return command ?: ""
         }
         // 先处理${} 单个花括号的情况
-        val value = parseWithSingleCurlyBraces(command, data, replaceWithEmpty, isEscape, contextMap)
+        val value = parseWithSingleCurlyBraces(command, data, replaceWithEmpty, isEscape, contextMap, depth = 1)
         // 再处理${{}} 双花括号的情况
-        return parseWithDoubleCurlyBraces(value, data, isEscape, contextMap)
+        return parseWithDoubleCurlyBraces(value, data, isEscape, contextMap, depth = 1)
     }
 
-    fun parseWithDoubleCurlyBraces(
+    private fun parseWithDoubleCurlyBraces(
         value: String,
         data: Map<String, String>,
         escape: Boolean = false,
-        contextMap: Map<String, String>? = emptyMap()
+        contextMap: Map<String, String>? = emptyMap(),
+        depth: Int = 1
     ): String {
         val newValue = StringBuilder()
         var index = 0
@@ -71,7 +81,7 @@ object EnvUtils {
             val c = value[index]
             if (checkPrefix(c, index, value)) {
                 val inside = StringBuilder()
-                index = parseVariableWithDoubleCurlyBraces(value, index + 3, inside, data, contextMap)
+                index = parseVariableWithDoubleCurlyBraces(value, index + 3, inside, data, contextMap, escape, depth)
                 if (escape) {
                     newValue.append(escapeSpecialWord(inside.toString()))
                 } else {
@@ -85,12 +95,14 @@ object EnvUtils {
         return newValue.toString()
     }
 
+    @Suppress("NestedBlockDepth", "LongParameterList")
     private fun parseWithSingleCurlyBraces(
         command: String,
         data: Map<String, String>,
         replaceWithEmpty: Boolean,
         isEscape: Boolean,
-        contextMap: Map<String, String>? = emptyMap()
+        contextMap: Map<String, String>? = emptyMap(),
+        depth: Int = 1
     ): String {
         val newValue = StringBuilder()
         var index = 0
@@ -98,7 +110,7 @@ object EnvUtils {
             val c = command[index]
             if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
                 val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, data, replaceWithEmpty, contextMap)
+                index = parseVariable(command, index + 2, inside, data, replaceWithEmpty, contextMap, isEscape, depth)
                 if (isEscape) {
                     // 将动态参数值里面的特殊字符转义
                     newValue.append(escapeSpecialWord(inside.toString()))
@@ -126,13 +138,16 @@ object EnvUtils {
         return replaceWord
     }
 
+    @Suppress("NestedBlockDepth", "LongParameterList")
     private fun parseVariable(
         command: String,
         start: Int,
         newValue: StringBuilder,
         data: Map<String, String>,
         replaceWithEmpty: Boolean = false,
-        contextMap: Map<String, String>? = emptyMap()
+        contextMap: Map<String, String>? = emptyMap(),
+        isEscape: Boolean = false,
+        depth: Int = 1
     ): Int {
         val token = StringBuilder()
         var index = start
@@ -140,16 +155,29 @@ object EnvUtils {
             val c = command[index]
             if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
                 val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, data, replaceWithEmpty, contextMap)
+                index = parseVariable(command, index + 2, inside, data, replaceWithEmpty, contextMap, isEscape, depth)
                 token.append(inside)
             } else if (c == '}') {
-                val value = data[token.toString()] ?: contextMap?.get(token.toString()) ?: if (replaceWithEmpty) {
-                    ""
-                } else {
-                    "\${$token}"
+                val value = data[token.toString()] ?: contextMap?.get(token.toString())
+                if (value != null) {
+                    if (depth > 0 && value.startsWith("\${")) {
+                        newValue.append(
+                            parseWithSingleCurlyBraces(
+                                command = value,
+                                data = data,
+                                replaceWithEmpty = replaceWithEmpty,
+                                isEscape = isEscape,
+                                contextMap = contextMap,
+                                depth = depth - 1
+                            )
+                        )
+                    } else {
+                        newValue.append(value)
+                    }
+                } else if (!replaceWithEmpty) {
+                    newValue.append("\${$token}")
                 }
 
-                newValue.append(value)
                 return index + 1
             } else {
                 token.append(c)
@@ -160,12 +188,15 @@ object EnvUtils {
         return index
     }
 
+    @Suppress("NestedBlockDepth", "LongParameterList")
     private fun parseVariableWithDoubleCurlyBraces(
         command: String,
         start: Int,
         newValue: StringBuilder,
         data: Map<String, String>,
-        contextMap: Map<String, String>? = emptyMap()
+        contextMap: Map<String, String>? = emptyMap(),
+        escape: Boolean = false,
+        depth: Int = 1
     ): Int {
         val token = StringBuilder()
         var index = start
@@ -173,12 +204,20 @@ object EnvUtils {
             val c = command[index]
             if (checkPrefix(c, index, command)) {
                 val inside = StringBuilder()
-                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, data)
+                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, data, contextMap, escape, depth)
                 token.append(inside)
             } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
                 val tokenStr = token.toString().trim()
-                val value = data[tokenStr] ?: contextMap?.get(tokenStr) ?: "\${{$token}}"
-                newValue.append(value)
+                val value = data[tokenStr] ?: contextMap?.get(tokenStr)
+                if (value != null) {
+                    if (depth > 0 && value.startsWith("\${{")) {
+                        newValue.append(parseWithDoubleCurlyBraces(value, data, escape, contextMap, depth - 1))
+                    } else {
+                        newValue.append(value)
+                    }
+                } else {
+                    newValue.append("\${{$token}}")
+                }
                 return index + 2
             } else {
                 token.append(c)
