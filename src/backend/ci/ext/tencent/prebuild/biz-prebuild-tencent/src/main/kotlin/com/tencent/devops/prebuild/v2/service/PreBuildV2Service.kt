@@ -345,13 +345,15 @@ class PreBuildV2Service @Autowired constructor(
             )
 
             // bash
-            val element: Element = when {
+            val element: Element? = when {
                 step.run != null -> makeScriptElement(job, step, additionalOptions)
                 else ->
                     makeNormalElement(job, step, startUpReq, agentInfo, userId, additionalOptions)
             }
 
-            elementList.add(element)
+            if (element != null) {
+                elementList.add(element)
+            }
 
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
@@ -400,11 +402,15 @@ class PreBuildV2Service @Autowired constructor(
         agentInfo: ThirdPartyAgentStaticInfo,
         userId: String,
         additionalOptions: ElementAdditionalOptions
-    ): Element {
+    ): Element? {
         val data = mutableMapOf<String, Any>()
         val atomCode = step.uses!!.split('@')[0]
         // 代码同步
-        return if (atomCode == "syncCodeToRemote") {
+        return if (atomCode.equals("syncLocalCode", ignoreCase = true)) {
+            if (job.runsOn.poolName == JobRunsOnType.LOCAL.type) {
+                return null
+            }
+
             // 确保同步代码插件安装
             installMarketAtom(userId, "syncCodeToRemote")
             val input = step.with?.toMutableMap() ?: mutableMapOf()
