@@ -7,7 +7,6 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -22,21 +21,20 @@ import javax.ws.rs.core.MediaType
 interface ServiceRepositoryGitCheckResource {
 
     @ApiOperation("获取gitcheck信息")
-    @GET
+    @POST
     @Path("/get")
     fun getGitCheck(
         @ApiParam("pipelineId", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @ApiParam("repositoryConfig", required = true)
-        @QueryParam("repositoryConfig")
-        repositoryConfig: RepositoryConfig,
         @ApiParam("commitId", required = true)
         @QueryParam("commitId")
         commitId: String,
         @ApiParam("context", required = true)
         @QueryParam("context")
-        context: String
+        context: String,
+        @ApiParam("repositoryConfig", required = true)
+        repositoryConfig: RepositoryConfig
     ): Result<RepositoryGitCheck?>
 
     @ApiOperation("记录gitcheck信息")
@@ -44,7 +42,6 @@ interface ServiceRepositoryGitCheckResource {
     @Path("/create")
     fun createGitCheck(
         @ApiParam("gitCheck", required = true)
-        @QueryParam("gitCheck")
         gitCheck: RepositoryGitCheck
     )
 

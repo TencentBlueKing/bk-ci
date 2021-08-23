@@ -35,14 +35,14 @@ class GitCheckService @Autowired constructor(
     fun creatGitCheck(
         repositoryGitCheck: RepositoryGitCheck
     ) {
-        return gitCheckDao.create(dslContext, repositoryGitCheck)
+        gitCheckDao.create(dslContext, repositoryGitCheck)
     }
 
     fun updateGitCheck(
         gitCheckId: Long,
         buildNumber: Int
     ) {
-        return gitCheckDao.update(
+        gitCheckDao.update(
             dslContext = dslContext,
             id = gitCheckId,
             buildNumber = buildNumber
