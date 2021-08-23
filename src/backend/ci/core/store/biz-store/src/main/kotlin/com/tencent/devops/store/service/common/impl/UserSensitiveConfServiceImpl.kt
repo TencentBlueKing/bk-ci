@@ -43,7 +43,6 @@ import com.tencent.devops.store.pojo.common.SensitiveConfReq
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.UserSensitiveConfService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
