@@ -125,6 +125,8 @@ class ContainerBuildDetailService(
                     if (buildStatus.isFinish() &&
                         (container.startVMStatus == null || !BuildStatus.valueOf(container.startVMStatus!!).isFinish())
                     ) {
+                        logger.info("[$buildId]|updateContainer|containerId=$containerId|startVMStatus " +
+                            "changed from ${container.startVMStatus} to ${container.status}")
                         container.startVMStatus = container.status
                     }
                     return Traverse.BREAK
