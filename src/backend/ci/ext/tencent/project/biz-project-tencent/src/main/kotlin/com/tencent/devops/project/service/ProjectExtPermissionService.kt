@@ -25,8 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:auth:api-auth"))
+package com.tencent.devops.project.service
+
+interface ProjectExtPermissionService {
+
+    /**
+     * 校验用户是否有这个项目的权限
+     */
+    fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Boolean
+
+    /**
+     * 添加用户到项目下指定分组
+     */
+    fun createUser2Project(
+        createUser: String,
+        userIds: List<String>,
+        projectCode: String,
+        roleId: Int?,
+        roleName: String?,
+        checkManager: Boolean
+    ): Boolean
 }

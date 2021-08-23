@@ -23,50 +23,37 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.impl
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.api.ServiceRoleMemberResource
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
-import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleMemberImpl
-import com.tencent.devops.common.client.Client
-import org.springframework.stereotype.Service
+import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
-@Service
-class TxPermissionRoleMemberImpl @Autowired constructor(
-    override val iamManagerService: ManagerService,
-    private val permissionGradeService: PermissionGradeService,
-    private val client: Client,
-    val groupService: AuthGroupService
-) : AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService, groupService) {
+@RestResource
+class ServiceRoleMemberResourceImpl @Autowired constructor(
+    val permissionRoleMemberService: PermissionRoleMemberService
+) : ServiceRoleMemberResource {
     override fun createRoleMember(
         userId: String,
         projectId: Int,
         roleId: Int,
-        members: List<RoleMemberDTO>,
         managerGroup: Boolean,
-        checkAGradeManager: Boolean?
-    ) {
-        super.createRoleMember(userId, projectId, roleId, members, managerGroup, checkAGradeManager)
-    }
-
-    override fun deleteRoleMember(
-        userId: String,
-        projectId: Int,
-        roleId: Int,
-        id: String,
-        type: ManagerScopesEnum,
-        managerGroup: Boolean
-    ) {
-        super.deleteRoleMember(userId, projectId, roleId, id, type, managerGroup)
-    }
-
-    override fun checkUser(userId: String) {
-        return
+        members: List<RoleMemberDTO>,
+        checkGradeManager: Boolean?
+    ): Result<Boolean> {
+        permissionRoleMemberService.createRoleMember(
+            userId = userId,
+            projectId = projectId,
+            roleId = roleId,
+            members = members,
+            managerGroup = managerGroup,
+            checkAGradeManager = checkGradeManager
+        )
+        return Result(true)
     }
 }

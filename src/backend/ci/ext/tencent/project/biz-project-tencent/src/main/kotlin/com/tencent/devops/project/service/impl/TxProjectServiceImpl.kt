@@ -62,6 +62,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
@@ -100,7 +101,8 @@ class TxProjectServiceImpl @Autowired constructor(
     private val managerService: ManagerService,
     private val projectIamV0Service: ProjectIamV0Service,
     private val tokenService: ClientTokenService,
-    private val bsAuthTokenApi: BSAuthTokenApi
+    private val bsAuthTokenApi: BSAuthTokenApi,
+    private val projectExtPermissionService: ProjectExtPermissionService
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -349,12 +351,13 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
-        projectIamV0Service.createUser2Project(
+        projectExtPermissionService.createUser2Project(
             createUser = createInfo.createUserId,
             projectCode = projectId,
             roleName = createInfo.roleName,
             roleId = createInfo.roleId,
-            userIds = createInfo.userIds!!
+            userIds = createInfo.userIds!!,
+            checkManager = true
         )
         return true
     }

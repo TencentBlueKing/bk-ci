@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.MessageProperties
 import org.springframework.beans.factory.annotation.Autowired
 
-class V0ProjectPermissionServiceImpl @Autowired constructor(
+class TxV0ProjectPermissionServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val authProperties: BkAuthProperties,
     private val authProjectApi: BSAuthProjectApi,
@@ -168,6 +168,6 @@ class V0ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(V0ProjectPermissionServiceImpl::class.java)
+        val logger = LoggerFactory.getLogger(TxV0ProjectPermissionServiceImpl::class.java)
     }
 }

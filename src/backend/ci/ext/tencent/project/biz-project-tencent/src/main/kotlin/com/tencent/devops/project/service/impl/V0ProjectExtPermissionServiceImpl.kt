@@ -32,7 +32,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.TxProjectPermissionService
+import com.tencent.devops.project.service.ProjectExtPermissionService
+import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -40,12 +41,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.MessageProperties
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
-@Service
-class TxProjectPermissionServiceImpl @Autowired constructor(
-    private val objectMapper: ObjectMapper
-) : TxProjectPermissionService {
+class V0ProjectExtPermissionServiceImpl @Autowired constructor(
+    private val objectMapper: ObjectMapper,
+    private val projectIamV0Service: ProjectIamV0Service
+) : ProjectExtPermissionService {
 
     @Value("\${auth.url}")
     private lateinit var authUrl: String
@@ -64,6 +64,32 @@ class TxProjectPermissionServiceImpl @Autowired constructor(
         return false
     }
 
+    override fun createUser2Project(
+        createUser: String,
+        userIds: List<String>,
+        projectCode: String,
+        roleId: Int?,
+        roleName: String?,
+        checkManager: Boolean
+    ): Boolean {
+        return if (checkManager) {
+            projectIamV0Service.createUser2Project(
+                createUser = createUser,
+                userIds = userIds,
+                projectCode = projectCode,
+                roleId = roleId,
+                roleName = roleName
+            )
+        } else {
+            projectIamV0Service.createUser2ProjectImpl(
+                userIds = userIds,
+                projectId = projectCode,
+                roleName = roleName,
+                roleId = roleId
+            )
+        }
+    }
+
     private fun request(request: Request, errorMessage: String): String {
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
@@ -76,6 +102,6 @@ class TxProjectPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(TxProjectPermissionServiceImpl::class.java)
+        val logger = LoggerFactory.getLogger(V0ProjectExtPermissionServiceImpl::class.java)
     }
 }
