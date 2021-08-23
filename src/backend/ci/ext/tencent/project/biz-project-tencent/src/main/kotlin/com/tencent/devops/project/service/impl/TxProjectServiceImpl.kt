@@ -164,17 +164,26 @@ class TxProjectServiceImpl @Autowired constructor(
         return tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
     }
 
-    override fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, projectCreateExtInfo: ProjectCreateExtInfo) {
+    override fun createExtProjectInfo(
+        userId: String,
+        projectId: String,
+        accessToken: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        projectCreateExtInfo: ProjectCreateExtInfo
+    ) {
         // 添加repo项目
         val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
         logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
 
-        if (!accessToken.isNullOrEmpty() && projectCreateExtInfo.needAuth!!) {
+        if (projectCreateExtInfo.needAuth!!) {
+            val newAccessToken = if (accessToken.isNullOrBlank()) {
+                bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+            } else accessToken
             // 添加paas项目
             projectPaasCCService.createPaasCCProject(
                 userId = userId,
                 projectId = projectId,
-                accessToken = accessToken!!,
+                accessToken = newAccessToken!!,
                 projectCreateInfo = projectCreateInfo
             )
         }
