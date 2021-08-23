@@ -202,7 +202,9 @@ class PreBuildV2Service @Autowired constructor(
                         label = emptyList(),
                         ifField = null,
                         fastKill = false,
-                        jobs = yamlObject.finally!!
+                        jobs = yamlObject.finally!!,
+                        checkIn = null,
+                        checkOut = null
                     ),
                     startUpReq = startUpReq,
                     agentInfo = agentInfo,
