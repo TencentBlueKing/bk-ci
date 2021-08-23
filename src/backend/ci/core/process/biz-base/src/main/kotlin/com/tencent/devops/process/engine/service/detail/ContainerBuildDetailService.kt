@@ -60,6 +60,8 @@ class ContainerBuildDetailService(
             modelInterface = object : ModelInterface {
                 var update = false
                 override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                    logger.info("[$buildId]|containerPreparing|id=$id&containerId=$containerId|startVMStatus " +
+                        "changed from ${container.startVMStatus} to RUNNING")
                     if (id == containerId) {
                         container.startEpoch = System.currentTimeMillis()
                         container.status = BuildStatus.PREPARE_ENV.name
@@ -90,8 +92,6 @@ class ContainerBuildDetailService(
                         if (container.startEpoch != null) {
                             container.systemElapsed = System.currentTimeMillis() - container.startEpoch!!
                         }
-                        logger.info("[$buildId]|containerStarted|containerId=$containerId|startVMStatus " +
-                            "changed from ${container.startVMStatus} to ${containerBuildStatus.name}")
                         container.startVMStatus = containerBuildStatus.name
                         // #2074 containerBuildStatus如果是失败的，则将Job整体状态设置为失败
                         if (containerBuildStatus.isFailure()) {
@@ -127,8 +127,6 @@ class ContainerBuildDetailService(
                     if (buildStatus.isFinish() &&
                         (container.startVMStatus == null || !BuildStatus.valueOf(container.startVMStatus!!).isFinish())
                     ) {
-                        logger.info("[$buildId]|updateContainer|containerId=$containerId|startVMStatus " +
-                            "changed from ${container.startVMStatus} to ${container.status}")
                         container.startVMStatus = container.status
                     }
                     return Traverse.BREAK
