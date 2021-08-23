@@ -25,35 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.websocket.dispatch.push
+package com.tencent.devops.auth.entity
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.websocket.dispatch.message.SendMessage
-import com.tencent.devops.common.websocket.pojo.NotifyPost
-import com.tencent.devops.common.websocket.pojo.WebSocketType
-import com.tencent.devops.common.websocket.utils.RedisUtlis
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-abstract class WebsocketPush(
-    open val userId: String,
-//    open val pathClass: IPath,
-    open val pushType: WebSocketType,
-    open val redisOperation: RedisOperation,
-    open val objectMapper: ObjectMapper,
-    open var page: String?,
-    open var notifyPost: NotifyPost
-) {
-    companion object {
-        val logger = LoggerFactory.getLogger(WebsocketPush:: class.java)
-    }
-
-    open fun findSession(page: String): List<String>?
-    {
-        return RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, page)
-    }
-
-    abstract fun buildMqMessage(): SendMessage?
-
-    abstract fun buildNotifyMessage(message: SendMessage)
-}
+@ApiModel
+data class SearchProfileDeptEntity(
+    @ApiModelProperty("用户 ID")
+    val id: String,
+    val with_family: Boolean,
+    override var bk_app_code: String,
+    override var bk_app_secret: String,
+    override var bk_username: String,
+    override val bk_token: String = ""
+) : EsbBaseReq(bk_app_code, bk_app_secret, bk_username, bk_token)

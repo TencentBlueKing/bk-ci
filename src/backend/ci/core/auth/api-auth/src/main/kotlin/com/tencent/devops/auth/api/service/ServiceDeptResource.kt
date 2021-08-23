@@ -25,35 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.websocket.dispatch.push
+package com.tencent.devops.auth.api.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.websocket.dispatch.message.SendMessage
-import com.tencent.devops.common.websocket.pojo.NotifyPost
-import com.tencent.devops.common.websocket.pojo.WebSocketType
-import com.tencent.devops.common.websocket.utils.RedisUtlis
-import org.slf4j.LoggerFactory
+import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-abstract class WebsocketPush(
-    open val userId: String,
-//    open val pathClass: IPath,
-    open val pushType: WebSocketType,
-    open val redisOperation: RedisOperation,
-    open val objectMapper: ObjectMapper,
-    open var page: String?,
-    open var notifyPost: NotifyPost
-) {
-    companion object {
-        val logger = LoggerFactory.getLogger(WebsocketPush:: class.java)
-    }
+@Api(tags = ["SERVICE_DEPT"], description = "权限校验--组织相关")
+@Path("/service/dept")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceDeptResource {
+    @GET
+    @Path("/parents")
+    @ApiOperation("获取组织父级")
+    fun getParentDept(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("用户ID", required = true)
+        userId: String
+    ): Result<Int>
 
-    open fun findSession(page: String): List<String>?
-    {
-        return RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, page)
-    }
-
-    abstract fun buildMqMessage(): SendMessage?
-
-    abstract fun buildNotifyMessage(message: SendMessage)
+    @GET
+    @Path("/get/byName")
+    @ApiOperation("根据组织名称获取组织id")
+    fun getDeptByName(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("用户ID", required = true)
+        userId: String,
+        @QueryParam("deptName")
+        @ApiParam("组织名称", required = true)
+        deptName: String
+    ): Result<DeptInfoVo?>
 }

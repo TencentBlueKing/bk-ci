@@ -535,7 +535,7 @@ class DockerHostBuildService(
             val containerName =
                 "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
 
-            val dockerResource = dockerHostBuildApi.getResourceConfig(pipelineId, vmSeqId)
+            val dockerResource = dockerHostBuildApi.getResourceConfig(pipelineId, vmSeqId)?.data
 
             val hostConfig: HostConfig
             if (dockerResource != null) {

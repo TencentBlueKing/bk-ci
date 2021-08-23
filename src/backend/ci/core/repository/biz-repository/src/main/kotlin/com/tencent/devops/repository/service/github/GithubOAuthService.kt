@@ -102,7 +102,7 @@ class GithubOAuthService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(GithubOAuthService::class.java)
         private const val RANDOM_ALPHA_NUM = 8
         private const val GITHUB_URL = "https://github.com"
     }
