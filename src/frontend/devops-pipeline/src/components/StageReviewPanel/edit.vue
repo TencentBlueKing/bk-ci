@@ -1,30 +1,40 @@
 <template>
     <div class="pipeline-stage-review-control bk-form bk-form-vertical">
-        <form-field>
+        <form-field :label="$t('stageReview.stageInConditions')" class="stage-rule">
             <bk-radio-group class="stage-review-radio-group" v-model="manualTrigger">
                 <bk-radio :disabled="disabled" :value="false">{{ $t('disableStageReviewRadioLabel') }}</bk-radio>
-                <bk-radio :disabled="disabled" :value="true">{{ $t('enableStageReviewRadioLabel') }}</bk-radio>
+                <bk-radio :disabled="disabled" :value="true" style="marginLeft:82px">{{ $t('enableStageReviewRadioLabel') }}</bk-radio>
             </bk-radio-group>
         </form-field>
         <template v-if="manualTrigger">
-            <form-field :required="true" :disabled="disabled" :label="$t('stageUserTriggers')" :is-error="!hasTriggerMember" :desc="$t('stageTriggerDesc')" :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')">
-                <user-input :clearable="true" :disabled="disabled" :value="triggerUsers" name="triggerUsers" :handle-change="handleUpdateStageControl"></user-input>
+            <bk-divider class="stage-divider"></bk-divider>
+
+            <form-field required :label="$t('stageReview.approvalFlow')" :is-error="!hasTriggerMember" :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')">
+                <edit-review-flow
+                    :review-groups="reviewGroups"
+                    :disabled="disabled"
+                    @change="handleUpdateStageControl"
+                ></edit-review-flow>
             </form-field>
 
-            <form-field :disabled="disabled" :label="$t('stageReviewInputDesc')">
+            <form-field :disabled="disabled" :label="$t('stageReviewInputDesc')" class="mt14">
                 <vuex-textarea :placeholder="$t('stageReviewInputDescTip')" name="reviewDesc" clearable :disabled="disabled" :handle-change="handleUpdateStageControl" :value="reviewDesc"></vuex-textarea>
             </form-field>
 
-            <form-field :disabled="disabled" :label="$t('stageReviewParams')">
-                <key-value-normal :disabled="disabled" name="reviewParams" :handle-change="handleUpdateStageControl" :value="reviewParams"></key-value-normal>
-            </form-field>
-
-            <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
+            <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" class="mt14" :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
                 <bk-input type="number" :disabled="disabled" v-model="timeout" :min="1" :max="720">
                     <template slot="append">
                         <div class="group-text">{{ $t('timeMap.hours') }}</div>
                     </template>
                 </bk-input>
+            </form-field>
+
+            <form-field :disabled="disabled" :label="$t('stageReviewParams')" class="mt14">
+                <edit-params
+                    :disabled="disabled"
+                    :review-params="reviewParams"
+                    @change="handleUpdateStageControl"
+                ></edit-params>
             </form-field>
         </template>
     </div>
@@ -34,16 +44,17 @@
     import Vue from 'vue'
     import { mapActions } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import UserInput from '@/components/atomFormField/UserInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+    import EditParams from './components/params/edit'
+    import EditReviewFlow from './components/reviewFlow/edit'
+
     export default {
         name: 'stage-review-control',
         components: {
             FormField,
-            UserInput,
             VuexTextarea,
-            KeyValueNormal
+            EditParams,
+            EditReviewFlow
         },
         props: {
             stage: {
@@ -53,15 +64,16 @@
             disabled: {
                 type: Boolean,
                 default: false
+            },
+            stageControl: {
+                type: Object,
+                default: () => ({})
+            },
+            stageReviewType: {
+                type: String
             }
         },
         computed: {
-            stageControl () {
-                if (this.stage && this.stage.stageControlOption) {
-                    return this.stage.stageControlOption
-                }
-                return {}
-            },
             manualTrigger: {
                 get () {
                     return !!this.stageControl.manualTrigger
@@ -78,12 +90,12 @@
                     this.handleUpdateStageControl('timeout', timeout)
                 }
             },
-            triggerUsers () {
-                return this.stageControl && Array.isArray(this.stageControl.triggerUsers) ? this.stageControl.triggerUsers : []
+            reviewGroups () {
+                return this.stageControl && Array.isArray(this.stageControl.reviewGroups) ? this.stageControl.reviewGroups : []
             },
             hasTriggerMember () {
                 try {
-                    return this.manualTrigger && this.triggerUsers.length > 0
+                    return this.manualTrigger && this.reviewGroups.length > 0
                 } catch (e) {
                     return false
                 }
@@ -100,7 +112,7 @@
         },
         watch: {
             manualTrigger (val) {
-                !val && this.handleUpdateStageControl('triggerUsers', [])
+                !val && this.handleUpdateStageControl('reviewGroups', [])
                 this.handleUpdateStageControl('isReviewError', !this.validateStageControl())
             },
             hasTriggerMember (hasTriggerMember) {
@@ -135,19 +147,16 @@
             },
             handleUpdateStageControl (name, value) {
                 this.setPipelineEditing(true)
-                this.handleStageChange('stageControlOption', {
+                this.handleStageChange(this.stageReviewType, {
                     ...(this.stageControl || {}),
                     [name]: value
                 })
             },
             initStageReview () {
                 if (this.stageControl === undefined || JSON.stringify(this.stageControl) === '{}') {
-                    this.handleStageChange('stageControlOption', {
-                        enable: true,
-                        runCondition: 'AFTER_LAST_FINISHED',
-                        customVariables: [{ key: 'param1', value: '' }],
+                    this.handleStageChange(this.stageReviewType, {
                         manualTrigger: false,
-                        triggerUsers: [],
+                        reviewGroups: [],
                         timeout: 24
                     })
                 }
@@ -164,5 +173,17 @@
         .bk-form-radio {
             margin-right: 16px;
         }
+    }
+    .stage-rule {
+        /deep/ .bk-form-content {
+            min-height: auto;
+            line-height: 20px;
+        }
+    }
+    .stage-divider {
+        margin: 24px 0 2px !important;
+    }
+    .mt14 {
+        margin-top: 14px !important;
     }
 </style>
