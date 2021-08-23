@@ -28,7 +28,7 @@
 package com.tencent.devops.sign.utils
 
 import com.tencent.devops.common.api.util.FileUtil
-import junit.framework.Assert.assertEquals
+import org.junit.Assert
 import org.junit.Test
 import java.io.File
 
@@ -51,7 +51,7 @@ class IpaSignUtilTest {
         val inputStream = File(inputStreamFile).inputStream()
         val outputStreamFile = File(outputStreamStreamFile)
         val md5 = IpaFileUtil.copyInputStreamToFile(inputStream, outputStreamFile)
-        assertEquals(FileUtil.getMD5(testFile), md5)
+        Assert.assertEquals(FileUtil.getMD5(testFile), md5)
         if (!exists) {
             testFile.delete()
         }
