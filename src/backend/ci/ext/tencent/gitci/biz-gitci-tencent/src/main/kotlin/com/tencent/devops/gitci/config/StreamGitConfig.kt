@@ -33,5 +33,5 @@ import org.springframework.stereotype.Component
 @Component
 class StreamGitConfig {
     @Value("\${rtx.v2GitUrl:#{null}}")
-    val TGitUrl: String? = null
+    val tGitUrl: String? = null
 }

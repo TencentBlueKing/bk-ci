@@ -203,7 +203,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                     gitCIBasicSetting = gitCIBasicSetting,
                     isFinish = false,
                     targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
-                        homePage = streamGitConfig.TGitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                        homePage = streamGitConfig.tGitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
                         projectName = GitCommonUtils.getRepoName(gitCIBasicSetting.gitHttpUrl, gitCIBasicSetting.name),
                         pipelineId = pipeline.pipelineId,
                         buildId = buildId
