@@ -126,7 +126,7 @@ class GitCIEventService @Autowired constructor(
                 userId = event.userId,
                 block = realBlock,
                 state = GitCICommitCheckState.FAILURE,
-                context = filePath,
+                context = "$filePath@${event.objectKind.toUpperCase()}",
                 description = TriggerReason.getTriggerReason(reason)?.summary ?: reason,
                 gitCIBasicSetting = gitBasicSetting,
                 jumpRequest = true
