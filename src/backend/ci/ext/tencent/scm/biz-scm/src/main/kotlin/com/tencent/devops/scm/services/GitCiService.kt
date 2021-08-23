@@ -167,10 +167,14 @@ class GitCiService {
                 .url(url)
                 .get()
                 .build()
-            OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
-                if (!it.isSuccessful) throw RuntimeException("fail to get git file content with: $url($data)")
-                return data
+            OkhttpUtils.doHttp(request).use { response ->
+                if (!response.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${response.code()})${response.message()}"
+                    )
+                }
+                return response.body()!!.string()
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
@@ -239,11 +243,16 @@ class GitCiService {
             .url(url)
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use {
-            val response = it.body()!!.string()
+        OkhttpUtils.doHttp(request).use { response ->
             logger.info("[url=$url]|getMergeRequestChangeInfo with response=$response")
-            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-            return Result(JsonUtil.to(response, GitMrChangeInfo::class.java))
+            if (!response.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "(${response.code()})${response.message()}"
+                )
+            }
+            val data = response.body()!!.string()
+            return Result(JsonUtil.to(data, GitMrChangeInfo::class.java))
         }
     }
 
@@ -339,15 +348,20 @@ class GitCiService {
                 } else {
                     ""
                 }
-            logger.info("getFileInfo request url: $url")
             val request = Request.Builder()
                 .url(url)
                 .get()
                 .build()
-            OkhttpUtils.doHttp(request).use {
-                val response = it.body()!!.string()
-                if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-                return Result(JsonUtil.to(response, GitCodeFileInfo::class.java))
+            OkhttpUtils.doHttp(request).use { response ->
+                logger.info("[url=$url]|getFileInfo with response=$response")
+                if (!response.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${response.code()})${response.message()}"
+                    )
+                }
+                val data = response.body()!!.string()
+                return Result(JsonUtil.to(data, GitCodeFileInfo::class.java))
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")

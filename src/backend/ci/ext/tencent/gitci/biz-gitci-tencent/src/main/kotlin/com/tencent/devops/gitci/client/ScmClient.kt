@@ -38,6 +38,7 @@ import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.api.ServiceScmOauthResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -106,10 +107,9 @@ class ScmClient @Autowired constructor(
         context: String,
         gitCIBasicSetting: GitCIBasicSetting,
         pipelineId: String,
-        block: Boolean
+        block: Boolean,
+        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf())
     ) = try {
-        val titleData = mutableListOf<String>()
-        val resultMap = mutableMapOf<String, MutableList<List<String>>>()
 
         val token = getAccessToken(gitCIBasicSetting.gitProjectId).first
         val buildNum = getBuildNum(gitCIBasicSetting.projectCode.toString(), buildId)
@@ -133,10 +133,10 @@ class ScmClient @Autowired constructor(
             description = description,
             block = block,
             mrRequestId = mergeRequestId,
-            reportData = Pair(titleData, resultMap)
+            reportData = reportData
         )
         logger.info("user $userId buildId $buildId pushCommitCheck: $request")
-        client.getScm(ServiceGitResource::class).addCommitCheck(request)
+        client.getScm(ServiceScmOauthResource::class).addCommitCheck(request)
     } catch (e: Exception) {
         logger.error("user $userId buildId $buildId pushCommitCheck error.", e)
     }

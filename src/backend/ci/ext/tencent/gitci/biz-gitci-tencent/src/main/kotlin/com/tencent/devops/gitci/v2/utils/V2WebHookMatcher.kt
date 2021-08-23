@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.v2.utils
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.gitci.pojo.GitRequestEvent
@@ -53,6 +54,7 @@ class V2WebHookMatcher @Autowired constructor(
         private val matcher = AntPathMatcher()
     }
 
+    @Throws(ErrorCodeException::class)
     fun isMatch(
         triggerOn: TriggerOn,
         event: GitEvent,

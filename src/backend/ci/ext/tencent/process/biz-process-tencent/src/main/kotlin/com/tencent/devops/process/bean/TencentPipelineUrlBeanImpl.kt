@@ -27,16 +27,10 @@
 
 package com.tencent.devops.process.bean
 
-import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
-import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Component
 
-@Primary
-@Component
 class TencentPipelineUrlBeanImpl constructor(
     private val commonConfig: CommonConfig,
     private val client: Client
@@ -50,15 +44,15 @@ class TencentPipelineUrlBeanImpl constructor(
     override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
         val devopsHostGateway = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         logger.info("[$buildId]|genBuildDetailUrl| host=$devopsHostGateway")
-        val url = "$devopsHostGateway/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
-        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+        return "$devopsHostGateway/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+//        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
     }
 
     override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
         val devopsOuterHostGateWay = HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
         logger.info("[$buildId]|genBuildDetailUrl| outHost=$devopsOuterHostGateWay")
-        val url = "$devopsOuterHostGateWay/app/download/devops_app_forward.html" +
+        return "$devopsOuterHostGateWay/app/download/devops_app_forward.html" +
             "?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId"
-        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+//        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
     }
 }
