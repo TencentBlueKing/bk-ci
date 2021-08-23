@@ -174,7 +174,7 @@ class ApiFilter(
                 val username = user["username"]?.toString() ?: ""
                 val verified = user["verified"].toString().toBoolean()
                 // 名字为空或者没有通过认证的时候，直接失败
-                if (username.isNullOrBlank() && verified) {
+                if (username.isNotBlank() && verified) {
                     // 将user头部置空
                     requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
                     if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
