@@ -145,10 +145,7 @@ class GitCheckService @Autowired constructor(
                 return
             }
 
-            val gitCheckClient = client.get(ServiceRepositoryGitCheckResource::class)
-
             tryAddCommitCheck(
-                gitCheckClient = gitCheckClient,
                 context = context,
                 event = event,
                 targetUrl = targetUrl,
@@ -163,7 +160,6 @@ class GitCheckService @Autowired constructor(
 
     @Suppress("NestedBlockDepth")
     private fun GitCommitCheckEvent.tryAddCommitCheck(
-        gitCheckClient: ServiceRepositoryGitCheckResource,
         context: String,
         event: GitCommitCheckEvent,
         targetUrl: String,
@@ -173,6 +169,8 @@ class GitCheckService @Autowired constructor(
         buildNum: String,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
     ) {
+        val gitCheckClient = client.get(ServiceRepositoryGitCheckResource::class)
+
         while (true) {
             val lockKey = "code_git_commit_check_lock_$pipelineId"
             val redisLock = RedisLock(redisOperation, lockKey, 60)
