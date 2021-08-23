@@ -114,7 +114,7 @@ class GithubOauthService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(GithubOauthService::class.java)
 //        private val okHttpClient = okhttp3.OkHttpClient.Builder()
 //                .connectTimeout(5L, TimeUnit.SECONDS)
 //                .readTimeout(60L, TimeUnit.SECONDS)

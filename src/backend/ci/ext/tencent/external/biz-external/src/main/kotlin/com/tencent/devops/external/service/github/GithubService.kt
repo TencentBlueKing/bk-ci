@@ -266,7 +266,7 @@ class GithubService @Autowired constructor(
     private val OPERATION_GET_TAG = "获取指定Tag"
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(GithubService::class.java)
 //        private val okHttpClient = okhttp3.OkHttpClient.Builder()
 //                .connectTimeout(5L, TimeUnit.SECONDS)
 //                .readTimeout(60L, TimeUnit.SECONDS)
