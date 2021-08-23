@@ -114,7 +114,7 @@ open class ScriptTask : ITask() {
                     repoName = "pipeline",
                     path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
                     type = TokenType.UPLOAD,
-                    expireSeconds = TaskUtil.getTimeOut(buildTask)?.times(60)
+                    expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
                 )
                 val count = ArchiveUtils.archivePipelineFiles(
                     filePath = archiveFileIfExecFail,
