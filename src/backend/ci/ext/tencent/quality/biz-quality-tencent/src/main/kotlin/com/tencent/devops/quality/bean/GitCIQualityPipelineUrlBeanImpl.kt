@@ -25,15 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.trigger.template.pojo
+package com.tencent.devops.quality.bean
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.scm.api.ServiceGitCiResource
+import org.springframework.beans.factory.annotation.Value
 
-data class ParametersTemplate(
-    val parameters: List<Parameters>
-)
+class GitCIQualityPipelineUrlBeanImpl constructor(
+    private val client: Client
+) : QualityUrlBean {
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ParametersTemplateNull(
-    val parameters: List<Parameters>?
-)
+    @Value("\${gitci.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
+
+    override fun genBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        runtimeVariable: Map<String, String>?
+    ): String {
+        logger.info("[$buildId]|genGitCIBuildDetailUrl| host=$v2GitUrl")
+        val project = client.getScm(ServiceGitCiResource::class)
+            .getGitCodeProjectInfo(projectCode.removePrefix("git_"))
+            .data ?: return ""
+        val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId/#${project.pathWithNamespace}"
+        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+    }
+
+    companion object {
+        private val logger = org.slf4j.LoggerFactory.getLogger(GitCIQualityPipelineUrlBeanImpl::class.java)
+        private const val TTL = 24 * 3600 * 3
+    }
+}

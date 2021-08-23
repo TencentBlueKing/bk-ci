@@ -32,7 +32,7 @@ import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.service.PipelineSubscriptionService
+import com.tencent.devops.process.service.TxPipelineSubscriptionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -45,7 +45,7 @@ import org.springframework.stereotype.Component
 @Component
 class MeasurePipelineBuildFinishListener @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineSubscriptionService: PipelineSubscriptionService,
+    private val pipelineSubscriptionService: TxPipelineSubscriptionService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 

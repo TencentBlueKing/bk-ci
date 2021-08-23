@@ -25,12 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.exception
+package com.tencent.devops.gitci.common.exception
 
-import com.tencent.devops.common.api.pojo.ErrorType
-
-open class GitCIServiceException(
-    val errorType: ErrorType,
-    val errorCode: Int,
-    errorMsg: String
-) : Exception(errorMsg)
+class QualityRulesException(message: String, val errorCode: String? = null) : RuntimeException(message)
