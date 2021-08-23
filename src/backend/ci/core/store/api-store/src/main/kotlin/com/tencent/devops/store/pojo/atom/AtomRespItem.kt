@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.store.pojo.common.Label
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -91,5 +92,9 @@ data class AtomRespItem(
     @ApiModelProperty("评分")
     val score: Double? = null,
     @ApiModelProperty("最近执行次数")
-    val recentExecuteNum: Int? = null
+    val recentExecuteNum: Int? = null,
+    @ApiModelProperty("是否能卸载标识")
+    val uninstallFlag: Boolean? = null,
+    @ApiModelProperty("标签列表", required = false)
+    val labelList: List<Label>? = null
 )
