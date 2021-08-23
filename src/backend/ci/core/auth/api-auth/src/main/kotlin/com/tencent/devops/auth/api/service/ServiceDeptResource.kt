@@ -25,28 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.api.service
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-interface DeptService {
-    fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo?
+@Api(tags = ["SERVICE_DEPT"], description = "权限校验--组织相关")
+@Path("/service/dept")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceDeptResource {
+    @GET
+    @Path("/parents")
+    @ApiOperation("获取组织父级")
+    fun getParentDept(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("用户ID", required = true)
+        userId: String
+    ): Result<Int>
 
-    fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo?
-
-    fun getUserAndDeptByName(
-        name: String,
-        accessToken: String?,
+    @GET
+    @Path("/get/byName")
+    @ApiOperation("根据组织名称获取组织id")
+    fun getDeptByName(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("用户ID", required = true)
         userId: String,
-        type: ManagerScopesEnum
-    ): List<UserAndDeptInfoVo?>
-
-    fun getDeptUser(deptId: Int, accessToken: String?): List<String>?
-
-    // 获取用户组织上一级组织
-    fun getUserParentDept(userId: String): Int
-
-    fun getDeptByName(deptName: String, userId: String): DeptInfoVo?
+        @QueryParam("deptName")
+        @ApiParam("组织名称", required = true)
+        deptName: String
+    ): Result<DeptInfoVo?>
 }

@@ -25,28 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.resources.service
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
+import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-interface DeptService {
-    fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo?
+@RestResource
+class ServiceDeptResourceImpl @Autowired constructor(
+    val deptService: DeptService
+) : ServiceDeptResource {
+    override fun getParentDept(userId: String): Result<Int> {
+        return Result("", deptService.getUserParentDept(userId))
+    }
 
-    fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo?
-
-    fun getUserAndDeptByName(
-        name: String,
-        accessToken: String?,
-        userId: String,
-        type: ManagerScopesEnum
-    ): List<UserAndDeptInfoVo?>
-
-    fun getDeptUser(deptId: Int, accessToken: String?): List<String>?
-
-    // 获取用户组织上一级组织
-    fun getUserParentDept(userId: String): Int
-
-    fun getDeptByName(deptName: String, userId: String): DeptInfoVo?
+    override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
+        return Result(deptService.getDeptByName(deptName, userId))
+    }
 }
