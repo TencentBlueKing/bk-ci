@@ -59,7 +59,8 @@ import javax.ws.rs.core.MediaType
 @Api(tags = ["USER_MARKET_ATOM"], description = "插件市场-插件")
 @Path("/user/market/")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
+@Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserMarketAtomResource {
 
     @ApiOperation("获取插件市场首页的数据")
