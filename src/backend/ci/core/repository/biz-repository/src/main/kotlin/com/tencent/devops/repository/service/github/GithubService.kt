@@ -297,7 +297,7 @@ class GithubService @Autowired constructor(
 
     // TODO:脱敏
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(GithubService::class.java)
         private const val PAGE_SIZE = 100
         private const val SLEEP_MILLS_FOR_RETRY_500: Long = 500
         private const val GITHUB_API_URL = "https://api.github.com"

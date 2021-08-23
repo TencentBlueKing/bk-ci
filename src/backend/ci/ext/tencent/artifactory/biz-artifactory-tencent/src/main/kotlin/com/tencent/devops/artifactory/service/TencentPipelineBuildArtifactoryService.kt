@@ -43,7 +43,7 @@ class TencentPipelineBuildArtifactoryService constructor(
 ) : PipelineBuildArtifactoryService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)!!
+        private val logger = LoggerFactory.getLogger(TencentPipelineBuildArtifactoryService::class.java)!!
     }
 
     override fun getArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {

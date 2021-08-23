@@ -84,7 +84,6 @@
                 </bk-form-item>
             </bk-form>
         </bk-dialog>
-        <review-dialog :is-show="showReviewDialog"></review-dialog>
         <export-dialog :is-show.sync="showExportDialog"></export-dialog>
         <import-pipeline-popup :handle-import-success="handleImportModifyPipeline" :is-show.sync="showImportDialog"></import-pipeline-popup>
         
@@ -97,7 +96,6 @@
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
     import innerHeader from '@/components/devops/inner_header'
     import triggers from '@/components/pipeline/triggers'
-    import ReviewDialog from '@/components/ReviewDialog'
     import { bus } from '@/utils/bus'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
@@ -112,7 +110,6 @@
             BreadCrumb,
             showTooltip,
             BreadCrumbItem,
-            ReviewDialog,
             exportDialog,
             versionSideslider,
             ImportPipelinePopup

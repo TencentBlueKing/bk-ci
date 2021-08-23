@@ -1,4 +1,4 @@
-USE devops_ci_gitci_dispatch;
+USE devops_ci_dispatch_gitci;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;

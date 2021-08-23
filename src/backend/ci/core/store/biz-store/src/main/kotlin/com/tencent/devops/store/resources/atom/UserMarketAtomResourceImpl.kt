@@ -47,7 +47,8 @@ import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.common.StoreProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource@Suppress("ALL")
+@RestResource
+@Suppress("ALL")
 class UserMarketAtomResourceImpl @Autowired constructor(
     private val marketAtomService: MarketAtomService,
     private val storeProjectService: StoreProjectService
@@ -66,6 +67,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         rdType: AtomTypeEnum?,
         yamlFlag: Boolean?,
         recommendFlag: Boolean?,
+        qualityFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
         pageSize: Int?
@@ -80,6 +82,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
                 rdType = rdType,
                 yamlFlag = yamlFlag,
                 recommendFlag = recommendFlag,
+                qualityFlag = qualityFlag,
                 sortType = sortType,
                 page = page,
                 pageSize = pageSize,
@@ -140,6 +143,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     }
 
     override fun getAtomYmlV2Info(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
-        return Result(marketAtomService.generateCiV2Yaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag ?: false))
+        return Result(marketAtomService.generateCiV2Yaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag
+            ?: false))
     }
 }

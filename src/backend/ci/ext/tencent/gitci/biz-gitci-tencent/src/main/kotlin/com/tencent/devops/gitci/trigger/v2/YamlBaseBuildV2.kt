@@ -201,7 +201,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                 )
             }
             return BuildId(buildId)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             logger.error(
                 "GitCI Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                     "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",

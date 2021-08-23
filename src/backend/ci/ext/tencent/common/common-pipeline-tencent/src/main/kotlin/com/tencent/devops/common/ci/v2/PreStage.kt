@@ -28,6 +28,7 @@
 package com.tencent.devops.common.ci.v2
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
@@ -40,5 +41,9 @@ data class PreStage(
     val ifField: String? = null,
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,
-    val jobs: Map<String, PreJob>?
+    val jobs: Map<String, PreJob>?,
+    @JsonProperty("check-in")
+    val checkIn: PreStageCheck?,
+    @JsonProperty("check-out")
+    val checkOut: PreStageCheck?
 )
