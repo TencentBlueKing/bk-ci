@@ -1504,6 +1504,7 @@ class PipelineRuntimeService @Autowired constructor(
         container.startEpoch = null
         container.elementElapsed = null
         container.systemElapsed = null
+        container.startVMStatus = null
         container.executeCount = target.executeCount
         if (atomElement != null) { // 将原子状态重置
             if (initialStatus == null) { // 未指定状态的，将重新运行
