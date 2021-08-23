@@ -39,5 +39,7 @@ data class AtomFeatureRequest(
     @ApiModelProperty("删除标识", required = false)
     val deleteFlag: Boolean? = null,
     @ApiModelProperty("yaml可用标识 true：是，false：否")
-    val yamlFlag: Boolean? = null
+    val yamlFlag: Boolean? = null,
+    @ApiModelProperty("质量红线可用标识 true：是，false：否")
+    val qualityFlag: Boolean? = null
 )
