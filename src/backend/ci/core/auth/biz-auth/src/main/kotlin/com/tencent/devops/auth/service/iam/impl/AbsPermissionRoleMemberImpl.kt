@@ -67,7 +67,8 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         projectId: Int,
         roleId: Int,
         members: List<RoleMemberDTO>,
-        managerGroup: Boolean
+        managerGroup: Boolean,
+        checkAGradeManager: Boolean?
     ) {
         val iamId = groupService.getRelationId(roleId)
         if (iamId == null) {
@@ -75,7 +76,10 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
             throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
         }
 
-        permissionGradeService.checkGradeManagerUser(projectId = projectId, userId = userId)
+        // 页面操作需要校验分级管理员,服务间调用无需校验
+        if (checkAGradeManager!!) {
+            permissionGradeService.checkGradeManagerUser(projectId = projectId, userId = userId)
+        }
         val roleMembers = mutableListOf<ManagerMember>()
         val userIds = mutableListOf<String>()
         members.forEach {

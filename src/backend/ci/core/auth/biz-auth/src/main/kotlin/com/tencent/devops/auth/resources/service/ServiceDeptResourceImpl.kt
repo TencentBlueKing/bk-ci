@@ -25,35 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.websocket.dispatch.push
+package com.tencent.devops.auth.resources.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.websocket.dispatch.message.SendMessage
-import com.tencent.devops.common.websocket.pojo.NotifyPost
-import com.tencent.devops.common.websocket.pojo.WebSocketType
-import com.tencent.devops.common.websocket.utils.RedisUtlis
-import org.slf4j.LoggerFactory
+import com.tencent.devops.auth.api.service.ServiceDeptResource
+import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-abstract class WebsocketPush(
-    open val userId: String,
-//    open val pathClass: IPath,
-    open val pushType: WebSocketType,
-    open val redisOperation: RedisOperation,
-    open val objectMapper: ObjectMapper,
-    open var page: String?,
-    open var notifyPost: NotifyPost
-) {
-    companion object {
-        val logger = LoggerFactory.getLogger(WebsocketPush:: class.java)
+@RestResource
+class ServiceDeptResourceImpl @Autowired constructor(
+    val deptService: DeptService
+) : ServiceDeptResource {
+    override fun getParentDept(userId: String): Result<Int> {
+        return Result("", deptService.getUserParentDept(userId))
     }
 
-    open fun findSession(page: String): List<String>?
-    {
-        return RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, page)
+    override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
+        return Result(deptService.getDeptByName(deptName, userId))
     }
-
-    abstract fun buildMqMessage(): SendMessage?
-
-    abstract fun buildNotifyMessage(message: SendMessage)
 }

@@ -241,6 +241,6 @@ class V3EnvironmentPermissionService constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(V3EnvironmentPermissionService::class.java)
     }
 }
