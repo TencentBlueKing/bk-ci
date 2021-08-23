@@ -111,6 +111,6 @@ class AuthProjectService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(AuthProjectService::class.java)
     }
 }
