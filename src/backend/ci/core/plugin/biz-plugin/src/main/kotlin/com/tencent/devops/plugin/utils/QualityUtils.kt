@@ -38,7 +38,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 
 @Suppress("ALL")

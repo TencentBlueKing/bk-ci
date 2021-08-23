@@ -27,11 +27,14 @@
 
 package com.tencent.devops.gitci.trigger.v2
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.kafka.KafkaClient
+import com.tencent.devops.common.kafka.KafkaTopic.STREAM_BUILD_INFO_TOPIC
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.client.ScmClient
@@ -43,6 +46,7 @@ import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.pojo.v2.StreamBuildInfo
 import com.tencent.devops.gitci.trigger.GitCIEventService
 import com.tencent.devops.gitci.trigger.GitCheckService
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
@@ -58,10 +62,13 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 abstract class YamlBaseBuildV2<T> @Autowired constructor(
     private val client: Client,
+    private val kafkaClient: KafkaClient,
     private val scmClient: ScmClient,
     private val dslContext: DSLContext,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
@@ -171,10 +178,11 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
     ): BuildId? {
         val processClient = client.get(ServicePipelineResource::class)
         // 修改流水线并启动构建，需要加锁保证事务性
+        var buildId = ""
         try {
             logger.info("GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
-            val buildId =
+            buildId =
                 startupPipelineBuild(processClient, gitBuildId, model, event, gitCIBasicSetting, pipeline.pipelineId)
             logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
@@ -207,7 +215,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                 )
             }
             return BuildId(buildId)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             logger.error(
                 "GitCI Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                     "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
@@ -230,6 +238,14 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                 version = ymlVersion
             )
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
+        } finally {
+            if (buildId.isNotEmpty()) {
+                kafkaClient.send(STREAM_BUILD_INFO_TOPIC, JsonUtil.toJson(StreamBuildInfo(
+                    buildId = buildId,
+                    streamYamlUrl = "${gitCIBasicSetting.homepage}/blob/${event.commitId}/${pipeline.filePath}",
+                    washTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                )))
+            }
         }
 
         return null

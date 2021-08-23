@@ -36,6 +36,7 @@ import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.api.ServiceScmOauthResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -94,6 +95,49 @@ class ScmClient @Autowired constructor(
      * V2版本的同名方法，因为表结构发生了改变，所以数据结构变化
      * 有回填信息
      */
+    fun pushCommitCheck(
+        commitId: String,
+        description: String,
+        mergeRequestId: Long,
+        buildId: String,
+        userId: String,
+        status: GitCICommitCheckState,
+        context: String,
+        gitCIBasicSetting: GitCIBasicSetting,
+        pipelineId: String,
+        block: Boolean,
+        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf())
+    ) = try {
+
+        val token = getAccessToken(gitCIBasicSetting.gitProjectId).first
+        val buildNum = getBuildNum(gitCIBasicSetting.projectCode.toString(), buildId)
+        val request = CommitCheckRequest(
+            projectName = gitCIBasicSetting.gitProjectId.toString(),
+            url = gitCIBasicSetting.gitHttpUrl,
+            type = ScmType.CODE_GIT,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            commitId = commitId,
+            state = status.value,
+            targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                projectName = getProjectName(gitCIBasicSetting),
+                pipelineId = pipelineId,
+                buildId = buildId
+            ),
+            context = context,
+            description = description,
+            block = block,
+            mrRequestId = mergeRequestId,
+            reportData = reportData
+        )
+        logger.info("user $userId buildId $buildId pushCommitCheck: $request")
+        client.getScm(ServiceScmOauthResource::class).addCommitCheck(request)
+    } catch (e: Exception) {
+        logger.error("user $userId buildId $buildId pushCommitCheck error.", e)
+    }
 
     // 用来进行锁定提交的CommitCheck，无回填信息
     fun pushCommitCheckWithBlock(

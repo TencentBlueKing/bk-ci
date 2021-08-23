@@ -37,6 +37,7 @@ dependencies {
     api(project(":core:common:common-db"))
     api(project(":core:common:common-scm"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
+    api(project(":ext:tencent:common:common-kafka-tencent"))
     api(project(":ext:tencent:common:common-wechatwork"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":ext:tencent:gitci:api-gitci-tencent"))
@@ -49,11 +50,13 @@ dependencies {
     api(project(":ext:tencent:scm:api-scm"))
     api(project(":core:repository:api-repository"))
     api(project(":core:plugin:api-plugin"))
+    api(project(":core:quality:api-quality"))
     api(project(":ext:tencent:notify:api-notify-tencent"))
 
     api(project(":core:auth:api-auth"))
     api(project(":core:common:common-websocket"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+    api(project(":core:plugin:codecc-plugin:api-codecc"))
 
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")

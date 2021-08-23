@@ -59,9 +59,9 @@ interface UserGitCIUserMessageResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @ApiParam(value = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
-        projectId: String,
+        projectId: String?,
         @ApiParam(value = "消息类型")
         @QueryParam("messageType")
         messageType: UserMessageType?,
@@ -83,9 +83,9 @@ interface UserGitCIUserMessageResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @ApiParam(value = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
-        projectId: String
+        projectId: String?
     ): Result<Int>
 
     @ApiOperation("读取消息")
@@ -98,9 +98,9 @@ interface UserGitCIUserMessageResource {
         @ApiParam(value = "消息ID")
         @PathParam("id")
         id: Int,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @ApiParam(value = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
-        projectId: String
+        projectId: String?
     ): Result<Boolean>
 
     @ApiOperation("读取所有消息")
@@ -110,8 +110,8 @@ interface UserGitCIUserMessageResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @ApiParam(value = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
-        projectId: String
+        projectId: String?
     ): Result<Boolean>
 }

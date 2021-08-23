@@ -50,7 +50,7 @@ cmd_del (){
   local e=0
   local _data enable id dockerHostPort capacity
   for kv in "$@"; do
-    [[ "$kv" =~ $kvpatt_cmd_set ]] || { tip "unknow kv: kv($kv) does NOT match patt($kvpatt_cmd_add)."; let e++; continue; }
+    [[ "$kv" =~ $kvpatt_cmd_del ]] || { tip "unknow kv: kv($kv) does NOT match patt($kvpatt_cmd_del)."; let e++; continue; }
     local $kv && let s++
   done
   # id必选, 用于校验.
@@ -97,7 +97,7 @@ cmd_set (){
   local _data enable id dockerHostPort capacity
   local e=0 s=0
   for kv in "$@"; do
-    [[ "$kv" =~ $kvpatt_cmd_set ]] || { tip "unknow kv: kv($kv) does NOT match patt($kvpatt_cmd_add)."; let e++; continue; }
+    [[ "$kv" =~ $kvpatt_cmd_set ]] || { tip "unknow kv: kv($kv) does NOT match patt($kvpatt_cmd_set)."; let e++; continue; }
     local $kv && let s++
   done
   # id必选, 用于校验.
