@@ -512,16 +512,17 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 processingVersionInfoMap = mutableMapOf()
             }
             val atomCode = processingAtomRecord.atomCode
+            val atomBaseInfo = AtomBaseInfo(
+                atomId = processingAtomRecord.id,
+                atomCode = atomCode,
+                version = processingAtomRecord.version,
+                atomStatus = AtomStatusEnum.getAtomStatus(processingAtomRecord.atomStatus.toInt())
+            )
             if (processingVersionInfoMap!!.containsKey(atomCode)) {
                 val atomBaseInfoList = processingVersionInfoMap!![atomCode]
-                atomBaseInfoList?.add(
-                    AtomBaseInfo(
-                        atomId = processingAtomRecord.id,
-                        atomCode = atomCode,
-                        version = processingAtomRecord.version,
-                        atomStatus = AtomStatusEnum.getAtomStatus(processingAtomRecord.atomStatus.toInt())
-                    )
-                )
+                atomBaseInfoList?.add(atomBaseInfo)
+            } else {
+                processingVersionInfoMap!![atomCode] = mutableListOf(atomBaseInfo)
             }
         }
         val myAtoms = mutableListOf<MyAtomRespItem?>()
