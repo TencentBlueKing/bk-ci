@@ -34,7 +34,6 @@ object Versions {
     const val Slf4j = "1.7.25"
     const val Jjwt = "0.9.0"
     const val Mockito = "1.10.19"
-    const val JsonLib = "2.4"
     const val CronUtils = "7.0.1"
     const val AwsS3 = "1.11.461"
     const val AsyncHttpClient = "2.1.0"
