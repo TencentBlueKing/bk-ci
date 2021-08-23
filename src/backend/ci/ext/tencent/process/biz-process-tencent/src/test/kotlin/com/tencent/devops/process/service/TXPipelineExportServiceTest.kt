@@ -2,6 +2,7 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.nhaarman.mockito_kotlin.mock
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
@@ -18,6 +19,7 @@ class TXPipelineExportServiceTest {
     private val pipelineRepositoryService: PipelineRepositoryService = mock()
     private val storeImageHelper: StoreImageHelper = mock()
     private val scmProxyService: ScmProxyService = mock()
+    private val client: Client = mock()
 
     private val txPipelineExportService = TXPipelineExportService(
         stageTagService = stageTagService,
@@ -25,7 +27,8 @@ class TXPipelineExportServiceTest {
         pipelinePermissionService = pipelinePermissionService,
         pipelineRepositoryService = pipelineRepositoryService,
         storeImageHelper = storeImageHelper,
-        scmProxyService = scmProxyService
+        scmProxyService = scmProxyService,
+        client = client
     )
 
     @Test
