@@ -37,31 +37,29 @@ class GitCheckDao {
         repositoryGitCheck: RepositoryGitCheck
     ) {
         val now = LocalDateTime.now()
-        with(repositoryGitCheck) {
-            with(TRepositoryGitCheck.T_REPOSITORY_GIT_CHECK) {
-                dslContext.insertInto(
-                    this,
-                    PIPELINE_ID,
-                    BUILD_NUMBER,
-                    REPO_ID,
-                    REPO_NAME,
-                    COMMIT_ID,
-                    CREATE_TIME,
-                    UPDATE_TIME,
-                    CONTEXT,
-                    SOURCE
-                ).values(
-                    pipelineId,
-                    buildNumber,
-                    repositoryId,
-                    repositoryName,
-                    commitId,
-                    now,
-                    now,
-                    context,
-                    source.name
-                ).execute()
-            }
+        with(TRepositoryGitCheck.T_REPOSITORY_GIT_CHECK) {
+            dslContext.insertInto(
+                this,
+                PIPELINE_ID,
+                BUILD_NUMBER,
+                REPO_ID,
+                REPO_NAME,
+                COMMIT_ID,
+                CREATE_TIME,
+                UPDATE_TIME,
+                CONTEXT,
+                SOURCE
+            ).values(
+                repositoryGitCheck.pipelineId,
+                repositoryGitCheck.buildNumber,
+                repositoryGitCheck.repositoryId,
+                repositoryGitCheck.repositoryName,
+                repositoryGitCheck.commitId,
+                now,
+                now,
+                repositoryGitCheck.context,
+                repositoryGitCheck.source.name
+            ).execute()
         }
     }
 
