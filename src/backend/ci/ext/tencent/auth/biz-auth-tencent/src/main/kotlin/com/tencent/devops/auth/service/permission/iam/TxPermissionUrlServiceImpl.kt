@@ -33,6 +33,7 @@ import com.tencent.bk.sdk.iam.dto.RelationResourceInstance
 import com.tencent.bk.sdk.iam.dto.action.UrlAction
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.PermissionUrlDTO
+import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionUrlService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -48,7 +49,8 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
     private val iamConfiguration: IamConfiguration,
     private val managerService: ManagerService,
     private val permissionProjectService: TxPermissionProjectServiceImpl,
-    private val client: Client
+    private val client: Client,
+    private val authGroupService: AuthGroupService
 ) : PermissionUrlService {
 
     @Value("\${auth.webHost:#{null}}")
@@ -188,7 +190,8 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
     override fun getRolePermissionUrl(projectId: String, groupId: String?): String? {
         val projectRelationId = permissionProjectService.getProjectId(projectId)
         val rolePermissionUrl = if (!groupId.isNullOrEmpty()) {
-            "user-group-detail/$groupId?current_role_id=$projectRelationId&tab=group_perm"
+            val iamGroupId = authGroupService.getRelationId(groupId.toInt())
+            "user-group-detail/$iamGroupId?current_role_id=$projectRelationId&tab=group_perm"
         } else {
             "user-group?current_role_id=$projectRelationId"
         }
