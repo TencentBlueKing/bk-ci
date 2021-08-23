@@ -42,14 +42,14 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PIPELINE"], description = "服务-流水线资源")
-@Path("/service/pipelines/stream")
+@Path("/service/streams/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceTXPipelineResource {
 
     @ApiOperation("导出流水线yaml,gitci")
     @GET
-    @Path("/pipeline/{pipelineId}/projects/{projectId}/yaml/gitci")
+    @Path("/{pipelineId}/projects/{projectId}/yaml/gitci")
     fun exportPipelineGitCI(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
