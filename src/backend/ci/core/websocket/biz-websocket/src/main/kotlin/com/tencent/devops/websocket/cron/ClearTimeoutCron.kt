@@ -48,7 +48,7 @@ class ClearTimeoutCron(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ClearTimeoutCron::class.java)
     }
 
     /**

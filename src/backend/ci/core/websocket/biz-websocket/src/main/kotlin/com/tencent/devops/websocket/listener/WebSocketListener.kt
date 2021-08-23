@@ -47,7 +47,7 @@ class WebSocketListener @Autowired constructor(
 ) : Listener<SendMessage> {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(WebSocketListener::class.java)
     }
 
     override fun execute(event: SendMessage) {
