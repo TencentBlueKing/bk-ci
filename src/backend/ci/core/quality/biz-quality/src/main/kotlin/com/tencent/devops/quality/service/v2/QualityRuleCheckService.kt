@@ -731,7 +731,7 @@ class QualityRuleCheckService @Autowired constructor(
                         "projectName" to projectName,
                         "cc" to triggerUserId,
                         "time" to time,
-                        //"thresholdListString" to interceptList.joinToString("；"),
+                        // "thresholdListString" to interceptList.joinToString("；"),
                         "result" to messageResult.toString(),
                         "emailResult" to emailResult.toString(),
                         "url" to url
