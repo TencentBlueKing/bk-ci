@@ -916,12 +916,12 @@ class TXPipelineExportService @Autowired constructor(
         }
     }
 
-    private fun formatScriptOutput(
+    fun formatScriptOutput(
         script: String,
         output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
         variables: Map<String, String>?
     ): String {
-        val regex = Regex("setEnv\\s+(.*[\\s]+.*)[\\s\\n]")
+        val regex = Regex("setEnv\\s+(\"?.*\"?)\\s*\\n?")
         val foundMatches = regex.findAll(script)
         var formatScript: String = script
         foundMatches.forEach { result ->
