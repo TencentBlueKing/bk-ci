@@ -33,8 +33,14 @@ import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionService
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.springframework.beans.factory.annotation.Autowired
 
 class TxPermissionServiceImpl @Autowired constructor(
@@ -42,7 +48,8 @@ class TxPermissionServiceImpl @Autowired constructor(
     val policyService: PolicyService,
     val iamConfiguration: IamConfiguration,
     val managerService: ManagerService,
-    val iamCacheService: IamCacheService
+    val iamCacheService: IamCacheService,
+    val client: Client
 ) : AbsPermissionService(authHelper, policyService, iamConfiguration, iamCacheService) {
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
@@ -82,11 +89,22 @@ class TxPermissionServiceImpl @Autowired constructor(
             )) {
             return true
         }
+
+        // 如果校验的资源为pipeline,需要兼容repo传pipelineId的情况
+        val useResourceCode = findPipelineAutoId(resourceType, resourceCode)
+
+        // action需要兼容repo只传AuthPermission的情况,需要组装为V3的action
+        val useAction = if (!action.contains("_")) {
+            TActionUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
+        } else {
+            action
+        }
+
         return super.validateUserResourcePermissionByRelation(
             userId = userId,
-            action = action,
+            action = useAction,
             projectCode = projectCode,
-            resourceCode = resourceCode,
+            resourceCode = useResourceCode,
             resourceType = resourceType,
             relationResourceType = relationResourceType
         )
@@ -133,5 +151,27 @@ class TxPermissionServiceImpl @Autowired constructor(
             resourceType = TActionUtils.getResourceTypeByStr(resourceTypeStr),
             authPermission = TActionUtils.getAuthPermissionByAction(action)
         )
+    }
+
+    private fun findPipelineAutoId(resourceType: String, resourceCode: String): String {
+        // 非pipeline的资源类型直接返回
+        if (resourceType != AuthResourceType.PIPELINE_DEFAULT.value) {
+            return resourceCode
+        }
+        return try {
+            // 若不能转成Int,则为pipelineId,需要做转换
+            resourceCode.toInt()
+            resourceCode
+        } catch (e: Exception) {
+            logger.info("pipeline check permission user pipelineId $resourceCode")
+            val pipelineInfo = client.get(ServicePipelineResource::class)
+                .getPipelineInfoByPipelineId(resourceCode)?.data
+                ?: throw PermissionForbiddenException(
+                    message = MessageCodeUtil.getCodeMessage(
+                        messageCode = CommonMessageCode.PERMISSION_DENIED,
+                        params = arrayOf(resourceCode))
+                )
+            pipelineInfo!!.id.toString()
+        }
     }
 }

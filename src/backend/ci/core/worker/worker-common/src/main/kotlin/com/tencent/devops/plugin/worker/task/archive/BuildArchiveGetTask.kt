@@ -101,7 +101,7 @@ class BuildArchiveGetTask : ITask() {
                     repoName = "pipeline",
                     path = fileUrl,
                     type = TokenType.DOWNLOAD,
-                    expireSeconds = TaskUtil.getTimeOut(buildTask)?.times(60)
+                    expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
                 )
                 archiveGetResourceApi.downloadPipelineFile(
                     userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",

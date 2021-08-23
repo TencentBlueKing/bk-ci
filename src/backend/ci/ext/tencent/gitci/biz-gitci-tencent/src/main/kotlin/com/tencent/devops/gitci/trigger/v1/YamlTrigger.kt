@@ -172,7 +172,7 @@ class YamlTrigger @Autowired constructor(
         val yamlObject = try {
             createCIBuildYaml(originYaml, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
-            logger.error("git ci yaml is invalid", e)
+            logger.warn("git ci yaml is invalid", e)
             gitCIEventSaveService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,

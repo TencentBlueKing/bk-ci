@@ -66,6 +66,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         rdType: AtomTypeEnum?,
         yamlFlag: Boolean?,
         recommendFlag: Boolean?,
+        qualityFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
         pageSize: Int?
@@ -80,6 +81,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
                 rdType = rdType,
                 yamlFlag = yamlFlag,
                 recommendFlag = recommendFlag,
+                qualityFlag = qualityFlag,
                 sortType = sortType,
                 page = page,
                 pageSize = pageSize,

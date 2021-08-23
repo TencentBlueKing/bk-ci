@@ -27,10 +27,10 @@
 package com.tencent.devops.openapi.resources.apigw.v2.app
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v2.app.ApigwAppQualityResource
 import com.tencent.devops.openapi.service.apigw.ApigwQualityService
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

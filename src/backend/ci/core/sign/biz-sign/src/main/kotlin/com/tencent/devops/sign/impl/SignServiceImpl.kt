@@ -337,7 +337,8 @@ class SignServiceImpl @Autowired constructor(
         return SignUtils.resignAppWildcard(
             appDir = appDir,
             certId = ipaSignInfo.certId,
-            wildcardInfo = wildcardInfo
+            wildcardInfo = wildcardInfo,
+            replaceKeyList = ipaSignInfo.replaceKeyList
         )
     }
 

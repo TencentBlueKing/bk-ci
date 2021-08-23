@@ -36,6 +36,7 @@ import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.Variable
+import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.gitci.trigger.template.pojo.enums.TemplateType
 
 object YamlObjects {
@@ -121,7 +122,7 @@ object YamlObjects {
         return try {
             YamlUtil.getObjectMapper().readValue(template, object : TypeReference<T>() {})
         } catch (e: Exception) {
-            throw RuntimeException(YamlTemplate.YAML_FORMAT_ERROR.format(path, e.message))
+            throw YamlFormatException(YamlTemplate.YAML_FORMAT_ERROR.format(path, e.message))
         }
     }
 
@@ -145,25 +146,25 @@ object YamlObjects {
         }
     }
 
-    private fun <T> transValue(file: String, type: String, value: Any?): T {
+    private inline fun <reified T> transValue(file: String, type: String, value: Any?): T {
         if (value == null) {
-            throw RuntimeException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
+            throw YamlFormatException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
         }
         return try {
             value as T
         } catch (e: Exception) {
-            throw RuntimeException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
+            throw YamlFormatException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
         }
     }
 
-    fun <T> transNullValue(file: String, type: String, key: String, map: Map<String, Any?>): T? {
+    inline fun <reified T> transNullValue(file: String, type: String, key: String, map: Map<String, Any?>): T? {
         return if (map[key] == null) {
             null
         } else {
             return try {
                 map[key] as T
             } catch (e: Exception) {
-                throw RuntimeException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
+                throw YamlFormatException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
             }
         }
     }
@@ -176,15 +177,15 @@ object YamlObjects {
         }
     }
 
-    fun getNotNullValue(key: String, mapName: String, map: Map<String, Any?>): String {
+    private fun getNotNullValue(key: String, mapName: String, map: Map<String, Any?>): String {
         return if (map[key] == null) {
-            throw RuntimeException(YamlTemplate.ATTR_MISSING_ERROR)
+            throw YamlFormatException(YamlTemplate.ATTR_MISSING_ERROR.format(key, mapName))
         } else {
             map[key].toString()
         }
     }
 
     private fun error(content: String) {
-        throw RuntimeException(content)
+        throw YamlFormatException(content)
     }
 }

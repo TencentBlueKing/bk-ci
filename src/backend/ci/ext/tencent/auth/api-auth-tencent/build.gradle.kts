@@ -28,4 +28,5 @@
 dependencies {
     api(project(":core:common:common-web"))
     api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:auth:api-auth"))
 }

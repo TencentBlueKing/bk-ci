@@ -50,11 +50,14 @@ dependencies {
     api(project(":ext:tencent:scm:api-scm"))
     api(project(":core:repository:api-repository"))
 
+    api(project(":core:quality:api-quality"))
+
     api(project(":ext:tencent:notify:api-notify-tencent"))
 
     api(project(":core:auth:api-auth"))
     api(project(":core:common:common-websocket"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+    api(project(":core:plugin:codecc-plugin:api-codecc"))
 
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")

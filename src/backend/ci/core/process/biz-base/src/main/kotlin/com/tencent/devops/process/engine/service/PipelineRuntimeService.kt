@@ -778,9 +778,9 @@ class PipelineRuntimeService @Autowired constructor(
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
             var needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
-            // #2318 如果是stage重试不是当前stage，并且当前stage已经是完成状态，则直接跳过
-            if (context.needSkipWhenStageFailRetry(stage)) {
-                logger.info("[$buildId|RETRY|#${stage.id!!}|${stage.status}|NOT_RETRY_STAGE")
+            // #2318 如果是stage重试不是当前stage且当前stage已经是完成状态，或者该stage被禁用，则直接跳过
+            if (context.needSkipWhenStageFailRetry(stage) || stage.stageControlOption?.enable == false) {
+                logger.info("[$buildId|EXECUTE|#${stage.id!!}|${stage.status}|NOT_EXECUTE_STAGE")
                 context.containerSeq += stage.containers.size // Job跳过计数也需要增加
                 return@nextStage
             }
@@ -1054,9 +1054,7 @@ class PipelineRuntimeService @Autowired constructor(
                     stageControlOption = stage.stageControlOption ?: StageControlOption(
                         enable = true,
                         runCondition = StageRunCondition.AFTER_LAST_FINISHED,
-                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS,
-                        manualTrigger = false,
-                        triggerUsers = null
+                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
                     ),
                     finally = stage.finally,
                     fastKill = stage.fastKill
@@ -1065,9 +1063,10 @@ class PipelineRuntimeService @Autowired constructor(
                 if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
             }
 
-            // 只在第一次启动时刷新为QUEUE，若重试则保持原审核状态
-            if (stageOption?.stageControlOption?.manualTrigger == true &&
-                stageOption.stageControlOption.triggered != true) {
+            // TODO 只在第一次启动时刷新为QUEUE，后续只需保留兼容数据刷新
+            stage.refreshReviewOption(true)
+            if (stage.checkIn?.manualTrigger == true &&
+                stage.checkIn?.groupToReview() != null) {
                 stage.reviewStatus = BuildStatus.QUEUE.name
             }
 
@@ -1080,6 +1079,12 @@ class PipelineRuntimeService @Autowired constructor(
                                 it.startTime = null
                                 it.endTime = null
                                 it.executeCount += 1
+                                it.checkIn = if (stage.checkIn != null) {
+                                    JsonUtil.toJson(stage.checkIn!!)
+                                } else null
+                                it.checkOut = if (stage.checkOut != null) {
+                                    JsonUtil.toJson(stage.checkOut!!)
+                                } else null
                                 updateStageExistsRecord.add(it)
                                 return@findHistoryStage
                             }
@@ -1095,7 +1100,9 @@ class PipelineRuntimeService @Autowired constructor(
                         stageId = stage.id!!,
                         seq = index,
                         status = BuildStatus.QUEUE,
-                        controlOption = stageOption
+                        controlOption = stageOption,
+                        checkIn = stage.checkIn,
+                        checkOut = stage.checkOut
                     )
                 )
             }
@@ -1500,6 +1507,7 @@ class PipelineRuntimeService @Autowired constructor(
         container.startEpoch = null
         container.elementElapsed = null
         container.systemElapsed = null
+        container.startVMStatus = null
         container.executeCount = target.executeCount
         if (atomElement != null) { // 将原子状态重置
             if (initialStatus == null) { // 未指定状态的，将重新运行
