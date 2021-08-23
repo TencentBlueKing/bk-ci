@@ -1,3 +1,4 @@
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,28 +26,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2.pojo
+package com.tencent.devops.quality.resources.v3
 
-import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
+import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
+import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
+import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
+import com.tencent.devops.common.quality.pojo.RuleCheckResult
+import com.tencent.devops.quality.service.v2.QualityRuleBuildHisService
+import com.tencent.devops.quality.service.v2.QualityRuleCheckService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("质量红线-规则拦截数")
-data class QualityRuleIntercept(
-    @ApiModelProperty("流水线ID", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("流水线名称", required = true)
-    val pipelineName: String,
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("规则ID", required = true)
-    val ruleHashId: String,
-    @ApiModelProperty("规则名称", required = true)
-    val ruleName: String,
-    @ApiModelProperty("拦截时间", required = true)
-    val interceptTime: Long,
-    @ApiModelProperty("拦截结果", required = true)
-    val result: RuleInterceptResult,
-    @ApiModelProperty("拦截结果信息列表", required = true)
-    val resultMsg: List<QualityRuleInterceptRecord>
-)
+@RestResource
+class ServiceQualityRuleV3ResourceImpl @Autowired constructor(
+    private val qualityRuleBuildHisService: QualityRuleBuildHisService,
+    private val qualityRuleCheckService: QualityRuleCheckService
+) : ServiceQualityRuleResource {
+    override fun check(buildCheckParams: BuildCheckParamsV3): Result<RuleCheckResult> {
+        return Result(qualityRuleCheckService.checkBuildHis(buildCheckParams))
+    }
+
+    override fun create(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        ruleList: List<RuleCreateRequestV3>
+    ): Result<List<RuleCreateResponseV3>> {
+        return Result(qualityRuleBuildHisService.serviceCreate(userId, projectId, pipelineId, ruleList))
+    }
+}

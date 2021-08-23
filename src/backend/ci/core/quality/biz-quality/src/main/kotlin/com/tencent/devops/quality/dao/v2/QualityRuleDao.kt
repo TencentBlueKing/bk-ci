@@ -253,6 +253,15 @@ class QualityRuleDao {
         }
     }
 
+    fun deleteByPipelineId(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
+        with(TQualityRule.T_QUALITY_RULE) {
+            return dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(INDICATOR_RANGE.eq(pipelineId))
+                .execute()
+        }
+    }
+
     fun searchByIdLike(
         dslContext: DSLContext,
         projectId: String,

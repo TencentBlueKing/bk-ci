@@ -25,9 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.pojo.enum
+package com.tencent.devops.quality.resources.v2
 
-enum class RuleInterceptResult {
-    PASS,
-    FAIL
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.quality.api.v2.UserQualityMarketResource
+import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
+import com.tencent.devops.quality.service.v2.QualityIndicatorService
+
+@RestResource
+class UserQualityMarketResourceImpl constructor(
+    private val qualityIndicatorService: QualityIndicatorService
+) : UserQualityMarketResource {
+    override fun getAuditUserList(atomCode: String): Result<List<QualityIndicator>> {
+        return Result(qualityIndicatorService.serviceList(atomCode, listOf()))
+    }
 }
