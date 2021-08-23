@@ -14,9 +14,9 @@ class ServiceRepositoryGitCheckResourceImpl @Autowired constructor(
 ) : ServiceRepositoryGitCheckResource {
     override fun getGitCheck(
         pipelineId: String,
-        repositoryConfig: RepositoryConfig,
         commitId: String,
-        context: String
+        context: String,
+        repositoryConfig: RepositoryConfig,
     ): Result<RepositoryGitCheck?> {
         return Result(gitCheckService.getGitCheck(pipelineId, repositoryConfig, commitId, context))
     }
