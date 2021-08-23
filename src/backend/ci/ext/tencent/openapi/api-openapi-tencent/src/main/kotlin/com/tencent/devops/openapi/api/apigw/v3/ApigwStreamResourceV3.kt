@@ -245,7 +245,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("查询工蜂CI项目配置")
     @GET
-    @Path("/{projectId}")
+    @Path("/settings/get")
     fun getGitCIConf(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -257,13 +257,13 @@ interface ApigwStreamResourceV3 {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam(value = "蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
+        @PathParam("gitProjectId")
+        gitProjectId: String
     ): Result<GitCIBasicSetting?>
 
     @ApiOperation("保存工蜂CI配置")
     @POST
-    @Path("/{projectId}/save")
+    @Path("/settings/save")
     fun saveGitCIConf(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -275,8 +275,8 @@ interface ApigwStreamResourceV3 {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam(value = "蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
+        @PathParam("gitProjectId")
+        gitProjectId: String,
         @ApiParam("工蜂项目配置", required = true)
         gitCIUpdateSetting: GitCIUpdateSetting
     ): Result<Boolean>
