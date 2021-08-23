@@ -84,6 +84,6 @@ class SessionHandler @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(SessionHandler::class.java)
     }
 }

@@ -53,7 +53,7 @@ data class HistoryWebsocketPush(
 ) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(HistoryWebsocketPush::class.java)
     }
 
     override fun findSession(page: String): List<String>? {

@@ -260,6 +260,6 @@ class PipelinePermissionServiceImpl @Autowired constructor(
         )
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(PipelinePermissionServiceImpl::class.java)
     }
 }

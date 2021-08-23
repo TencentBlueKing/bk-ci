@@ -56,7 +56,7 @@ data class StatusWebsocketPush(
     override var notifyPost: NotifyPost
 ) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(StatusWebsocketPush::class.java)
         private val pipelineStatusService = SpringContextUtil.getBean(PipelineStatusService::class.java)
     }
 
