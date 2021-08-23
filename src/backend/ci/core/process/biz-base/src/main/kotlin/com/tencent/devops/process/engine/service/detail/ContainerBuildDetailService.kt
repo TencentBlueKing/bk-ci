@@ -90,6 +90,8 @@ class ContainerBuildDetailService(
                         if (container.startEpoch != null) {
                             container.systemElapsed = System.currentTimeMillis() - container.startEpoch!!
                         }
+                        logger.info("[$buildId]|containerStarted|containerId=$containerId|startVMStatus " +
+                            "changed from ${container.startVMStatus} to ${containerBuildStatus.name}")
                         container.startVMStatus = containerBuildStatus.name
                         // #2074 containerBuildStatus如果是失败的，则将Job整体状态设置为失败
                         if (containerBuildStatus.isFailure()) {
