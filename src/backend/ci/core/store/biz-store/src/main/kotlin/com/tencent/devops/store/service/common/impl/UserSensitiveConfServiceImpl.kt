@@ -290,7 +290,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                 // build类接口需要校验storeCode是否为正在运行的storeCode，防止越权查询storeCode信息
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PERMISSION_DENIED,
-                    params = arrayOf("$storeCode is forbidden to be accessed")
+                    params = arrayOf(storeCode)
                 )
             }
         }
@@ -309,7 +309,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PERMISSION_DENIED,
-                params = arrayOf("$storeCode is forbidden to be accessed")
+                params = arrayOf(storeCode)
             )
         }
     }
