@@ -43,15 +43,21 @@ import java.time.LocalDateTime
 @Repository@Suppress("ALL")
 class QualityControlPointDao {
 
-    fun list(dslContext: DSLContext, elementType: Collection<String>, projectId: String): List<TQualityControlPointRecord>? {
+    fun list(
+        dslContext: DSLContext,
+        elementType: Collection<String>,
+        projectId: String = ""
+    ): List<TQualityControlPointRecord>? {
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             val result = dslContext.selectFrom(this)
                 .where(ELEMENT_TYPE.`in`(elementType))
                 .fetch()
             val filterResult = mutableListOf<TQualityControlPointRecord>()
             // 获取生产跑的，或者测试项目对应的
-            result?.groupBy { it.elementType }?.forEach { elementType, list ->
-                val testControlPoint = list.firstOrNull { it.testProject == projectId }
+            result.groupBy { it.elementType }.forEach { elementType, list ->
+                val testControlPoint = list.firstOrNull {
+                    projectId.isBlank() && it.testProject == projectId
+                }
                 val prodControlPoint = list.firstOrNull { it.testProject.isNullOrBlank() }
                 if (testControlPoint != null) {
                     filterResult.add(testControlPoint)

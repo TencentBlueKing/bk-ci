@@ -25,19 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.pojo
+package com.tencent.devops.quality.api.v2
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("质量红线-拦截检测结果")
-data class RuleCheckResult(
-    @ApiModelProperty("是否通过", required = true)
-    val success: Boolean,
-    @ApiModelProperty("失败后是否结束", required = true)
-    val failEnd: Boolean,
-    @ApiModelProperty("审核超时时间", required = true)
-    val auditTimeoutSeconds: Int,
-    @ApiModelProperty("失败信息", required = true)
-    val resultList: List<RuleCheckSingleResult>
-)
+@Api(tags = ["SERVICE_CONTROL_POINT"], description = "服务-质量红线")
+@Path("/service/controlPoint")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceQualityControlPointResource {
+
+    @ApiOperation("")
+    @Path("/listByTypes")
+    @POST
+    fun listByTypes(
+        elementTypes: Collection<String>
+    ): Result<List<QualityControlPoint>>
+}

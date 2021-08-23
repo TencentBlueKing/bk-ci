@@ -105,6 +105,9 @@ interface UserMarketAtomResource {
         @ApiParam("是否推荐标识 true：推荐，false：不推荐", required = false)
         @QueryParam("recommendFlag")
         recommendFlag: Boolean?,
+        @ApiParam("是否有红线指标", required = false)
+        @QueryParam("qualityFlag")
+        qualityFlag: Boolean?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
         sortType: MarketAtomSortTypeEnum? = MarketAtomSortTypeEnum.CREATE_TIME,

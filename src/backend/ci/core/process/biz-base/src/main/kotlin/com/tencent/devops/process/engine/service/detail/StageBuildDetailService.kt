@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -56,7 +57,12 @@ class StageBuildDetailService(
     pipelineEventDispatcher,
     redisOperation
 ) {
-    fun updateStageStatus(buildId: String, stageId: String, buildStatus: BuildStatus): List<BuildStageStatus> {
+
+    fun updateStageStatus(
+        buildId: String,
+        stageId: String,
+        buildStatus: BuildStatus
+    ): List<BuildStageStatus> {
         logger.info("[$buildId]|update_stage_status|stageId=$stageId|status=$buildStatus")
         var allStageStatus: List<BuildStageStatus>? = null
         update(buildId, object : ModelInterface {
@@ -113,7 +119,9 @@ class StageBuildDetailService(
     fun stagePause(
         buildId: String,
         stageId: String,
-        controlOption: PipelineBuildStageControlOption
+        controlOption: PipelineBuildStageControlOption,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_pause|stageId=$stageId")
         var allStageStatus: List<BuildStageStatus>? = null
@@ -125,8 +133,10 @@ class StageBuildDetailService(
                     update = true
                     stage.status = BuildStatus.PAUSE.name
                     stage.reviewStatus = BuildStatus.REVIEWING.name
-                    stage.stageControlOption!!.triggerUsers = controlOption.stageControlOption.triggerUsers
+                    stage.stageControlOption = controlOption.stageControlOption
                     stage.startEpoch = System.currentTimeMillis()
+                    stage.checkIn = checkIn
+                    stage.checkOut = checkOut
                     allStageStatus = fetchHistoryStageStatus(model)
                     return Traverse.BREAK
                 }
@@ -140,7 +150,13 @@ class StageBuildDetailService(
         return allStageStatus ?: emptyList()
     }
 
-    fun stageCancel(buildId: String, stageId: String) {
+    fun stageCancel(
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
+    ) {
         logger.info("[$buildId]|stage_cancel|stageId=$stageId")
         update(buildId, object : ModelInterface {
             var update = false
@@ -150,6 +166,70 @@ class StageBuildDetailService(
                     update = true
                     stage.status = ""
                     stage.reviewStatus = BuildStatus.REVIEW_ABORT.name
+                    stage.stageControlOption = controlOption.stageControlOption
+                    stage.checkIn = checkIn
+                    stage.checkOut = checkOut
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.STAGE_SUCCESS)
+    }
+
+    fun stageCheckQualityFail(
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
+    ): List<BuildStageStatus> {
+        logger.info("[$buildId]|stage_cancel|stageId=$stageId")
+        var allStageStatus: List<BuildStageStatus>? = null
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindStage(stage: Stage, model: Model): Traverse {
+                if (stage.id == stageId) {
+                    update = true
+                    stage.status = null
+                    stage.reviewStatus = BuildStatus.QUALITY_CHECK_FAIL.name
+                    stage.stageControlOption = controlOption.stageControlOption
+                    stage.checkIn = checkIn
+                    stage.checkOut = checkOut
+                    allStageStatus = fetchHistoryStageStatus(model)
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.FAILED)
+        return allStageStatus ?: emptyList()
+    }
+
+    fun stageReview(
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
+    ) {
+        logger.info("[$buildId]|stage_review|stageId=$stageId")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindStage(stage: Stage, model: Model): Traverse {
+                if (stage.id == stageId) {
+                    update = true
+                    stage.stageControlOption = controlOption.stageControlOption
+                    stage.checkIn = checkIn
+                    stage.checkOut = checkOut
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -164,7 +244,9 @@ class StageBuildDetailService(
     fun stageStart(
         buildId: String,
         stageId: String,
-        controlOption: PipelineBuildStageControlOption
+        controlOption: PipelineBuildStageControlOption,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_start|stageId=$stageId")
         var allStageStatus: List<BuildStageStatus>? = null
@@ -176,8 +258,9 @@ class StageBuildDetailService(
                     update = true
                     stage.status = BuildStatus.QUEUE.name
                     stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
-                    stage.stageControlOption?.triggered = controlOption.stageControlOption.triggered
-                    stage.stageControlOption?.reviewParams = controlOption.stageControlOption.reviewParams
+                    stage.stageControlOption = controlOption.stageControlOption
+                    stage.checkIn = checkIn
+                    stage.checkOut = checkOut
                     allStageStatus = fetchHistoryStageStatus(model)
                     return Traverse.BREAK
                 }

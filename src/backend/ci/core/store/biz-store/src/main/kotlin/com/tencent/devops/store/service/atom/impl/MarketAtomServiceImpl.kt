@@ -51,6 +51,7 @@ import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.quality.api.v2.ServiceQualityControlPointResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -210,6 +211,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         rdType: AtomTypeEnum?,
         yamlFlag: Boolean?,
         recommendFlag: Boolean?,
+        qualityFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
@@ -219,17 +221,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return executor.submit(Callable<MarketAtomResp> {
             val results = mutableListOf<MarketItem>()
             // 获取插件
-            val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
-            val count = marketAtomDao.count(
-                dslContext = dslContext,
-                keyword = keyword,
-                classifyCode = classifyCode,
-                labelCodeList = labelCodeList,
-                score = score,
-                rdType = rdType,
-                yamlFlag = yamlFlag,
-                recommendFlag = recommendFlag
-            )
+            val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
+
             val atoms = marketAtomDao.list(
                 dslContext = dslContext,
                 keyword = keyword,
@@ -243,12 +236,30 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 desc = desc,
                 page = page,
                 pageSize = pageSize
-            )
-                ?: return@Callable MarketAtomResp(0, page, pageSize, results)
+            ) ?: return@Callable MarketAtomResp(0, page, pageSize, results)
 
-            val atomCodeList = atoms.map {
+            var atomCodeList = atoms.map {
                 it["ATOM_CODE"] as String
             }.toList()
+
+            if (true == qualityFlag) {
+                val controlPoints = client.get(ServiceQualityControlPointResource::class)
+                    .listByTypes(atomCodeList).data?.map { it.type } ?: listOf()
+                atomCodeList = atomCodeList.intersect(controlPoints).toList()
+            }
+
+            val count = marketAtomDao.count(
+                dslContext = dslContext,
+                keyword = keyword,
+                classifyCode = classifyCode,
+                labelCodeList = labelCodeList,
+                score = score,
+                rdType = rdType,
+                yamlFlag = yamlFlag,
+                recommendFlag = recommendFlag,
+                atomCodes = atomCodeList
+            )
+
             // 获取可见范围
             val storeType = StoreTypeEnum.ATOM
             val atomVisibleData = generateAtomVisibleData(atomCodeList, storeType).data
@@ -268,6 +279,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
             atoms.forEach {
                 val atomCode = it["ATOM_CODE"] as String
+
+                if (!atomCodeList.contains(atomCode)) {
+                    return@forEach
+                }
+
                 val visibleList = atomVisibleData?.get(atomCode)
                 val statistic = atomStatisticData[atomCode]
                 val members = memberData?.get(atomCode)
@@ -355,6 +371,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 rdType = null,
                 yamlFlag = null,
                 recommendFlag = null,
+                qualityFlag = null,
                 sortType = MarketAtomSortTypeEnum.UPDATE_TIME,
                 desc = true,
                 page = page,
@@ -374,6 +391,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 rdType = null,
                 yamlFlag = null,
                 recommendFlag = null,
+                qualityFlag = null,
                 sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
                 desc = true,
                 page = page,
@@ -403,6 +421,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         rdType = null,
                         yamlFlag = null,
                         recommendFlag = null,
+                        qualityFlag = null,
                         sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
                         desc = true,
                         page = page,
@@ -437,6 +456,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         rdType: AtomTypeEnum?,
         yamlFlag: Boolean?,
         recommendFlag: Boolean?,
+        qualityFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
         pageSize: Int?,
@@ -459,6 +479,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             sortType = sortType,
             yamlFlag = yamlFlag,
             recommendFlag = recommendFlag,
+            qualityFlag = qualityFlag,
             desc = true,
             page = page,
             pageSize = pageSize,
