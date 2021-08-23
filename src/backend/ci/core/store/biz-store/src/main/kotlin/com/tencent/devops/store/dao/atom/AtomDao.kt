@@ -607,6 +607,7 @@ class AtomDao : AtomBaseDao() {
         tsst: TStoreStatisticsTotal
     ): SelectOnConditionStep<Record> {
         return dslContext.select(
+            ta.ID.`as`(KEY_ID),
             ta.ATOM_CODE.`as`(KEY_ATOM_CODE),
             ta.VERSION.`as`(VERSION),
             ta.CLASS_TYPE.`as`(KEY_CLASS_TYPE),

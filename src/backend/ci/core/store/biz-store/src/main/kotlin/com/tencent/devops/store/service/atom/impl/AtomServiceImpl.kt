@@ -110,6 +110,7 @@ import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.atom.AtomLabelService
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
@@ -163,6 +164,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
+
+    @Autowired
+    lateinit var atomLabelService: AtomLabelService
 
     @Autowired
     lateinit var redisOperation: RedisOperation
@@ -272,6 +276,21 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             page = page,
             pageSize = pageSize
         )
+        val atomIdSet = mutableSetOf<String>()
+        val atomCodeSet = mutableSetOf<String>()
+        pipelineAtoms?.forEach {
+            atomIdSet.add(it[KEY_ID] as String)
+            atomCodeSet.add(it[KEY_ATOM_CODE] as String)
+        }
+        val atomLabelInfoMap = atomLabelService.getLabelsByAtomIds(atomIdSet)
+        // 查询使用插件的流水线数量
+        var atomPipelineCntMap: Map<String, Int>? = null
+        if (!projectCode.isNullOrBlank() && !atomCodeSet.isNullOrEmpty()) {
+            atomPipelineCntMap = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
+                atomCodes = atomCodeSet.joinToString(","),
+                projectCode = projectCode
+            ).data
+        }
         pipelineAtoms?.forEach {
             val name = it[NAME] as String
             val atomCode = it[KEY_ATOM_CODE] as String
@@ -299,7 +318,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val categoryFlag = it[KEY_CATEGORY] as Byte
             val atomType = it[KEY_ATOM_TYPE] as Byte
             val atomStatus = it[KEY_ATOM_STATUS] as Byte
-
+            val atomPipelineCnt = atomPipelineCntMap?.get(atomCode)
             val pipelineAtomRespItem = AtomRespItem(
                 name = name,
                 atomCode = atomCode,
@@ -329,7 +348,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 weight = it[KEY_WEIGHT] as? Int,
                 recommendFlag = it[KEY_RECOMMEND_FLAG] as? Boolean,
                 score = String.format("%.1f", (it[KEY_AVG_SCORE] as? BigDecimal)?.toDouble()).toDoubleOrNull(),
-                recentExecuteNum = it[KEY_RECENT_EXECUTE_NUM] as? Int
+                recentExecuteNum = it[KEY_RECENT_EXECUTE_NUM] as? Int,
+                uninstallFlag = if (atomPipelineCnt == null) null else atomPipelineCnt < 1,
+                labelList = atomLabelInfoMap?.get(it[KEY_ID] as String)
             )
             dataList.add(pipelineAtomRespItem)
         }
@@ -440,7 +461,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 val versionList = getPipelineAtomVersions(projectCode, atomCode).data
                 val atomLabelList = mutableListOf<Label>()
                 // 查询插件标签信息
-                val atomLabelRecords = atomLabelRelDao.getLabelsByAtomId(dslContext, pipelineAtomRecord.id)
+                val atomLabelRecords = atomLabelRelDao.getLabelsByAtomIds(dslContext, setOf(pipelineAtomRecord.id))
                 atomLabelRecords?.forEach {
                     atomLabelList.add(
                         Label(

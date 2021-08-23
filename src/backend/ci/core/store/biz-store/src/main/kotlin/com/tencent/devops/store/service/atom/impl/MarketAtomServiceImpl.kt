@@ -639,7 +639,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             }
             val repositoryInfo = repositoryInfoResult.data
             val flag = storeUserService.isCanInstallStoreComponent(defaultFlag, userId, atomCode, StoreTypeEnum.ATOM)
-            val labelList = atomLabelService.getLabelsByAtomId(atomId).data // 查找标签列表
+            val labelList = atomLabelService.getLabelsByAtomId(atomId) // 查找标签列表
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.ATOM)
             val atomEnvInfoRecord = marketAtomEnvInfoDao.getMarketAtomEnvInfoByAtomId(dslContext, atomId)
             val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode)
