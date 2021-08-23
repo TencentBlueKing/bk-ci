@@ -76,7 +76,7 @@ class DockerHostBuildResourceApi constructor(
         }
     }
 
-    fun getResourceConfig(pipelineId: String, vmSeqId: String, retryCount: Int = 3): DockerResourceOptionsVO? {
+    fun getResourceConfig(pipelineId: String, vmSeqId: String, retryCount: Int = 3): Result<DockerResourceOptionsVO>? {
         try {
             val path = "/${getUrlPrefix()}/api/dockerhost/resource-config/pipelines/$pipelineId/vmSeqs/$vmSeqId"
             OkhttpUtils.doHttp(buildGet(path)).use { response ->
