@@ -316,8 +316,6 @@ class MarketAtomDao : AtomBaseDao() {
         val a = TAtom.T_ATOM.`as`("a")
         val b = TStoreMember.T_STORE_MEMBER.`as`("b")
         val d = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("d")
-        val t = dslContext.select(a.ATOM_CODE.`as`("atomCode"), DSL.max(a.CREATE_TIME).`as`("createTime"))
-            .from(a).groupBy(a.ATOM_CODE) // 查找每组atomCode最新的记录
         val conditions = generateGetMyAtomConditions(a, userId, b, atomName)
         val baseStep = dslContext.select(
             a.ID.`as`("atomId"),
@@ -334,9 +332,6 @@ class MarketAtomDao : AtomBaseDao() {
             a.UPDATE_TIME.`as`("updateTime")
         )
             .from(a)
-            .join(t)
-            .on(a.ATOM_CODE.eq(t.field("atomCode", String::class.java))
-                .and(a.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java))))
             .join(b)
             .on(a.ATOM_CODE.eq(b.STORE_CODE))
             .leftJoin(d)
