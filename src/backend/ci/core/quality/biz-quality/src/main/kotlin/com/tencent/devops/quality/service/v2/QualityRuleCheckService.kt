@@ -660,7 +660,7 @@ class QualityRuleCheckService @Autowired constructor(
                         "buildNo" to buildNo
                 ),
                 bodyParams = mapOf(
-                        "title" to "$pipelineName($buildNo)被拦截，待审核(审核人$notifyUserSet)",
+                        "title" to "$pipelineName(#$buildNo)被拦截，待审核(审核人$notifyUserSet)",
                         "projectName" to projectName,
                         "cc" to triggerUserId,
                         "time" to time,
