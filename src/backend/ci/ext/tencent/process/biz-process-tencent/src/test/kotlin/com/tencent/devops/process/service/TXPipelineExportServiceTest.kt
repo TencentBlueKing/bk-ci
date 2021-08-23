@@ -120,7 +120,6 @@ class TXPipelineExportServiceTest {
             "# something\n" +
             "rm \${TestDir} -rf\n" +
             "\n" +
-            "\n" +
             "setEnv \"user\" \${default_user}"
         val variables = mapOf("haha" to "value")
         val output2Elements = mutableMapOf("aaaa" to mutableListOf(MarketBuildAtomElement(
@@ -141,7 +140,7 @@ class TXPipelineExportServiceTest {
             "可进入当前工作空间目录\n\nset -x\n\n# 编译镜像\necho \"::set-output name=compile_img_str::trpc-golang-compile" +
             ":0.1.2:tlinux:common\"\n# 运行镜像\necho \"::set-output name=img_str::trpc-golang-runtime:0.1.0\"\necho " +
             "\"::set-output name=img_str2::trpc-golang-runtime:0.1.1\"\n# something\necho \"::set-output " +
-            "name=TestDir::src/go-test\"\n# something\nrm \${{ TestDir }} -rf\n\n\necho \"::set-output " +
+            "name=TestDir::src/go-test\"\n# something\nrm \${{ TestDir }} -rf\n\necho \"::set-output " +
             "name=user::\${{ default_user }}\"\n"
         )
     }
