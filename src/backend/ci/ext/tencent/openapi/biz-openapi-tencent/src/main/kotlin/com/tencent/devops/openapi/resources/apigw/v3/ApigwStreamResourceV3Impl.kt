@@ -7,12 +7,16 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.GitCIDetailResource
 import com.tencent.devops.gitci.api.GitCIHistoryResource
 import com.tencent.devops.gitci.api.GitCIPipelineResource
+import com.tencent.devops.gitci.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.gitci.api.service.ServiceStreamTriggerResource
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.StreamTriggerBuildReq
+import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.openapi.api.apigw.v3.ApigwStreamResourceV3
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -147,6 +151,46 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
             sourceGitProjectId = sourceGitProjectId,
             page = page,
             pageSize = pageSize
+        )
+    }
+
+    override fun enableGitCI(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        enabled: Boolean,
+        projectInfo: GitCIProjectInfo
+    ): Result<Boolean> {
+        return client.get(ServiceGitBasicSettingResource::class).enableGitCI(
+            userId = userId,
+            enabled = enabled,
+            projectInfo = projectInfo
+        )
+    }
+
+    override fun getGitCIConf(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String
+    ): Result<GitCIBasicSetting?> {
+        return client.get(ServiceGitBasicSettingResource::class).getGitCIConf(
+            userId = userId,
+            projectId = projectId
+        )
+    }
+
+    override fun saveGitCIConf(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        gitCIUpdateSetting: GitCIUpdateSetting
+    ): Result<Boolean> {
+        return client.get(ServiceGitBasicSettingResource::class).saveGitCIConf(
+            userId = userId,
+            projectId = projectId,
+            gitCIUpdateSetting = gitCIUpdateSetting
         )
     }
 }
