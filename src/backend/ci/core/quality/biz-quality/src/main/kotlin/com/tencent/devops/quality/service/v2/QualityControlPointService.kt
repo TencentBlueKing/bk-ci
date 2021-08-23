@@ -97,6 +97,22 @@ class QualityControlPointService @Autowired constructor(
         }
     }
 
+    fun serviceList(elementTypes: Collection<String>): List<QualityControlPoint> {
+        val controlPointList = controlPointDao.list(dslContext, elementTypes) ?: return listOf()
+        return controlPointList.map {
+                QualityControlPoint(
+                    hashId = HashUtil.encodeLongId(it.id),
+                    type = it.elementType,
+                    name = it.name,
+                    stage = it.stage,
+                    availablePos = it.availablePosition.split(",").map { name -> ControlPointPosition(name) },
+                    defaultPos = ControlPointPosition(it.defaultPosition),
+                    enable = it.enable,
+                    atomVersion = it.atomVersion
+                )
+            }
+    }
+
     fun listAllControlPoint(): List<TQualityControlPointRecord> {
         return controlPointDao.listAllControlPoint(dslContext)
     }
