@@ -67,7 +67,10 @@ class V0ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun createResources(userId: String, accessToken: String?, projectCreateInfo: ResourceRegisterInfo, userDeptDetail: UserDeptDetail?): String {
         // 创建AUTH项目
-        val authUrl = "$authUrl/projects?access_token=$accessToken"
+        val newAccessToken = if (accessToken.isNullOrBlank()) {
+            authTokenApi.getAccessToken(bsProjectAuthServiceCode)
+        } else accessToken
+        val authUrl = "$authUrl/projects?access_token=$newAccessToken"
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
         if (userDeptDetail != null) {
             param["bg_id"] = userDeptDetail.bgId
