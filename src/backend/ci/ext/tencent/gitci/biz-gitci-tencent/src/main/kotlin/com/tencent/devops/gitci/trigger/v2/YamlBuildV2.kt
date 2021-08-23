@@ -115,12 +115,12 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation.Companion.convertToSymbol
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.common.exception.CommitCheck
 import com.tencent.devops.gitci.common.exception.QualityRulesException
 import com.tencent.devops.gitci.common.exception.TriggerBaseException
 import com.tencent.devops.gitci.common.exception.TriggerException
 import com.tencent.devops.gitci.common.exception.Yamls
+import com.tencent.devops.gitci.config.StreamGitConfig
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
@@ -149,7 +149,6 @@ import com.tencent.devops.gitci.trigger.GitCIEventService
 import com.tencent.devops.gitci.trigger.GitCheckService
 import com.tencent.devops.gitci.v2.service.GitCIV2WebsocketService
 import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
-import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.classify.PipelineGroup
@@ -188,19 +187,18 @@ class YamlBuildV2 @Autowired constructor(
     private val gitCIBasicSettingDao: GitCIBasicSettingDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
-    private val scmClient: ScmClient,
     private val redisOperation: RedisOperation,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val oauthService: OauthService,
     private val gitCIEventSaveService: GitCIEventService,
     private val websocketService: GitCIV2WebsocketService,
     private val gitCISettingDao: GitCISettingDao,
     private val gitPipelineBranchService: GitPipelineBranchService,
-    private val gitCheckService: GitCheckService
+    private val gitCheckService: GitCheckService,
+    private val streamGitConfig: StreamGitConfig
 ) : YamlBaseBuildV2<ScriptBuildYaml>(
-    client, kafkaClient, scmClient, dslContext, gitPipelineResourceDao,
+    client, kafkaClient, dslContext, gitPipelineResourceDao,
     gitRequestEventBuildDao, gitCIEventSaveService, websocketService, gitPipelineBranchService,
-    gitCheckService
+    gitCheckService, streamGitConfig
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")

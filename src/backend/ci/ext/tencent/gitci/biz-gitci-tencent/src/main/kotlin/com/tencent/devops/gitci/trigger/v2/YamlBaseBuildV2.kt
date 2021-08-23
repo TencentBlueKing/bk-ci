@@ -37,7 +37,6 @@ import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic.STREAM_BUILD_INFO_TOPIC
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.config.StreamGitConfig
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
@@ -69,7 +68,6 @@ import java.time.format.DateTimeFormatter
 abstract class YamlBaseBuildV2<T> @Autowired constructor(
     private val client: Client,
     private val kafkaClient: KafkaClient,
-    private val scmClient: ScmClient,
     private val dslContext: DSLContext,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,

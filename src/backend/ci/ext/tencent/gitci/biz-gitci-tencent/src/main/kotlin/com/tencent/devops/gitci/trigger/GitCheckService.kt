@@ -48,7 +48,6 @@ import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -57,8 +56,6 @@ class GitCheckService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val scmService: ScmService
 ) {
-    @Value("\${rtx.v2GitUrl:#{null}}")
-    private val v2GitUrl: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitCheckService::class.java)
@@ -76,7 +73,8 @@ class GitCheckService @Autowired constructor(
         context: String,
         targetUrl: String,
         pipelineId: String,
-        block: Boolean
+        block: Boolean,
+        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf())
     ) {
         val gitProjectId = gitCIBasicSetting.gitProjectId
         pushCommitCheck(
@@ -101,18 +99,20 @@ class GitCheckService @Autowired constructor(
             isFinish = isFinish,
             context = context,
             description = description,
-            targetUrl = targetUrl
+            targetUrl = targetUrl,
+            reportData = reportData
         )
     }
 
     // todo: 后期修改1、增加filePath字段 2、去掉isFinish(旧数据已经改完了) 3、修改RepositoryConfig增加兼容Stream
-    fun pushCommitCheck(
+    private fun pushCommitCheck(
         event: GitCommitCheckEvent,
         isFinish: Boolean,
         gitCIBasicSetting: GitCIBasicSetting,
         context: String,
         targetUrl: String,
-        description: String
+        description: String,
+        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
     ) {
         with(event) {
             logger.info(
@@ -146,68 +146,94 @@ class GitCheckService @Autowired constructor(
             }
 
             val gitCheckClient = client.get(ServiceRepositoryGitCheckResource::class)
-            while (true) {
-                val lockKey = "code_git_commit_check_lock_$pipelineId"
-                val redisLock = RedisLock(redisOperation, lockKey, 60)
 
-                redisLock.use {
-                    if (!redisLock.tryLock()) {
-                        logger.info("Code web hook commit check try lock($lockKey) fail")
-                        Thread.sleep(100)
-                        return@use
-                    }
+            tryAddCommitCheck(
+                gitCheckClient = gitCheckClient,
+                context = context,
+                event = event,
+                targetUrl = targetUrl,
+                isFinish = isFinish,
+                description = description,
+                gitCIBasicSetting = gitCIBasicSetting,
+                buildNum = buildNum,
+                reportData = reportData
+            )
+        }
+    }
 
-                    val record = gitCheckClient.getGitCheck(
-                        pipelineId = pipelineId,
-                        repositoryConfig = repositoryConfig,
-                        commitId = commitId,
-                        context = context
-                    ).data
+    @Suppress("NestedBlockDepth")
+    private fun GitCommitCheckEvent.tryAddCommitCheck(
+        gitCheckClient: ServiceRepositoryGitCheckResource,
+        context: String,
+        event: GitCommitCheckEvent,
+        targetUrl: String,
+        isFinish: Boolean,
+        description: String,
+        gitCIBasicSetting: GitCIBasicSetting,
+        buildNum: String,
+        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
+    ) {
+        while (true) {
+            val lockKey = "code_git_commit_check_lock_$pipelineId"
+            val redisLock = RedisLock(redisOperation, lockKey, 60)
 
-                    if (record == null) {
+            redisLock.use {
+                if (!redisLock.tryLock()) {
+                    logger.info("Code web hook commit check try lock($lockKey) fail")
+                    Thread.sleep(100)
+                    return@use
+                }
+
+                val record = gitCheckClient.getGitCheck(
+                    pipelineId = pipelineId,
+                    repositoryConfig = repositoryConfig,
+                    commitId = commitId,
+                    context = context
+                ).data
+
+                if (record == null) {
+                    addCommitCheck(
+                        event = event,
+                        targetUrl = targetUrl,
+                        // 兼容旧数据，如果结束是发送还是空记录肯定是旧数据
+                        context = if (isFinish) {
+                            context.split("@").first()
+                        } else {
+                            context
+                        },
+                        description = description,
+                        gitCIBasicSetting = gitCIBasicSetting
+                    )
+                    gitCheckClient.createGitCheck(
+                        gitCheck = RepositoryGitCheck(
+                            gitCheckId = -1,
+                            pipelineId = pipelineId,
+                            buildNumber = buildNum.toInt(),
+                            repositoryId = gitCIBasicSetting.gitProjectId.toString(),
+                            repositoryName = getProjectName(gitCIBasicSetting),
+                            commitId = commitId,
+                            context = context,
+                            source = ExecuteSource.STREAM
+                        )
+                    )
+                } else {
+                    if (buildNum.toInt() >= record.buildNumber) {
                         addCommitCheck(
                             event = event,
                             targetUrl = targetUrl,
-                            // 兼容旧数据，如果结束是发送还是空记录肯定是旧数据
-                            context = if (isFinish) {
-                                context.split("@").first()
-                            } else {
-                                context
-                            },
+                            context = record.context,
                             description = description,
                             gitCIBasicSetting = gitCIBasicSetting
                         )
-                        gitCheckClient.createGitCheck(
-                            gitCheck = RepositoryGitCheck(
-                                gitCheckId = -1,
-                                pipelineId = pipelineId,
-                                buildNumber = buildNum.toInt(),
-                                repositoryId = gitCIBasicSetting.gitProjectId.toString(),
-                                repositoryName = getProjectName(gitCIBasicSetting),
-                                commitId = commitId,
-                                context = context,
-                                source = ExecuteSource.STREAM
-                            )
+                        gitCheckClient.updateGitCheck(
+                            gitCheckId = record.gitCheckId,
+                            buildNumber = buildNum.toInt()
                         )
                     } else {
-                        if (buildNum.toInt() >= record.buildNumber) {
-                            addCommitCheck(
-                                event = event,
-                                targetUrl = targetUrl,
-                                context = record.context,
-                                description = description,
-                                gitCIBasicSetting = gitCIBasicSetting
-                            )
-                            gitCheckClient.updateGitCheck(
-                                gitCheckId = record.gitCheckId,
-                                buildNumber = buildNum.toInt()
-                            )
-                        } else {
-                            logger.info("Code web hook commit check has bigger build number(${record.buildNumber})")
-                        }
+                        logger.info("Code web hook commit check has bigger build number(${record.buildNumber})")
                     }
-                    return
                 }
+                return
             }
         }
     }
@@ -217,7 +243,8 @@ class GitCheckService @Autowired constructor(
         gitCIBasicSetting: GitCIBasicSetting,
         targetUrl: String,
         context: String,
-        description: String
+        description: String,
+        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf())
     ): String {
         with(event) {
             logger.info("Project($$projectId) add git commit($commitId) commit check.")
@@ -239,7 +266,7 @@ class GitCheckService @Autowired constructor(
                 description = description,
                 block = block,
                 mrRequestId = mergeRequestId,
-                reportData = Pair(mutableListOf(), mutableMapOf())
+                reportData = reportData
             )
             client.getScm(ServiceGitResource::class).addCommitCheck(request)
             return gitProjectId
