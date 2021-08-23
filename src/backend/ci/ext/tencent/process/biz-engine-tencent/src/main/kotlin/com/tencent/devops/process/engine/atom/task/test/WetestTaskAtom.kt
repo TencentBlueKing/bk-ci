@@ -402,6 +402,6 @@ class WetestTaskAtom @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(WetestTaskAtom::class.java)
     }
 }

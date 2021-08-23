@@ -25,12 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.auth.resources.service
 
-interface TxProjectPermissionService {
+import com.tencent.devops.auth.api.service.ServiceDeptResource
+import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-    /**
-     * 校验用户是否有这个项目的权限
-     */
-    fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Boolean
+@RestResource
+class ServiceDeptResourceImpl @Autowired constructor(
+    val deptService: DeptService
+) : ServiceDeptResource {
+    override fun getParentDept(userId: String): Result<Int> {
+        return Result("", deptService.getUserParentDept(userId))
+    }
+
+    override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
+        return Result(deptService.getDeptByName(deptName, userId))
+    }
 }

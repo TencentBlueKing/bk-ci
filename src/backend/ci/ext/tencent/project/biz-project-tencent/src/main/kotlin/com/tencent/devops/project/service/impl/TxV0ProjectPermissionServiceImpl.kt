@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.MessageProperties
 import org.springframework.beans.factory.annotation.Autowired
 
-class V0ProjectPermissionServiceImpl @Autowired constructor(
+class TxV0ProjectPermissionServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val authProperties: BkAuthProperties,
     private val authProjectApi: BSAuthProjectApi,
@@ -65,10 +65,19 @@ class V0ProjectPermissionServiceImpl @Autowired constructor(
 
     private val authUrl = authProperties.url
 
-    override fun createResources(userId: String, accessToken: String?, projectCreateInfo: ResourceRegisterInfo, userDeptDetail: UserDeptDetail?): String {
-        // 创建AUTH项目
-        val authUrl = "$authUrl/projects?access_token=$accessToken"
+    override fun createResources(
+        userId: String,
+        accessToken: String?,
+        projectCreateInfo: ResourceRegisterInfo,
+        userDeptDetail: UserDeptDetail?
+    ): String {
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
+        // 创建AUTH项目
+        val newAccessToken = if (accessToken.isNullOrBlank()) {
+            authTokenApi.getAccessToken(bsProjectAuthServiceCode)
+            param["creator"] = userId
+        } else accessToken
+        val authUrl = "$authUrl/projects?access_token=$newAccessToken"
         if (userDeptDetail != null) {
             param["bg_id"] = userDeptDetail.bgId
             param["dept_id"] = userDeptDetail.deptId
@@ -168,6 +177,6 @@ class V0ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(TxV0ProjectPermissionServiceImpl::class.java)
     }
 }

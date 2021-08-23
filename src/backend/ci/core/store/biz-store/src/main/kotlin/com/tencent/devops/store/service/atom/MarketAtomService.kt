@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
+import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MarketMainItem
@@ -161,6 +162,11 @@ interface MarketAtomService {
         classType: String? = null,
         defaultShowFlag: Boolean? = true
     ): String
+
+    /**
+     * 获得插件依赖关系
+     */
+    fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>>
 
     /**
      * 查找带post属性的插件

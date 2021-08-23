@@ -135,6 +135,6 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ExtServiceMemberImpl::class.java)
     }
 }

@@ -152,6 +152,7 @@ class QualityRuleBuildHisService constructor(
         }
     }
 
+    @Suppress("NestedBlockDepth")
     private fun checkRuleRequest(ruleRequestList: List<RuleCreateRequestV3>) {
         ruleRequestList.forEach { request ->
             request.opList?.forEach { op ->

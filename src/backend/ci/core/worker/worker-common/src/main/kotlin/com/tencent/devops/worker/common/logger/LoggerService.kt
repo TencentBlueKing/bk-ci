@@ -50,6 +50,7 @@ import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
+import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -246,7 +247,8 @@ object LoggerService {
                 logger.warn("The number of Task[$elementId] log lines exceeds the limit, " +
                     "the log file will be archived.")
                 this.uploadQueue.put(logMessage.copy(
-                    message = "The number of log lines printed by the task exceeds the limit"
+                    message = "Printed logs cannot exceed 1 million lines. " +
+                        "Please download logs to view."
                 ))
                 elementId2LogProperty[elementId]?.logStorageMode = LogStorageMode.LOCAL
             }
@@ -329,11 +331,14 @@ object LoggerService {
             }
             logger.info("Finished archiving log $archivedCount files")
 
-            // 同步所有存储状态到
+            // 同步所有存储状态到log服务端
             logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), executeCount)
             logger.info("Finished update mode to log service.")
         } catch (ignored: Throwable) {
             logger.warn("Fail to archive log files", ignored)
+        } finally {
+            logger.info("Remove temp log files in [$pipelineLogDir].")
+            FileUtils.deleteRecursivelyOnExit(pipelineLogDir!!)
         }
     }
 

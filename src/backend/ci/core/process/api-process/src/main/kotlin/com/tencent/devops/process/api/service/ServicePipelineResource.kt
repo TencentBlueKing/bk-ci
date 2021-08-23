@@ -464,4 +464,13 @@ interface ServicePipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineIdInfo?>
+
+    @ApiOperation("根据流水线id获取流水线信息")
+    @GET
+    @Path("/pipelines/{pipelineId}")
+    fun getPipelineInfoByPipelineId(
+        @ApiParam("流水线id列表", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<SimplePipeline?>?
 }
