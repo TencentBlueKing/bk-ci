@@ -92,7 +92,7 @@ class CustomizeArchiveGetTask : ITask() {
                     repoName = "custom",
                     path = fileUrl,
                     type = TokenType.DOWNLOAD,
-                    expireSeconds = TaskUtil.getTimeOut(buildTask)?.times(60)
+                    expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
                 )
                 archiveGetResourceApi.downloadCustomizeFile(
                     userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
