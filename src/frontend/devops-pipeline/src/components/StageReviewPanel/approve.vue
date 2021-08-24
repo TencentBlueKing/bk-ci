@@ -95,6 +95,7 @@
                         reviewParams
                     }).then(() => {
                         this.cancelApprove()
+                        this.$emit('approve')
                         this.$bkMessage({ theme: 'success', message: this.$t('editPage.operateSuc') })
                     })
                 }).catch((err) => {
