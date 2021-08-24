@@ -59,7 +59,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         }
         return Result(
             scmService.getProjectInfo(
-                token = getToken(gitProjectId),
+                token = getToken(userId, isEnableUser = false, gitProjectId = 0),
                 gitProjectId = gitProjectId,
                 useAccessToken = true
             )
