@@ -172,7 +172,6 @@ class DockerHostBuildAgentLessService(
                 // CPU and memory Limit
                 HostConfig()
                     .withMemory(dockerHostConfig.memory)
-                    .withMemorySwap(dockerHostConfig.memory)
                     .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
                     .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
 /*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))

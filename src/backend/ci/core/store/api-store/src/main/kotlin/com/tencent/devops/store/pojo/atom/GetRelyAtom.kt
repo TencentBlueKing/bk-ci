@@ -25,28 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["SERVICE_CONTROL_POINT"], description = "服务-质量红线")
-@Path("/service/controlPoint")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceQualityControlPointResource {
-
-    @ApiOperation("")
-    @Path("/listByTypes")
-    @POST
-    fun listByTypes(
-        elementTypes: Collection<String>
-    ): Result<List<QualityControlPoint>>
-}
+@ApiModel("批量获取插件依赖关系")
+data class GetRelyAtom(
+    @ApiModelProperty("请求所需参数", required = true)
+    val thirdPartyElementList: List<ElementThirdPartySearchParam>
+)

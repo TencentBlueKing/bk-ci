@@ -81,9 +81,8 @@ class DockerHostBuildResourceApi constructor(
             val path = "/${getUrlPrefix()}/api/dockerhost/resource-config/pipelines/$pipelineId/vmSeqs/$vmSeqId"
             OkhttpUtils.doHttp(buildGet(path)).use { response ->
                 val responseContent = response.body()!!.string()
-                logger.info("[$pipelineId]|[$vmSeqId] get resourceConfig, response: $responseContent")
                 if (!response.isSuccessful) {
-                    logger.error("Get resourceConfig $path fail. $responseContent")
+                    logger.error("[$pipelineId]|[$vmSeqId] Get resourceConfig $path fail. $responseContent")
                     throw TaskExecuteException(
                         errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                         errorType = ErrorType.SYSTEM,
