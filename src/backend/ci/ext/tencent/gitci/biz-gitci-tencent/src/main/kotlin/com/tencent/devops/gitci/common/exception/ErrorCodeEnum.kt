@@ -40,8 +40,8 @@ enum class ErrorCodeEnum(
     NO_REPORT_AUTH(ErrorType.SYSTEM, 2129002, "无权限查看报告"),
 
     // 工蜂接口请求错误
-    DEVNET_TIMEOUT_ERROR(ErrorType.THIRD_PARTY, 2129003, "请求DEVNET网关超时"),
-    GET_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129003, "获取工蜂项目TOKEN失败"),
+    DEVNET_TIMEOUT_ERROR(ErrorType.THIRD_PARTY, 2129003, "request DEVNET gateway timeout"),
+    GET_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129003, "get token from git error %s"),
     GET_YAML_CONTENT_ERROR(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = 2129004,

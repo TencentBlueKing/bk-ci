@@ -99,7 +99,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         permissionService.checkGitCIPermission(userId, projectId)
         return Result(
             scmService.getCommits(
-                token = getToken(userId = userId, isEnableUser = true, gitProjectId = gitProjectId),
+                token = scmService.getTokenForProject(gitProjectId.toString())!!.accessToken,
                 gitProjectId = gitProjectId,
                 filePath = filePath,
                 branch = branch,
@@ -165,11 +165,6 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
                 search = search
             )
         )
-    }
-
-    // 针对获取项目信息使用超级token
-    private fun getToken(gitProjectId: String): String {
-        return scmService.getToken(gitProjectId).accessToken
     }
 
     // 看是否使用工蜂开启人的OAuth

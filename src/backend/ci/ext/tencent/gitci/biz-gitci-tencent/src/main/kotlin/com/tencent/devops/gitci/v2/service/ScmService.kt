@@ -81,6 +81,40 @@ class ScmService @Autowired constructor(
         )
     }
 
+    // 针对刚开始的获取项目信息获取超级token，遇到报错一定是项目不存在返回项目不存在信息
+    fun getTokenForProject(
+        gitProjectId: String
+    ): GitToken? {
+        try {
+            return client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!
+        } catch (e: Throwable) {
+            when (e) {
+                is ClientException -> {
+                    error(
+                        "getTokenForProject timeout ${e.message}",
+                        ErrorCodeEnum.DEVNET_TIMEOUT_ERROR,
+                        "get token from git time out"
+                    )
+                }
+                is RemoteServiceException -> {
+                    error(
+                        "getTokenForProject timeout ${e.message}",
+                        ErrorCodeEnum.GET_TOKEN_ERROR,
+                        ErrorCodeEnum.PROJECT_NOT_FOUND.formatErrorMessage.format(gitProjectId)
+                    )
+                }
+                else -> {
+                    error(
+                        "getTokenForProject timeout ${e.message}",
+                        ErrorCodeEnum.GET_TOKEN_ERROR,
+                        ErrorCodeEnum.GET_TOKEN_ERROR.formatErrorMessage.format(e.message)
+                    )
+                }
+            }
+        }
+        return null
+    }
+
     fun getYamlFromGit(
         token: String,
         gitProjectId: String,
