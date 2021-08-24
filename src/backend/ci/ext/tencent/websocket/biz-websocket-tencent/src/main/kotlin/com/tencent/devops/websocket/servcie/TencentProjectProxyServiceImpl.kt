@@ -89,6 +89,6 @@ class TencentProjectProxyServiceImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(TencentProjectProxyServiceImpl::class.java)
-        val IGNORETAG = "gitci"
+        const val IGNORETAG = "gitci"
     }
 }
