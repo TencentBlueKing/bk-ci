@@ -34,7 +34,6 @@ import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.AuthConfigurations
-import com.github.dockerjava.api.model.BlkioRateDevice
 import com.github.dockerjava.api.model.BuildResponseItem
 import com.github.dockerjava.api.model.Capability
 import com.github.dockerjava.api.model.ExposedPort
@@ -203,12 +202,12 @@ class DockerHostBuildService(
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
-            val blkioRateDeviceWirte = BlkioRateDevice()
+/*            val blkioRateDeviceWirte = BlkioRateDevice()
                 .withPath("/dev/sda")
                 .withRate(dockerBuildInfo.dockerResource.blkioDeviceWriteBps)
             val blkioRateDeviceRead = BlkioRateDevice()
                 .withPath("/dev/sda")
-                .withRate(dockerBuildInfo.dockerResource.blkioDeviceReadBps)
+                .withRate(dockerBuildInfo.dockerResource.blkioDeviceReadBps)*/
 
             val containerName =
                 "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
@@ -358,14 +357,6 @@ class DockerHostBuildService(
             val dockerfilePath = Paths.get(workspace + dockerBuildParam.dockerFile).normalize().toString()
             val baseDirectory = File(buildDir)
             val dockerfile = File(dockerfilePath)
-/*            val imageNameTag =
-                getImageNameWithTag(
-                    repoAddr = repoAddr,
-                    projectId = projectId,
-                    imageName = dockerBuildParam.imageName,
-                    imageTag = dockerBuildParam.imageTag,
-                    outer = outer
-                )*/
 
             val imageNameTagSet = mutableSetOf<String>()
             if (dockerBuildParam.imageTagList.isNotEmpty()) {
@@ -472,7 +463,7 @@ class DockerHostBuildService(
                 // 直接失败，禁止使用本地镜像
                 throw NotFoundException(errorMessage)
             } catch (t: Throwable) {
-                logger.warn("Fail to pull the image $imageName of build $buildId", t, "")
+                logger.warn("[$buildId]|[$vmSeqId] Fail to pull the image $imageName of build $buildId", t, "")
                 log(
                     buildId = buildId,
                     message = "拉取镜像失败，错误信息：${t.message}",
@@ -540,12 +531,12 @@ class DockerHostBuildService(
             val hostConfig: HostConfig
             if (dockerResource != null) {
                 logger.info("[$buildId]|[$vmSeqId] dockerRun dockerResource: ${JsonUtil.toJson(dockerResource)}")
-                val blkioRateDeviceWirte = BlkioRateDevice()
+/*                val blkioRateDeviceWirte = BlkioRateDevice()
                     .withPath("/dev/sda")
                     .withRate(dockerResource.blkioDeviceWriteBps)
                 val blkioRateDeviceRead = BlkioRateDevice()
                     .withPath("/dev/sda")
-                    .withRate(dockerResource.blkioDeviceReadBps)
+                    .withRate(dockerResource.blkioDeviceReadBps)*/
 
                 hostConfig = HostConfig()
                     .withCapAdd(Capability.SYS_PTRACE)
@@ -580,13 +571,13 @@ class DockerHostBuildService(
 
             val container = createContainerCmd.exec()
 
-            logger.info("Created container $container")
+            logger.info("[$buildId]|[$vmSeqId] Created container $container")
             val timestamp = (System.currentTimeMillis() / 1000).toInt()
             httpLongDockerCli.startContainerCmd(container.id).exec()
 
             return Triple(container.id, timestamp, dockerRunPortBindingList)
         } catch (er: Throwable) {
-            val errorLog = "[$buildId]|启动容器失败，错误信息:${er.message}"
+            val errorLog = "[$buildId]|[$vmSeqId]|启动容器失败，错误信息:${er.message}"
             logger.error(errorLog, er)
             log(buildId, true, errorLog, VMUtils.genStartVMTaskId(vmSeqId), "")
             alertApi.alert(
@@ -601,11 +592,11 @@ class DockerHostBuildService(
             if (!dockerRunParam.registryUser.isNullOrEmpty()) {
                 try {
                     httpLongDockerCli.removeImageCmd(dockerRunParam.imageName)
-                    logger.info("Delete local image successfully......")
+                    logger.info("[$buildId]|[$vmSeqId] Delete local image successfully......")
                 } catch (e: java.lang.Exception) {
-                    logger.info("the exception of deleteing local image is ${e.message}")
+                    logger.info("[$buildId]|[$vmSeqId] the exception of deleteing local image is ${e.message}")
                 } finally {
-                    logger.info("Docker run end......")
+                    logger.info("[$buildId]|[$vmSeqId] Docker run end......")
                 }
             }
         }
