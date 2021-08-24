@@ -87,5 +87,12 @@ class TxProjectInitConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    fun gitCIProjectPermissionServiceImpl(
+        objectMapper: ObjectMapper,
+        projectIamV0Service: ProjectIamV0Service
+    ) = V0ProjectExtPermissionServiceImpl(objectMapper, projectIamV0Service)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
     fun gitCiProjectPermission() = GitCIProjectPermissionService()
 }
