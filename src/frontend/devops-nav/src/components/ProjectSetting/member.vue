@@ -74,7 +74,11 @@
                 @page-change="pageChange"
                 @page-limit-change="pageLimitChange">
                 <bk-table-column type="selection" width="60"></bk-table-column>
-                <bk-table-column :label="$t('permission.userName')" prop="name"></bk-table-column>
+                <bk-table-column :label="$t('permission.userName')">
+                    <template slot-scope="props">
+                        {{props.row.id}}({{props.row.name}})
+                    </template>
+                </bk-table-column>
                 <bk-table-column :label="$t('permission.userType')" prop="type" :formatter="typeFormatter"></bk-table-column>
             </bk-table>
         </main>
