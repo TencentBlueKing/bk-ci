@@ -201,7 +201,7 @@
                 'globalEnvs',
                 'atomCodeList',
                 'atomClassifyCodeList',
-                'atomMap',
+                'projectRecommendAtomMap',
                 'atomModalMap',
                 'fetchingAtmoModal',
                 'atomVersionList',
@@ -281,8 +281,8 @@
                 return this.element.version || this.getDefaultVersion(this.atomCode)
             },
             atom () {
-                const { atomMap, atomCode, element, getDefaultVersion, getAtomModal } = this
-                const atom = atomMap[atomCode]
+                const { projectRecommendAtomMap, atomCode, element, getDefaultVersion, getAtomModal } = this
+                const atom = projectRecommendAtomMap[atomCode]
                 const version = element.version || getDefaultVersion(atomCode)
                 const atomModal = getAtomModal({
                     atomCode,

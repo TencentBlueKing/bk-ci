@@ -31,7 +31,6 @@ import {
     SET_PIPELINE_CONTAINER,
     SET_TEMPLATE,
     SET_CONTAINER_DETAIL,
-    SET_ATOMS,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     UPDATE_ATOM_TYPE,
@@ -61,7 +60,6 @@ import {
     UPDATE_ATOM_OUTPUT,
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     FETCHING_ATOM_LIST,
-    SET_STORE_DATA,
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     FETCHING_ATOM_VERSION,
@@ -71,7 +69,19 @@ import {
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_STAGE_REVIEW_PANEL,
     SET_IMPORTED_JSON,
-    SET_EDIT_FROM
+    SET_EDIT_FROM,
+    SET_CUR_JOBTYPE,
+    IS_MORE_LOADING,
+    IS_PROJECT_PAGE_OVER,
+    IS_STORE_PAGE_OVER,
+    SET_STORE_DATA,
+    SET_PROJECT_DATA,
+    SET_PROJECT_ATOMS,
+    SET_STORE_ATOMS,
+    SET_PROJECT_UNRECOMMEN_ATOMS,
+    SET_STORE_UNRECOMMEN_ATOMS,
+    SET_CLASSIFY,
+    SET_INNER_ACTIVE_NAME
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import { hashID, randomString } from '@/utils/util'
@@ -236,30 +246,205 @@ export default {
     fetchBuildResourceByType: ({ commit }, { projectCode, containerId, os, buildType }) => {
         return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${projectCode}/containers/${containerId}/oss/${os}?buildType=${buildType}`)
     },
-    fetchAtoms: async ({ commit }, { projectCode }) => {
-        try {
-            commit(FETCHING_ATOM_LIST, true)
-            const [{ data: atomClassifyList }, { data: atomList }] = await Promise.all([
-                request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`),
-                request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
-                    params: {
-                        projectCode
-                    }
-                })
-            ])
-
-            const [atomCodeList, atomMap] = getMapByKey(atomList.records, 'atomCode')
-            const [atomClassifyCodeList, atomClassifyMap] = getMapByKey(atomClassifyList, 'classifyCode')
-            commit(SET_ATOMS, {
-                atomCodeList,
-                atomClassifyCodeList,
-                atomMap,
-                atomClassifyMap
+    setCurJobType: ({ commit }, str) => {
+        commit(SET_CUR_JOBTYPE, str)
+    },
+    fetchClassify: async ({ commit }) => {
+        const { data: atomClassifyList } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`)
+        const [atomClassifyCodeList, atomClassifyMap] = getMapByKey(atomClassifyList, 'classifyCode')
+        Object.assign(atomClassifyMap, {
+            'all': {
+                classifyCode: 'all',
+                classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.all')) || 'all'
+            }
+        })
+        commit(SET_CLASSIFY, {
+            atomClassifyCodeList,
+            atomClassifyMap
+        })
+    },
+    setInnerActiveName: async ({ commit }, innerActiveName) => {
+        commit(SET_INNER_ACTIVE_NAME, innerActiveName)
+    },
+    setProjectData: async ({ commit }, projectData) => {
+        commit(SET_PROJECT_DATA, projectData)
+    },
+    setStoreData: async ({ commit }, storeData) => {
+        commit(SET_STORE_DATA, storeData)
+    },
+    setProjectPageOver: async ({ commit }, payload) => {
+        commit(IS_PROJECT_PAGE_OVER, payload)
+    },
+    /**
+     * 获取项目下插件
+     */
+    fetchProjectAtoms: async ({ commit, state }, { projectCode, category, recommendFlag, os }) => {
+        let projectData, page, pageSize, keyword
+        if (recommendFlag) {
+            // 适用插件
+            projectData = state.projectData || {}
+            page = projectData.page || 1
+            pageSize = projectData.pageSize || 15
+            keyword = projectData.keyword || undefined
+        } else {
+            // 不适用插件
+            projectData = state.projectUnRecommendAtomData || {}
+            page = projectData.page || 1
+            pageSize = projectData.pageSize || 500
+            keyword = projectData.keyword || undefined
+        }
+        if (category === 'TRIGGER') {
+            pageSize = 500
+            page = 1
+            commit(SET_PROJECT_DATA, {
+                page: 1
             })
+        }
+        const jobType = category === 'TRIGGER' ? 'AGENT' : 'AGENT_LESS'
+        
+        try {
+            if (page === 1) {
+                commit(FETCHING_ATOM_LIST, true)
+            } else {
+                commit(IS_MORE_LOADING, true)
+            }
+            const { data: atomList } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
+                params: {
+                    category,
+                    projectCode,
+                    os,
+                    jobType,
+                    recommendFlag,
+                    page,
+                    pageSize,
+                    keyword
+                }
+            })
+
+            const projectAtomMap = getMapByKey(atomList.records, 'atomCode')[1]
+
+            if (page === 1) {
+                if (recommendFlag) {
+                    commit(SET_PROJECT_ATOMS, {
+                        projectRecommendAtomMap: projectAtomMap
+                    })
+                } else {
+                    commit(SET_PROJECT_UNRECOMMEN_ATOMS, {
+                        projectUnRecommendAtomMap: projectAtomMap
+                    })
+                }
+            } else {
+                if (recommendFlag) {
+                    commit(SET_PROJECT_ATOMS, {
+                        projectRecommendAtomMap: Object.assign(state.projectRecommendAtomMap, projectAtomMap)
+                    })
+                } else {
+                    commit(SET_PROJECT_UNRECOMMEN_ATOMS, {
+                        projectUnRecommendAtomMap: Object.assign(state.projectUnRecommendAtomMap, projectAtomMap)
+                    })
+                }
+            }
+            
+            if (recommendFlag && category === 'TASK') {
+                // 保存请求页码、搜索关键字
+                const isProjectPageOver = Object.keys(state.projectRecommendAtomMap).length === atomList.count
+                const storeData = {
+                    page: ++page,
+                    pageSize,
+                    keyword
+                }
+                commit(IS_PROJECT_PAGE_OVER, isProjectPageOver)
+                commit(SET_PROJECT_DATA, storeData)
+            }
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
         } finally {
             commit(FETCHING_ATOM_LIST, false)
+            commit(IS_MORE_LOADING, false)
+        }
+    },
+    /**
+     * 获取研发商店插件
+     */
+    fetchStoreAtoms: async ({ commit, state }, { classifyId, recommendFlag, category, os }) => {
+        let storeData, page, pageSize, keyword
+        if (recommendFlag) {
+            // 适用插件
+            storeData = state.storeData || {}
+            page = storeData.page || 1
+            pageSize = storeData.pageSize || 15
+            keyword = storeData.keyword || undefined
+        } else {
+            // 不适用插件
+            storeData = state.storeUnRecommendAtomData || {}
+            page = storeData.page || 1
+            pageSize = storeData.pageSize || 500
+            keyword = storeData.keyword || undefined
+        }
+        if (state.storeData && state.storeData.classifyId !== classifyId) {
+            page = 1
+        }
+        try {
+            if (page === 1) {
+                commit(FETCHING_ATOM_LIST, true)
+            } else {
+                commit(IS_MORE_LOADING, true)
+            }
+
+            const jobType = category === 'TRIGGER' ? 'AGENT' : 'AGENT_LESS'
+
+            const { data: atomList } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
+                params: {
+                    classifyId,
+                    recommendFlag,
+                    category,
+                    os,
+                    jobType,
+                    page,
+                    pageSize,
+                    keyword
+                }
+            })
+
+            const storeAtomMap = getMapByKey(atomList.records, 'atomCode')[1]
+            if (page === 1) {
+                if (recommendFlag) {
+                    commit(SET_STORE_ATOMS, {
+                        storeRecommendAtomMap: storeAtomMap
+                    })
+                } else {
+                    commit(SET_STORE_UNRECOMMEN_ATOMS, {
+                        storeUnRecommendAtomMap: storeAtomMap
+                    })
+                }
+            } else {
+                if (recommendFlag) {
+                    commit(SET_STORE_ATOMS, {
+                        storeRecommendAtomMap: Object.assign(state.storeRecommendAtomMap, storeAtomMap)
+                    })
+                } else {
+                    commit(SET_STORE_UNRECOMMEN_ATOMS, {
+                        storeUnRecommendAtomMap: Object.assign(state.storeUnRecommendAtomMap, storeAtomMap)
+                    })
+                }
+            }
+            if (recommendFlag && category === 'TASK') {
+                // 保存请求页码、搜索关键字
+                const isStorePageOver = Object.keys(state.storeRecommendAtomMap).length === atomList.count
+                const storeData = {
+                    page: ++page,
+                    pageSize,
+                    keyword,
+                    classifyId
+                }
+                commit(IS_STORE_PAGE_OVER, isStorePageOver)
+                commit(SET_STORE_DATA, storeData)
+            }
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+        } finally {
+            commit(FETCHING_ATOM_LIST, false)
+            commit(IS_MORE_LOADING, false)
         }
     },
     fetchAtomModal: async ({ commit, dispatch }, { projectCode, atomCode, version, atomIndex, container }) => {

@@ -211,6 +211,7 @@
                 'addStage',
                 'addContainer',
                 'fetchAtoms',
+                'fetchClassify',
                 'clearStoreAtom',
                 'setStoreSearch',
                 'addStoreAtom'
@@ -221,6 +222,7 @@
                 this.fetchAtoms({
                     projectCode
                 })
+                this.fetchClassify()
                 this.clearStoreAtom()
                 this.setStoreSearch(searchKey)
                 this.addStoreAtom()

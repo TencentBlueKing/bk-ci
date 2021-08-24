@@ -24,7 +24,6 @@ import {
     SET_COMMON_SETTING,
     SET_PIPELINE_CONTAINER,
     SET_TEMPLATE,
-    SET_ATOMS,
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_MODAL,
     SET_CONTAINER_FETCHING,
@@ -66,7 +65,18 @@ import {
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_STAGE_REVIEW_PANEL,
     SET_IMPORTED_JSON,
-    SET_EDIT_FROM
+    SET_EDIT_FROM,
+    SET_CUR_JOBTYPE,
+    SET_PROJECT_ATOMS,
+    SET_STORE_ATOMS,
+    SET_PROJECT_UNRECOMMEN_ATOMS,
+    SET_STORE_UNRECOMMEN_ATOMS,
+    SET_PROJECT_DATA,
+    SET_CLASSIFY,
+    IS_MORE_LOADING,
+    IS_PROJECT_PAGE_OVER,
+    IS_STORE_PAGE_OVER,
+    SET_INNER_ACTIVE_NAME
 } from './constants'
 import {
     getAtomModalKey,
@@ -134,6 +144,18 @@ export default {
         Vue.set(state, 'fetchingAtomList', fetching)
         return state
     },
+    [IS_MORE_LOADING]: (state, loading) => {
+        Vue.set(state, 'isMoreLoading', loading)
+        return state
+    },
+    [IS_PROJECT_PAGE_OVER]: (state, loading) => {
+        Vue.set(state, 'isProjectPageOver', loading)
+        return state
+    },
+    [IS_STORE_PAGE_OVER]: (state, loading) => {
+        Vue.set(state, 'isStorePageOver', loading)
+        return state
+    },
     [SET_PIPELINE]: (state, pipeline = null) => {
         Vue.set(state, 'pipeline', pipeline)
         return state
@@ -153,13 +175,51 @@ export default {
         })
         return state
     },
-    [SET_ATOMS]: (state, { atomCodeList, atomClassifyCodeList, atomMap, atomClassifyMap }) => {
+    [SET_CLASSIFY]: (state, { atomClassifyCodeList, atomClassifyMap }) => {
         Object.assign(state, {
-            atomCodeList,
             atomClassifyCodeList,
-            atomMap,
             atomClassifyMap
         })
+        return state
+    },
+    [SET_PROJECT_ATOMS]: (state, { projectRecommendAtomMap }) => {
+        Object.assign(state, {
+            projectRecommendAtomMap
+        })
+        return state
+    },
+    [SET_PROJECT_UNRECOMMEN_ATOMS]: (state, { projectUnRecommendAtomMap }) => {
+        Object.assign(state, {
+            projectUnRecommendAtomMap
+        })
+        return state
+    },
+    [SET_STORE_ATOMS]: (state, { storeRecommendAtomMap }) => {
+        Object.assign(state, {
+            storeRecommendAtomMap
+        })
+        return state
+    },
+    [SET_STORE_UNRECOMMEN_ATOMS]: (state, { storeUnRecommendAtomMap }) => {
+        Object.assign(state, {
+            storeUnRecommendAtomMap
+        })
+        return state
+    },
+    [SET_PROJECT_DATA]: (state, projectData) => {
+        Object.assign(state, {
+            projectData
+        })
+        return state
+    },
+    [SET_STORE_DATA]: (state, storeData) => {
+        Object.assign(state, {
+            storeData
+        })
+        return state
+    },
+    [SET_INNER_ACTIVE_NAME]: (state, value) => {
+        state.innerActiveName = value
         return state
     },
     [FETCHING_ATOM_VERSION]: (state, fetchingAtmoVersion) => {
@@ -380,9 +440,6 @@ export default {
         Vue.set(state, 'showAtomSelectorPopup', show)
         return state
     },
-    [SET_STORE_DATA]: (state, data) => {
-        Vue.set(state, 'storeAtomData', data)
-    },
     [SET_STORE_LOADING]: (state, data) => {
         state.storeAtomData.loading = data
     },
@@ -391,5 +448,8 @@ export default {
     },
     [SET_IMPORTED_JSON]: (state, importedPipelineJson) => {
         state.importedPipelineJson = importedPipelineJson
+    },
+    [SET_CUR_JOBTYPE]: (state, str) => {
+        state.curJobType = str
     }
 }

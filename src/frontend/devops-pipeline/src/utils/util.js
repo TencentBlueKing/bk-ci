@@ -653,10 +653,36 @@ export function rely (fieldProps, values) {
         return true
     }
 }
-
 export class HttpError extends Error {
     constructor (code = 500, message = 'http request error message') {
         super(message)
         this.code = code
     }
+}
+
+// 计算时长换成 1min 1h 1天等
+export function formatDiff (times) {
+    const timesTamp = new Date(times).getTime()
+    const nowTimes = new Date().getTime()
+    const minute = 1000 * 60
+    const hour = minute * 60
+    const day = hour * 24
+    const month = day * 30
+    const year = month * 12
+    const time = nowTimes - timesTamp
+    let result = null
+    if (time / year >= 1) {
+        result = parseInt(time / year) + ' 年前'
+    } else if (time / month >= 1) {
+        result = parseInt(time / month) + ' 个月前'
+    } else if (time / day >= 1) {
+        result = parseInt(time / day) + ' 天前'
+    } else if (time / hour >= 1) {
+        result = parseInt(time / hour) + ' 小时前'
+    } else if (time / minute >= 1) {
+        result = parseInt(time / minute) + ' 分钟前'
+    } else {
+        result = '刚刚'
+    }
+    return result
 }

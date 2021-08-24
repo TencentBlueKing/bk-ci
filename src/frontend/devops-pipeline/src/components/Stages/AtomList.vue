@@ -18,7 +18,7 @@
                     v-if="atom['@type'] !== 'qualityGateInTask' && atom['@type'] !== 'qualityGateOutTask'">
                     <status-icon v-if="atom.status && atom.status !== 'SKIP'" type="element" :status="atom.status" :is-hook="((atom.additionalOptions || {}).elementPostInfo || false)" />
                     <status-icon v-else-if="isWaiting && atom.status !== 'SKIP'" type="element" status="WAITING" />
-                    <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon && !(atom.additionalOptions || {}).elementPostInfo" :src="atomMap[atom.atomCode].icon" :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" />
+                    <img v-else-if="projectRecommendAtomMap[atom.atomCode] && projectRecommendAtomMap[atom.atomCode].icon && !(atom.additionalOptions || {}).elementPostInfo" :src="projectRecommendAtomMap[atom.atomCode].icon" :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" />
                     <logo v-else :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" :name="getAtomIcon(atom)" size="18" />
                     <p class="atom-name">
                         <span :title="atom.name" :class="{ 'skip-name': useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
@@ -134,7 +134,7 @@
             ]),
             ...mapState('atom', [
                 'execDetail',
-                'atomMap',
+                'projectRecommendAtomMap',
                 'pipeline',
                 'pipelineLimit'
             ]),
@@ -206,6 +206,7 @@
                 'addAtom',
                 'deleteAtom',
                 'setPipelineEditing',
+                'setCurJobType',
                 'pausePlugin',
                 'requestPipelineExecDetail'
             ]),
@@ -269,7 +270,7 @@
                 const dragContext = event.draggedContext || {}
                 const element = dragContext.element || {}
                 const atomCode = element.atomCode || ''
-                const atom = this.atomMap[atomCode] || {}
+                const atom = this.projectRecommendAtomMap[atomCode] || {}
                 const os = atom.os || []
                 const isTriggerAtom = atom.category === 'TRIGGER'
 
@@ -314,7 +315,11 @@
                 return reviewUsers
             },
             showPropertyPanel (elementIndex) {
-                const { stageIndex, containerIndex } = this
+                const { stageIndex, containerIndex, container } = this
+
+                const jobType = container['@type'] === 'vmBuild' ? 'AGENT' : 'AGENT_LESS'
+                this.setCurJobType(jobType)
+
                 this.togglePropertyPanel({
                     isShow: true,
                     editingElementPos: {
@@ -334,6 +339,10 @@
                     })
                     return
                 }
+
+                const jobType = container['@type'] === 'vmBuild' ? 'AGENT' : 'AGENT_LESS'
+                this.setCurJobType(jobType)
+
                 editAction({
                     container,
                     atomIndex,

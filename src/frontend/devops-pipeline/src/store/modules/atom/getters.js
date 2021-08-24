@@ -34,7 +34,6 @@ export default {
         if (isTrigger) {
             return ['trigger']
         }
-
         return state.atomClassifyCodeList.filter(classifyCode => classifyCode !== 'trigger')
     },
     getAtomTree: (state, getters) => (os, category, searchKey) => {
@@ -317,5 +316,11 @@ export default {
     getPlatformList: state => platformList,
     getAtomModalKey: state => getAtomModalKey,
     isNewAtomTemplate: state => isNewAtomTemplate,
-    atomVersionChangedKeys: state => state.atomVersionChangedKeys
+    atomVersionChangedKeys: state => state.atomVersionChangedKeys,
+    getProjectRecommendAtomMap: state => state.projectRecommendAtomMap,
+    getProjectUnRecommendAtomMap: state => state.projectUnRecommendAtomMap,
+    getStoreRecommendAtomMap: state => state.storeRecommendAtomMap,
+    getStoreUnRecommendAtomMap: state => state.storeUnRecommendAtomMap,
+    getAtomClassifyMap: state => state.atomClassifyMap,
+    innerActiveName: state => state.innerActiveName
 }
