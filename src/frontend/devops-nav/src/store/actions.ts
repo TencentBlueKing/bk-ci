@@ -149,7 +149,7 @@ const actions: ActionTree<RootState, any> = {
         return Request.put(`${AUTH_API_URL_PREFIX}/user/project/roles/projectIds/${projectId}/roleIds/${roleId}`, body)
     },
     deleteGroupMember (_, { projectId, roleId, id, type, isAdmin }) {
-        return Request.delete(`${AUTH_API_URL_PREFIX}/user/project/members/projectIds/${projectId}/roleIds/${roleId}?boolean=${isAdmin}&id=${id}&type=${type}`)
+        return Request.delete(`${AUTH_API_URL_PREFIX}/user/project/members/projectIds/${projectId}/roleIds/${roleId}?managerGroup=${isAdmin}&id=${id}&type=${type}`)
     },
     getDeptsByLevel (_, level) {
         return Request.get(`${AUTH_API_URL_PREFIX}/user/dept/levels/${level}`)
@@ -161,7 +161,7 @@ const actions: ActionTree<RootState, any> = {
         return Request.get(`${AUTH_API_URL_PREFIX}/user/dept/names/${name}?type=DEPARTMENT`)
     },
     addRoleMembers (_, { projectId, roleId, isAdmin, body }) {
-        return Request.post(`${AUTH_API_URL_PREFIX}/user/project/members/projectIds/${projectId}/roleIds/${roleId}?boolean=${isAdmin}`, body)
+        return Request.post(`${AUTH_API_URL_PREFIX}/user/project/members/projectIds/${projectId}/roleIds/${roleId}?managerGroup=${isAdmin}`, body)
     },
     getAllMember (_, { projectId }) {
         return Request.get(`${AUTH_API_URL_PREFIX}/user/project/members/projectIds/${projectId}/members/all`)
