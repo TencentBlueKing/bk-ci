@@ -25,22 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.constant
+package com.tencent.devops.gitci.mq.streamTrigger
 
-object MQ {
+import com.tencent.devops.common.event.annotation.Event
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-    // 工蜂CI触发请求
-    const val EXCHANGE_GITCI_REQUEST_EVENT = "e.gitci.request.event"
-    const val ROUTE_GITCI_REQUEST_EVENT = "r.gitci.request.event"
-    const val QUEUE_GITCI_REQUEST_EVENT = "q.gitci.request.event"
+object StreamTriggerDispatch {
+    fun dispatch(rabbitTemplate: RabbitTemplate, event: StreamTriggerEvent) {
+        try {
+            logger.info("Dispatch stream trigger event: $event")
+            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
+        } catch (e: Throwable) {
+            logger.error("Fail to dispatch the event($event)", e)
+        }
+    }
 
-    // 工蜂Mr请求冲突检查
-    const val EXCHANGE_GITCI_MR_CONFLICT_CHECK_EVENT = "e.gitci.mr.conflict.check.event"
-    const val ROUTE_GITCI_MR_CONFLICT_CHECK_EVENT = "r.gitci.mr.conflict.check.event"
-    const val QUEUE_GITCI_MR_CONFLICT_CHECK_EVENT = "q.gitci.mr.conflict.check.event"
-
-    // 工蜂Mr请求冲突检查
-    const val EXCHANGE_STREAM_TRIGGER_EVENT = "e.stream.trigger.event"
-    const val ROUTE_STREAM_TRIGGER_EVENT = "r.stream.trigger.event"
-    const val QUEUE_STREAM_TRIGGER_EVENT = "q.stream.trigger.event"
+    private val logger = LoggerFactory.getLogger(StreamTriggerDispatch::class.java)
 }

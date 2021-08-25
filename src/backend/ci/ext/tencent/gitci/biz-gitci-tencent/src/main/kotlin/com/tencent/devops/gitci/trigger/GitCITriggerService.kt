@@ -63,6 +63,8 @@ import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.listener.GitCIMrConflictCheckDispatcher
 import com.tencent.devops.gitci.listener.GitCIMrConflictCheckEvent
+import com.tencent.devops.gitci.mq.streamTrigger.StreamTriggerDispatch
+import com.tencent.devops.gitci.mq.streamTrigger.StreamTriggerEvent
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
@@ -565,15 +567,33 @@ class GitCITriggerService @Autowired constructor(
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)
         val triggerInterface = yamlTriggerFactory.getGitCIRequestTrigger(ymlVersion)
-        triggerInterface.triggerBuild(
-            gitToken = gitToken,
-            forkGitToken = forkGitToken,
-            gitRequestEvent = gitRequestEvent,
-            gitProjectPipeline = buildPipeline,
-            event = event,
-            originYaml = originYaml,
-            filePath = filePath
-        )
+        if (ymlVersion?.version == "v2.0") {
+            dispatchStreamTrigger(
+                StreamTriggerEvent(
+                    gitToken = gitToken,
+                    forkGitToken = forkGitToken,
+                    gitRequestEvent = gitRequestEvent,
+                    gitProjectPipeline = buildPipeline,
+                    event = event,
+                    originYaml = originYaml,
+                    filePath = filePath
+                )
+            )
+        } else {
+            triggerInterface.triggerBuild(
+                gitToken = gitToken,
+                forkGitToken = forkGitToken,
+                gitRequestEvent = gitRequestEvent,
+                gitProjectPipeline = buildPipeline,
+                event = event,
+                originYaml = originYaml,
+                filePath = filePath
+            )
+        }
+    }
+
+    private fun dispatchStreamTrigger(event: StreamTriggerEvent) {
+        StreamTriggerDispatch.dispatch(rabbitTemplate, event)
     }
 
     fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)

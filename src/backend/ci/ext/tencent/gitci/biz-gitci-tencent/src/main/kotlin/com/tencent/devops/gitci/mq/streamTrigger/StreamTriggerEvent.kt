@@ -25,22 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.constant
+package com.tencent.devops.gitci.mq.streamTrigger
 
-object MQ {
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.gitci.constant.MQ
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.repository.pojo.oauth.GitToken
 
-    // 工蜂CI触发请求
-    const val EXCHANGE_GITCI_REQUEST_EVENT = "e.gitci.request.event"
-    const val ROUTE_GITCI_REQUEST_EVENT = "r.gitci.request.event"
-    const val QUEUE_GITCI_REQUEST_EVENT = "q.gitci.request.event"
-
-    // 工蜂Mr请求冲突检查
-    const val EXCHANGE_GITCI_MR_CONFLICT_CHECK_EVENT = "e.gitci.mr.conflict.check.event"
-    const val ROUTE_GITCI_MR_CONFLICT_CHECK_EVENT = "r.gitci.mr.conflict.check.event"
-    const val QUEUE_GITCI_MR_CONFLICT_CHECK_EVENT = "q.gitci.mr.conflict.check.event"
-
-    // 工蜂Mr请求冲突检查
-    const val EXCHANGE_STREAM_TRIGGER_EVENT = "e.stream.trigger.event"
-    const val ROUTE_STREAM_TRIGGER_EVENT = "r.stream.trigger.event"
-    const val QUEUE_STREAM_TRIGGER_EVENT = "q.stream.trigger.event"
-}
+@Event(MQ.EXCHANGE_STREAM_TRIGGER_EVENT, MQ.ROUTE_STREAM_TRIGGER_EVENT)
+data class StreamTriggerEvent(
+    val gitToken: GitToken,
+    val forkGitToken: GitToken?,
+    val gitRequestEvent: GitRequestEvent,
+    val gitProjectPipeline: GitProjectPipeline,
+    val event: GitEvent,
+    val originYaml: String?,
+    val filePath: String
+)
