@@ -61,14 +61,15 @@ interface AtomService {
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int = 1,
+        pageSize: Int = 10
     ): Result<AtomResp<AtomRespItem>?>
 
     /**
      * 获取插件列表
      */
     fun serviceGetPipelineAtoms(
+        userId: String,
         serviceScope: String?,
         jobType: String?,
         os: String?,

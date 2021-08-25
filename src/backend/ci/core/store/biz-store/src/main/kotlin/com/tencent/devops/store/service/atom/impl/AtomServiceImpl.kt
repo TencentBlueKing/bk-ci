@@ -115,7 +115,9 @@ import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
+import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreProjectService
+import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
@@ -169,6 +171,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     lateinit var atomLabelService: AtomLabelService
 
     @Autowired
+    lateinit var atomMemberService: AtomMemberServiceImpl
+
+    @Autowired
+    lateinit var storeCommonService: StoreCommonService
+
+    @Autowired
+    lateinit var storeUserService: StoreUserService
+
+    @Autowired
     lateinit var redisOperation: RedisOperation
 
     @Autowired
@@ -181,6 +192,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         .build(object : CacheLoader<String, Map<String, String>>() {
             override fun load(projectId: String): Map<String, String> {
                 val elementMapData = serviceGetPipelineAtoms(
+                    userId = "",
                     serviceScope = null,
                     jobType = null,
                     os = null,
@@ -211,8 +223,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
         if (!projectCode.isNullOrBlank()) {
             // 根据token校验用户有没有查询该项目的权限
@@ -236,6 +248,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             }
         }
         return serviceGetPipelineAtoms(
+            userId = userId,
             serviceScope = serviceScope,
             jobType = jobType,
             os = os,
@@ -251,6 +264,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     @Suppress("UNCHECKED_CAST")
     override fun serviceGetPipelineAtoms(
+        userId: String,
         serviceScope: String?,
         jobType: String?,
         os: String?,
@@ -285,11 +299,25 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val atomLabelInfoMap = atomLabelService.getLabelsByAtomIds(atomIdSet)
         // 查询使用插件的流水线数量
         var atomPipelineCntMap: Map<String, Int>? = null
+        var atomVisibleDataMap: Map<String, MutableList<Int>>? = null
+        var memberDataMap: Map<String, MutableList<String>>? = null
+        var installedAtomList: List<String>? = null
+        var userDeptList: List<Int>? = null
         if (!projectCode.isNullOrBlank() && !atomCodeSet.isNullOrEmpty()) {
             atomPipelineCntMap = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
                 atomCodes = atomCodeSet.joinToString(","),
                 projectCode = projectCode
             ).data
+            val atomCodeList = atomCodeSet.toList()
+            atomVisibleDataMap = storeCommonService.generateStoreVisibleData(atomCodeList, StoreTypeEnum.ATOM)
+            memberDataMap = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
+            installedAtomList = storeProjectRelDao.getValidStoreCodesByProject(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                storeCodes = atomCodeList,
+                storeType = StoreTypeEnum.ATOM
+            )?.map { it.value1() }
+            userDeptList = storeUserService.getUserDeptList(userId)
         }
         pipelineAtoms?.forEach {
             val name = it[NAME] as String
@@ -319,6 +347,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val atomType = it[KEY_ATOM_TYPE] as Byte
             val atomStatus = it[KEY_ATOM_STATUS] as Byte
             val atomPipelineCnt = atomPipelineCntMap?.get(atomCode)
+            val installFlag = if (projectCode.isNullOrBlank()) storeCommonService.generateInstallFlag(
+                defaultFlag = it[KEY_DEFAULT_FLAG] as Boolean,
+                members = memberDataMap?.get(atomCode),
+                userId = userId,
+                visibleList = atomVisibleDataMap?.get(atomCode),
+                userDeptList = userDeptList!!) else null
             val pipelineAtomRespItem = AtomRespItem(
                 name = name,
                 atomCode = atomCode,
@@ -350,7 +384,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 score = String.format("%.1f", (it[KEY_AVG_SCORE] as? BigDecimal)?.toDouble()).toDoubleOrNull(),
                 recentExecuteNum = it[KEY_RECENT_EXECUTE_NUM] as? Int,
                 uninstallFlag = if (atomPipelineCnt == null) null else atomPipelineCnt < 1,
-                labelList = atomLabelInfoMap?.get(it[KEY_ID] as String)
+                labelList = atomLabelInfoMap?.get(it[KEY_ID] as String),
+                installFlag = installFlag,
+                installed = installedAtomList?.contains(atomCode)
             )
             dataList.add(pipelineAtomRespItem)
         }

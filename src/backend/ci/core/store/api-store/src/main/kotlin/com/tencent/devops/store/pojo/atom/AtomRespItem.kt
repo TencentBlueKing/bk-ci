@@ -89,12 +89,16 @@ data class AtomRespItem(
     val weight: Int?,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean?,
-    @ApiModelProperty("评分")
+    @ApiModelProperty("评分", required = false)
     val score: Double? = null,
-    @ApiModelProperty("最近执行次数")
+    @ApiModelProperty("最近执行次数", required = false)
     val recentExecuteNum: Int? = null,
-    @ApiModelProperty("是否能卸载标识")
+    @ApiModelProperty("是否能卸载标识", required = false)
     val uninstallFlag: Boolean? = null,
     @ApiModelProperty("标签列表", required = false)
-    val labelList: List<Label>? = null
+    val labelList: List<Label>? = null,
+    @ApiModelProperty("是否有权限安装标识", required = false)
+    val installFlag: Boolean? = null,
+    @ApiModelProperty("是否已安装", required = false)
+    val installed: Boolean? = null
 )

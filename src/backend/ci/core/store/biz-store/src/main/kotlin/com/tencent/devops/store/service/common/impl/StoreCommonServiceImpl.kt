@@ -71,28 +71,67 @@ import org.springframework.stereotype.Service
  */
 @Suppress("ALL")
 @Service
-class StoreCommonServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val storeMemberDao: StoreMemberDao,
-    private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
-    private val storeProjectRelDao: StoreProjectRelDao,
-    private val operationLogDao: OperationLogDao,
-    private val sensitiveConfDao: SensitiveConfDao,
-    private val reasonRelDao: ReasonRelDao,
-    private val storeApproveDao: StoreApproveDao,
-    private val storeCommentDao: StoreCommentDao,
-    private val storeCommentPraiseDao: StoreCommentPraiseDao,
-    private val storeCommentReplyDao: StoreCommentReplyDao,
-    private val storeDeptRelDao: StoreDeptRelDao,
-    private val storeEnvVarDao: StoreEnvVarDao,
-    private val storeMediaInfoDao: StoreMediaInfoDao,
-    private val storePipelineRelDao: StorePipelineRelDao,
-    private val storeReleaseDao: StoreReleaseDao,
-    private val storeStatisticDao: StoreStatisticDao,
-    private val storeStatisticTotalDao: StoreStatisticTotalDao,
-    private val storeStatisticDailyDao: StoreStatisticDailyDao,
-    private val storeDetailUrlConfig: StoreDetailUrlConfig
-) : StoreCommonService {
+abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonService {
+
+    @Autowired
+    lateinit var dslContext: DSLContext
+
+    @Autowired
+    lateinit var storeMemberDao: StoreMemberDao
+
+    @Autowired
+    lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
+
+    @Autowired
+    lateinit var storeProjectRelDao: StoreProjectRelDao
+
+    @Autowired
+    lateinit var operationLogDao: OperationLogDao
+
+    @Autowired
+    lateinit var sensitiveConfDao: SensitiveConfDao
+
+    @Autowired
+    lateinit var reasonRelDao: ReasonRelDao
+
+    @Autowired
+    lateinit var storeApproveDao: StoreApproveDao
+
+    @Autowired
+    lateinit var storeCommentDao: StoreCommentDao
+
+    @Autowired
+    lateinit var storeCommentPraiseDao: StoreCommentPraiseDao
+
+    @Autowired
+    lateinit var storeCommentReplyDao: StoreCommentReplyDao
+
+    @Autowired
+    lateinit var storeDeptRelDao: StoreDeptRelDao
+
+    @Autowired
+    lateinit var storeEnvVarDao: StoreEnvVarDao
+
+    @Autowired
+    lateinit var storeMediaInfoDao: StoreMediaInfoDao
+
+    @Autowired
+    lateinit var storePipelineRelDao: StorePipelineRelDao
+
+    @Autowired
+    lateinit var storeReleaseDao: StoreReleaseDao
+
+    @Autowired
+    lateinit var storeStatisticDao: StoreStatisticDao
+
+    @Autowired
+    lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
+
+    @Autowired
+    lateinit var storeStatisticDailyDao: StoreStatisticDailyDao
+
+    @Autowired
+    lateinit var storeDetailUrlConfig: StoreDetailUrlConfig
 
     private val logger = LoggerFactory.getLogger(StoreCommonServiceImpl::class.java)
 
@@ -255,6 +294,19 @@ class StoreCommonServiceImpl @Autowired constructor(
         storeStatisticDailyDao.deleteDailyStatisticData(context, storeCode, storeType)
         return true
     }
+
+    abstract override fun generateInstallFlag(
+        defaultFlag: Boolean,
+        members: MutableList<String>?,
+        userId: String,
+        visibleList: MutableList<Int>?,
+        userDeptList: List<Int>
+    ): Boolean
+
+    abstract override fun generateStoreVisibleData(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): HashMap<String, MutableList<Int>>?
 
     override fun getStoreShowVersionInfo(
         cancelFlag: Boolean,
