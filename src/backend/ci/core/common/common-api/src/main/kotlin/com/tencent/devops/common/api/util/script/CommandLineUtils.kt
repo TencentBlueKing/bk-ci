@@ -34,7 +34,6 @@ import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayOutputStream
 import java.io.File
 
 object CommandLineUtils {
