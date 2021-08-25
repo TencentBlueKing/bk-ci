@@ -32,13 +32,15 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.VersionInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -94,12 +96,13 @@ interface UserAtomResource {
         @ApiParam("搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @ApiParam("页码", required = false)
+        @ApiParam("页码", required = true)
         @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数量", required = false)
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int = 10
     ): Result<AtomResp<AtomRespItem>?>
 
     @ApiOperation("根据插件代码和版本号获取流水线插件详细信息")
@@ -142,12 +145,13 @@ interface UserAtomResource {
         @ApiParam("插件分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @ApiParam("页码", required = false)
+        @ApiParam("页码", required = true)
         @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数量", required = false)
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int = 10
     ): Result<Page<InstalledAtom>>
 
     @ApiOperation("更新流水线插件信息")

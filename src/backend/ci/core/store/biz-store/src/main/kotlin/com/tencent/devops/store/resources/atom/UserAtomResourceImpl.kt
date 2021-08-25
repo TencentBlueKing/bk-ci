@@ -60,8 +60,8 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
         return atomService.getPipelineAtoms(
             accessToken = accessToken,
@@ -87,8 +87,8 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         userId: String,
         projectCode: String,
         classifyCode: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<Page<InstalledAtom>> {
         return Result(atomService.getInstalledAtoms(userId, projectCode, classifyCode, page, pageSize))
     }

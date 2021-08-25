@@ -30,29 +30,11 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.SampleMarketAtomService
 import org.springframework.stereotype.Service
 
 @Service
 class SampleMarketAtomServiceImpl : SampleMarketAtomService, MarketAtomServiceImpl() {
-
-    override fun generateAtomVisibleData(
-        storeCodeList: List<String?>,
-        storeType: StoreTypeEnum
-    ): Result<HashMap<String, MutableList<Int>>?> {
-        return Result(data = null) // 开源版插件不设置可见范围
-    }
-
-    override fun generateInstallFlag(
-        defaultFlag: Boolean,
-        members: MutableList<String>?,
-        userId: String,
-        visibleList: MutableList<Int>?,
-        userDeptList: List<Int>
-    ): Boolean {
-        return true // 开源版插件默认所有用户都有权限安装
-    }
 
     override fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?> {
         // 开源版暂不支持按代码库打成可执行包的方式
