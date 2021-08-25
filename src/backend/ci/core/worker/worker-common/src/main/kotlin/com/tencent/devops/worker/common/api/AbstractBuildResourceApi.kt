@@ -51,6 +51,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpMethod
 import java.io.File
 import java.io.FileOutputStream
 import java.net.ConnectException
@@ -103,7 +104,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             logger.warn("ConnectException|request($request),error is :$e, try to retry $retryCount")
             true
         } catch (re: SocketTimeoutException) {
-            if (re.message == "connect timed out" || re.message == "timeout") {
+            if (re.message == "connect timed out" ||
+                (request.method() == HttpMethod.GET.name && re.message == "timeout")
+            ) {
                 logger.warn("SocketTimeoutException(${re.message})|request($request), try to retry $retryCount")
                 true
             } else { // 对于因为服务器的超时，不一定能幂等重试的，抛出原来的异常，外层业务自行决定是否重试
