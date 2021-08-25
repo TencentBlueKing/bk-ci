@@ -28,6 +28,7 @@
 dependencies {
     api(project(":core:common:common-web"))
     api(project(":core:common:common-service"))
+    api("com.google.code.gson:gson")
     api("com.tencent.bkrepo:api-generic")
     api("com.tencent.bkrepo:api-repository")
 }
