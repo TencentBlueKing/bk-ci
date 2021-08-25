@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import java.time.LocalDateTime
 
 data class PipelineBuildStage(
@@ -41,5 +42,7 @@ data class PipelineBuildStage(
     val endTime: LocalDateTime? = null,
     val cost: Int = 0,
     val executeCount: Int = 1,
-    val controlOption: PipelineBuildStageControlOption?
+    val controlOption: PipelineBuildStageControlOption?,
+    var checkIn: StagePauseCheck? = null,
+    var checkOut: StagePauseCheck? = null
 )

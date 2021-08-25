@@ -27,7 +27,6 @@
 
 package com.tencent.devops.worker.common.task.script.bat
 
-import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.task.script.ICommand
 import com.tencent.devops.worker.common.utils.BatScriptUtil

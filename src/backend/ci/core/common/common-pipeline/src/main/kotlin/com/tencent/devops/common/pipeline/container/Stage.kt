@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.container
 
 import com.tencent.devops.common.pipeline.option.StageControlOption
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -58,5 +59,28 @@ data class Stage(
     @ApiModelProperty("当前Stage是否能重试", required = false)
     var canRetry: Boolean? = null,
     @ApiModelProperty("流程控制选项", required = true)
-    var stageControlOption: StageControlOption? = null // 为了兼容旧数据，所以定义为可空以及var
-)
+    var stageControlOption: StageControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
+    @ApiModelProperty("当前Stage是否能重试", required = false)
+    var checkIn: StagePauseCheck? = null, // stage准入配置
+    @ApiModelProperty("当前Stage是否能重试", required = false)
+    var checkOut: StagePauseCheck? = null // stage准出配置
+) {
+    /**
+     * 兼容性逻辑 - 将原有的审核配置刷新到审核流中，并且补充审核组ID
+     */
+    fun refreshReviewOption(init: Boolean? = false) {
+        if (checkIn != null) {
+            checkIn?.fixReviewGroups(init == true)
+            return
+        }
+        val originControlOption = stageControlOption ?: return
+        if (originControlOption.manualTrigger == true) {
+            checkIn = StagePauseCheck.convertControlOption(originControlOption)
+        }
+        // TODO 在下一次发布中增加抹除旧数据逻辑
+//        stageControlOption?.triggerUsers = null
+//        stageControlOption?.triggered = null
+//        stageControlOption?.reviewParams = null
+//        stageControlOption?.reviewDesc = null
+    }
+}
