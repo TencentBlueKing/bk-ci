@@ -59,7 +59,8 @@ import javax.ws.rs.core.MediaType
 @Api(tags = ["USER_MARKET_ATOM"], description = "插件市场-插件")
 @Path("/user/market/")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
+@Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserMarketAtomResource {
 
     @ApiOperation("获取插件市场首页的数据")
@@ -105,6 +106,9 @@ interface UserMarketAtomResource {
         @ApiParam("是否推荐标识 true：推荐，false：不推荐", required = false)
         @QueryParam("recommendFlag")
         recommendFlag: Boolean?,
+        @ApiParam("是否有红线指标", required = false)
+        @QueryParam("qualityFlag")
+        qualityFlag: Boolean?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
         sortType: MarketAtomSortTypeEnum? = MarketAtomSortTypeEnum.CREATE_TIME,

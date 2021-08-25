@@ -40,7 +40,8 @@ interface PermissionRoleMemberService {
         projectId: Int,
         roleId: Int,
         members: List<RoleMemberDTO>,
-        managerGroup: Boolean
+        managerGroup: Boolean,
+        checkAGradeManager: Boolean? = true
     )
 
     fun deleteRoleMember(

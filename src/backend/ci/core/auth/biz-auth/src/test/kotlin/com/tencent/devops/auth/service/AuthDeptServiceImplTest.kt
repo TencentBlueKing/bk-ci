@@ -43,9 +43,6 @@ class AuthDeptServiceImplTest {
     @Test
     fun test() {
         val response = "{\n" +
-            "    \"message\": \"success\",\n" +
-            "    \"code\": 0,\n" +
-            "    \"data\": {\n" +
             "        \"count\": 162,\n" +
             "        \"results\": [\n" +
             "            {\n" +
@@ -133,10 +130,7 @@ class AuthDeptServiceImplTest {
             "                \"category_id\": 2\n" +
             "            }\n" +
             "        ]\n" +
-            "    },\n" +
-            "    \"result\": true,\n" +
-            "    \"request_id\": \"ca60654f7f054606a56a9644b7211ddf\"\n" +
-            "}"
+            "    }"
         val users = authDeptServiceImpl.findUserName(response)
         println(users)
     }

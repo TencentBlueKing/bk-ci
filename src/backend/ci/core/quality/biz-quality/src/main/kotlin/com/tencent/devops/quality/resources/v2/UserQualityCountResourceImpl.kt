@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.quality.api.v2.UserQualityCountResource
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import com.tencent.devops.quality.api.v2.pojo.response.CountOverviewResponse
 import com.tencent.devops.quality.pojo.CountDailyIntercept
 import com.tencent.devops.quality.pojo.CountPipelineIntercept

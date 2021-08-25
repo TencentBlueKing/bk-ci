@@ -33,9 +33,9 @@
             <div
                 class="corner-mark"
                 :class="config.status"
-                v-if="!config.isRunning && (config.status === 'known_error' || config.status === 'success')"
+                v-if="!config.isRunning && (config.status === 'known_error' || config.status === 'success' || config.status === 'known_cancel')"
             >
-                <i class="devops-icon icon-exclamation" v-if="config.status === 'known_error'"></i>
+                <i class="devops-icon icon-exclamation" v-if="config.status === 'known_error' || config.status === 'known_cancel'"></i>
                 <i class="devops-icon icon-check-1" v-else></i>
             </div>
             <!-- </bk-popover> -->
@@ -374,6 +374,9 @@
         &.known_error {
             border-color: $dangerColor transparent transparent $dangerColor;
         }
+        &.known_cancel {
+            border-color: $cancelColor transparent transparent $cancelColor;
+        }
         &.success {
             border-color: $successColor transparent transparent $successColor;
         }
@@ -427,6 +430,9 @@
         }
         &.success {
             color: $successColor;
+        }
+        &.known_cancel {
+            color: $cancelColor
         }
     }
     .pipelines-triggers {
