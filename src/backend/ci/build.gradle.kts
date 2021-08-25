@@ -1,3 +1,5 @@
+import com.tencent.devops.utils.findPropertyOrNull
+
 plugins {
     id("com.tencent.devops.boot")
     detektCheck
@@ -6,13 +8,20 @@ plugins {
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
 
-    // 包路径
+    project.findPropertyOrNull("mavenRepoUrl")?.let {
+        project.repositories {
+            removeAt(0)
+            addFirst(maven(it))
+        }
+    }
+
+// 包路径
     group = "com.tencent.bk.devops.ci"
-    // 版本
+// 版本
     version = (System.getProperty("ci_version") ?: "1.6.0") +
             if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
-    // 版本管理
+// 版本管理
     dependencyManagement {
         setApplyMavenExclusions(false)
         dependencies {
@@ -73,11 +82,11 @@ allprojects {
         }
     }
 
-    // 兼容Junit4
+// 兼容Junit4
     dependencies {
         testImplementation("org.junit.vintage:junit-vintage-engine")
     }
-    // 兼容 Log4j
+// 兼容 Log4j
     configurations.forEach {
         it.exclude("org.springframework.boot", "spring-boot-starter-logging")
         it.exclude("org.springframework.boot", "spring-boot-starter-tomcat")
