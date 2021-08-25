@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.mq.streamMrConflict
 
 import com.tencent.devops.gitci.constant.MQ
 import com.tencent.devops.gitci.trigger.GitCITriggerService
@@ -73,7 +73,8 @@ constructor(
         }
         // 未检查完成，继续进入延时队列
         if (!result && checkEvent.retryTime > 0) {
-            logger.warn("Retry to check gitci mr request conflict event [${checkEvent.gitRequestEvent}|${checkEvent.retryTime}]")
+            logger.warn("Retry to check gitci mr request conflict " +
+                "event [${checkEvent.gitRequestEvent}|${checkEvent.retryTime}]")
             checkEvent.retryTime--
             GitCIMrConflictCheckDispatcher.dispatch(rabbitTemplate, checkEvent)
         }

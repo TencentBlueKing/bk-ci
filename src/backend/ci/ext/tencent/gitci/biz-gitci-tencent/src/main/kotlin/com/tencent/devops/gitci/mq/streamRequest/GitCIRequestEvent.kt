@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.mq.streamRequest
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.gitci.constant.MQ

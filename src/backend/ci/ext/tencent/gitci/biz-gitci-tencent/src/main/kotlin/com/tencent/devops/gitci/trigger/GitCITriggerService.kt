@@ -61,8 +61,8 @@ import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
-import com.tencent.devops.gitci.listener.GitCIMrConflictCheckDispatcher
-import com.tencent.devops.gitci.listener.GitCIMrConflictCheckEvent
+import com.tencent.devops.gitci.mq.streamMrConflict.GitCIMrConflictCheckDispatcher
+import com.tencent.devops.gitci.mq.streamMrConflict.GitCIMrConflictCheckEvent
 import com.tencent.devops.gitci.mq.streamTrigger.StreamTriggerDispatch
 import com.tencent.devops.gitci.mq.streamTrigger.StreamTriggerEvent
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
