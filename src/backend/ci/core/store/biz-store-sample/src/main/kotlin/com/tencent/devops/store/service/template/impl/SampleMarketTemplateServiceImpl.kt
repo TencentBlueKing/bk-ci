@@ -30,36 +30,14 @@ package com.tencent.devops.store.service.template.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.template.SampleMarketTemplateService
 import org.springframework.stereotype.Service
 
 @Service
 class SampleMarketTemplateServiceImpl : SampleMarketTemplateService, MarketTemplateServiceImpl() {
 
-    override fun generateTemplateVisibleData(
-        storeCodeList: List<String?>,
-        storeType: StoreTypeEnum
-    ): Result<HashMap<String, MutableList<Int>>?> {
-        return Result(data = null)
-    }
-
     override fun checkUserInvalidVisibleStoreInfo(userStoreDeptInfoRequest: UserStoreDeptInfoRequest): Boolean {
         return true
-    }
-
-    override fun generateInstallFlag(
-        defaultFlag: Boolean,
-        members: MutableList<String>?,
-        userId: String,
-        visibleList: MutableList<Int>?,
-        userDeptList: List<Int>
-    ): Boolean {
-        return if (defaultFlag || (members != null && members.contains(userId))) {
-            true
-        } else {
-            visibleList != null && (visibleList.contains(0) || visibleList.intersect(userDeptList).count() > 0)
-        }
     }
 
     override fun validateTemplateVisibleDept(
