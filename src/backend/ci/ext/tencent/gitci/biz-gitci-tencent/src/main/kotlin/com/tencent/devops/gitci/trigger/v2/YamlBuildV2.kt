@@ -212,6 +212,7 @@ class YamlBuildV2 @Autowired constructor(
         const val VARIABLE_PREFIX = "variables."
     }
 
+    @Throws(TriggerBaseException::class, ErrorCodeException::class)
     override fun gitStartBuild(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,

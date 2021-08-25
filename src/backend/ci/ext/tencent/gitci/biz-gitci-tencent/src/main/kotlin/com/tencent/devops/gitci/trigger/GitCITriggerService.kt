@@ -44,7 +44,6 @@ import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisLock
@@ -126,6 +125,7 @@ class GitCITriggerService @Autowired constructor(
     private val scmService: ScmService,
     private val yamlBuild: YamlBuild,
     private val yamlBuildV2: YamlBuildV2,
+    private val manualTriggerService: ManualTriggerService,
     private val triggerExceptionService: TriggerExceptionService
 ) {
     companion object {
@@ -148,7 +148,7 @@ class GitCITriggerService @Autowired constructor(
 
         val existsPipeline =
             gitPipelineResourceDao.getPipelineById(dslContext, triggerBuildReq.gitProjectId, pipelineId)
-                ?: throw OperationException("git ci pipelineId not exist")
+                ?: throw OperationException("stream pipeline: $pipelineId is not exist")
         // 如果该流水线已保存过，则继续使用
         val buildPipeline = GitProjectPipeline(
             gitProjectId = existsPipeline.gitProjectId,
@@ -187,6 +187,11 @@ class GitCITriggerService @Autowired constructor(
                 commitCheckBlock = false,
                 version = null
             )
+            throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = TriggerReason.CI_YAML_CONTENT_NULL.name +
+                    "(${TriggerReason.CI_YAML_CONTENT_NULL.detail.format("")})"
+            )
         }
 
         if (!ScriptYmlUtils.isV2Version(originYaml)) {
@@ -202,7 +207,7 @@ class GitCITriggerService @Autowired constructor(
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
-                originYaml = originYaml!!,
+                originYaml = originYaml,
                 parsedYaml = originYaml,
                 normalizedYaml = normalizedYaml,
                 gitProjectId = gitRequestEvent.gitProjectId,
@@ -222,44 +227,12 @@ class GitCITriggerService @Autowired constructor(
             )
             return true
         } else {
-            // v2 先做OAuth校验
-            val token = oauthService.getAndCheckOauthToken(userId)
-            val objects = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
-                gitToken = token,
-                forkGitToken = null,
+            manualTriggerService.handleTrigger(
+                userId = userId,
                 gitRequestEvent = gitRequestEvent,
-                isMr = false,
                 originYaml = originYaml,
-                filePath = existsPipeline.filePath,
-                pipelineId = existsPipeline.pipelineId,
-                pipelineName = existsPipeline.displayName
-            ) ?: return false
-            val parsedYaml = YamlCommonUtils.toYamlNotNull(objects.preYaml)
-            val gitBuildId = gitRequestEventBuildDao.save(
-                dslContext = dslContext,
-                eventId = gitRequestEvent.id!!,
-                originYaml = originYaml!!,
-                parsedYaml = parsedYaml,
-                normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
-                gitProjectId = gitRequestEvent.gitProjectId,
-                branch = gitRequestEvent.branch,
-                objectKind = gitRequestEvent.objectKind,
-                commitMsg = triggerBuildReq.customCommitMsg,
-                triggerUser = gitRequestEvent.userId,
-                sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
-                buildStatus = BuildStatus.RUNNING,
-                version = "v2.0"
-            )
-            // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
-            gitCIBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
-            yamlBuildV2.gitStartBuild(
-                pipeline = buildPipeline,
-                event = gitRequestEvent,
-                yaml = objects.normalYaml,
-                parsedYaml = parsedYaml,
-                originYaml = originYaml,
-                normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
-                gitBuildId = gitBuildId
+                buildPipeline = buildPipeline,
+                triggerBuildReq = triggerBuildReq
             )
             return true
         }
