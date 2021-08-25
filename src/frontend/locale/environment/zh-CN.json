@@ -202,7 +202,7 @@
         "location": "地点",
         "buildMachineLocationTips": "请根据构建机的归属地选择最近的接入点，这样可以提高构建机的归档和拉取构建产物的速度，并增加构建机的连接稳定性。PS:北京地区请选择天津。",
         "referenceStep": "请参考以下步骤",
-        "executeCommandPrompt": "在目标构建机任意路径下(工作空间)执行如下命令",
+        "executeCommandPrompt": "请在合适的位置为Agent创建工作目录，并在该目录下执行安装命令",
         "installBuildMachineTips": "如何在Windows上安装Agent",
         "connectedNodes": "已连接的节点",
         "noConnectedNodes": "暂无连接任何连接节点",

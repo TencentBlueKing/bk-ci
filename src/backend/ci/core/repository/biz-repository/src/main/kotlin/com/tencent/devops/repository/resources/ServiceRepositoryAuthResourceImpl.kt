@@ -49,8 +49,8 @@ class ServiceRepositoryAuthResourceImpl @Autowired constructor(
                 return repositoryAuthService.getRepository(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
-                val hashIds = callBackInfo.filter.idList.map { it.toString() }
-                return repositoryAuthService.getRepositoryInfo(hashIds, token)
+                val ids = callBackInfo.filter.idList.map { it.toString() }
+                return repositoryAuthService.getRepositoryInfo(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return repositoryAuthService.searchRepositoryInstances(

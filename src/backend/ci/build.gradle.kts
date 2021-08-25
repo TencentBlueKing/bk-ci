@@ -1,3 +1,5 @@
+import com.tencent.devops.utils.findPropertyOrNull
+
 plugins {
     id("com.tencent.devops.boot")
     detektCheck
@@ -5,6 +7,17 @@ plugins {
 
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
+
+    // 特殊的maven仓库
+    project.findPropertyOrNull("mavenRepoUrl")?.let {
+        project.repositories {
+            all {
+                if (this is MavenArtifactRepository && this.name == "TencentMirrors") {
+                    this.setUrl(it)
+                }
+            }
+        }
+    }
 
     // 包路径
     group = "com.tencent.bk.devops.ci"
