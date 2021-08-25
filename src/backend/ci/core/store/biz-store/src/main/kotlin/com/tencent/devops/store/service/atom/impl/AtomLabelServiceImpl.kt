@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.service.atom.impl
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
+import com.tencent.devops.store.pojo.common.KEY_ID
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.service.atom.AtomLabelService
 import com.tencent.devops.store.service.common.LabelService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -49,18 +48,28 @@ class AtomLabelServiceImpl @Autowired constructor(
     private val labelService: LabelService
 ) : AtomLabelService {
 
-    private val logger = LoggerFactory.getLogger(AtomLabelServiceImpl::class.java)
+    override fun getLabelsByAtomId(atomId: String): List<Label>? {
+        return getLabelsByAtomIds(setOf(atomId))?.get(atomId)
+    }
 
-    /**
-     * 查找插件标签
-     */
-    override fun getLabelsByAtomId(atomId: String): Result<List<Label>?> {
-        logger.info("the atomId is :$atomId")
-        val atomLabelList = mutableListOf<Label>()
-        val atomLabelRecords = atomLabelRelDao.getLabelsByAtomId(dslContext, atomId) // 查询插件标签信息
-        atomLabelRecords?.forEach {
-            labelService.addLabelToLabelList(it, atomLabelList)
+    override fun getLabelsByAtomIds(atomIds: Set<String>): Map<String, List<Label>>? {
+        var atomLabelInfoMap: MutableMap<String, MutableList<Label>>? = null
+        // 批量查询插件标签信息
+        val atomLabelRecords = atomLabelRelDao.getLabelsByAtomIds(dslContext, atomIds)
+        atomLabelRecords?.forEach { atomLabelRecord ->
+            if (atomLabelInfoMap == null) {
+                atomLabelInfoMap = mutableMapOf()
+            }
+            val atomId = atomLabelRecord[KEY_ID] as String
+            if (atomLabelInfoMap!!.containsKey(atomId)) {
+                val atomLabelList = atomLabelInfoMap!![atomId] ?: mutableListOf()
+                labelService.addLabelToLabelList(atomLabelRecord, atomLabelList)
+            } else {
+                val atomLabelList = mutableListOf<Label>()
+                labelService.addLabelToLabelList(atomLabelRecord, atomLabelList)
+                atomLabelInfoMap!![atomId] = atomLabelList
+            }
         }
-        return Result(atomLabelList)
+        return atomLabelInfoMap
     }
 }

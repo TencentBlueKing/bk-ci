@@ -53,21 +53,27 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         accessToken: String,
         userId: String,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
-        projectCode: String,
+        projectCode: String?,
         category: String?,
         classifyId: String?,
-        page: Int?,
-        pageSize: Int?
+        recommendFlag: Boolean?,
+        keyword: String?,
+        page: Int,
+        pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
         return atomService.getPipelineAtoms(
             accessToken = accessToken,
             userId = userId,
             serviceScope = serviceScope,
+            jobType = jobType,
             os = os,
             projectCode = projectCode,
             category = category,
             classifyId = classifyId,
+            recommendFlag = recommendFlag,
+            keyword = keyword,
             page = page,
             pageSize = pageSize
         )
@@ -81,8 +87,8 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         userId: String,
         projectCode: String,
         classifyCode: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<Page<InstalledAtom>> {
         return Result(atomService.getInstalledAtoms(userId, projectCode, classifyCode, page, pageSize))
     }

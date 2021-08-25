@@ -54,23 +54,30 @@ interface AtomService {
         accessToken: String,
         userId: String,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
-        projectCode: String,
+        projectCode: String?,
         category: String?,
         classifyId: String?,
-        page: Int?,
-        pageSize: Int?
+        recommendFlag: Boolean?,
+        keyword: String?,
+        page: Int = 1,
+        pageSize: Int = 10
     ): Result<AtomResp<AtomRespItem>?>
 
     /**
      * 获取插件列表
      */
     fun serviceGetPipelineAtoms(
+        userId: String,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
-        projectCode: String,
+        projectCode: String?,
         category: String?,
         classifyId: String?,
+        recommendFlag: Boolean?,
+        keyword: String?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?>
