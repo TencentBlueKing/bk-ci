@@ -34,7 +34,6 @@ dependencies {
     api(project(":core:plugin:codecc-plugin:common-codecc"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":ext:tencent:common:common-job"))
-    api(project(":ext:tencent:common:common-itest"))
     api(project(":ext:tencent:common:common-gcloud"))
     api(project(":core:process:biz-engine"))
     api(project(":ext:tencent:experience:api-experience-tencent")) // 版本体验依赖

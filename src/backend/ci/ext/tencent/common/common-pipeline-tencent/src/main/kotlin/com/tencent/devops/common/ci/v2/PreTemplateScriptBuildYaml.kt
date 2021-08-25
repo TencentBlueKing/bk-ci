@@ -48,6 +48,6 @@ data class PreTemplateScriptBuildYaml(
     val steps: List<Map<String, Any>>? = null,
     val extends: Extends?,
     val resources: Resources?,
-    val notices: List<Notices>?,
+    val notices: List<GitNotices>?,
     var finally: Map<String, Any>?
 )

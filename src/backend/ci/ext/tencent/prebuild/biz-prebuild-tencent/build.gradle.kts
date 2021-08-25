@@ -48,16 +48,13 @@ dependencies {
     api("com.squareup.okhttp3:okhttp")
     api("com.tencent.devops.ci-plugins:sigar")
 
-    //api(project(":common:common-job"))
+
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-client"))
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-auth"))
-    //api(project(":common:common-itest"))
     api(project(":core:common:common-archive"))
-    //api(project(":common:common-gcloud"))
-    //api(project(":common:common-tcm"))
     api(project(":core:common:common-db"))
     api(project(":ext:tencent:common:common-wechatwork"))
     api(project(":ext:tencent:project:api-project-tencent"))

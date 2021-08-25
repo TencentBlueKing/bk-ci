@@ -28,11 +28,11 @@ package com.tencent.devops.openapi.service.apigw
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 

@@ -245,8 +245,6 @@ include(":core:sign:model-sign")
 //  ==================== tencent ============================================================
 include(":ext")
 include(":ext:tencent")
-include(":ext:tencent:common:common-cos")
-include(":ext:tencent:common:common-itest")
 include(":ext:tencent:common:common-job")
 include(":ext:tencent:common:common-gcloud")
 include(":ext:tencent:common:common-notify-tencent")

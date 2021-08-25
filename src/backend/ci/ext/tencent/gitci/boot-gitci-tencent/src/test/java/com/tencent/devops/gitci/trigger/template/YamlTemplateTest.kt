@@ -43,7 +43,7 @@ class YamlTemplateTest {
 
     @Test
     fun testAllTemplate() {
-        // replace("all.yml")
+        replace("all.yml")
     }
 
     @Test
@@ -122,6 +122,6 @@ class YamlTemplateTest {
             sb.append(str).append("\n")
         }
         inputStream.close()
-        return sb.toString()
+        return ScriptYmlUtils.formatYaml(sb.toString())
     }
 }

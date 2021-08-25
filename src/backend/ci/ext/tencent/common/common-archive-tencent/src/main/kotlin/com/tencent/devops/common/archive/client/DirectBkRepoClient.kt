@@ -131,7 +131,7 @@ class DirectBkRepoClient {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(DirectBkRepoClient::class.java)
         private const val BK_REPO_UID = "X-BKREPO-UID"
         private const val BK_REPO_OVERRIDE = "X-BKREPO-OVERWRITE"
         private const val BK_REPO_METADATA = "X-BKREPO-META"

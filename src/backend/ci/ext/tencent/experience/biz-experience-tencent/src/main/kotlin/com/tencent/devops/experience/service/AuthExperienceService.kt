@@ -31,6 +31,7 @@ package com.tencent.devops.experience.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
@@ -49,8 +50,12 @@ class AuthExperienceService @Autowired constructor(
     val dslContext: DSLContext,
     val authTokenApi: AuthTokenApi
 ) {
-
-    fun getExperienceTask(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+    fun getExperienceTask(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        token: String
+    ): ListInstanceResponseDTO? {
         authTokenApi.checkToken(token)
         val experienceTaskInfos = experienceDao.search(
             dslContext = dslContext,
@@ -65,9 +70,10 @@ class AuthExperienceService @Autowired constructor(
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
+        // 因iam内存的id类型为encode，故此处需要返回加密id
         experienceTaskInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -76,18 +82,23 @@ class AuthExperienceService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, count)
     }
 
-    fun getExperienceTaskInfo(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+    // 此处为无权限跳转回调，id类型根据页面能获取的id为准。此处为hashId
+    fun getExperienceTaskInfo(
+        hashIds: List<Any>?,
+        token: String
+    ): FetchInstanceInfoResponseDTO? {
+        val ids = hashIds?.map { HashUtil.decodeIdToLong(it.toString()) }
         authTokenApi.checkToken(token)
-        val experienceTaskInfos = experienceDao.list(dslContext, ids!!.toSet() as Set<Long>)
+        val experienceTaskInfos = experienceDao.list(dslContext, ids!!.toSet())
         val result = FetchInstanceInfo()
         if (experienceTaskInfos == null || experienceTaskInfos.isEmpty()) {
-            logger.info("$ids 无体验")
+            logger.info("$hashIds 无体验")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         experienceTaskInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -108,7 +119,8 @@ class AuthExperienceService @Autowired constructor(
             projectId = projectId,
             offset = offset,
             limit = limit,
-            name = keyword)
+            name = keyword
+        )
         val result = SearchInstanceInfo()
         if (experienceTaskInfos == null) {
             logger.info("$projectId 项目下无体验")
@@ -117,7 +129,7 @@ class AuthExperienceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         experienceTaskInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -126,7 +138,12 @@ class AuthExperienceService @Autowired constructor(
         return result.buildSearchInstanceResult(entityInfo, count)
     }
 
-    fun getExperienceGroup(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+    fun getExperienceGroup(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        token: String
+    ): ListInstanceResponseDTO? {
         authTokenApi.checkToken(token)
         val experienceGroupInfos = experienceGroupDao.list(
             dslContext = dslContext,
@@ -142,7 +159,7 @@ class AuthExperienceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         experienceGroupInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -151,9 +168,14 @@ class AuthExperienceService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, count)
     }
 
-    fun getExperienceGroupInfo(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+    // 此处为无权限跳转回调，id类型根据页面能获取的id为准。此处为hashId
+    fun getExperienceGroupInfo(
+        hashIds: List<Any>?,
+        token: String
+    ): FetchInstanceInfoResponseDTO? {
+        val ids = hashIds?.map { HashUtil.decodeIdToLong(it.toString()) }
         authTokenApi.checkToken(token)
-        val experienceGroupInfos = experienceGroupDao.list(dslContext, ids!!.toSet() as Set<Long>)
+        val experienceGroupInfos = experienceGroupDao.list(dslContext, ids!!.toSet())
         val result = FetchInstanceInfo()
         if (experienceGroupInfos == null || experienceGroupInfos.isEmpty()) {
             logger.info("$ids 无体验用户组")
@@ -162,7 +184,7 @@ class AuthExperienceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         experienceGroupInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -193,7 +215,7 @@ class AuthExperienceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         experienceGroupInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }

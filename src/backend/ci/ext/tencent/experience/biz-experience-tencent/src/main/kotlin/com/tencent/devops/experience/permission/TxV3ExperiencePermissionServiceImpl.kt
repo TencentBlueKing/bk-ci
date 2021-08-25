@@ -2,6 +2,7 @@ package com.tencent.devops.experience.permission
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -34,7 +35,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
             token = tokenService.getSystemToken(null)!!,
             userId = user,
             projectCode = projectId,
-            resourceCode = experienceId.toString(),
+            resourceCode = HashUtil.encodeLongId(experienceId),
             relationResourceType = null,
             action = TActionUtils.buildAction(authPermission, AuthResourceType.EXPERIENCE_TASK),
             resourceType = TActionUtils.extResourceType(AuthResourceType.EXPERIENCE_TASK)
@@ -50,7 +51,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
             serviceCode = null,
             resourceType = TActionUtils.extResourceType(AuthResourceType.EXPERIENCE_TASK),
             projectCode = projectId,
-            resourceCode = experienceId.toString(),
+            resourceCode = HashUtil.encodeLongId(experienceId),
             resourceName = experienceName
         )
     }
@@ -74,7 +75,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
                 val ids = experienceDao.list(dslContext, projectId, null, null).map { it.id }
                 resultMap[key] = ids
             } else {
-                val instanceList = value.map { it.toLong() }
+                val instanceList = value.map { HashUtil.decodeIdToLong(it) }
                 resultMap[key] = instanceList
             }
         }
@@ -92,7 +93,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
-            resourceCode = groupId.toString(),
+            resourceCode = HashUtil.encodeLongId(groupId),
             relationResourceType = null,
             action = TActionUtils.buildAction(authPermission, AuthResourceType.EXPERIENCE_GROUP),
             resourceType = TActionUtils.extResourceType(AuthResourceType.EXPERIENCE_GROUP)
@@ -108,7 +109,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
             serviceCode = null,
             resourceType = TActionUtils.extResourceType(AuthResourceType.EXPERIENCE_GROUP),
             projectCode = projectId,
-            resourceCode = groupId.toString(),
+            resourceCode = HashUtil.encodeLongId(groupId),
             resourceName = groupName
         )
     }
@@ -140,7 +141,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
                 val ids = groupDao.list(dslContext, projectId, 0, 1000).map { it.id }
                 resultMap[key] = ids
             } else {
-                val instanceList = value.map { it.toLong() }
+                val instanceList = value.map { HashUtil.decodeIdToLong(it) }
                 resultMap[key] = instanceList
             }
         }

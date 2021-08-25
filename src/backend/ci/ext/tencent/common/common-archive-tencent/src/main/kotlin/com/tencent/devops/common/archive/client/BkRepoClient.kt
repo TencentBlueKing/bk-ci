@@ -1160,7 +1160,7 @@ class BkRepoClient constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(BkRepoClient::class.java)
         private const val METADATA_PREFIX = "X-BKREPO-META-"
 
         private const val BK_REPO_UID = "X-BKREPO-UID"

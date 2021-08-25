@@ -45,7 +45,6 @@ dependencies {
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-redis"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-cos"))
     api(project(":core:common:common-notify"))
     api(project(":core:common:common-db"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))

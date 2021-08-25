@@ -37,7 +37,6 @@ dependencies {
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":core:plugin:codecc-plugin:common-codecc"))
     api(project(":ext:tencent:common:common-job"))
-    api(project(":ext:tencent:common:common-itest"))
     api(project(":ext:tencent:common:common-gcloud"))
     api(project(":core:process:model-process"))
     api(project(":ext:tencent:process:api-process-tencent"))
