@@ -1186,7 +1186,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     }
                     builder.append(timetoSelect)
                 }
-            }catch (e: Exception) {
+            } catch (e: Exception) {
                 println("load atom input[rely] with error: ${e.message}")
             }
         }
