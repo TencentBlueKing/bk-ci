@@ -202,18 +202,21 @@ class GitCheckService @Autowired constructor(
                         description = description,
                         gitCIBasicSetting = gitCIBasicSetting
                     )
-                    gitCheckClient.createGitCheck(
-                        gitCheck = RepositoryGitCheck(
-                            gitCheckId = -1,
-                            pipelineId = pipelineId,
-                            buildNumber = buildNum.toInt(),
-                            repositoryId = gitCIBasicSetting.gitProjectId.toString(),
-                            repositoryName = getProjectName(gitCIBasicSetting),
-                            commitId = commitId,
-                            context = context,
-                            source = ExecuteSource.STREAM
+                    // 兼容旧数据，旧数据只发不存
+                    if (!isFinish) {
+                        gitCheckClient.createGitCheck(
+                            gitCheck = RepositoryGitCheck(
+                                gitCheckId = -1,
+                                pipelineId = pipelineId,
+                                buildNumber = buildNum.toInt(),
+                                repositoryId = gitCIBasicSetting.gitProjectId.toString(),
+                                repositoryName = getProjectName(gitCIBasicSetting),
+                                commitId = commitId,
+                                context = context,
+                                source = ExecuteSource.STREAM
+                            )
                         )
-                    )
+                    }
                 } else {
                     if (buildNum.toInt() >= record.buildNumber) {
                         addCommitCheck(
