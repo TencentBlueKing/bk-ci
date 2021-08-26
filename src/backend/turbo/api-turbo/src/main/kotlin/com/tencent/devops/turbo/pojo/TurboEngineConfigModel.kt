@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty
 import javax.validation.constraints.NotBlank
 import javax.validation.constraints.NotEmpty
 
+@Suppress("MaxLineLength")
 @ApiModel("编译加速模式请求数据模型")
 data class TurboEngineConfigModel(
     @ApiModelProperty("编译加速模式代码")

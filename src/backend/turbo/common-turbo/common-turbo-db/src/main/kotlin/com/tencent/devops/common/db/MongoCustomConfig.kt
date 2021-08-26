@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories
 
+@Suppress("MaxLineLength")
 @Configuration
 @EnableMongoRepositories(basePackages = ["com.tencent.devops.turbo"])
 class MongoCustomConfig {

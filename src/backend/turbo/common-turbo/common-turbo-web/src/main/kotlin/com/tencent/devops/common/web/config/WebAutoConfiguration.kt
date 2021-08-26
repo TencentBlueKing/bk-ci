@@ -14,6 +14,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+@Suppress("MaxLineLength")
 @Configuration
 class WebAutoConfiguration : WebMvcConfigurer {
 

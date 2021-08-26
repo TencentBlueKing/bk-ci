@@ -20,11 +20,11 @@ allprojects {
 
 	dependencyManagement {
 		dependencies {
-			dependency("javax.ws.rs:javax.ws.rs-api:${DependencyVersions.jaxrsVersion}")
-			dependency("com.github.ulisesbocchio:jasypt-spring-boot-starter:${DependencyVersions.jasyptVersion}")
-			dependency("org.bouncycastle:bcprov-jdk16:${DependencyVersions.bouncyCastleVersion}")
-			dependency("io.springfox:springfox-boot-starter:${DependencyVersions.swaggerVersion}")
-			dependency("com.google.guava:guava:${DependencyVersions.guavaVersion}")
+			dependency("javax.ws.rs:javax.ws.rs-api:${Versions.jaxrsVersion}")
+			dependency("com.github.ulisesbocchio:jasypt-spring-boot-starter:${Versions.jasyptVersion}")
+			dependency("org.bouncycastle:bcprov-jdk16:${Versions.bouncyCastleVersion}")
+			dependency("io.springfox:springfox-boot-starter:${Versions.swaggerVersion}")
+			dependency("com.google.guava:guava:${Versions.guavaVersion}")
 		}
 	}
 }

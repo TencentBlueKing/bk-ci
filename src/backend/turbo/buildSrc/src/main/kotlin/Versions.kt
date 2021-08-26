@@ -1,5 +1,4 @@
-@Suppress("MatchingDeclarationName")
-object DependencyVersions {
+object Versions {
     const val jaxrsVersion = "2.0"
     const val jasyptVersion = "2.1.0"
     const val bouncyCastleVersion = "1.46"
