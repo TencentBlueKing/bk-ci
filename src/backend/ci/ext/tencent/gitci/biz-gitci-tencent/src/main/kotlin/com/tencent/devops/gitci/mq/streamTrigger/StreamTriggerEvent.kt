@@ -25,34 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.resources
+package com.tencent.devops.gitci.mq.streamTrigger
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.ExternalScmResource
-import com.tencent.devops.gitci.mq.streamRequest.GitCIRequestDispatcher
-import com.tencent.devops.gitci.mq.streamRequest.GitCIRequestEvent
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.gitci.constant.MQ
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.repository.pojo.oauth.GitToken
 
-@RestResource
-class ExternalScmResourceImpl @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
-) : ExternalScmResource {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ExternalScmResourceImpl::class.java)
-    }
-
-    override fun webHookCodeGitCommit(token: String, event: String): Result<Boolean> {
-        logger.info("webHook event: $event")
-        GitCIRequestDispatcher.dispatch(
-            rabbitTemplate = rabbitTemplate,
-            event = GitCIRequestEvent(
-                event = event
-            )
-        )
-        return Result(true)
-    }
-}
+@Event(MQ.EXCHANGE_STREAM_TRIGGER_EVENT, MQ.ROUTE_STREAM_TRIGGER_EVENT)
+data class StreamTriggerEvent(
+    val gitToken: GitToken,
+    val forkGitToken: GitToken?,
+    val gitRequestEvent: GitRequestEvent,
+    val gitProjectPipeline: GitProjectPipeline,
+    val event: GitEvent,
+    val originYaml: String?,
+    val filePath: String
+)

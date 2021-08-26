@@ -25,12 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.mq.streamMrConflict
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.gitci.constant.MQ
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-@Event(MQ.EXCHANGE_GITCI_REQUEST_EVENT, MQ.ROUTE_GITCI_REQUEST_EVENT)
-data class GitCIRequestEvent(
-    val event: String
-)
+object GitCIMrConflictCheckDispatcher {
+
+    fun dispatch(rabbitTemplate: RabbitTemplate, event: GitCIMrConflictCheckEvent) {
+        try {
+            logger.info("[${event.gitRequestEvent}] Dispatch the event")
+            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
+                message.messageProperties.setHeader("x-delay", event.delayMills)
+                message
+            }
+        } catch (e: Throwable) {
+            logger.error("Fail to dispatch the event($event)", e)
+        }
+    }
+
+    private val logger = LoggerFactory.getLogger(GitCIMrConflictCheckDispatcher::class.java)
+}
