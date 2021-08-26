@@ -386,6 +386,10 @@ class DockerHostBuildService(
                 .awaitImageId()
 
             imageNameTagSet.parallelStream().forEach {
+                dockerClient.saveImageCmd(it).withTag(it).withName("$it.tar").exec()
+            }
+
+            imageNameTagSet.parallelStream().forEach {
                 logger.info("Build image success, now push to repo, image name and tag: $it")
                 dockerClient.pushImageCmd(it)
                     .withAuthConfig(authConfig)
