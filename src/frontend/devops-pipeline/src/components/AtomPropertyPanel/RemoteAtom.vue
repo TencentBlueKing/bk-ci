@@ -1,5 +1,21 @@
 <template>
     <section v-bkloading="{ isLoading: loading }">
+        <form-field :key="'pauseReviewers'" :desc="reviewObj.desc" :desc-link="reviewObj.descLink" :desc-link-text="reviewObj.descLinkText" :required="reviewObj.required" :label="reviewObj.label" :is-error="errors.has('pauseReviewers')" :error-msg="errors.first('pauseReviewers')">
+            <component
+                :is="reviewObj.component"
+                :name="'pauseReviewers'"
+                v-bind="reviewObj"
+                :value="element['pauseReviewers']"
+                :container="container"
+                :element="element"
+                :is-new-atom="true"
+                :atom-value="element"
+                v-validate.initial="Object.assign({ required: true })"
+                :disabled="isPause"
+                :handle-change="handleUpdateElement"
+                :get-atom-key-modal="getAtomKeyModal"
+                :placeholder="getPlaceholder(reviewObj, element)"></component>
+        </form-field>
         <div class="bk-form bk-form-vertical">
             <iframe
                 v-if="src"
@@ -51,6 +67,9 @@
             }
         },
         mounted () {
+            if (this.atomPropsModel.config.pauseAsReview) {
+                this.atomPropsModel.input['pauseReviewers'] = this.element.pauseReviewers || []
+            }
             window.addEventListener('message', this.receiveMsgFromIframe)
         },
         destroyed () {

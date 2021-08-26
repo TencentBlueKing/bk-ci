@@ -35,7 +35,13 @@
                             <p>{{ $t('editPage.abortTips') }}{{ $t('editPage.checkUser') }}{{ execDetail.cancelUserId }}</p>
                         </template>
                     </bk-popover>
-                    <template v-if="atom.status === 'PAUSE'">
+                    <bk-popover placement="top" v-if="atom.status === 'PAUSE' && atom.pauseReviewers && atom.pauseReviewers.length">
+                        <span @click.stop="continueAuthExecute(index, atom.pauseReviewers)" :class="[{ 'disabled': isExecStop || !isCurrentUser(atom.pauseReviewers) }, 'pause-button']">{{ $t('editPage.toCheck') }}</span>
+                        <template slot="content">
+                            <p>{{ $t('editPage.checkUser') }}{{ atom.computedReviewers.join(';') }}</p>
+                        </template>
+                    </bk-popover>
+                    <template v-if="atom.status === 'PAUSE' && (!atom.pauseReviewers || !atom.pauseReviewers.length)">
                         <span @click.stop="continueExecute(index)" :class="[{ 'disabled': isExecStop }, 'pause-button']">{{ $t('resume') }}</span>
                         <span @click.stop="stopExecute(index)" class="pause-button">
                             <i class="devops-icon icon-circle-2-1 executing-job" v-if="isExecStop" />
@@ -128,6 +134,7 @@
             }
         },
         computed: {
+            ...mapState(['userlist']),
             ...mapState('common', [
                 'ruleList',
                 'templateRuleList'
@@ -168,6 +175,10 @@
                             atom.isQualityCheck = false
                         }
                         atom.isReviewing = atom.status === 'REVIEWING'
+                        if (atom.status === 'PAUSE') {
+                            const atomReviewer = this.getPauseReviewUser(atom)
+                            atom.computedReviewers = atomReviewer
+                        }
                         if (atom.isReviewing) {
                             const atomReviewer = this.getReviewUser(atom)
                             atom.computedReviewers = atomReviewer
@@ -209,7 +220,20 @@
                 'pausePlugin',
                 'requestPipelineExecDetail'
             ]),
-
+            continueAuthExecute (elementIndex, reviewer) {
+                if (!this.isCurrentUser(reviewer)) return
+                if (this.isExecStop) return
+                const { stageIndex, containerIndex } = this
+                this.togglePropertyPanel({
+                    isShow: true,
+                    showPanelType: 'PAUSE',
+                    editingElementPos: {
+                        stageIndex,
+                        containerIndex,
+                        elementIndex
+                    }
+                })
+            },
             continueExecute (elementIndex) {
                 if (this.isExecStop) return
                 const { stageIndex, containerIndex } = this
@@ -311,6 +335,14 @@
                 const reviewUsers = list.map(user => user.split(';').map(val => val.trim())).reduce((prev, curr) => {
                     return prev.concat(curr)
                 }, [])
+                return reviewUsers
+            },
+            getPauseReviewUser (atom) {
+                const list = atom.pauseReviewers
+                const reviewUsers = list.map(user => user.split(';').map(val => this.userlist[val.trim()] ? this.userlist[val.trim()].name : val.trim())).reduce((prev, curr) => {
+                    return prev.concat(curr)
+                }, [])
+
                 return reviewUsers
             },
             showPropertyPanel (elementIndex) {

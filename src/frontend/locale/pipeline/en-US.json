@@ -861,6 +861,8 @@
             "templateDownload": "Download",
             "otherChoice": "Other Choice"
         },
+        "reviewers": "reviewers",
+        "reviewTips": "Environment variables (${var}) are supported. Multiple environment variables are separated by English commas",
         "stageOption": "Control option"
     },
     "storeMap": {

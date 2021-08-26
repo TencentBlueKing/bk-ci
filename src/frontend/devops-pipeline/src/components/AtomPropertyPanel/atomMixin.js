@@ -60,7 +60,8 @@ const atomMixin = {
         atomPropsModel: Object,
         setAtomValidate: Function,
         atomValue: Object,
-        disabled: Boolean
+        disabled: Boolean,
+        isPause: Boolean
     },
     components: {
         Accordion,
@@ -92,6 +93,16 @@ const atomMixin = {
         QualitygateTips,
         AutoComplete,
         DevopsSelect
+    },
+    data () {
+        return {
+            reviewObj: {
+                required: true,
+                label: this.$t('editPage.reviewers'),
+                component: 'user-input',
+                placeholder: this.$t('editPage.reviewTips')
+            }
+        }
     },
     computed: {
         ...mapGetters('atom', [

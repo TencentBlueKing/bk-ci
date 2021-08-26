@@ -864,6 +864,8 @@
             "templateDownload": "模板下载",
             "otherChoice": "其他选项"
         },
+        "reviewers": "审核人",
+        "reviewTips": "支持环境变量(${var})，多个环境变量以英文逗号分隔",
         "stageOption": "流程控制选项"
     },
     "storeMap": {

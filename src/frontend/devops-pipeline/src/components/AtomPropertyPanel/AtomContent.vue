@@ -73,6 +73,7 @@
                         :atom-props-model="atom.atomModal.props"
                         :set-parent-validate="setAtomValidate"
                         :disabled="!editable"
+                        :is-pause="showPanelType === 'PAUSE' || !editable"
                         class="atom-content">
                     </div>
                     <div class="atom-option">
