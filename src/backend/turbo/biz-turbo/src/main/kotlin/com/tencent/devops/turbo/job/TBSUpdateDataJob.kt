@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 
-@Suppress("SpringJavaAutowiredMembersInspection")
+@Suppress("SpringJavaAutowiredMembersInspection","NestedBlockDepth")
 class TBSUpdateDataJob @Autowired constructor(
     private val turboRecordService: TurboRecordService,
     private val rabbitTemplate: RabbitTemplate,
