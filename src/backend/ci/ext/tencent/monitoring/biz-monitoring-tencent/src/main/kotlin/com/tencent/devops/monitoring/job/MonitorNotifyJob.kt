@@ -649,7 +649,7 @@ class MonitorNotifyJob @Autowired constructor(
         searchRequest.indices("v2_9_bklog_prod_ci_service_access_${DateFormatUtils.format(startTime, "yyyyMMdd")}*")
         searchRequest.source(sourceBuilder)
         val hits = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT).hits.totalHits?.value ?: 0
-        logger.info("apiStatus:$name , hits:${hits}")
+        logger.info("apiStatus:$name , hits:$hits")
         return hits
     }
 
