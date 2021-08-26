@@ -210,10 +210,17 @@ class DockerHostDebugService(
                 binds.add(Bind(getProjectShareDir(containerInfo.projectId), volumeProjectShare))
             }
 
+            // 脚本解析器类型
+            val cmd = if (containerInfo.token.isEmpty()) {
+                "/bin/sh"
+            } else {
+                containerInfo.token
+            }
+
             val containerName = "debug-${containerInfo.pipelineId}-${containerInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = dockerCli.createContainerCmd(imageName)
                 .withName(containerName)
-                .withCmd("/bin/sh", entryPointCmd)
+                .withCmd(cmd, entryPointCmd)
                 .withEnv(
                     envList.plus(
                         listOf(
