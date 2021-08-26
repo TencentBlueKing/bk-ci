@@ -1,6 +1,6 @@
 <template>
     <section v-bkloading="{ isLoading: loading }">
-        <form-field :key="'pauseReviewers'" :desc="reviewObj.desc" :desc-link="reviewObj.descLink" :desc-link-text="reviewObj.descLinkText" :required="reviewObj.required" :label="reviewObj.label" :is-error="errors.has('pauseReviewers')" :error-msg="errors.first('pauseReviewers')">
+        <form-field v-if="atomPropsModel.config && atomPropsModel.config.pauseAsReview" :key="'pauseReviewers'" :desc="reviewObj.desc" :desc-link="reviewObj.descLink" :desc-link-text="reviewObj.descLinkText" :required="reviewObj.required" :label="reviewObj.label" :is-error="errors.has('pauseReviewers')" :error-msg="errors.first('pauseReviewers')">
             <component
                 :is="reviewObj.component"
                 :name="'pauseReviewers'"
@@ -67,7 +67,7 @@
             }
         },
         mounted () {
-            if (this.atomPropsModel.config.pauseAsReview) {
+            if (this.atomPropsModel.config && this.atomPropsModel.config.pauseAsReview) {
                 this.atomPropsModel.input['pauseReviewers'] = this.element.pauseReviewers || []
             }
             window.addEventListener('message', this.receiveMsgFromIframe)
