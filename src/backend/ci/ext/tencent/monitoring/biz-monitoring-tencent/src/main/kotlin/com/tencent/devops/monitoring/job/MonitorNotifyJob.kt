@@ -648,9 +648,9 @@ class MonitorNotifyJob @Autowired constructor(
         val searchRequest = SearchRequest()
         searchRequest.indices("v2_9_bklog_prod_ci_service_access_${DateFormatUtils.format(startTime, "yyyyMMdd")}*")
         searchRequest.source(sourceBuilder)
-        val hits = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT).hits.totalHits
-        logger.info("apiStatus:$name , hits:${hits.value}")
-        return hits.value
+        val hits = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT).hits.totalHits?.value ?: 0
+        logger.info("apiStatus:$name , hits:${hits}")
+        return hits
     }
 
     private fun getObservableUrl(startTime: Long, endTime: Long, module: Module): String {
