@@ -98,14 +98,14 @@ class ScmService @Autowired constructor(
                 }
                 is RemoteServiceException -> {
                     error(
-                        "getTokenForProject timeout ${e.message}",
+                        "getTokenForProject git error ${e.message}",
                         ErrorCodeEnum.GET_TOKEN_ERROR,
                         ErrorCodeEnum.PROJECT_NOT_FOUND.formatErrorMessage.format(gitProjectId)
                     )
                 }
                 else -> {
                     error(
-                        "getTokenForProject timeout ${e.message}",
+                        "getTokenForProject error ${e.message}",
                         ErrorCodeEnum.GET_TOKEN_ERROR,
                         ErrorCodeEnum.GET_TOKEN_ERROR.formatErrorMessage.format(e.message)
                     )
