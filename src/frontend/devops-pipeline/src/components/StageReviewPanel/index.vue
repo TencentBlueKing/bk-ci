@@ -6,6 +6,7 @@
 
         <component
             v-bind="$props"
+            v-on="$listeners"
             :is="reviewComponent"
             :stage-control="stageControl"
             :stage-review-type="stageReviewType"

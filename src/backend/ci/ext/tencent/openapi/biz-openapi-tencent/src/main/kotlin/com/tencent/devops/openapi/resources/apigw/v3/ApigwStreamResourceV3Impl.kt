@@ -77,12 +77,14 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         gitProjectId: Long,
-        pipelineId: String
+        pipelineId: String,
+        withHistory: Boolean?
     ): Result<GitProjectPipeline?> {
         return client.get(GitCIPipelineResource::class).getPipeline(
             userId = userId,
             gitProjectId = gitProjectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            withHistory = withHistory
         )
     }
 

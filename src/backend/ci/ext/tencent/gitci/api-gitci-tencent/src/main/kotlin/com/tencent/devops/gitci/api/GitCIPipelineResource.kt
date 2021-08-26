@@ -84,7 +84,10 @@ interface GitCIPipelineResource {
         gitProjectId: Long,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam(value = "是否带有最新一次构建历史", required = false)
+        @QueryParam("withHistory")
+        withHistory: Boolean? = false
     ): Result<GitProjectPipeline?>
 
     @ApiOperation("开启或关闭流水线")

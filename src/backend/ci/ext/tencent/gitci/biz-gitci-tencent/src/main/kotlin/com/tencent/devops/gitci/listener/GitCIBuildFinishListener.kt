@@ -57,6 +57,7 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.rtxCustom.MessageType
 import com.tencent.devops.gitci.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.trigger.GitCheckService
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.QualityService
@@ -78,7 +79,6 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.lang.Exception
 import java.util.Date
 
 @Service
@@ -91,7 +91,8 @@ class GitCIBuildFinishListener @Autowired constructor(
     private val scmClient: ScmClient,
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
-    private val qualityService: QualityService
+    private val qualityService: QualityService,
+    private val gitCheckService: GitCheckService
 ) {
 
     @Value("\${rtx.corpid:#{null}}")
@@ -204,23 +205,30 @@ class GitCIBuildFinishListener @Autowired constructor(
                             null
                         }
 
-                        scmClient.pushCommitCheck(
+                        gitCheckService.pushCommitCheck(
                             commitId = commitId,
                             description = getDescByBuildStatus(buildStatus, pipeline.displayName),
                             mergeRequestId = mrEvent?.object_attributes?.id ?: 0L,
                             buildId = buildFinishEvent.buildId,
                             userId = buildFinishEvent.userId,
                             status = state,
-                            context = pipeline.filePath,
+                            context = "${pipeline.filePath}@${objectKind.toUpperCase()}",
                             gitCIBasicSetting = v2GitSetting!!,
                             pipelineId = buildFinishEvent.pipelineId,
                             block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess() &&
                                 v2GitSetting.enableMrBlock),
                             reportData = qualityService.getQualityGitMrResult(
                                 client = client,
-                                projectName = getProjectName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
+                                projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
                                 pipelineName = pipeline.displayName,
                                 event = buildFinishEvent
+                            ),
+                            isFinish = true,
+                            targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+                                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                                projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
+                                pipelineId = pipelineId,
+                                buildId = buildFinishEvent.buildId
                             )
                         )
                     } else {
@@ -446,7 +454,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         build: BuildHistory
     ) {
 
-        val projectName = getProjectName(conf.gitHttpUrl, conf.name)
+        val projectName = GitCommonUtils.getRepoName(conf.gitHttpUrl, conf.name)
         val branchName = GitCommonUtils.checkAndGetForkBranchName(
             gitProjectId = gitProjectId,
             sourceGitProjectId = sourceProjectId,
@@ -638,15 +646,6 @@ class GitCIBuildFinishListener @Autowired constructor(
         }
     }
 
-    // 获取 name/projectName格式的项目名称
-    private fun getProjectName(gitHttpUrl: String, name: String): String {
-        return try {
-            GitCommonUtils.getRepoName(gitHttpUrl, name)
-        } catch (e: Exception) {
-            name
-        }
-    }
-
     private fun sendNotifyV2(
         gitProjectId: Long,
         sourceProjectId: Long?,
@@ -664,7 +663,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         title: String?,
         content: String?
     ) {
-        val projectName = getProjectName(conf.gitHttpUrl, conf.name)
+        val projectName = GitCommonUtils.getRepoName(conf.gitHttpUrl, conf.name)
         val branchName = GitCommonUtils.checkAndGetForkBranchName(
             gitProjectId = gitProjectId,
             sourceGitProjectId = sourceProjectId,

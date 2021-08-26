@@ -259,6 +259,7 @@ class YamlTriggerV2 @Autowired constructor(
         )
     }
 
+    @Throws(TriggerBaseException::class, ErrorCodeException::class)
     override fun prepareCIBuildYaml(
         gitToken: GitToken,
         forkGitToken: GitToken?,
@@ -341,6 +342,7 @@ class YamlTriggerV2 @Autowired constructor(
         return preTemplateYamlObject
     }
 
+    @Throws(TriggerBaseException::class, ErrorCodeException::class)
     private fun formatAndCheckYaml(
         originYaml: String,
         gitRequestEvent: GitRequestEvent,
@@ -384,6 +386,7 @@ class YamlTriggerV2 @Autowired constructor(
         }
     }
 
+    @Throws(TriggerBaseException::class, ErrorCodeException::class)
     private fun replaceYamlTemplate(
         isFork: Boolean,
         isMr: Boolean,

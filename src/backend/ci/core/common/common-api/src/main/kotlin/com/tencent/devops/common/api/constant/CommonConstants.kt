@@ -98,6 +98,10 @@ const val LATEST_MODIFIER = "latestModifier" // 最近修改人
 const val LATEST_UPDATE_TIME = "latestUpdateTime" // 最近修改时间
 const val LATEST_EXECUTOR = "latestExecutor" // 最近执行人
 const val LATEST_EXECUTE_TIME = "latestExecuteTime" // 最近执行时间
+const val DANG = "dang" // 当
+const val AND = "and" // 和
+const val OR = "or" // 或
+const val TIMETOSELECT = "timetoSelect" // 时必选
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"
