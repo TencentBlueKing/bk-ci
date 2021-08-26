@@ -146,7 +146,8 @@ object GitCommonUtils {
                 realEvent = gitRequestEvent.copy(
                     // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
                     branch = if (sourceRepositoryConf != null) {
-                        "${sourceRepositoryConf.pathWithNamespace.split("/")[0]}:${gitRequestEvent.branch}"
+                        val path = sourceRepositoryConf.pathWithNamespace ?: sourceRepositoryConf.nameWithNamespace
+                        "${path.split("/")[0]}:${gitRequestEvent.branch}"
                     } else {
                         gitRequestEvent.branch
                     }
@@ -169,7 +170,8 @@ object GitCommonUtils {
                     .accessToken, sourceGitProjectId).data
                 // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
                 return if (sourceRepositoryConf != null) {
-                    "${sourceRepositoryConf.pathWithNamespace.split("/")[0]}:$branch"
+                    val path = sourceRepositoryConf.pathWithNamespace ?: sourceRepositoryConf.nameWithNamespace
+                    "${path.split("/")[0]}:$branch"
                 } else {
                     branch
                 }
