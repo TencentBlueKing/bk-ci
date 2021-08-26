@@ -73,12 +73,12 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
     ): String {
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
         // 创建AUTH项目
-        val newAccessToken = if (accessToken.isNullOrBlank()) {
+        val newAccessToken = if (accessToken.isNullOrEmpty()) {
             param["creator"] = userId
             authTokenApi.getAccessToken(bsProjectAuthServiceCode)
         } else accessToken
         val authUrl = "$authUrl/projects?access_token=$newAccessToken"
-        logger.info("create project $authUrl $userId $accessToken $newAccessToken")
+        logger.info("create project $authUrl $userId, use userAccessToken ${newAccessToken == accessToken}")
         if (userDeptDetail != null) {
             param["bg_id"] = userDeptDetail.bgId
             param["dept_id"] = userDeptDetail.deptId
