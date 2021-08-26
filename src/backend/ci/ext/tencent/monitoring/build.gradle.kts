@@ -30,10 +30,6 @@ subprojects {
     dependencies {
         api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
         api("org.jetbrains.kotlin:kotlin-reflect")
-        api("org.apache.lucene:lucene-core:6.6.1")
-        api("org.elasticsearch:elasticsearch:5.6.14")
-        api("org.elasticsearch.client:elasticsearch-rest-client:5.6.14")
-        api("org.elasticsearch.client:elasticsearch-rest-high-level-client:5.6.14")
         testImplementation("junit:junit")
         testImplementation("org.springframework.boot:spring-boot-starter-test")
         compile("org.influxdb:influxdb-java:2.10")

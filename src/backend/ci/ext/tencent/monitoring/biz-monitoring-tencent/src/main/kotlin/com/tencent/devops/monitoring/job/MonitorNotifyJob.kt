@@ -44,10 +44,11 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.commons.lang3.tuple.MutablePair
 import org.elasticsearch.action.search.SearchRequest
+import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.RestHighLevelClient
 import org.elasticsearch.index.query.QueryBuilders
 import org.elasticsearch.search.aggregations.AggregationBuilders
-import org.elasticsearch.search.aggregations.metrics.avg.Avg
+import org.elasticsearch.search.aggregations.metrics.Avg
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.influxdb.dto.QueryResult
 import org.jooq.DSLContext
@@ -228,7 +229,7 @@ class MonitorNotifyJob @Autowired constructor(
         searchRequest.indices("v2_9_bklog_prod_ci_gateway_access_${DateFormatUtils.format(startTime, "yyyyMMdd")}*")
         searchRequest.source(sourceBuilder)
 
-        val aggregations = restHighLevelClient.search(searchRequest).aggregations
+        val aggregations = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT).aggregations
         val avgSecs = aggregations.get<Avg>("avg_ms").value
 
         oteamStatus(avgSecs, oteamJobTimeTarget, startTime)
@@ -642,12 +643,12 @@ class MonitorNotifyJob @Autowired constructor(
                 .filter(
                     queryStringQuery
                 )
-        sourceBuilder.query(query).size(1)
+        sourceBuilder.query(query).trackTotalHits(true).size(1)
 
         val searchRequest = SearchRequest()
         searchRequest.indices("v2_9_bklog_prod_ci_service_access_${DateFormatUtils.format(startTime, "yyyyMMdd")}*")
         searchRequest.source(sourceBuilder)
-        val hits = restHighLevelClient.search(searchRequest).hits.getTotalHits()
+        val hits = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT).hits.totalHits?.value ?: 0
         logger.info("apiStatus:$name , hits:$hits")
         return hits
     }
