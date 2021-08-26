@@ -38,8 +38,8 @@ import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
 import com.tencent.devops.common.client.Client
 import org.jooq.DSLContext
-import org.jvnet.hk2.annotations.Service
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
 class BkIamPermissionRoleExtService @Autowired constructor(
