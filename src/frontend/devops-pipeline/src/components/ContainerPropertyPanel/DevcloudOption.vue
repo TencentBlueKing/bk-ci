@@ -55,6 +55,7 @@
         },
         watch: {
             buildType (v) {
+                this.selectValue = ''
                 this.$nextTick(() => {
                     this.getData()
                 })
@@ -78,8 +79,11 @@
                 try {
                     this.isLoading = true
                     const res = await this.fetchDevcloudSettings({ projectId: this.projectId, buildType: this.buildType })
-                    this.changeShowPerformance(res.data.needShow || false)
-                    this.selectValue = this.value || res.data['default']
+                    const needShow = res.data.needShow || false
+                    this.changeShowPerformance(needShow)
+                    if (needShow) {
+                        this.selectValue = this.value || res.data['default']
+                    }
                     this.optionList = res.data.dockerResourceOptionsMaps || []
                     this.optionList = this.optionList.map(item => {
                         return {
