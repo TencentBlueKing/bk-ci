@@ -70,7 +70,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ProjectPipelineCallBackService::class.java)
         private val JSON = MediaType.parse("application/json;charset=utf-8")
     }
 
