@@ -38,6 +38,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 
+@Suppress("TooManyFunctions")
 object SignUtils {
 
     private val logger = LoggerFactory.getLogger(SignUtils::class.java)
@@ -67,7 +68,7 @@ object SignUtils {
      *  @return 本层app包签名结果
      *
      */
-    @Suppress("ALL")
+    @Suppress("NestedBlockDepth")
     fun resignAppWildcard(
         appDir: File,
         certId: String,
@@ -78,14 +79,14 @@ object SignUtils {
             logger.error("App directory $appDir is invalid.")
             return false
         }
-        try {
+        return try {
             // 通配符签名统一不做Bundle替换
             overwriteInfo(appDir, wildcardInfo, false, replaceKeyList)
 
             // 扫描是否有其他待签目录
             val needResignDirs = scanNeedResignFiles(appDir)
             needResignDirs.forEach { resignDir ->
-                resignDir.listFiles().forEach { subFile ->
+                resignDir.listFiles()?.forEach { subFile ->
                     when {
                         // 如果是个拓展则递归进入进行重签
                         subFile.isDirectory && subFile.extension.contains("app") -> {
@@ -112,10 +113,10 @@ object SignUtils {
             }
             // 替换后进行重签名
             codesignFileByEntitlement(certId, appDir.absolutePath, wildcardInfo.entitlementFile.absolutePath)
-            return true
-        } catch (e: Exception) {
-            logger.error("WildcardResign app <$appDir> directory with exception: $e")
-            return false
+            true
+        } catch (ignore: Throwable) {
+            logger.error("WildcardResign app <$appDir> directory with exception:", ignore)
+            false
         }
     }
 
@@ -129,7 +130,7 @@ object SignUtils {
      *  @return 本层app包签名结果
      *
      */
-    @Suppress("ALL", "RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    @Suppress("ComplexMethod", "NestedBlockDepth", "ReturnCount", "LongParameterList")
     fun resignApp(
         appDir: File,
         certId: String,
@@ -149,7 +150,7 @@ object SignUtils {
             logger.error("The app directory $appDir is invalid.")
             return false
         }
-        try {
+        return try {
             // 先将entitlements文件中补充所有ul和group
             if (universalLinks != null) addUniversalLink(universalLinks, info.entitlementFile)
             if (keychainAccessGroups != null) addApplicationGroups(keychainAccessGroups, info.entitlementFile)
@@ -160,7 +161,7 @@ object SignUtils {
             // 扫描是否有其他待签目录
             val needResignDirs = scanNeedResignFiles(appDir)
             needResignDirs.forEach { resignDir ->
-                resignDir.listFiles().forEach { subFile ->
+                resignDir.listFiles()?.forEach { subFile ->
                     when {
                         // 如果是个拓展则递归进入进行重签，存在拓展必然是替换bundle的重签
                         subFile.isDirectory && subFile.extension.contains("app") -> {
@@ -196,10 +197,10 @@ object SignUtils {
             }
             // 替换后对当前APP进行重签名操作
             codesignFileByEntitlement(certId, appDir.absolutePath, info.entitlementFile.absolutePath)
-            return true
-        } catch (e: Exception) {
-            logger.error("Resign app <$appName> directory with exception.", e)
-            return false
+            true
+        } catch (ignore: Throwable) {
+            logger.error("Resign app <$appName> directory with exception.", ignore)
+            false
         }
     }
 
@@ -212,8 +213,7 @@ object SignUtils {
      *  @return 本层framework包签名结果
      *
      */
-    @Suppress("ALL", "RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-    fun resignFramework(
+    private fun resignFramework(
         frameworkDir: File,
         certId: String,
         info: MobileProvisionInfo,
@@ -227,7 +227,7 @@ object SignUtils {
             // 扫描是否有下层待签目录
             val needResignDirs = scanNeedResignFiles(frameworkDir)
             needResignDirs.forEach { resignDir ->
-                resignDir.listFiles().forEach { subFile ->
+                resignDir.listFiles()?.forEach { subFile ->
                     // 如果是个其他待签文件则使用主描述文件进行重签
                     overwriteInfo(subFile, info, false, replaceKeyList)
                     codesignFile(certId, subFile.absolutePath)
@@ -237,8 +237,8 @@ object SignUtils {
             overwriteInfo(frameworkDir, info, false, replaceKeyList)
             codesignFile(certId, frameworkDir.absolutePath)
             true
-        } catch (e: Exception) {
-            logger.error("Resign framework <${frameworkDir.name}> directory with exception.", e)
+        } catch (ignore: Throwable) {
+            logger.error("Resign framework <${frameworkDir.name}> directory with exception.", ignore)
             false
         }
     }
@@ -277,13 +277,11 @@ object SignUtils {
         val originMpFile = File(resignDir.absolutePath + File.separator + APP_MOBILE_PROVISION_FILENAME)
 
         // 无论是什么目录都将 mobileprovision 文件进行替换
-        if (originMpFile.exists()) {
-            logger.info(
-                "[replace mobileprovision] origin " +
-                        "{${originMpFile.absolutePath}} with {${info.mobileProvisionFile.absolutePath}}"
-            )
-            info.mobileProvisionFile.copyTo(originMpFile, true)
-        }
+        logger.info(
+            "[replace mobileprovision] origin " +
+                "{${originMpFile.absolutePath}} with {${info.mobileProvisionFile.absolutePath}}"
+        )
+        info.mobileProvisionFile.copyTo(originMpFile, true)
 
         // plist文件信息的修改
         if (!infoPlist.exists()) return
@@ -380,8 +378,11 @@ object SignUtils {
                     "\"com\\.apple\\.developer\\.associated-domains\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $removeCmd")
                 runtimeExec(removeCmd)
-            } catch (e: Exception) {
-                logger.error("entitlement <$entitlementsFile> does not have com.apple.developer.associated-domains")
+            } catch (ignore: Throwable) {
+                logger.error(
+                    "entitlement <$entitlementsFile> does not have com.apple.developer.associated-domains",
+                    ignore
+                )
             } finally {
                 val sb = StringBuilder()
                 sb.appendln("<array>")
@@ -409,8 +410,11 @@ object SignUtils {
                     "\"com\\.apple\\.security\\.application-groups\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $removeCmd")
                 runtimeExec(removeCmd)
-            } catch (e: Exception) {
-                logger.error("entitlement <$entitlementsFile> does not have com.apple.developer.associated-domains")
+            } catch (ignore: Throwable) {
+                logger.error(
+                    "entitlement <$entitlementsFile> does not have com.apple.developer.associated-domains",
+                    ignore
+                )
             } finally {
                 val sb = StringBuilder()
                 sb.appendln("<array>")
@@ -441,16 +445,13 @@ object SignUtils {
     }
 
     private fun getSubDictionary(nsObject: NSObject?, key: String): NSDictionary? {
-        if (nsObject == null) {
-            return null
-        }
-        if (nsObject !is NSDictionary) {
+        if (nsObject == null || nsObject !is NSDictionary) {
             return null
         }
         return try {
             nsObject.objectForKey(key) as NSDictionary
-        } catch (e: Exception) {
-            logger.error("[getSubDictionary] Fail to find key[$key] subDictionary in NSObject", e)
+        } catch (ignore: Throwable) {
+            logger.error("[getSubDictionary] Fail to find key[$key] subDictionary in NSObject", ignore)
             null
         }
     }
@@ -461,7 +462,7 @@ object SignUtils {
         val process = runtime.exec(shellPrefix.plus(cmd))
         val stdInput = BufferedReader(InputStreamReader(process.inputStream))
         val stdError = BufferedReader(InputStreamReader(process.errorStream))
-        var s: String? = null
+        var s: String?
         while (stdInput.readLine().also { s = it } != null) {
             logger.info(s)
         }
