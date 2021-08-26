@@ -643,7 +643,7 @@ class MonitorNotifyJob @Autowired constructor(
                 .filter(
                     queryStringQuery
                 )
-        sourceBuilder.query(query).size(1)
+        sourceBuilder.query(query).trackTotalHits(true).size(1)
 
         val searchRequest = SearchRequest()
         searchRequest.indices("v2_9_bklog_prod_ci_service_access_${DateFormatUtils.format(startTime, "yyyyMMdd")}*")
