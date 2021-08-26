@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
-@Suppress("NAME_SHADOWING")
+@Suppress("NAME_SHADOWING", "MaxLineLength")
 @Service
 class TurboPlanInstanceService @Autowired constructor(
     private val turboPlanInstanceRepository: TurboPlanInstanceRepository,

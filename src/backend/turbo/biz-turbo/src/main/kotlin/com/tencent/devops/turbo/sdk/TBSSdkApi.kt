@@ -18,6 +18,7 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpMethod
 
+@Suppress("MaxLineLength")
 object TBSSdkApi {
 
     private val logger = LoggerFactory.getLogger(TBSSdkApi::class.java)

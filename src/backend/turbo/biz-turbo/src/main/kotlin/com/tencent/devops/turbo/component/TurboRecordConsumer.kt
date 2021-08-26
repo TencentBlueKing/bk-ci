@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
+@Suppress("MaxLineLength")
 @Component
 class TurboRecordConsumer @Autowired constructor(
     private val turboEngineConfigService: TurboEngineConfigService,

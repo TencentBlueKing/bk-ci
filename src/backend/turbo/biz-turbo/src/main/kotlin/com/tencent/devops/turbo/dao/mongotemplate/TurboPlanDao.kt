@@ -16,6 +16,7 @@ import org.springframework.data.mongodb.core.query.Update
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("MaxLineLength")
 @Repository
 class TurboPlanDao @Autowired constructor(
     private val mongoTemplate: MongoTemplate

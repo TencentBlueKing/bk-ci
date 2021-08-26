@@ -9,6 +9,7 @@ import com.tencent.devops.turbo.vo.TurboPlanDetailVO
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.RestController
 
+@Suppress("MaxLineLength")
 @RestController
 class OpTurboPlanController @Autowired constructor(
     private val turboPlanService: TurboPlanService

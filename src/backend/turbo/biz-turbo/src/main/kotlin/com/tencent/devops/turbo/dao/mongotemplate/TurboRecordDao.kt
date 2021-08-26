@@ -22,6 +22,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+@Suppress("MaxLineLength")
 @Repository
 class TurboRecordDao @Autowired constructor(
     private val mongoTemplate: MongoTemplate

@@ -16,6 +16,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
+@Suppress("MaxLineLength")
 @Service
 class TurboSummaryService @Autowired constructor(
     private val turboSummaryDao: TurboSummaryDao,

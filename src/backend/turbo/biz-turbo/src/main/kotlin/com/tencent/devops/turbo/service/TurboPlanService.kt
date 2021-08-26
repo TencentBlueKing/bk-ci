@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
-@Suppress("MaxLineLength")
+@Suppress("MaxLineLength", "ComplexMethod", "NestedBlockDepth")
 @Service
 class TurboPlanService @Autowired constructor(
     private val turboPlanDao: TurboPlanDao,

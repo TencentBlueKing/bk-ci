@@ -4,6 +4,7 @@ import com.tencent.devops.turbo.model.TTurboPlanInstanceEntity
 import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.stereotype.Repository
 
+@Suppress("MaxLineLength")
 @Repository
 interface TurboPlanInstanceRepository : MongoRepository<TTurboPlanInstanceEntity, String> {
 

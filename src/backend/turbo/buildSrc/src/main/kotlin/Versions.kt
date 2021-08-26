@@ -1,3 +1,4 @@
+@Suppress("MatchingDeclarationName")
 object DependencyVersions {
     const val jaxrsVersion = "2.0"
     const val jasyptVersion = "2.1.0"
