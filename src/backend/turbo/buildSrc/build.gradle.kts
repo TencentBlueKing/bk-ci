@@ -1,3 +1,4 @@
+@Suppress("NewLineAtEndOfFile")
 plugins {
     `kotlin-dsl`
 }
