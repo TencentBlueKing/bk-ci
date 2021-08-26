@@ -29,14 +29,14 @@ package com.tencent.devops.gitci.common.exception
 
 import com.tencent.devops.common.api.pojo.ErrorType
 
-@Suppress("ALL")
 enum class ErrorCodeEnum(
     val errorType: ErrorType,
     val errorCode: Int,
     val formatErrorMessage: String
 ) {
     GITCI_NOT_ENABLE_ERROR(ErrorType.USER, 419, "[%s]CI is not enabled"),
-    SYSTEM_ERROR(ErrorType.SYSTEM, 2129001, "gitci系统错误"),
+
+    //    SYSTEM_ERROR(ErrorType.SYSTEM, 2129001, "gitci系统错误"),
     NO_REPORT_AUTH(ErrorType.SYSTEM, 2129002, "无权限查看报告"),
 
     // 工蜂接口请求错误
@@ -58,7 +58,8 @@ enum class ErrorCodeEnum(
         formatErrorMessage = "Load project [%s] failed. Git api error: %s"
     ),
     GET_PROJECT_INFO_FORBIDDEN(ErrorType.USER, 2129007, "No access to project [%s]."),
-    GET_PROJECT_COMMITS_ERROR(ErrorType.THIRD_PARTY, 2129008, "获取仓库提交记录失败"),
+
+    //    GET_PROJECT_COMMITS_ERROR(ErrorType.THIRD_PARTY, 2129008, "获取仓库提交记录失败"),
     CREATE_NEW_FILE_ERROR(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = 2129009,
@@ -69,12 +70,26 @@ enum class ErrorCodeEnum(
         errorCode = 21290015,
         formatErrorMessage = "Create new pipeline failed. User [%s] is not authorized to commit file to branch [%s]."
     ),
-    GET_PROJECT_MEMBERS_ERROR(ErrorType.THIRD_PARTY, 2129010, "获取项目成员失败"),
-    GET_PROJECT_BRANCHES_ERROR(ErrorType.THIRD_PARTY, 2129011, "获取仓库分支列表失败"),
+
+    //    GET_PROJECT_MEMBERS_ERROR(ErrorType.THIRD_PARTY, 2129010, "获取项目成员失败"),
+    //    GET_PROJECT_BRANCHES_ERROR(ErrorType.THIRD_PARTY, 2129011, "获取仓库分支列表失败"),
     GET_GIT_MERGE_CHANGE_INFO(ErrorType.THIRD_PARTY, 2129012, "获取MERGE变更文件列表失败"),
     GET_GIT_FILE_INFO_ERROR(ErrorType.THIRD_PARTY, 2129013, "获取仓库文件信息失败"),
     GET_GIT_MERGE_INFO(ErrorType.THIRD_PARTY, 2129014, "获取MERGE提交信息失败"),
-    GET_GIT_FILE_TREE_ERROR(ErrorType.THIRD_PARTY, 2129015, "获取仓库CI文件列表失败");
+    GET_GIT_FILE_TREE_ERROR(ErrorType.THIRD_PARTY, 2129015, "获取仓库CI文件列表失败"),
+
+    // 手动触发需要转为错误码给用户，区分构建中的系统和用户异常
+    MANUAL_TRIGGER_USER_ERROR(ErrorType.USER, 2129016, "manual trigger user error: [%s]"),
+    MANUAL_TRIGGER_SYSTEM_ERROR(
+        errorType = ErrorType.SYSTEM,
+        errorCode = 2129017,
+        formatErrorMessage = "manual trigger system error: [%s]"
+    ),
+    MANUAL_TRIGGER_THIRD_PARTY_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = 2129018,
+        formatErrorMessage = "manual trigger third party error: [%s]"
+    );
 
     companion object {
 
