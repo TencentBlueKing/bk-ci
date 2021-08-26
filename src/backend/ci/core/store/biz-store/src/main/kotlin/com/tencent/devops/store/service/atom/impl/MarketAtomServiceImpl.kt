@@ -1165,65 +1165,71 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
             builder.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
         }
-
         val rely = paramValueMap["rely"]
         if (null != rely) {
-            val dang = MessageCodeUtil.getCodeLanMessage(DANG)
-            val and = MessageCodeUtil.getCodeLanMessage(AND)
-            val or = MessageCodeUtil.getCodeLanMessage(OR)
-            val timetoSelect = MessageCodeUtil.getCodeLanMessage(TIMETOSELECT)
-            try {
-                rely as Map<String, Any>
-                if (null != rely["expression"]) {
-                    val expression = rely["expression"] as List<Map<String, Any>>
-                    builder.append(", $dang")
-                    val link = if (rely["operation"] == "AND") and else or
-                    expression.map { " [${it["key"]}] = [${it["value"]}] " }.forEachIndexed { index, value ->
-                        builder.append(value)
-                        if (index < expression.size - 1) {
-                            builder.append(link)
-                        }
-                    }
-                    builder.append(timetoSelect)
-                }
-            } catch (e: Exception) {
-                println("load atom input[rely] with error: ${e.message}")
-            }
+            parseRely(builder, rely as Map<String, Any>)
         }
-
         val options = paramValueMap["options"]
         if (null != options) {
-            try {
-                options as List<Map<String, Any>>
-                builder.append(", $selectorTypeName")
-                builder.append(", $optionsName:")
-                options.forEachIndexed { index, map ->
-                    if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
-                    else builder.append(" ${map["id"]}[${map["name"]}] |")
-                }
-                builder.removeSuffix("|")
-            } catch (e: Exception) {
-                println("load atom input[options] with error: ${e.message}")
-            }
+            builder.append(", $selectorTypeName")
+            builder.append(", $optionsName:")
+            parseOptions(builder, options as List<Map<String, Any>>)
         }
-
         val list = paramValueMap["list"]
         if (null != list) {
-            try {
-                list as List<Map<String, Any>>
-                builder.append(", $optionsName:")
-                list.forEachIndexed { index, map ->
-                    val key = if (null != map["label"]) map["label"] else if (null != map["id"]) map["id"] else
-                        null ?: return
-                    val value = if (null != map["value"]) map["value"] else if (null != map["name"]) map["name"] else
-                        null ?: return
-                    if (index == list.size - 1) builder.append(" $key[$value]")
-                    else builder.append(" $key[$value] |")
+            builder.append(", $optionsName:")
+            parseList(builder, list as List<Map<String, Any>>)
+        }
+    }
+
+    private fun parseRely(builder: StringBuilder, rely: Map<String, Any>) {
+        val dang = MessageCodeUtil.getCodeLanMessage(DANG)
+        val and = MessageCodeUtil.getCodeLanMessage(AND)
+        val or = MessageCodeUtil.getCodeLanMessage(OR)
+        val timeToSelect = MessageCodeUtil.getCodeLanMessage(TIMETOSELECT)
+        try {
+            if (null != rely["expression"]) {
+                val expression = rely["expression"] as List<Map<String, Any>>
+                builder.append(", $dang")
+                val link = if (rely["operation"] == "AND") and else or
+                expression.map { " [${it["key"]}] = [${it["value"]}] " }.forEachIndexed { index, value ->
+                    builder.append(value)
+                    if (index < expression.size - 1) {
+                        builder.append(link)
+                    }
                 }
-                builder.removeSuffix("|")
-            } catch (e: Exception) {
-                println("load atom input[list] with error: ${e.message} ")
+                builder.append(timeToSelect)
             }
+        } catch (e: Exception) {
+            println("load atom input[rely] with error: ${e.message}")
+        }
+    }
+
+    private fun parseOptions(builder: StringBuilder, options: List<Map<String, Any>>) {
+        try {
+            options.forEachIndexed { index, map ->
+                if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
+                else builder.append(" ${map["id"]}[${map["name"]}] |")
+            }
+            builder.removeSuffix("|")
+        } catch (e: Exception) {
+            println("load atom input[options] with error: ${e.message}")
+        }
+    }
+
+    private fun parseList(builder: StringBuilder, list: List<Map<String, Any>>) {
+        try {
+            list.forEachIndexed { index, map ->
+                val key = if (null != map["label"]) map["label"] else if (null != map["id"]) map["id"] else
+                    null ?: return
+                val value = if (null != map["value"]) map["value"] else if (null != map["name"]) map["name"] else
+                    null ?: return
+                if (index == list.size - 1) builder.append(" $key[$value]")
+                else builder.append(" $key[$value] |")
+            }
+            builder.removeSuffix("|")
+        } catch (e: Exception) {
+            println("load atom input[list] with error: ${e.message} ")
         }
     }
 }
