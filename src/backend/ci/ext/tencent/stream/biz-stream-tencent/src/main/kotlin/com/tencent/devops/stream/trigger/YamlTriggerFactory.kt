@@ -25,8 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.pojo.rtxCustom
+package com.tencent.devops.stream.trigger
 
-enum class MessageType(val value: String) {
-    MARKDOWN("markdown")
+import com.tencent.devops.common.ci.v2.YmlVersion
+import com.tencent.devops.stream.trigger.v1.YamlTrigger
+import com.tencent.devops.stream.trigger.v2.YamlTriggerV2
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
+
+@Component
+class YamlTriggerFactory @Autowired constructor(
+    val requestTrigger: YamlTrigger,
+    val requestTriggerV2: YamlTriggerV2
+) {
+
+    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): YamlTriggerInterface<*> {
+        if (ymlVersion == null) {
+            return requestTrigger
+        }
+
+        return when (ymlVersion.version) {
+            "v2.0" -> {
+                requestTriggerV2
+            }
+            else -> {
+                requestTrigger
+            }
+        }
+    }
 }

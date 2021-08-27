@@ -368,6 +368,12 @@ include(":ext:tencent:gitci:biz-gitci-tencent")
 include(":ext:tencent:gitci:boot-gitci-tencent")
 include(":ext:tencent:gitci:model-gitci-tencent")
 
+include(":ext:tencent:stream")
+include(":ext:tencent:stream:api-stream-tencent")
+include(":ext:tencent:stream:biz-stream-tencent")
+include(":ext:tencent:stream:boot-stream-tencent")
+include(":ext:tencent:stream:model-stream-tencent")
+
 include(":ext:tencent:support")
 include(":ext:tencent:support:api-support-tencent")
 include(":ext:tencent:support:biz-support-tencent")
