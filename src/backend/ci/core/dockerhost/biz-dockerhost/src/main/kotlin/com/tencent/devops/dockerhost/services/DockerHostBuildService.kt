@@ -52,6 +52,7 @@ import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.script.ShellUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
@@ -78,6 +79,7 @@ import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.dockerhost.utils.SigarUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
+import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
@@ -386,7 +388,17 @@ class DockerHostBuildService(
                 .awaitImageId()
 
             imageNameTagSet.parallelStream().forEach {
-                dockerClient.saveImageCmd(it).withTag(it).withName("$it.tar").exec()
+                val imageAndTagArray = it.split(":")
+                val inputStream = dockerClient.saveImageCmd(imageAndTagArray[0])
+                    .withTag(imageAndTagArray[1])
+                    .exec()
+                val imageSavedPath = "/data/dockersavedimages/${imageAndTagArray[0]}.tar"
+                val targetSavedImagesFile = File(imageSavedPath)
+                FileUtils.copyInputStreamToFile(inputStream, targetSavedImagesFile)
+
+                val script = "dockerscan -t $imageSavedPath -p $pipelineId -u $it -i dev " +
+                        "-T $projectId -b $buildId -n sawyersong"
+                ShellUtil.executeEnhance(script)
             }
 
             imageNameTagSet.parallelStream().forEach {
