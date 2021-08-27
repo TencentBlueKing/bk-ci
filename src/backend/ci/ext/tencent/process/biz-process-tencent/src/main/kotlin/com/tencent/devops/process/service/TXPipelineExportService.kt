@@ -163,7 +163,13 @@ class TXPipelineExportService @Autowired constructor(
             }
         }
 
-        logger.info("TXPipelineExportService getGroups pipelineGroupsMap info:$pipelineGroupsMap")
+        // 获取流水线labels
+        val groups = pipelineGroupService.getGroups(userId = userId, projectId = projectId, pipelineId = pipelineId)
+        val labels = mutableListOf<String>()
+        groups.forEach {
+            labels.addAll(it.labels)
+        }
+        model.labels = labels
 
         val stageTagsMap = stageTagService.getAllStageTag().data?.map {
             it.id to it.stageTagName
