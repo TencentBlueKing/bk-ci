@@ -162,6 +162,9 @@ class TXPipelineExportService @Autowired constructor(
                 pipelineGroupsMap[label.id] = label.name
             }
         }
+
+        logger.info("TXPipelineExportService getGroups pipelineGroupsMap info:$pipelineGroupsMap")
+
         val stageTagsMap = stageTagService.getAllStageTag().data?.map {
             it.id to it.stageTagName
         }?.toMap() ?: emptyMap()

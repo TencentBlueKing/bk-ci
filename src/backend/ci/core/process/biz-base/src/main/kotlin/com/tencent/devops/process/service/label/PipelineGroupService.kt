@@ -79,6 +79,8 @@ class PipelineGroupService @Autowired constructor(
 
         val labels = pipelineLabelDao.getByGroupIds(dslContext, groupIds)
 
+        logger.info("PipelineGroupService getGroups labels info:$labels")
+
         labels.forEach {
             val list = if (labelsByGroup.containsKey(it.groupId)) {
                 labelsByGroup[it.groupId]!!
@@ -89,6 +91,7 @@ class PipelineGroupService @Autowired constructor(
             }
             list.add(it)
         }
+        logger.info("PipelineGroupService getGroups labelsByGroup info:$labelsByGroup")
 
         return groups.map {
             PipelineGroup(
