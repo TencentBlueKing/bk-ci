@@ -270,7 +270,7 @@ object SignUtils {
         replaceBundle: Boolean,
         replaceKeyList: Map<String, String>?
     ) {
-        if (!resignDir.exists()) return
+        if (!resignDir.exists() || resignDir.isDirectory) return
 
         // 取目录下所有签名相关文件路径
         val infoPlist = File(resignDir.absolutePath + File.separator + APP_INFO_PLIST_FILENAME)
