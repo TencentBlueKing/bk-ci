@@ -62,8 +62,8 @@ import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.QualityService
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
-import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
-import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
+import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
+import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
