@@ -34,7 +34,7 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.repository.pojo.oauth.GitToken
 
-@Event(MQ.EXCHANGE_STREAM_TRIGGER_EVENT, MQ.ROUTE_STREAM_TRIGGER_EVENT)
+@Event(MQ.EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_STREAM_TRIGGER_PIPELINE_EVENT)
 data class StreamTriggerEvent(
     val gitToken: GitToken,
     val forkGitToken: GitToken?,

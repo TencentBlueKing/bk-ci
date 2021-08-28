@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.dao
 
-
 import com.tencent.devops.model.stream.tables.TGitCiServicesConf
 import com.tencent.devops.model.stream.tables.records.TGitCiServicesConfRecord
 import org.jooq.DSLContext

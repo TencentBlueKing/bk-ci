@@ -59,13 +59,13 @@ class StreamTriggerMQConfig {
      */
     @Bean
     fun gitCIRequestTriggerExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_STREAM_TRIGGER_EVENT, true, false)
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
 
     @Bean
-    fun requestTriggerQueue() = Queue(MQ.QUEUE_STREAM_TRIGGER_EVENT)
+    fun requestTriggerQueue() = Queue(MQ.QUEUE_STREAM_TRIGGER_PIPELINE_EVENT)
 
     @Bean
     fun requestTriggerQueueBind(

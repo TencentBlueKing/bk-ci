@@ -42,8 +42,8 @@ object MQ {
     const val ROUTE_STREAM_MR_CONFLICT_CHECK_EVENT = "r.stream.mr.conflict.check.event"
     const val QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT = "q.stream.mr.conflict.check.event"
 
-    // Stream 触发请求
-    const val EXCHANGE_STREAM_TRIGGER_EVENT = "e.stream.trigger.event"
-    const val ROUTE_STREAM_TRIGGER_EVENT = "r.stream.trigger.event"
-    const val QUEUE_STREAM_TRIGGER_EVENT = "q.stream.trigger.event"
+    // Stream 每条流水线的触发构建请求
+    const val EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT = "e.stream.trigger.pipeline.event"
+    const val ROUTE_STREAM_TRIGGER_PIPELINE_EVENT = "r.stream.trigger.pipeline.event"
+    const val QUEUE_STREAM_TRIGGER_PIPELINE_EVENT = "q.stream.trigger.pipeline.event"
 }
