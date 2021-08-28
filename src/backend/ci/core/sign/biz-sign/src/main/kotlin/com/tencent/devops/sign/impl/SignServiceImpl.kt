@@ -40,6 +40,7 @@ import com.tencent.devops.sign.api.pojo.IpaInfoPlist
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
+import com.tencent.devops.sign.config.CodeSignProperties
 import com.tencent.devops.sign.service.ArchiveService
 import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.service.MobileProvisionService
@@ -50,21 +51,25 @@ import com.tencent.devops.sign.utils.SignUtils.APP_INFO_PLIST_FILENAME
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
 import java.util.regex.Pattern
 
 @Service
+@EnableConfigurationProperties(CodeSignProperties::class)
 @Suppress("TooManyFunctions")
 class SignServiceImpl @Autowired constructor(
     private val fileService: FileService,
     private val signInfoService: SignInfoService,
     private val archiveService: ArchiveService,
-    private val mobileProvisionService: MobileProvisionService
+    private val mobileProvisionService: MobileProvisionService,
+    private val codeSignProperties: CodeSignProperties
 ) : SignService {
     companion object {
         private val logger = LoggerFactory.getLogger(SignServiceImpl::class.java)
+        const val DEFAULT_CODESIGN_PATH = "/usr/bin/codesign"
     }
 
     override fun uploadIpaAndDecodeInfo(
@@ -111,7 +116,7 @@ class SignServiceImpl @Autowired constructor(
                 resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
             }
             if (!signFinished) {
-                logger.error("[$resignId]|[${ipaSignInfo.buildId}] sign ipa failed.")
+                logger.error("SIGN|[$resignId]|[${ipaSignInfo.buildId}] sign ipa failed.")
                 throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA包签名失败")
             }
             signInfoService.finishResign(resignId, ipaSignInfo, taskExecuteCount)
@@ -124,7 +129,7 @@ class SignServiceImpl @Autowired constructor(
             // 压缩目录
             val signedIpaFile = SignUtils.zipIpaFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + uploadFileName)
             if (signedIpaFile == null) {
-                logger.error("[$resignId]|[${ipaSignInfo.buildId}] zip ipa failed.")
+                logger.error("SIGN|[$resignId]|[${ipaSignInfo.buildId}] zip ipa failed.")
                 throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA文件生成失败")
             }
             signInfoService.finishZip(resignId, signedIpaFile, ipaSignInfo, taskExecuteCount)
@@ -136,7 +141,7 @@ class SignServiceImpl @Autowired constructor(
             // 归档IPA包
             val archiveResult = archiveService.archive(signedIpaFile, ipaSignInfo, properties)
             if (!archiveResult) {
-                logger.error("[$resignId]|[${ipaSignInfo.buildId}] archive signed ipa failed.")
+                logger.error("SIGN|[$resignId]|[${ipaSignInfo.buildId}] archive signed ipa failed.")
                 throw ErrorCodeException(
                     errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA,
                     defaultMessage = "归档IPA包失败"
@@ -148,7 +153,7 @@ class SignServiceImpl @Autowired constructor(
             signInfoService.successResign(resignId, ipaSignInfo, taskExecuteCount)
             finished = true
         } catch (ignore: Throwable) {
-            logger.error("[$resignId] sign failed with error.", ignore)
+            logger.error("SIGN|[$resignId] sign failed with error.", ignore)
             signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, ignore.message ?: "Unknown error")
             finished = true
         } finally {
@@ -164,7 +169,6 @@ class SignServiceImpl @Autowired constructor(
 
     private fun findZhStrings(ipaUnzipDir: File): File? {
         val dir = File(ipaUnzipDir, "payload")
-        if (!dir.exists() || !dir.isDirectory) return null
         val appPattern = Pattern.compile(".+\\.app")
         dir.listFiles()?.forEach {
             if (appPattern.matcher(it.name).matches()) {
@@ -233,7 +237,7 @@ class SignServiceImpl @Autowired constructor(
         plistFile.writeText(plistResult)
         // 从plist文件抽离出entitlement文件
         val plistToEntitlementCommand = "/usr/libexec/PlistBuddy -x -c 'Print:Entitlements' ${plistFile.canonicalPath}"
-        // 将entitlment写入到文件
+        // 将entitlement写入到文件
         val entitlementResult = CommandLineUtils.execute(
             command = plistToEntitlementCommand,
             workspace = mobileProvisionFile.parentFile,
@@ -244,11 +248,17 @@ class SignServiceImpl @Autowired constructor(
         // 解析bundleId
         val rootDict = PropertyListParser.parse(plistFile) as NSDictionary
         // entitlement
-        if (!rootDict.containsKey("Entitlements")) throw RuntimeException("no Entitlements find in plist")
+        if (!rootDict.containsKey("Entitlements")) throw ErrorCodeException(
+            errorCode = SignMessageCode.ERROR_MP_PARSE_ERROR,
+            defaultMessage = "no Entitlements find in plist"
+        )
         val entitlementDict = rootDict.objectForKey("Entitlements") as NSDictionary
         // application-identifier
         if (!entitlementDict.containsKey("application-identifier")) {
-            throw RuntimeException("no Entitlements.application-identifier find in plist")
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_MP_PARSE_ERROR,
+                defaultMessage = "no Entitlements.application-identifier find in plist"
+            )
         }
         val bundleIdString = (entitlementDict.objectForKey("application-identifier") as NSString).toString()
         val bundleId = bundleIdString.substring(bundleIdString.indexOf(".") + 1)
@@ -277,7 +287,7 @@ class SignServiceImpl @Autowired constructor(
         SignUtils.getAllAppsInDir(appDir, allAppsInPackage)
         allAppsInPackage.forEach { app ->
             if (!mobileProvisionInfoList.keys.contains(app.nameWithoutExtension)) {
-                logger.error("Not found appex <${app.name}> MobileProvisionInfo")
+                logger.error("SIGN| Not found appex <${app.name}> MobileProvisionInfo")
                 throw ErrorCodeException(
                     errorCode = SignMessageCode.ERROR_SIGN_INFO_ILLEGAL,
                     defaultMessage = "缺少${app.name}签名信息，请检查参数"
@@ -285,7 +295,7 @@ class SignServiceImpl @Autowired constructor(
             }
         }
 
-        logger.info("Start to resign ${appDir.name} with $mobileProvisionInfoList")
+        logger.info("SIGN| Start to resign ${appDir.name} with $mobileProvisionInfoList")
         return SignUtils.resignApp(
             appDir = appDir,
             certId = ipaSignInfo.certId,
@@ -294,7 +304,8 @@ class SignServiceImpl @Autowired constructor(
             replaceBundleId = ipaSignInfo.replaceBundleId ?: true,
             universalLinks = ipaSignInfo.universalLinks,
             keychainAccessGroups = ipaSignInfo.keychainAccessGroups,
-            replaceKeyList = ipaSignInfo.replaceKeyList
+            replaceKeyList = ipaSignInfo.replaceKeyList,
+            codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion)
         )
     }
 
@@ -318,7 +329,8 @@ class SignServiceImpl @Autowired constructor(
             appDir = getAppDirectory(unzipDir),
             certId = ipaSignInfo.certId,
             wildcardInfo = wildcardInfo,
-            replaceKeyList = ipaSignInfo.replaceKeyList
+            replaceKeyList = ipaSignInfo.replaceKeyList,
+            codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion)
         )
     }
 
@@ -340,16 +352,20 @@ class SignServiceImpl @Autowired constructor(
     private fun findInfoPlist(
         unzipDir: File
     ): File {
-        return fetchPlistFileInDir(File(unzipDir, "payload"))
-            ?: throw ErrorCodeException(
-                errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST,
-                defaultMessage = "ipa文件解压并检查签名信息失败"
-            )
+        if (!unzipDir.exists() || !unzipDir.isDirectory) throw ErrorCodeException(
+            errorCode = SignMessageCode.ERROR_SIGN_IPA_ILLEGAL,
+            defaultMessage = "ipa文件解压失败，无法找到目录"
+        )
+        return fetchPlistFileInDir(File(unzipDir, "payload")) ?: throw ErrorCodeException(
+            errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST,
+            defaultMessage = "ipa文件解压并检查签名信息失败"
+        )
     }
 
     /*
     * 解析IPA包Info.plist的信息
     * */
+    @Suppress("ComplexCondition")
     private fun parsInfoPlist(
         resignId: String,
         infoPlist: File,
@@ -357,52 +373,29 @@ class SignServiceImpl @Autowired constructor(
     ): IpaInfoPlist {
         try {
             val rootDict = PropertyListParser.parse(infoPlist) as NSDictionary
-            // 应用包名
-            if (!rootDict.containsKey("CFBundleIdentifier")) {
-                throw RuntimeException("no CFBundleIdentifier find in plist")
+
+            if (!rootDict.containsKey("CFBundleIdentifier") || // 应用包名
+                !rootDict.containsKey("CFBundleName") || // 应用标题
+                !rootDict.containsKey("CFBundleShortVersionString") || // 应用版本
+                !rootDict.containsKey("CFBundleVersion") // 应用构建版本
+            ) {
+                throw ErrorCodeException(
+                    errorCode = SignMessageCode.ERROR_PARS_INFO_PLIST,
+                    defaultMessage = "Missing parameters in Info.plist file, please check:" +
+                        "CFBundleIdentifier, CFBundleName, CFBundleShortVersionString, CFBundleVersion"
+                )
             }
             var parameters = rootDict.objectForKey("CFBundleIdentifier") as NSString
             val bundleIdentifier = parameters.toString()
-            // 应用标题
-            if (!rootDict.containsKey("CFBundleName")) throw RuntimeException("no CFBundleName find in plist")
             parameters = rootDict.objectForKey("CFBundleName") as NSString
             val appTitle = parameters.toString()
-            // 应用版本
-            if (!rootDict.containsKey("CFBundleShortVersionString")) {
-                throw RuntimeException("no CFBundleShortVersionString find in plist")
-            }
             parameters = rootDict.objectForKey("CFBundleShortVersionString") as NSString
             val bundleVersion = parameters.toString()
-            // 应用构建版本
-            if (!rootDict.containsKey("CFBundleVersion")) throw RuntimeException("no CFBundleVersion find in plist")
             parameters = rootDict.objectForKey("CFBundleVersion") as NSString
+
             val bundleVersionFull = parameters.toString()
             // scheme
-            val scheme = try {
-                val schemeArray = rootDict.objectForKey("CFBundleURLTypes") as NSArray
-                schemeArray.array
-                    .map { it as NSDictionary }
-                    .map { it.objectForKey("CFBundleURLSchemes") }
-                    .map { it as NSArray }
-                    .map { it.array }
-                    .flatMap { it.toList() }
-                    .map { it as NSString }
-                    .map { it.toString() }
-                    .maxBy { it.length } ?: ""
-            } catch (e: Exception) {
-                ""
-            }
-            // 应用名称
-            val appName = try {
-                val nameDictionary = if (zhStrings != null) {
-                    PropertyListParser.parse(zhStrings) as NSDictionary
-                } else {
-                    rootDict
-                }
-                nameDictionary.objectForKey("CFBundleDisplayName").toString()
-            } catch (e: Exception) {
-                ""
-            }
+            val (scheme, appName) = pair(rootDict, zhStrings)
 
             return IpaInfoPlist(
                 bundleIdentifier = bundleIdentifier,
@@ -413,12 +406,41 @@ class SignServiceImpl @Autowired constructor(
                 appName = appName
             )
         } catch (ignore: Throwable) {
-            logger.error("[$resignId] parse plist with error:", ignore)
+            logger.error("SIGN||[$resignId] parse plist with error:", ignore)
             throw ErrorCodeException(
                 errorCode = SignMessageCode.ERROR_PARS_INFO_PLIST,
                 defaultMessage = "解析Info.plist失败: ${ignore.message}"
             )
         }
+    }
+
+    private fun pair(rootDict: NSDictionary, zhStrings: File?): Pair<String, String> {
+        val scheme = try {
+            val schemeArray = rootDict.objectForKey("CFBundleURLTypes") as NSArray
+            schemeArray.array
+                .map { it as NSDictionary }
+                .map { it.objectForKey("CFBundleURLSchemes") }
+                .map { it as NSArray }
+                .map { it.array }
+                .flatMap { it.toList() }
+                .map { it as NSString }
+                .map { it.toString() }
+                .maxBy { it.length } ?: ""
+        } catch (ignore: Throwable) {
+            ""
+        }
+        // 应用名称
+        val appName = try {
+            val nameDictionary = if (zhStrings != null) {
+                PropertyListParser.parse(zhStrings) as NSDictionary
+            } else {
+                rootDict
+            }
+            nameDictionary.objectForKey("CFBundleDisplayName").toString()
+        } catch (ignore: Throwable) {
+            ""
+        }
+        return Pair(scheme, appName)
     }
 
     /*
@@ -448,7 +470,6 @@ class SignServiceImpl @Autowired constructor(
     * 寻找目录下的指定文件
     * */
     private fun fetchPlistFileInDir(dir: File): File? {
-        if (!dir.exists() || !dir.isDirectory) return null
         val appPattern = Pattern.compile(".+\\.app")
         dir.listFiles()?.forEach {
             if (appPattern.matcher(it.name).matches()) {
@@ -459,5 +480,14 @@ class SignServiceImpl @Autowired constructor(
             }
         }
         return null
+    }
+
+    private fun getCodeSignFile(version: String?): String {
+        logger.info("SIGN| codeSignProperties=$codeSignProperties")
+        return if (version.isNullOrBlank()) {
+            DEFAULT_CODESIGN_PATH
+        } else {
+            codeSignProperties.paths?.get(version) ?: DEFAULT_CODESIGN_PATH
+        }
     }
 }

@@ -32,6 +32,7 @@ import com.dd.plist.NSObject
 import com.dd.plist.PropertyListParser
 import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.ZipUtil
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
@@ -73,7 +74,8 @@ object SignUtils {
         appDir: File,
         certId: String,
         wildcardInfo: MobileProvisionInfo,
-        replaceKeyList: Map<String, String>?
+        replaceKeyList: Map<String, String>?,
+        codeSignPath: String?
     ): Boolean {
         if (!appDir.isDirectory || !appDir.extension.contains("app")) {
             logger.error("App directory $appDir is invalid.")
@@ -90,7 +92,7 @@ object SignUtils {
                     when {
                         // 如果是个拓展则递归进入进行重签
                         subFile.isDirectory && subFile.extension.contains("app") -> {
-                            resignAppWildcard(subFile, certId, wildcardInfo, replaceKeyList)
+                            resignAppWildcard(subFile, certId, wildcardInfo, replaceKeyList, codeSignPath)
                         }
 
                         // 如果是个framework则在做一次下层目录扫描
@@ -99,20 +101,24 @@ object SignUtils {
                                 frameworkDir = subFile,
                                 certId = certId,
                                 info = wildcardInfo,
-                                replaceKeyList = replaceKeyList
+                                replaceKeyList = replaceKeyList,
+                                codeSignPath = codeSignPath
                             )
                         }
 
                         // 如果不是app或framework目录，则使用主描述文件进行重签
                         else -> {
                             overwriteInfo(subFile, wildcardInfo, false, replaceKeyList)
-                            codesignFile(certId, subFile.absolutePath)
+                            codesignFile(certId, subFile.absolutePath, codeSignPath)
                         }
                     }
                 }
             }
             // 替换后进行重签名
-            codesignFileByEntitlement(certId, appDir.absolutePath, wildcardInfo.entitlementFile.absolutePath)
+            codesignFileByEntitlement(cerName = certId,
+                signFilename = appDir.absolutePath,
+                entitlementsPath = wildcardInfo.entitlementFile.absolutePath,
+                codeSignPath = codeSignPath)
             true
         } catch (ignore: Throwable) {
             logger.error("WildcardResign app <$appDir> directory with exception:", ignore)
@@ -138,6 +144,7 @@ object SignUtils {
         appName: String,
         replaceBundleId: Boolean,
         replaceKeyList: Map<String, String>?,
+        codeSignPath: String?,
         keychainAccessGroups: List<String>? = null,
         universalLinks: List<String>? = null
     ): Boolean {
@@ -172,7 +179,8 @@ object SignUtils {
                                 appName = subFile.nameWithoutExtension,
                                 replaceBundleId = replaceBundleId,
                                 keychainAccessGroups = keychainAccessGroups,
-                                replaceKeyList = replaceKeyList
+                                replaceKeyList = replaceKeyList,
+                                codeSignPath = codeSignPath
                             )
                             if (!success) return false
                         }
@@ -183,20 +191,21 @@ object SignUtils {
                                 frameworkDir = subFile,
                                 certId = certId,
                                 info = info,
-                                replaceKeyList = replaceKeyList
+                                replaceKeyList = replaceKeyList,
+                                codeSignPath = codeSignPath
                             )
                         }
 
                         // 如果不是app或framework目录，则使用主描述文件进行重签
                         else -> {
                             overwriteInfo(subFile, info, false, replaceKeyList)
-                            codesignFile(certId, subFile.absolutePath)
+                            codesignFile(certId, subFile.absolutePath, codeSignPath)
                         }
                     }
                 }
             }
             // 替换后对当前APP进行重签名操作
-            codesignFileByEntitlement(certId, appDir.absolutePath, info.entitlementFile.absolutePath)
+            codesignFileByEntitlement(certId, appDir.absolutePath, info.entitlementFile.absolutePath, codeSignPath)
             true
         } catch (ignore: Throwable) {
             logger.error("Resign app <$appName> directory with exception.", ignore)
@@ -217,7 +226,8 @@ object SignUtils {
         frameworkDir: File,
         certId: String,
         info: MobileProvisionInfo,
-        replaceKeyList: Map<String, String>?
+        replaceKeyList: Map<String, String>?,
+        codeSignPath: String?
     ): Boolean {
         if (!frameworkDir.isDirectory || !frameworkDir.extension.contains("framework")) {
             logger.error("The framework directory $frameworkDir is invalid.")
@@ -230,12 +240,12 @@ object SignUtils {
                 resignDir.listFiles()?.forEach { subFile ->
                     // 如果是个其他待签文件则使用主描述文件进行重签
                     overwriteInfo(subFile, info, false, replaceKeyList)
-                    codesignFile(certId, subFile.absolutePath)
+                    codesignFile(certId, subFile.absolutePath, codeSignPath)
                 }
             }
             // 重签当前目录
             overwriteInfo(frameworkDir, info, false, replaceKeyList)
-            codesignFile(certId, frameworkDir.absolutePath)
+            codesignFile(certId, frameworkDir.absolutePath, codeSignPath)
             true
         } catch (ignore: Throwable) {
             logger.error("Resign framework <${frameworkDir.name}> directory with exception.", ignore)
@@ -355,14 +365,23 @@ object SignUtils {
         }
     }
 
-    private fun codesignFile(cerName: String, signFilename: String) {
-        val cmd = "/usr/bin/codesign -f -s '$cerName' ${fixPath(signFilename)}"
+    private fun codesignFile(
+        cerName: String,
+        signFilename: String,
+        codeSignPath: String?
+    ) {
+        val cmd = "$codeSignPath -f -s '$cerName' ${fixPath(signFilename)}"
         logger.info("[codesignFile] $cmd")
         runtimeExec(cmd)
     }
 
-    private fun codesignFileByEntitlement(cerName: String, signFilename: String, entitlementsPath: String) {
-        val cmd = "/usr/bin/codesign -f -s '$cerName' --entitlements '$entitlementsPath' ${fixPath(signFilename)}"
+    private fun codesignFileByEntitlement(
+        cerName: String,
+        signFilename: String,
+        entitlementsPath: String,
+        codeSignPath: String?
+    ) {
+        val cmd = "$codeSignPath -f -s '$cerName' --entitlements '$entitlementsPath' ${fixPath(signFilename)}"
         logger.info("[codesignFile by entitlements] $cmd")
         runtimeExec(cmd)
     }
