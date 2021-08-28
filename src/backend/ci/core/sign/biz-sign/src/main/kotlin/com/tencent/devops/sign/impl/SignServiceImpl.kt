@@ -40,7 +40,6 @@ import com.tencent.devops.sign.api.pojo.IpaInfoPlist
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
-import com.tencent.devops.sign.config.CodeSignProperties
 import com.tencent.devops.sign.service.ArchiveService
 import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.service.MobileProvisionService
@@ -51,26 +50,30 @@ import com.tencent.devops.sign.utils.SignUtils.APP_INFO_PLIST_FILENAME
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
 import java.util.regex.Pattern
 
 @Service
-@EnableConfigurationProperties(CodeSignProperties::class)
 @Suppress("TooManyFunctions")
 class SignServiceImpl @Autowired constructor(
     private val fileService: FileService,
     private val signInfoService: SignInfoService,
     private val archiveService: ArchiveService,
-    private val mobileProvisionService: MobileProvisionService,
-    private val codeSignProperties: CodeSignProperties
+    private val mobileProvisionService: MobileProvisionService
 ) : SignService {
     companion object {
         private val logger = LoggerFactory.getLogger(SignServiceImpl::class.java)
         const val DEFAULT_CODESIGN_PATH = "/usr/bin/codesign"
     }
+
+    @Value("\${codesign.paths.version1:#{null}}")
+    private val codesignPathVersion1: String? = null
+
+    @Value("\${codesign.paths.version2:#{null}}")
+    private val codesignPathVersion2: String? = null
 
     override fun uploadIpaAndDecodeInfo(
         resignId: String,
@@ -483,11 +486,12 @@ class SignServiceImpl @Autowired constructor(
     }
 
     private fun getCodeSignFile(version: String?): String {
-        logger.info("SIGN| codeSignProperties=$codeSignProperties")
-        return if (version.isNullOrBlank()) {
-            DEFAULT_CODESIGN_PATH
-        } else {
-            codeSignProperties.paths?.get(version) ?: DEFAULT_CODESIGN_PATH
+        logger.info("SIGN|codesignPathVersion1=$codesignPathVersion1" +
+            "|codesignPathVersion2=$codesignPathVersion2")
+        return when (version) {
+            "version1" -> codesignPathVersion1 ?: DEFAULT_CODESIGN_PATH
+            "version2" -> codesignPathVersion2 ?: DEFAULT_CODESIGN_PATH
+            else -> DEFAULT_CODESIGN_PATH
         }
     }
 }

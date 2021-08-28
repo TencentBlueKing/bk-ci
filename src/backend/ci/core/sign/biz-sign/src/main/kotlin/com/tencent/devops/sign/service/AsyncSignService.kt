@@ -61,7 +61,7 @@ class AsyncSignService(
         taskPoolSize ?: DEFAULT_TASK_POOL_SIZE,
         0L,
         TimeUnit.MILLISECONDS,
-        LinkedBlockingQueue(taskQueueSize ?: 5)
+        LinkedBlockingQueue(taskQueueSize ?: DEFAULT_TASK_QUEUE_SIZE)
     )
 
     fun asyncSign(
@@ -74,7 +74,12 @@ class AsyncSignService(
             signExecutorService.execute {
                 val start = LocalDateTime.now()
                 logger.info("[$resignId] asyncSign start")
-                val success = signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+                val success = signService.signIpaAndArchive(
+                    resignId = resignId,
+                    ipaSignInfo = ipaSignInfo,
+                    ipaFile = ipaFile,
+                    taskExecuteCount = taskExecuteCount
+                )
                 logger.info("[$resignId] asyncSign finished with success:$success")
                 signBean.signTaskFinish(
                     elapse = LocalDateTime.now().timestampmilli() - start.timestampmilli(),
@@ -107,7 +112,7 @@ class AsyncSignService(
     override fun destroy() {
         // 当有签名任务执行时，阻塞服务的退出
         signExecutorService.shutdown()
-        while (!signExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
+        while (!signExecutorService.awaitTermination(EXECUTOR_DESTROY_AWAIT_SECOND, TimeUnit.SECONDS)) {
             logger.warn("SignTaskBean still has sign tasks.")
         }
     }
@@ -126,5 +131,7 @@ class AsyncSignService(
     companion object {
         private val logger = LoggerFactory.getLogger(AsyncSignService::class.java)
         const val DEFAULT_TASK_POOL_SIZE = 10
+        const val DEFAULT_TASK_QUEUE_SIZE = 5
+        const val EXECUTOR_DESTROY_AWAIT_SECOND = 5L
     }
 }
