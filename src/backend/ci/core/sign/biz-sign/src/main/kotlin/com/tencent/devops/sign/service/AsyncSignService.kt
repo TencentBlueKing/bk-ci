@@ -57,8 +57,8 @@ class AsyncSignService(
 
     // 线程池队列和线程上限保持一致，并保持有一个活跃线程
     private val signExecutorService = ThreadPoolExecutor(
-        taskPoolSize ?: 10,
-        taskPoolSize ?: 10,
+        taskPoolSize ?: DEFAULT_TASK_POOL_SIZE,
+        taskPoolSize ?: DEFAULT_TASK_POOL_SIZE,
         0L,
         TimeUnit.MILLISECONDS,
         LinkedBlockingQueue(taskQueueSize ?: 5)
@@ -91,16 +91,16 @@ class AsyncSignService(
             )
             // 异步处理，所以无需抛出异常
             logger.error("[$resignId] asyncSign failed: $e")
-        } catch (e: Throwable) {
+        } catch (ignore: Throwable) {
             // 失败结束签名逻辑
             signInfoService.failResign(
                 resignId = resignId,
                 info = ipaSignInfo,
                 executeCount = taskExecuteCount,
-                message = e.message ?: "Start async sign task with exception"
+                message = ignore.message ?: "Start async sign task with exception"
             )
             // 异步处理，所以无需抛出异常
-            logger.error("[$resignId] asyncSign failed: $e")
+            logger.error("[$resignId] asyncSign failed: $ignore")
         }
     }
 
@@ -125,5 +125,6 @@ class AsyncSignService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(AsyncSignService::class.java)
+        const val DEFAULT_TASK_POOL_SIZE = 10
     }
 }

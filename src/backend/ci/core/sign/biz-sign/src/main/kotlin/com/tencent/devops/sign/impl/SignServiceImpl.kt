@@ -56,7 +56,7 @@ import java.io.InputStream
 import java.util.regex.Pattern
 
 @Service
-@Suppress("ALL")
+@Suppress("TooManyFunctions")
 class SignServiceImpl @Autowired constructor(
     private val fileService: FileService,
     private val signInfoService: SignInfoService,
@@ -130,7 +130,7 @@ class SignServiceImpl @Autowired constructor(
             signInfoService.finishZip(resignId, signedIpaFile, ipaSignInfo, taskExecuteCount)
 
             // 生产元数据
-            val newInfoPlist = parsInfoPlist(findInfoPlist(ipaUnzipDir), findZhStrings(ipaUnzipDir))
+            val newInfoPlist = parsInfoPlist(resignId, findInfoPlist(ipaUnzipDir), findZhStrings(ipaUnzipDir))
             val properties = getProperties(ipaSignInfo, newInfoPlist)
 
             // 归档IPA包
@@ -147,9 +147,9 @@ class SignServiceImpl @Autowired constructor(
             // 成功结束签名逻辑
             signInfoService.successResign(resignId, ipaSignInfo, taskExecuteCount)
             finished = true
-        } catch (t: Throwable) {
-            logger.error("[$resignId] sign failed with error.", t)
-            signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, t.message ?: "Unknown error")
+        } catch (ignore: Throwable) {
+            logger.error("[$resignId] sign failed with error.", ignore)
+            signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, ignore.message ?: "Unknown error")
             finished = true
         } finally {
             if (!finished) signInfoService.failResign(
@@ -166,7 +166,7 @@ class SignServiceImpl @Autowired constructor(
         val dir = File(ipaUnzipDir, "payload")
         if (!dir.exists() || !dir.isDirectory) return null
         val appPattern = Pattern.compile(".+\\.app")
-        dir.listFiles().forEach {
+        dir.listFiles()?.forEach {
             if (appPattern.matcher(it.name).matches()) {
                 val matchFile = File(it, "/zh-Hans.lproj/InfoPlist.strings")
                 if (it.isDirectory && matchFile.exists() && matchFile.isFile) {
@@ -266,22 +266,12 @@ class SignServiceImpl @Autowired constructor(
     * 通用逻辑-对解压后的ipa目录进行签名
     * 对主App，扩展App和框架文件进行签名
     * */
-    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     private fun resignIpaPackage(
         unzipDir: File,
         ipaSignInfo: IpaSignInfo,
         mobileProvisionInfoList: Map<String, MobileProvisionInfo>
     ): Boolean {
-        val payloadDir = File(unzipDir.absolutePath + File.separator + "Payload")
-        val appDirs = payloadDir.listFiles { dir, name ->
-            dir.extension == "app" || name.endsWith("app")
-        }.toList()
-        if (appDirs.isEmpty()) throw ErrorCodeException(
-            errorCode = SignMessageCode.ERROR_SIGN_IPA_ILLEGAL,
-            defaultMessage = "IPA包解析失败"
-        )
-        val appDir = appDirs.first()
-
+        val appDir = getAppDirectory(unzipDir)
         // 检查是否将包内所有app/appex对应的签名信息传入
         val allAppsInPackage = mutableListOf<File>()
         SignUtils.getAllAppsInDir(appDir, allAppsInPackage)
@@ -312,7 +302,6 @@ class SignServiceImpl @Autowired constructor(
     * 通用逻辑-对解压后的ipa目录进行通配符签名
     * 对主App，扩展App和框架文件进行通配符签名
     * */
-    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     private fun resignIpaPackageWildcard(
         unzipDir: File,
         ipaSignInfo: IpaSignInfo,
@@ -324,22 +313,25 @@ class SignServiceImpl @Autowired constructor(
                 defaultMessage = "通配符描述文件不存在"
             )
         }
-        val payloadDir = File(unzipDir.absolutePath + File.separator + "Payload")
-        val appDirs = payloadDir.listFiles { dir, name ->
-            dir.extension == "app" || name.endsWith("app")
-        }.toList()
-        if (appDirs.isEmpty()) throw ErrorCodeException(
-            errorCode = SignMessageCode.ERROR_SIGN_IPA_ILLEGAL,
-            defaultMessage = "IPA包解析失败"
-        )
-        val appDir = appDirs.first()
 
         return SignUtils.resignAppWildcard(
-            appDir = appDir,
+            appDir = getAppDirectory(unzipDir),
             certId = ipaSignInfo.certId,
             wildcardInfo = wildcardInfo,
             replaceKeyList = ipaSignInfo.replaceKeyList
         )
+    }
+
+    private fun getAppDirectory(unzipDir: File): File {
+        val payloadDir = File(unzipDir.absolutePath + File.separator + "Payload")
+        val appDirs = payloadDir.listFiles { dir, name ->
+            dir.extension == "app" || name.endsWith("app")
+        }?.toList()
+        if (appDirs.isNullOrEmpty()) throw ErrorCodeException(
+            errorCode = SignMessageCode.ERROR_SIGN_IPA_ILLEGAL,
+            defaultMessage = "IPA包解析失败"
+        )
+        return appDirs.first()
     }
 
     /*
@@ -359,6 +351,7 @@ class SignServiceImpl @Autowired constructor(
     * 解析IPA包Info.plist的信息
     * */
     private fun parsInfoPlist(
+        resignId: String,
         infoPlist: File,
         zhStrings: File?
     ): IpaInfoPlist {
@@ -419,10 +412,11 @@ class SignServiceImpl @Autowired constructor(
                 scheme = scheme,
                 appName = appName
             )
-        } catch (e: Exception) {
+        } catch (ignore: Throwable) {
+            logger.error("[$resignId] parse plist with error:", ignore)
             throw ErrorCodeException(
                 errorCode = SignMessageCode.ERROR_PARS_INFO_PLIST,
-                defaultMessage = "解析Info.plist失败"
+                defaultMessage = "解析Info.plist失败: ${ignore.message}"
             )
         }
     }
@@ -456,7 +450,7 @@ class SignServiceImpl @Autowired constructor(
     private fun fetchPlistFileInDir(dir: File): File? {
         if (!dir.exists() || !dir.isDirectory) return null
         val appPattern = Pattern.compile(".+\\.app")
-        dir.listFiles().forEach {
+        dir.listFiles()?.forEach {
             if (appPattern.matcher(it.name).matches()) {
                 val matchFile = File(it, APP_INFO_PLIST_FILENAME)
                 if (it.isDirectory && matchFile.isFile) {
