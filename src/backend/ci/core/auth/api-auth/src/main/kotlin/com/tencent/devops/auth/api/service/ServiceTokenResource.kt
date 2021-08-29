@@ -24,12 +24,45 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.filter
 
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
+package com.tencent.devops.auth.api.service
 
-interface ApiFilter : ContainerRequestFilter {
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.auth.pojo.TokenInfo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-    fun verifyJWT(requestContext: ContainerRequestContext): Boolean
+@Api(tags = ["AUTH_SERVICE_TOKEN"], description = "权限校验--token相关")
+@Path("/service/token")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceTokenResource {
+
+    @POST
+    @Path("/validate")
+    @ApiOperation("校验用户是否有action的权限")
+    fun validateToken(
+        @ApiParam("权限Token", required = false)
+        @QueryParam("accessToken")
+        accessToken: String
+    ): Result<TokenInfo>
+
+    @ApiOperation("获取用户访问openapi的accessToken")
+    @GET
+    @Path("/get")
+    fun getAccessToken(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<TokenInfo>
 }
