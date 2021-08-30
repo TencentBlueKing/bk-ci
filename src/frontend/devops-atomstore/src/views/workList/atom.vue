@@ -30,24 +30,35 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('store.调试项目')" prop="projectName"></bk-table-column>
                 <bk-table-column :label="$t('store.开发语言')" prop="language"></bk-table-column>
-                <bk-table-column :label="$t('store.版本')" prop="version"></bk-table-column>
-                <bk-table-column :label="$t('store.状态')">
+                <bk-table-column :label="$t('store.版本')" prop="version">
                     <template slot-scope="props">
-                        <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary" v-if="props.row.atomStatus === 'COMMITTING' || props.row.atomStatus === 'BUILDING' || props.row.atomStatus === 'BUILD_FAIL' || props.row.atomStatus === 'TESTING' || props.row.atomStatus === 'AUDITING' || props.row.atomStatus === 'UNDERCARRIAGING'">
-                            <div class="rotate rotate1"></div>
-                            <div class="rotate rotate2"></div>
-                            <div class="rotate rotate3"></div>
-                            <div class="rotate rotate4"></div>
-                            <div class="rotate rotate5"></div>
-                            <div class="rotate rotate6"></div>
-                            <div class="rotate rotate7"></div>
-                            <div class="rotate rotate8"></div>
-                        </div>
-                        <span class="atom-status-icon success" v-if="props.row.atomStatus === 'RELEASED'"></span>
-                        <span class="atom-status-icon fail" v-if="props.row.atomStatus === 'GROUNDING_SUSPENSION'"></span>
-                        <span class="atom-status-icon obtained" v-if="props.row.atomStatus === 'AUDIT_REJECT' || props.row.atomStatus === 'UNDERCARRIAGED'"></span>
-                        <span class="atom-status-icon devops-icon icon-initialize" v-if="props.row.atomStatus === 'INIT'"></span>
-                        <span>{{ $t(atomStatusList[props.row.atomStatus]) }}</span>
+                        <span
+                            v-for="(prop, index) in [props.row, ...(props.row.processingVersionInfos || [])]"
+                            :key="index"
+                            class="mr15"
+                            @click="handleVersionClick(prop)"
+                        >
+                            <div
+                                class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                                v-if="['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING', 'UNDERCARRIAGING'].includes(prop.atomStatus)"
+                            >
+                                <div class="rotate rotate1"></div>
+                                <div class="rotate rotate2"></div>
+                                <div class="rotate rotate3"></div>
+                                <div class="rotate rotate4"></div>
+                                <div class="rotate rotate5"></div>
+                                <div class="rotate rotate6"></div>
+                                <div class="rotate rotate7"></div>
+                                <div class="rotate rotate8"></div>
+                            </div>
+                            <span class="atom-status-icon success" v-if="prop.atomStatus === 'RELEASED'"></span>
+                            <span class="atom-status-icon fail" v-if="prop.atomStatus === 'GROUNDING_SUSPENSION'"></span>
+                            <span class="atom-status-icon obtained" v-if="prop.atomStatus === 'AUDIT_REJECT' || prop.atomStatus === 'UNDERCARRIAGED'"></span>
+                            <span class="atom-status-icon devops-icon icon-initialize" v-if="prop.atomStatus === 'INIT'"></span>
+                            <span
+                                :class="{ 'g-text-link': ['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'].includes(prop.atomStatus) }"
+                            >V{{ prop.version }}</span>
+                        </span>
                     </template>
                 </bk-table-column>
                 <bk-table-column :label="$t('store.修改人')" prop="modifier"></bk-table-column>
@@ -426,6 +437,11 @@
         },
 
         methods: {
+            handleVersionClick (prop) {
+                if (['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'].includes(prop.atomStatus)) {
+                    this.routerProgress(prop)
+                }
+            },
             openConvention () {
                 this.showConvention = true
                 this.agreeWithConvention = false
