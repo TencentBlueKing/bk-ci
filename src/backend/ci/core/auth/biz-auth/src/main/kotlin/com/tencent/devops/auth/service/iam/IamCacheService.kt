@@ -26,7 +26,7 @@ class IamCacheService @Autowired constructor(
     // 用户-project_view项目 缓存， 10分钟有效时间
     private val projectViewCache = CacheBuilder.newBuilder()
         .maximumSize(5000)
-        .expireAfterWrite(1, TimeUnit.DAYS)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
         .build<String, Set<String>>()
 
     // 用户 -- action下策略
