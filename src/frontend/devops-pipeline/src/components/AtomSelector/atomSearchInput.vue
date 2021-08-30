@@ -53,6 +53,7 @@
             activeTab: {
                 handler (value) {
                     if (value && value === this.tabName) {
+                        this.searchKey = ''
                         setTimeout(() => {
                             this.$refs.searchStr.focus()
                         }, 0)
@@ -61,7 +62,7 @@
                 immediate: true
             },
             innerActiveName: {
-                handler (val) {
+                handler () {
                     if (this.tabName === 'storeAtom') {
                         this.searchKey = ''
                     }

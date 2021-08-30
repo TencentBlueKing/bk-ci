@@ -10,7 +10,6 @@
                         <atom-search-input
                             :tab-name="panel.name"
                             :container="container"
-
                             :active-tab="activeTab" />
                         <atom-card-list
                             :tab-name="panel.name"
@@ -78,7 +77,6 @@
             atomCode () {
                 if (this.element) {
                     const isThird = this.element.atomCode && this.element['@type'] !== this.element.atomCode
-                    console.log(this.element, 'this.element')
                     if (isThird) {
                         return this.element.atomCode
                     } else {

@@ -16,12 +16,14 @@
                 :class="{ 'recommend-atom-item': true, 'active': atomCode === recommendAtom.atomCode }"
                 @close="close"
                 :atom="recommendAtom"
+                :atom-index="index"
                 :container="container"
                 :element-index="elementIndex"
                 :delete-reasons="deleteReasons"
                 :is-project-atom="isProjectAtom"
-                :atom-code="atomCode" />
-            <div v-if="isMoreLoading" class="loading-more" slot="append"><i class="devops-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></div>
+                :atom-code="atomCode"
+                @update-atoms="handelUpdateAtom" />
+            <div v-if="isRecommendMoreLoading" class="loading-more" slot="append"><i class="devops-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></div>
             <template v-if="RecommendAtomLength">
                 <p v-if="isProjectPageOver && tabName === 'projectAtom'" class="page-over">{{ $t('editPage.loadedAllAtom') }}</p>
                 <p v-if="isStorePageOver && tabName === 'storeAtom'" class="page-over">{{ $t('editPage.loadedAllAtom') }}</p>
@@ -34,13 +36,22 @@
             {{ $t('editPage.fixedTips') }} ({{ unRecommendAtomLength }})
             <span class="devops-icon icon-angle-right"></span>
         </div>
-        <div v-if="unRecommendAtomLength" :class="{ 'unRecommend-atom-list': true, 'show-unRecommend': isToolActive }">
+        <div :class="{ 'unRecommend-atom-list': true, 'show-unRecommend': isToolActive }">
             <atom-card
                 class="unRecommend-atom-item"
                 v-for="(unRecommendAtom, index) in curUnRecommendAtomMap"
-                :key="index"
+                :key="index + tabName"
+                :is-project-atom="isProjectAtom"
                 :atom="unRecommendAtom"
-                :recommend="false" />
+                :is-recommend="false" />
+            <template v-if="isUnRecommendMoreLoading" class="loading-more" slot="append"><i class="devops-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></template>
+            <template v-if="unRecommendAtomLength">
+                <p v-if="isUnRecommendProjectPageOver && tabName === 'projectAtom'" class="page-over">{{ $t('editPage.loadedAllAtom') }}</p>
+                <p v-if="isUnRecommendStorePageOver && tabName === 'storeAtom'" class="page-over">{{ $t('editPage.loadedAllAtom') }}</p>
+            </template>
+            <template v-else>
+                <p class="page-empty">{{ $t('empty') }}</p>
+            </template>
         </div>
     </section>
 </template>
@@ -80,10 +91,10 @@
         data () {
             return {
                 isToolActive: false,
-                // innerActiveName: 'all',
                 curRecommendAtomMap: {},
                 curUnRecommendAtomMap: {},
-                isThrottled: false
+                isRecommendThrottled: false,
+                isUnRecommendThrottled: false
             }
         },
         computed: {
@@ -99,9 +110,12 @@
             ]),
             ...mapState('atom', [
                 'fetchingAtomList',
-                'isMoreLoading',
+                'isRecommendMoreLoading',
+                'isUnRecommendMoreLoading',
                 'isProjectPageOver',
+                'isUnRecommendProjectPageOver',
                 'isStorePageOver',
+                'isUnRecommendStorePageOver',
                 'showAtomSelectorPopup',
                 'atomClassifyMap',
                 'atomClassifyCodeList',
@@ -184,6 +198,7 @@
                         this.curUnRecommendAtomMap = atoms
                     }
                 },
+                immediate: true,
                 deep: true
             }
         },
@@ -205,7 +220,9 @@
                 'fetchStoreAtoms',
                 'fetchClassify',
                 'setInnerActiveName',
-                'setStoreData'
+                'setStoreData',
+                'updateProjectAtoms',
+                'updateStoreAtoms'
             ]),
 
             initData () {
@@ -230,11 +247,13 @@
                             recommendFlag: false,
                             os: this.os
                         })
-                        // 延迟300ms获取dom元素
                         setTimeout(() => {
-                            const dom = document.getElementsByClassName('recommend-atom-list')[0]
-                            dom.addEventListener('scroll', this.scrollLoading)
-                        }, 300)
+                            const recommendDom = document.getElementsByClassName('recommend-atom-list')[0]
+                            recommendDom.addEventListener('scroll', this.recommendScrollLoading)
+
+                            const unRecommendDomR = document.getElementsByClassName('unRecommend-atom-list')[0]
+                            unRecommendDomR.addEventListener('scroll', this.unRecommendScrollLoading)
+                        }, 200)
                     }
                     if (this.tabName === 'storeAtom') {
                         this.fetchClassify()
@@ -245,15 +264,18 @@
                             os: this.os
                         })
                         this.fetchStoreAtoms({
-                            classifyId: this.innerActiveName === 'all' ? undefined : this.classifyId,
+                            classifyId: undefined,
                             recommendFlag: false,
                             category: this.category,
                             os: this.os
                         })
                         setTimeout(() => {
-                            const dom = document.getElementsByClassName('recommend-atom-list')[1]
-                            dom.addEventListener('scroll', this.scrollLoading)
-                        }, 300)
+                            const recommendDom = document.getElementsByClassName('recommend-atom-list')[1]
+                            recommendDom.addEventListener('scroll', this.recommendScrollLoading)
+
+                            const unRecommendDomR = document.getElementsByClassName('unRecommend-atom-list')[1]
+                            unRecommendDomR.addEventListener('scroll', this.unRecommendScrollLoading)
+                        }, 200)
                     }
                 }
             },
@@ -274,25 +296,90 @@
                     this.$refs.atomListDom.scrollTo(0, 0)
                 })
             },
+
+            // 移除插件更新数据
+            handelUpdateAtom (payload) {
+                const { isRecommend, atomCode } = payload
+                const atoms = isRecommend ? this.curRecommendAtomMap : this.curUnRecommendAtomMap
+                for (const key in atoms) {
+                    if (key === atomCode) this.$delete(atoms, atomCode)
+                }
+                this.updateProjectAtoms({
+                    atoms: atoms,
+                    recommend: isRecommend
+                })
+            },
             
-            // 滚动加载
-            scrollLoading () {
+            // 适用插件滚动加载
+            recommendScrollLoading () {
                 if (this.activeTab === 'projectAtom') {
-                    if (!this.isProjectPageOver && !this.isThrottled && !this.isMoreLoading) {
-                        this.isThrottled = true
-                        this.timer = setTimeout(() => {
-                            this.isThrottled = false
+                    if (!this.isProjectPageOver && !this.isRecommendThrottled && !this.isRecommendMoreLoading) {
+                        this.isRecommendThrottled = true
+                        this.recommendTimer = setTimeout(() => {
+                            this.isRecommendThrottled = false
                             if (this.activeTab === 'projectAtom') {
-                                const dom = document.querySelectorAll('.recommend-atom-list')[0]
-                                const scrollHeight = dom.scrollHeight
-                                const innerHeight = dom.offsetHeight
-                                const scrollY = dom.scrollTop
-                                if (scrollHeight - innerHeight - scrollY < 60) {
+                                // 项目适用插件列表滚动加载
+                                const recommendDom = document.querySelectorAll('.recommend-atom-list')[0]
+                                const scrollHeight = recommendDom.scrollHeight
+                                const innerHeight = recommendDom.offsetHeight
+                                const scrollY = recommendDom.scrollTop
+                                if (scrollHeight - innerHeight - scrollY < 100) {
                                     this.fetchProjectAtoms(
                                         {
                                             projectCode: this.$route.params.projectId,
                                             category: this.category,
                                             recommendFlag: true,
+                                            os: this.os
+                                        }
+                                    )
+                                    clearTimeout(this.recommendTimer)
+                                }
+                            }
+                        }, 1000)
+                    }
+                } else {
+                    if (!this.isStorePageOver && !this.isRecommendThrottled && !this.isRecommendMoreLoading) {
+                        this.isRecommendThrottled = true
+                        this.unRecommendTimer = setTimeout(() => {
+                            this.isRecommendThrottled = false
+                            if (this.activeTab === 'storeAtom') {
+                                const recommendDom = document.querySelectorAll('.recommend-atom-list')[1]
+                                const scrollHeight = recommendDom.scrollHeight
+                                const innerHeight = recommendDom.offsetHeight
+                                const scrollY = recommendDom.scrollTop
+                                if (scrollHeight - innerHeight - scrollY < 100) {
+                                    this.fetchStoreAtoms({
+                                        classifyId: this.innerActiveName === 'all' ? undefined : this.classifyId,
+                                        recommendFlag: true,
+                                        category: this.category,
+                                        os: this.os
+                                    })
+                                    clearTimeout(this.unRecommendTimer)
+                                }
+                            }
+                        }, 1000)
+                    }
+                }
+            },
+            // 不适用插件滚动加载
+            unRecommendScrollLoading () {
+                if (this.activeTab === 'projectAtom') {
+                    if (!this.isUnRecommendProjectPageOver && !this.isUnRecommendThrottled && !this.isUnRecommendMoreLoading) {
+                        this.isUnRecommendThrottled = true
+                        this.unRecommendTimer = setTimeout(() => {
+                            this.isUnRecommendThrottled = false
+                            if (this.activeTab === 'projectAtom') {
+                                // 项目不适用插件列表滚动加载
+                                const unRecommendDom = document.querySelectorAll('.unRecommend-atom-list')[0]
+                                const unRecommendDomScrollHeight = unRecommendDom.scrollHeight
+                                const unRecommendDomInnerHeight = unRecommendDom.offsetHeight
+                                const unRecommendDomScrollY = unRecommendDom.scrollTop
+                                if (unRecommendDomScrollHeight - unRecommendDomInnerHeight - unRecommendDomScrollY < 100) {
+                                    this.fetchProjectAtoms(
+                                        {
+                                            projectCode: this.$route.params.projectId,
+                                            category: this.category,
+                                            recommendFlag: false,
                                             os: this.os
                                         }
                                     )
@@ -302,24 +389,23 @@
                         }, 1000)
                     }
                 } else {
-                    if (!this.isStorePageOver && !this.isThrottled && !this.isMoreLoading) {
-                        this.isThrottled = true
-                        this.timer = setTimeout(() => {
-                            this.isThrottled = false
+                    if (!this.isUnRecommendStorePageOver && !this.isUnRecommendThrottled && !this.isUnRecommendMoreLoading) {
+                        this.isUnRecommendThrottled = true
+                        this.unRecommendTimer = setTimeout(() => {
+                            this.isUnRecommendThrottled = false
                             if (this.activeTab === 'storeAtom') {
-                                const dom = document.querySelectorAll('.recommend-atom-list')[1]
-                                const scrollHeight = dom.scrollHeight
-                                const innerHeight = dom.offsetHeight
-                                const scrollY = dom.scrollTop
-                                console.log(scrollY)
-                                if (scrollHeight - innerHeight - scrollY < 60) {
+                                const unRecommendDom = document.querySelectorAll('.unRecommend-atom-list')[1]
+                                const unRecommendDomScrollHeight = unRecommendDom.scrollHeight
+                                const unRecommendDomInnerHeight = unRecommendDom.offsetHeight
+                                const unRecommendDomScrollY = unRecommendDom.scrollTop
+                                if (unRecommendDomScrollHeight - unRecommendDomInnerHeight - unRecommendDomScrollY < 100) {
                                     this.fetchStoreAtoms({
-                                        classifyId: this.innerActiveName === 'all' ? undefined : this.classifyId,
-                                        recommendFlag: true,
+                                        classifyId: undefined,
+                                        recommendFlag: false,
                                         category: this.category,
                                         os: this.os
                                     })
-                                    clearTimeout(this.timer)
+                                    clearTimeout(this.unRecommendTimer)
                                 }
                             }
                         }, 1000)
@@ -429,14 +515,15 @@
         .unRecommend-atom-item {
             display: flex;
             padding: 10px 20px;
-            height: 75px;
+            max-height: 75px;
             width: 100%;
             overflow: hidden;
             cursor: pointer;
-            transition: height .3s;
+            transition: all .2s ease-out;
             &:hover {
-                height: 150px;
+                max-height: 150px;
                 background-color: #F5F6FA;
+                transition-timing-function: ease-in;
                 .atom-info-content .atom-update-time {
                     opacity: 1;
                 }
@@ -444,22 +531,24 @@
                     opacity: 1;
                 }
                 .atom-info-content .remove-atom,
-                .atom-info-content .install-atom {
+                .atom-info-content .un-remove,
+                .atom-info-content .install-atom,
+                .atom-info-content .atom-label {
                     opacity: 1;
                 }
             }
             &.active {
                 background-color: rgba(58, 132, 255, 0.1);
                 &:hover {
-                    height: 150px;
+                    max-height: 150px;
                     background-color: rgba($color: #3A84FF, $alpha: 0.1);
+                    transition-timing-function: ease-in;
                     .atom-update-time {
                         opacity: 1;
                     }
                 }
             }
             .atom-logo {
-                background-color: skyblue;
                 width: 50px;
                 height: 50px;
                 font-size: 50px;
@@ -481,6 +570,7 @@
                 font-size: 14px;
                 padding-right: 10px;
                 .remove-atom,
+                .un-remove,
                 .install-atom {
                     display: inline-block;
                     width: 25px;
@@ -492,17 +582,27 @@
                     color: #fff;
                     border-radius: 0 0 100% 100%/100%;
                     opacity: 0;
+                    z-index: 99;
                     .remove-icon {
                         position: relative;
                         right: -5px;
-                        top: 3px;
+                        top: 4px;
                     }
                 }
-                .remove-atom {
+                .un-remove {
                     cursor: not-allowed;
                 }
+                .remove-atom,
                 .install-atom {
-                    background-color: #3A84FF;
+                    &:hover {
+                        background-color: #3a84ff;
+                    }
+                }
+                .install-disabled {
+                    cursor: not-allowed;
+                    &:hover {
+                        background-color: #C4C6CC;
+                    }
                 }
                 .un-remove {
                     background-color: #EA3636;
@@ -532,7 +632,6 @@
                 }
                 .desc {
                     display: inline-block;
-                    height: 32px;
                     font-size: 12px;
                     color: #63656E;
                     display: -webkit-box;
@@ -544,7 +643,7 @@
                 }
                 .atom-label {
                     display: inline-block;
-                    height: 46px;
+                    opacity: 0;
                     span {
                         display: inline-block;
                         height: 20px;

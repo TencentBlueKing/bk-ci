@@ -71,10 +71,15 @@ import {
     SET_IMPORTED_JSON,
     SET_EDIT_FROM,
     SET_CUR_JOBTYPE,
-    IS_MORE_LOADING,
+    IS_RECOMMEND_MORE_LOADING,
+    IS_UNRECOMMEND_MORE_LOADING,
     IS_PROJECT_PAGE_OVER,
     IS_STORE_PAGE_OVER,
+    IS_UNRECOMMEND_STORE_PAGE_OVER,
+    IS_UNRECOMMEND_PROJECT_PAGE_OVER,
     SET_STORE_DATA,
+    SET_UNRECOMMEND_STORE_DATA,
+    SET_UNRECOMMEND_PROJECT_DATA,
     SET_PROJECT_DATA,
     SET_PROJECT_ATOMS,
     SET_STORE_ATOMS,
@@ -275,11 +280,28 @@ export default {
     setProjectPageOver: async ({ commit }, payload) => {
         commit(IS_PROJECT_PAGE_OVER, payload)
     },
+    updateProjectAtoms: async ({ commit }, payload) => {
+        const { atoms, recommend } = payload
+        if (recommend) {
+            commit(SET_PROJECT_ATOMS, {
+                projectRecommendAtomMap: atoms
+            })
+        } else {
+            commit(SET_PROJECT_UNRECOMMEN_ATOMS, {
+                projectUnRecommendAtomMap: atoms
+            })
+        }
+    },
+    updateStoreAtoms: async ({ commit }, payload) => {
+        const { atoms, recommend } = payload
+        const mutation = recommend ? SET_STORE_ATOMS : SET_STORE_UNRECOMMEN_ATOMS
+        commit(mutation, atoms)
+    },
     /**
      * 获取项目下插件
      */
     fetchProjectAtoms: async ({ commit, state }, { projectCode, category, recommendFlag, os }) => {
-        let projectData, page, pageSize, keyword
+        let projectData, unRecommendProjectData, page, pageSize, keyword
         if (recommendFlag) {
             // 适用插件
             projectData = state.projectData || {}
@@ -288,13 +310,13 @@ export default {
             keyword = projectData.keyword || undefined
         } else {
             // 不适用插件
-            projectData = state.projectUnRecommendAtomData || {}
-            page = projectData.page || 1
-            pageSize = projectData.pageSize || 500
-            keyword = projectData.keyword || undefined
+            unRecommendProjectData = state.unRecommendProjectData || {}
+            page = unRecommendProjectData.page || 1
+            pageSize = unRecommendProjectData.pageSize || 15
+            keyword = unRecommendProjectData.keyword || undefined
         }
         if (category === 'TRIGGER') {
-            pageSize = 500
+            pageSize = 15
             page = 1
             commit(SET_PROJECT_DATA, {
                 page: 1
@@ -306,7 +328,7 @@ export default {
             if (page === 1) {
                 commit(FETCHING_ATOM_LIST, true)
             } else {
-                commit(IS_MORE_LOADING, true)
+                recommendFlag ? commit(IS_RECOMMEND_MORE_LOADING, true) : commit(IS_UNRECOMMEND_MORE_LOADING, true)
             }
             const { data: atomList } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
                 params: {
@@ -348,26 +370,38 @@ export default {
             if (recommendFlag && category === 'TASK') {
                 // 保存请求页码、搜索关键字
                 const isProjectPageOver = Object.keys(state.projectRecommendAtomMap).length === atomList.count
-                const storeData = {
+                const projectData = {
                     page: ++page,
                     pageSize,
                     keyword
                 }
                 commit(IS_PROJECT_PAGE_OVER, isProjectPageOver)
-                commit(SET_PROJECT_DATA, storeData)
+                commit(SET_PROJECT_DATA, projectData)
+            }
+
+            // 不适用插件请求页码数据保存
+            if (!recommendFlag && category === 'TASK') {
+                const isUnRecommendProjectPageOver = Object.keys(state.projectUnRecommendAtomMap).length === atomList.count
+                const curUnRecommendProjectData = {
+                    page: ++page,
+                    pageSize,
+                    keyword
+                }
+                commit(IS_UNRECOMMEND_PROJECT_PAGE_OVER, isUnRecommendProjectPageOver)
+                commit(SET_UNRECOMMEND_PROJECT_DATA, curUnRecommendProjectData)
             }
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
         } finally {
             commit(FETCHING_ATOM_LIST, false)
-            commit(IS_MORE_LOADING, false)
+            commit(IS_RECOMMEND_MORE_LOADING, false)
         }
     },
     /**
      * 获取研发商店插件
      */
     fetchStoreAtoms: async ({ commit, state }, { classifyId, recommendFlag, category, os }) => {
-        let storeData, page, pageSize, keyword
+        let storeData, unRecommendStoreData, page, pageSize, keyword
         if (recommendFlag) {
             // 适用插件
             storeData = state.storeData || {}
@@ -376,19 +410,21 @@ export default {
             keyword = storeData.keyword || undefined
         } else {
             // 不适用插件
-            storeData = state.storeUnRecommendAtomData || {}
-            page = storeData.page || 1
-            pageSize = storeData.pageSize || 500
-            keyword = storeData.keyword || undefined
+            unRecommendStoreData = state.unRecommendStoreData || {}
+            page = unRecommendStoreData.page || 1
+            pageSize = unRecommendStoreData.pageSize || 15
+            keyword = unRecommendStoreData.keyword || undefined
         }
+
         if (state.storeData && state.storeData.classifyId !== classifyId) {
             page = 1
         }
+
         try {
             if (page === 1) {
                 commit(FETCHING_ATOM_LIST, true)
             } else {
-                commit(IS_MORE_LOADING, true)
+                recommendFlag ? commit(IS_RECOMMEND_MORE_LOADING, true) : commit(IS_UNRECOMMEND_MORE_LOADING, true)
             }
 
             const jobType = category === 'TRIGGER' ? 'AGENT' : 'AGENT_LESS'
@@ -428,8 +464,8 @@ export default {
                     })
                 }
             }
+            // 适用插件请求页码数据保存
             if (recommendFlag && category === 'TASK') {
-                // 保存请求页码、搜索关键字
                 const isStorePageOver = Object.keys(state.storeRecommendAtomMap).length === atomList.count
                 const storeData = {
                     page: ++page,
@@ -440,11 +476,25 @@ export default {
                 commit(IS_STORE_PAGE_OVER, isStorePageOver)
                 commit(SET_STORE_DATA, storeData)
             }
+
+            // 不适用插件请求页码数据保存
+            if (!recommendFlag && category === 'TASK') {
+                const isUnRecommendStorePageOver = Object.keys(state.storeUnRecommendAtomMap).length === atomList.count
+                const curUnRecommendStoreData = {
+                    page: ++page,
+                    pageSize,
+                    keyword,
+                    classifyId
+                }
+                commit(IS_UNRECOMMEND_STORE_PAGE_OVER, isUnRecommendStorePageOver)
+                commit(SET_UNRECOMMEND_STORE_DATA, curUnRecommendStoreData)
+            }
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
         } finally {
             commit(FETCHING_ATOM_LIST, false)
-            commit(IS_MORE_LOADING, false)
+            commit(IS_RECOMMEND_MORE_LOADING, false)
+            commit(IS_UNRECOMMEND_MORE_LOADING, false)
         }
     },
     fetchAtomModal: async ({ commit, dispatch }, { projectCode, atomCode, version, atomIndex, container }) => {

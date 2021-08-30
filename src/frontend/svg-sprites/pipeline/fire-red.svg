@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="12px" height="14px" viewBox="0 0 12 14" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Icon/填充/火爆</title>
+    <defs>
+        <filter color-interpolation-filters="auto" id="filter-1">
+            <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0.917647 0 0 0 0 0.211765 0 0 0 0 0.211765 0 0 0 1.000000 0"></feColorMatrix>
+        </filter>
+        <path d="M6.5,1 C12,3.5 14,6.6565 14,9.625 C14,12.5935 11.31375,15 8,15 C4.68625,15 2,12.75 2,9.625 C2,5.5 6.5,5.75 6.5,1 Z M9,8 C7.75,9.75 9,10.75 7.25,11.5 C7,10.25 6.5,10.5 6.5,9 C5.75,9.5 5,10.5 5,11.5 C5,12.75 6.52075,14 8,14 C9.47925,14 11,12.73425 11,11.25 C11,9.76575 10,9.12 9,8 Z" id="path-2"></path>
+    </defs>
+    <g id="流水线" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="插件选取界面" transform="translate(-254.000000, -1595.000000)">
+            <g id="项目插件" transform="translate(51.000000, 646.000000)">
+                <g id="内容" transform="translate(0.000000, 90.000000)">
+                    <g id="1" transform="translate(0.000000, 848.000000)">
+                        <g id="编组-5" transform="translate(201.000000, 8.000000)">
+                            <g id="Icon/填充/火爆" transform="translate(0.000000, 2.000000)" filter="url(#filter-1)">
+                                <g>
+                                    <mask id="mask-3" fill="white">
+                                        <use xlink:href="#path-2"></use>
+                                    </mask>
+                                    <use id="形状结合" fill="#63656E" xlink:href="#path-2"></use>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

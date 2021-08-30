@@ -56,6 +56,8 @@ import {
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     FETCHING_ATOM_LIST,
     SET_STORE_DATA,
+    SET_UNRECOMMEND_STORE_DATA,
+    SET_UNRECOMMEND_PROJECT_DATA,
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     FETCHING_ATOM_VERSION,
@@ -73,9 +75,12 @@ import {
     SET_STORE_UNRECOMMEN_ATOMS,
     SET_PROJECT_DATA,
     SET_CLASSIFY,
-    IS_MORE_LOADING,
+    IS_RECOMMEND_MORE_LOADING,
+    IS_UNRECOMMEND_MORE_LOADING,
     IS_PROJECT_PAGE_OVER,
     IS_STORE_PAGE_OVER,
+    IS_UNRECOMMEND_PROJECT_PAGE_OVER,
+    IS_UNRECOMMEND_STORE_PAGE_OVER,
     SET_INNER_ACTIVE_NAME
 } from './constants'
 import {
@@ -144,16 +149,28 @@ export default {
         Vue.set(state, 'fetchingAtomList', fetching)
         return state
     },
-    [IS_MORE_LOADING]: (state, loading) => {
-        Vue.set(state, 'isMoreLoading', loading)
+    [IS_RECOMMEND_MORE_LOADING]: (state, loading) => {
+        Vue.set(state, 'isRecommendMoreLoading', loading)
+        return state
+    },
+    [IS_UNRECOMMEND_MORE_LOADING]: (state, loading) => {
+        Vue.set(state, 'isUnRecommendMoreLoading', loading)
         return state
     },
     [IS_PROJECT_PAGE_OVER]: (state, loading) => {
         Vue.set(state, 'isProjectPageOver', loading)
         return state
     },
+    [IS_UNRECOMMEND_PROJECT_PAGE_OVER]: (state, loading) => {
+        Vue.set(state, 'isUnRecommendProjectPageOver', loading)
+        return state
+    },
     [IS_STORE_PAGE_OVER]: (state, loading) => {
         Vue.set(state, 'isStorePageOver', loading)
+        return state
+    },
+    [IS_UNRECOMMEND_STORE_PAGE_OVER]: (state, loading) => {
+        Vue.set(state, 'isUnRecommendStorePageOver', loading)
         return state
     },
     [SET_PIPELINE]: (state, pipeline = null) => {
@@ -212,9 +229,20 @@ export default {
         })
         return state
     },
+    [SET_UNRECOMMEND_PROJECT_DATA]: (state, unRecommendProjectData) => {
+        Object.assign(state, {
+            unRecommendProjectData
+        })
+    },
     [SET_STORE_DATA]: (state, storeData) => {
         Object.assign(state, {
             storeData
+        })
+        return state
+    },
+    [SET_UNRECOMMEND_STORE_DATA]: (state, unRecommendStoreData) => {
+        Object.assign(state, {
+            unRecommendStoreData
         })
         return state
     },
