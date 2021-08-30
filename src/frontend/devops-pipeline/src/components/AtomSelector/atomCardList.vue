@@ -215,12 +215,14 @@
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
                 'setProjectData',
+                'setUnRecommendProjectData',
+                'setStoreData',
+                'setUnRecommendStoreData',
                 'setProjectPageOver',
                 'fetchProjectAtoms',
                 'fetchStoreAtoms',
                 'fetchClassify',
                 'setInnerActiveName',
-                'setStoreData',
                 'updateProjectAtoms',
                 'updateStoreAtoms'
             ]),
@@ -229,10 +231,18 @@
                 this.$nextTick(() => {
                     this.$refs.atomListDom.scrollTo(0, 0)
                 })
+                this.setInnerActiveName('all')
+                this.curRecommendAtomMap = {}
+                this.curUnRecommendAtomMap = {}
                 if (this.activeTab && this.activeTab === this.tabName) {
                     if (this.tabName === 'projectAtom') {
                         this.setProjectData({
-                            page: 1
+                            page: 1,
+                            keyword: ''
+                        })
+                        this.setUnRecommendProjectData({
+                            page: 1,
+                            keyword: ''
                         })
                         this.setProjectPageOver(false)
                         this.fetchProjectAtoms({
@@ -257,6 +267,14 @@
                     }
                     if (this.tabName === 'storeAtom') {
                         this.fetchClassify()
+                        this.setStoreData({
+                            page: 1,
+                            keyword: ''
+                        })
+                        this.setUnRecommendStoreData({
+                            page: 1,
+                            keyword: ''
+                        })
                         this.fetchStoreAtoms({
                             classifyId: this.innerActiveName === 'all' ? undefined : this.classifyId,
                             recommendFlag: true,

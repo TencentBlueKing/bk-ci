@@ -277,6 +277,12 @@ export default {
     setStoreData: async ({ commit }, storeData) => {
         commit(SET_STORE_DATA, storeData)
     },
+    setUnRecommendProjectData: async ({ commit }, unRecommendProjectData) => {
+        commit(SET_UNRECOMMEND_PROJECT_DATA, unRecommendProjectData)
+    },
+    setUnRecommendStoreData: async ({ commit }, unRecommendStoreData) => {
+        commit(SET_UNRECOMMEND_STORE_DATA, unRecommendStoreData)
+    },
     setProjectPageOver: async ({ commit }, payload) => {
         commit(IS_PROJECT_PAGE_OVER, payload)
     },
@@ -322,7 +328,7 @@ export default {
                 page: 1
             })
         }
-        const jobType = category === 'TRIGGER' ? 'AGENT' : 'AGENT_LESS'
+        const jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
         
         try {
             if (page === 1) {
@@ -427,7 +433,7 @@ export default {
                 recommendFlag ? commit(IS_RECOMMEND_MORE_LOADING, true) : commit(IS_UNRECOMMEND_MORE_LOADING, true)
             }
 
-            const jobType = category === 'TRIGGER' ? 'AGENT' : 'AGENT_LESS'
+            const jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
 
             const { data: atomList } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
                 params: {
