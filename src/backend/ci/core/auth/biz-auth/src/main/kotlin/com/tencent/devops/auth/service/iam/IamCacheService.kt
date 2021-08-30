@@ -5,7 +5,6 @@ import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.dto.expression.ExpressionDTO
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.common.Constants.ALL_ACTION
-import com.tencent.devops.auth.common.Constants.PROJECT_VIEW
 import com.tencent.devops.common.auth.utils.AuthUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,14 +20,14 @@ class IamCacheService @Autowired constructor(
     // 用户-管理员项目 缓存， 10分钟有效时间
     private val projectManager = CacheBuilder.newBuilder()
         .maximumSize(5000)
-        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String, List<String>>()
 
     // 用户-project_view项目 缓存， 10分钟有效时间
     private val projectViewCache = CacheBuilder.newBuilder()
         .maximumSize(5000)
-        .expireAfterWrite(10, TimeUnit.MINUTES)
-        .build<String, List<String>>()
+        .expireAfterWrite(1, TimeUnit.DAYS)
+        .build<String, Set<String>>()
 
     // 用户 -- action下策略
     private val userExpressionCache = CacheBuilder.newBuilder()
@@ -64,18 +63,23 @@ class IamCacheService @Autowired constructor(
         return projectCodes.contains(projectCode)
     }
 
-    fun checkProjectView(userId: String, projectCode: String): Boolean {
+    fun checkProjectUser(userId: String, projectCode: String): Boolean {
         if (projectViewCache.getIfPresent(userId) != null) {
             if (projectViewCache.getIfPresent(userId)!!.contains(projectCode)) {
                 return true
             }
         }
-        val projectCodes = getProjectIamData(PROJECT_VIEW, userId)
-        if (projectCode.isNullOrEmpty()) {
-            return false
+        return false
+    }
+
+    fun cacheProjectUser(userId: String, projectCode: String) {
+        val newProjectList = mutableSetOf<String>()
+        newProjectList.add(projectCode)
+        if (projectViewCache.getIfPresent(userId) != null) {
+            val projectList = projectViewCache.getIfPresent(userId)
+            newProjectList.addAll(projectList!!)
         }
-        projectViewCache.put(userId, projectCodes)
-        return projectCodes.contains(projectCode)
+        projectViewCache.put(userId, newProjectList)
     }
 
     fun getUserExpression(userId: String, action: String, resourceType: String): ExpressionDTO? {
