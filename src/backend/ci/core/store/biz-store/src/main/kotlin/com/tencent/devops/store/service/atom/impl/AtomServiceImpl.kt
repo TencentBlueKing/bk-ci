@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.constant.KEY_DOCSLINK
@@ -192,7 +193,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         .build(object : CacheLoader<String, Map<String, String>>() {
             override fun load(projectId: String): Map<String, String> {
                 val elementMapData = serviceGetPipelineAtoms(
-                    userId = "",
+                    userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
                     serviceScope = null,
                     jobType = null,
                     os = null,
@@ -308,15 +309,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 atomCodes = atomCodeSet.joinToString(","),
                 projectCode = projectCode
             ).data
-            val atomCodeList = atomCodeSet.toList()
-            atomVisibleDataMap = storeCommonService.generateStoreVisibleData(atomCodeList, StoreTypeEnum.ATOM)
-            memberDataMap = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
             installedAtomList = storeProjectRelDao.getValidStoreCodesByProject(
                 dslContext = dslContext,
                 projectCode = projectCode,
-                storeCodes = atomCodeList,
+                storeCodes = atomCodeSet,
                 storeType = StoreTypeEnum.ATOM
             )?.map { it.value1() }
+        } else if (projectCode.isNullOrBlank() && !atomCodeSet.isNullOrEmpty()) {
+            val atomCodeList = atomCodeSet.toList()
+            atomVisibleDataMap = storeCommonService.generateStoreVisibleData(atomCodeList, StoreTypeEnum.ATOM)
+            memberDataMap = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
             userDeptList = storeUserService.getUserDeptList(userId)
         }
         pipelineAtoms?.forEach {
