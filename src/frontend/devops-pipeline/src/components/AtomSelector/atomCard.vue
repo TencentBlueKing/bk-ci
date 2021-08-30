@@ -6,14 +6,14 @@
         <div class="atom-info-content">
             <span v-if="isProjectAtom">
                 <span
-                    v-if="!('uninstallFlag' in atom) && !atom.defaultFlag"
+                    v-if="!('uninstallFlag' in atom) && !atom.defaultFlag & atomCode !== atom.atomCode"
                     class="remove-atom"
                     v-bk-tooltips="{ content: `${$t('editPage.removeAtom')}`, zIndex: 99999, delay: 200 }"
                     @click.stop="handleUnInstallAtom(atom)">
                     <logo class="remove-icon" name="minus" size="14" />
                 </span>
                 <span
-                    v-if="'uninstallFlag' in atom && !atom.defaultFlag"
+                    v-if="('uninstallFlag' in atom && !atom.defaultFlag) || atomCode === atom.atomCode"
                     :class="{ 'un-remove': !atom.uninstallFlag }"
                     v-bk-tooltips="{ content: `${$t('editPage.unRemoveAtom')}`, zIndex: 99999, delay: 200 }"
                     @click.stop="handleUnInstallAtom(atom)">
