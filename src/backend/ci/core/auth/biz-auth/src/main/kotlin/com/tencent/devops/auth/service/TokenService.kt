@@ -42,7 +42,7 @@ import javax.crypto.SecretKey
 import kotlin.collections.HashMap
 
 @Service
-class UserTokenService @Autowired constructor(
+class TokenService @Autowired constructor(
     val dslContext: DSLContext
 ) {
     fun verifyJWT(token: String): Boolean {
@@ -132,6 +132,6 @@ class UserTokenService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(UserTokenService::class.java)
+        val logger = LoggerFactory.getLogger(TokenService::class.java)
     }
 }

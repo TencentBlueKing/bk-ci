@@ -25,36 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.api.service
+package com.tencent.devops.auth.resources.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.auth.api.service.ServiceTokenResource
+import com.tencent.devops.auth.service.TokenService
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["AUTH_SERVICE_PERMISSION"], description = "权限校验--权限相关")
-@Path("/open/service/auth/permission")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceUserTokenResource {
+@RestResource
+class ServiceTokenResourceImpl @Autowired constructor(
+    val tokenService: TokenService
+) : ServiceTokenResource {
 
-    @GET
-    @Path("/token/validate")
-    @ApiOperation("校验用户是否有action的权限")
-    fun validateUserToken(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("待校验用户ID", required = true)
-        userId: String,
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @ApiParam("认证token", required = true)
-        token: String
-    ): Result<Boolean>
+    override fun validateUserToken(userId: String, token: String): Result<Boolean> {
+        return Result(tokenService.verifyJWT(userId, token))
+    }
 }
