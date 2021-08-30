@@ -33,4 +33,6 @@ import javax.ws.rs.container.ContainerRequestFilter
 interface ApiFilter : ContainerRequestFilter {
 
     fun verifyJWT(requestContext: ContainerRequestContext): Boolean
+
+    fun generateJWT(userId: String): String
 }

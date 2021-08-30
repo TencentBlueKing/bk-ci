@@ -128,4 +128,13 @@ interface ApigwSignResourceV3 {
         @PathParam("resignId")
         resignId: String
     ): Result<String>
+
+    @ApiOperation("获取jwt")
+    @GET
+    @Path("/jwt")
+    fun getJwt(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<String>
 }

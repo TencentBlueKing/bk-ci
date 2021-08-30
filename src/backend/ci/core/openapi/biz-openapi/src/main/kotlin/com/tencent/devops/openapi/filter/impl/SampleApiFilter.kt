@@ -28,14 +28,6 @@ class SampleApiFilter : ApiFilter {
     }
 
     override fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun filter(requestContext: ContainerRequestContext?) {
-        TODO("Not yet implemented")
-    }
-
-    fun verifyUserTokenPermission(requestContext: ContainerRequestContext): Boolean {
         val bkApiJwt = requestContext.getHeaderString(jwtHeader)
         if (bkApiJwt.isNullOrBlank()) {
             logger.error("Request bk api jwt is empty for ${requestContext.request}")
@@ -47,6 +39,21 @@ class SampleApiFilter : ApiFilter {
             return false
         }
         return isValidToken(bkApiJwt)
+    }
+
+    override fun filter(requestContext: ContainerRequestContext) {
+        if (!verifyJWT(requestContext)) {
+            requestContext.abortWith(
+                Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Devops OpenAPI Auth fail：user or app auth fail.")
+                    .build()
+            )
+            return
+        }
+    }
+
+    override fun generateJWT(userId: String): String {
+        return generateUserToken(userId)
     }
 
     fun generateUserToken(userDetails: String): String {

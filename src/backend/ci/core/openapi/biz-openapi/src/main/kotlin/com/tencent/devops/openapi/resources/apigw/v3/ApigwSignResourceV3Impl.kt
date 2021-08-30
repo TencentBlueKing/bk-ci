@@ -31,15 +31,18 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwSignResourceV3
+import com.tencent.devops.openapi.filter.ApiFilter
 import com.tencent.devops.sign.api.pojo.IpaUploadInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.api.service.ServiceIpaResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import kotlin.math.log
 
 @RestResource
 class ApigwSignResourceV3Impl @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val apiFilter: ApiFilter
 ) : ApigwSignResourceV3 {
 
     override fun getSignToken(
@@ -87,6 +90,11 @@ class ApigwSignResourceV3Impl @Autowired constructor(
     ): Result<String> {
         logger.info("get sign download url: the resignId($resignId)")
         return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).downloadUrl(resignId)
+    }
+
+    override fun getJwt(userId: String): Result<String> {
+        logger.info("get jwt with userId:$userId")
+        return Result(apiFilter.generateJWT(userId))
     }
 
     companion object {
