@@ -156,9 +156,9 @@ object ControlUtils {
         if (!isEnable(additionalOptions)) {
             skip = true
         } else when {
-            // [只有前面有任务失败时才运行]，容器状态必须是失败 && 之前存在失败的任务
+            // [只有前面有任务失败时才运行]，之前存在失败的任务
             runCondition == RunCondition.PRE_TASK_FAILED_ONLY -> {
-                skip = containerFinalStatus.isSuccess() && !hasFailedTaskInSuccessContainer
+                skip = !(containerFinalStatus.isFailure() || hasFailedTaskInSuccessContainer)
             }
             // [即使前面有插件运行失败也运行，除非被取消才不运行]，不会跳过
             runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
