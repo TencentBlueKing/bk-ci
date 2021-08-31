@@ -25,20 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources.service
+package com.tencent.devops.openapi.api.apigw.v3
 
-import com.tencent.devops.auth.api.service.ServiceTokenResource
-import com.tencent.devops.auth.service.TokenService
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ServiceTokenResourceImpl @Autowired constructor(
-    val tokenService: TokenService
-) : ServiceTokenResource {
+@Api(tags = ["OPENAPI_ARTIFACTORY_V3"], description = "OPENAPI-构建产物资源")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/token")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
+interface ApigwTokenResourceV3 {
 
-    override fun validateToken(userId: String, token: String): Result<Boolean> {
-        return Result(tokenService.verifyJWT(userId, token))
-    }
+    @ApiOperation("获取token")
+    @Path("/get")
+    @GET
+    fun getJWToken(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<String>
+
+    @ApiOperation("验证token")
+    @Path("/validate/{token}")
+    @GET
+    fun validateToken(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("token", required = true)
+        @PathParam("token")
+        token: String
+    ): Result<Boolean>
 }

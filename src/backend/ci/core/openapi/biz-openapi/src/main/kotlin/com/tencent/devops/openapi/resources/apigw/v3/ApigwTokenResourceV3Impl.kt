@@ -25,20 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources.service
+package com.tencent.devops.openapi.resources.apigw.v3
 
 import com.tencent.devops.auth.api.service.ServiceTokenResource
-import com.tencent.devops.auth.service.TokenService
+import com.tencent.devops.auth.api.user.UserTokenResource
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v3.ApigwTokenResourceV3
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceTokenResourceImpl @Autowired constructor(
-    val tokenService: TokenService
-) : ServiceTokenResource {
+@Suppress("UNUSED")
+class ApigwTokenResourceV3Impl @Autowired constructor(
+    private val client: Client
+) : ApigwTokenResourceV3 {
+
+    override fun getJWToken(userId: String): Result<String> {
+        return client.get(UserTokenResource::class).getJwt(userId)
+    }
 
     override fun validateToken(userId: String, token: String): Result<Boolean> {
-        return Result(tokenService.verifyJWT(userId, token))
+        return client.get(ServiceTokenResource::class).validateToken(userId,token)
     }
 }

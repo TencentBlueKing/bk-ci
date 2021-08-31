@@ -36,15 +36,24 @@ import io.jsonwebtoken.security.Keys
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Date
 import javax.crypto.SecretKey
 import kotlin.collections.HashMap
 
 @Service
+@Suppress("UNUSED")
 class TokenService @Autowired constructor(
     val dslContext: DSLContext
 ) {
+
+    @Value("\${token.expirationTime:#{null}}")
+    private val expirationTime: Int? = null
+
+    @Value("\${token.secretkey:#{null}}")
+    private val secretkey: String? = null
+
     fun verifyJWT(token: String): Boolean {
         return isValidToken(token)
     }
@@ -61,11 +70,11 @@ class TokenService @Autowired constructor(
      * 用于生成 JWT 令牌的加密密钥
      */
     private fun generalKeyByDecoders(): SecretKey {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode("cuAihCz53DZRjZwbsGcZJ2Ai6At+T142uphtJMsk7iQ="));
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretkey!!))
     }
 
     /**
-     * 为给定的 [UserDetails] 和有效期生成 JWT 令牌
+     * 为给定的 UserDetails 和有效期生成 JWT 令牌
      */
     private fun generateToken(userDetails: String): String {
         val claims = HashMap<String, Any>()
@@ -77,7 +86,7 @@ class TokenService @Autowired constructor(
      */
     private fun createToken(claims: Map<String, Any>, subject: String): String {
         //5 hours validity
-        val expirationDate = Date(System.currentTimeMillis() + 1000 * 60 * 60 * 5)
+        val expirationDate = Date(System.currentTimeMillis() + (expirationTime ?: 14400000))
 
         return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(Date(System.currentTimeMillis()))
             .setExpiration(expirationDate)
@@ -104,7 +113,7 @@ class TokenService @Autowired constructor(
     private fun isValidToken(token: String, userId: String = ""): Boolean {
         return try {
             val result = extractExpiration(token).before(Date())
-            if (userId.isEmpty()){
+            if (userId.isEmpty()) {
                 !result
             }
             extractUsername(token) == userId
