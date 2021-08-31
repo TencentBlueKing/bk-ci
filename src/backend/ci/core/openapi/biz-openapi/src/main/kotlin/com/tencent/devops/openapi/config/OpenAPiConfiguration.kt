@@ -44,6 +44,6 @@ class OpenAPiConfiguration {
     fun opAppUserService() = DefaultOpAppUserService()
 
     @Bean
-    @ConditionalOnMissingBean(name = ["tokenService"])
-    fun tokenService(@Autowired client: Client) = SampleApiFilter(client)
+    @ConditionalOnMissingBean
+    fun apiFilter(@Autowired client: Client) = SampleApiFilter(client)
 }
