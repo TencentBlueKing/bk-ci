@@ -25,12 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:store:api-store-image"))
-}
+package com.tencent.devops.dispatch.docker.service
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.docker.common.Constants
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+
+@Service
+class DockerResourceWhitelistService constructor(
+    private val redisOperation: RedisOperation
+) {
+    private val logger = LoggerFactory.getLogger(DockerResourceWhitelistService::class.java)
+
+    fun getDockerResourceWhiteList(userId: String): List<String> {
+        val whiteList = mutableListOf<String>()
+
+        val whiteSet = redisOperation.getSetMembers(Constants.DOCKER_RESOURCE_WHITE_LIST_KEY_PREFIX)
+        return if (whiteSet != null) {
+            whiteSet.parallelStream().forEach {
+                whiteList.add(it)
+            }
+
+            whiteList
+        } else {
+            emptyList()
+        }
+    }
+
+    fun addDockerResourceWhiteList(userId: String, projectId: String): Boolean {
+        redisOperation.addSetValue(Constants.DOCKER_RESOURCE_WHITE_LIST_KEY_PREFIX, projectId)
+        return true
+    }
+
+    fun deleteDockerResourceWhiteList(userId: String, projectId: String): Boolean {
+        redisOperation.removeSetMember(Constants.DOCKER_RESOURCE_WHITE_LIST_KEY_PREFIX, projectId)
+        return true
+    }
+
+    fun checkDockerResourceWhitelist(projectId: String): Boolean {
+        return redisOperation.isMember(Constants.DOCKER_RESOURCE_WHITE_LIST_KEY_PREFIX, projectId)
+    }
 }

@@ -25,12 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:store:api-store-image"))
-}
+package com.tencent.devops.dispatch.docker.controller
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.user.UserDockerResourceConfigResource
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import com.tencent.devops.dispatch.docker.service.DockerResourceOptionsService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+@Suppress("ALL")
+class UserDockerResourceConfigResourceImpl @Autowired constructor(
+    private val dockerResourceOptionsService: DockerResourceOptionsService
+) : UserDockerResourceConfigResource {
+
+    override fun getDockerResourceConfigList(
+        userId: String,
+        projectId: String,
+        buildType: String?
+    ): Result<UserDockerResourceOptionsVO> {
+        return Result(dockerResourceOptionsService.getDockerResourceConfigList(userId, projectId, buildType))
+    }
 }
