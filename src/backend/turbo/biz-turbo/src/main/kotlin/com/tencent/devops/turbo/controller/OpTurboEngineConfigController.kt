@@ -2,6 +2,8 @@ package com.tencent.devops.turbo.controller
 
 import com.tencent.devops.api.pojo.Response
 import com.tencent.devops.turbo.api.IOpTurboEngineConfigController
+import com.tencent.devops.turbo.pojo.ParamEnumModel
+import com.tencent.devops.turbo.pojo.ParamEnumSimpleModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigPriorityModel
 import com.tencent.devops.turbo.service.TurboEngineConfigService
@@ -61,4 +63,32 @@ class OpTurboEngineConfigController @Autowired constructor(
         turboEngineConfigService.updateEngineConfigPriority(turboPriorityList, user)
         return Response.success(true)
     }
+
+
+    override fun addWorkVersion(
+        engineCode: String,
+        paramEnum: ParamEnumModel
+    ): Response<Boolean> {
+        turboEngineConfigService.addWorkerVersion(engineCode, "work_version", paramEnum)
+        return Response.success(true)
+    }
+
+    override fun deleteWorkVersion(
+        engineCode: String,
+        paramValue: String
+    ): Response<Boolean> {
+        turboEngineConfigService.deleteWorkerVersion(engineCode, "work_version", paramValue)
+        return Response.success(true)
+    }
+
+    override fun updateWorkVersion(
+        engineCode: String,
+        paramValue: String,
+        paramEnum: ParamEnumSimpleModel
+    ): Response<Boolean> {
+        turboEngineConfigService.updateWorkerVersion(engineCode, "work_version", paramValue, paramEnum)
+        return Response.success(true)
+    }
+
+
 }

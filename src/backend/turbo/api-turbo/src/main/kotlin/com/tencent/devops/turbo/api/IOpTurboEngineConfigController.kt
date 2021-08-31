@@ -2,6 +2,8 @@ package com.tencent.devops.turbo.api
 
 import com.tencent.devops.api.pojo.Response
 import com.tencent.devops.common.util.constants.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.turbo.pojo.ParamEnumModel
+import com.tencent.devops.turbo.pojo.ParamEnumSimpleModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigPriorityModel
 import com.tencent.devops.turbo.validate.TurboEngineConfigGroup
@@ -123,5 +125,55 @@ interface IOpTurboEngineConfigController {
         @ApiParam(value = "用户信息", required = true)
         @RequestHeader(AUTH_HEADER_DEVOPS_USER_ID)
         user: String
+    ): Response<Boolean>
+
+    @ApiOperation("更新编译加速模式优先级")
+    @PostMapping(
+        "/workVersion/engineCode/{engineCode}",
+        produces = [MediaType.APPLICATION_JSON_VALUE],
+        consumes = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun addWorkVersion(
+        @ApiParam(value = "编译加速引擎代码", required = true)
+        @PathVariable("engineCode")
+        engineCode: String,
+        @ApiParam(value = "参数枚举值详细信息", required = true)
+        @RequestBody
+        paramEnum: ParamEnumModel
+    ): Response<Boolean>
+
+
+    @ApiOperation("更新编译加速模式优先级")
+    @DeleteMapping(
+        "/workVersion/engineCode/{engineCode}/paramValue/{paramValue}",
+        produces = [MediaType.APPLICATION_JSON_VALUE],
+        consumes = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun deleteWorkVersion(
+        @ApiParam(value = "编译加速引擎代码", required = true)
+        @PathVariable("engineCode")
+        engineCode: String,
+        @ApiParam(value = "参数key值", required = true)
+        @PathVariable("paramValue")
+        paramValue: String
+    ): Response<Boolean>
+
+
+    @ApiOperation("更新编译加速模式优先级")
+    @PutMapping(
+        "/workVersion/engineCode/{engineCode}/paramValue/{paramValue}",
+        produces = [MediaType.APPLICATION_JSON_VALUE],
+        consumes = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun updateWorkVersion(
+        @ApiParam(value = "编译加速引擎代码", required = true)
+        @PathVariable("engineCode")
+        engineCode: String,
+        @ApiParam(value = "参数key值", required = true)
+        @PathVariable("paramValue")
+        paramValue: String,
+        @ApiParam(value = "参数枚举值详细信息", required = true)
+        @RequestBody
+        paramEnum: ParamEnumSimpleModel
     ): Response<Boolean>
 }
