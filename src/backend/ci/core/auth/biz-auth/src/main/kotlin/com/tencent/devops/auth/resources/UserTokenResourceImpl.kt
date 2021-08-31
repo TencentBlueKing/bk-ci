@@ -28,16 +28,16 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.user.UserTokenResource
-import com.tencent.devops.auth.service.TokenService
+import com.tencent.devops.auth.service.ApiAccessTokenService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserTokenResourceImpl @Autowired constructor(
-    val tokenService: TokenService
+    val apiAccessTokenService: ApiAccessTokenService
 ) : UserTokenResource {
     override fun getJwt(userId: String): Result<String> {
-        return Result(tokenService.generateUserToken(userId))
+        return Result(apiAccessTokenService.generateUserToken(userId))
     }
 }

@@ -43,8 +43,7 @@ import javax.crypto.SecretKey
 import kotlin.collections.HashMap
 
 @Service
-@Suppress("UNUSED")
-class TokenService @Autowired constructor(
+class ApiAccessTokenService @Autowired constructor(
     val dslContext: DSLContext
 ) {
 
@@ -59,6 +58,7 @@ class TokenService @Autowired constructor(
     }
 
     fun generateUserToken(userDetails: String): String {
+        logger.info("generate token with userId: $userDetails")
         return generateToken(userDetails)
     }
 
@@ -119,20 +119,7 @@ class TokenService @Autowired constructor(
      */
     private fun extractExpiration(token: String): Date = extractClaim(token, Claims::getExpiration)
 
-    /**
-     * 提取给定 JWT 令牌的用户名
-     */
-    private fun extractUsername(token: String): String = extractClaim(token, Claims::getSubject)
-
-    private fun getTokenFromAuthHeader(authHeader: String): String? {
-        return if (authHeader.startsWith("Bearer")) {
-            authHeader.substring(7)
-        } else {
-            null
-        }
-    }
-
     companion object {
-        val logger = LoggerFactory.getLogger(TokenService::class.java)
+        private val logger = LoggerFactory.getLogger(ApiAccessTokenService::class.java)
     }
 }

@@ -28,17 +28,17 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceTokenResource
-import com.tencent.devops.auth.service.TokenService
+import com.tencent.devops.auth.service.ApiAccessTokenService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceTokenResourceImpl @Autowired constructor(
-    val tokenService: TokenService
+    val apiAccessTokenService: ApiAccessTokenService
 ) : ServiceTokenResource {
 
     override fun validateToken(token: String): Result<Boolean> {
-        return Result(tokenService.verifyJWT(token))
+        return Result(apiAccessTokenService.verifyJWT(token))
     }
 }
