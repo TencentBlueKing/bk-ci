@@ -13,7 +13,12 @@ import com.tencent.devops.turbo.model.TTurboEngineConfigEntity
 import com.tencent.devops.turbo.model.pojo.DisplayFieldEntity
 import com.tencent.devops.turbo.model.pojo.ParamConfigEntity
 import com.tencent.devops.turbo.model.pojo.ParamEnumEntity
-import com.tencent.devops.turbo.pojo.*
+import com.tencent.devops.turbo.pojo.ParamConfigModel
+import com.tencent.devops.turbo.pojo.ParamEnumModel
+import com.tencent.devops.turbo.pojo.TurboDisplayFieldModel
+import com.tencent.devops.turbo.pojo.TurboEngineConfigModel
+import com.tencent.devops.turbo.pojo.TurboEngineConfigPriorityModel
+import com.tencent.devops.turbo.pojo.ParamEnumSimpleModel
 import com.tencent.devops.turbo.vo.TurboEngineConfigVO
 import org.quartz.CronScheduleBuilder
 import org.quartz.JobBuilder
