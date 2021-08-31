@@ -48,7 +48,7 @@ class TokenService @Autowired constructor(
     val dslContext: DSLContext
 ) {
 
-     @Value("\${auth.token.expirationTime:#{null}}")
+    @Value("\${auth.token.expirationTime:#{null}}")
     private val expirationTime: Int? = null
 
     @Value("\${auth.token.secret:#{null}}")
