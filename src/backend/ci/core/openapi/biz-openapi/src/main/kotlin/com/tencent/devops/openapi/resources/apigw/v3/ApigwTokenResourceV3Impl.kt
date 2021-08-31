@@ -42,7 +42,7 @@ class ApigwTokenResourceV3Impl @Autowired constructor(
 ) : ApigwTokenResourceV3 {
 
     override fun getJWToken(userId: String): Result<String> {
-        return client.get(UserTokenResource::class).getJwt(userId)
+        return client.get(UserTokenResource::class).getAccessToken(userId)
     }
 
     override fun validateToken(token: String): Result<Boolean> {

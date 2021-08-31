@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserTokenResourceImpl @Autowired constructor(
     val apiAccessTokenService: ApiAccessTokenService
 ) : UserTokenResource {
-    override fun getJwt(userId: String): Result<String> {
+    override fun getAccessToken(userId: String): Result<String> {
         return Result(apiAccessTokenService.generateUserToken(userId))
     }
 }

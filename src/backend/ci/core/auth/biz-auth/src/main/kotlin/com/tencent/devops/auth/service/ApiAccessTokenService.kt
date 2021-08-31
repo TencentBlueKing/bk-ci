@@ -31,7 +31,6 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
-import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -47,10 +46,10 @@ class ApiAccessTokenService @Autowired constructor(
     val dslContext: DSLContext
 ) {
 
-    @Value("\${auth.token.expirationTime:#{null}}")
+    @Value("\${auth.accessToken.expirationTime:#{null}}")
     private val expirationTime: Int? = null
 
-    @Value("\${auth.token.secret:#{null}}")
+    @Value("\${auth.accessToken.secret:#{null}}")
     private val secret: String? = null
 
     fun verifyJWT(token: String): Boolean {
@@ -66,7 +65,7 @@ class ApiAccessTokenService @Autowired constructor(
      * 用于生成 JWT 令牌的加密密钥
      */
     private fun generalKeyByDecoders(): SecretKey {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret!!))
+        return Keys.hmacShaKeyFor(secret!!.toByteArray())
     }
 
     /**

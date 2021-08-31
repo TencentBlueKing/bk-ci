@@ -40,14 +40,14 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["AUTH_RESOURCE"], description = "用户态-权限")
-@Path("/user/auth")
+@Path("/user/token")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserTokenResource {
     @ApiOperation("获取jwt")
     @GET
-    @Path("/token")
-    fun getJwt(
+    @Path("/get")
+    fun getAccessToken(
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String

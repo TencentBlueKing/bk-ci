@@ -24,7 +24,7 @@ class SampleApiFilter constructor(
         private val logger = LoggerFactory.getLogger(SampleApiFilter::class.java)
     }
 
-    @Value("\${auth.token.headerName:#{null}}")
+    @Value("\${auth.accessToken.queryParamName:#{null}}")
     private val headerName: String? = null
 
     override fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
