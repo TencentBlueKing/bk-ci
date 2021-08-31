@@ -48,10 +48,10 @@ class TokenService @Autowired constructor(
     val dslContext: DSLContext
 ) {
 
-    @Value("\${token.expirationTime:#{null}}")
+    @Value("\${auth.token.expirationTime:#{null}}")
     private val expirationTime: Int? = null
 
-    @Value("\${token.secretkey:#{null}}")
+    @Value("\${auth.token.secret:#{null}}")
     private val secretkey: String? = null
 
     fun verifyJWT(token: String): Boolean {
