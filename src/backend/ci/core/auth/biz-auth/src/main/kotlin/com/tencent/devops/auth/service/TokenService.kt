@@ -52,7 +52,7 @@ class TokenService @Autowired constructor(
     private val expirationTime: Int? = null
 
     @Value("\${auth.token.secret:#{null}}")
-    private val secretkey: String? = null
+    private val secret: String? = null
 
     fun verifyJWT(token: String): Boolean {
         return isValidToken(token)
@@ -70,7 +70,7 @@ class TokenService @Autowired constructor(
      * 用于生成 JWT 令牌的加密密钥
      */
     private fun generalKeyByDecoders(): SecretKey {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretkey!!))
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret!!))
     }
 
     /**
