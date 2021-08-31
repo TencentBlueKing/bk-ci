@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.TurboException
 import com.tencent.devops.common.api.exception.code.TURBO_PARAM_INVALID
 import com.tencent.devops.common.db.PageUtils
+import com.tencent.devops.common.util.enums.ConfigParamType
 import com.tencent.devops.turbo.dao.mongotemplate.TurboEngineConfigDao
 import com.tencent.devops.turbo.dao.repository.TurboEngineConfigRepository
 import com.tencent.devops.turbo.job.TBSCreateDataJob
@@ -12,11 +13,7 @@ import com.tencent.devops.turbo.model.TTurboEngineConfigEntity
 import com.tencent.devops.turbo.model.pojo.DisplayFieldEntity
 import com.tencent.devops.turbo.model.pojo.ParamConfigEntity
 import com.tencent.devops.turbo.model.pojo.ParamEnumEntity
-import com.tencent.devops.turbo.pojo.ParamConfigModel
-import com.tencent.devops.turbo.pojo.ParamEnumModel
-import com.tencent.devops.turbo.pojo.TurboDisplayFieldModel
-import com.tencent.devops.turbo.pojo.TurboEngineConfigModel
-import com.tencent.devops.turbo.pojo.TurboEngineConfigPriorityModel
+import com.tencent.devops.turbo.pojo.*
 import com.tencent.devops.turbo.vo.TurboEngineConfigVO
 import org.quartz.CronScheduleBuilder
 import org.quartz.JobBuilder
@@ -613,6 +610,111 @@ class TurboEngineConfigService @Autowired constructor(
             logger.info("write result success!")
         }
     }
+
+    /**
+     * 添加worker version逻辑
+     */
+    fun addWorkerVersion(engineCode: String, paramKey: String, paramEnum: ParamEnumModel) : Boolean {
+        logger.info("add new worker version")
+        val turboEngineConfigEntity = turboEngineConfigRepository.findByEngineCode(engineCode)
+        if (null == turboEngineConfigEntity || turboEngineConfigEntity.id.isNullOrBlank()) {
+            logger.info("no turbo engine config found with engine code: $engineCode")
+            throw TurboException(errorCode = TURBO_PARAM_INVALID, errorMessage = "no turbo engine config found")
+        }
+        val paramConfig = turboEngineConfigEntity.paramConfig?.findLast { it.paramKey == paramKey }
+        if (null == paramConfig) {
+            logger.info("no param config with engine code: $engineCode, param key: $paramKey")
+            throw TurboException(errorCode = TURBO_PARAM_INVALID, errorMessage = "no turbo engine config param found")
+        }
+        if (paramConfig.paramType != ConfigParamType.SELECT) {
+            logger.info("param type not equal to SELECT")
+            return false
+        }
+        if (paramConfig.paramEnum.isNullOrEmpty()) {
+            paramConfig.paramEnum = listOf()
+        }
+        val tempParamEnum = paramConfig.paramEnum!!.toMutableList()
+        tempParamEnum.add(
+            with(paramEnum) {
+                ParamEnumEntity(
+                    paramValue = paramValue,
+                    paramName = paramName,
+                    visualRange = visualRange
+                )
+            }
+        )
+        paramConfig.paramEnum = tempParamEnum
+        turboEngineConfigRepository.save(turboEngineConfigEntity)
+        return true
+    }
+
+    /**
+     * 删除worker version逻辑
+     */
+    fun deleteWorkerVersion(engineCode: String, paramKey: String, enumParamValue: String): Boolean {
+        logger.info("delete new worker version")
+        val turboEngineConfigEntity = turboEngineConfigRepository.findByEngineCode(engineCode)
+        if (null == turboEngineConfigEntity || turboEngineConfigEntity.id.isNullOrBlank()) {
+            logger.info("no turbo engine config found with engine code: $engineCode")
+            throw TurboException(errorCode = TURBO_PARAM_INVALID, errorMessage = "no turbo engine config found")
+        }
+        val paramConfig = turboEngineConfigEntity.paramConfig?.findLast { it.paramKey == paramKey }
+        if (null == paramConfig) {
+            logger.info("no param config with engine code: $engineCode, param key: $paramKey")
+            throw TurboException(errorCode = TURBO_PARAM_INVALID, errorMessage = "no turbo engine config param found")
+        }
+        if (paramConfig.paramType != ConfigParamType.SELECT) {
+            logger.info("param type not equal to SELECT")
+            return false
+        }
+        if (paramConfig.paramEnum.isNullOrEmpty()) {
+            paramConfig.paramEnum = listOf()
+        }
+        val tempParamEnum = paramConfig.paramEnum!!.toMutableList()
+        tempParamEnum.removeIf { it.paramValue == enumParamValue }
+        paramConfig.paramEnum = tempParamEnum
+        turboEngineConfigRepository.save(turboEngineConfigEntity)
+        return true
+    }
+
+    /**
+     * 更新worker version逻辑
+     */
+    fun updateWorkerVersion(engineCode: String, paramKey: String, enumParamValue: String, paramEnum: ParamEnumSimpleModel): Boolean {
+        logger.info("update new worker version")
+        val turboEngineConfigEntity = turboEngineConfigRepository.findByEngineCode(engineCode)
+        if (null == turboEngineConfigEntity || turboEngineConfigEntity.id.isNullOrBlank()) {
+            logger.info("no turbo engine config found with engine code: $engineCode")
+            throw TurboException(errorCode = TURBO_PARAM_INVALID, errorMessage = "no turbo engine config found")
+        }
+        val paramConfig = turboEngineConfigEntity.paramConfig?.findLast { it.paramKey == paramKey }
+        if (null == paramConfig) {
+            logger.info("no param config with engine code: $engineCode, param key: $paramKey")
+            throw TurboException(errorCode = TURBO_PARAM_INVALID, errorMessage = "no turbo engine config param found")
+        }
+        if (paramConfig.paramType != ConfigParamType.SELECT) {
+            logger.info("param type not equal to SELECT")
+            return false
+        }
+        if (paramConfig.paramEnum.isNullOrEmpty()) {
+            paramConfig.paramEnum = listOf()
+        }
+        val tempParamEnum = paramConfig.paramEnum!!.toMutableList()
+        tempParamEnum.replaceAll {
+            if (it.paramValue == enumParamValue)
+                with(paramEnum) {
+                    ParamEnumEntity(
+                        paramValue = enumParamValue,
+                        paramName = paramName,
+                        visualRange = visualRange
+                    )
+                }
+            else it }
+        paramConfig.paramEnum = tempParamEnum
+        turboEngineConfigRepository.save(turboEngineConfigEntity)
+        return true
+    }
+
 
     /**
      * spel表达式缓存方法
