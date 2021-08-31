@@ -7,6 +7,7 @@ import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.openapi.filter.ApiFilter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.Response
@@ -16,27 +17,28 @@ import javax.ws.rs.ext.Provider
 @PreMatching
 @RequestFilter
 @Suppress("UNUSED")
-class SampleApiFilter @Autowired constructor(
+class SampleApiFilter constructor(
     private val client: Client
 ) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(SampleApiFilter::class.java)
-        private const val jwtHeader = "X-Bkapi-JWT"
     }
 
+    @Value("\${auth.token.headerName:#{null}}")
+    private val headerName: String? = null
+
     override fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
-        val userId = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_USER_ID)
-        val bkApiJwt = requestContext.uriInfo.queryParameters.getFirst(jwtHeader)
-        if (bkApiJwt.isNullOrBlank() || userId.isNullOrEmpty()) {
-            logger.error("Request bk api jwt/userId is empty for ${requestContext.request}")
+        val bkApiJwt = requestContext.uriInfo.queryParameters.getFirst(headerName)
+        if (bkApiJwt.isNullOrBlank()) {
+            logger.error("Request bk api jwt is empty for ${requestContext.request}")
             requestContext.abortWith(
                 Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Request bkapi jwt/userId is empty.")
+                    .entity("Request bkapi jwt is empty.")
                     .build()
             )
             return false
         }
-        return client.get(ServiceTokenResource::class).validateToken(userId = userId, token = bkApiJwt).data ?: false
+        return client.get(ServiceTokenResource::class).validateToken(token = bkApiJwt).data ?: false
     }
 
     override fun filter(requestContext: ContainerRequestContext) {

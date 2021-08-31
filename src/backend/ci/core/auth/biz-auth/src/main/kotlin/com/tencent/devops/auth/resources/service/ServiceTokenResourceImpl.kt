@@ -38,7 +38,7 @@ class ServiceTokenResourceImpl @Autowired constructor(
     val tokenService: TokenService
 ) : ServiceTokenResource {
 
-    override fun validateToken(userId: String, token: String): Result<Boolean> {
-        return Result(tokenService.verifyJWT(userId, token))
+    override fun validateToken(token: String): Result<Boolean> {
+        return Result(tokenService.verifyJWT(token))
     }
 }

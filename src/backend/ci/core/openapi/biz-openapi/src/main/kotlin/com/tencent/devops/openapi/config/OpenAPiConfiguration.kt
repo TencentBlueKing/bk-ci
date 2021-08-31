@@ -26,7 +26,10 @@
  */
 
 package com.tencent.devops.openapi.config
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.openapi.filter.impl.SampleApiFilter
 import com.tencent.devops.openapi.service.op.DefaultOpAppUserService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -39,4 +42,8 @@ class OpenAPiConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = ["opAppUserService"])
     fun opAppUserService() = DefaultOpAppUserService()
+
+    @Bean
+    @ConditionalOnMissingBean(name = ["tokenService"])
+    fun tokenService(@Autowired client: Client) = SampleApiFilter(client)
 }

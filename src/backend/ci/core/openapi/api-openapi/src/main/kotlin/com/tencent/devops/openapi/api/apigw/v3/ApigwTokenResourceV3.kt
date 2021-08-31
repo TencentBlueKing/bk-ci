@@ -61,9 +61,6 @@ interface ApigwTokenResourceV3 {
     @Path("/validate/{token}")
     @GET
     fun validateToken(
-        @ApiParam("用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("token", required = true)
         @PathParam("token")
         token: String

@@ -58,10 +58,6 @@ class TokenService @Autowired constructor(
         return isValidToken(token)
     }
 
-    fun verifyJWT(userId: String, token: String): Boolean {
-        return isValidToken(token = token, userId = userId)
-    }
-
     fun generateUserToken(userDetails: String): String {
         return generateToken(userDetails)
     }
@@ -110,13 +106,9 @@ class TokenService @Autowired constructor(
     /**
      * 返回令牌是否有效
      */
-    private fun isValidToken(token: String, userId: String = ""): Boolean {
+    private fun isValidToken(token: String): Boolean {
         return try {
-            val result = extractExpiration(token).before(Date())
-            if (userId.isEmpty()) {
-                !result
-            }
-            extractUsername(token) == userId
+            !extractExpiration(token).before(Date())
         } catch (e: ExpiredJwtException) {
             false
         }

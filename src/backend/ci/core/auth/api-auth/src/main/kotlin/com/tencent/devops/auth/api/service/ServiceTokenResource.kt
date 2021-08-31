@@ -50,9 +50,6 @@ interface ServiceTokenResource {
     @Path("/token/validate")
     @ApiOperation("校验用户是否有action的权限")
     fun validateToken(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("待校验用户ID", required = true)
-        userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String

@@ -45,7 +45,7 @@ class ApigwTokenResourceV3Impl @Autowired constructor(
         return client.get(UserTokenResource::class).getJwt(userId)
     }
 
-    override fun validateToken(userId: String, token: String): Result<Boolean> {
-        return client.get(ServiceTokenResource::class).validateToken(userId,token)
+    override fun validateToken(token: String): Result<Boolean> {
+        return client.get(ServiceTokenResource::class).validateToken(token)
     }
 }
