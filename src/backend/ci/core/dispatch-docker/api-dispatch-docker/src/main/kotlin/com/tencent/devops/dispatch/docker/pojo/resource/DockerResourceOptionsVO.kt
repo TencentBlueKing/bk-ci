@@ -25,12 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:store:api-store-image"))
-}
+package com.tencent.devops.dispatch.docker.pojo.resource
 
-plugins {
-    `task-deploy-to-maven`
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("性能基础选项配置")
+data class DockerResourceOptionsVO(
+    @ApiModelProperty("内存")
+    val memoryLimitBytes: Long,
+
+    @ApiModelProperty("CPU")
+    val cpuPeriod: Int,
+
+    @ApiModelProperty("CPU")
+    val cpuQuota: Int,
+
+    @ApiModelProperty("磁盘写速率")
+    val blkioDeviceWriteBps: Long,
+
+    @ApiModelProperty("磁盘读速率")
+    val blkioDeviceReadBps: Long,
+
+    @ApiModelProperty("磁盘大小: 单位GB")
+    val disk: Int,
+
+    @ApiModelProperty("描述")
+    val description: String
+)
