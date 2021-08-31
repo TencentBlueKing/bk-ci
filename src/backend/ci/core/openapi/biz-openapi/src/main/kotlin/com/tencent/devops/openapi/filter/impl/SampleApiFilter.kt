@@ -1,12 +1,9 @@
 package com.tencent.devops.openapi.filter.impl
 
 import com.tencent.devops.auth.api.service.ServiceTokenResource
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.openapi.filter.ApiFilter
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
@@ -15,7 +12,6 @@ import javax.ws.rs.ext.Provider
 
 @Provider
 @PreMatching
-@RequestFilter
 @Suppress("UNUSED")
 class SampleApiFilter constructor(
     private val client: Client

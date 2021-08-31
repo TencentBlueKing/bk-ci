@@ -27,25 +27,22 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.devops.auth.utils.AccessTokenUtils
-import io.jsonwebtoken.Claims
-import io.jsonwebtoken.ExpiredJwtException
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
-import io.jsonwebtoken.security.Keys
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.auth.entity.TokenInfo
+import com.tencent.devops.common.api.util.AESUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.Date
-import javax.crypto.SecretKey
-import kotlin.collections.HashMap
 
 @Service
 class ApiAccessTokenService @Autowired constructor(
     val dslContext: DSLContext
 ) {
+
+    private val objectMapper = ObjectMapper()
 
     @Value("\${auth.accessToken.expirationTime:#{null}}")
     private val expirationTime: Int? = null
@@ -54,12 +51,20 @@ class ApiAccessTokenService @Autowired constructor(
     private val secret: String? = null
 
     fun verifyJWT(token: String): Boolean {
-        return AccessTokenUtils.isValidToken(token, secret)
+        val result = AESUtil.decrypt(secret!!, token)
+        val expireTime = JsonUtil.to(result,TokenInfo::class.java).expirationTime
+        return expireTime < System.currentTimeMillis()
     }
 
     fun generateUserToken(userDetails: String): String {
         logger.info("generate token with userId: $userDetails")
-        return AccessTokenUtils.generateToken(userDetails, expirationTime, secret)
+        return AESUtil.encrypt(
+            secret!!,
+            objectMapper.writeValueAsString(TokenInfo(
+                userID = userDetails,
+                expirationTime = System.currentTimeMillis() + (expirationTime ?: 14400000)
+            ))
+        )
     }
 
     companion object {
