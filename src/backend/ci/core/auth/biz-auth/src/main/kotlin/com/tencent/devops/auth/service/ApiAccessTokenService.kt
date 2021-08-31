@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.net.URLDecoder
+import java.net.URLEncoder
 
 @Service
 class ApiAccessTokenService @Autowired constructor(
@@ -51,20 +53,20 @@ class ApiAccessTokenService @Autowired constructor(
     private val secret: String? = null
 
     fun verifyJWT(token: String): Boolean {
-        val result = AESUtil.decrypt(secret!!, token)
-        val expireTime = JsonUtil.to(result,TokenInfo::class.java).expirationTime
+        val result = AESUtil.decrypt(secret!!, URLDecoder.decode(token, "UTF-8"))
+        val expireTime = JsonUtil.to(result, TokenInfo::class.java).expirationTime
         return expireTime < System.currentTimeMillis()
     }
 
     fun generateUserToken(userDetails: String): String {
         logger.info("generate token with userId: $userDetails")
-        return AESUtil.encrypt(
+        return URLEncoder.encode(AESUtil.encrypt(
             secret!!,
             objectMapper.writeValueAsString(TokenInfo(
                 userID = userDetails,
                 expirationTime = System.currentTimeMillis() + (expirationTime ?: 14400000)
             ))
-        )
+        ), "UTF-8")
     }
 
     companion object {
