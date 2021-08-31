@@ -104,6 +104,7 @@ import java.util.Base64
 import java.util.Date
 import javax.ws.rs.core.Response
 
+@Suppress("ComplexCondition")
 @Service
 class GitCITriggerService @Autowired constructor(
     private val client: Client,

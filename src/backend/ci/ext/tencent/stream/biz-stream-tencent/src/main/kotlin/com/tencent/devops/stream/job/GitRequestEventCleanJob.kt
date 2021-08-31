@@ -36,6 +36,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
+@Suppress("LoopWithTooManyJumpStatements")
 @Service
 class GitRequestEventCleanJob @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
@@ -74,7 +75,10 @@ class GitRequestEventCleanJob @Autowired constructor(
 
             val result = gitRequestEventDao.deleteByIds(dslContext, cleanIds)
 
-            logger.info("clean git request event , endId : $endId , allIds size:${allIds.size} , usedIds size : ${usedIds.size} , cleanIds size:${cleanIds.size} , del size:$result")
+            logger.info("clean git request event , " +
+                "endId : $endId , allIds size:${allIds.size} , " +
+                "usedIds size : ${usedIds.size} , cleanIds size:${cleanIds.size} , del size:$result"
+            )
         }
 
         logger.info("GitRequestEventCleanJob finish...")

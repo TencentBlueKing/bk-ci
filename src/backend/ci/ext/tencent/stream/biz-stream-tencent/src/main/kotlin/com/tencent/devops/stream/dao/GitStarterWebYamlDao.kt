@@ -37,6 +37,7 @@ import org.jooq.InsertOnDuplicateSetMoreStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("NestedBlockDepth")
 @Repository
 class GitStarterWebYamlDao {
 

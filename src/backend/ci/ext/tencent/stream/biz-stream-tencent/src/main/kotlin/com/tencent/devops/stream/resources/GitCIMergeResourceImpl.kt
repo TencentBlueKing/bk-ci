@@ -45,7 +45,12 @@ class GitCIMergeResourceImpl @Autowired constructor(
     private val repositoryConfService: GitRepositoryConfService
 ) : GitCIMergeResource {
 
-    override fun getMergeBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Result<Page<GitMergeHistory>> {
+    override fun getMergeBuildList(
+        userId: String,
+        gitProjectId: Long,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<GitMergeHistory>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启Stream，请联系蓝盾助手")

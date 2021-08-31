@@ -37,6 +37,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import java.util.Base64
 
+@Suppress("NestedBlockDepth")
 object GitCommonUtils {
 
     private val logger = LoggerFactory.getLogger(GitCommonUtils::class.java)
@@ -108,7 +109,8 @@ object GitCommonUtils {
                 } else {
                     if (str.last().contains(":")) {
                         val nameTag = str.last().split(":")
-                        Triple(str[0], imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]), nameTag[1])
+                        Triple(str[0], imageNameStr.substringAfter(str[0] + "/")
+                            .substringBefore(":" + nameTag[1]), nameTag[1])
                     } else {
                         Triple(str[0], str.last(), "latest")
                     }
@@ -142,12 +144,15 @@ object GitCommonUtils {
     fun checkAndGetForkBranch(gitRequestEvent: GitRequestEvent, client: Client): GitRequestEvent {
         var realEvent = gitRequestEvent
         // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
-        if (gitRequestEvent.sourceGitProjectId != null && gitRequestEvent.gitProjectId != gitRequestEvent.sourceGitProjectId) {
+        if (gitRequestEvent.sourceGitProjectId != null &&
+            gitRequestEvent.gitProjectId != gitRequestEvent.sourceGitProjectId) {
             try {
-                val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.sourceGitProjectId!!).data!!
-                logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, token: $gitToken")
-                val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken
-                    .accessToken, gitRequestEvent.sourceGitProjectId!!).data
+                val gitToken = client.getScm(ServiceGitResource::class)
+                    .getToken(gitRequestEvent.sourceGitProjectId!!).data!!
+                logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, " +
+                    "token: $gitToken")
+                val sourceRepositoryConf = client.getScm(ServiceGitResource::class)
+                    .getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
                 realEvent = gitRequestEvent.copy(
                     // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
                     branch = if (sourceRepositoryConf != null) {
@@ -165,7 +170,12 @@ object GitCommonUtils {
     }
 
     // 判断是否为fork库的mr请求并返回带fork库信息的branchName
-    fun checkAndGetForkBranchName(gitProjectId: Long, sourceGitProjectId: Long?, branch: String, client: Client): String {
+    fun checkAndGetForkBranchName(
+        gitProjectId: Long,
+        sourceGitProjectId: Long?,
+        branch: String,
+        client: Client
+    ): String {
         // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
         if (sourceGitProjectId != null && gitProjectId != sourceGitProjectId) {
             try {

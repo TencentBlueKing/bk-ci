@@ -36,7 +36,9 @@ import com.tencent.devops.stream.service.GitCIServicesConfService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpGitCIServicesResourceImpl @Autowired constructor(private val gitCIServicesConfService: GitCIServicesConfService) : OpGitCIServicesResource {
+class OpGitCIServicesResourceImpl @Autowired constructor(
+    private val gitCIServicesConfService: GitCIServicesConfService
+) : OpGitCIServicesResource {
     override fun create(userId: String, gitCIServicesConf: GitCIServicesConf): Result<Boolean> {
         return try {
             Result(gitCIServicesConfService.create(userId, gitCIServicesConf))

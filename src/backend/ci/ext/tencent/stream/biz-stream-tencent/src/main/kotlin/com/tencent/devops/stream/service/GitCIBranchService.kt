@@ -79,7 +79,11 @@ class GitCIBranchService @Autowired constructor(
             builds.addAll(it.buildIds.split(","))
         }
         logger.info("${conf.projectCode}|$builds|$channelCode")
-        val buildHistoryList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
+        val buildHistoryList = client.get(ServiceBuildResource::class).getBatchBuildStatus(
+            projectId = conf.projectCode!!,
+            buildId = builds,
+            channelCode = channelCode
+        ).data
         if (null == buildHistoryList) {
             logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
             return emptyList()
@@ -93,7 +97,11 @@ class GitCIBranchService @Autowired constructor(
                 val history = getBuildHistory(buildHistoryList, buildIdIt)
                 val gitRequestBuildEvent = gitRequestEventBuildDao.getByBuildId(dslContext, buildIdIt) ?: return@forEach
                 val gitRequestEvent = gitRequestEventDao.get(dslContext, gitRequestBuildEvent.eventId) ?: return@forEach
-                val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, gitRequestBuildEvent.pipelineId) ?: return@forEach
+                val pipeline = pipelineResourceDao.getPipelineById(
+                    dslContext = dslContext,
+                    gitProjectId = gitProjectId,
+                    pipelineId = gitRequestBuildEvent.pipelineId
+                ) ?: return@forEach
 
                 gitCIBuildHistoryList.add(GitCIBuildHistory(
                     displayName = pipeline.displayName,
@@ -111,7 +119,11 @@ class GitCIBranchService @Autowired constructor(
                     client = client
                 ),
                 buildTotal = it.buildTotal,
-                branchType = if (default.equals(it.branch, true)) { BranchType.Default } else { BranchType.Active },
+                branchType = if (default.equals(it.branch, true)) {
+                    BranchType.Default
+                } else {
+                    BranchType.Active
+                },
                 buildHistory = gitCIBuildHistoryList
             ))
         }

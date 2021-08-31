@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
+@Suppress("NestedBlockDepth", "ComplexMethod")
 @Service
 class GitCIMergeService @Autowired constructor(
     private val client: Client,
@@ -65,7 +66,8 @@ class GitCIMergeService @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         logger.info("get merge build list, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启Stream，无法查询")
+        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+            ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启Stream，无法查询")
         val mergeList = gitRequestEventDao.getMergeRequestList(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
@@ -105,7 +107,11 @@ class GitCIMergeService @Autowired constructor(
             val mergeBuildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!)
             logger.info("Get merge build list mergeBuildsList: $mergeBuildsList, gitProjectId: $gitProjectId")
             val builds = mergeBuildsList.map { it.buildId }.toSet()
-            val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
+            val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(
+                projectId = conf.projectCode!!,
+                buildId = builds,
+                channelCode = channelCode
+            ).data
             if (buildList?.isEmpty() == false) {
                 logger.info("Get merge build history list buildHistoryList: $buildList, gitProjectId: $gitProjectId")
                 val records = mutableListOf<GitCIBuildHistory>()
@@ -121,7 +127,8 @@ class GitCIMergeService @Autowired constructor(
                             buildHistory = history
                         ))
                     } catch (e: Exception) {
-                        logger.error("Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ", e)
+                        logger.error("Load gitProjectId: ${it.gitProjectId}, " +
+                            "eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ", e)
                         return@nextBuild
                     }
                 }

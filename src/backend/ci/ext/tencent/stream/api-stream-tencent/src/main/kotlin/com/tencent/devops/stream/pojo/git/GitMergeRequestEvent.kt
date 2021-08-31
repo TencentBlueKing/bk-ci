@@ -58,17 +58,17 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
         "description":"ddd",
         "source":{
             "name":"aaron-git-test",
-            "ssh_url":"git@git.code.oa.com:aaronxsheng/aaron-git-test.git",
-            "http_url":"http://git.code.oa.com/aaronxsheng/aaron-git-test.git",
-            "web_url":"http://git.code.oa.com/aaronxsheng/aaron-git-test",
+            "ssh_url":"xxx
+            "http_url":"xxx
+            "web_url":"xxx
             "namespace":"aaronxsheng",
             "visibility_level":0
         },
         "target":{
             "name":"aaron-git-test",
-            "ssh_url":"git@git.code.oa.com:aaronxsheng/aaron-git-test.git",
-            "http_url":"http://git.code.oa.com/aaronxsheng/aaron-git-test.git",
-            "web_url":"http://git.code.oa.com/aaronxsheng/aaron-git-test",
+            "ssh_url":"xxx
+            "http_url":"xxx
+            "web_url":"xxx
             "namespace":"aaronxsheng",
             "visibility_level":0
         },
@@ -76,18 +76,19 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
             "id":"1663cbea34521a3c8097046716306d2fbdd9cfea",
             "message":"ddd",
             "timestamp":"2018-11-19T08:41:32+0000",
-            "url":"http://git.code.oa.com/aaronxsheng/aaron-git-test/commits/1663cbea34521a3c8097046716306d2fbdd9cfea",
+            "url":"xxx
             "author":{
                 "name":"aaronxsheng",
                 "email":"aaronxsheng@tencent.com"
             }
         },
-        "url":"http://git.code.oa.com/aaronxsheng/aaron-git-test/merge_requests/3",
+        "url":"xxx
         "action":"open" / "close",
         "extension_action":"push-update"
     }
 }
 */
+@Suppress("ConstructorParameterNaming")
 data class GitMergeRequestEvent(
     val user: GitUser,
     val object_attributes: GitMRAttributes
@@ -97,6 +98,7 @@ data class GitMergeRequestEvent(
     }
 }
 
+@Suppress("ConstructorParameterNaming")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitMRAttributes(
     val id: Long,

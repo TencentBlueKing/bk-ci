@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
+@Suppress("ComplexMethod", "MaxLineLength")
 @Service
 class GitCIRequestService @Autowired constructor(
     private val client: Client,
