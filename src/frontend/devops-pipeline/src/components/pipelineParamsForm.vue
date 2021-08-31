@@ -1,13 +1,17 @@
 <template>
     <div style="text-align: left">
         <form class="bk-form" action="//localhost" target="previewHiddenIframe" ref="previewParamsForm" onsubmit="return false;">
-            <form-field v-for="(param, index) in paramList"
+            <div v-for="(param, index) in paramList"
                 :key="param.id" :required="param.required"
+                class="preview-params-item"
                 :is-error="errors.has('devops' + param.name)"
                 :error-msg="errors.first('devops' + param.name)"
                 :label="param.label || param.id"
                 :style="{ width: param.width }"
             >
+                <div class="preview-params-label">
+                    {{ param.label || param.id }}:
+                </div>
                 <section class="component-row">
                     <component :is="param.component" v-validate="{ required: param.required }" :click-unfold="true" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;" :placeholder="param.placeholder"></component>
                     <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
@@ -19,8 +23,8 @@
                         <file-param-input :file-path="param.value"></file-param-input>
                     </div>
                 </section>
-                <span v-if="!errors.has('devops' + param.name)" :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']" :title="param.desc">{{ param.desc }}</span>
-            </form-field>
+                <span v-if="!errors.has('devops' + param.name)" :class="{ 'preview-params-desc': true, 'is-textarea-desc': param.component === 'VuexTextarea' }" :title="param.desc">{{ param.desc }}</span>
+            </div>
         </form>
         <iframe v-show="false" name="previewHiddenIframe"></iframe>
     </div>
@@ -186,7 +190,6 @@
     @import '@/scss/conf';
     @import '@/scss/mixins/ellipsis';
     .component-row {
-        display: flex;
         .metadata-box {
             position: relative;
             display: none;
@@ -235,12 +238,14 @@
         }
     }
     .preview-params-desc {
+        margin-top: 5px;
+        margin-bottom: 10px;
         color: #999;
         width: 100%;
         font-size: 12px;
         @include ellipsis();
     }
-    .params-desc-styles {
-        margin-top: 32px;
+    .is-textarea-desc {
+        margin-top: 37px;
     }
 </style>

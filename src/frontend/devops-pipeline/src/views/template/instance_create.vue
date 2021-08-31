@@ -723,18 +723,22 @@
                 border: 1px dashed #EBF0F5;
             }
             .pipeline-params-content {
-                padding: 10px 20px 25px;
+                padding: 20px;
                 background-color: #fff;
-                .bk-form-item {
-                    float: left;
-                    margin-top: 20px;
-                    width: 46%;
-                    height: 40px;
+                .bk-form {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: space-between;
                 }
-            }
-            .template-params-content {
-                padding-top: 0;
-                padding-bottom: 40px;
+                .preview-params-item {
+                    position: relative;
+                    width: 48%;
+                    margin-right: 29px;
+                }
+                .preview-params-label {
+                    font-size: 12px;
+                    margin-bottom: 5px;
+                }
             }
         }
         .params-item {
