@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.utils.AccessTokenUtils
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
@@ -53,70 +54,13 @@ class ApiAccessTokenService @Autowired constructor(
     private val secret: String? = null
 
     fun verifyJWT(token: String): Boolean {
-        return isValidToken(token)
+        return AccessTokenUtils.isValidToken(token, secret)
     }
 
     fun generateUserToken(userDetails: String): String {
         logger.info("generate token with userId: $userDetails")
-        return generateToken(userDetails)
+        return AccessTokenUtils.generateToken(userDetails, expirationTime, secret)
     }
-
-    /**
-     * 用于生成 JWT 令牌的加密密钥
-     */
-    private fun generalKeyByDecoders(): SecretKey {
-        return Keys.hmacShaKeyFor(secret!!.toByteArray())
-    }
-
-    /**
-     * 为给定的 UserDetails 和有效期生成 JWT 令牌
-     */
-    private fun generateToken(userDetails: String): String {
-        val claims = HashMap<String, Any>()
-        return createToken(claims, userDetails)
-    }
-
-    /**
-     * 创建具有给定声明、主题和有效期的令牌
-     */
-    private fun createToken(claims: Map<String, Any>, subject: String): String {
-        //5 hours validity
-        val expirationDate = Date(System.currentTimeMillis() + (expirationTime ?: 14400000))
-
-        return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(Date(System.currentTimeMillis()))
-            .setExpiration(expirationDate)
-            .signWith(generalKeyByDecoders(), SignatureAlgorithm.HS512).compact()
-    }
-
-    /**
-     * 提取给定 JWT 令牌的所有声明
-     */
-    private fun extractAllClaims(token: String): Claims = Jwts.parser().setSigningKey(generalKeyByDecoders())
-        .parseClaimsJws(token).body
-
-    /**
-     * 从给定的令牌和解析器函数中提取单个声明
-     */
-    private fun <T> extractClaim(token: String, claimsResolver: (Claims) -> T): T {
-        val claims = extractAllClaims(token)
-        return claimsResolver(claims)
-    }
-
-    /**
-     * 返回令牌是否有效
-     */
-    private fun isValidToken(token: String): Boolean {
-        return try {
-            !extractExpiration(token).before(Date())
-        } catch (e: ExpiredJwtException) {
-            false
-        }
-    }
-
-    /**
-     * 提取给定 JWT 令牌的到期日期
-     */
-    private fun extractExpiration(token: String): Date = extractClaim(token, Claims::getExpiration)
 
     companion object {
         private val logger = LoggerFactory.getLogger(ApiAccessTokenService::class.java)
