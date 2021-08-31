@@ -30,14 +30,17 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.openapi.filter.impl.SampleApiFilter
 import com.tencent.devops.openapi.service.op.DefaultOpAppUserService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
 /**
  * 流水线构建核心配置
  */
 @Configuration
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class OpenAPiConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = ["opAppUserService"])
