@@ -43,17 +43,16 @@ class ServiceRepositoryAuthResourceImpl @Autowired constructor(
     override fun repositoryInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
+        val projectId = callBackInfo.filter.parent?.id ?: "" // FETCH_INSTANCE_INFO场景下iam不会传parentId
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                val projectId = callBackInfo.filter.parent.id
                 return repositoryAuthService.getRepository(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
-                val hashIds = callBackInfo.filter.idList.map { it.toString() }
-                return repositoryAuthService.getRepositoryInfo(hashIds, token)
+                val ids = callBackInfo.filter.idList.map { it.toString() }
+                return repositoryAuthService.getRepositoryInfo(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
-                val projectId = callBackInfo.filter.parent.id
                 return repositoryAuthService.searchRepositoryInstances(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,

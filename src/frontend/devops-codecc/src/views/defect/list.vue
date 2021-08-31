@@ -1369,7 +1369,7 @@
                 }
                 data.bizType = 'AssignDefect'
                 // data.sourceAuthor = data.sourceAuthor
-                data.newAuthor = data.targetAuthor
+                data.newAuthor = data.targetAuthor.split(',')
                 if (this.isSelectAll === 'Y') {
                     data = { ...data, isSelectAll: 'Y', queryDefectCondition: JSON.stringify(this.searchParams) }
                 }

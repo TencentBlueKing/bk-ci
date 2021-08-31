@@ -183,6 +183,7 @@ class RepositoryService @Autowired constructor(
             logger.info("serviceCreate result>> $repositoryHashId")
             Result(
                 RepositoryInfo(
+                    repositoryId = null,
                     repositoryHashId = repositoryHashId,
                     aliasName = gitRepositoryResp.name,
                     url = gitRepositoryResp.repositoryUrl,
@@ -1032,6 +1033,7 @@ class RepositoryService @Autowired constructor(
             )
         val repositoryList = repositoryRecordList.map {
             RepositoryInfo(
+                repositoryId = null,
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
                 url = it.url,
@@ -1067,6 +1069,7 @@ class RepositoryService @Autowired constructor(
             )
         val repositoryList = repositoryRecordList.map {
             RepositoryInfo(
+                repositoryId = it.repositoryId,
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
                 url = it.url,
@@ -1103,6 +1106,7 @@ class RepositoryService @Autowired constructor(
             )
         val repositoryList = repositoryRecordList.map {
             RepositoryInfo(
+                repositoryId = it.repositoryId,
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
                 url = it.url,
@@ -1235,6 +1239,29 @@ class RepositoryService @Autowired constructor(
         repositoryInfos?.map {
             result.add(
                 RepositoryInfo(
+                    repositoryId = it.repositoryId,
+                    repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
+                    aliasName = it.aliasName,
+                    url = it.url,
+                    type = ScmType.valueOf(it.type),
+                    updatedTime = it.updatedTime.timestampmilli()
+                )
+            )
+        }
+        return result
+    }
+
+    fun getInfoByIds(ids: List<Long>): List<RepositoryInfo> {
+        val repositoryInfos = repositoryDao.getRepoByIds(
+            dslContext = dslContext,
+            repositoryIds = ids,
+            checkDelete = true
+        )
+        val result = mutableListOf<RepositoryInfo>()
+        repositoryInfos?.map {
+            result.add(
+                RepositoryInfo(
+                    repositoryId = it.repositoryId,
                     repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                     aliasName = it.aliasName,
                     url = it.url,

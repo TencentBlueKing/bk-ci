@@ -47,7 +47,7 @@ import java.sql.DriverManager
 
 @Suppress("ALL")
 object SvnUtil {
-    private val logger = LoggerFactory.getLogger(this::class.java)
+    private val logger = LoggerFactory.getLogger(SvnUtil::class.java)
 
     /**
      * 删除svn锁并执行clean up

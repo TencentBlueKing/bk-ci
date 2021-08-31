@@ -278,6 +278,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     fun buildClaimTask(buildId: String, vmSeqId: String, vmName: String): BuildTask {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
+            containerIdLock.lock()
             val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             if (buildInfo == null || buildInfo.status.isFinish()) {
                 LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId|$vmName|buildInfo ${buildInfo?.status}")
@@ -391,6 +392,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             containerIdLock.lock()
             executeCompleteTaskBus(buildId, result, vmName, vmSeqId)
         } finally {
+            redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
             containerIdLock.unlock()
         }
     }
@@ -403,14 +405,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     ) {
         val buildTask = pipelineRuntimeService.getBuildTask(buildId, result.taskId)
         val taskStatus = buildTask?.status
-        if (taskStatus == null || taskStatus.isFinish()) {
-            // 当上报的任务不存在或者状态已经结束，则直接返回
-            LOG.error("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|${result.taskId}|invalid or finish")
+        if (taskStatus == null) {
+            // 当上报的任务不存在，则直接返回
+            LOG.warn("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|${result.taskId}|invalid")
             return
         }
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: run {
-            LOG.error("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|buildInfo is null")
+            LOG.warn("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|buildInfo is null")
             return // 数据为空是平台异常，正常情况不应该出现
         }
 
@@ -425,6 +427,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             } catch (ignored: Exception) { // 防止因为变量字符过长而失败。
                 LOG.warn("ENGINE|$buildId| save var fail: ${ignored.message}", ignored)
             }
+        }
+        if (taskStatus.isFinish()) {
+            // 当上报的任务状态已经结束，则直接返回
+            LOG.warn("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|${result.taskId}|finish")
+            return
         }
         val errorType = ErrorType.getErrorType(result.errorType)
         val buildStatus = getCompleteTaskBuildStatus(result, buildId, buildInfo)
@@ -465,8 +472,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         )
         // 发送度量数据
         sendElementData(buildId = buildId, result = result)
-
-        redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
 
         LOG.info(
             "ENGINE|$buildId|Agent|END_TASK|j($vmSeqId)|${result.taskId}|$buildStatus|" +
@@ -512,6 +517,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     fun buildEndTask(buildId: String, vmSeqId: String, vmName: String): Boolean {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
+            containerIdLock.lock()
             val task = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
                 .firstOrNull { it.taskId == VMUtils.genEndPointTaskId(it.taskSeq) }
 

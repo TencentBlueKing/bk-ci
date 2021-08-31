@@ -132,6 +132,11 @@ class PipelineBuildDetailService @Autowired constructor(
         }
         triggerContainer.params = newParams
 
+        // #4531 兼容历史构建的页面显示
+        model.stages.forEach { stage ->
+            stage.refreshReviewOption()
+        }
+
         return ModelDetail(
             id = record.buildId,
             pipelineId = buildInfo.pipelineId,
@@ -205,8 +210,9 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                 }
                 // #3138 状态实时刷新
-                if (status.isRunning() && container.elements[0].status.isNullOrBlank() &&
-                    container.containPostTaskFlag != true) {
+                val refreshFlag = status.isRunning() && container.elements[0].status.isNullOrBlank() &&
+                    container.containPostTaskFlag != true
+                if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
                     container.status = buildStatus.name
                 }
                 return Traverse.CONTINUE

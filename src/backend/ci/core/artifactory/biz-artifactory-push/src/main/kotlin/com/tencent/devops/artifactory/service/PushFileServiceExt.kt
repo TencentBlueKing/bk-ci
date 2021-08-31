@@ -189,6 +189,6 @@ class PushFileServiceExt @Autowired constructor(
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(this::class.java)
+        val logger: Logger = LoggerFactory.getLogger(PushFileServiceExt::class.java)
     }
 }

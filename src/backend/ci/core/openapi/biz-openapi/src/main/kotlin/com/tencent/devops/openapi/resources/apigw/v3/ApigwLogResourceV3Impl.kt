@@ -155,6 +155,6 @@ class ApigwLogResourceV3Impl @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ApigwLogResourceV3Impl::class.java)
     }
 }
