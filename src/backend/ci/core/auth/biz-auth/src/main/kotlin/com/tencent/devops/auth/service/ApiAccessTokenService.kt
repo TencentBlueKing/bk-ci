@@ -27,8 +27,11 @@
 
 package com.tencent.devops.auth.service
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.pojo.TokenInfo
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_EXPIRED_ERROR
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_ILLEGAL_ERROR
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDATE_ERROR
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.AESUtil
@@ -40,6 +43,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 
 @Service
@@ -55,28 +59,16 @@ class ApiAccessTokenService @Autowired constructor(
     @Value("\${auth.accessToken.secret:#{null}}")
     private val secret: String? = null
 
+    private val tokenCache = Caffeine.newBuilder()
+        .maximumSize(100000)
+        .expireAfterAccess(30, TimeUnit.MINUTES)
+        .build<String/*BuildId*/, TokenInfo/*token context*/>()
+
     fun verifyJWT(token: String): TokenInfo {
-        val result = try {
-            AESUtil.decrypt(secret!!, URLDecoder.decode(token, "UTF-8"))
-        } catch (ignore: Throwable) {
-            throw ErrorCodeException(
-                errorCode = PARAMETER_VALIDATE_ERROR,
-                statusCode = Response.Status.BAD_REQUEST.statusCode,
-                defaultMessage = "Access token illegal"
-            )
-        }
-        val tokenInfo = try {
-            JsonUtil.to(result, TokenInfo::class.java)
-        } catch (ignore: Throwable) {
-            throw ErrorCodeException(
-                errorCode = PARAMETER_VALIDATE_ERROR,
-                statusCode = Response.Status.BAD_REQUEST.statusCode,
-                defaultMessage = "Access token invalid: ${ignore.message}"
-            )
-        }
+        val tokenInfo = getTokenInfo(token)
         if (tokenInfo.expirationTime > System.currentTimeMillis()) {
             throw ErrorCodeException(
-                errorCode = PARAMETER_VALIDATE_ERROR,
+                errorCode = PARAMETER_EXPIRED_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 defaultMessage = "Access token expired in: ${tokenInfo.expirationTime}"
             )
@@ -85,14 +77,40 @@ class ApiAccessTokenService @Autowired constructor(
     }
 
     fun generateUserToken(userDetails: String): String {
-        logger.info("generate token with userId: $userDetails")
+        logger.info("AUTH|generateUserToken userId=$userDetails")
         return URLEncoder.encode(AESUtil.encrypt(
             secret!!,
             objectMapper.writeValueAsString(TokenInfo(
-                userID = userDetails,
+                userId = userDetails,
                 expirationTime = System.currentTimeMillis() + (expirationTime ?: 14400000)
             ))
         ), "UTF-8")
+    }
+
+    private fun getTokenInfo(token: String): TokenInfo {
+        val cacheToken = tokenCache.getIfPresent(token)
+        if (cacheToken != null) return cacheToken
+
+        val result = try {
+            AESUtil.decrypt(secret!!, URLDecoder.decode(token, "UTF-8"))
+        } catch (ignore: Throwable) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_ILLEGAL_ERROR,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                defaultMessage = "Access token illegal"
+            )
+        }
+        try {
+            val tokenInfo = JsonUtil.to(result, TokenInfo::class.java)
+            tokenCache.put(token, tokenInfo)
+            return tokenInfo
+        } catch (ignore: Throwable) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_VALIDATE_ERROR,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                defaultMessage = "Access token invalid: ${ignore.message}"
+            )
+        }
     }
 
     companion object {

@@ -1,11 +1,11 @@
 package com.tencent.devops.openapi.filter.impl
 
 import com.tencent.devops.auth.api.service.ServiceTokenResource
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.API_ACCESS_TOKEN_PROPERTY
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.openapi.filter.ApiFilter
-import org.jooq.True
 import org.slf4j.LoggerFactory
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
@@ -26,7 +26,8 @@ class SampleApiFilter constructor(
     override fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
         val accessToken = requestContext.uriInfo.queryParameters.getFirst(API_ACCESS_TOKEN_PROPERTY)
         if (accessToken.isNullOrBlank()) {
-            logger.error("Request accessToken is empty for ${requestContext.request}")
+            logger.error("OPENAPI|verifyJWT accessToken is blank|" +
+                "context=${requestContext.uriInfo.queryParameters}")
             requestContext.abortWith(
                 Response.status(Response.Status.BAD_REQUEST)
                     .entity("Request accessToken is empty.")
@@ -35,9 +36,12 @@ class SampleApiFilter constructor(
             return false
         }
         try {
-            client.get(ServiceTokenResource::class).validateToken(accessToken)
+            val tokenInfo = client.get(ServiceTokenResource::class).validateToken(accessToken).data!!
+            logger.info("OPENAPI|verifyJWT|accessToken=$accessToken|tokenInfo=$tokenInfo")
+            requestContext.headers.add(AUTH_HEADER_USER_ID, tokenInfo.userId)
             return true
         } catch (ignore: Throwable) {
+            logger.error("OPENAPI|verifyJWT with error:", ignore)
             requestContext.abortWith(
                 Response.status(Response.Status.BAD_REQUEST)
                     .entity("Verification failed : $ignore")

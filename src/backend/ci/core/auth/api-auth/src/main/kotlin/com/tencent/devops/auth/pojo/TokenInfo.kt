@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel
 data class TokenInfo(
     @ApiModelProperty("用户id")
-    val userID: String?,
+    val userId: String?,
     @ApiModelProperty("过期时间戳")
     val expirationTime: Long
 )

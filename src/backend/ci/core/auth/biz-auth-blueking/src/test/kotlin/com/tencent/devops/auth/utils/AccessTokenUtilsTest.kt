@@ -34,7 +34,7 @@ internal class AccessTokenUtilsTest {
         val res = URLEncoder.encode(AESUtil.encrypt(
             secret,
             objectMapper.writeValueAsString(TokenInfo(
-                userID = userDetails,
+                userId = userDetails,
                 expirationTime = System.currentTimeMillis() + (expirationTime ?: 14400000)
             ))
         ), "UTF-8")
