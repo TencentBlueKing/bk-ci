@@ -73,4 +73,5 @@ object CommonMessageCode {
     const val PARAMETER_LENGTH_TOO_SHORT = "2100023" // 参数长度不能小于{0}个字符
     const val PARAMETER_ILLEGAL_ERROR = "2100024" // {0}参数非法错误: {1}
     const val PARAMETER_EXPIRED_ERROR = "2100025" // {0}token过期错误: {1}
+    const val PARAMETER_SECRET_ERROR = "2100026" // {0}密钥配置错误: {1}
 }

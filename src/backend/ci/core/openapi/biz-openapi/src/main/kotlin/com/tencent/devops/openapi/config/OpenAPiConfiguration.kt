@@ -48,6 +48,5 @@ class OpenAPiConfiguration {
     fun opAppUserService() = DefaultOpAppUserService()
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["validate"], havingValue = "token")
     fun apiFilter(@Autowired client: Client) = SampleApiFilter(client)
 }

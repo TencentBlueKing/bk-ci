@@ -28,10 +28,10 @@
 package com.tencent.devops.auth.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.pojo.TokenInfo
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_EXPIRED_ERROR
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_ILLEGAL_ERROR
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_SECRET_ERROR
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDATE_ERROR
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.AESUtil
@@ -50,8 +50,6 @@ import javax.ws.rs.core.Response
 class ApiAccessTokenService @Autowired constructor(
     val dslContext: DSLContext
 ) {
-
-    private val objectMapper = ObjectMapper()
 
     @Value("\${auth.accessToken.expirationTime:#{null}}")
     private val expirationTime: Int? = null
@@ -78,9 +76,19 @@ class ApiAccessTokenService @Autowired constructor(
 
     fun generateUserToken(userDetails: String): String {
         logger.info("AUTH|generateUserToken userId=$userDetails")
+        if (secret.isNullOrBlank()) {
+            logger.error("AUTH| generateUserToken failed, " +
+                "because config[auth.accessToken.secret] is not found")
+            throw ErrorCodeException(
+                errorCode = PARAMETER_SECRET_ERROR,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                defaultMessage = "AUTH| generateUserToken failed, " +
+                    "because config[auth.accessToken.secret] is not found"
+            )
+        }
         return URLEncoder.encode(AESUtil.encrypt(
-            secret!!,
-            objectMapper.writeValueAsString(TokenInfo(
+            secret,
+            JsonUtil.toJson(TokenInfo(
                 userId = userDetails,
                 expirationTime = System.currentTimeMillis() + (expirationTime ?: 14400000)
             ))
