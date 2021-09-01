@@ -29,6 +29,7 @@ package com.tencent.devops.openapi.resources.apigw.v3
 
 import com.tencent.devops.auth.api.service.ServiceTokenResource
 import com.tencent.devops.auth.api.user.UserTokenResource
+import com.tencent.devops.auth.pojo.TokenInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -45,7 +46,7 @@ class ApigwTokenResourceV3Impl @Autowired constructor(
         return client.get(UserTokenResource::class).getAccessToken(userId)
     }
 
-    override fun validateToken(token: String): Result<Boolean> {
+    override fun validateToken(token: String): Result<TokenInfo> {
         return client.get(ServiceTokenResource::class).validateToken(token)
     }
 }

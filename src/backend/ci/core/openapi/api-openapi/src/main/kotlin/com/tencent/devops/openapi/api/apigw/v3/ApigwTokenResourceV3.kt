@@ -27,8 +27,8 @@
 
 package com.tencent.devops.openapi.api.apigw.v3
 
+import com.tencent.devops.auth.pojo.TokenInfo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -64,5 +64,5 @@ interface ApigwTokenResourceV3 {
         @ApiParam("token", required = true)
         @PathParam("token")
         token: String
-    ): Result<Boolean>
+    ): Result<TokenInfo>
 }
