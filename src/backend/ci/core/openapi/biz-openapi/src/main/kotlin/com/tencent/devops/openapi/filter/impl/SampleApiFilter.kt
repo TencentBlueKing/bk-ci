@@ -24,7 +24,7 @@ class SampleApiFilter constructor(
     }
 
     override fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
-        val accessToken =  requestContext.uriInfo.queryParameters.getFirst(API_ACCESS_TOKEN_PROPERTY)
+        val accessToken = requestContext.uriInfo.queryParameters.getFirst(API_ACCESS_TOKEN_PROPERTY)
         if (accessToken.isNullOrBlank()) {
             logger.error("Request accessToken is empty for ${requestContext.request}")
             requestContext.abortWith(
@@ -38,9 +38,11 @@ class SampleApiFilter constructor(
             client.get(ServiceTokenResource::class).validateToken(accessToken)
             return true
         } catch (ignore: Throwable) {
-            Response.status(Response.Status.BAD_REQUEST)
-                .entity("Verification failed : $ignore")
-                .build()
+            requestContext.abortWith(
+                Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Verification failed : $ignore")
+                    .build()
+            )
         }
         return false
     }
