@@ -27,31 +27,29 @@
 
 package com.tencent.devops.auth.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_SERVICE_PERMISSION"], description = "权限校验--权限相关")
-@Path("/open/service/auth/permission")
+@Api(tags = ["AUTH_SERVICE_TOKEN"], description = "权限校验--token相关")
+@Path("/service/auth/token")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceTokenResource {
 
-    @GET
-    @Path("/token/validate")
+    @POST
+    @Path("/validate")
     @ApiOperation("校验用户是否有action的权限")
     fun validateToken(
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @ApiParam("认证token", required = true)
-        token: String
+        @ApiParam("权限Token", required = false)
+        @QueryParam("accessToken")
+        accessToken: String
     ): Result<Boolean>
 }

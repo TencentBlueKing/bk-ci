@@ -34,7 +34,7 @@ class SampleApiFilter constructor(
             )
             return false
         }
-        return client.get(ServiceTokenResource::class).validateToken(token = bkApiJwt).data ?: false
+        return client.get(ServiceTokenResource::class).validateToken(bkApiJwt).data ?: false
     }
 
     override fun filter(requestContext: ContainerRequestContext) {

@@ -32,6 +32,7 @@ import com.tencent.devops.openapi.service.op.DefaultOpAppUserService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -47,6 +48,6 @@ class OpenAPiConfiguration {
     fun opAppUserService() = DefaultOpAppUserService()
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "auth", name = ["validate"], havingValue = "token")
     fun apiFilter(@Autowired client: Client) = SampleApiFilter(client)
 }
