@@ -58,7 +58,6 @@
         },
         computed: {
             ...mapGetters('atom', [
-                'getAtomTree',
                 'getAtomCodeListByCategory',
                 'classifyCodeListByCategory',
                 'isTriggerContainer'

@@ -25,7 +25,7 @@ import { jobConst, buildEnvMap } from '@/utils/pipelineConst'
 export default {
     getAtomCodeListByCategory: state => category => {
         return state.atomCodeList.filter(atomCode => {
-            const atom = state.atomMap[atomCode]
+            const atom = state.projectRecommendAtomMap[atomCode]
             return atom.category === category
         })
     },
@@ -35,66 +35,6 @@ export default {
             return ['trigger']
         }
         return state.atomClassifyCodeList.filter(classifyCode => classifyCode !== 'trigger')
-    },
-    getAtomTree: (state, getters) => (os, category, searchKey) => {
-        let atomCodeList = getters.getAtomCodeListByCategory(category)
-        if (searchKey) {
-            const searchStr = searchKey.toLowerCase()
-            atomCodeList = atomCodeList.filter(atomCode => {
-                const atom = state.atomMap[atomCode] || {}
-                const name = (atom.name || '').toLowerCase()
-                const summary = (atom.summary || '').toLowerCase()
-                return name.indexOf(searchStr) > -1 || summary.indexOf(searchStr) > -1
-            })
-        }
-        const classifyCodeList = getters.classifyCodeListByCategory(category)
-        const { atomClassifyMap, atomMap } = state
-        const atomTree = classifyCodeList.reduce((cMap, classifyCode) => {
-            const classify = atomClassifyMap[classifyCode]
-            if (classify) {
-                cMap[classifyCode] = {
-                    classifyCode,
-                    classifyName: classify.classifyName,
-                    level: 0,
-                    children: []
-                }
-            }
-            return cMap
-        }, {
-            all: {
-                classifyCode: 'all',
-                classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.all')) || 'all',
-                level: 0,
-                children: atomCodeList.map(atomCode => {
-                    const atom = atomMap[atomCode]
-                    return {
-                        ...atom,
-                        level: 1,
-                        disabled: getters.isAtomDisabled({ os, atom, category })
-                    }
-                })
-            }
-        })
-
-        atomCodeList.map(atomCode => {
-            const atom = atomMap[atomCode]
-            const parent = atomTree[atom.classifyCode]
-            if (parent && Array.isArray(parent.children)) {
-                parent.children.push({
-                    ...atom,
-                    level: parent.level + 1,
-                    disabled: getters.isAtomDisabled({ os, atom, category })
-                })
-            }
-        })
-
-        Object.keys(atomTree).map(classify => { // 按disable排序
-            if (atomTree[classify] && Array.isArray(atomTree[classify].children)) {
-                atomTree[classify].children.sort((a, b) => a.disabled - b.disabled)
-            }
-        })
-
-        return atomTree
     },
     isAtomDisabled: state => ({ os, atom, category }) => {
         return (!os && atom.os.length > 0 && category !== 'TRIGGER') || (os && atom.os.length > 0 && !atom.os.includes(os)) || (os && atom.os.length === 0 && !atom.buildLessRunFlag) || false
@@ -106,7 +46,7 @@ export default {
     },
     getDefaultVersion: state => atomCode => {
         try {
-            const atom = state.atomMap[atomCode]
+            const atom = state.projectRecommendAtomMap[atomCode]
             return atom.defaultVersion || '1.*'
         } catch (error) {
             return '1.*'
