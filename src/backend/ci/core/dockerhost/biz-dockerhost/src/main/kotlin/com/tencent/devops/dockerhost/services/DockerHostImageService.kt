@@ -28,37 +28,92 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.DockerClient
-import com.github.dockerjava.api.async.ResultCallback
-import com.github.dockerjava.api.command.BuildImageResultCallback
-import com.github.dockerjava.api.model.AuthConfig
-import com.github.dockerjava.api.model.AuthConfigurations
-import com.github.dockerjava.api.model.BuildResponseItem
-import com.github.dockerjava.api.model.PushResponseItem
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
-import org.apache.commons.lang3.StringUtils
+import com.tencent.devops.dockerhost.services.image.ImageBuildHandler
+import com.tencent.devops.dockerhost.services.image.ImageHandlerContext
+import com.tencent.devops.dockerhost.services.image.ImagePushHandler
+import com.tencent.devops.dockerhost.services.image.ImageScanHandler
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.io.File
 import java.io.IOException
-import java.nio.file.Paths
 
 @Component
 class DockerHostImageService(
     private val dockerHostConfig: DockerHostConfig,
-    private val dockerHostBuildApi: DockerHostBuildResourceApi,
-    private val dockerHostImageScanService: DockerHostImageScanService
+/*    private val dockerHostBuildApi: DockerHostBuildResourceApi,
+    private val dockerHostImageScanService: DockerHostImageScanService,*/
+    private val imageBuildHandler: ImageBuildHandler,
+    private val imageScanHandler: ImageScanHandler,
+    private val imagePushHandler: ImagePushHandler
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostImageService::class.java)
     }
 
+    fun dockerBuildAndPushImage(
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        dockerBuildParam: DockerBuildParam,
+        buildId: String,
+        elementId: String?,
+        outer: Boolean
+    ): Pair<Boolean, String?> {
+        lateinit var dockerClient: DockerClient
+        try {
+            val repoAddr = dockerBuildParam.repoAddr
+            val userName = dockerBuildParam.userName
+            val password = dockerBuildParam.password
+            val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
+                .withDockerConfig(dockerHostConfig.dockerConfig)
+                .withApiVersion(dockerHostConfig.apiVersion)
+                .withRegistryUrl(repoAddr)
+                .withRegistryUsername(userName)
+                .withRegistryPassword(password)
+                .build()
+
+            val longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
+                .dockerHost(config.dockerHost)
+                .sslConfig(config.sslConfig)
+                .connectTimeout(5000)
+                .readTimeout(300000)
+                .build()
+
+            dockerClient = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
+
+            imageBuildHandler.setNextHandler(imageScanHandler.setNextHandler(imagePushHandler))
+                .handlerRequest(
+                    ImageHandlerContext(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        vmSeqId = vmSeqId,
+                        dockerBuildParam = dockerBuildParam,
+                        dockerClient = dockerClient,
+                        pipelineTaskId = elementId,
+                        outer = outer
+                    ))
+
+            return Pair(true, null)
+        } catch (e: Exception) {
+            logger.error("Docker build and push failed, exception: ", e)
+            return Pair(false, e.message)
+        } finally {
+            try {
+                dockerClient.close()
+            } catch (e: IOException) {
+                logger.error("docker client close exception: ${e.message}")
+            }
+        }
+
+    }
+/*
     fun dockerBuildAndPushImage(
         projectId: String,
         pipelineId: String,
@@ -274,5 +329,5 @@ class DockerHostImageService(
             }
             super.onNext(item)
         }
-    }
+    }*/
 }
