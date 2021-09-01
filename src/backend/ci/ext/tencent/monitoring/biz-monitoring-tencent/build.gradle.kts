@@ -38,4 +38,9 @@ dependencies {
     compile("org.apache.commons:commons-compress:1.15")
     compile("org.json:json:20140107")
     compile("org.influxdb:influxdb-java:2.10")
+    api("org.apache.lucene:lucene-core")
+    api("org.elasticsearch:elasticsearch")
+    api("org.elasticsearch.client:elasticsearch-rest-client")
+    api("org.elasticsearch.client:elasticsearch-rest-high-level-client")
+    api(project(":ext:tencent:common:common-kafka-tencent"))
 }

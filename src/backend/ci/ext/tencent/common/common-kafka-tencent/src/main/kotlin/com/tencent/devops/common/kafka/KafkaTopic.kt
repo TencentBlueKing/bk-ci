@@ -57,4 +57,9 @@ object KafkaTopic {
 
     // APP上报topic
     const val BK_CI_APP_LOGIN_TOPIC = "tendata-bkdevops-296-topic-landun-app-login"
+
+    // Stream上报topic
+    const val STREAM_BUILD_INFO_TOPIC = "tendata-bkdevops-topic-stream-build-info"
+
+    const val BUILD_ATOM_REPORT_TOPIC_PREFIX = "tendata-bkdevops-topic-build-atom-report"
 }
