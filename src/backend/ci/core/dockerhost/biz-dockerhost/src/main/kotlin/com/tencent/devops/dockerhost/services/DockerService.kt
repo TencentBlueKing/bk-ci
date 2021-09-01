@@ -46,7 +46,8 @@ import java.util.concurrent.Future
 
 @Service@Suppress("ALL")
 class DockerService @Autowired constructor(
-    private val dockerHostBuildService: DockerHostBuildService
+    private val dockerHostBuildService: DockerHostBuildService,
+    private val dockerHostImageService: DockerHostImageService
 ) {
 
     private val executor = Executors.newFixedThreadPool(10)
@@ -64,7 +65,7 @@ class DockerService @Autowired constructor(
     ): Boolean {
         logger.info("[$buildId]|projectId=$projectId|pipelineId=$pipelineId|vmSeqId=$vmSeqId|param=$dockerBuildParam")
         if (null != syncFlag && syncFlag) {
-            return dockerHostBuildService.dockerBuildAndPushImage(
+            return dockerHostImageService.dockerBuildAndPushImage(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     vmSeqId = vmSeqId,
@@ -75,7 +76,7 @@ class DockerService @Autowired constructor(
             ).first
         } else {
             val future = executor.submit(Callable<Pair<Boolean, String?>> {
-                dockerHostBuildService.dockerBuildAndPushImage(
+                dockerHostImageService.dockerBuildAndPushImage(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         vmSeqId = vmSeqId,
