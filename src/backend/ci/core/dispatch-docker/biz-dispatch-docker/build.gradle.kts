@@ -27,7 +27,8 @@
 
 dependencies {
     api(project(":core:dispatch-docker:api-dispatch-docker"))
-    // api(project(":core:dispatch:biz-dispatch"))
+    api(project(":core:dispatch-docker:model-dispatch-docker"))
+
     api(project(":core:common:common-dispatch-sdk"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
@@ -35,6 +36,5 @@ dependencies {
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:dispatch:model-dispatch"))
     api(project(":core:log:api-log"))
 }
