@@ -69,10 +69,7 @@ interface GitCIBuildResource {
         buildId: String,
         @ApiParam("要重试的原子任务ID", required = false)
         @QueryParam("taskId")
-        taskId: String? = null,
-        @ApiParam("仅重试所有失败Job", required = false)
-        @QueryParam("failedContainer")
-        failedContainer: Boolean? = false
+        taskId: String? = null
     ): Result<BuildId>
 
     @ApiOperation("手动停止流水线")
