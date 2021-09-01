@@ -37,7 +37,6 @@ import com.tencent.devops.openapi.api.apigw.v3.ApigwTokenResourceV3
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-@Suppress("UNUSED")
 class ApigwTokenResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwTokenResourceV3 {

@@ -15,7 +15,6 @@ import javax.ws.rs.ext.Provider
 @Provider
 @PreMatching
 @RequestFilter
-@Suppress("UNUSED")
 class SampleApiFilter constructor(
     private val client: Client
 ) : ApiFilter {
