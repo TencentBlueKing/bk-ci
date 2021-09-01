@@ -68,9 +68,11 @@ enum class AtomStatusEnum(val status: Int) {
                 INIT.status.toByte(),
                 COMMITTING.status.toByte(),
                 BUILDING.status.toByte(),
+                BUILD_FAIL.status.toByte(),
                 TESTING.status.toByte(),
                 AUDITING.status.toByte(),
-                CODECCING.status.toByte()
+                CODECCING.status.toByte(),
+                CODECC_FAIL.status.toByte()
             )
         }
     }

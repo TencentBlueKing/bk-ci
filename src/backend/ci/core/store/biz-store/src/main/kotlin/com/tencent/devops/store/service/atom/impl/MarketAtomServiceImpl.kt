@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
 import com.tencent.devops.common.api.constant.NO_LABEL
 import com.tencent.devops.common.api.constant.OPTIONS
@@ -508,6 +509,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         // 获取插件处于流程中的版本信息
         var processingVersionInfoMap: MutableMap<String, MutableList<AtomBaseInfo>>? = null
         processingAtomRecords?.forEach { processingAtomRecord ->
+            if (processingAtomRecord.version == INIT_VERSION) {
+                return@forEach
+            }
             if (processingVersionInfoMap == null) {
                 processingVersionInfoMap = mutableMapOf()
             }
