@@ -44,10 +44,10 @@ import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
  *   "repository":{
  *    　"name":"maven-hello-world",
  *      "description":"",
- *      "homepage":"http://git.code.oa.com/rdeng/maven-hello-world",
- *      "git_http_url":"http://git.code.oa.com/rdeng/maven-hello-world.git",
- *      "git_ssh_url":"git@git.code.oa.com:rdeng/maven-hello-world.git",
- *      "url":"git@git.code.oa.com:rdeng/maven-hello-world.git",
+ *      "homepage":"xxx
+ *      "git_http_url":"xxx
+ *      "git_ssh_url":"xxx
+ *      "url":"xxx
  *      "visibility_level":0
  *    },
  *    "commits":[
@@ -55,7 +55,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
  *         "id":"47f4f77f5428eed4e75f4d84d1b9089b38c5a34e",
  *         "message":"Test webhook",
  *         "timestamp":"2018-03-16T06:50:11+0000",
- *         "url":"http://git.code.oa.com/rdeng/maven-hello-world/commit/47f4f77f5428eed4e75f4d84d1b9089b38c5a34e",
+ *         "url":"xxx
  *         "author":{
  *           "name":"rdeng",
  *           "email":"rdeng@tencent.com"
@@ -73,6 +73,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
  *   "total_commits_count":1
  * }
  */
+@Suppress("ConstructorParameterNaming")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitPushEvent(
     val operation_kind: String,

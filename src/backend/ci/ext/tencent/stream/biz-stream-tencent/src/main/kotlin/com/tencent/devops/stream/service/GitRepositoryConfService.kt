@@ -93,16 +93,6 @@ class GitRepositoryConfService @Autowired constructor(
         )
     }
 
-    fun enableGitCI(gitProjectId: Long): Boolean {
-        if (gitCISettingDao.getSetting(dslContext, gitProjectId) == null) {
-            logger.info("git repo not exists.")
-            return false
-        }
-
-        gitCISettingDao.enableGitCI(dslContext, gitProjectId, true)
-        return true
-    }
-
     fun disableGitCI(gitProjectId: Long): Boolean {
         if (gitCISettingDao.getSetting(dslContext, gitProjectId) == null) {
             logger.info("git repo not exists.")
@@ -142,7 +132,10 @@ class GitRepositoryConfService @Autowired constructor(
         logger.info("save git ci conf, repositoryConf: $repositoryConf")
         val gitRepoConf = gitCISettingDao.getSetting(dslContext, repositoryConf.gitProjectId)
         val projectCode = if (gitRepoConf?.projectCode == null) {
-            val projectResult = client.get(ServiceTxProjectResource::class).createGitCIProject(repositoryConf.gitProjectId, userId)
+            val projectResult = client.get(ServiceTxProjectResource::class).createGitCIProject(
+                repositoryConf.gitProjectId,
+                userId
+            )
             if (projectResult.isNotOk()) {
                 throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")
             }

@@ -81,7 +81,11 @@ class GitCIDetailService @Autowired constructor(
             Response.Status.FORBIDDEN,
             "项目未开启Stream，无法查询"
         )
-        val eventBuildRecord = gitRequestEventBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId) ?: return null
+        val eventBuildRecord = gitRequestEventBuildDao.getLatestBuild(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId
+        ) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
         val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
@@ -116,7 +120,11 @@ class GitCIDetailService @Autowired constructor(
         return GitCIModelDetail(pipeline, realEvent, modelDetail)
     }
 
-    fun batchGetBuildHistory(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitCIBuildHistory> {
+    fun batchGetBuildHistory(
+        userId: String,
+        gitProjectId: Long,
+        buildIds: List<String>
+    ): Map<String, GitCIBuildHistory> {
         val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启Stream，无法查询"
@@ -132,7 +140,11 @@ class GitCIDetailService @Autowired constructor(
             val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
             val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
-            val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, buildRecord.pipelineId) ?: return@forEach
+            val pipeline = pipelineResourceDao.getPipelineById(
+                dslContext = dslContext,
+                gitProjectId = gitProjectId,
+                pipelineId = buildRecord.pipelineId
+            ) ?: return@forEach
             infoMap[it.id] = GitCIBuildHistory(
                 displayName = pipeline.displayName,
                 pipelineId = pipeline.pipelineId,

@@ -30,6 +30,7 @@ package com.tencent.devops.stream.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Suppress("UnnecessaryAbstractClass")
 @ApiModel("工蜂项目基类")
 abstract class Repository(
     @ApiModelProperty("工蜂项目ID")

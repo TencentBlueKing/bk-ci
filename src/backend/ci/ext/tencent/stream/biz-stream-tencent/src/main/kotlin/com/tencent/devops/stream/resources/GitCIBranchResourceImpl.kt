@@ -33,7 +33,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.GitCIBranchResource
 import com.tencent.devops.stream.pojo.BranchBuildHistory
 import com.tencent.devops.stream.service.GitCIBranchService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -41,9 +40,11 @@ class GitCIBranchResourceImpl @Autowired constructor(
     private val gitCIBranchService: GitCIBranchService
 ) : GitCIBranchResource {
 
-    private val logger = LoggerFactory.getLogger(GitCIBranchResourceImpl::class.java)
-
-    override fun getBranchBuildList(userId: String, gitProjectId: Long, defaultBranch: String?): Result<List<BranchBuildHistory>> {
+    override fun getBranchBuildList(
+        userId: String,
+        gitProjectId: Long,
+        defaultBranch: String?
+    ): Result<List<BranchBuildHistory>> {
         checkParam(userId)
         return Result(gitCIBranchService.getBranchBuildList(userId, gitProjectId, defaultBranch))
     }

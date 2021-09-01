@@ -51,9 +51,9 @@ class GitCIDetailResourceImpl @Autowired constructor(
         pipelineId: String?,
         buildId: String?
     ): Result<GitCIModelDetail?> {
-        checkParam(userId, gitProjectId)
+        checkParam(userId)
         return if (!buildId.isNullOrBlank()) {
-            Result(gitCIDetailService.getBuildDetail(userId, gitProjectId, buildId!!))
+            Result(gitCIDetailService.getBuildDetail(userId, gitProjectId, buildId))
         } else {
             Result(gitCIDetailService.getProjectLatestBuildDetail(userId, gitProjectId, pipelineId))
         }
@@ -67,7 +67,7 @@ class GitCIDetailResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>> {
-        checkParam(userId, gitProjectId)
+        checkParam(userId)
         return Result(gitCIDetailService.search(
             userId = userId,
             gitProjectId = gitProjectId,
@@ -85,7 +85,7 @@ class GitCIDetailResourceImpl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<Url> {
-        checkParam(userId, gitProjectId)
+        checkParam(userId)
         return Result(gitCIDetailService.downloadUrl(
             userId = userId,
             gitUserId = gitUserId,
@@ -95,13 +95,18 @@ class GitCIDetailResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Result<List<Report>> {
-        checkParam(userId, gitProjectId)
+    override fun getReports(
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String,
+        buildId: String
+    ): Result<List<Report>> {
+        checkParam(userId)
 
         return Result(gitCIDetailService.getReports(userId, gitProjectId, pipelineId, buildId))
     }
 
-    private fun checkParam(userId: String, gitProjectId: Long) {
+    private fun checkParam(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }

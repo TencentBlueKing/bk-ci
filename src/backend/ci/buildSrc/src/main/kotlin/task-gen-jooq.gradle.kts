@@ -51,6 +51,9 @@ val moduleNames = when (val moduleName = name.split("-")[1]) {
     "lambda" -> {
         listOf("process", "project", "lambda")
     }
+    "gitci" -> {
+        listOf("stream")
+    }
     else -> listOf(moduleName)
 }
 
@@ -125,7 +128,11 @@ jooq {
                         }
 
                         target.apply {
-                            packageName = "com.tencent.devops.model.$moduleName"
+                            if (packageName == "gitci") {
+                                packageName = "com.tencent.devops.model.gitci"
+                            } else {
+                                packageName = "com.tencent.devops.model.$moduleName"
+                            }
                         }
                     }
                 }

@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
+@Suppress("ComplexMethod", "NestedBlockDepth")
 @Service
 class GitCIRequestService @Autowired constructor(
     private val client: Client,
@@ -114,7 +115,11 @@ class GitCIRequestService @Autowired constructor(
             val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!)
             logger.info("Get build list requestBuildsList: $buildsList, gitProjectId: $gitProjectId")
             val builds = buildsList.map { it.buildId }.toSet()
-            val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
+            val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(
+                projectId = conf.projectCode!!,
+                buildId = builds,
+                channelCode = channelCode
+            ).data
             if (buildList?.isEmpty() == false) {
                 logger.info("Get build history list buildHistoryList: $buildList, gitProjectId: $gitProjectId")
                 val records = mutableListOf<GitCIBuildHistory>()
@@ -132,7 +137,8 @@ class GitCIRequestService @Autowired constructor(
                             reasonDetail = null
                         ))
                     } catch (e: Exception) {
-                        logger.error("Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ", e)
+                        logger.error("Load gitProjectId: ${it.gitProjectId}, " +
+                            "eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ", e)
                         return@nextBuild
                     }
                 }

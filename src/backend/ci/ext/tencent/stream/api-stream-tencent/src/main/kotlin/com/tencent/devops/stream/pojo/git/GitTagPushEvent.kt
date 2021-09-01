@@ -44,8 +44,8 @@ import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
         "name": "z-413",
         "url": "ssh://git@tencent.com/z-413/tencent.git",
         "description": "",
-        "homepage": "http://tencent.com/z-413/tencent",
-        "git_http_url":"http://tencent.com/z-413/tencent.git",
+        "homepage": "xxx
+        "git_http_url":"xxx
         "git_ssh_url":"git@tencent.com:z-413/tencent.git",
         "visibility_level":0
     },
@@ -54,7 +54,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
             "id":"458ce39e1a28572597979ca6c7cdc6c338f6bd43",
             "message":"update",
             "timestamp":"2019-03-28T02:14:59+0000",
-            "url":"https://git.test.code.oa.com/release-test/xxx-framework/commit/458ce39e1a28572597979ca6c7cdc6c338f6bd43",
+            "url":"xxx",
             "author":{
                 "name":"xuhaohe",
                 "email":"xuhaohe@tencent.com"
@@ -70,6 +70,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
     "create_from":"master"
 }
  */
+@Suppress("ConstructorParameterNaming")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitTagPushEvent(
     val operation_kind: String,

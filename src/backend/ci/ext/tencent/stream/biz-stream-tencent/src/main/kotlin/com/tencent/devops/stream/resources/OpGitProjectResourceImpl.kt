@@ -35,7 +35,9 @@ import com.tencent.devops.stream.service.GitProjectConfService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpGitProjectResourceImpl @Autowired constructor(private val gitProjectConfService: GitProjectConfService) : OpGitProjectResource {
+class OpGitProjectResourceImpl @Autowired constructor(
+    private val gitProjectConfService: GitProjectConfService
+) : OpGitProjectResource {
 
     override fun create(gitProjectId: Long, name: String, url: String, enable: Boolean): Result<Boolean> {
         return Result(gitProjectConfService.create(gitProjectId, name, url, enable))
@@ -45,8 +47,19 @@ class OpGitProjectResourceImpl @Autowired constructor(private val gitProjectConf
         return Result(gitProjectConfService.delete(gitProjectId))
     }
 
-    override fun list(gitProjectId: Long?, name: String?, url: String?, page: Int, pageSize: Int): Result<GitProjectConfWithPage> {
-        return Result(GitProjectConfWithPage(gitProjectConfService.count(gitProjectId, name, url), gitProjectConfService.list(gitProjectId, name, url, page, pageSize)))
+    override fun list(
+        gitProjectId: Long?,
+        name: String?,
+        url: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<GitProjectConfWithPage> {
+        return Result(
+            GitProjectConfWithPage(
+                gitProjectConfService.count(gitProjectId, name, url),
+                gitProjectConfService.list(gitProjectId, name, url, page, pageSize)
+            )
+        )
     }
 
     override fun fixPipelineInfo(): Result<Int> {
