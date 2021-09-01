@@ -25,12 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:store:api-store-image"))
-}
+package com.tencent.devops.dispatch.docker.service
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import org.springframework.stereotype.Service
+
+@Service
+class ExtDockerResourceOptionsServiceImpl : ExtDockerResourceOptionsService {
+
+    override fun getDockerResourceConfigList(
+        userId: String,
+        projectId: String,
+        buildType: String
+    ): UserDockerResourceOptionsVO? {
+        return null
+    }
 }
