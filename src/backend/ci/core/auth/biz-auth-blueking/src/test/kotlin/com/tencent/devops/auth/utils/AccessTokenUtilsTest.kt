@@ -1,7 +1,7 @@
 package com.tencent.devops.auth.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.auth.entity.TokenInfo
+import com.tencent.devops.auth.pojo.TokenInfo
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import org.junit.Test

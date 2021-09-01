@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.auth.pojo.TokenInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -51,5 +52,5 @@ interface ServiceTokenResource {
         @ApiParam("权限Token", required = false)
         @QueryParam("accessToken")
         accessToken: String
-    ): Result<Boolean>
+    ): Result<TokenInfo>
 }

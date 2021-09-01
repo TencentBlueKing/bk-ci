@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceTokenResource
+import com.tencent.devops.auth.pojo.TokenInfo
 import com.tencent.devops.auth.service.ApiAccessTokenService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -38,7 +39,7 @@ class ServiceTokenResourceImpl @Autowired constructor(
     val apiAccessTokenService: ApiAccessTokenService
 ) : ServiceTokenResource {
 
-    override fun validateToken(token: String): Result<Boolean> {
-        return Result(apiAccessTokenService.verifyJWT(token))
+    override fun validateToken(accessToken: String): Result<TokenInfo> {
+        return Result(apiAccessTokenService.verifyJWT(accessToken))
     }
 }

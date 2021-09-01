@@ -28,7 +28,9 @@
 package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.auth.entity.TokenInfo
+import com.tencent.devops.auth.pojo.TokenInfo
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDATE_ERROR
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import org.jooq.DSLContext
@@ -38,6 +40,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
 import java.net.URLEncoder
+import javax.ws.rs.core.Response
 
 @Service
 class ApiAccessTokenService @Autowired constructor(
@@ -52,10 +55,33 @@ class ApiAccessTokenService @Autowired constructor(
     @Value("\${auth.accessToken.secret:#{null}}")
     private val secret: String? = null
 
-    fun verifyJWT(token: String): Boolean {
-        val result = AESUtil.decrypt(secret!!, URLDecoder.decode(token, "UTF-8"))
-        val expireTime = JsonUtil.to(result, TokenInfo::class.java).expirationTime
-        return expireTime < System.currentTimeMillis()
+    fun verifyJWT(token: String): TokenInfo {
+        val result = try {
+            AESUtil.decrypt(secret!!, URLDecoder.decode(token, "UTF-8"))
+        } catch (ignore: Throwable) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_VALIDATE_ERROR,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                defaultMessage = "Access token illegal"
+            )
+        }
+        val tokenInfo = try {
+            JsonUtil.to(result, TokenInfo::class.java)
+        } catch (ignore: Throwable) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_VALIDATE_ERROR,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                defaultMessage = "Access token invalid: ${ignore.message}"
+            )
+        }
+        if (tokenInfo.expirationTime > System.currentTimeMillis()) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_VALIDATE_ERROR,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                defaultMessage = "Access token expired in: ${tokenInfo.expirationTime}"
+            )
+        }
+        return tokenInfo
     }
 
     fun generateUserToken(userDetails: String): String {
