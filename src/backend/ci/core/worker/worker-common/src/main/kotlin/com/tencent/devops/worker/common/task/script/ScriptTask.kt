@@ -37,6 +37,8 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.env.AgentEnv
@@ -65,15 +67,17 @@ open class ScriptTask : ITask() {
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_INPUT_INVAILD
         )
+        val charSetType = taskParams["charSetType"] ?: CharSetType.UTF_8.name
+
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
         val archiveFileIfExecFail = taskParams["archiveFile"]
         val script = URLDecoder.decode(taskParams["script"]
-                ?: throw TaskExecuteException(
-                    errorMsg = "Empty build script content",
-                    errorType = ErrorType.USER,
-                    errorCode = ErrorCode.USER_INPUT_INVAILD
-                ), "UTF-8").replace("\r", "")
+            ?: throw TaskExecuteException(
+                errorMsg = "Empty build script content",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            ), "UTF-8").replace("\r", "")
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId
@@ -102,7 +106,10 @@ open class ScriptTask : ITask() {
                 dir = workspace,
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
                 continueNoneZero = continueNoneZero.toBoolean(),
-                errorMessage = "Fail to run the plugin"
+                errorMessage = "Fail to run the plugin",
+                charSetType = if (BuildScriptType.valueOf(scriptType) == BuildScriptType.BAT) {
+                    charSetType
+                } else null
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)

@@ -40,7 +40,8 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
         dslContext: DSLContext,
         pipelineId: String,
         vmSeq: String,
-        dockerIp: String
+        dockerIp: String,
+        dockerResourceOptionsId: Int
     ) {
         with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
             dslContext.insertInto(
@@ -48,16 +49,19 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
                 PIPELINE_ID,
                 VM_SEQ,
                 DOCKER_IP,
+                DOCKER_RESOURCE_OPTION,
                 GMT_CREATE,
                 GMT_MODIFIED
             ).values(
                 pipelineId,
                 vmSeq,
                 dockerIp,
+                dockerResourceOptionsId,
                 LocalDateTime.now(),
                 LocalDateTime.now()
             ).onDuplicateKeyUpdate()
                 .set(DOCKER_IP, dockerIp)
+                .set(DOCKER_RESOURCE_OPTION, dockerResourceOptionsId)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .execute()
         }
