@@ -33,17 +33,14 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.v2.IfType
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCISettingDao
@@ -66,8 +63,6 @@ import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -245,81 +240,83 @@ class GitCIBuildFinishListener @Autowired constructor(
                     }
                 }
 
-                // 发送通知兼容v1的老数据
-                // v1 校验是否发送通知
-                if (!isV2 && !checkIsSendNotify(gitProjectConf!!, state.value)) {
-                    return
-                }
+                // gitci服务不发送通知
 
-                val sourceProjectId = if (record["SOURCE_GIT_PROJECT_ID"] == null) {
-                    null
-                } else {
-                    record["SOURCE_GIT_PROJECT_ID"] as Long
-                }
-
-                val buildInfo = client.get(ServiceBuildResource::class)
-                    .getBatchBuildStatus(
-                        projectId = if (isV2) {
-                            v2GitSetting!!.projectCode!!
-                        } else {
-                            gitProjectConf!!.projectCode!!
-                        },
-                        buildId = setOf(buildFinishEvent.buildId),
-                        channelCode = ChannelCode.GIT
-                    ).data
-                if (buildInfo == null || buildInfo.isEmpty()) {
-                    throw OperationException("git ci buildInfo not exist")
-                }
-
-                // 构建结束发送通知
-                val build = buildInfo.first()
-                if (isV2) {
-                    // 获取需要进行替换的variables
-                    val variables =
-                        client.get(ServiceVarResource::class).getBuildVar(buildId = build.id, varName = null).data
-                    val notices = YamlUtil.getObjectMapper().readValue(
-                        event.normalizedYaml, ScriptBuildYaml::class.java
-                    ).notices
-                    notices?.forEach { notice ->
-                        // 替换 variables
-                        if (!checkStatus(build.id, replaceVar(notice.ifField, variables), buildStatus)) {
-                            return@forEach
-                        }
-                        val newType = replaceVar(notice.type, variables)
-                        if (newType.isNullOrBlank()) {
-                            return@forEach
-                        }
-                        sendNotifyV2(
-                            gitProjectId = gitProjectId,
-                            sourceProjectId = sourceProjectId,
-                            mergeRequestId = mergeRequestId,
-                            commitId = commitId,
-                            state = state.value,
-                            conf = v2GitSetting!!,
-                            event = event,
-                            pipeline = pipeline,
-                            build = build,
-                            receivers = replaceVar(notice.receivers, variables),
-                            ccs = replaceVar(notice.ccs, variables)?.toMutableSet(),
-                            chatIds = replaceVar(notice.chatId, variables)?.toMutableSet(),
-                            title = replaceVar(notice.title, variables),
-                            content = replaceVar(notice.content, variables),
-                            notifyType = getNoticeType(build.id, newType)
-                        )
-                    }
-                } else {
-                    notify(
-                        gitProjectId = gitProjectId,
-                        sourceProjectId = sourceProjectId,
-                        mergeRequestId = mergeRequestId,
-                        commitId = commitId,
-                        state = state.value,
-                        conf = gitProjectConf!!,
-                        event = event,
-                        pipeline = pipeline,
-                        build = build
-                    )
-                }
+//                // 发送通知兼容v1的老数据
+//                // v1 校验是否发送通知
+//                if (!isV2 && !checkIsSendNotify(gitProjectConf!!, state.value)) {
+//                    return
+//                }
+//
+//                val sourceProjectId = if (record["SOURCE_GIT_PROJECT_ID"] == null) {
+//                    null
+//                } else {
+//                    record["SOURCE_GIT_PROJECT_ID"] as Long
+//                }
+//
+//                val buildInfo = client.get(ServiceBuildResource::class)
+//                    .getBatchBuildStatus(
+//                        projectId = if (isV2) {
+//                            v2GitSetting!!.projectCode!!
+//                        } else {
+//                            gitProjectConf!!.projectCode!!
+//                        },
+//                        buildId = setOf(buildFinishEvent.buildId),
+//                        channelCode = ChannelCode.GIT
+//                    ).data
+//                if (buildInfo == null || buildInfo.isEmpty()) {
+//                    throw OperationException("git ci buildInfo not exist")
+//                }
+//
+//                // 构建结束发送通知
+//                val build = buildInfo.first()
+//                if (isV2) {
+//                    // 获取需要进行替换的variables
+//                    val variables =
+//                        client.get(ServiceVarResource::class).getBuildVar(buildId = build.id, varName = null).data
+//                    val notices = YamlUtil.getObjectMapper().readValue(
+//                        event.normalizedYaml, ScriptBuildYaml::class.java
+//                    ).notices
+//                    notices?.forEach { notice ->
+//                        // 替换 variables
+//                        if (!checkStatus(build.id, replaceVar(notice.ifField, variables), buildStatus)) {
+//                            return@forEach
+//                        }
+//                        val newType = replaceVar(notice.type, variables)
+//                        if (newType.isNullOrBlank()) {
+//                            return@forEach
+//                        }
+//                        sendNotifyV2(
+//                            gitProjectId = gitProjectId,
+//                            sourceProjectId = sourceProjectId,
+//                            mergeRequestId = mergeRequestId,
+//                            commitId = commitId,
+//                            state = state.value,
+//                            conf = v2GitSetting!!,
+//                            event = event,
+//                            pipeline = pipeline,
+//                            build = build,
+//                            receivers = replaceVar(notice.receivers, variables),
+//                            ccs = replaceVar(notice.ccs, variables)?.toMutableSet(),
+//                            chatIds = replaceVar(notice.chatId, variables)?.toMutableSet(),
+//                            title = replaceVar(notice.title, variables),
+//                            content = replaceVar(notice.content, variables),
+//                            notifyType = getNoticeType(build.id, newType)
+//                        )
+//                    }
+//                } else {
+//                    notify(
+//                        gitProjectId = gitProjectId,
+//                        sourceProjectId = sourceProjectId,
+//                        mergeRequestId = mergeRequestId,
+//                        commitId = commitId,
+//                        state = state.value,
+//                        conf = gitProjectConf!!,
+//                        event = event,
+//                        pipeline = pipeline,
+//                        build = build
+//                    )
+//                }
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)
