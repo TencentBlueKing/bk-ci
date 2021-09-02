@@ -25,17 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.v2.utils
+package com.tencent.devops.stream.trigger.parsers
 
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.stream.common.exception.CommitCheck
+import com.tencent.devops.stream.common.exception.TriggerBaseException
+import com.tencent.devops.stream.common.exception.TriggerException
+import com.tencent.devops.stream.common.exception.Yamls
+import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
+import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.git.GitCommit
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
+import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
 import com.tencent.devops.stream.v2.service.ScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,19 +55,59 @@ import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
 import java.util.regex.Pattern
 
-@Suppress("ALL")
+@Suppress("ComplexMethod", "NestedBlockDepth")
 @Component
-class V2WebHookMatcher @Autowired constructor(
+class TriggerMatcher @Autowired constructor(
     private val scmService: ScmService
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(V2WebHookMatcher::class.java)
+        private val logger = LoggerFactory.getLogger(TriggerMatcher::class.java)
         private val matcher = AntPathMatcher()
     }
 
-    @Throws(ErrorCodeException::class)
+    @Throws(TriggerBaseException::class)
     fun isMatch(
+        event: GitEvent,
+        gitRequestEvent: GitRequestEvent,
+        pipeline: GitProjectPipeline,
+        originYaml: String
+    ): Pair<Boolean, Boolean> {
+        val newYaml = try {
+            // 触发器需要将 on: 转为 TriggerOn:
+            val realYaml = ScriptYmlUtils.formatYaml(originYaml)
+            YamlUtil.getObjectMapper()
+                .readValue(realYaml, object : TypeReference<NoReplaceTemplate>() {})
+        } catch (e: Throwable) {
+            when (e) {
+                is JsonProcessingException, is TypeCastException -> {
+                    TriggerException.triggerError(
+                        request = gitRequestEvent,
+                        event = event,
+                        pipeline = pipeline,
+                        reason = TriggerReason.CI_YAML_INVALID,
+                        reasonParams = listOf(e.message ?: ""),
+                        yamls = Yamls(originYaml, null, null),
+                        commitCheck = CommitCheck(
+                            block = event is GitMergeRequestEvent,
+                            state = GitCICommitCheckState.FAILURE
+                        )
+                    )
+                }
+                else -> {
+                    throw e
+                }
+            }
+        }
+        return isMatch(
+            triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
+            event = event,
+            gitRequestEvent = gitRequestEvent
+        )
+    }
+
+    @Throws(ErrorCodeException::class)
+    private fun isMatch(
         triggerOn: TriggerOn,
         event: GitEvent,
         gitRequestEvent: GitRequestEvent
@@ -111,7 +163,8 @@ class V2WebHookMatcher @Autowired constructor(
         if (isIgnoreUserMatch(pushRule.usersIgnore, event)) return false
 
         // include
-        if (isBranchMatch(pushRule.branches, event) && isIncludePathMatch(pushRule.paths, event) && isUserMatch(pushRule.users, event)) {
+        if (isBranchMatch(pushRule.branches, event) && isIncludePathMatch(pushRule.paths, event) &&
+            isUserMatch(pushRule.users, event)) {
             logger.info("Git trigger branch($eventBranch) is included and path(${pushRule.paths}) is included")
             return true
         }
@@ -364,7 +417,8 @@ class V2WebHookMatcher @Autowired constructor(
                     mrChangeFiles.forEach { changeFilePath ->
                         pathList.forEach { includePath ->
                             if (isPathMatch(changeFilePath, includePath)) {
-                                logger.info("The include path($includePath) include the git mr update one($changeFilePath)")
+                                logger.info("The include path($includePath) " +
+                                    "include the git mr update one($changeFilePath)")
                                 mrPathIncluded = true
                                 return@outside
                             }
@@ -446,32 +500,6 @@ class V2WebHookMatcher @Autowired constructor(
         }
 
         return false
-    }
-
-    private fun matchUrl(url: String, event: GitEvent): Boolean {
-        return when (event) {
-            is GitPushEvent -> {
-                val repoHttpUrl = url.removePrefix("http://").removePrefix("https://")
-                val eventHttpUrl =
-                        event.repository.git_http_url.removePrefix("http://").removePrefix("https://")
-                url == event.repository.git_ssh_url || repoHttpUrl == eventHttpUrl
-            }
-            is GitTagPushEvent -> {
-                val repoHttpUrl = url.removePrefix("http://").removePrefix("https://")
-                val eventHttpUrl =
-                        event.repository.git_http_url.removePrefix("http://").removePrefix("https://")
-                url == event.repository.git_ssh_url || repoHttpUrl == eventHttpUrl
-            }
-            is GitMergeRequestEvent -> {
-                val repoHttpUrl = url.removePrefix("http://").removePrefix("https://")
-                val eventHttpUrl =
-                        event.object_attributes.target.http_url.removePrefix("http://").removePrefix("https://")
-                url == event.object_attributes.target.ssh_url || repoHttpUrl == eventHttpUrl
-            }
-            else -> {
-                false
-            }
-        }
     }
 
     private fun getUser(event: GitEvent): String {
