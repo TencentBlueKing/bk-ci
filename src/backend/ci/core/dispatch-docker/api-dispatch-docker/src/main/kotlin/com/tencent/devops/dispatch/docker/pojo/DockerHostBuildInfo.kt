@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.docker.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 
 data class DockerHostBuildInfo(
     val projectId: String,
@@ -50,5 +51,14 @@ data class DockerHostBuildInfo(
     val imageRDType: String?,
     val containerHashId: String?,
     val customBuildEnv: Map<String, String>? = null,
-    val buildType: BuildType = BuildType.DOCKER
+    val buildType: BuildType = BuildType.DOCKER,
+    val dockerResource: DockerResourceOptionsVO = DockerResourceOptionsVO(
+        memoryLimitBytes = 34359738368L,
+        cpuPeriod = 10000,
+        cpuQuota = 160000,
+        blkioDeviceReadBps = 125829120,
+        blkioDeviceWriteBps = 125829120,
+        disk = 100,
+        description = ""
+    )
 )

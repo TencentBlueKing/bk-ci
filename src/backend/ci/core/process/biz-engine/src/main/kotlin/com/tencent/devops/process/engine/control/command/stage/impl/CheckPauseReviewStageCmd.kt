@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
@@ -89,6 +90,16 @@ class CheckPauseReviewStageCmd(
             if (needPause(event, stage)) {
                 // #3742 进入暂停状态则刷新完状态后直接返回，等待手动触发
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_PAUSE|${event.stageId}")
+
+                // TODO 避免前端显示未替换的审核信息，将老数据也做变量替换，下一版去掉
+                val triggerUsers = stage.controlOption?.stageControlOption?.triggerUsers?.joinToString(",") ?: ""
+                val realUsers = EnvUtils.parseEnv(triggerUsers, commandContext.variables).split(",").toList()
+                stage.controlOption!!.stageControlOption.triggerUsers = realUsers
+                var reviewDesc = stage.controlOption!!.stageControlOption.reviewDesc
+                reviewDesc = EnvUtils.parseEnv(reviewDesc, commandContext.variables)
+                stage.controlOption!!.stageControlOption.reviewDesc = reviewDesc
+                // ---
+
                 stage.checkIn?.parseReviewVariables(commandContext.variables)
                 pipelineStageService.pauseStageNotify(
                     userId = event.userId,
