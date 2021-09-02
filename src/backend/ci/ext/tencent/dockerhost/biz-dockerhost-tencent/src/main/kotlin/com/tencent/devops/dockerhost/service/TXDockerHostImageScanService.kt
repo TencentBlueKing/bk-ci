@@ -64,12 +64,12 @@ class TXDockerHostImageScanService(
                     val scanResult = ShellUtil.executeEnhance(script)
                     logger.info("[$buildId]|[$vmSeqId] scan docker $it result: $scanResult")
 
-                    logger.info("[$buildId]|[$vmSeqId] Push image success, now remove local image, image name and tag: $it")
+                    logger.info("[$buildId]|[$vmSeqId] scan image success, now remove local image, image name and tag: $it")
                     try {
                         longDockerClient.removeImageCmd(it).exec()
                         logger.info("[$buildId]|[$vmSeqId] Remove local image success")
                     } catch (e: Throwable) {
-                        logger.error("[$buildId]|[$vmSeqId] Docker rmi failed, msg: ${e.message}")
+                        logger.error("[$buildId]|[$vmSeqId] Docker remove image failed, msg: ${e.message}")
                     }
                 }
             } catch (e: Exception) {
