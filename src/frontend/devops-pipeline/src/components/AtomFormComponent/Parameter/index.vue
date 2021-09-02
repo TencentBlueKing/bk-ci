@@ -61,6 +61,12 @@
 
         methods: {
             initData () {
+                if (this.disabled) {
+                    let values = this.atomValue[this.name] || []
+                    if (!Array.isArray(values)) values = JSON.parse(values)
+                    this.parameters = values
+                    return
+                }
                 if (this.param.paramType === 'list') {
                     const list = this.param.parameters || []
                     this.parameters = JSON.parse(JSON.stringify(list))
@@ -79,6 +85,7 @@
                 //     if (typeof value === 'undefined') isErrorParam = true
                 //     return value
                 // })
+                
                 let [url] = this.generateReqUrl(this.param.url, this.paramValues)
 
                 if (!url) return
