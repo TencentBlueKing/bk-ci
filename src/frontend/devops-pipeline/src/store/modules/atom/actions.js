@@ -481,6 +481,10 @@ export default {
         })
     },
 
+    fetchDevcloudSettings ({ commit }, { projectId, buildType }) {
+        return request.get(`/dispatch-docker/api/user/dispatch-docker/resource-config/projects/${projectId}/list?buildType=${buildType}`)
+    },
+
     getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
         return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, executeCount } })
     },
