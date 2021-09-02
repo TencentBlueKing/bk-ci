@@ -25,21 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.config
 
-import com.tencent.devops.common.event.annotation.Event
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-object GitCIRequestDispatcher {
-    private val logger = LoggerFactory.getLogger(GitCIRequestDispatcher::class.java)
-
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: GitCIRequestEvent) {
-        try {
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
-        } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
-        }
-    }
+@Component
+class StreamGitConfig {
+    @Value("\${rtx.v2GitUrl:#{null}}")
+    val tGitUrl: String? = null
 }

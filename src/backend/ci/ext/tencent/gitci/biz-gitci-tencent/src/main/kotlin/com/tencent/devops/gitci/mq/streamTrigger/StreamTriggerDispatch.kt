@@ -25,46 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.mq.streamTrigger
 
-import com.tencent.devops.gitci.constant.MQ
-import com.tencent.devops.gitci.trigger.GitCITriggerService
+import com.tencent.devops.common.event.annotation.Event
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.ExchangeTypes
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-@Service
-class GitCIRequestListener @Autowired constructor(
-    private val gitCITriggerService: GitCITriggerService
-) {
-    @RabbitListener(
-        bindings = [(QueueBinding(
-            key = [MQ.ROUTE_GITCI_REQUEST_EVENT],
-            value = Queue(value = MQ.QUEUE_GITCI_REQUEST_EVENT, durable = "true"),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_GITCI_REQUEST_EVENT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.DIRECT
-            )
-        ))]
-    )
-    fun listenGitCIRequestEvent(gitCIRequestEvent: GitCIRequestEvent) {
+object StreamTriggerDispatch {
+    fun dispatch(rabbitTemplate: RabbitTemplate, event: StreamTriggerEvent) {
         try {
-            gitCITriggerService.externalCodeGitBuild(
-                event = gitCIRequestEvent.event
-            )
+            logger.info("Dispatch stream trigger event: $event")
+            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
         } catch (e: Throwable) {
-            logger.error("Fail to start the git ci build($gitCIRequestEvent)", e)
+            logger.error("Fail to dispatch the event($event)", e)
         }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(GitCIRequestListener::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(StreamTriggerDispatch::class.java)
 }

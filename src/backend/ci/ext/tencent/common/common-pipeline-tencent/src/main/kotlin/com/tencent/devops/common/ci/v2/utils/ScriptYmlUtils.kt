@@ -400,10 +400,19 @@ object ScriptYmlUtils {
         }
 
         val stepList = mutableListOf<Step>()
+        val stepIdSet = mutableSetOf<String>()
         oldSteps.forEach {
             if (it.uses == null && it.run == null && it.checkout == null) {
                 throw YamlFormatException("step必须包含uses或run或checkout!")
             }
+
+            // 校验stepId唯一性
+            if (it.id != null && stepIdSet.contains(it.id)) {
+                throw YamlFormatException("请确保step.id唯一性!(${it.id})")
+            } else if (it.id != null && !stepIdSet.contains(it.id)) {
+                stepIdSet.add(it.id)
+            }
+
             // 检测step env合法性
             GitCIEnvUtils.checkEnv(it.env)
 
@@ -433,7 +442,15 @@ object ScriptYmlUtils {
         }
 
         val stageList = mutableListOf<Stage>()
+        val stageIdSet = mutableSetOf<String>()
         preStageList.forEach {
+            // 校验stageId唯一性
+            if (it.id != null && stageIdSet.contains(it.id)) {
+                throw YamlFormatException("请确保stage.id唯一性!(${it.id})")
+            } else if (it.id != null && !stageIdSet.contains(it.id)) {
+                stageIdSet.add(it.id)
+            }
+
             stageList.add(
                 Stage(
                     id = it.id ?: randomString(stageNamespace),

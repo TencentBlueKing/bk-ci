@@ -49,6 +49,7 @@ dependencies {
     api(project(":ext:tencent:gitci:model-gitci-tencent"))
     api(project(":ext:tencent:scm:api-scm"))
     api(project(":core:repository:api-repository"))
+    api(project(":core:plugin:api-plugin"))
     api(project(":core:quality:api-quality"))
     api(project(":ext:tencent:notify:api-notify-tencent"))
     api(project(":core:auth:api-auth"))

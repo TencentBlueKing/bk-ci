@@ -25,38 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.gitci.mq.streamTrigger
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.gitci.constant.MQ
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.repository.pojo.oauth.GitToken
 
-@ApiModel("工蜂CI查询代码库项目信息")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitCIProjectInfo(
-    @ApiModelProperty("项目ID")
-    @JsonProperty("id")
-    val gitProjectId: Int,
-    @ApiModelProperty("项目名称")
-    @JsonProperty("name")
-    val name: String,
-    @ApiModelProperty("页面地址")
-    @JsonProperty("web_url")
-    val homepage: String?,
-    @ApiModelProperty("HTTP链接", required = true)
-    @JsonProperty("http_url_to_repo")
-    val gitHttpUrl: String,
-    @ApiModelProperty("HTTPS链接")
-    @JsonProperty("https_url_to_repo")
-    val gitHttpsUrl: String?,
-    @ApiModelProperty("gitSshUrl")
-    @JsonProperty("ssh_url_to_repo")
-    val gitSshUrl: String?,
-    @ApiModelProperty("带有所有者的项目名称")
-    @JsonProperty("name_with_namespace")
-    val nameWithNamespace: String,
-    @ApiModelProperty("带有所有者的项目路径")
-    @JsonProperty("path_with_namespace")
-    val pathWithNamespace: String?
+@Event(MQ.EXCHANGE_STREAM_TRIGGER_EVENT, MQ.ROUTE_STREAM_TRIGGER_EVENT)
+data class StreamTriggerEvent(
+    val gitToken: GitToken,
+    val forkGitToken: GitToken?,
+    val gitRequestEvent: GitRequestEvent,
+    val gitProjectPipeline: GitProjectPipeline,
+    val event: GitEvent,
+    val originYaml: String?,
+    val filePath: String
 )

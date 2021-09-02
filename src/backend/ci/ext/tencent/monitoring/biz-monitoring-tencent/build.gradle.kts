@@ -38,7 +38,6 @@ dependencies {
     api("org.apache.commons:commons-compress")
     api("org.json:json")
     api("org.influxdb:influxdb-java")
-    api("com.squareup.okhttp3:okhttp")
     api("org.apache.lucene:lucene-core")
     api("org.elasticsearch:elasticsearch")
     api("org.elasticsearch.client:elasticsearch-rest-client")

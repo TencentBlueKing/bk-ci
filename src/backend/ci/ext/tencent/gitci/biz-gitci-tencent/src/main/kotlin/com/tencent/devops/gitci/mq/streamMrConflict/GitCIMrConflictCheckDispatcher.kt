@@ -25,38 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.gitci.mq.streamMrConflict
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.event.annotation.Event
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-@ApiModel("工蜂CI查询代码库项目信息")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitCIProjectInfo(
-    @ApiModelProperty("项目ID")
-    @JsonProperty("id")
-    val gitProjectId: Int,
-    @ApiModelProperty("项目名称")
-    @JsonProperty("name")
-    val name: String,
-    @ApiModelProperty("页面地址")
-    @JsonProperty("web_url")
-    val homepage: String?,
-    @ApiModelProperty("HTTP链接", required = true)
-    @JsonProperty("http_url_to_repo")
-    val gitHttpUrl: String,
-    @ApiModelProperty("HTTPS链接")
-    @JsonProperty("https_url_to_repo")
-    val gitHttpsUrl: String?,
-    @ApiModelProperty("gitSshUrl")
-    @JsonProperty("ssh_url_to_repo")
-    val gitSshUrl: String?,
-    @ApiModelProperty("带有所有者的项目名称")
-    @JsonProperty("name_with_namespace")
-    val nameWithNamespace: String,
-    @ApiModelProperty("带有所有者的项目路径")
-    @JsonProperty("path_with_namespace")
-    val pathWithNamespace: String?
-)
+object GitCIMrConflictCheckDispatcher {
+
+    fun dispatch(rabbitTemplate: RabbitTemplate, event: GitCIMrConflictCheckEvent) {
+        try {
+            logger.info("[${event.gitRequestEvent}] Dispatch the event")
+            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
+                message.messageProperties.setHeader("x-delay", event.delayMills)
+                message
+            }
+        } catch (e: Throwable) {
+            logger.error("Fail to dispatch the event($event)", e)
+        }
+    }
+
+    private val logger = LoggerFactory.getLogger(GitCIMrConflictCheckDispatcher::class.java)
+}
