@@ -99,7 +99,7 @@ const atomMixin = {
             reviewObj: {
                 required: true,
                 label: this.$t('editPage.reviewers'),
-                component: 'user-input',
+                component: 'staff-input',
                 placeholder: this.$t('editPage.reviewTips')
             }
         }
