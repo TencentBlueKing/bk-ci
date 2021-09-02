@@ -8,8 +8,6 @@ import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.util.script.ShellUtil
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.services.DockerHostImageScanService
-import com.tencent.devops.dockerhost.services.DockerHostImageService
-import com.tencent.devops.dockerhost.services.image.ImageDeleteHandler
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
