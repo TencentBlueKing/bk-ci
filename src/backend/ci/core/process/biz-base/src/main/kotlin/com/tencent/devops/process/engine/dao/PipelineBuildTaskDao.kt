@@ -37,7 +37,6 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_TASK
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
-import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
@@ -292,8 +291,7 @@ class PipelineBuildTaskDao @Autowired constructor(
         buildId: String,
         taskId: String,
         userId: String? = null,
-        buildStatus: BuildStatus,
-        additionalOptions: ElementAdditionalOptions? = null
+        buildStatus: BuildStatus
     ) {
         with(T_PIPELINE_BUILD_TASK) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
@@ -305,9 +303,9 @@ class PipelineBuildTaskDao @Autowired constructor(
                     update.set(APPROVER, userId)
                 }
             } else if (buildStatus.isRunning() &&
-                !ControlUtils.retryWhenFailure(additionalOptions, redisOperation.get(
+                redisOperation.get(
                     TaskUtils.getFailRetryTaskRedisKey(buildId = buildId, taskId = taskId)
-                )?.toInt() ?: 0)
+                )?.toInt() ?: 0 > 0
             ) {
                 update.set(START_TIME, LocalDateTime.now())
                 if (!userId.isNullOrBlank()) {

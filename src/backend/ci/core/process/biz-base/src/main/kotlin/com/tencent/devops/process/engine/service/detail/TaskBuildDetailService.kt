@@ -43,7 +43,6 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
-import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
@@ -153,12 +152,11 @@ class TaskBuildDetailService(
                             c.status = BuildStatus.RUNNING.name
                             e.status = BuildStatus.RUNNING.name
                         }
-                        val additionalOptions = e.additionalOptions
                         // 如果是自动重试则不重置task和job的时间
-                        if (!ControlUtils.retryWhenFailure(additionalOptions, redisOperation.get(
-                                TaskUtils.getFailRetryTaskRedisKey(buildId = buildId, taskId = taskId)
-                            )?.toInt() ?: 0)
-                        ) {
+                        val retryCount = redisOperation.get(
+                            TaskUtils.getFailRetryTaskRedisKey(buildId = buildId, taskId = taskId)
+                        )?.toInt() ?: 0
+                        if (retryCount < 1) {
                             e.startEpoch = System.currentTimeMillis()
                             if (c.startEpoch == null) {
                                 c.startEpoch = e.startEpoch
