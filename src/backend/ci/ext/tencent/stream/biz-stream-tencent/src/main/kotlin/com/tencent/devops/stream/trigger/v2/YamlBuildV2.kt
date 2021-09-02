@@ -31,7 +31,6 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
@@ -61,6 +60,7 @@ import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.v2.service.GitCIV2WebsocketService
 import com.tencent.devops.stream.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.stream.pojo.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreate
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -145,7 +145,7 @@ class YamlBuildV2 @Autowired constructor(
             val (block, message, reason) = when (e) {
                 is JsonProcessingException, is ParamBlankException, is CustomException -> {
                     Triple(
-                        (event.objectKind == OBJECT_KIND_MERGE_REQUEST),
+                        (event.objectKind == TGitObjectKind.MERGE_REQUEST.value),
                         e.message,
                         TriggerReason.PIPELINE_PREPARE_ERROR
                     )

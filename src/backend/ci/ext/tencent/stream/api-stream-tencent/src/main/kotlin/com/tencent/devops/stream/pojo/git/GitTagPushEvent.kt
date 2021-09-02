@@ -28,7 +28,7 @@
 package com.tencent.devops.stream.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
+import com.tencent.devops.stream.pojo.enums.gitEventKind.TGitObjectKind
 
 /**
 {
@@ -86,6 +86,6 @@ data class GitTagPushEvent(
     val create_from: String?
 ) : GitEvent() {
     companion object {
-        const val classType = OBJECT_KIND_TAG_PUSH
+        const val classType = TGitObjectKind.OBJECT_KIND_TAG_PUSH
     }
 }

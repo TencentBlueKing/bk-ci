@@ -29,9 +29,6 @@ package com.tencent.devops.stream.trigger
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
-import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.client.ScmClient
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -40,6 +37,7 @@ import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.pojo.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
 import com.tencent.devops.stream.pojo.v2.message.UserMessageType
 import com.tencent.devops.stream.utils.GitCommonUtils
@@ -116,7 +114,7 @@ class GitCIEventService @Autowired constructor(
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
         // 人工触发不发送
-        if (event.objectKind != OBJECT_KIND_MANUAL && sendCommitCheck) {
+        if (event.objectKind != TGitObjectKind.MANUAL.value && sendCommitCheck) {
             val gitBasicSetting = gitCIBasicSettingService.getGitCIConf(gitProjectId)
                 ?: throw RuntimeException("can't find gitBasicSetting $gitProjectId")
             val realBlock = gitBasicSetting.enableMrBlock && commitCheckBlock
@@ -242,7 +240,7 @@ class GitCIEventService @Autowired constructor(
 
     private fun getEventMessage(event: GitRequestEvent, gitProjectId: Long): String {
         val messageTitle = when (event.objectKind) {
-            OBJECT_KIND_MERGE_REQUEST -> {
+            TGitObjectKind.MERGE_REQUEST.value -> {
                 val branch = GitCommonUtils.checkAndGetForkBranchName(
                     gitProjectId = gitProjectId,
                     sourceGitProjectId = event.sourceGitProjectId,
@@ -251,10 +249,10 @@ class GitCIEventService @Autowired constructor(
                 )
                 "[$branch] Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
             }
-            OBJECT_KIND_MANUAL -> {
+            TGitObjectKind.MANUAL.value -> {
                 "[${event.branch}] Manual Triggered by ${event.userId}"
             }
-            OBJECT_KIND_TAG_PUSH -> {
+            TGitObjectKind.TAG_PUSH.value -> {
                 val eventMap = try {
                     objectMapper.readValue<GitTagPushEvent>(event.event)
                 } catch (e: Exception) {

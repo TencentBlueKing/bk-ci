@@ -27,10 +27,10 @@
 
 package com.tencent.devops.stream.dao
 
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
+import com.tencent.devops.stream.pojo.enums.gitEventKind.TGitObjectKind
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -221,7 +221,7 @@ class GitRequestEventDao {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             val records = dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(OBJECT_KIND.eq(OBJECT_KIND_MERGE_REQUEST))
+                .and(OBJECT_KIND.eq(TGitObjectKind.MERGE_REQUEST.value))
                 .orderBy(ID.desc())
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
@@ -264,7 +264,7 @@ class GitRequestEventDao {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             return dslContext.selectCount().from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(OBJECT_KIND.eq(OBJECT_KIND_MERGE_REQUEST))
+                .and(OBJECT_KIND.eq(TGitObjectKind.MERGE_REQUEST.value))
                 .fetchOne(0, Long::class.java)!!
         }
     }

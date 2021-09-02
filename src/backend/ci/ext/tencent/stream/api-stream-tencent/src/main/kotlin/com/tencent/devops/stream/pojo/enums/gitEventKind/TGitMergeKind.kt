@@ -25,31 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.v2
+package com.tencent.devops.stream.pojo.enums.gitEventKind
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.stream.pojo.enums.gitEventKind.TGitObjectKind
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+/*
+ * action字段
+ * open：新建MR
+ * close：MR被关闭
+ * reopen：MR重新被打开
+ * update：MR本身信息更新，或源分支有代码push
+ * merge：代码已合并
+ */
+enum class TGitMergeActionKind(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    UPDATE("update"),
+    MERGE("merge")
+}
 
-@ApiModel("V2版本多选搜索过滤历史参数")
-data class GitCIBuildHistorySearch(
-    @ApiModelProperty("第几页", required = false)
-    val page: Int?,
-    @ApiModelProperty("每页多少条", required = false)
-    val pageSize: Int?,
-    @ApiModelProperty("分支", required = false)
-    val branch: Set<String>?,
-    @ApiModelProperty("fork库分支", required = false)
-    val sourceGitProjectId: Set<String>?,
-    @ApiModelProperty("触发人", required = false)
-    val triggerUser: Set<String>?,
-    @ApiModelProperty("流水线ID", required = false)
-    val pipelineId: String?,
-    @ApiModelProperty("Commit Msg", required = false)
-    val commitMsg: String?,
-    @ApiModelProperty("Event", required = false)
-    val event: Set<TGitObjectKind>?,
-    @ApiModelProperty("构建状态", required = false)
-    val status: Set<BuildStatus>?
-)
+/*
+ * extension_action字段
+ * open：新建MR
+ * close：MR被关闭
+ * reopen：MR重新被打开
+ * update：MR本身信息更新
+ * push-update：源分支有代码push
+ * merge：代码已合并
+ */
+enum class TGitMergeExtensionActionKind(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    UPDATE("update"),
+    PUSH_UPDATE("push-update"),
+    MERGE("merge")
+}

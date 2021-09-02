@@ -37,8 +37,6 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
@@ -69,6 +67,7 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.stream.pojo.enums.gitEventKind.TGitObjectKind
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -192,10 +191,10 @@ class GitCIBuildFinishListener @Autowired constructor(
                 }
 
                 // 推送结束构建消息,当人工触发时不推送CommitCheck消息
-                if (objectKind != OBJECT_KIND_MANUAL) {
+                if (objectKind != TGitObjectKind.MANUAL.value) {
                     if (isV2) {
                         // gitRequestEvent中存的为mriid不是mrid
-                        val mrEvent = if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
+                        val mrEvent = if (objectKind == TGitObjectKind.MERGE_REQUEST.value) {
                             try {
                                 objectMapper.readValue<GitMergeRequestEvent>(record["EVENT"] as String)
                             } catch (e: Throwable) {
@@ -216,7 +215,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                             context = "${pipeline.filePath}@${objectKind.toUpperCase()}",
                             gitCIBasicSetting = v2GitSetting!!,
                             pipelineId = buildFinishEvent.pipelineId,
-                            block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess() &&
+                            block = (objectKind == TGitObjectKind.MERGE_REQUEST.value && !buildStatus.isSuccess() &&
                                 v2GitSetting.enableMrBlock),
                             reportData = qualityService.getQualityGitMrResult(
                                 client = client,

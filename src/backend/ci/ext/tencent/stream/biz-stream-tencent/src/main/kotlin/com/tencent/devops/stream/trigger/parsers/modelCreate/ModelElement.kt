@@ -27,9 +27,6 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
-import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.Job
@@ -47,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.stream.dao.GitCIServicesConfDao
 import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -165,13 +163,13 @@ class ModelElement @Autowired constructor(
             inputMap["authType"] = "AUTH_USER_TOKEN"
 
             when (event.objectKind) {
-                OBJECT_KIND_MERGE_REQUEST ->
+                TGitObjectKind.MERGE_REQUEST.value ->
                     inputMap["pullType"] = "BRANCH"
-                OBJECT_KIND_TAG_PUSH -> {
+                TGitObjectKind.TAG_PUSH.value -> {
                     inputMap["pullType"] = "TAG"
                     inputMap["refName"] = event.branch
                 }
-                OBJECT_KIND_MANUAL -> {
+                TGitObjectKind.MANUAL.value -> {
                     if (event.commitId.isNotBlank()) {
                         inputMap["pullType"] = "COMMIT_ID"
                         inputMap["refName"] = event.commitId

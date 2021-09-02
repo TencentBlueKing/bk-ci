@@ -27,12 +27,9 @@
 
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
-import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
-import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.TriggerBuildReq
+import com.tencent.devops.stream.pojo.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.git.GitCommit
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
@@ -47,7 +44,7 @@ object GitRequestEventHandle {
         val latestCommit = getLatestCommit(gitPushEvent.after, gitPushEvent.commits)
         return GitRequestEvent(
             id = null,
-            objectKind = OBJECT_KIND_PUSH,
+            objectKind = TGitObjectKind.PUSH.value,
             operationKind = gitPushEvent.operation_kind,
             extensionAction = null,
             gitProjectId = gitPushEvent.project_id,
@@ -70,7 +67,7 @@ object GitRequestEventHandle {
         val latestCommit = gitMrEvent.object_attributes.last_commit
         return GitRequestEvent(
             id = null,
-            objectKind = OBJECT_KIND_MERGE_REQUEST,
+            objectKind = TGitObjectKind.MERGE_REQUEST.value,
             operationKind = null,
             extensionAction = gitMrEvent.object_attributes.extension_action,
             gitProjectId = gitMrEvent.object_attributes.target_project_id,
@@ -93,7 +90,7 @@ object GitRequestEventHandle {
         val latestCommit = getLatestCommit(gitTagPushEvent.after, gitTagPushEvent.commits)
         return GitRequestEvent(
             id = null,
-            objectKind = OBJECT_KIND_TAG_PUSH,
+            objectKind = TGitObjectKind.TAG_PUSH.value,
             operationKind = gitTagPushEvent.operation_kind,
             extensionAction = null,
             gitProjectId = gitTagPushEvent.project_id,
@@ -115,7 +112,7 @@ object GitRequestEventHandle {
     fun createManualTriggerEvent(userId: String, triggerBuildReq: TriggerBuildReq): GitRequestEvent {
         return GitRequestEvent(
             id = null,
-            objectKind = OBJECT_KIND_MANUAL,
+            objectKind = TGitObjectKind.MANUAL.value,
             operationKind = "",
             extensionAction = null,
             gitProjectId = triggerBuildReq.gitProjectId,

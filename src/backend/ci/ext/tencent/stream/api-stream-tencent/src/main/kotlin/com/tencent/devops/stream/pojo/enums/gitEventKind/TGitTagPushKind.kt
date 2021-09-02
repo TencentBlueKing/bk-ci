@@ -25,31 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.v2
+package com.tencent.devops.stream.pojo.enums.gitEventKind
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.stream.pojo.enums.gitEventKind.TGitObjectKind
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+class TGitTagPushKind
 
-@ApiModel("V2版本多选搜索过滤历史参数")
-data class GitCIBuildHistorySearch(
-    @ApiModelProperty("第几页", required = false)
-    val page: Int?,
-    @ApiModelProperty("每页多少条", required = false)
-    val pageSize: Int?,
-    @ApiModelProperty("分支", required = false)
-    val branch: Set<String>?,
-    @ApiModelProperty("fork库分支", required = false)
-    val sourceGitProjectId: Set<String>?,
-    @ApiModelProperty("触发人", required = false)
-    val triggerUser: Set<String>?,
-    @ApiModelProperty("流水线ID", required = false)
-    val pipelineId: String?,
-    @ApiModelProperty("Commit Msg", required = false)
-    val commitMsg: String?,
-    @ApiModelProperty("Event", required = false)
-    val event: Set<TGitObjectKind>?,
-    @ApiModelProperty("构建状态", required = false)
-    val status: Set<BuildStatus>?
-)
+/**
+ * operation_kind字段
+ * create：创建tag
+ * delete：删除tag
+ * create_from字段：从哪个分支或者commit点创建
+ */
+enum class TGitTagPushOperationKind(val value: String) {
+    CREATE("create"),
+    DELETE("delete")
+}

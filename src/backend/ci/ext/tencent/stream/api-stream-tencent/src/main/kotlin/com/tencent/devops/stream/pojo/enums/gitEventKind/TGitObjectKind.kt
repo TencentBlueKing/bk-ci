@@ -25,11 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.enums
+package com.tencent.devops.stream.pojo.enums.gitEventKind
 
-enum class GitEventEnum(val value: String) {
+enum class TGitObjectKind(val value: String) {
     PUSH("push"),
-    TAG("tag_push"),
-    MERGE("merge_request"),
-    MANUAL("manual")
+    TAG_PUSH("tag_push"),
+    MERGE_REQUEST("merge_request"),
+    MANUAL("manual");
+
+    // 方便Json初始化使用常量保存，需要同步维护
+    companion object {
+        const val OBJECT_KIND_MANUAL = "manual"
+        const val OBJECT_KIND_PUSH = "push"
+        const val OBJECT_KIND_TAG_PUSH = "tag_push"
+        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
+    }
 }
