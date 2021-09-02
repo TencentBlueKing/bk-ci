@@ -33,7 +33,7 @@
             <div
                 class="corner-mark"
                 :class="config.status"
-                v-if="!config.isRunning && (config.status === 'known_error' || config.status === 'success' || config.status === 'known_cancel')"
+                v-if="!config.isRunning && (config.status === 'known_error' || config.status === 'success' || config.status === 'known_cancel' || config.status === 'stage_success')"
             >
                 <i class="devops-icon icon-exclamation" v-if="config.status === 'known_error' || config.status === 'known_cancel'"></i>
                 <i class="devops-icon icon-check-1" v-else></i>
@@ -377,7 +377,8 @@
         &.known_cancel {
             border-color: $cancelColor transparent transparent $cancelColor;
         }
-        &.success {
+        &.success,
+        &.stage_success {
             border-color: $successColor transparent transparent $successColor;
         }
     }
@@ -428,7 +429,8 @@
         &.known_error {
             color: $dangerColor;
         }
-        &.success {
+        &.success,
+        &.stage_success {
             color: $successColor;
         }
         &.known_cancel {
