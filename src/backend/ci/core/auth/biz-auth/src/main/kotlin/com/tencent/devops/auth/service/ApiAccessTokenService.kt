@@ -74,7 +74,7 @@ class ApiAccessTokenService @Autowired constructor(
         return tokenInfo
     }
 
-    fun generateUserToken(userDetails: String): String {
+    fun generateUserToken(userDetails: String): TokenInfo {
         logger.info("AUTH|generateUserToken userId=$userDetails")
         if (secret.isNullOrBlank()) {
             logger.error("AUTH| generateUserToken failed, " +
@@ -86,13 +86,25 @@ class ApiAccessTokenService @Autowired constructor(
                     "because config[auth.accessToken.secret] is not found"
             )
         }
-        return URLEncoder.encode(AESUtil.encrypt(
-            secret,
-            JsonUtil.toJson(TokenInfo(
-                userId = userDetails,
-                expirationTime = System.currentTimeMillis() + (expirationTime ?: 14400000)
-            ))
-        ), "UTF-8")
+        val tokenInfo = TokenInfo(
+            userId = userDetails,
+            expirationTime = System.currentTimeMillis() + (expirationTime ?: 14400000),
+            accessToken = null
+        )
+        tokenInfo.accessToken = try {
+            URLEncoder.encode(AESUtil.encrypt(
+                secret,
+                JsonUtil.toJson(tokenInfo)
+            ), "UTF-8")
+        } catch (ignore: Throwable) {
+            logger.error("AUTH| generateUserToken failed because $ignore ")
+            throw ErrorCodeException(
+                errorCode = PARAMETER_SECRET_ERROR,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                defaultMessage = "AUTH| generateUserToken failed because encoding failed "
+            )
+        }
+        return tokenInfo
     }
 
     private fun getTokenInfo(token: String): TokenInfo {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.api.user
 
+import com.tencent.devops.auth.pojo.TokenInfo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -51,5 +52,5 @@ interface UserTokenResource {
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): Result<String>
+    ): Result<TokenInfo>
 }

@@ -35,5 +35,7 @@ data class TokenInfo(
     @ApiModelProperty("用户id")
     val userId: String?,
     @ApiModelProperty("过期时间戳")
-    val expirationTime: Long
+    val expirationTime: Long,
+    @ApiModelProperty("用户token")
+    var accessToken: String?
 )
