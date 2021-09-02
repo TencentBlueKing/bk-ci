@@ -3,6 +3,7 @@ package com.tencent.devops.dockerhost.service
 import com.github.dockerjava.api.DockerClient
 import com.tencent.devops.common.api.util.script.ShellUtil
 import com.tencent.devops.dockerhost.services.DockerHostImageScanService
+import com.tencent.devops.dockerhost.services.image.ImageDeleteHandler
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -38,6 +39,14 @@ class TXDockerHostImageScanService : DockerHostImageScanService {
                             "-T $projectId -b $buildId -n sawyersong"
                     val scanResult = ShellUtil.executeEnhance(script)
                     logger.info("[$buildId]|[$vmSeqId] scan docker $it result: $scanResult")
+
+                    logger.info("[$buildId]|[$vmSeqId] Push image success, now remove local image, image name and tag: $it")
+                    try {
+                        dockerClient.removeImageCmd(it).exec()
+                        logger.info("[$buildId]|[$vmSeqId] Remove local image success")
+                    } catch (e: Throwable) {
+                        logger.error("[$buildId]|[$vmSeqId] Docker rmi failed, msg: ${e.message}")
+                    }
                 }
             } catch (e: Exception) {
                 logger.error("[$buildId]|[$vmSeqId] scan docker error.", e)
