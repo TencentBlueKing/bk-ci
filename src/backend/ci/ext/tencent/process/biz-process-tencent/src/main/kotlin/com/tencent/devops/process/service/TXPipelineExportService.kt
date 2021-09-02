@@ -129,12 +129,18 @@ class TXPipelineExportService @Autowired constructor(
         return exportToFile(pair.first, pair.second.name)
     }
 
-    fun exportV2YamlStr(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): PipelineExportV2YamlData {
+    fun exportV2YamlStr(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        isGitCI: Boolean = false
+    ): PipelineExportV2YamlData {
         val pair = generateV2Yaml(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            isGitCI = isGitCI)
+            isGitCI = isGitCI
+        )
         return PipelineExportV2YamlData(pair.first, pair.third)
     }
 
@@ -600,7 +606,8 @@ class TXPipelineExportService @Autowired constructor(
                                 variables = variables,
                                 outputConflictMap = outputConflictMap,
                                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                                iisExportFile = iisExportFile),
+                                iisExportFile = iisExportFile
+                            ),
                             checkout = null
                         )
                     )
@@ -630,7 +637,8 @@ class TXPipelineExportService @Autowired constructor(
                                 variables = variables,
                                 outputConflictMap = outputConflictMap,
                                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                                iisExportFile = iisExportFile),
+                                iisExportFile = iisExportFile
+                            ),
                             checkout = null
                         )
                     )
@@ -805,8 +813,9 @@ class TXPipelineExportService @Autowired constructor(
         val result = mutableMapOf<String, Any>()
         inputMap.forEach lit@{ (key, value) ->
             if (!relyMap.isNullOrEmpty()) {
+                var rely: Map<String, Any>? = null
                 try {
-                    val rely = relyMap[key] as Map<String, Any>
+                    rely = relyMap[key] as Map<String, Any>
                     if (null != rely["expression"]) {
                         val expression = rely["expression"] as List<Map<String, Any>>
                         if (rely["operation"] == "AND") {
@@ -833,7 +842,7 @@ class TXPipelineExportService @Autowired constructor(
                         }
                     }
                 } catch (e: Exception) {
-                    logger.info("load atom input[rely] with error: ${e.message}")
+                    logger.info("load atom input[rely] with error: ${e.message} ,rely=$rely")
                 }
             }
             result[key] = replaceValueWithDoubleCurlyBraces(
@@ -842,7 +851,8 @@ class TXPipelineExportService @Autowired constructor(
                 variables = variables,
                 outputConflictMap = outputConflictMap,
                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                iisExportFile = iisExportFile)
+                iisExportFile = iisExportFile
+            )
         }
         return result
     }
@@ -869,13 +879,16 @@ class TXPipelineExportService @Autowired constructor(
             val result = mutableListOf<Any?>()
             value.forEach {
                 if (it is String) {
-                    result.add(replaceStringWithDoubleCurlyBraces(
-                        value = it,
-                        output2Elements = output2Elements,
-                        variables = variables,
-                        outputConflictMap = outputConflictMap,
-                        pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                        iisExportFile = iisExportFile))
+                    result.add(
+                        replaceStringWithDoubleCurlyBraces(
+                            value = it,
+                            output2Elements = output2Elements,
+                            variables = variables,
+                            outputConflictMap = outputConflictMap,
+                            pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                            iisExportFile = iisExportFile
+                        )
+                    )
                 } else {
                     result.add(it)
                 }
@@ -1215,7 +1228,7 @@ class TXPipelineExportService @Autowired constructor(
             } else {
                 outputConflictMap[key] = mutableListOf(item)
             }
-            if (iisExportFile){
+            if (iisExportFile) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = ProcessMessageCode.ERROR_EXPORT_OUTPUT_CONFLICT,
