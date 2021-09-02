@@ -55,7 +55,7 @@ interface ApigwTokenResourceV3 {
         @ApiParam("用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): Result<String>
+    ): Result<TokenInfo>
 
     @ApiOperation("验证token")
     @Path("/validate/{token}")

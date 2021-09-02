@@ -41,7 +41,7 @@ class ApigwTokenResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwTokenResourceV3 {
 
-    override fun getJWToken(userId: String): Result<String> {
+    override fun getJWToken(userId: String): Result<TokenInfo> {
         return client.get(UserTokenResource::class).getAccessToken(userId)
     }
 
