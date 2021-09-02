@@ -13,10 +13,12 @@ data class ImageHandlerContext(
     override val projectId: String,
     override val pipelineId: String,
     override val buildId: String,
-    override val vmSeqId: String
+    override val vmSeqId: String,
+    override val userName: String
 ) : HandlerContext(
     projectId = projectId,
     pipelineId = pipelineId,
     buildId = buildId,
-    vmSeqId = vmSeqId
+    vmSeqId = vmSeqId,
+    userName = userName
 )
