@@ -33,6 +33,7 @@ import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
 @Event(MQ.EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_STREAM_TRIGGER_PIPELINE_EVENT)
 data class StreamTriggerEvent(
@@ -42,5 +43,6 @@ data class StreamTriggerEvent(
     val gitProjectPipeline: GitProjectPipeline,
     val event: GitEvent,
     val originYaml: String?,
-    val filePath: String
+    val filePath: String,
+    val gitCIBasicSetting: GitCIBasicSetting
 )
