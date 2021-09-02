@@ -59,7 +59,8 @@ class ImageBuildHandler(
 
             this.imageTagSet = imageNameTagSet
 
-            logger.info("[$buildId]|[$vmSeqId] Build docker image, workspace: $workspace, buildDir:$buildDir, dockerfile: $dockerfilePath")
+            logger.info("[$buildId]|[$vmSeqId] Build docker image, workspace: $workspace, " +
+                    "buildDir:$buildDir, dockerfile: $dockerfilePath")
             logger.info("[$buildId]|[$vmSeqId] Build docker image, imageNameTag: $imageNameTagSet")
             val step = dockerClient.buildImageCmd().withNoCache(true)
                 .withPull(true)
