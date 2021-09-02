@@ -4,8 +4,6 @@ import com.github.dockerjava.api.async.ResultCallback
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.PushResponseItem
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
-import com.tencent.devops.dockerhost.services.DockerHostImageScanService
-import com.tencent.devops.dockerhost.services.DockerHostImageService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
