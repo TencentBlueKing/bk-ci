@@ -69,7 +69,7 @@ class ApiAccessTokenService @Autowired constructor(
                 errorCode = PARAMETER_EXPIRED_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 defaultMessage = "Access token expired in: ${tokenInfo.expirationTime}",
-                params = arrayOf("token","Access token expired in: ${tokenInfo.expirationTime}")
+                params = arrayOf("token", "Access token expired in: ${tokenInfo.expirationTime}")
             )
         }
         return tokenInfo
@@ -85,7 +85,7 @@ class ApiAccessTokenService @Autowired constructor(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 defaultMessage = "AUTH| generateUserToken failed, " +
                     "because config[auth.accessToken.secret] is not found",
-                params = arrayOf("config","AUTH| generateUserToken failed, " +
+                params = arrayOf("config", "AUTH| generateUserToken failed, " +
                     "because config[auth.accessToken.secret] is not found")
             )
         }
@@ -105,7 +105,7 @@ class ApiAccessTokenService @Autowired constructor(
                 errorCode = PARAMETER_SECRET_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 defaultMessage = "AUTH| generateUserToken failed because encoding failed ",
-                params = arrayOf("encoding","AUTH| generateUserToken failed because encoding failed")
+                params = arrayOf("encoding", "AUTH| generateUserToken failed because encoding failed")
             )
         }
         return tokenInfo
@@ -122,7 +122,7 @@ class ApiAccessTokenService @Autowired constructor(
                 errorCode = PARAMETER_ILLEGAL_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 defaultMessage = "Access token illegal",
-                params = arrayOf("token","Access token illegal")
+                params = arrayOf("token", "Access token illegal")
             )
         }
         try {
@@ -134,7 +134,7 @@ class ApiAccessTokenService @Autowired constructor(
                 errorCode = PARAMETER_VALIDATE_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 defaultMessage = "Access token invalid: ${ignore.message}",
-                params = arrayOf("token","Access token invalid: ${ignore.message}")
+                params = arrayOf("token", "Access token invalid: ${ignore.message}")
             )
         }
     }
