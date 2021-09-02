@@ -27,11 +27,10 @@ class TXDockerHostImageScanService : DockerHostImageScanService {
         Executors.newFixedThreadPool(10).execute {
             try {
                 imageTagSet.stream().forEach {
-                    val imageAndTagArray = it.split(":")
-                    val inputStream = dockerClient.saveImageCmd(imageAndTagArray[0])
-                        .withTag(imageAndTagArray[1])
+                    val inputStream = dockerClient.saveImageCmd(it.substringBeforeLast(":"))
+                        .withTag(it.substringAfterLast(":"))
                         .exec()
-                    val imageSavedPath = "$dockerSavedPath/${imageAndTagArray[0]}.tar"
+                    val imageSavedPath = "$dockerSavedPath/${it.substringBeforeLast(":")}.tar"
                     val targetSavedImagesFile = File(imageSavedPath)
                     FileUtils.copyInputStreamToFile(inputStream, targetSavedImagesFile)
 
