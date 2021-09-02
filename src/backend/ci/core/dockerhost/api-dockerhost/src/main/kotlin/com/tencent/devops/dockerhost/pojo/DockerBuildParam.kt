@@ -55,5 +55,7 @@ data class DockerBuildParam(
     @ApiModelProperty("并发构建池序号", required = false)
     val poolNo: String? = "0",
     @ApiModelProperty("镜像tag列表", required = false)
-    val imageTagList: List<String> = emptyList()
+    val imageTagList: List<String> = emptyList(),
+    @ApiModelProperty("pipelineTaskId", required = false)
+    val pipelineTaskId: String = ""
 )

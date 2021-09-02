@@ -35,6 +35,7 @@ import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.services.image.ImageBuildHandler
+import com.tencent.devops.dockerhost.services.image.ImageDeleteHandler
 import com.tencent.devops.dockerhost.services.image.ImageHandlerContext
 import com.tencent.devops.dockerhost.services.image.ImagePushHandler
 import com.tencent.devops.dockerhost.services.image.ImageScanHandler
@@ -49,7 +50,8 @@ class DockerHostImageService(
     private val dockerHostImageScanService: DockerHostImageScanService,*/
     private val imageBuildHandler: ImageBuildHandler,
     private val imageScanHandler: ImageScanHandler,
-    private val imagePushHandler: ImagePushHandler
+    private val imagePushHandler: ImagePushHandler,
+    private val imageDeleteHandler: ImageDeleteHandler
 ) {
 
     companion object {
@@ -63,7 +65,8 @@ class DockerHostImageService(
         dockerBuildParam: DockerBuildParam,
         buildId: String,
         elementId: String?,
-        outer: Boolean
+        outer: Boolean,
+        scanFlag: Boolean
     ): Pair<Boolean, String?> {
         lateinit var dockerClient: DockerClient
         try {
@@ -87,18 +90,24 @@ class DockerHostImageService(
 
             dockerClient = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
 
-            imageBuildHandler.setNextHandler(imageScanHandler.setNextHandler(imagePushHandler))
-                .handlerRequest(
-                    ImageHandlerContext(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        vmSeqId = vmSeqId,
-                        dockerBuildParam = dockerBuildParam,
-                        dockerClient = dockerClient,
-                        pipelineTaskId = elementId,
-                        outer = outer
-                    ))
+            val imageHandlerContext = ImageHandlerContext(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                dockerBuildParam = dockerBuildParam,
+                dockerClient = dockerClient,
+                pipelineTaskId = elementId,
+                outer = outer,
+                scanFlag = scanFlag
+            )
+
+            // 同步扫描
+            imageBuildHandler.setNextHandler(
+                imageScanHandler.setNextHandler(
+                    imagePushHandler.setNextHandler(imageDeleteHandler)
+                )
+            ).handlerRequest(imageHandlerContext)
 
             return Pair(true, null)
         } catch (e: Exception) {
