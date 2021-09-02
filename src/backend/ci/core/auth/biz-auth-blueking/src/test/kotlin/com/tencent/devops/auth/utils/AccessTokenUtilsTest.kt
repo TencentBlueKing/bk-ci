@@ -19,7 +19,8 @@ internal class AccessTokenUtilsTest {
             secret,
             JsonUtil.toJson(TokenInfo(
                 userId = userDetails,
-                expirationTime = expirationTime
+                expirationTime = expirationTime,
+                accessToken = null
             ))
         ), "UTF-8")
         val result = AESUtil.decrypt(secret, URLDecoder.decode(res, "UTF-8"))
