@@ -30,6 +30,7 @@ package com.tencent.devops.dockerhost.services
 import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Binds
+import com.github.dockerjava.api.model.BlkioRateDevice
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.Volume
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -143,6 +144,14 @@ class DockerHostBuildAgentLessService(
             Bind(linkPath, volumeTmpLink),
             Bind(hostWorkspace, volumeWs)
         )
+
+        val blkioRateDeviceWirte = BlkioRateDevice()
+            .withPath("/data")
+            .withRate(dockerHostConfig.blkioDeviceWriteBps)
+        val blkioRateDeviceRead = BlkioRateDevice()
+            .withPath("/data")
+            .withRate(dockerHostConfig.blkioDeviceReadBps)
+
         val container = httpLongDockerCli.createContainerCmd(imageName)
             .withCmd("/bin/sh", ENTRY_POINT_CMD)
             .withEnv(
@@ -163,9 +172,10 @@ class DockerHostBuildAgentLessService(
                 // CPU and memory Limit
                 HostConfig()
                     .withMemory(dockerHostConfig.memory)
-                    .withMemorySwap(dockerHostConfig.memory)
                     .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
                     .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
+/*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
                     .withBinds(binds)
                     .withNetworkMode("bridge")
             )

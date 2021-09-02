@@ -25,12 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:store:api-store-image"))
-}
+package com.tencent.devops.dispatch.docker.controller
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.op.OPDockerResourceWhiteListResource
+import com.tencent.devops.dispatch.docker.service.DockerResourceWhitelistService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpDockerResourceWhiteListResourceImpl @Autowired constructor(
+    private val dockerResourceWhitelistService: DockerResourceWhitelistService
+) : OPDockerResourceWhiteListResource {
+
+    override fun getResourceWhitelist(userId: String): Result<List<String>> {
+        return Result(dockerResourceWhitelistService.getDockerResourceWhiteList(userId))
+    }
+
+    override fun addResourceWhitelist(userId: String, projectId: String): Result<Boolean> {
+        return Result(dockerResourceWhitelistService.addDockerResourceWhiteList(userId, projectId))
+    }
+
+    override fun deleteResourceWhitelist(userId: String, projectId: String): Result<Boolean> {
+        return Result(dockerResourceWhitelistService.deleteDockerResourceWhiteList(userId, projectId))
+    }
 }
