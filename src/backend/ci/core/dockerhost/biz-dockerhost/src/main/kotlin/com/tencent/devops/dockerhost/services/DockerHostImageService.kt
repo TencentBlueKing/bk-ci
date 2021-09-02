@@ -95,6 +95,7 @@ class DockerHostImageService(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
+                userName = userName,
                 dockerBuildParam = dockerBuildParam,
                 dockerClient = dockerClient,
                 pipelineTaskId = elementId,
