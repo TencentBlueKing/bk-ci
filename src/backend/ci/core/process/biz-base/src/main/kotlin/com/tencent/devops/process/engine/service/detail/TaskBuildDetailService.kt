@@ -151,9 +151,13 @@ class TaskBuildDetailService(
                             c.status = BuildStatus.RUNNING.name
                             e.status = BuildStatus.RUNNING.name
                         }
-                        e.startEpoch = System.currentTimeMillis()
-                        if (c.startEpoch == null) {
-                            c.startEpoch = e.startEpoch
+                        val additionalOptions = e.additionalOptions
+                        // 如果是自动重试则不重置task和job的时间
+                        if (!(additionalOptions?.retryWhenFailed == true && additionalOptions.retryCount > 0)) {
+                            e.startEpoch = System.currentTimeMillis()
+                            if (c.startEpoch == null) {
+                                c.startEpoch = e.startEpoch
+                            }
                         }
                         e.errorType = null
                         e.errorCode = null

@@ -286,7 +286,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         buildId: String,
         taskId: String,
         userId: String? = null,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        additionalOptions: ElementAdditionalOptions? = null
     ) {
         with(T_PIPELINE_BUILD_TASK) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
@@ -297,7 +298,9 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                 if (buildStatus.isReview() && !userId.isNullOrBlank()) {
                     update.set(APPROVER, userId)
                 }
-            } else if (buildStatus.isRunning()) {
+            } else if (buildStatus.isRunning() &&
+                !(additionalOptions?.retryWhenFailed == true && additionalOptions.retryCount > 0)
+            ) {
                 update.set(START_TIME, LocalDateTime.now())
                 if (!userId.isNullOrBlank()) {
                     update.set(STARTER, userId)

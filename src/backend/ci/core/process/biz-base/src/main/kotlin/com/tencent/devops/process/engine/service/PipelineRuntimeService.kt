@@ -1887,7 +1887,8 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = task.buildId,
                 taskId = task.taskId,
                 userId = userId,
-                buildStatus = taskStatus
+                buildStatus = taskStatus,
+                additionalOptions = task.additionalOptions
             )
             if (errorType != null) pipelineBuildTaskDao.setTaskErrorInfo(
                 dslContext = transactionContext,
