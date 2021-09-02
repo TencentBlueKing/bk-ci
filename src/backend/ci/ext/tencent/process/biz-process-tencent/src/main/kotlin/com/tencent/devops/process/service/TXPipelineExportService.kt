@@ -991,9 +991,7 @@ class TXPipelineExportService @Autowired constructor(
             inputMap.remove("repositoryHashId")
             inputMap.remove("repositoryName")
             inputMap.remove("repositoryUrl")
-
-            // 将鉴权类型统一刷成token方式
-            inputMap["authType"] = "ACCESS_TOKEN"
+            inputMap.remove("authType")
 
             stepList.add(
                 V2Step(
