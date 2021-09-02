@@ -27,6 +27,8 @@ class ImagePushHandler(
                     .exec(MyPushImageResultCallback(buildId, pipelineTaskId, dockerHostBuildApi))
                     .awaitCompletion()
             }
+
+            nextHandler?.handlerRequest(this)
         }
     }
 
