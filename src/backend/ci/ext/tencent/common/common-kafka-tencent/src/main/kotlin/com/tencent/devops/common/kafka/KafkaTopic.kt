@@ -61,5 +61,5 @@ object KafkaTopic {
     // Stream上报topic
     const val STREAM_BUILD_INFO_TOPIC = "tendata-bkdevops-topic-stream-build-info"
 
-    const val BUILD_ATOM_ATOM_METRICS_TOPIC_PREFIX = "tendata-bkdevops-topic-build-atom-report"
+    const val BUILD_ATOM_METRICS_TOPIC_PREFIX = "tendata-bkdevops-topic-build-atom-metrics"
 }
