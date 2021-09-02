@@ -62,7 +62,8 @@ class TXDockerHostImageScanService(
                     val scanResult = ShellUtil.executeEnhance(script)
                     logger.info("[$buildId]|[$vmSeqId] scan docker $it result: $scanResult")
 
-                    logger.info("[$buildId]|[$vmSeqId] scan image success, now remove local image, image name and tag: $it")
+                    logger.info("[$buildId]|[$vmSeqId] scan image success, now remove local image, " +
+                            "image name and tag: $it")
                     try {
                         longDockerClient.removeImageCmd(it).exec()
                         logger.info("[$buildId]|[$vmSeqId] Remove local image success")
