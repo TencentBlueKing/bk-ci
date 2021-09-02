@@ -5,6 +5,7 @@ import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 
 data class ImageHandlerContext(
     val outer: Boolean, // 是否为外部请求创建镜像
+    val scanFlag: Boolean, // 镜像扫描开关
     val dockerClient: DockerClient,
     val pipelineTaskId: String?,
     val dockerBuildParam: DockerBuildParam,

@@ -26,14 +26,6 @@ class ImagePushHandler(
                     .withAuthConfig(authConfig)
                     .exec(MyPushImageResultCallback(buildId, pipelineTaskId, dockerHostBuildApi))
                     .awaitCompletion()
-
-                logger.info("[$buildId]|[$vmSeqId] Push image success, now remove local image, image name and tag: $it")
-                try {
-                    dockerClient.removeImageCmd(it).exec()
-                    logger.info("[$buildId]|[$vmSeqId] Remove local image success")
-                } catch (e: Throwable) {
-                    logger.error("[$buildId]|[$vmSeqId] Docker rmi failed, msg: ${e.message}")
-                }
             }
         }
     }

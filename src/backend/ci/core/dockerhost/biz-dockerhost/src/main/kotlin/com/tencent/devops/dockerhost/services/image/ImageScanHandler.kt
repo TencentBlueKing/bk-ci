@@ -9,14 +9,16 @@ class ImageScanHandler(
 ) : Handler<ImageHandlerContext>() {
     override fun handlerRequest(handlerContext: ImageHandlerContext) {
         with(handlerContext) {
-            dockerHostImageScanService.scanningDocker(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                vmSeqId = vmSeqId,
-                imageTagSet = imageTagSet,
-                dockerClient = dockerClient
-            )
+            if (scanFlag) {
+                dockerHostImageScanService.scanningDocker(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    imageTagSet = imageTagSet,
+                    dockerClient = dockerClient
+                )
+            }
 
             nextHandler?.handlerRequest(this)
         }
