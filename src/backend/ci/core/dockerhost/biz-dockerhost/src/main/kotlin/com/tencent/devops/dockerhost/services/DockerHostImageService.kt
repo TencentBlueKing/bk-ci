@@ -103,7 +103,6 @@ class DockerHostImageService(
                 scanFlag = scanFlag
             )
 
-            // 同步扫描
             imageBuildHandler.setNextHandler(
                 imageScanHandler.setNextHandler(
                     imagePushHandler.setNextHandler(imageDeleteHandler)
