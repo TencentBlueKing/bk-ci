@@ -160,4 +160,11 @@ object TaskUtils {
      * 获取当前构建取消任务ID集合的redis键
      */
     fun getCancelTaskIdRedisKey(buildId: String, containerId: String) = "CANCEL_TASK_IDS_${buildId}_$containerId"
+
+    /**
+     * 获取当前构建插件失败自动重试的redis键
+     */
+    fun getFailRetryTaskRedisKey(buildId: String, taskId: String): String {
+        return "process:task:failRetry:count:$buildId:$taskId"
+    }
 }
