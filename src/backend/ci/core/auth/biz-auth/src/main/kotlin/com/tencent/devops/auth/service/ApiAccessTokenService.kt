@@ -64,7 +64,7 @@ class ApiAccessTokenService @Autowired constructor(
 
     fun verifyJWT(token: String): TokenInfo {
         val tokenInfo = getTokenInfo(token)
-        if (tokenInfo.expirationTime > System.currentTimeMillis()) {
+        if (tokenInfo.expirationTime < System.currentTimeMillis()) {
             throw ErrorCodeException(
                 errorCode = PARAMETER_EXPIRED_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
@@ -116,8 +116,9 @@ class ApiAccessTokenService @Autowired constructor(
         if (cacheToken != null) return cacheToken
 
         val result = try {
-            AESUtil.decrypt(secret!!, URLDecoder.decode(token, "UTF-8"))
+            AESUtil.decrypt(secret!!, token)
         } catch (ignore: Throwable) {
+            logger.error("AUTH|getTokenInfo Access token illegal,secret=$secret,token=$token,error=$ignore")
             throw ErrorCodeException(
                 errorCode = PARAMETER_ILLEGAL_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
