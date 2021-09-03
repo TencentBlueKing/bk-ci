@@ -38,6 +38,8 @@ import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.common.quality.pojo.RuleCheckSingleResult
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.notify.GRAY_PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE
+import com.tencent.devops.notify.GRAY_PIPELINE_QUALITY_END_NOTIFY_TEMPLATE
 import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE
 import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -649,9 +651,14 @@ class QualityRuleCheckService @Autowired constructor(
             emailResult.append("<br>")
         }
 
+        var templateCode = PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE
+        if (getProjectGray(projectId)) {
+            templateCode = GRAY_PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE
+        }
+
         // 推送消息
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
-                templateCode = PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE,
+                templateCode = templateCode,
                 receivers = notifyUserSet,
                 cc = mutableSetOf(triggerUserId),
                 titleParams = mapOf(
@@ -720,8 +727,13 @@ class QualityRuleCheckService @Autowired constructor(
             emailResult.append("<br>")
         }
 
+        var templateCode = PIPELINE_QUALITY_END_NOTIFY_TEMPLATE
+        if (getProjectGray(projectId)) {
+            templateCode = GRAY_PIPELINE_QUALITY_END_NOTIFY_TEMPLATE
+        }
+
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
-                templateCode = PIPELINE_QUALITY_END_NOTIFY_TEMPLATE,
+                templateCode = templateCode,
                 receivers = notifyUserSet,
                 cc = mutableSetOf(triggerUserId),
                 notifyType = endNotifyTypeList.map { it.name }.toMutableSet(),
@@ -785,6 +797,11 @@ class QualityRuleCheckService @Autowired constructor(
     private fun getBuildDetail(projectId: String, pipelineId: String, buildNum: String): BuildHistory {
         return client.get(ServiceBuildResource::class)
                 .getSingleHistoryBuild(projectId, pipelineId, buildNum, ChannelCode.BS).data!!
+    }
+
+    private fun getProjectGray(projectId: String): Boolean {
+        val project = client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
+        return project?.gray ?: false
     }
 
     companion object {
