@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
@@ -45,6 +46,7 @@ import com.tencent.devops.common.pipeline.event.SimpleModel
 import com.tencent.devops.common.pipeline.event.SimpleStage
 import com.tencent.devops.common.pipeline.event.SimpleTask
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
@@ -175,24 +177,32 @@ class CallBackControl @Autowired constructor(
     }
 
     private fun <T> sendToCallBack(callBackData: CallBackData<T>, list: List<ProjectPipelineCallBack>) {
-        val startEpoch = System.currentTimeMillis()
-        try {
-            val requestBody = ObjectMapper().writeValueAsString(callBackData)
+        val requestBody = ObjectMapper().writeValueAsString(callBackData)
 
-            list.forEach {
-                try {
-                    logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback")
-                    if (it.callBackUrl.isBlank()) {
-                        logger.warn("[${it.projectId}]| call back url is empty!")
-                        return@forEach
-                    }
-                    send(callBack = it, requestBody = requestBody)
-                } catch (e: Exception) {
-                    logger.error("BKSystemErrorMonitor|${it.projectId}|${it.callBackUrl}|${it.events}|${e.message}", e)
+        list.forEach {
+            val uniqueId = when (val data = callBackData.data) {
+                is PipelineEvent -> {
+                    data.pipelineId
                 }
+                is BuildEvent -> {
+                    data.buildId
+                }
+                else -> ""
             }
-        } finally {
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the project")
+            val watcher = Watcher(id = "${it.projectId}|${it.callBackUrl}|${it.events}|$uniqueId")
+            try {
+                logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback")
+                if (it.callBackUrl.isBlank()) {
+                    logger.warn("[${it.projectId}]| call back url is empty!")
+                    return@forEach
+                }
+                send(callBack = it, requestBody = requestBody)
+            } catch (e: Exception) {
+                logger.error("BKSystemErrorMonitor|${it.projectId}|${it.callBackUrl}|${it.events}|${e.message}", e)
+            } finally {
+                watcher.stop()
+                LogUtils.printCostTimeWE(watcher, warnThreshold = 2000)
+            }
         }
     }
 
