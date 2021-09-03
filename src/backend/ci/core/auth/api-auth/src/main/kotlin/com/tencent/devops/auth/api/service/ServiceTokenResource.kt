@@ -53,7 +53,7 @@ interface ServiceTokenResource {
     @ApiOperation("校验用户是否有action的权限")
     fun validateToken(
         @ApiParam("权限Token", required = false)
-        @QueryParam("accessToken")
+        @QueryParam("access_token")
         accessToken: String
     ): Result<TokenInfo>
 
