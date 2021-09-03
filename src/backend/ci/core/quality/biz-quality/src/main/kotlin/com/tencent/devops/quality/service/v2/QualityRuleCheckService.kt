@@ -38,7 +38,8 @@ import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.common.quality.pojo.RuleCheckSingleResult
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
-import com.tencent.devops.notify.*
+import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE_V2
+import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE_V2
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
