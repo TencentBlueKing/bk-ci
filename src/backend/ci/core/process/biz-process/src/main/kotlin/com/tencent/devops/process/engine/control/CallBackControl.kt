@@ -175,9 +175,10 @@ class CallBackControl @Autowired constructor(
     }
 
     private fun <T> sendToCallBack(callBackData: CallBackData<T>, list: List<ProjectPipelineCallBack>) {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val requestBody = ObjectMapper().writeValueAsString(callBackData)
 
-        val requestBody = ObjectMapper().writeValueAsString(callBackData)
-        executors.submit {
             list.forEach {
                 try {
                     logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback")
@@ -190,6 +191,8 @@ class CallBackControl @Autowired constructor(
                     logger.error("BKSystemErrorMonitor|${it.projectId}|${it.callBackUrl}|${it.events}|${e.message}", e)
                 }
             }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the project")
         }
     }
 
@@ -203,21 +206,10 @@ class CallBackControl @Autowired constructor(
             .post(RequestBody.create(JSON, requestBody))
             .build()
 
-        var responseCode: Int? = null
-        var responseBody: String? = null
         var errorMsg: String? = null
         var status = ProjectPipelineCallbackStatus.SUCCESS
         try {
-            callbackClient.newCall(request).execute().use { response ->
-                if (response.code() != 200) {
-                    logger.warn("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|code=${response.code()}")
-                } else {
-                    logger.info("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|code=${response.code()}")
-                }
-                responseCode = response.code()
-                responseBody = response.body()?.string()
-                errorMsg = response.message()
-            }
+            callbackClient.newCall(request).execute()
         } catch (e: Exception) {
             logger.warn("BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
                 "url=${callBack.callBackUrl}|${callBack.events}", e)
@@ -228,8 +220,6 @@ class CallBackControl @Autowired constructor(
                 callBack = callBack,
                 requestHeaders = request.headers().names().map { CallBackHeader(it, value = request.header(it) ?: "") },
                 requestBody = requestBody,
-                responseCode = responseCode,
-                responseBody = responseBody,
                 status = status.name,
                 errorMsg = errorMsg,
                 startTime = startTime,
@@ -242,8 +232,6 @@ class CallBackControl @Autowired constructor(
         callBack: ProjectPipelineCallBack,
         requestHeaders: List<CallBackHeader>,
         requestBody: String,
-        responseCode: Int?,
-        responseBody: String?,
         status: String,
         errorMsg: String?,
         startTime: Long,
@@ -258,8 +246,8 @@ class CallBackControl @Autowired constructor(
                 errorMsg = errorMsg,
                 requestHeaders = requestHeaders,
                 requestBody = requestBody,
-                responseCode = responseCode,
-                responseBody = responseBody,
+                responseCode = 0,
+                responseBody = "",
                 startTime = startTime,
                 endTime = endTime
             ))
