@@ -33,6 +33,8 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwBuildResourceV3
+import com.tencent.devops.openapi.utils.ApiGatewayUtil
+import com.tencent.devops.openapi.utils.ChannelUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
@@ -68,10 +70,10 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
+        gatewayTag: String,
         projectId: String,
         pipelineId: String,
-        buildId: String,
-        channelCode: ChannelCode?
+        buildId: String
     ): Result<ModelDetail> {
         logger.info("$buildId|DETAIL|user($userId)")
         return client.get(ServiceBuildResource::class).getBuildDetail(
@@ -79,7 +81,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = channelCode ?: ChannelCode.BS
+            channelCode = ChannelUtils.getChannelCode(gatewayTag)
         )
     }
 

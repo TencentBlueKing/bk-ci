@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -81,14 +82,14 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @ApiParam(value = "网关路由tag", required = true)
+        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
+        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "流水线模型", required = true)
-        pipeline: Model,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        pipeline: Model
     ): Result<PipelineId>
 
     @Deprecated("Replace with editPipeline")
@@ -105,6 +106,9 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @ApiParam(value = "网关路由tag", required = true)
+        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
+        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -112,10 +116,7 @@ interface ApigwPipelineResourceV3 {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam(value = "流水线模型", required = true)
-        pipeline: Model,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        pipeline: Model
     ): Result<Boolean>
 
     @ApiOperation("导入新流水线, 包含流水线编排和设置")
@@ -131,15 +132,15 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @ApiParam(value = "网关路由tag", required = true)
+        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
+        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "流水线模型与设置", required = true)
         @Valid
-        modelAndSetting: PipelineModelAndSetting,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        modelAndSetting: PipelineModelAndSetting
     ): Result<PipelineId>
 
     @ApiOperation("更新流水线编排和设置")
@@ -155,6 +156,9 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @ApiParam(value = "网关路由tag", required = true)
+        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
+        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -163,10 +167,7 @@ interface ApigwPipelineResourceV3 {
         pipelineId: String,
         @ApiParam(value = "流水线模型与设置", required = true)
         @Valid
-        modelAndSetting: PipelineModelAndSetting,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        modelAndSetting: PipelineModelAndSetting
     ): Result<DeployPipelineResult>
 
     @ApiOperation("获取流水线编排")
@@ -182,15 +183,15 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @ApiParam(value = "网关路由tag", required = true)
+        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
+        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("channel", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        pipelineId: String
     ): Result<Model>
 
     @ApiOperation("批量获取流水线编排与配置")
@@ -206,12 +207,12 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @ApiParam(value = "网关路由tag", required = true)
+        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
+        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("channel", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS,
         @ApiParam("流水线ID列表", required = true)
         pipelineIds: List<String>
     ): Result<List<PipelineWithModel>>
@@ -246,15 +247,15 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @ApiParam(value = "网关路由tag", required = true)
+        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
+        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        pipelineId: String
     ): Result<Boolean>
 
     @ApiOperation("获取项目的流水线列表")
@@ -270,6 +271,9 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @ApiParam(value = "网关路由tag", required = true)
+        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
+        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -278,10 +282,7 @@ interface ApigwPipelineResourceV3 {
         page: Int? = null,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int? = null,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        pageSize: Int? = null
     ): Result<Page<Pipeline>>
 
     @ApiOperation("获取流水线状态")
