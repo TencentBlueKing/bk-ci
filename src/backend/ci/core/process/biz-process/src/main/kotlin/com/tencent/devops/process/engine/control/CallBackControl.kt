@@ -191,12 +191,12 @@ class CallBackControl @Autowired constructor(
             }
             val watcher = Watcher(id = "${it.projectId}|${it.callBackUrl}|${it.events}|$uniqueId")
             try {
-                logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback")
+                logger.info("${it.projectId}|${it.callBackUrl}|$uniqueId|${it.events}|send to callback")
                 if (it.callBackUrl.isBlank()) {
                     logger.warn("[${it.projectId}]| call back url is empty!")
                     return@forEach
                 }
-                send(callBack = it, requestBody = requestBody)
+                send(uniqueId = uniqueId, callBack = it, requestBody = requestBody)
             } catch (e: Exception) {
                 logger.error("BKSystemErrorMonitor|${it.projectId}|${it.callBackUrl}|${it.events}|${e.message}", e)
             } finally {
@@ -206,7 +206,7 @@ class CallBackControl @Autowired constructor(
         }
     }
 
-    private fun send(callBack: ProjectPipelineCallBack, requestBody: String) {
+    private fun send(uniqueId: String, callBack: ProjectPipelineCallBack, requestBody: String) {
 
         val startTime = System.currentTimeMillis()
         val request = Request.Builder()
@@ -228,8 +228,7 @@ class CallBackControl @Autowired constructor(
         } finally {
             saveHistory(
                 callBack = callBack,
-                requestHeaders = request.headers().names().map { CallBackHeader(it, value = request.header(it) ?: "") },
-                requestBody = requestBody,
+                requestHeaders = listOf(CallBackHeader(name = "X-DEVOPS-WEBHOOK-UNIQUE-ID", value = uniqueId)),
                 status = status.name,
                 errorMsg = errorMsg,
                 startTime = startTime,
@@ -241,7 +240,6 @@ class CallBackControl @Autowired constructor(
     private fun saveHistory(
         callBack: ProjectPipelineCallBack,
         requestHeaders: List<CallBackHeader>,
-        requestBody: String,
         status: String,
         errorMsg: String?,
         startTime: Long,
@@ -255,7 +253,7 @@ class CallBackControl @Autowired constructor(
                 status = status,
                 errorMsg = errorMsg,
                 requestHeaders = requestHeaders,
-                requestBody = requestBody,
+                requestBody = "",
                 responseCode = 0,
                 responseBody = "",
                 startTime = startTime,
