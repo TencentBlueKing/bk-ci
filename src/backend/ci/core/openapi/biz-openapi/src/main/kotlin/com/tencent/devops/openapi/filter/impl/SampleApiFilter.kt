@@ -27,7 +27,7 @@ class SampleApiFilter constructor(
     private val apiFilterEnabled: Boolean? = false
 
     override fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
-        if (!apiFilterEnabled!!){
+        if (!apiFilterEnabled!!) {
             return true
         }
         val accessToken = requestContext.uriInfo.queryParameters.getFirst(API_ACCESS_TOKEN_PROPERTY)
