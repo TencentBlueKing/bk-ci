@@ -25,22 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.config
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.openapi.filter.impl.SampleApiFilter
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+package com.tencent.devops.auth.api.user
 
-/**
- * 流水线构建核心配置
- */
-@Configuration
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class OpenAPiConfiguration {
+import com.tencent.devops.auth.pojo.TokenInfo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-    @Bean
-    fun apiFilter(@Autowired client: Client) = SampleApiFilter(client)
+@Api(tags = ["AUTH_RESOURCE"], description = "用户态-权限")
+@Path("/user/token")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserTokenResource {
+    @ApiOperation("获取accessToken")
+    @GET
+    @Path("/get")
+    fun getAccessToken(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<TokenInfo>
 }
