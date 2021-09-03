@@ -49,7 +49,6 @@ import javax.ws.rs.core.Response
 class ApiAccessTokenService @Autowired constructor(
     val dslContext: DSLContext
 ) {
-
     @Value("\${auth.accessToken.expirationTime:#{null}}")
     private val expirationTime: Int? = null
 
@@ -75,7 +74,7 @@ class ApiAccessTokenService @Autowired constructor(
     }
 
     fun generateUserToken(userDetails: String): TokenInfo {
-        logger.info("AUTH|generateUserToken userId=$userDetails")
+        logger.info("AUTH|generateUserToken| userId=$userDetails")
         if (secret.isNullOrBlank()) {
             logger.error("AUTH| generateUserToken failed, " +
                 "because config[auth.accessToken.secret] is not found")
@@ -96,7 +95,7 @@ class ApiAccessTokenService @Autowired constructor(
         tokenInfo.accessToken = try {
             URLEncoder.encode(AESUtil.encrypt(
                 secret,
-                JsonUtil.toJson(tokenInfo)
+                JsonUtil.toUnformattedJson(tokenInfo)
             ), "UTF-8")
         } catch (ignore: Throwable) {
             logger.error("AUTH| generateUserToken failed because $ignore ")

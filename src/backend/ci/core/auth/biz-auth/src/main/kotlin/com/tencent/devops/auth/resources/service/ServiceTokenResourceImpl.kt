@@ -42,4 +42,8 @@ class ServiceTokenResourceImpl @Autowired constructor(
     override fun validateToken(accessToken: String): Result<TokenInfo> {
         return Result(apiAccessTokenService.verifyJWT(accessToken))
     }
+
+    override fun getAccessToken(userId: String): Result<TokenInfo> {
+        return Result(apiAccessTokenService.generateUserToken(userId))
+    }
 }

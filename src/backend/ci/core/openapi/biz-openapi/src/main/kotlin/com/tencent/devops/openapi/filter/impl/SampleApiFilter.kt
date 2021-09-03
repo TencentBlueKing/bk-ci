@@ -7,6 +7,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.openapi.filter.ApiFilter
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.Response
@@ -22,7 +23,13 @@ class SampleApiFilter constructor(
         private val logger = LoggerFactory.getLogger(SampleApiFilter::class.java)
     }
 
+    @Value("\${auth.accessToken.enabled:#{null}}")
+    private val apiFilterEnabled: Boolean? = false
+
     override fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
+        if (!apiFilterEnabled!!){
+            return true
+        }
         val accessToken = requestContext.uriInfo.queryParameters.getFirst(API_ACCESS_TOKEN_PROPERTY)
         if (accessToken.isNullOrBlank()) {
             logger.error("OPENAPI|verifyJWT accessToken is blank|" +

@@ -45,7 +45,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserTokenResource {
-    @ApiOperation("获取jwt")
+    @ApiOperation("获取accessToken")
     @GET
     @Path("/get")
     fun getAccessToken(
