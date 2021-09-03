@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -170,11 +171,7 @@ data class StagePauseCheck(
         }
         reviewDesc = EnvUtils.parseEnv(reviewDesc, variables)
         reviewParams?.forEach {
-            it.value = if (variables.containsKey(it.key)) {
-                variables[it.key]
-            } else {
-                EnvUtils.parseEnv(it.value.toString(), variables)
-            }
+            it.value = ObjectReplaceEnvVarUtil.replaceEnvVar(it.value, variables)
         }
     }
 
