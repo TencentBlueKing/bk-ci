@@ -44,8 +44,8 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
@@ -58,7 +58,7 @@ import java.util.concurrent.TimeUnit
 class TaskBuildDetailService(
     private val client: Client,
     private val buildVariableService: BuildVariableService,
-    private val pipelineBuildTaskDao: PipelineBuildTaskDao,
+    private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildLogPrinter: BuildLogPrinter,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
@@ -274,11 +274,11 @@ class TaskBuildDetailService(
             operation = "taskEnd"
         )
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
-            pipelineBuildTaskDao.updateStatus(
-                dslContext = dslContext,
+            pipelineRuntimeService.updateTaskStatusInfo(
                 buildId = buildId,
                 taskId = updateTaskStatusInfo.taskId,
-                buildStatus = updateTaskStatusInfo.buildStatus
+                taskStatus = updateTaskStatusInfo.buildStatus,
+                transactionContext = dslContext
             )
             if (!updateTaskStatusInfo.message.isNullOrBlank()) {
                 buildLogPrinter.addLine(
