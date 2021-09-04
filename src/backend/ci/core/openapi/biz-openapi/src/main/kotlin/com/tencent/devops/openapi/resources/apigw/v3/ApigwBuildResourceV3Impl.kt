@@ -34,7 +34,6 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwBuildResourceV3
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
-import com.tencent.devops.openapi.utils.ChannelUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
@@ -47,7 +46,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwBuildResourceV3Impl @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val apiGatewayUtil: ApiGatewayUtil
 ) : ApigwBuildResourceV3 {
     override fun manualStartupInfo(
         appCode: String?,
@@ -81,7 +81,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelUtils.getChannelCode(gatewayTag)
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
