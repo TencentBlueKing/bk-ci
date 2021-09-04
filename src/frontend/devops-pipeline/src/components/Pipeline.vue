@@ -55,10 +55,9 @@
             </template>
             <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined' && showStageReviewPanel.isShow">
                 <stage-review-panel
-                    editable
                     :stage="stage"
                     :stage-index="editingElementPos.stageIndex"
-                    :disabled="!pipelineEditable"
+                    :editable="pipelineEditable"
                 />
             </template>
             <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
