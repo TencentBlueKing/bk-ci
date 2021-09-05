@@ -138,7 +138,6 @@ class UpdateStateForStageCmdFinally(
             commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_OUT"
 
             return finishBuild(commandContext = commandContext)
-
         } else if (nextStage != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|gotoFinal=$gotoFinal|" +
                 "next_s(${nextStage.stageId})|e=${stage.executeCount}|summary=${commandContext.latestSummary}")
