@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.Model
@@ -50,6 +51,9 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
+import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -70,7 +74,8 @@ class PipelineStageService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val buildVariableService: BuildVariableService,
-    private val stageBuildDetailService: StageBuildDetailService
+    private val stageBuildDetailService: StageBuildDetailService,
+    private val client: Client
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineStageService::class.java)
@@ -373,6 +378,50 @@ class PipelineStageService @Autowired constructor(
                 )
             )
         )
+    }
+
+    /**
+     * @param event 流水线引擎Stage事件
+     * @param stage 该Stage的当前配置属性
+     * @param variables 上下文中的环境变量
+     * @param inOrOut 准入为true，准出为false
+     * @return 是否通过红线检查
+     */
+    fun checkQualityPassed(
+        event: PipelineBuildStageEvent,
+        stage: PipelineBuildStage,
+        variables: Map<String, String>,
+        inOrOut: Boolean
+    ): Boolean {
+        val (check, position) = if (inOrOut) {
+            Pair(stage.checkIn, ControlPointPosition.BEFORE_POSITION)
+        } else {
+            Pair(stage.checkOut, ControlPointPosition.AFTER_POSITION)
+        }
+        if (check?.ruleIds.isNullOrEmpty()) return false
+        return try {
+            val request = BuildCheckParamsV3(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                position = position,
+                templateId = null,
+                interceptName = null,
+                ruleBuildIds = stage.checkIn?.ruleIds!!.toSet(),
+                runtimeVariable = variables
+            )
+            logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
+                "inOrOut=$inOrOut|request=$request|ruleIds=${stage.checkIn?.ruleIds}")
+            val result = client.get(ServiceQualityRuleResource::class).check(request).data!!
+            logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
+                "inOrOut=$inOrOut|response=$result|ruleIds=${stage.checkIn?.ruleIds}")
+            stage.checkIn!!.checkTimes = result.checkTimes
+            result.success
+        } catch (ignore: Throwable) {
+            logger.error("ENGINE|${event.buildId}|${event.source}|inOrOut=$inOrOut|" +
+                "STAGE_QUALITY_CHECK_OUT_ERROR|${event.stageId}", ignore)
+            true
+        }
     }
 
     fun retryRefreshStage(model: Model) {
