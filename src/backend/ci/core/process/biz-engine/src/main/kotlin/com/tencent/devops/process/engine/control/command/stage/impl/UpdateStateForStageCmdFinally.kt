@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
@@ -43,6 +44,9 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
+import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -56,7 +60,8 @@ class UpdateStateForStageCmdFinally(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val stageBuildDetailService: StageBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val client: Client
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -130,7 +135,16 @@ class UpdateStateForStageCmdFinally(
             nextStage = pipelineStageService.getNextStage(buildId = event.buildId, currentStageSeq = stage.seq)
         }
 
-        if (nextStage != null) {
+        // #5019 在结束阶段做stage准出判断
+        if (checkOutQualityFailed(event, stage, commandContext.variables)) {
+
+            commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_FAIL.name
+            commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
+            commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_OUT"
+
+            return finishBuild(commandContext = commandContext)
+
+        } else if (nextStage != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|gotoFinal=$gotoFinal|" +
                 "next_s(${nextStage.stageId})|e=${stage.executeCount}|summary=${commandContext.latestSummary}")
             event.sendNextStage(source = "From_s(${stage.stageId})", stageId = nextStage.stageId)
@@ -258,6 +272,36 @@ class UpdateStateForStageCmdFinally(
                 status = commandContext.buildStatus
             )
         )
+    }
+
+    private fun checkOutQualityFailed(
+        event: PipelineBuildStageEvent,
+        stage: PipelineBuildStage,
+        variables: Map<String, String>
+    ): Boolean {
+        if (stage.checkOut?.ruleIds.isNullOrEmpty()) return false
+        return try {
+            val request = BuildCheckParamsV3(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                position = ControlPointPosition.AFTER_POSITION,
+                templateId = null,
+                interceptName = null,
+                ruleBuildIds = stage.checkOut?.ruleIds!!.toSet(),
+                runtimeVariable = variables
+            )
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_OUT_REQUEST|${event.stageId}|" +
+                "request=$request|ruleIds=${stage.checkOut?.ruleIds}")
+            val result = client.get(ServiceQualityRuleResource::class).check(request).data!!
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_OUT_RESPONSE|${event.stageId}|" +
+                "response=$result|ruleIds=${stage.checkOut?.ruleIds}")
+            stage.checkOut!!.checkTimes = result.checkTimes
+            !result.success
+        } catch (ignore: Throwable) {
+            LOG.error("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_OUT_ERROR|${event.stageId}", ignore)
+            true
+        }
     }
 
     companion object {

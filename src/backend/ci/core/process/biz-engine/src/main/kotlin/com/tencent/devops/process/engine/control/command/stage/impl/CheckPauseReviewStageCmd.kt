@@ -75,10 +75,9 @@ class CheckPauseReviewStageCmd(
         } else if (commandContext.buildStatus.isReadyToRun()) {
 
             // 质量红线
-            if (checkQualityFailed(event, stage, commandContext.variables)) {
+            if (checkInQualityFailed(event, stage, commandContext.variables)) {
                 // #4732 优先判断是否能通过质量红线检查
-                LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_FAILED|${event.stageId}")
-                // TODO 暂时只处理准入，后续需要兼容准出
+                LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_FAILED|${event.stageId}")
                 commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_FAIL.name
                 commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
                 commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_IN"
@@ -137,7 +136,7 @@ class CheckPauseReviewStageCmd(
         }
     }
 
-    private fun checkQualityFailed(
+    private fun checkInQualityFailed(
         event: PipelineBuildStageEvent,
         stage: PipelineBuildStage,
         variables: Map<String, String>
@@ -154,15 +153,15 @@ class CheckPauseReviewStageCmd(
                 ruleBuildIds = stage.checkIn?.ruleIds!!.toSet(),
                 runtimeVariable = variables
             )
-            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_REQUEST|${event.stageId}|" +
                 "request=$request|ruleIds=${stage.checkIn?.ruleIds}")
             val result = client.get(ServiceQualityRuleResource::class).check(request).data!!
-            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_RESPONSE|${event.stageId}|" +
                 "response=$result|ruleIds=${stage.checkIn?.ruleIds}")
             stage.checkIn!!.checkTimes = result.checkTimes
             !result.success
         } catch (ignore: Throwable) {
-            LOG.error("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)
+            LOG.error("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_OUT_ERROR|${event.stageId}", ignore)
             true
         }
     }
