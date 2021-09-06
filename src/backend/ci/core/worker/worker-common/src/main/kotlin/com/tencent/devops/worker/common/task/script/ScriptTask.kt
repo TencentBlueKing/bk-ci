@@ -67,7 +67,7 @@ open class ScriptTask : ITask() {
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_INPUT_INVAILD
         )
-        val charSetType = taskParams["charSetType"] ?: CharSetType.UTF_8.name
+//        val charSetType = taskParams["charSetType"] ?: CharSetType.UTF_8.name
 
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
@@ -107,9 +107,7 @@ open class ScriptTask : ITask() {
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
                 continueNoneZero = continueNoneZero.toBoolean(),
                 errorMessage = "Fail to run the plugin",
-                charSetType = if (BuildScriptType.valueOf(scriptType) == BuildScriptType.BAT) {
-                    charSetType
-                } else null
+                charSetType = null
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
