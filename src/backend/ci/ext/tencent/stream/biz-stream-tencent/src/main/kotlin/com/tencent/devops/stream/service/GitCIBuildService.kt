@@ -69,7 +69,13 @@ class GitCIBuildService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    fun retry(userId: String, gitProjectId: Long, pipelineId: String, buildId: String, taskId: String?): BuildId {
+    fun retry(
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String,
+        buildId: String,
+        taskId: String?
+    ): BuildId {
         logger.info("retry pipeline, gitProjectId: $gitProjectId, pipelineId: $pipelineId, buildId: $buildId")
         val pipeline =
             gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
