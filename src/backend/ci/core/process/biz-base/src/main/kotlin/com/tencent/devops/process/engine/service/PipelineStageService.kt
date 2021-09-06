@@ -398,7 +398,7 @@ class PipelineStageService @Autowired constructor(
         } else {
             Pair(stage.checkOut, ControlPointPosition.AFTER_POSITION)
         }
-        if (check?.ruleIds.isNullOrEmpty()) return false
+        if (check?.ruleIds.isNullOrEmpty()) return true
         return try {
             val request = BuildCheckParamsV3(
                 projectId = event.projectId,
@@ -407,20 +407,20 @@ class PipelineStageService @Autowired constructor(
                 position = position,
                 templateId = null,
                 interceptName = null,
-                ruleBuildIds = stage.checkIn?.ruleIds!!.toSet(),
+                ruleBuildIds = check?.ruleIds!!.toSet(),
                 runtimeVariable = variables
             )
             logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
-                "inOrOut=$inOrOut|request=$request|ruleIds=${stage.checkIn?.ruleIds}")
+                "inOrOut=$inOrOut|request=$request|ruleIds=${check.ruleIds}")
             val result = client.get(ServiceQualityRuleResource::class).check(request).data!!
             logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
-                "inOrOut=$inOrOut|response=$result|ruleIds=${stage.checkIn?.ruleIds}")
-            stage.checkIn!!.checkTimes = result.checkTimes
+                "inOrOut=$inOrOut|response=$result|ruleIds=${check.ruleIds}")
+            check.checkTimes = result.checkTimes
             result.success
         } catch (ignore: Throwable) {
             logger.error("ENGINE|${event.buildId}|${event.source}|inOrOut=$inOrOut|" +
                 "STAGE_QUALITY_CHECK_OUT_ERROR|${event.stageId}", ignore)
-            true
+            false
         }
     }
 
