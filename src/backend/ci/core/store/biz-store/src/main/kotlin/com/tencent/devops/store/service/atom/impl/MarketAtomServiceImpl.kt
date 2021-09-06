@@ -509,7 +509,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         // 获取插件处于流程中的版本信息
         var processingVersionInfoMap: MutableMap<String, MutableList<AtomBaseInfo>>? = null
         processingAtomRecords?.forEach { processingAtomRecord ->
-            if (processingAtomRecord.version == INIT_VERSION) {
+            if (processingAtomRecord.version == INIT_VERSION || processingAtomRecord.version.isNullOrBlank()) {
                 return@forEach
             }
             if (processingVersionInfoMap == null) {
