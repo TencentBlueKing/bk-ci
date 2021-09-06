@@ -1,0 +1,11 @@
+# TODO
+1. 把value完善好
+2. ingress
+3. 将服务改写为k8s调用模式
+4. 可能要挂载pv , dockerhost要怎么解决
+
+1. influxdb?
+2. nfs?
+3. 检查mysql?
+4. auth?
+5. helm的配置怎么自动化同步?

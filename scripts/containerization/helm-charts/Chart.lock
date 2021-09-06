@@ -1,0 +1,21 @@
+dependencies:
+- name: common
+  repository: https://charts.bitnami.com/bitnami
+  version: 1.4.1
+- name: mysql
+  repository: https://charts.bitnami.com/bitnami
+  version: 8.8.3
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 14.8.8
+- name: elasticsearch
+  repository: https://charts.bitnami.com/bitnami
+  version: 15.10.3
+- name: rabbitmq
+  repository: https://charts.bitnami.com/bitnami
+  version: 8.20.1
+- name: influxdb
+  repository: https://charts.bitnami.com/bitnami
+  version: 2.3.7
+digest: sha256:5fdab241bd8ced1bd81be1b92c9e7ae99d028f623be8eca3b97fee13217d9605
+generated: "2021-09-03T18:49:11.393303033+08:00"

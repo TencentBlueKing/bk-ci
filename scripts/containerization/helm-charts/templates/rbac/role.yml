@@ -1,0 +1,48 @@
+# 用户权限管理
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: {{ .Values.common.namespace }}
+  name: default-read-role
+rules:
+  - apiGroups: ["", "extensions", "apps"]
+    resources: ["configmaps", "pods", "services", "endpoints", "secrets"]
+    verbs: ["get", "list", "watch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: default-role-read-binding
+  namespace: {{ .Values.common.namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.common.serviceAccount }}
+    apiGroup: ""
+roleRef:
+  kind: Role
+  name: default-read-role
+  apiGroup: ""
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: default-read-role
+rules:
+  - apiGroups: ["", "extensions", "apps"]
+    resources: ["configmaps", "pods", "services", "endpoints", "secrets"]
+    verbs: ["get", "list", "watch"]
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: default-role-read-binding
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.common.serviceAccount }}
+    apiGroup: ""
+    namespace: {{ .Values.common.namespace }}
+roleRef:
+  kind: ClusterRole
+  name: default-read-role
+  apiGroup: ""
