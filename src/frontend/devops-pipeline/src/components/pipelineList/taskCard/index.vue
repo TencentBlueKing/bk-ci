@@ -33,9 +33,9 @@
             <div
                 class="corner-mark"
                 :class="config.status"
-                v-if="!config.isRunning && (config.status === 'known_error' || config.status === 'success' || config.status === 'known_cancel')"
+                v-if="!config.isRunning && (config.status === 'known_error' || config.status === 'success' || config.status === 'known_cancel' || config.status === 'stage_success')"
             >
-                <i class="devops-icon icon-exclamation" v-if="config.status === 'known_error' || config.status === 'known_cancel'"></i>
+                <i class="devops-icon icon-exclamation" v-if="config.status === 'known_error'"></i>
                 <i class="devops-icon icon-check-1" v-else></i>
             </div>
             <!-- </bk-popover> -->

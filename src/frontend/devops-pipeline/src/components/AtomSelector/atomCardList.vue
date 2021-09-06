@@ -322,6 +322,7 @@
                 for (const key in atoms) {
                     if (key === atomCode) this.$delete(atoms, atomCode)
                 }
+
                 this.updateProjectAtoms({
                     atoms: atoms,
                     recommend: isRecommend
