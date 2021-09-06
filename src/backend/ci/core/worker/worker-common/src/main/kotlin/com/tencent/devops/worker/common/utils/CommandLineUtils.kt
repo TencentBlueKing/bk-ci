@@ -57,7 +57,7 @@ object CommandLineUtils {
         executeErrorMessage: String? = null,
         buildId: String? = null,
         elementId: String? = null,
-        charSetType: String? = CharSetType.UTF_8.name
+        charSetType: String? = null
     ): String {
 
         val result = StringBuilder()
@@ -73,20 +73,21 @@ object CommandLineUtils {
             null
         }
 
-        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
-            CharSetType.UTF_8 -> "UTF-8"
-            CharSetType.GBK -> "GBK"
-            else -> "UTF-8"
-        }
+//        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
+//            CharSetType.UTF_8 -> "UTF-8"
+//            CharSetType.GBK -> "GBK"
+//            else -> "UTF-8"
+//        }
 
         val outputStream = object : LogOutputStream() {
-            override fun processBuffer() {
-                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
-                privateStringField.isAccessible = true
-                val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                processLine(buffer.toString(charset))
-                buffer.reset()
-            }
+
+//            override fun processBuffer() {
+//                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
+//                privateStringField.isAccessible = true
+//                val buffer = privateStringField.get(this) as ByteArrayOutputStream
+//                processLine(buffer.toString(charset))
+//                buffer.reset()
+//            }
 
             override fun processLine(line: String?, level: Int) {
                 if (line == null)
@@ -107,13 +108,14 @@ object CommandLineUtils {
         }
 
         val errorStream = object : LogOutputStream() {
-            override fun processBuffer() {
-                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
-                privateStringField.isAccessible = true
-                val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                processLine(buffer.toString(charset))
-                buffer.reset()
-            }
+
+//            override fun processBuffer() {
+//                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
+//                privateStringField.isAccessible = true
+//                val buffer = privateStringField.get(this) as ByteArrayOutputStream
+//                processLine(buffer.toString(charset))
+//                buffer.reset()
+//            }
 
             override fun processLine(line: String?, level: Int) {
                 if (line == null) {

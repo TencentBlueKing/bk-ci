@@ -73,7 +73,7 @@ object BatScriptUtil {
         workspace: File = dir,
         print2Logger: Boolean = true,
         elementId: String? = null,
-        charSetType: String? = CharSetType.UTF_8.name
+        charSetType: String? = null
     ): String {
         try {
             val file = getCommandFile(
