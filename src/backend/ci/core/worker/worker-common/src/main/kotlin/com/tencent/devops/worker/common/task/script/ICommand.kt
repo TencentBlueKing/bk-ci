@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.api.util.ReplacementUtils
+import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
@@ -38,7 +39,7 @@ import java.io.File
 
 interface ICommand {
 
-    @Suppress("ALL")
+    @Suppress("LongParameterList")
     fun execute(
         buildId: String,
         script: String,
@@ -49,7 +50,8 @@ interface ICommand {
         buildEnvs: List<BuildEnv>,
         continueNoneZero: Boolean = false,
         errorMessage: String? = null,
-        elementId: String? = null
+        elementId: String? = null,
+        charSetType: String? = CharSetType.UTF_8.name
     )
 
     fun parseTemplate(buildId: String, command: String, data: Map<String, String>, dir: File): String {
@@ -59,13 +61,12 @@ interface ICommand {
             } else {
                 try {
                     CredentialUtils.getCredential(buildId, key, false)[0]
-                } catch (e: Exception) {
+                } catch (ignored: Exception) {
                     CredentialUtils.getCredentialContextValue(key) ?: if (doubleCurlyBraces) {
                         "\${{$key}}"
                     } else {
                         "\${$key}"
                     }
-
                 }
             }
         }, mapOf(

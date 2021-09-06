@@ -62,6 +62,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
@@ -100,7 +101,8 @@ class TxProjectServiceImpl @Autowired constructor(
     private val managerService: ManagerService,
     private val projectIamV0Service: ProjectIamV0Service,
     private val tokenService: ClientTokenService,
-    private val bsAuthTokenApi: BSAuthTokenApi
+    private val bsAuthTokenApi: BSAuthTokenApi,
+    private val projectExtPermissionService: ProjectExtPermissionService
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -162,17 +164,26 @@ class TxProjectServiceImpl @Autowired constructor(
         return tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
     }
 
-    override fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, projectCreateExtInfo: ProjectCreateExtInfo) {
+    override fun createExtProjectInfo(
+        userId: String,
+        projectId: String,
+        accessToken: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        projectCreateExtInfo: ProjectCreateExtInfo
+    ) {
         // 添加repo项目
         val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
         logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
 
-        if (!accessToken.isNullOrEmpty() && projectCreateExtInfo.needAuth!!) {
+        if (projectCreateExtInfo.needAuth!!) {
+            val newAccessToken = if (accessToken.isNullOrBlank()) {
+                bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+            } else accessToken
             // 添加paas项目
             projectPaasCCService.createPaasCCProject(
                 userId = userId,
                 projectId = projectId,
-                accessToken = accessToken!!,
+                accessToken = newAccessToken!!,
                 projectCreateInfo = projectCreateInfo
             )
         }
@@ -349,12 +360,13 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
-        projectIamV0Service.createUser2Project(
+        projectExtPermissionService.createUser2Project(
             createUser = createInfo.createUserId,
             projectCode = projectId,
             roleName = createInfo.roleName,
             roleId = createInfo.roleId,
-            userIds = createInfo.userIds!!
+            userIds = createInfo.userIds!!,
+            checkManager = true
         )
         return true
     }

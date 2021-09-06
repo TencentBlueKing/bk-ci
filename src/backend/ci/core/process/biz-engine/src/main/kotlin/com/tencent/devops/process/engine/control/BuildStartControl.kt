@@ -78,6 +78,7 @@ import java.time.LocalDateTime
  * @version 1.0
  */
 @Service
+@Suppress("TooManyFunctions", "LongParameterList")
 class BuildStartControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
@@ -303,7 +304,9 @@ class BuildStartControl @Autowired constructor(
         pipelineStageService.updateStageStatus(
             buildId = buildInfo.buildId,
             stageId = stage.id!!,
-            buildStatus = BuildStatus.SUCCEED
+            buildStatus = BuildStatus.SUCCEED,
+            checkIn = stage.checkIn,
+            checkOut = stage.checkOut
         )
 
         stage.status = BuildStatus.SUCCEED.name

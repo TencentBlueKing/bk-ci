@@ -27,6 +27,8 @@
 
 package com.tencent.devops.gitci.listener
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -51,11 +53,14 @@ import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyTemplateEnum
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
+import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.rtxCustom.MessageType
 import com.tencent.devops.gitci.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.trigger.GitCheckService
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.service.QualityService
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
@@ -74,7 +79,6 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.lang.Exception
 import java.util.Date
 
 @Service
@@ -85,7 +89,10 @@ class GitCIBuildFinishListener @Autowired constructor(
     private val gitCIBasicSettingDao: GitCIBasicSettingDao,
     private val client: Client,
     private val scmClient: ScmClient,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper,
+    private val qualityService: QualityService,
+    private val gitCheckService: GitCheckService
 ) {
 
     @Value("\${rtx.corpid:#{null}}")
@@ -156,9 +163,13 @@ class GitCIBuildFinishListener @Autowired constructor(
                     throw OperationException("git ci all projectCode not exist")
                 }
 
-                val description = if (record["DESCRIPTION"] != null) {
-                    record["DESCRIPTION"] as String
-                } else ""
+                val description = try {
+                    if (record["COMMIT_MESSAGE"] != null) {
+                        record["COMMIT_MESSAGE"] as String
+                    } else ""
+                } catch (ignore: Throwable) {
+                    ""
+                }
 
                 val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
                     ?: throw OperationException("git ci pipeline not exist")
@@ -182,17 +193,43 @@ class GitCIBuildFinishListener @Autowired constructor(
                 // 推送结束构建消息,当人工触发时不推送CommitCheck消息
                 if (objectKind != OBJECT_KIND_MANUAL) {
                     if (isV2) {
-                        scmClient.pushCommitCheck(
+                        // gitRequestEvent中存的为mriid不是mrid
+                        val mrEvent = if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
+                            try {
+                                objectMapper.readValue<GitMergeRequestEvent>(record["EVENT"] as String)
+                            } catch (e: Throwable) {
+                                logger.error("push commit check get mergeId error ${e.message}")
+                                null
+                            }
+                        } else {
+                            null
+                        }
+
+                        gitCheckService.pushCommitCheck(
                             commitId = commitId,
-                            description = getDescByBuildStatus(description, buildStatus, pipeline.displayName),
-                            mergeRequestId = mergeRequestId,
+                            description = getDescByBuildStatus(buildStatus, pipeline.displayName),
+                            mergeRequestId = mrEvent?.object_attributes?.id ?: 0L,
                             buildId = buildFinishEvent.buildId,
                             userId = buildFinishEvent.userId,
                             status = state,
-                            context = pipeline.filePath,
+                            context = "${pipeline.filePath}@${objectKind.toUpperCase()}",
                             gitCIBasicSetting = v2GitSetting!!,
                             pipelineId = buildFinishEvent.pipelineId,
-                            block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess())
+                            block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess() &&
+                                v2GitSetting.enableMrBlock),
+                            reportData = qualityService.getQualityGitMrResult(
+                                client = client,
+                                projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
+                                pipelineName = pipeline.displayName,
+                                event = buildFinishEvent
+                            ),
+                            isFinish = true,
+                            targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+                                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                                projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
+                                pipelineId = pipelineId,
+                                buildId = buildFinishEvent.buildId
+                            )
                         )
                     } else {
                         scmClient.pushCommitCheck(
@@ -290,11 +327,8 @@ class GitCIBuildFinishListener @Autowired constructor(
     }
 
     // 根据状态切换描述
-    private fun getDescByBuildStatus(oldDesc: String?, buildStatus: BuildStatus, pipelineName: String): String {
+    private fun getDescByBuildStatus(buildStatus: BuildStatus, pipelineName: String): String {
         return when {
-            !oldDesc.isNullOrBlank() -> {
-                oldDesc
-            }
             buildStatus.isSuccess() -> {
                 buildSuccessDesc.format(pipelineName)
             }
@@ -420,7 +454,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         build: BuildHistory
     ) {
 
-        val projectName = getProjectName(conf.gitHttpUrl, conf.name)
+        val projectName = GitCommonUtils.getRepoName(conf.gitHttpUrl, conf.name)
         val branchName = GitCommonUtils.checkAndGetForkBranchName(
             gitProjectId = gitProjectId,
             sourceGitProjectId = sourceProjectId,
@@ -612,15 +646,6 @@ class GitCIBuildFinishListener @Autowired constructor(
         }
     }
 
-    // 获取 name/projectName格式的项目名称
-    private fun getProjectName(gitHttpUrl: String, name: String): String {
-        return try {
-            GitCommonUtils.getRepoName(gitHttpUrl, name)
-        } catch (e: Exception) {
-            name
-        }
-    }
-
     private fun sendNotifyV2(
         gitProjectId: Long,
         sourceProjectId: Long?,
@@ -638,7 +663,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         title: String?,
         content: String?
     ) {
-        val projectName = getProjectName(conf.gitHttpUrl, conf.name)
+        val projectName = GitCommonUtils.getRepoName(conf.gitHttpUrl, conf.name)
         val branchName = GitCommonUtils.checkAndGetForkBranchName(
             gitProjectId = gitProjectId,
             sourceGitProjectId = sourceProjectId,

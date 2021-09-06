@@ -30,6 +30,7 @@ package com.tencent.devops.process.service
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -42,6 +43,7 @@ import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.RunsOn
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -72,6 +74,9 @@ import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
+import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.common.ci.v2.Step as V2Step
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -91,14 +96,16 @@ class TXPipelineExportService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val storeImageHelper: StoreImageHelper,
-    private val scmProxyService: ScmProxyService
+    private val scmProxyService: ScmProxyService,
+    private val client: Client
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TXPipelineExportService::class.java)
-        private val yamlObjectMapper = ObjectMapper(YAMLFactory()).apply {
-            registerModule(KotlinModule())
-        }
+        private val yamlObjectMapper = ObjectMapper(YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE))
+            .apply {
+                registerModule(KotlinModule())
+            }
     }
 
     private val checkoutAtomCodeSet = listOf(
@@ -155,6 +162,15 @@ class TXPipelineExportService @Autowired constructor(
                 pipelineGroupsMap[label.id] = label.name
             }
         }
+
+        // 获取流水线labels
+        val groups = pipelineGroupService.getGroups(userId = userId, projectId = projectId, pipelineId = pipelineId)
+        val labels = mutableListOf<String>()
+        groups.forEach {
+            labels.addAll(it.labels)
+        }
+        model.labels = labels
+
         val stageTagsMap = stageTagService.getAllStageTag().data?.map {
             it.id to it.stageTagName
         }?.toMap() ?: emptyMap()
@@ -252,7 +268,10 @@ class TXPipelineExportService @Autowired constructor(
                         null
                     },
                     fastKill = if (stage.fastKill == true) true else null,
-                    jobs = jobs
+                    jobs = jobs,
+                    // TODO 暂时不支持准入准出的导出
+                    checkIn = null,
+                    checkOut = null
                 )
             )
         }
@@ -446,6 +465,36 @@ class TXPipelineExportService @Autowired constructor(
         variables: Map<String, String>?
     ): List<V2Step> {
         val stepList = mutableListOf<V2Step>()
+
+        // 根据job里的elements统一查询数据库的store里的ATOM表prob字段
+        val thirdPartyElementList = mutableListOf<ElementThirdPartySearchParam>()
+        job.elements.forEach { element ->
+            when (element.getClassType()) {
+                MarketBuildAtomElement.classType -> {
+                    val step = element as MarketBuildAtomElement
+                    thirdPartyElementList.add(ElementThirdPartySearchParam(
+                        atomCode = step.getAtomCode(),
+                        version = step.version
+                    ))
+                }
+                MarketBuildLessAtomElement.classType -> {
+                    val step = element as MarketBuildLessAtomElement
+                    thirdPartyElementList.add(ElementThirdPartySearchParam(
+                        atomCode = step.getAtomCode(),
+                        version = step.version
+                    ))
+                }
+                else -> {
+                }
+            }
+        }
+        val relyList = try {
+            client.get(ServiceMarketAtomResource::class).getAtomRely(GetRelyAtom(thirdPartyElementList))
+        } catch (e: Exception) {
+            logger.error("get Atom Rely error.", e)
+            null
+        }
+        logger.info("[$projectId] getV2StepFromJob export relyList: ${relyList?.data} ")
         job.elements.forEach { element ->
             val originRetryTimes = element.additionalOptions?.retryCount ?: 0
             val originTimeout = element.additionalOptions?.timeout?.toInt() ?: 480
@@ -531,7 +580,8 @@ class TXPipelineExportService @Autowired constructor(
                         inputMap = inputMap,
                         timeoutMinutes = timeoutMinutes,
                         continueOnError = continueOnError,
-                        retryTimes = retryTimes
+                        retryTimes = retryTimes,
+                        relyMap = relyList?.data?.get(step.getAtomCode())
                     )
                     if (!checkoutAtom) stepList.add(
                         V2Step(
@@ -544,7 +594,12 @@ class TXPipelineExportService @Autowired constructor(
                                 null
                             },
                             uses = "${step.getAtomCode()}@${step.version}",
-                            with = replaceMapWithDoubleCurlyBraces(inputMap, output2Elements, variables),
+                            with = replaceMapWithDoubleCurlyBraces(
+                                inputMap = inputMap,
+                                output2Elements = output2Elements,
+                                variables = variables,
+                                relyMap = relyList?.data?.get(step.getAtomCode())
+                            ),
                             timeoutMinutes = timeoutMinutes,
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
@@ -571,7 +626,12 @@ class TXPipelineExportService @Autowired constructor(
                                 null
                             },
                             uses = "${step.getAtomCode()}@${step.version}",
-                            with = replaceMapWithDoubleCurlyBraces(inputMap, output2Elements, variables),
+                            with = replaceMapWithDoubleCurlyBraces(
+                                inputMap = inputMap,
+                                output2Elements = output2Elements,
+                                variables = variables,
+                                relyMap = relyList?.data?.get(step.getAtomCode())
+                            ),
                             timeoutMinutes = timeoutMinutes,
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
@@ -629,13 +689,39 @@ class TXPipelineExportService @Autowired constructor(
     fun replaceMapWithDoubleCurlyBraces(
         inputMap: MutableMap<String, Any>?,
         output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
-        variables: Map<String, String>?
+        variables: Map<String, String>?,
+        relyMap: Map<String, Any>? = null
     ): Map<String, Any?>? {
         if (inputMap.isNullOrEmpty()) {
             return null
         }
         val result = mutableMapOf<String, Any>()
-        inputMap.forEach { (key, value) ->
+        inputMap.forEach lit@{ (key, value) ->
+            if (!relyMap.isNullOrEmpty()) {
+                try {
+                    val rely = relyMap[key] as Map<String, Any>
+                    if (null != rely["expression"]) {
+                        val expression = rely["expression"] as List<Map<String, Any>>
+                        if (rely["operation"] == "AND") {
+                            expression.forEach {
+                                if (inputMap[it["key"]] != it["value"]) {
+                                    return@lit
+                                }
+                            }
+                        } else if (rely["operation"] == "OR") {
+                            expression.forEach {
+                                if (inputMap[it["key"]] == it["value"]) {
+                                    result[key] = replaceValueWithDoubleCurlyBraces(value, output2Elements, variables)
+                                    return@lit
+                                }
+                            }
+                            return@lit
+                        }
+                    }
+                } catch (e: Exception) {
+                    logger.info("load atom input[rely] with error: ${e.message}")
+                }
+            }
             result[key] = replaceValueWithDoubleCurlyBraces(value, output2Elements, variables)
         }
         return result
@@ -686,7 +772,12 @@ class TXPipelineExportService @Autowired constructor(
             }
             newValue = newValue.replace(matcher.group(), realValue)
         }
-        return newValue
+        return removeExcessIndentation(newValue)
+    }
+
+    private fun removeExcessIndentation(value: String): String {
+        val regex = Regex("\\n(\\t+|\\s+)\\n")
+        return value.replace(regex, "\n\n")
     }
 
     private fun getYamlStringBuilder(
@@ -707,7 +798,7 @@ class TXPipelineExportService @Autowired constructor(
         yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
         yamlSb.append("# 注意：[插件]输入参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
         if (isGitCI) {
-            yamlSb.append("# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
+            yamlSb.append("# 注意：[插件]Stream不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
         }
         yamlSb.append("########################################################" +
             "#############################################################\n\n")
@@ -804,7 +895,9 @@ class TXPipelineExportService @Autowired constructor(
                             "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
                         }
                     } + ":" + imageRepoInfo.repoTag
-                    return Pair(completeImageName, Credentials(
+                    return if (imageRepoInfo.publicFlag) {
+                        Pair(completeImageName, null)
+                    } else Pair(completeImageName, Credentials(
                         "### 重新配置凭据(${imageRepoInfo.ticketId})后填入 ###",
                         "### 重新配置凭据(${imageRepoInfo.ticketId})后填入 ###"
                     ))
@@ -832,12 +925,12 @@ class TXPipelineExportService @Autowired constructor(
         }
     }
 
-    private fun formatScriptOutput(
+    fun formatScriptOutput(
         script: String,
         output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
         variables: Map<String, String>?
     ): String {
-        val regex = Regex("setEnv\\s+(.*[\\s]+.*)[\\s\\n]")
+        val regex = Regex("setEnv\\s+(\"?.*\"?)\\s*\\n?")
         val foundMatches = regex.findAll(script)
         var formatScript: String = script
         foundMatches.forEach { result ->
@@ -862,7 +955,8 @@ class TXPipelineExportService @Autowired constructor(
         inputMap: MutableMap<String, Any>?,
         timeoutMinutes: Int?,
         continueOnError: Boolean?,
-        retryTimes: Int?
+        retryTimes: Int?,
+        relyMap: Map<String, Any>? = null
     ): Boolean {
         if (inputMap == null || atomCode.isBlank() || !checkoutAtomCodeSet.contains(atomCode)) return false
         logger.info("[$projectId] addCheckoutAtom export with atomCode($atomCode), inputMap=$inputMap, step=$step")
@@ -897,9 +991,7 @@ class TXPipelineExportService @Autowired constructor(
             inputMap.remove("repositoryHashId")
             inputMap.remove("repositoryName")
             inputMap.remove("repositoryUrl")
-
-            // 将鉴权类型统一刷成token方式
-            inputMap["authType"] = "ACCESS_TOKEN"
+            inputMap.remove("authType")
 
             stepList.add(
                 V2Step(
@@ -912,7 +1004,12 @@ class TXPipelineExportService @Autowired constructor(
                         null
                     },
                     uses = null,
-                    with = replaceMapWithDoubleCurlyBraces(inputMap, output2Elements, variables),
+                    with = replaceMapWithDoubleCurlyBraces(
+                        inputMap = inputMap,
+                        output2Elements = output2Elements,
+                        variables = variables,
+                        relyMap = relyMap
+                    ),
                     timeoutMinutes = timeoutMinutes,
                     continueOnError = continueOnError,
                     retryTimes = retryTimes,

@@ -86,7 +86,7 @@ class GitCIPipelineService @Autowired constructor(
             records = emptyList()
         )
         val count = pipelineResourceDao.getPipelineCount(dslContext, gitProjectId)
-        val latestBuilds = gitCIDetailService.batchGetBuildDetail(
+        val latestBuilds = gitCIDetailService.batchGetBuildHistory(
             userId = userId,
             gitProjectId = gitProjectId,
             buildIds = pipelines.map { it.latestBuildId }
@@ -137,10 +137,11 @@ class GitCIPipelineService @Autowired constructor(
         }
     }
 
-    fun getPipelineListById(
+    fun getPipelineById(
         userId: String,
         gitProjectId: Long,
-        pipelineId: String
+        pipelineId: String,
+        withHistory: Boolean? = false
     ): GitProjectPipeline? {
         logger.info("get pipeline: $pipelineId, gitProjectId: $gitProjectId")
         val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
@@ -153,6 +154,13 @@ class GitCIPipelineService @Autowired constructor(
             gitProjectId = gitProjectId,
             pipelineId = pipelineId
         ) ?: return null
+        val latestBuildInfo = if (withHistory == true) {
+            gitCIDetailService.batchGetBuildHistory(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                buildIds = listOf(pipeline.latestBuildId)
+            ).values.firstOrNull()
+        } else null
         return GitProjectPipeline(
             gitProjectId = gitProjectId,
             pipelineId = pipeline.pipelineId,
@@ -160,40 +168,8 @@ class GitCIPipelineService @Autowired constructor(
             displayName = pipeline.displayName,
             enabled = pipeline.enabled,
             creator = pipeline.creator,
-            latestBuildInfo = null
+            latestBuildInfo = latestBuildInfo
         )
-    }
-
-    fun getPipelineListWithIds(
-        userId: String,
-        gitProjectId: Long,
-        pipelineIds: List<String>
-    ): List<GitProjectPipeline> {
-        logger.info("get pipeline list in $pipelineIds, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
-        if (conf == null) {
-            repositoryConfService.initGitCISetting(userId, gitProjectId)
-            return emptyList()
-        }
-        val pipelines = pipelineResourceDao.getPipelinesInIds(
-            dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            pipelineIds = pipelineIds
-        )
-        if (pipelines.isEmpty()) return emptyList()
-        val latestBuilds =
-            gitCIDetailService.batchGetBuildDetail(userId, gitProjectId, pipelines.map { it.latestBuildId })
-        return pipelines.map {
-            GitProjectPipeline(
-                gitProjectId = gitProjectId,
-                pipelineId = it.pipelineId,
-                filePath = it.filePath,
-                displayName = it.displayName,
-                enabled = it.enabled,
-                creator = it.creator,
-                latestBuildInfo = latestBuilds[it.latestBuildId]
-            )
-        }
     }
 
     fun enablePipeline(

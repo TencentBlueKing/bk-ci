@@ -27,7 +27,6 @@
 
 dependencies {
     api(project(":core:openapi:biz-openapi"))
-    api(group = "net.sf.json-lib", name = "json-lib", classifier = "jdk15")
     api("org.springframework.boot:spring-boot-starter-aop")
     api("io.jsonwebtoken:jjwt-api:0.10.8")
     runtime("io.jsonwebtoken:jjwt-impl:0.10.8")

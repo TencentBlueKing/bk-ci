@@ -52,7 +52,7 @@ class WebsocketService @Autowired constructor(
     private val projectProxyService: ProjectProxyService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(WebsocketService::class.java)
     }
 
     @Value("\${transferData:false}")

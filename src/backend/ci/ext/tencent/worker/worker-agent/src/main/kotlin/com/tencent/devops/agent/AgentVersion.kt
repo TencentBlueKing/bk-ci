@@ -27,7 +27,7 @@
 
 package com.tencent.devops.agent
 
-const val AGENT_VERSION = 12.44 // 不能以0结束
+const val AGENT_VERSION = 12.46 // 不能以0结束
 
 fun main(argv: Array<String>) {
     println(AGENT_VERSION)

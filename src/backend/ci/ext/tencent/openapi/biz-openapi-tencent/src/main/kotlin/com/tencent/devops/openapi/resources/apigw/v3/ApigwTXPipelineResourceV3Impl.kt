@@ -11,7 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwTXPipelineResourceV3Impl @Autowired constructor(
     val client: Client
 ) : ApigwTXPipelineResourceV3 {
-    override fun exportPipelineGitCI(userId: String, projectId: String, pipelineId: String): Result<String> {
+    override fun exportPipelineGitCI(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<String> {
         return client.get(ServiceTXPipelineResource::class).exportPipelineGitCI(userId, projectId, pipelineId)
     }
 }

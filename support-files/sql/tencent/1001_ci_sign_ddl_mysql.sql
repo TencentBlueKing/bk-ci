@@ -7,7 +7,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Table structure for T_SIGN_HISTORY
 -- ----------------------------
 
-CREATE TABLE `T_SIGN_HISTORY` (
+CREATE TABLE IF NOT EXISTS `T_SIGN_HISTORY` (
   `RESIGN_ID` varchar(64) NOT NULL,
   `USER_ID` varchar(64) NOT NULL DEFAULT 'system',
   `PROJECT_ID` varchar(64) DEFAULT NULL,

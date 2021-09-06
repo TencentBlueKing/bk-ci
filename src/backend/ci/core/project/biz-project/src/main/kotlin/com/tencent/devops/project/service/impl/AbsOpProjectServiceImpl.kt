@@ -470,6 +470,6 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     abstract fun setGrayExt(projectCodeList: List<String>, operateFlag: Int, system: SystemEnums)
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)!!
+        val logger = LoggerFactory.getLogger(AbsOpProjectServiceImpl::class.java)!!
     }
 }

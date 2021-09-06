@@ -57,7 +57,7 @@ export default {
         defaultStageTags: [],
         showReviewDialog: false,
         reviewInfo: null,
-        showStageReviewPanel: false,
+        showStageReviewPanel: {},
         importedPipelineJson: null,
         atomVersionChangedKeys: [],
         pipelineLimit: {

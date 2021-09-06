@@ -418,7 +418,7 @@ class PipelineTaskService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineTaskService::class.java)
         private val expiredInSecond = TimeUnit.DAYS.toMinutes(7L)
         private const val DEFAULT_PAGE_SIZE = 50
     }
