@@ -27,13 +27,11 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.nio.charset.Charset
 
 object BatScriptUtil {
     private const val setEnv = ":setEnv\r\n" +
@@ -73,7 +71,7 @@ object BatScriptUtil {
         workspace: File = dir,
         print2Logger: Boolean = true,
         elementId: String? = null,
-        charSetType: String? = CharSetType.UTF_8.name
+        charSetType: String? = null
     ): String {
         try {
             val file = getCommandFile(
@@ -108,7 +106,7 @@ object BatScriptUtil {
         runtimeVariables: Map<String, String>,
         dir: File,
         workspace: File = dir,
-        charSetType: String? = CharSetType.UTF_8.name
+        charSetType: String? = null
     ): File {
         val tmpDir = System.getProperty("java.io.tmpdir")
         val file = if (tmpDir.isNullOrBlank()) {
@@ -149,14 +147,14 @@ object BatScriptUtil {
                 newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
             ))
 
-        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
-            CharSetType.UTF_8 -> Charsets.UTF_8
-            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
-            else -> Charsets.UTF_8
-        }
-        logger.info("The default charset is $charset")
+//        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
+//            CharSetType.UTF_8 -> Charsets.UTF_8
+//            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
+//            else -> Charsets.UTF_8
+//        }
+//        logger.info("The default charset is $charset")
 
-        file.writeText(command.toString(), charset)
+        file.writeText(command.toString())
         logger.info("start to run windows script - ($command)")
         return file
     }
