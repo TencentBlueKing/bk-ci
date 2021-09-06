@@ -76,10 +76,15 @@ class StartBuildContextTest : TestBase() {
     fun needSkipContainerWhenFailRetry() {
         params[PIPELINE_RETRY_COUNT] = "abc"
         var context = StartBuildContext.init(params)
-        Assert.assertEquals(context.retryCount, 0)
-        params[PIPELINE_RETRY_COUNT] = "3"
+        Assert.assertEquals(context.executeCount, 1)
+
+        params[PIPELINE_RETRY_COUNT] = "2"
         context = StartBuildContext.init(params)
-        Assert.assertEquals(context.retryCount, 3)
+        Assert.assertEquals(context.executeCount, params[PIPELINE_RETRY_COUNT].toString().toInt() + 1)
+
+        params[PIPELINE_RETRY_COUNT] = 3
+        context = StartBuildContext.init(params)
+        Assert.assertEquals(context.executeCount, params[PIPELINE_RETRY_COUNT].toString().toInt() + 1)
 
         params[PIPELINE_START_CHANNEL] = ChannelCode.AM.name
         context = StartBuildContext.init(params)

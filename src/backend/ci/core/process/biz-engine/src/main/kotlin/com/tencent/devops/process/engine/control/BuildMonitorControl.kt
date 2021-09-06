@@ -66,6 +66,7 @@ import kotlin.math.min
  * @version 1.0
  */
 @Service
+@Suppress("LongParameterList")
 class BuildMonitorControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -100,14 +101,14 @@ class BuildMonitorControl @Autowired constructor(
     private fun monitorPipeline(event: PipelineBuildMonitorEvent): Boolean {
 
         // 由于30天对应的毫秒数值过大，以Int的上限值作为下一次monitor时间
-        val stageMinInt = min(monitorStage(event), Int.MAX_VALUE.toLong()).toInt()
+        val stageMinInt = monitorStage(event)
         val jobMinInt = monitorContainer(event)
 
-        val minInterval = min(jobMinInt, stageMinInt)
+        // #5090 有任何一方出现超时，都应该退出监控
+        if (jobMinInt < Timeout.CONTAINER_MAX_MILLS && stageMinInt < Timeout.STAGE_MAX_MILLS) {
+            event.delayMills = min(jobMinInt, stageMinInt)
+            LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_MONITOR_CONTINUE|Interval=${event.delayMills}")
 
-        if (minInterval < min(Timeout.CONTAINER_MAX_MILLS.toLong(), Timeout.STAGE_MAX_MILLS)) {
-            LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_MONITOR_CONTINUE|Interval=$minInterval")
-            event.delayMills = minInterval
             pipelineEventDispatcher.dispatch(event)
         }
         return true
@@ -116,7 +117,7 @@ class BuildMonitorControl @Autowired constructor(
     private fun monitorContainer(event: PipelineBuildMonitorEvent): Int {
 
         val containers = pipelineRuntimeService.listContainers(event.buildId)
-            .filter { !it.status.isFinish() }
+            .filter { !it.status.isFinish() && it.executeCount == event.executeCount }
 
         var minInterval = Timeout.CONTAINER_MAX_MILLS
 
@@ -125,7 +126,10 @@ class BuildMonitorControl @Autowired constructor(
             return minInterval
         }
 
-        containers.forEach { container ->
+        for (container in containers) {
+            if (container.executeCount != event.executeCount) { // 不属于当前构建，比如重试
+                continue
+            }
             val interval = container.checkNextContainerMonitorIntervals(event.userId)
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {
@@ -135,10 +139,14 @@ class BuildMonitorControl @Autowired constructor(
         return minInterval
     }
 
-    private fun monitorStage(event: PipelineBuildMonitorEvent): Long {
+    private fun monitorStage(event: PipelineBuildMonitorEvent): Int {
 
         val stages = pipelineStageService.listStages(event.buildId)
-            .filter { !it.status.isFinish() && it.status != BuildStatus.STAGE_SUCCESS }
+            .filter {
+                !it.status.isFinish() &&
+                    it.status != BuildStatus.STAGE_SUCCESS &&
+                    it.executeCount == event.executeCount
+            }
 
         var minInterval = Timeout.STAGE_MAX_MILLS
 
@@ -147,7 +155,10 @@ class BuildMonitorControl @Autowired constructor(
             return minInterval
         }
 
-        stages.forEach Next@{ stage ->
+        for (stage in stages) {
+            if (stage.executeCount != event.executeCount) { // 不属于当前构建，比如重试
+                continue
+            }
             val interval = stage.checkNextStageMonitorIntervals(event.userId)
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {
@@ -209,8 +220,8 @@ class BuildMonitorControl @Autowired constructor(
         return interval
     }
 
-    private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Long {
-        var interval: Long = 0
+    private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Int {
+        var interval = 0
 
         if (checkIn?.manualTrigger != true) {
             return interval
@@ -228,7 +239,7 @@ class BuildMonitorControl @Autowired constructor(
             0
         }
 
-        interval = timeoutMills - usedTimeMills
+        interval = (timeoutMills - usedTimeMills).toInt()
         if (interval <= 0) {
             buildLogPrinter.addRedLine(
                 buildId = buildId,

@@ -708,11 +708,19 @@ class PipelineBuildDao {
         }
     }
 
-    fun updateBuildRemark(dslContext: DSLContext, buildId: String, remark: String?) {
+    fun updateBuildRemark(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        remark: String?
+    ) {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(REMARK, remark)
                 .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
     }
