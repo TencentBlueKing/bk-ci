@@ -33,14 +33,14 @@ import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.RepoDownloadService
-import com.tencent.devops.artifactory.service.RepoSearchService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceIptResourceImpl @Autowired constructor(
-    private val repoSearchService: RepoSearchService,
+    private val repoSearchService: BkRepoSearchService,
     private val repoDownloadService: RepoDownloadService
 ) : ServiceIptResource {
     override fun searchFileAndProperty(
@@ -70,7 +70,7 @@ class ServiceIptResourceImpl @Autowired constructor(
                 crossPipineId = null,
                 crossBuildNo = null,
                 region = null
-                ).firstOrNull()
+            ).firstOrNull()
         }
 
         return Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
