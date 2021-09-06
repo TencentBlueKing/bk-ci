@@ -81,9 +81,6 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "网关路由tag", required = true)
-        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
-        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -105,9 +102,6 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "网关路由tag", required = true)
-        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
-        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -131,9 +125,6 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "网关路由tag", required = true)
-        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
-        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -155,9 +146,6 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "网关路由tag", required = true)
-        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
-        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -182,9 +170,6 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "网关路由tag", required = true)
-        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
-        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -206,9 +191,6 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "网关路由tag", required = true)
-        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
-        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -246,9 +228,6 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "网关路由tag", required = true)
-        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
-        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -270,9 +249,6 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "网关路由tag", required = true)
-        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
-        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

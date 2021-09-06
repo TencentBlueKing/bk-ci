@@ -38,7 +38,7 @@ class ApiGatewayUtil {
     @Value("\${api.gateway.auth:#{false}}")
     private val apiGatewayAuth: Boolean = false
 
-    @Value("\${spring.cloud.consul.discovery.tag:prod}")
+    @Value("\${spring.cloud.consul.discovery.tags:prod}")
     private val consulTag: String = "prod"
 
     fun isAuth() = apiGatewayAuth

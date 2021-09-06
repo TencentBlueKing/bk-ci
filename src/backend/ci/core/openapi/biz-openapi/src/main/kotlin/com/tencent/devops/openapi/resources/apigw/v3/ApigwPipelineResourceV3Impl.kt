@@ -70,7 +70,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        gatewayTag: String,
         projectId: String,
         pipeline: Model
     ): Result<PipelineId> {
@@ -87,7 +86,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        gatewayTag: String,
         projectId: String,
         pipelineId: String,
         pipeline: Model
@@ -106,7 +104,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        gatewayTag: String,
         projectId: String,
         pipelineId: String,
         modelAndSetting: PipelineModelAndSetting
@@ -125,7 +122,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        gatewayTag: String,
         projectId: String,
         modelAndSetting: PipelineModelAndSetting
     ): Result<PipelineId> {
@@ -142,7 +138,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        gatewayTag: String,
         projectId: String,
         pipelineId: String
     ): Result<Model> {
@@ -160,7 +155,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        gatewayTag: String,
         projectId: String,
         pipelineIds: List<String>
     ): Result<List<PipelineWithModel>> {
@@ -177,7 +171,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        gatewayTag: String,
         projectId: String,
         pipelineId: String
     ): Result<Boolean> {
@@ -209,7 +202,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        gatewayTag: String,
         projectId: String,
         page: Int?,
         pageSize: Int?
