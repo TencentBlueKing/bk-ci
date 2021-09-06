@@ -24,12 +24,45 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.filter
 
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
+package com.tencent.devops.openapi.api.apigw.v3
 
-interface ApiFilter : ContainerRequestFilter {
+import com.tencent.devops.auth.pojo.TokenInfo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-    fun verifyJWT(requestContext: ContainerRequestContext): Boolean
+@Api(tags = ["OPENAPI_ARTIFACTORY_V3"], description = "OPENAPI-构建产物资源")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/token")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
+interface ApigwTokenResourceV3 {
+
+    @ApiOperation("获取token")
+    @Path("/get")
+    @GET
+    fun getJWToken(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<TokenInfo>
+
+    @ApiOperation("验证token")
+    @Path("/validate/{token}")
+    @GET
+    fun validateToken(
+        @ApiParam("token", required = true)
+        @PathParam("token")
+        token: String
+    ): Result<TokenInfo>
 }
