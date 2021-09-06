@@ -46,7 +46,7 @@ import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
-import com.tencent.devops.stream.pojo.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 

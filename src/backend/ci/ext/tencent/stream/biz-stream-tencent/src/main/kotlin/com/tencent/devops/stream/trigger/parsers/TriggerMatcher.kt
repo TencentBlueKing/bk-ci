@@ -41,6 +41,7 @@ import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
+import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.git.GitCommit
 import com.tencent.devops.stream.pojo.git.GitEvent
@@ -76,8 +77,7 @@ class TriggerMatcher @Autowired constructor(
         val newYaml = try {
             // 触发器需要将 on: 转为 TriggerOn:
             val realYaml = ScriptYmlUtils.formatYaml(originYaml)
-            YamlUtil.getObjectMapper()
-                .readValue(realYaml, object : TypeReference<NoReplaceTemplate>() {})
+            YamlUtil.getObjectMapper().readValue(realYaml, object : TypeReference<NoReplaceTemplate>() {})
         } catch (e: Throwable) {
             when (e) {
                 is JsonProcessingException, is TypeCastException -> {
@@ -492,7 +492,7 @@ class TriggerMatcher @Autowired constructor(
             return true
         }
 
-        val mrAction = (event as GitMergeRequestEvent).object_attributes.extension_action
+        val mrAction = StreamMrEventAction.getActionValue(event as GitMergeRequestEvent) ?: false
         actionList.forEach {
             if (it == mrAction) {
                 return true

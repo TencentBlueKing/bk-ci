@@ -60,7 +60,7 @@ import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.v2.service.GitCIV2WebsocketService
 import com.tencent.devops.stream.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.stream.pojo.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreate
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

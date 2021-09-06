@@ -39,21 +39,16 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.common.exception.CommitCheck
-import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.common.exception.TriggerException
 import com.tencent.devops.stream.common.exception.TriggerException.Companion.triggerError
 import com.tencent.devops.stream.common.exception.TriggerThirdException
 import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
-import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
-import com.tencent.devops.stream.mq.streamMrConflict.GitCIMrConflictCheckDispatcher
-import com.tencent.devops.stream.mq.streamMrConflict.GitCIMrConflictCheckEvent
 import com.tencent.devops.stream.mq.streamTrigger.StreamTriggerDispatch
 import com.tencent.devops.stream.mq.streamTrigger.StreamTriggerEvent
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
-import com.tencent.devops.stream.pojo.enums.GitCiMergeStatus
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
@@ -67,6 +62,8 @@ import com.tencent.devops.stream.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
+import com.tencent.devops.stream.trigger.parsers.MergeConflict
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.TriggerParameter
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -85,7 +82,6 @@ class GitCITriggerService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitCISettingDao: GitCIBasicSettingDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val rabbitTemplate: RabbitTemplate,
@@ -94,6 +90,7 @@ class GitCITriggerService @Autowired constructor(
     private val gitPipelineBranchService: GitPipelineBranchService,
     private val scmService: ScmService,
     private val triggerParameter: TriggerParameter,
+    private val mergeConflict: MergeConflict,
     private val triggerExceptionService: TriggerExceptionService
 ) {
     companion object {
@@ -143,9 +140,18 @@ class GitCITriggerService @Autowired constructor(
                 )
             }
 
-        // 校验mr请求是否产生冲突
-        if (event is GitMergeRequestEvent) {
-            return checkMrConflict(gitRequestEvent, event, path2PipelineExists, gitProjectConf)
+        // 校验mr请求是否产生冲突，已合并的无需检查
+        if (event is GitMergeRequestEvent &&
+            event.object_attributes.action != TGitMergeActionKind.MERGE.value &&
+            !mergeConflict.checkMrConflict(
+                gitRequestEvent = gitRequestEvent,
+                event = event,
+                path2PipelineExists = path2PipelineExists,
+                gitProjectConf = gitProjectConf,
+                gitToken = handleGetToken(gitRequestEvent)!!
+            )
+        ) {
+            return false
         }
         logger.info("It takes ${LocalDateTime.now().timestampmilli() - start}ms to match trigger pipeline")
 
@@ -153,19 +159,25 @@ class GitCITriggerService @Autowired constructor(
     }
 
     @Suppress("ALL")
-    private fun matchAndTriggerPipeline(
+    fun matchAndTriggerPipeline(
         gitRequestEvent: GitRequestEvent,
         event: GitEvent,
         path2PipelineExists: Map<String, GitProjectPipeline>,
         gitProjectConf: GitCIBasicSetting
     ): Boolean {
         val mrEvent = event is GitMergeRequestEvent
+        val isMerged = if (mrEvent) {
+            val e = event as GitMergeRequestEvent
+            e.object_attributes.action == TGitMergeActionKind.MERGE.value
+        } else {
+            false
+        }
         val hookStartTime = LocalDateTime.now()
         val gitToken = handleGetToken(gitRequestEvent)!!
         logger.info("get token for gitProject[${gitRequestEvent.gitProjectId}] form scm, token: $gitToken")
 
         // fork项目库的projectId与原项目不同
-        val isFork = isFork(mrEvent, gitRequestEvent)
+        val isFork = !isMerged && isFork(mrEvent, gitRequestEvent)
         var forkGitToken: GitToken? = null
         if (isFork) {
             forkGitToken = handleGetToken(gitRequestEvent, true)!!
@@ -205,6 +217,7 @@ class GitCITriggerService @Autowired constructor(
             "commitTime:${gitRequestEvent.commitTimeStamp}, " +
             "hookStartTime:${DateTimeUtil.toDateTime(hookStartTime)}, " +
             "yamlCheckedTime:${DateTimeUtil.toDateTime(LocalDateTime.now())}")
+
         // 如果没有Yaml文件则直接不触发
         if (yamlPathList.isEmpty()) {
             logger.warn("event: ${gitRequestEvent.id} cannot found ci yaml from git")
@@ -219,13 +232,12 @@ class GitCITriggerService @Autowired constructor(
             mrEvent = mrEvent,
             event = gitRequestEvent,
             gitProjectConf = gitProjectConf,
-            context = noPipelineBuildEvent,
             block = true,
             state = GitCICommitCheckState.PENDING
         )
 
-        // 获取mr请求的变更文件列表，用来给后面判断
-        val changeSet = if (mrEvent) {
+        // 获取mr请求的变更文件列表，用来给后面判断，Merged事件不用检查版本
+        val changeSet = if (mrEvent && !isMerged) {
             // 由于前面提交无流水线锁，所以这个出错需要解锁
             triggerExceptionService.handleErrorCode(
                 request = gitRequestEvent,
@@ -295,7 +307,8 @@ class GitCITriggerService @Autowired constructor(
                             gitToken = gitToken,
                             changeSet = changeSet,
                             displayName = displayName,
-                            gitProjectConf = gitProjectConf
+                            mrEvent = mrEvent,
+                            isMerged = isMerged
                         )
                     },
                     commitCheck = CommitCheck(
@@ -310,7 +323,6 @@ class GitCITriggerService @Autowired constructor(
             mrEvent = mrEvent,
             event = gitRequestEvent,
             gitProjectConf = gitProjectConf,
-            context = noPipelineBuildEvent,
             block = false,
             state = GitCICommitCheckState.SUCCESS
         )
@@ -326,9 +338,9 @@ class GitCITriggerService @Autowired constructor(
         gitToken: GitToken,
         changeSet: Set<String>,
         displayName: String,
-        gitProjectConf: GitCIBasicSetting
+        mrEvent: Boolean,
+        isMerged: Boolean
     ) {
-        val mrEvent = event is GitMergeRequestEvent
         val filePath = buildPipeline.filePath
         // 流水线未启用则跳过
         if (!buildPipeline.enabled) {
@@ -343,8 +355,8 @@ class GitCITriggerService @Autowired constructor(
             )
         }
 
-        // 检查版本落后信息和真正要触发的文件
-        val originYaml = if (mrEvent) {
+        // 检查版本落后信息和真正要触发的文件，Merged事件不用检查版本
+        val originYaml = if (mrEvent && !isMerged) {
             // todo: 将超级token根据项目ID塞到Map里，每次取一下，没有了就重新拿
             val (result, orgYaml) =
                 checkYmlVersion(
@@ -488,151 +500,6 @@ class GitCITriggerService @Autowired constructor(
     }
 
     /**
-     * 检查请求中是否有冲突
-     * - 冲突通过请求详情获取，冲突检查为异步，需要通过延时队列轮训冲突检查结果
-     * - 有冲突，不触发
-     * - 没有冲突，进行后续操作
-     */
-    @Throws(TriggerException::class, TriggerThirdException::class)
-    private fun checkMrConflict(
-        gitRequestEvent: GitRequestEvent,
-        event: GitEvent,
-        path2PipelineExists: Map<String, GitProjectPipeline>,
-        gitProjectConf: GitCIBasicSetting
-    ): Boolean {
-        val gitToken = handleGetToken(gitRequestEvent)!!
-        logger.info("get token form scm, token: $gitToken")
-
-        val projectId = gitRequestEvent.gitProjectId
-        val mrRequestId = (event as GitMergeRequestEvent).object_attributes.id
-
-        val mrInfo = triggerExceptionService.handleErrorCode(
-            request = gitRequestEvent,
-            action = {
-                scmService.getMergeInfo(
-                    gitProjectId = projectId,
-                    mergeRequestId = mrRequestId,
-                    token = gitToken.accessToken
-                )
-            }
-        )!!
-        // 通过查询当前merge请求的状态，unchecked说明未检查完，进入延迟队列
-        when (mrInfo.mergeStatus) {
-            GitCiMergeStatus.MERGE_STATUS_UNCHECKED.value -> {
-                // 第一次未检查完则改变状态为正在检查供用户查看
-                val recordId = gitCIEventSaveService.saveTriggerNotBuildEvent(
-                    userId = gitRequestEvent.userId,
-                    eventId = gitRequestEvent.id!!,
-                    reason = TriggerReason.CI_MERGE_CHECKING.name,
-                    reasonDetail = TriggerReason.CI_MERGE_CHECKING.detail,
-                    gitProjectId = gitRequestEvent.gitProjectId
-                )
-
-                dispatchMrConflictCheck(
-                    GitCIMrConflictCheckEvent(
-                        token = gitToken.accessToken,
-                        gitRequestEvent = gitRequestEvent,
-                        event = event,
-                        path2PipelineExists = path2PipelineExists,
-                        gitProjectConf = gitProjectConf,
-                        notBuildRecordId = recordId
-                    )
-                )
-                return true
-            }
-            GitCiMergeStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
-                logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
-                triggerError(
-                    request = gitRequestEvent,
-                    reason = TriggerReason.CI_MERGE_CONFLICT
-                )
-            }
-            // 没有冲突则触发流水线
-            else -> return matchAndTriggerPipeline(
-                gitRequestEvent = gitRequestEvent,
-                event = event,
-                path2PipelineExists = path2PipelineExists,
-                gitProjectConf = gitProjectConf
-            )
-        }
-    }
-
-    // 检查是否存在冲突，供Rabbit Listener使用
-    // todo: 由于是update所以先不用handle做异常统一处理，后续优化
-    fun checkMrConflictByListener(
-        token: String,
-        gitRequestEvent: GitRequestEvent,
-        event: GitEvent,
-        path2PipelineExists: Map<String, GitProjectPipeline>,
-        gitProjectConf: GitCIBasicSetting,
-        // 是否是最后一次的检查
-        isEndCheck: Boolean = false,
-        notBuildRecordId: Long
-    ): Boolean {
-        val projectId = gitRequestEvent.gitProjectId
-        val mrRequestId = (event as GitMergeRequestEvent).object_attributes.id
-        val mrInfo = try {
-            scmService.getMergeInfo(
-                gitProjectId = projectId,
-                mergeRequestId = mrRequestId,
-                token = token
-            )
-        } catch (e: ErrorCodeException) {
-            gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
-                dslContext = dslContext,
-                recordId = notBuildRecordId,
-                reason = ErrorCodeEnum.GET_GIT_MERGE_INFO.name,
-                reasonDetail = if (e.defaultMessage.isNullOrBlank()) {
-                    ErrorCodeEnum.GET_GIT_MERGE_INFO.formatErrorMessage
-                } else {
-                    e.defaultMessage!!
-                }
-            )
-            return false
-        }
-        when (mrInfo.mergeStatus) {
-            GitCiMergeStatus.MERGE_STATUS_UNCHECKED.value -> {
-                // 如果最后一次检查还未检查完就是检查超时
-                if (isEndCheck) {
-                    // 第一次之后已经在not build中有数据了，修改构建原因
-                    gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
-                        dslContext = dslContext,
-                        recordId = notBuildRecordId,
-                        reason = TriggerReason.CI_MERGE_CHECK_TIMEOUT.name,
-                        reasonDetail = TriggerReason.CI_MERGE_CHECK_TIMEOUT.detail
-                    )
-                }
-                return false
-            }
-            GitCiMergeStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
-                logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
-                gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
-                    dslContext = dslContext,
-                    recordId = notBuildRecordId,
-                    reason = TriggerReason.CI_MERGE_CONFLICT.name,
-                    reasonDetail = TriggerReason.CI_MERGE_CONFLICT.detail
-                )
-                return true
-            }
-            else -> {
-                gitRequestEventNotBuildDao.deleteNoBuildsById(
-                    dslContext = dslContext,
-                    recordId = notBuildRecordId
-                )
-                triggerExceptionService.handle {
-                    matchAndTriggerPipeline(
-                        gitRequestEvent = gitRequestEvent,
-                        event = event,
-                        path2PipelineExists = path2PipelineExists,
-                        gitProjectConf = gitProjectConf
-                    )
-                }
-                return true
-            }
-        }
-    }
-
-    /**
      * MR触发时，yml以谁为准：
      * - 当前MR变更中不存在yml文件，取目标分支（默认为未改动时目标分支永远是最新的）
      * - 当前MR变更中存在yml文件，通过对比两个文件的blobId：
@@ -654,8 +521,7 @@ class GitCITriggerService @Autowired constructor(
             token = targetGitToken.accessToken,
             ref = mrEvent.object_attributes.target_branch,
             filePath = filePath,
-            gitProjectId = mrEvent.object_attributes.target_project_id.toString(),
-            useAccessToken = true
+            gitProjectId = mrEvent.object_attributes.target_project_id.toString()
         )
         if (!changeSet.contains(filePath)) {
             return if (targetFile?.content.isNullOrBlank()) {
@@ -669,8 +535,7 @@ class GitCITriggerService @Autowired constructor(
             token = sourceGitToken?.accessToken ?: targetGitToken.accessToken,
             ref = mrEvent.object_attributes.source_branch,
             filePath = filePath,
-            gitProjectId = mrEvent.object_attributes.source_project_id.toString(),
-            useAccessToken = true
+            gitProjectId = mrEvent.object_attributes.source_project_id.toString()
         )
         val sourceContent = if (sourceFile?.content.isNullOrBlank()) {
             ""
@@ -693,10 +558,9 @@ class GitCITriggerService @Autowired constructor(
         )
         val baseTargetFile = getFileInfo(
             token = targetGitToken.accessToken,
-            ref = mergeRequest!!.baseCommit,
+            ref = mergeRequest.baseCommit,
             filePath = filePath,
-            gitProjectId = mrEvent.object_attributes.target_project_id.toString(),
-            useAccessToken = true
+            gitProjectId = mrEvent.object_attributes.target_project_id.toString()
         )
         if (targetFile?.blobId == baseTargetFile?.blobId) {
             return Pair(true, sourceContent)
@@ -709,8 +573,7 @@ class GitCITriggerService @Autowired constructor(
         token: String,
         gitProjectId: String,
         filePath: String?,
-        ref: String?,
-        useAccessToken: Boolean
+        ref: String?
     ): GitCodeFileInfo? {
         return try {
             scmService.getFileInfo(
@@ -718,7 +581,7 @@ class GitCITriggerService @Autowired constructor(
                 ref = ref,
                 filePath = filePath,
                 gitProjectId = gitProjectId,
-                useAccessToken = useAccessToken
+                useAccessToken = true
             )
         } catch (e: ErrorCodeException) {
             if (e.statusCode == 404) {
@@ -739,23 +602,10 @@ class GitCITriggerService @Autowired constructor(
         event: GitRequestEvent,
         gitProjectConf: GitCIBasicSetting,
         block: Boolean,
-        state: GitCICommitCheckState,
-        context: String
+        state: GitCICommitCheckState
     ) {
         logger.info("CommitCheck with block, gitProjectId:${event.gitProjectId}, mrEvent:$mrEvent, " +
-            "block:$block, state:$state, context:$context, enableMrBlock:${gitProjectConf.enableMrBlock}")
-//        if (!isMrEvent) {
-//            // push事件也发送commitCheck不加锁
-//            scmClient.pushCommitCheckWithBlock(
-//                commitId = event.commitId,
-//                mergeRequestId = event.mergeRequestId ?: 0L,
-//                userId = event.userId,
-//                block = false,
-//                state = state,
-//                context = context,
-//                gitCIBasicSetting = gitProjectConf
-//            )
-//        }
+            "block:$block, state:$state, enableMrBlock:${gitProjectConf.enableMrBlock}")
         if (gitProjectConf.enableMrBlock && mrEvent) {
             scmClient.pushCommitCheckWithBlock(
                 commitId = event.commitId,
@@ -763,7 +613,7 @@ class GitCITriggerService @Autowired constructor(
                 userId = event.userId,
                 block = block,
                 state = state,
-                context = context,
+                context = noPipelineBuildEvent,
                 gitCIBasicSetting = gitProjectConf,
                 jumpRequest = false,
                 description = null
@@ -837,10 +687,6 @@ class GitCITriggerService @Autowired constructor(
             return true
         }
         return false
-    }
-
-    private fun dispatchMrConflictCheck(event: GitCIMrConflictCheckEvent) {
-        GitCIMrConflictCheckDispatcher.dispatch(rabbitTemplate, event)
     }
 
     @Throws(TriggerThirdException::class)

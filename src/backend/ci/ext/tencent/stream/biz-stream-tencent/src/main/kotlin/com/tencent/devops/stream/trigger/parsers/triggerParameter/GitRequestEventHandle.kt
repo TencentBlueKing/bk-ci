@@ -29,7 +29,8 @@ package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.TriggerBuildReq
-import com.tencent.devops.stream.pojo.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.git.GitCommit
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
@@ -72,7 +73,12 @@ object GitRequestEventHandle {
             extensionAction = gitMrEvent.object_attributes.extension_action,
             gitProjectId = gitMrEvent.object_attributes.target_project_id,
             sourceGitProjectId = gitMrEvent.object_attributes.source_project_id,
-            branch = gitMrEvent.object_attributes.source_branch,
+            // Merged动作使用目标分支，因为源分支可能已被删除
+            branch = if (gitMrEvent.object_attributes.action == TGitMergeActionKind.MERGE.value) {
+                gitMrEvent.object_attributes.target_branch
+            } else {
+                gitMrEvent.object_attributes.source_branch
+            },
             targetBranch = gitMrEvent.object_attributes.target_branch,
             commitId = latestCommit.id,
             commitMsg = latestCommit.message,

@@ -35,6 +35,7 @@ import io.swagger.annotations.ApiModelProperty
 data class GitRequestEvent(
     @ApiModelProperty("ID")
     var id: Long?,
+    // TODO: 开源版时将不同仓库的事件类型使用统一的Stream Action做映射来判断，存储。
     @ApiModelProperty("事件类型")
     val objectKind: String,
     @ApiModelProperty("操作类型")

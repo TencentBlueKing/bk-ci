@@ -71,13 +71,13 @@ class TriggerParameter @Autowired constructor(
                 return gitRequestEvent
             }
             is GitMergeRequestEvent -> {
-                if (event.object_attributes.action == "close" || event.object_attributes.action == "merge" ||
-                    (event.object_attributes.action == "update" &&
-                        event.object_attributes.extension_action != "push-update")
-                ) {
+                // 目前不支持Mr信息更新的触发
+                if (event.object_attributes.action == "update" &&
+                    event.object_attributes.extension_action != "push-update") {
                     logger.info("Git web hook is ${event.object_attributes.action} merge request")
                     return null
                 }
+
                 val gitRequestEvent = GitRequestEventHandle.createMergeEvent(event, e)
                 val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
                 gitRequestEvent.id = id

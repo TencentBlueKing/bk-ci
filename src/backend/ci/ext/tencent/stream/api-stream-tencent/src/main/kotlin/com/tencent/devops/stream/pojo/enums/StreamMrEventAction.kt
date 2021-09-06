@@ -25,31 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.v2
+package com.tencent.devops.stream.pojo.enums
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeExtensionActionKind
+import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 
-@ApiModel("V2版本多选搜索过滤历史参数")
-data class GitCIBuildHistorySearch(
-    @ApiModelProperty("第几页", required = false)
-    val page: Int?,
-    @ApiModelProperty("每页多少条", required = false)
-    val pageSize: Int?,
-    @ApiModelProperty("分支", required = false)
-    val branch: Set<String>?,
-    @ApiModelProperty("fork库分支", required = false)
-    val sourceGitProjectId: Set<String>?,
-    @ApiModelProperty("触发人", required = false)
-    val triggerUser: Set<String>?,
-    @ApiModelProperty("流水线ID", required = false)
-    val pipelineId: String?,
-    @ApiModelProperty("Commit Msg", required = false)
-    val commitMsg: String?,
-    @ApiModelProperty("Event", required = false)
-    val event: Set<TGitObjectKind>?,
-    @ApiModelProperty("构建状态", required = false)
-    val status: Set<BuildStatus>?
-)
+/*
+ * Stream Mr 事件支持动作
+ * 根据Webhook事件抽象Stream action
+ */
+
+enum class StreamMrEventAction(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    PUSH_UPDATE("push-update"),
+    MERGE("merge");
+
+    companion object {
+        fun getActionValue(event: GitMergeRequestEvent): String? {
+            return when (event.object_attributes.action) {
+                TGitMergeActionKind.OPEN.value -> StreamMrEventAction.OPEN.value
+                TGitMergeActionKind.CLOSE.value -> StreamMrEventAction.CLOSE.value
+                TGitMergeActionKind.REOPEN.value -> StreamMrEventAction.REOPEN.value
+                TGitMergeActionKind.UPDATE.value -> {
+                    if (event.object_attributes.extension_action == TGitMergeExtensionActionKind.PUSH_UPDATE.value) {
+                        StreamMrEventAction.PUSH_UPDATE.value
+                    } else {
+                        null
+                    }
+                }
+                TGitMergeActionKind.MERGE.value -> StreamMrEventAction.MERGE.value
+                else -> null
+            }
+        }
+    }
+}
