@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.pojo.element.agent
 
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
