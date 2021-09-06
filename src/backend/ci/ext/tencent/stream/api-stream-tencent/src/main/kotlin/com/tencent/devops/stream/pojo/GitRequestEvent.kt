@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.pojo
 
+import com.tencent.devops.stream.pojo.git.GitEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -68,5 +69,8 @@ data class GitRequestEvent(
     @ApiModelProperty("描述（已废弃）")
     var description: String?,
     @ApiModelProperty("合并请求标题")
-    var mrTitle: String?
+    var mrTitle: String?,
+    // TODO: 后续修改统一参数时可以将GitEvent统一放在这里维护
+    @ApiModelProperty("Git事件对象")
+    var gitEvent: GitEvent?
 )

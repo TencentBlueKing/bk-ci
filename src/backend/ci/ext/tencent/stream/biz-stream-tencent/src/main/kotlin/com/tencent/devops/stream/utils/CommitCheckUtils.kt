@@ -25,39 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.enums
+package com.tencent.devops.stream.utils
 
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeExtensionActionKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
+import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 
-/*
- * Stream Mr 事件支持动作
- * 根据Webhook事件抽象Stream action
- */
+object CommitCheckUtils {
 
-enum class StreamMrEventAction(val value: String) {
-    OPEN("open"),
-    CLOSE("close"),
-    REOPEN("reopen"),
-    PUSH_UPDATE("push-update"),
-    MERGE("merge");
+    fun needSendCheck(request: GitRequestEvent): Boolean {
+        val event = request.gitEvent ?: return false
+        return when (event) {
+            is GitMergeRequestEvent -> {
+                val action = StreamMrEventAction.getActionValue(event) ?: return false
+                !(action == StreamMrEventAction.CLOSE.value || action == StreamMrEventAction.MERGE.value)
+            }
+            else -> {
+                request.objectKind != TGitObjectKind.MANUAL.value
+            }
+        }
+    }
 
-    companion object {
-        fun getActionValue(event: GitMergeRequestEvent): String? {
-            return when (event.object_attributes.action) {
-                TGitMergeActionKind.OPEN.value -> OPEN.value
-                TGitMergeActionKind.CLOSE.value -> CLOSE.value
-                TGitMergeActionKind.REOPEN.value -> REOPEN.value
-                TGitMergeActionKind.UPDATE.value -> {
-                    if (event.object_attributes.extension_action == TGitMergeExtensionActionKind.PUSH_UPDATE.value) {
-                        PUSH_UPDATE.value
-                    } else {
-                        null
-                    }
-                }
-                TGitMergeActionKind.MERGE.value -> MERGE.value
-                else -> null
+    // TODO: Finish阶段专用，后续重构参数时看是否可以干掉
+    fun needSendCheck(gitEvent: GitEvent): Boolean {
+        return when (gitEvent) {
+            is GitMergeRequestEvent -> {
+                val action = StreamMrEventAction.getActionValue(gitEvent) ?: return false
+                !(action == StreamMrEventAction.CLOSE.value || action == StreamMrEventAction.MERGE.value)
+            }
+            else -> {
+                true
             }
         }
     }

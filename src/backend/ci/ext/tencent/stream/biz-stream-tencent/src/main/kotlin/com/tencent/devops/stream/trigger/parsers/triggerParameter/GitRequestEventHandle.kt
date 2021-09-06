@@ -41,7 +41,7 @@ import java.util.Date
 
 object GitRequestEventHandle {
 
-    fun createPushEvent(gitPushEvent: GitPushEvent, e: String): GitRequestEvent {
+    fun createPushEvent(gitPushEvent: GitPushEvent, e: String, event: GitPushEvent): GitRequestEvent {
         val latestCommit = getLatestCommit(gitPushEvent.after, gitPushEvent.commits)
         return GitRequestEvent(
             id = null,
@@ -60,11 +60,12 @@ object GitRequestEventHandle {
             mergeRequestId = null,
             event = e,
             description = "",
-            mrTitle = null
+            mrTitle = null,
+            gitEvent = event
         )
     }
 
-    fun createMergeEvent(gitMrEvent: GitMergeRequestEvent, e: String): GitRequestEvent {
+    fun createMergeEvent(gitMrEvent: GitMergeRequestEvent, e: String, event: GitMergeRequestEvent): GitRequestEvent {
         val latestCommit = gitMrEvent.object_attributes.last_commit
         return GitRequestEvent(
             id = null,
@@ -88,11 +89,12 @@ object GitRequestEventHandle {
             mergeRequestId = gitMrEvent.object_attributes.iid,
             event = e,
             description = "",
-            mrTitle = gitMrEvent.object_attributes.title
+            mrTitle = gitMrEvent.object_attributes.title,
+            gitEvent = event
         )
     }
 
-    fun createTagPushEvent(gitTagPushEvent: GitTagPushEvent, e: String): GitRequestEvent {
+    fun createTagPushEvent(gitTagPushEvent: GitTagPushEvent, e: String, event: GitTagPushEvent): GitRequestEvent {
         val latestCommit = getLatestCommit(gitTagPushEvent.after, gitTagPushEvent.commits)
         return GitRequestEvent(
             id = null,
@@ -111,7 +113,8 @@ object GitRequestEventHandle {
             mergeRequestId = null,
             event = e,
             description = "",
-            mrTitle = null
+            mrTitle = null,
+            gitEvent = event
         )
     }
 
@@ -133,7 +136,8 @@ object GitRequestEventHandle {
             mergeRequestId = null,
             event = "",
             description = triggerBuildReq.description,
-            mrTitle = ""
+            mrTitle = "",
+            gitEvent = null
         )
     }
 

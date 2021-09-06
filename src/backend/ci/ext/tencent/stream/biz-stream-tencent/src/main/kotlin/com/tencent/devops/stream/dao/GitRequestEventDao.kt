@@ -120,7 +120,8 @@ class GitRequestEventDao {
                     } else {
                         record.description
                     },
-                    mrTitle = record.mrTitle
+                    mrTitle = record.mrTitle,
+                    gitEvent = null
                 )
             }
         }
@@ -162,7 +163,8 @@ class GitRequestEventDao {
                     } else {
                         record.description
                     },
-                    mrTitle = record.mrTitle
+                    mrTitle = record.mrTitle,
+                    gitEvent = null
                 )
             }
         }
@@ -204,7 +206,8 @@ class GitRequestEventDao {
                         } else {
                             it.description
                         },
-                        mrTitle = it.mrTitle
+                        mrTitle = it.mrTitle,
+                        gitEvent = null
                     )
                 )
             }
@@ -249,23 +252,12 @@ class GitRequestEventDao {
                         } else {
                             it.description
                         },
-                        mrTitle = it.mrTitle
+                        mrTitle = it.mrTitle,
+                        gitEvent = null
                     )
                 )
             }
             return result
-        }
-    }
-
-    fun getMergeRequestCount(
-        dslContext: DSLContext,
-        gitProjectId: Long
-    ): Long {
-        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            return dslContext.selectCount().from(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(OBJECT_KIND.eq(TGitObjectKind.MERGE_REQUEST.value))
-                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -354,7 +346,8 @@ class GitRequestEventDao {
                         } else {
                             it.description
                         },
-                        mrTitle = it.mrTitle
+                        mrTitle = it.mrTitle,
+                        gitEvent = null
                     )
                 )
             }

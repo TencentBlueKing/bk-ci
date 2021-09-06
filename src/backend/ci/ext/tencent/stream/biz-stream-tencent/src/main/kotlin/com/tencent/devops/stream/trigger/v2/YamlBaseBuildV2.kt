@@ -56,6 +56,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.stream.utils.CommitCheckUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -186,7 +187,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId, ymlVersion)
             // 推送启动构建消息,当人工触发时不推送构建消息
-            if (event.objectKind != TGitObjectKind.MANUAL.value) {
+            if (CommitCheckUtils.needSendCheck(event)) {
                 gitCheckService.pushCommitCheck(
                     commitId = event.commitId,
                     description = if (event.description.isNullOrBlank()) {
