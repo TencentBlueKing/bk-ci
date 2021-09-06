@@ -195,7 +195,6 @@ class StageBuildDetailService(
             override fun onFindStage(stage: Stage, model: Model): Traverse {
                 if (stage.id == stageId) {
                     update = true
-                    stage.status = null
                     stage.reviewStatus = BuildStatus.QUALITY_CHECK_FAIL.name
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
