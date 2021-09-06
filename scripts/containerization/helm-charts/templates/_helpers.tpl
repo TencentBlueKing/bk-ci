@@ -239,7 +239,7 @@ influxdb username
 */}}
 {{- define "bkci.influxdbUsername" -}}
 {{- if eq .Values.influxdb.enabled true -}}
-{{ .Values.influxdb.admin.username }}
+{{ .Values.influxdb.auth.admin.username }}
 {{- else -}}
 {{- .Values.external.influxdb.username -}}
 {{- end -}}
@@ -250,7 +250,7 @@ influxdb password
 */}}
 {{- define "bkci.influxdbPassword" -}}
 {{- if eq .Values.influxdb.enabled true -}}
-{{ .Values.influxdb.admin.password }}
+{{ .Values.influxdb.auth.admin.password }}
 {{- else -}}
 {{- .Values.external.influxdb.password -}}
 {{- end -}}

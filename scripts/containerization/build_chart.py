@@ -12,13 +12,19 @@ template_parent = './helm-charts/templates/configmap/tpl/'
 # 创建目录
 os.system("mkdir -p "+template_parent)
 
-# 设置一些默认值 TODO
+# 设置一些默认值
 default_value_dict = {
     'bkCiDataDir': '/data1/',
-    'bkCiHttpPort': '80'
+    'bkCiHttpPort': '80',
+    'bkCiRedisDb': '0',
+    'bkCiAuthProvider': 'sample',
+    'bkCiHost': 'devops.paasv3-test.woa.com',
+    'bkCiLogStorageType': 'elasticsearch',
+    'bkCiEsClusterName': 'devops',
+    'bkCiProcessEventConcurrent': '10'
 }
 
-# include 模板 TODO
+# include 模板
 include_dict = {
     '__BK_CI_MYSQL_ADDR__': '{{ include "bkci.mysqlAddr" . }}',
     '__BK_CI_MYSQL_USER__': '{{ include "bkci.mysqlUsername" . }}',
@@ -57,7 +63,10 @@ for line in open('./values.yaml', 'r'):
     value_file.write(line)
 value_file.write('\nconfig:\n')
 for key in sorted(replace_dict):
-    value_file.write('  '+replace_dict[key]+': '+default_value_dict.get(replace_dict[key], '""')+'\n')
+    default_value = '""'
+    if key.endswith("PORT"):
+        default_value = '80'
+    value_file.write('  '+replace_dict[key]+': '+default_value_dict.get(replace_dict[key], default_value)+'\n')
 value_file.flush()
 value_file.close()
 
@@ -97,7 +106,7 @@ gateway_config_file.write('{{- define "bkci.gateway.yaml" -}}\n')
 for env in gateway_envs:
     if include_dict.__contains__(env):
         gateway_config_file.write(env.replace(
-            "__", "")+": "+include_dict[env].replace(' . ',' . | quote')+"\n")
+            "__", "")+": "+include_dict[env].replace(' . ', ' . | quote')+"\n")
     else:
         gateway_config_file.write(env.replace(
             "__", "")+": {{ .Values.config."+humps.camelize(env.replace("__", "").lower())+" | quote }}\n")
