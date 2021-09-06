@@ -39,6 +39,7 @@ import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 
 @Suppress("ALL")
@@ -117,9 +118,12 @@ object QualityUtils {
             "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/" +
                 "console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
         } else {
-            val detailValue = codeccToolUrlPathMap[detail] ?: "defect/lint"
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/" +
-                "codecc/$projectId/task/$taskId/$detailValue/$detail/list?buildId=$buildId'>$value</a>"
+            val detailValue = codeccToolUrlPathMap[detail] ?: DEFAULT_CODECC_URL
+            val fillDetailUrl = detailValue.replace("##projectId##", projectId)
+                .replace("##taskId##", taskId.toString())
+                .replace("##buildId##", buildId)
+                .replace("##detail##", detail)
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/$fillDetailUrl'>$value</a>"
         }
     }
 }
