@@ -28,9 +28,9 @@
 rootProject.name = "bk-ci-backend"
 
 pluginManagement {
-    val DEVOPS_BOOT_VERSION: String by settings
+    val devopsBootVersion: String by settings
     plugins {
-        id("com.tencent.devops.boot") version DEVOPS_BOOT_VERSION
+        id("com.tencent.devops.boot") version devopsBootVersion
     }
     repositories {
         mavenLocal()
@@ -55,6 +55,7 @@ include(":core:common:common-redis")
 include(":core:common:common-kafka")
 include(":core:common:common-scm")
 include(":core:common:common-archive")
+include(":core:common:common-quality")
 include(":core:common:common-service")
 include(":core:common:common-pipeline")
 include(":core:common:common-test")

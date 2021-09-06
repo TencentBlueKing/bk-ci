@@ -34,9 +34,9 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-@Suppress("ALL")
 class IpaUploadDao {
 
+    @Suppress("LongParameterList")
     fun save(
         dslContext: DSLContext,
         userId: String,

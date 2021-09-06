@@ -85,4 +85,14 @@ interface UserSensitiveConfService {
         isDecrypt: Boolean,
         types: String? = null
     ): Result<List<SensitiveConfResp>?>
+
+    /**
+     * 检查权限
+     */
+    fun checkOperationAuthority(
+        buildId: String,
+        vmSeqId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    )
 }

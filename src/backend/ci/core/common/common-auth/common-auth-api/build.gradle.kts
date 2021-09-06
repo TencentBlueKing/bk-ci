@@ -35,6 +35,7 @@ dependencies {
     api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
     api("org.apache.commons:commons-collections4")
+    api("org.apache.httpcomponents:httpclient")
 //    implementation(group = "org.apache.commons", name = "commons-collections4", version = "4.4")
 
     api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))

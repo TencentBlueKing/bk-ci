@@ -130,7 +130,7 @@ class ApiAspect(
             "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
             "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
-    fun AfterMethod() {
+    fun afterMethod() {
         // 删除线程ThreadLocal数据,防止线程池复用。导致流量指向被污染
         ConsulContent.removeConsulContent()
     }

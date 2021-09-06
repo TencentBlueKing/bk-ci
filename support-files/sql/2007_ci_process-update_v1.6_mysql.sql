@@ -53,6 +53,22 @@ BEGIN
         ALTER TABLE T_PIPELINE_BUILD_VAR ADD COLUMN READ_ONLY BIT(1) NULL COMMENT '是否只读';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_STAGE'
+                        AND COLUMN_NAME = 'CHECK_IN') THEN
+        ALTER TABLE T_PIPELINE_BUILD_STAGE ADD COLUMN `CHECK_IN` mediumtext NULL COMMENT '准入检查配置';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_STAGE'
+                        AND COLUMN_NAME = 'CHECK_OUT') THEN
+        ALTER TABLE T_PIPELINE_BUILD_STAGE ADD COLUMN `CHECK_OUT` mediumtext NULL COMMENT '准出检查配置';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

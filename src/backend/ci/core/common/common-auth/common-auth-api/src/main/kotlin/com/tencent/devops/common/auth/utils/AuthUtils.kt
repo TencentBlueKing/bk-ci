@@ -135,28 +135,12 @@ object AuthUtils {
         projectId: String,
         resourceType: String
     ): Set<String> {
-        val instantList = mutableSetOf<String>()
-        when (parentExpression.operator) {
-            ExpressionOperationEnum.AND -> instantList.addAll(
-                getInstanceByContent(
-                    childExpression,
-                    projectId,
-                    resourceType,
-                    parentExpression.operator
-                )
-            )
-            ExpressionOperationEnum.OR -> instantList.addAll(
-                getInstanceByContent(
-                    childExpression,
-                    projectId,
-                    resourceType,
-                    parentExpression.operator
-                )
-            )
-            else -> {
-            }
-        }
-        return instantList
+        return getInstanceByContent(
+            childExpression = childExpression,
+            projectId = projectId,
+            resourceType = resourceType,
+            type = parentExpression.operator
+        )
     }
 
     private fun getInstanceByContent(
@@ -166,17 +150,18 @@ object AuthUtils {
         type: ExpressionOperationEnum
     ): Set<String> {
         var cacheList = mutableSetOf<String>()
-        var isReturn = false
-        var successCount = 0
         run content@{
             childExpression.map {
                 if (it.content != null && it.content.isNotEmpty()) {
                     val childInstanceList = getInstanceByContent(it.content, projectId, resourceType, it.operator)
                     if (childInstanceList.isNotEmpty()) {
+                        // 如果有策略解析出来为“*”,则直接返回
+                        if (childInstanceList.contains("*")) {
+                            return childInstanceList
+                        }
                         cacheList.addAll(childInstanceList)
-                        isReturn = true
-                        successCount += 1
                     } else {
+                        // 若表达式为AND拼接,检测到不满足条件则直接返回空数组
                         if (!andCheck(cacheList, type)) {
                             return emptySet()
                         }
@@ -193,34 +178,29 @@ object AuthUtils {
                 when (it.operator) {
                     ExpressionOperationEnum.ANY -> {
                         cacheList.add("*")
-                        isReturn = true
-                        successCount += 1
                         return@content
                     }
                     ExpressionOperationEnum.IN -> {
                         cacheList.addAll(StringUtils.obj2List(it.value.toString()))
                         StringUtils.removeAllElement(cacheList)
-                        isReturn = true
-                        successCount += 1
                     }
                     ExpressionOperationEnum.EQUAL -> {
                         cacheList.add(it.value.toString())
                         StringUtils.removeAllElement(cacheList)
-                        isReturn = true
-                        successCount += 1
                     }
                     ExpressionOperationEnum.START_WITH -> {
+                        // 两种情况: 1. 跟IN,EQUAL组合成项目下的某实例 2. 单指某个项目下的所有实例
                         val startWithPair = checkProject(projectId, it)
-                        if (!startWithPair.first && type == ExpressionOperationEnum.AND) {
-                            cacheList.clear()
-                            if (!andCheck(cacheList, type)) {
+                        // 跟IN,EQUAL结合才会出现type = AND
+                        if (type == ExpressionOperationEnum.AND) {
+                            // 项目未命中直接返回空数组
+                            // 命中则引用IN,EQUAL的数据,不将“*”加入到cacheList
+                            if (!startWithPair.first) {
                                 return emptySet()
                             }
-                        }
-                        isReturn = startWithPair.first
-                        if (isReturn && cacheList.size == 0) {
+                        } else {
+                            // 若为项目级别,直接按projectCheck结果返回
                             cacheList.addAll(startWithPair.second)
-                            successCount += 1
                         }
                     }
                     else -> cacheList = emptySet<String>() as MutableSet<String>
@@ -228,20 +208,15 @@ object AuthUtils {
                 if (!andCheck(cacheList, type)) {
                     return emptySet()
                 }
+
+                // 如果有“*” 表示项目下所有的实例都有权限,直接按“*”返回
+                if (cacheList.contains("*")) {
+                    return cacheList
+                }
             }
         }
 
-        return when {
-            isReturn -> {
-                cacheList
-            }
-            successCount > 0 -> {
-                cacheList
-            }
-            else -> {
-                emptySet()
-            }
-        }
+        return cacheList
     }
 
     fun getInstanceByField(expression: ExpressionDTO, projectId: String, resourceType: String): Set<String> {

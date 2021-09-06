@@ -37,6 +37,5 @@ dependencies {
     api("io.jsonwebtoken:jjwt-api")
     runtimeOnly("io.jsonwebtoken:jjwt-impl")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson")
-    api(group = "net.sf.json-lib", name = "json-lib", classifier = "jdk15")
     api("org.springframework.boot:spring-boot-starter-aop")
 }
