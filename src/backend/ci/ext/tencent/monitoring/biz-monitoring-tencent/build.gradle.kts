@@ -42,4 +42,5 @@ dependencies {
     api("org.elasticsearch:elasticsearch")
     api("org.elasticsearch.client:elasticsearch-rest-client")
     api("org.elasticsearch.client:elasticsearch-rest-high-level-client")
+    api(project(":ext:tencent:common:common-kafka-tencent"))
 }
