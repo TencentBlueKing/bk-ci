@@ -34,4 +34,5 @@ out
 .codecc
 build.yml
 *.ipa
-scripts/containerization/docker-images/ci
+scripts/containerization/helm-charts/values.yaml
+scripts/containerization/helm-charts/templates/configmap/tpl/
