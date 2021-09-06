@@ -623,8 +623,8 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         rtxNotifyMessage.addAllReceivers(sendNotifyMessageTemplateRequest.receivers)
         // 企业微信通知触发人
         val triggerUserId = sendNotifyMessageTemplateRequest.bodyParams?.get("cc")
-        if (null != triggerUserId && "" != triggerUserId
-            && !sendNotifyMessageTemplateRequest.receivers.contains(triggerUserId)) {
+        if (null != triggerUserId && "" != triggerUserId &&
+            !sendNotifyMessageTemplateRequest.receivers.contains(triggerUserId)) {
             rtxNotifyMessage.addReceiver(triggerUserId)
         }
         rtxNotifyMessage.title = title
