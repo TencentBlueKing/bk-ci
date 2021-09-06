@@ -86,10 +86,7 @@ interface ApigwBuildResourceV3 {
         values: Map<String, String>,
         @ApiParam("手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
-        buildNo: Int? = null,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        buildNo: Int? = null
     ): Result<BuildId>
 
     @ApiOperation("停止构建")
@@ -113,10 +110,7 @@ interface ApigwBuildResourceV3 {
         pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
-        buildId: String,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        buildId: String
     ): Result<Boolean>
 
     @ApiOperation("重试构建-重试或者跳过失败插件")
@@ -149,10 +143,7 @@ interface ApigwBuildResourceV3 {
         failedContainer: Boolean? = false,
         @ApiParam("跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
         @QueryParam("skip")
-        skipFailedTask: Boolean? = false,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        skipFailedTask: Boolean? = false
     ): Result<BuildId>
 
     @ApiOperation("查看构建状态信息,#4295增加stageStatus等")
@@ -176,10 +167,7 @@ interface ApigwBuildResourceV3 {
         pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
-        buildId: String,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        buildId: String
     ): Result<BuildHistoryWithVars>
 
     @ApiOperation("获取流水线构建历史")
@@ -206,10 +194,7 @@ interface ApigwBuildResourceV3 {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        pageSize: Int?
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取流水线手动启动参数")
@@ -230,10 +215,7 @@ interface ApigwBuildResourceV3 {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        pipelineId: String
     ): Result<BuildManualStartupInfo>
 
     @ApiOperation("构建详情")
@@ -249,9 +231,6 @@ interface ApigwBuildResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "网关路由tag", required = true)
-        @HeaderParam(AUTH_HEADER_GATEWAY_TAG)
-        gatewayTag: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
