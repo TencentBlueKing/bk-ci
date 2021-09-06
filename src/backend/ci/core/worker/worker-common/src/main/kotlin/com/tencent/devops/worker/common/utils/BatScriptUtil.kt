@@ -148,14 +148,14 @@ object BatScriptUtil {
                 newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
             ))
 
-        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
-            CharSetType.UTF_8 -> Charsets.UTF_8
-            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
-            else -> Charsets.UTF_8
-        }
-        logger.info("The default charset is $charset")
+//        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
+//            CharSetType.UTF_8 -> Charsets.UTF_8
+//            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
+//            else -> Charsets.UTF_8
+//        }
+//        logger.info("The default charset is $charset")
 
-        file.writeText(command.toString(), charset)
+        file.writeText(command.toString())
         logger.info("start to run windows script - ($command)")
         return file
     }
