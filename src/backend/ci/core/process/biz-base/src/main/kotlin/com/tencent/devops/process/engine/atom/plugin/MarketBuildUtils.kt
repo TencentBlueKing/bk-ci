@@ -61,6 +61,7 @@ object MarketBuildUtils {
     )
 
     fun beforeDelete(inputMap: Map<*, *>, atomCode: String, param: BeforeDeleteParam, codeccApi: CodeccApi) {
+        logger.info("start to do before delete: $inputMap, $atomCode")
         marketBuildExecutorService.execute {
             val bkAtomHookUrl = inputMap.getOrDefault(
                 BK_ATOM_HOOK_URL,
@@ -72,7 +73,10 @@ object MarketBuildUtils {
             ) as String
             val bkAtomHookBody = inputMap.getOrDefault(BK_ATOM_HOOK_URL_BODY, "") as String
 
-            if (bkAtomHookUrl.isBlank()) return@execute
+            if (bkAtomHookUrl.isBlank()) {
+                logger.info("bk atom hook url is blank: $atomCode")
+                return@execute
+            }
 
             doHttp(bkAtomHookUrl, bkAtomHookUrlMethod, bkAtomHookBody, param)
         }
@@ -87,6 +91,8 @@ object MarketBuildUtils {
         val url = resolveParam(bkAtomHookUrl, param)
         var request = Request.Builder()
             .url(url)
+
+        logger.info("start to market build atom http: $url, $bkAtomHookUrlMethod, $bkAtomHookBody")
 
         when (bkAtomHookUrlMethod) {
             HttpMethod.GET -> {
@@ -107,7 +113,7 @@ object MarketBuildUtils {
 
         OkhttpUtils.doHttp(request.build()).use { response ->
             val body = response.body()!!.string()
-            logger.info("before delete execute result: $url, $body")
+            logger.info("before delete execute result: $body")
         }
     }
 
