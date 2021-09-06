@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
