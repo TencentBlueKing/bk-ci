@@ -56,7 +56,7 @@ class TencentServiceConfig {
      */
     @Bean
     @Primary
-    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
     fun gitciAgentUrlService(commonConfig: CommonConfig) = TencentGITCIAgentUrlServiceImpl(commonConfig)
 
     @Bean

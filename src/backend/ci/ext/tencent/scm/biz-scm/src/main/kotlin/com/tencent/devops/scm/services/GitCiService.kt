@@ -274,15 +274,15 @@ class GitCiService {
                 "search" to search,
                 "order_by" to orderBy?.value,
                 "sort" to sort?.value,
-                "owned" to owned?.toString(),
-                "min_access_level" to minAccessLevel?.level.toString()
+                "owned" to owned,
+                "min_access_level" to minAccessLevel?.level
             ))
         val res = mutableListOf<GitCodeProjectInfo>()
         val request = Request.Builder()
             .url(url)
             .get()
             .build()
-
+        logger.info("getProjectList: $url")
         OkhttpUtils.doHttp(request).use { response ->
             val data = response.body()?.string() ?: return@use
             val repoList = JsonParser().parse(data).asJsonArray
@@ -368,7 +368,7 @@ class GitCiService {
         }
     }
 
-    private fun String.addParams(args: Map<String, String?>): String {
+    private fun String.addParams(args: Map<String, Any?>): String {
         val sb = StringBuilder(this)
         args.forEach { (name, value) ->
             if (value != null) {
