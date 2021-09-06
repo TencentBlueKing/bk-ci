@@ -136,6 +136,7 @@ class UpdateStateForStageCmdFinally(
             commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_FAIL.name
             commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
             commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_OUT"
+            pipelineStageService.checkQualityFailStage(userId = event.userId, buildStage = commandContext.stage)
 
             return finishBuild(commandContext = commandContext)
         } else if (nextStage != null) {
