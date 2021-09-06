@@ -477,7 +477,7 @@
                         this.curVersion = res.version
                         this.atomForm.jobType = !this.atomForm.jobType ? 'AGENT' : this.atomForm.jobType
                         this.initJobType = this.atomForm.jobType
-                        this.atomForm.labelIdList = this.atomForm.labelList.map(item => {
+                        this.atomForm.labelIdList = [this.atomForm.labelList || []].map(item => {
                             return item.id
                         })
                         this.initOs = JSON.parse(JSON.stringify(this.atomForm.os))

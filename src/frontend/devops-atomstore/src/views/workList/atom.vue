@@ -65,22 +65,17 @@
                 <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="150"></bk-table-column>
                 <bk-table-column :label="$t('store.操作')" width="240" class-name="handler-btn">
                     <template slot-scope="props">
-                        <span class="upgrade-btn"
-                            v-if="props.row.atomStatus === 'GROUNDING_SUSPENSION' || props.row.atomStatus === 'AUDIT_REJECT' || props.row.atomStatus === 'RELEASED'"
+                        <span class="upgrade-btn" v-if="['GROUNDING_SUSPENSION', 'AUDIT_REJECT', 'RELEASED'].includes(props.row.atomStatus) && (!props.row.processingVersionInfos || props.row.processingVersionInfos.length <= 0)"
                             @click="editHandle('upgradeAtom', props.row.atomId)"> {{ $t('store.升级') }} </span>
                         <span class="install-btn"
                             v-if="props.row.atomStatus === 'RELEASED'"
                             @click="installAHandle(props.row.atomCode)"> {{ $t('store.安装') }} </span>
                         <span class="shelf-btn"
-                            v-if="props.row.atomStatus === 'INIT' || props.row.atomStatus === 'UNDERCARRIAGED'"
+                            v-if="['INIT', 'UNDERCARRIAGED'].includes(props.row.atomStatus) && (!props.row.processingVersionInfos || props.row.processingVersionInfos.length <= 0)"
                             @click="editHandle('shelfAtom', props.row.atomId)"> {{ $t('store.上架') }} </span>
                         <span class="obtained-btn"
                             v-if="['AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION'].includes(props.row.atomStatus) && props.row.releaseFlag"
                             @click="offline(props.row)"> {{ $t('store.下架') }} </span>
-                        <span class="schedule-btn"
-                            v-if="props.row.atomStatus === 'COMMITTING' || props.row.atomStatus === 'BUILDING' || props.row.atomStatus === 'BUILD_FAIL'
-                                || props.row.atomStatus === 'TESTING' || props.row.atomStatus === 'AUDITING'"
-                            @click="routerProgress(props.row)"> {{ $t('store.进度') }} </span>
                         <span class="delete-btn" v-if="!props.row.releaseFlag" @click="deleteAtom(props.row)"> {{ $t('store.删除') }} </span>
                     </template>
                 </bk-table-column>
