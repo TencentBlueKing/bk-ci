@@ -306,10 +306,34 @@ class TXPipelineExportService @Autowired constructor(
                     name = stage.name,
                     id = null,
                     label = tags,
-                    ifField = if (stage.stageControlOption?.runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
-                        stage.stageControlOption?.customCondition
-                    } else {
-                        null
+                    ifField = when (stage.stageControlOption?.runCondition) {
+                        StageRunCondition.CUSTOM_CONDITION_MATCH -> stage.stageControlOption?.customCondition
+                        StageRunCondition.CUSTOM_VARIABLE_MATCH -> {
+
+                            var ifStr = ""
+                            stage.stageControlOption?.customVariables?.forEachIndexed { index, nameAndValue ->
+                                ifStr += if (index == stage.stageControlOption?.customVariables?.size!! - 1) {
+                                    "${nameAndValue.key} == ${nameAndValue.value}"
+                                }else{
+                                    "${nameAndValue.key} == ${nameAndValue.value} && "
+                                }
+                            }
+                            if (stage.stageControlOption?.customVariables?.isEmpty() == true) null
+                            else ifStr
+                        }
+                        StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                            var ifStr = ""
+                            stage.stageControlOption?.customVariables?.forEachIndexed { index, nameAndValue ->
+                                ifStr += if (index == stage.stageControlOption?.customVariables?.size!! - 1) {
+                                    "${nameAndValue.key} == ${nameAndValue.value}"
+                                }else{
+                                    "${nameAndValue.key} == ${nameAndValue.value} && "
+                                }
+                            }
+                            if (stage.stageControlOption?.customVariables?.isEmpty() == true) null
+                            else ifStr
+                        }
+                        else -> null
                     },
                     fastKill = if (stage.fastKill == true) true else null,
                     jobs = jobs,
@@ -593,12 +617,10 @@ class TXPipelineExportService @Autowired constructor(
                         V2Step(
                             name = step.name,
                             id = step.id,
-                            ifFiled = if (step.additionalOptions?.runCondition ==
-                                RunCondition.CUSTOM_CONDITION_MATCH
-                            ) {
-                                step.additionalOptions?.customCondition
-                            } else {
-                                null
+                            // bat插件上的
+                            ifFiled = when (step.additionalOptions?.runCondition) {
+                                RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
+                                else -> null
                             },
                             uses = null,
                             with = null,
@@ -624,6 +646,7 @@ class TXPipelineExportService @Autowired constructor(
                         V2Step(
                             name = step.name,
                             id = step.id,
+                            // bat插件上的
                             ifFiled = if (step.additionalOptions?.runCondition ==
                                 RunCondition.CUSTOM_CONDITION_MATCH
                             ) {
@@ -697,6 +720,7 @@ class TXPipelineExportService @Autowired constructor(
                         V2Step(
                             name = step.name,
                             id = step.id,
+                            // 插件上的
                             ifFiled = if (step.additionalOptions?.runCondition ==
                                 RunCondition.CUSTOM_CONDITION_MATCH
                             ) {
@@ -733,6 +757,7 @@ class TXPipelineExportService @Autowired constructor(
                         V2Step(
                             name = step.name,
                             id = step.id,
+                            // 插件上的
                             ifFiled = if (step.additionalOptions?.runCondition ==
                                 RunCondition.CUSTOM_CONDITION_MATCH
                             ) {
@@ -1202,6 +1227,7 @@ class TXPipelineExportService @Autowired constructor(
                 V2Step(
                     name = step.name,
                     id = step.id,
+                    // 插件上的
                     ifFiled = if (step.additionalOptions?.runCondition ==
                         RunCondition.CUSTOM_CONDITION_MATCH
                     ) {
