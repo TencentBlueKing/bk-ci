@@ -38,7 +38,11 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceTXPipelineResourceImpl @Autowired constructor(
     private val pipelineExportService: TXPipelineExportService
 ) : ServiceTXPipelineResource {
-    override fun exportPipelineGitCI(userId: String, projectId: String, pipelineId: String): Result<PipelineExportV2YamlData> {
+    override fun exportPipelineGitCI(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<PipelineExportV2YamlData> {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
         return Result(pipelineExportService.exportV2YamlStr(userId, projectId, pipelineId, true))
