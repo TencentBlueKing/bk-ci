@@ -75,6 +75,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<Boolean>? {
         checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
 
+        logger.info("[$userId]| start debug, debugStartParam: $debugStartParam")
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
         val result = dockerHostDebugService.getDebugStatus(debugStartParam.pipelineId, debugStartParam.vmSeqId)
         if (result.status == 0) {
