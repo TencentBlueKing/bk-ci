@@ -20,6 +20,7 @@ RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
 WORKDIR /usr/local/openresty/nginx/
 
 CMD mkdir -p ${BK_CI_LOGS_DIR}/nginx/ ${BK_CI_HOME} &&\
+    chown nobody:nobody ${BK_CI_LOGS_DIR}/nginx/ &&\
     ln -s /data/workspace/frontend ${BK_CI_HOME}/frontend &&\
     cp -r /data/workspace/scripts/render_tpl /usr/local/openresty/nginx/ &&\
     touch /usr/local/openresty/nginx/bkenv.properties &&\

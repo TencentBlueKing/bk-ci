@@ -36,3 +36,4 @@ build.yml
 *.ipa
 scripts/containerization/helm-charts/values.yaml
 scripts/containerization/helm-charts/templates/configmap/tpl/
+scripts/containerization/docker-images/ci

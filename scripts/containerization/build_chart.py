@@ -21,7 +21,10 @@ default_value_dict = {
     'bkCiHost': 'devops.paasv3-test.woa.com',
     'bkCiLogStorageType': 'elasticsearch',
     'bkCiEsClusterName': 'devops',
-    'bkCiProcessEventConcurrent': '10'
+    'bkCiProcessEventConcurrent': '10',
+    'bkCiLogsDir': '/data/logs',
+    'bkCiHome': '/data/bkee/ci',
+    'bkCiGatewayDnsAddr': 'local=on'
 }
 
 # include 模板
@@ -29,7 +32,7 @@ include_dict = {
     '__BK_CI_MYSQL_ADDR__': '{{ include "bkci.mysqlAddr" . }}',
     '__BK_CI_MYSQL_USER__': '{{ include "bkci.mysqlUsername" . }}',
     '__BK_CI_MYSQL_PASSWORD__': '{{ include "bkci.mysqlPassword" . }}',
-    '__BK_CI_REDIS_HOST__': '{{ include "bkci.redisHost" . }}',
+    '__BK_CI_REDIS_HOST__': '{{ printf "%s.%s.%s" (include "bkci.redisHost" .) .Release.Namespace "svc.cluster.local" | quote}}',
     '__BK_CI_REDIS_PASSWORD__': '{{ include "bkci.redisPassword" . }}',
     '__BK_CI_REDIS_PORT__': '{{ include "bkci.redisPort" . }}',
     '__BK_CI_ES_PASSWORD__': '{{ include "bkci.elasticsearchPassword" . }}',
@@ -110,6 +113,7 @@ for env in gateway_envs:
     else:
         gateway_config_file.write(env.replace(
             "__", "")+": {{ .Values.config."+humps.camelize(env.replace("__", "").lower())+" | quote }}\n")
+gateway_config_file.write('NAMESPACE: {{ .Release.Namespace }}\n')
 gateway_config_file.write('{{- end -}}')
 
 gateway_config_file.flush()
