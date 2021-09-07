@@ -56,7 +56,7 @@ import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
 import java.util.regex.Pattern
 
-@Suppress("ComplexMethod", "NestedBlockDepth")
+@Suppress("ComplexMethod", "NestedBlockDepth", "ComplexCondition")
 @Component
 class TriggerMatcher @Autowired constructor(
     private val scmService: ScmService
