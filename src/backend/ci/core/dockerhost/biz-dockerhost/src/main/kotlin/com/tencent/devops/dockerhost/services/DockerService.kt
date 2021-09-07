@@ -46,7 +46,8 @@ import java.util.concurrent.Future
 
 @Service@Suppress("ALL")
 class DockerService @Autowired constructor(
-    private val dockerHostBuildService: DockerHostBuildService
+    private val dockerHostBuildService: DockerHostBuildService,
+    private val dockerHostImageService: DockerHostImageService
 ) {
 
     private val executor = Executors.newFixedThreadPool(10)
@@ -60,34 +61,23 @@ class DockerService @Autowired constructor(
         elementId: String?,
         dockerBuildParam: DockerBuildParam,
         outer: Boolean = false,
-        syncFlag: Boolean? = false
+        scanFlag: Boolean? = false
     ): Boolean {
         logger.info("[$buildId]|projectId=$projectId|pipelineId=$pipelineId|vmSeqId=$vmSeqId|param=$dockerBuildParam")
-        if (null != syncFlag && syncFlag) {
-            return dockerHostBuildService.dockerBuildAndPushImage(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    vmSeqId = vmSeqId,
-                    dockerBuildParam = dockerBuildParam,
-                    buildId = buildId,
-                    elementId = elementId,
-                    outer = outer
-            ).first
-        } else {
-            val future = executor.submit(Callable<Pair<Boolean, String?>> {
-                dockerHostBuildService.dockerBuildAndPushImage(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        vmSeqId = vmSeqId,
-                        dockerBuildParam = dockerBuildParam,
-                        buildId = buildId,
-                        elementId = elementId,
-                        outer = outer
-                )
-            })
-            buildTask[getKey(vmSeqId, buildId)] = future
-            return true
-        }
+        val future = executor.submit(Callable<Pair<Boolean, String?>> {
+            dockerHostImageService.dockerBuildAndPushImage(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                dockerBuildParam = dockerBuildParam,
+                buildId = buildId,
+                elementId = elementId,
+                outer = outer,
+                scanFlag = scanFlag ?: false
+            )
+        })
+        buildTask[getKey(vmSeqId, buildId)] = future
+        return true
     }
 
     fun getBuildResult(vmSeqId: String, buildId: String): Pair<Status, String> {

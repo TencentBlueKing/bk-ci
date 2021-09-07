@@ -28,13 +28,13 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.async.ResultCallback
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.NotModifiedException
 import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.PullResponseItem
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
-import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.pojo.Result
@@ -234,7 +234,7 @@ abstract class AbstractDockerHostBuildService constructor(
         private val dockerHostBuildApi: DockerHostBuildResourceApi,
         private val startTaskId: String?,
         private val containerHashId: String?
-    ) : PullImageResultCallback() {
+    ) : ResultCallback.Adapter<PullResponseItem>() {
         private val totalList = mutableListOf<Long>()
         private val step = mutableMapOf<Int, Long>()
         override fun onNext(item: PullResponseItem?) {
@@ -251,7 +251,7 @@ abstract class AbstractDockerHostBuildService constructor(
                     currentProgress = 100
                 }
 
-                if (currentProgress >= step[lays]?.plus(25) ?: 5) {
+                if (currentProgress >= (step[lays]?.plus(25) ?: 5)) {
                     dockerHostBuildApi.postLog(
                         buildId = buildId,
                         red = false,

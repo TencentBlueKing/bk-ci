@@ -27,7 +27,6 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
@@ -73,7 +72,7 @@ object BatScriptUtil {
         workspace: File = dir,
         print2Logger: Boolean = true,
         elementId: String? = null,
-        charSetType: String? = CharSetType.UTF_8.name
+        charSetType: String? = null
     ): String {
         try {
             val file = getCommandFile(
@@ -108,7 +107,7 @@ object BatScriptUtil {
         runtimeVariables: Map<String, String>,
         dir: File,
         workspace: File = dir,
-        charSetType: String? = CharSetType.UTF_8.name
+        charSetType: String? = null
     ): File {
         val tmpDir = System.getProperty("java.io.tmpdir")
         val file = if (tmpDir.isNullOrBlank()) {
@@ -149,11 +148,13 @@ object BatScriptUtil {
                 newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
             ))
 
-        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
-            CharSetType.UTF_8 -> Charsets.UTF_8
-            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
-            else -> Charsets.UTF_8
-        }
+//        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
+//            CharSetType.UTF_8 -> Charsets.UTF_8
+//            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
+//            else -> Charsets.UTF_8
+//        }
+
+        val charset = Charset.defaultCharset()
         logger.info("The default charset is $charset")
 
         file.writeText(command.toString(), charset)

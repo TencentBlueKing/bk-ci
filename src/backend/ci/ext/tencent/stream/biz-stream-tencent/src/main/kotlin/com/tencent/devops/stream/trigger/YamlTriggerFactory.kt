@@ -25,32 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.pojo
+package com.tencent.devops.stream.trigger
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.ci.v2.YmlVersion
+import com.tencent.devops.stream.trigger.v1.YamlTrigger
+import com.tencent.devops.stream.trigger.v2.YamlTriggerV2
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@ApiModel("DockerBuild")
-data class DockerBuildParamNew(
-    @ApiModelProperty("基础镜像凭证", required = true)
-    val ticket: List<Triple<String, String, String>>,
-    @ApiModelProperty("镜像名称", required = true)
-    val imageName: String,
-    @ApiModelProperty("镜像TAG", required = true)
-    val imageTag: String,
-    @ApiModelProperty("构建目录", required = false)
-    val buildDir: String? = ".",
-    @ApiModelProperty("Dockerfile", required = false)
-    val dockerFile: String? = "Dockerfile",
-    @ApiModelProperty("repoAddr", required = true)
-    val repoAddr: String,
-    @ApiModelProperty("userName", required = true)
-    val userName: String,
-    @ApiModelProperty("password", required = true)
-    val password: String,
-    @ApiModelProperty("构建的参数", required = true)
-    val args: List<String>,
-    @ApiModelProperty("host配置", required = true)
-    val host: List<String>
+@Component
+class YamlTriggerFactory @Autowired constructor(
+    val requestTrigger: YamlTrigger,
+    val requestTriggerV2: YamlTriggerV2
+) {
 
-)
+    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): YamlTriggerInterface<*> {
+        if (ymlVersion == null) {
+            return requestTrigger
+        }
+
+        return when (ymlVersion.version) {
+            "v2.0" -> {
+                requestTriggerV2
+            }
+            else -> {
+                requestTrigger
+            }
+        }
+    }
+}
