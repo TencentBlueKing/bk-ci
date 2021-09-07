@@ -13,7 +13,7 @@
         ],
         "stage-2"
     ],
-    "plugins": ["transform-runtime", "syntax-dynamic-import", "transform-decorators-legacy"],
+    "plugins": ["transform-runtime", "transform-object-assign", "syntax-dynamic-import", "transform-vue-jsx", "transform-class-properties", "transform-decorators-legacy"],
     "env": {
         "test": {
             "presets": ["env", "stage-2"]

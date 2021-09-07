@@ -30,7 +30,6 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.openapi.filter.ApiFilter
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import org.aspectj.lang.JoinPoint
@@ -44,7 +43,6 @@ import org.springframework.stereotype.Component
 
 @Aspect
 @Component
-@Suppress("ALL")
 class ApiAspect(
     private val appCodeService: AppCodeService,
     private val apiGatewayUtil: ApiGatewayUtil,
@@ -52,7 +50,7 @@ class ApiAspect(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ApiFilter::class.java)
+        private val logger = LoggerFactory.getLogger(ApiAspect::class.java)
     }
 
     /**
