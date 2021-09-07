@@ -131,8 +131,21 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         if (managerPermission) {
             return managerPermission
         }
-        // 校验是否有project_view权限
-        return iamCacheService.checkProjectView(userId, projectCode)
+        // 优先匹配缓存
+        if (iamCacheService.checkProjectUser(userId, projectCode)) {
+            return true
+        }
+        var checkProjectUser = false
+        val projectUsers = getProjectGroupAndUserList(projectCode)
+        projectUsers.forEach {
+            // 此处可以考虑将list内的用户全部加到cache里面,但是要考虑userList过大占用较大内存
+            if (it.userIdList.contains(userId)) {
+                iamCacheService.cacheProjectUser(userId, projectCode)
+                checkProjectUser = true
+                return@forEach
+            }
+        }
+        return checkProjectUser
     }
 
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {

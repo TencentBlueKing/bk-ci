@@ -63,12 +63,12 @@ enum class DefaultGroupType(val value: String, val displayName: String) {
 
         fun getAll(): List<DefaultGroupType> {
             val allGroup = mutableListOf<DefaultGroupType>()
-            allGroup.add(DEVELOPER)
             allGroup.add(MANAGER)
+            allGroup.add(DEVELOPER)
             allGroup.add(MAINTAINER)
-            allGroup.add(TESTER)
             allGroup.add(PM)
             allGroup.add(QC)
+            allGroup.add(TESTER)
             return allGroup
         }
     }
