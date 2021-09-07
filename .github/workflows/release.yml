@@ -86,8 +86,10 @@ jobs:
         working-directory: src/backend/turbo
         run: |
           ./gradlew clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+          # copy jar to ci release dir
+          cp -vf release/boot-turbo.jar ${{ github.workspace }}/src/backend/ci/release/
           # copy turbo service config template to ci templates dir
-          cp -rf support-files/templates/* ${{ github.workspace }}/support-files/templates/
+          cp -vrf support-files/templates/* ${{ github.workspace }}/support-files/templates/
 
       - name: Create artifact - Step1:init
         run: |
