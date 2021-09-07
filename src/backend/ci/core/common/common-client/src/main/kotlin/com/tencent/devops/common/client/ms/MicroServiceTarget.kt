@@ -34,6 +34,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
 import org.springframework.cloud.client.ServiceInstance
+import org.springframework.cloud.client.discovery.DiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
 import java.util.concurrent.ConcurrentHashMap
@@ -42,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap
 class MicroServiceTarget<T> constructor(
     private val serviceName: String,
     private val type: Class<T>,
-    private val consulClient: ConsulDiscoveryClient,
+    private val discoveryClient: DiscoveryClient,
     private val tag: String?
 ) : FeignTarget<T> {
 
@@ -52,11 +53,16 @@ class MicroServiceTarget<T> constructor(
     private val usedInstance = ConcurrentHashMap<String, ServiceInstance>()
 
     private fun choose(serviceName: String): ServiceInstance {
+        val svrName = if (discoveryClient is ConsulDiscoveryClient) {
+            serviceName
+        } else {
+            "bkci-$serviceName" // TODO
+        }
 
-        val instances = consulClient.getInstances(serviceName)
-            ?: throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]服务提供者")
+        val instances = discoveryClient.getInstances(svrName)
+            ?: throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
         if (instances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]服务提供者")
+            throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
         }
 
         val matchTagInstances = ArrayList<ServiceInstance>()
@@ -82,7 +88,7 @@ class MicroServiceTarget<T> constructor(
         }
 
         if (matchTagInstances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]-[$useConsulTag]服务提供者")
+            throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]-[$useConsulTag]服务提供者")
         } else if (matchTagInstances.size > 1) {
             matchTagInstances.shuffle()
         }

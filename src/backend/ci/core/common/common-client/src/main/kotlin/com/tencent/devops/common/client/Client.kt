@@ -50,7 +50,7 @@ import feign.okhttp.OkHttpClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
+import org.springframework.cloud.client.discovery.DiscoveryClient
 import org.springframework.context.annotation.DependsOn
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.stereotype.Component
@@ -71,7 +71,7 @@ import kotlin.reflect.KClass
 @Component
 @DependsOn("springContextUtil")
 class Client @Autowired constructor(
-    private val consulClient: ConsulDiscoveryClient?,
+    private val discoveryClient: DiscoveryClient?,
     private val clientErrorDecoder: ClientErrorDecoder,
     private val commonConfig: CommonConfig,
     objectMapper: ObjectMapper
@@ -179,7 +179,7 @@ class Client @Autowired constructor(
                     throw e
                 }
             })
-            .target(MicroServiceTarget(findServiceName(clz), clz.java, consulClient!!, tag))
+            .target(MicroServiceTarget(findServiceName(clz), clz.java, discoveryClient!!, tag))
     }
 
     fun <T : Any> getExternalServiceWithoutRetry(serviceName: String, clz: KClass<T>): T {
@@ -201,7 +201,7 @@ class Client @Autowired constructor(
                     throw e
                 }
             })
-            .target(MicroServiceTarget(serviceName, clz.java, consulClient!!, tag))
+            .target(MicroServiceTarget(serviceName, clz.java, discoveryClient!!, tag))
     }
 
     /**
@@ -252,11 +252,11 @@ class Client @Autowired constructor(
             .decoder(jacksonDecoder)
             .contract(jaxRsContract)
             .requestInterceptor(requestInterceptor)
-            .target(MicroServiceTarget(findServiceName(clz), clz.java, consulClient!!, tag))
+            .target(MicroServiceTarget(findServiceName(clz), clz.java, discoveryClient!!, tag))
     }
 
     fun getServiceUrl(clz: KClass<*>): String {
-        return MicroServiceTarget(findServiceName(clz), clz.java, consulClient!!, tag).url()
+        return MicroServiceTarget(findServiceName(clz), clz.java, discoveryClient!!, tag).url()
     }
 
     private fun findServiceName(clz: KClass<*>): String {
