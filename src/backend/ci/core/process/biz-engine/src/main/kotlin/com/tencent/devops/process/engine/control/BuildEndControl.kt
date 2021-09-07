@@ -128,13 +128,13 @@ class BuildEndControl @Autowired constructor(
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
 
         // 当前构建整体的状态，可能是运行中，也可能已经失败
-        // 已经结束的构建，不再受理，抛弃消息
-        if (buildInfo == null || buildInfo.status.isFinish()) {
+        // 已经结束的构建，不再受理，抛弃消息 #5090 STAGE_SUCCESS 状态的也可能是已经处理完成
+        if (buildInfo == null || buildInfo.isFinish()) {
             LOG.info("ENGINE|$buildId|$source|BUILD_FINISH_REPEAT_EVENT|STATUS=${buildInfo?.status}| abandon!")
             return
         }
 
-        LOG.info("ENGINE|$buildId|$source|BUILD_FINISH|$pipelineId|status=$status")
+        LOG.info("ENGINE|$buildId|$source|BUILD_FINISH|$pipelineId|es=$status|bs=${buildInfo.status}")
 
         fixTask(buildInfo, buildStatus)
 
