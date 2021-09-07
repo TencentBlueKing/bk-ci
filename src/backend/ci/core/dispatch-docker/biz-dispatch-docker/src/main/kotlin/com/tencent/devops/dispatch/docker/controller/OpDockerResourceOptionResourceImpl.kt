@@ -25,31 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker
+package com.tencent.devops.dispatch.docker.controller
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.kafka.KafkaClient
-import com.tencent.devops.common.kafka.KafkaTopic
-import com.tencent.devops.dispatch.docker.pojo.FormatLog
-import com.tencent.devops.dispatch.docker.service.DockerHostBuildLogService
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.op.OPDockerResourceOptionsResource
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
+import com.tencent.devops.dispatch.docker.service.DockerResourceOptionsService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class TXDockerHostBuildLogServiceImpl @Autowired constructor(
-    private val kafkaClient: KafkaClient
-) : DockerHostBuildLogService {
+@RestResource
+class OpDockerResourceOptionResourceImpl @Autowired constructor(
+    private val dockerResourceOptionsService: DockerResourceOptionsService
+) : OPDockerResourceOptionsResource {
+    override fun listResourceOptions(userId: String): Result<List<DockerResourceOptionsVO>> {
+        return Result(dockerResourceOptionsService.listDockerResourceConfig(userId))
+    }
 
-    private val logger = LoggerFactory.getLogger(TXDockerHostBuildLogServiceImpl::class.java)
+    override fun createResourceOptions(
+        userId: String,
+        dockerResourceOptionsVO: DockerResourceOptionsVO
+    ): Result<Boolean> {
+        return Result(dockerResourceOptionsService.createDockerResourceOptions(userId, dockerResourceOptionsVO))
+    }
 
-    override fun sendFormatLog(formatLog: FormatLog): Boolean {
-        logger.info("send formatLog: $formatLog")
-        val formatLogMap = mapOf(
-            formatLog.logType to formatLog.logMessageMap,
-            "washTime" to formatLog.washTime
-        )
-        kafkaClient.send(KafkaTopic.LANDUN_LOG_FORMAT_TOPIC, JsonUtil.toJson(formatLogMap))
-        return true
+    override fun updateResourceOptions(
+        userId: String,
+        id: Long,
+        dockerResourceOptionsVO: DockerResourceOptionsVO
+    ): Result<Boolean> {
+        return Result(dockerResourceOptionsService.updateDockerResourceOptions(userId, id, dockerResourceOptionsVO))
+    }
+
+    override fun deleteResourceOptions(userId: String, projectId: Long): Result<Boolean> {
+        return Result(dockerResourceOptionsService.deleteDockerResourceOptions(userId, projectId))
     }
 }

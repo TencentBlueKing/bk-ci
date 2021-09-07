@@ -35,7 +35,7 @@ class GitCIV2WebsocketService @Autowired constructor(
                     objectMapper = objectMapper,
                     page = "",
                     notifyPost = NotifyPost(
-                        module = "gitci",
+                        module = "stream",
                         level = 0,
                         dealUrl = null,
                         code = 200,
@@ -63,7 +63,7 @@ class GitCIV2WebsocketService @Autowired constructor(
                     objectMapper = objectMapper,
                     page = "",
                     notifyPost = NotifyPost(
-                        module = "gitci",
+                        module = "stream",
                         level = 0,
                         code = 200,
                         page = "",

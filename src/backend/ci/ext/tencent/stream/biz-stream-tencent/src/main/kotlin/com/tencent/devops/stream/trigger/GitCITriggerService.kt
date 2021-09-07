@@ -116,16 +116,26 @@ class GitCITriggerService @Autowired constructor(
 
         val gitRequestEvent = triggerParameter.saveGitRequestEvent(eventObject, event) ?: return true
 
-        return triggerExceptionService.handle { checkRequest(gitRequestEvent, eventObject) }
+        val gitCIBasicSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
+        // 完全没创建过得项目不存记录
+        if (null == gitCIBasicSetting) {
+            logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")
+            return null
+        }
+
+        return triggerExceptionService.handle(gitRequestEvent, eventObject, gitCIBasicSetting) {
+            checkRequest(gitRequestEvent, eventObject, gitCIBasicSetting)
+        }
     }
 
-    private fun checkRequest(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
+    private fun checkRequest(
+        gitRequestEvent: GitRequestEvent,
+        event: GitEvent,
+        gitProjectConf: GitCIBasicSetting
+    ): Boolean {
         val start = LocalDateTime.now().timestampmilli()
-        val gitProjectConf = checkGitProjectConf(gitRequestEvent, event) ?: return false
 
-        triggerExceptionService.requestEvent = gitRequestEvent
-        triggerExceptionService.gitEvent = event
-        triggerExceptionService.basicSetting = gitProjectConf
+        checkGitProjectConf(gitRequestEvent, event, gitProjectConf)
 
         val path2PipelineExists = gitPipelineResourceDao.getAllByGitProjectId(dslContext, gitProjectConf.gitProjectId)
             .associate {
@@ -292,7 +302,7 @@ class GitCITriggerService @Autowired constructor(
                 )
             }
             // 针对每个流水线处理异常
-            triggerExceptionService.handle {
+            triggerExceptionService.handle(gitRequestEvent, event, gitProjectConf) {
                 // ErrorCode都是系统错误，在最外面统一处理,都要发送无锁的commitCheck
                 triggerExceptionService.handleErrorCode(
                     request = gitRequestEvent,
@@ -308,7 +318,8 @@ class GitCITriggerService @Autowired constructor(
                             changeSet = changeSet,
                             displayName = displayName,
                             mrEvent = mrEvent,
-                            isMerged = isMerged
+                            isMerged = isMerged,
+                            gitProjectConf = gitProjectConf
                         )
                     },
                     commitCheck = CommitCheck(
@@ -339,7 +350,8 @@ class GitCITriggerService @Autowired constructor(
         changeSet: Set<String>,
         displayName: String,
         mrEvent: Boolean,
-        isMerged: Boolean
+        isMerged: Boolean,
+        gitProjectConf: GitCIBasicSetting
     ) {
         val filePath = buildPipeline.filePath
         // 流水线未启用则跳过
@@ -428,7 +440,8 @@ class GitCITriggerService @Autowired constructor(
                     gitProjectPipeline = buildPipeline,
                     event = event,
                     originYaml = originYaml,
-                    filePath = filePath
+                    filePath = filePath,
+                    gitCIBasicSetting = gitProjectConf
                 )
             )
         } else {
@@ -449,13 +462,11 @@ class GitCITriggerService @Autowired constructor(
     }
 
     @Throws(TriggerException::class)
-    private fun checkGitProjectConf(gitRequestEvent: GitRequestEvent, event: GitEvent): GitCIBasicSetting? {
-        val gitProjectSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
-        // 完全没创建过得项目不存记录
-        if (null == gitProjectSetting) {
-            logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")
-            return null
-        }
+    private fun checkGitProjectConf(
+        gitRequestEvent: GitRequestEvent,
+        event: GitEvent,
+        gitProjectSetting: GitCIBasicSetting
+    ): Boolean {
         if (!gitProjectSetting.enableCi) {
             logger.warn("git ci is disabled, git project id: ${gitRequestEvent.gitProjectId}, " +
                 "name: ${gitProjectSetting.name}")
@@ -496,7 +507,7 @@ class GitCITriggerService @Autowired constructor(
                 }
             }
         }
-        return gitProjectSetting
+        return true
     }
 
     /**

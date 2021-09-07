@@ -25,20 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.dispatch.docker.service
 
-data class ContainerInfo(
-    val projectId: String,
-    val pipelineId: String,
-    val vmSeqId: String,
-    val poolNo: Int,
-    val status: Int,
-    val imageName: String,
-    val containerId: String,
-    val address: String,
-    val token: String,
-    val buildEnv: String?,
-    val registryUser: String?,
-    val registryPwd: String?,
-    val imageType: String?
-)
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import org.springframework.stereotype.Service
+
+@Service
+class ExtDockerResourceOptionsServiceImpl : ExtDockerResourceOptionsService {
+
+    override fun getDockerResourceConfigList(
+        userId: String,
+        projectId: String,
+        buildType: String
+    ): UserDockerResourceOptionsVO? {
+        return null
+    }
+}

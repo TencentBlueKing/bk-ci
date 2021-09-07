@@ -162,6 +162,15 @@ class TXPipelineExportService @Autowired constructor(
                 pipelineGroupsMap[label.id] = label.name
             }
         }
+
+        // 获取流水线labels
+        val groups = pipelineGroupService.getGroups(userId = userId, projectId = projectId, pipelineId = pipelineId)
+        val labels = mutableListOf<String>()
+        groups.forEach {
+            labels.addAll(it.labels)
+        }
+        model.labels = labels
+
         val stageTagsMap = stageTagService.getAllStageTag().data?.map {
             it.id to it.stageTagName
         }?.toMap() ?: emptyMap()
@@ -982,9 +991,7 @@ class TXPipelineExportService @Autowired constructor(
             inputMap.remove("repositoryHashId")
             inputMap.remove("repositoryName")
             inputMap.remove("repositoryUrl")
-
-            // 将鉴权类型统一刷成token方式
-            inputMap["authType"] = "ACCESS_TOKEN"
+            inputMap.remove("authType")
 
             stepList.add(
                 V2Step(

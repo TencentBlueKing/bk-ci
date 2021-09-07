@@ -50,7 +50,8 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        taskId: String?
+        taskId: String?,
+        failedContainer: Boolean?
     ): Result<BuildId> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, pipelineId, buildId)
@@ -61,7 +62,8 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
                 gitProjectId = gitProjectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                taskId = taskId
+                taskId = taskId,
+                failedContainer = failedContainer
             )
         )
     }

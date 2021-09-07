@@ -72,7 +72,7 @@ object RtxCustomApi {
     ) {
         if (urlPrefix.isNullOrBlank()) {
             throw RuntimeException(
-                "RtxCustomApi send GitCI finish message error"
+                "RtxCustomApi send Stream finish message error"
             )
         }
         val url = "$urlPrefix/cgi-bin/tencent/chat/send?access_token=$token"
@@ -96,7 +96,7 @@ object RtxCustomApi {
             .build()
         OkhttpUtils.doHttp(request).use { resp ->
             if (!resp.isSuccessful) throw RuntimeException(
-                "RtxCustomApi send GitCI finish message error code: ${resp.code()} messge: ${resp.message()}"
+                "RtxCustomApi send Stream finish message error code: ${resp.code()} messge: ${resp.message()}"
             )
         }
     }

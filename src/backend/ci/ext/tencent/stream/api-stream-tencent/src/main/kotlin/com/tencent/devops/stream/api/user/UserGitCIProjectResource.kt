@@ -52,7 +52,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserGitCIProjectResource {
 
-    @ApiOperation("获取工蜂项目与GITCI关联列表")
+    @ApiOperation("获取工蜂项目与STREAM关联列表")
     @GET
     @Path("/{type}/list")
     fun getProjects(

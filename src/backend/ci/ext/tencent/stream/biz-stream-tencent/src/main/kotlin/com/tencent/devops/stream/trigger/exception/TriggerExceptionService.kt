@@ -31,11 +31,12 @@ class TriggerExceptionService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TriggerExceptionService::class.java)
     }
 
-    var requestEvent: GitRequestEvent? = null
-    var gitEvent: GitEvent? = null
-    var basicSetting: GitCIBasicSetting? = null
-
-    fun <T> handle(action: () -> T?): T? {
+    fun <T> handle(
+        requestEvent: GitRequestEvent,
+        gitEvent: GitEvent,
+        basicSetting: GitCIBasicSetting,
+        action: () -> T?
+    ): T? {
         try {
             return action()
         } catch (triggerE: TriggerBaseException) {
@@ -43,27 +44,24 @@ class TriggerExceptionService @Autowired constructor(
         } catch (e: Throwable) {
             // 触发只要出了异常就把Mr锁定取消，防止出现工蜂项目无法合并
             logger.error("Trigger handle catch Throwable ${e.message}")
-            return if (requestEvent == null || basicSetting == null || gitEvent == null) {
-                null
-            } else {
-                val mrEvent = gitEvent is GitMergeRequestEvent
-                if (basicSetting!!.enableMrBlock && mrEvent) {
-                    noPipelineCommitCheck(
-                        gitRequestEvent = requestEvent!!,
-                        block = false,
-                        state = GitCICommitCheckState.FAILURE,
-                        gitCIBasicSetting = basicSetting!!
-                    )
-                }
-                gitCIEventService.saveTriggerNotBuildEvent(
-                    userId = requestEvent!!.userId,
-                    eventId = requestEvent!!.id!!,
-                    reason = TriggerReason.UNKNOWN_ERROR.name,
-                    reasonDetail = TriggerReason.UNKNOWN_ERROR.detail.format(e.message),
-                    gitProjectId = requestEvent!!.gitProjectId
+
+            val mrEvent = gitEvent is GitMergeRequestEvent
+            if (basicSetting.enableMrBlock && mrEvent) {
+                noPipelineCommitCheck(
+                    gitRequestEvent = requestEvent,
+                    block = false,
+                    state = GitCICommitCheckState.FAILURE,
+                    gitCIBasicSetting = basicSetting
                 )
-                null
             }
+            gitCIEventService.saveTriggerNotBuildEvent(
+                userId = requestEvent.userId,
+                eventId = requestEvent.id!!,
+                reason = TriggerReason.UNKNOWN_ERROR.name,
+                reasonDetail = TriggerReason.UNKNOWN_ERROR.detail.format(e.message),
+                gitProjectId = requestEvent.gitProjectId
+            )
+            return null
         }
     }
 
