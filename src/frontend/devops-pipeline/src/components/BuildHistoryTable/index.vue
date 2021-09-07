@@ -32,8 +32,8 @@
                 </template>
                 <template v-else-if="col.prop === 'material'" v-slot="props">
                     <template v-if="Array.isArray(props.row.material) && props.row.material.length > 0">
-                        <div @click.stop="" v-for="material in props.row.material" :key="material.aliasName" class="material-item">
-                            <p :title="generateMaterial(material)" :class="{ 'show-commit-times': material.commitTimes > 1 }" @click="handleRowClick(props.row)">{{ generateMaterial(material) }}</p>
+                        <div v-for="material in props.row.material" :key="material.aliasName" class="material-item">
+                            <p :title="generateMaterial(material)" :class="{ 'show-commit-times': material.commitTimes > 1 }">{{ generateMaterial(material) }}</p>
                             <span class="material-commit-id" v-if="material.newCommitId" :title="material.newCommitId" @click.stop="goCodeRecords(props.row, material.aliasName)">
                                 <span class="commit-nums">{{ material.newCommitId.slice(0, 8) }}</span>
                                 <span class="commit-times" v-if="material.commitTimes > 1">{{ material.commitTimes }} commit</span>
