@@ -30,3 +30,7 @@ dependencies:
   version: 2.3.7
   repository: https://charts.bitnami.com/bitnami
   condition: influxdb.enabled
+- name: nginx-ingress-controller
+  version: 7.6.21
+  repository: https://charts.bitnami.com/bitnami
+  condition: nginx-ingress-controller.enabled

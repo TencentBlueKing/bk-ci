@@ -29,7 +29,7 @@ metadata:
   name: default-read-role
 rules:
   - apiGroups: ["", "extensions", "apps"]
-    resources: ["configmaps", "pods", "services", "endpoints", "secrets"]
+    resources: ["configmaps", "pods", "services", "endpoints", "secrets","nodes"]
     verbs: ["get", "list", "watch"]
 
 ---

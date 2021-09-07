@@ -17,5 +17,8 @@ dependencies:
 - name: influxdb
   repository: https://charts.bitnami.com/bitnami
   version: 2.3.7
-digest: sha256:5fdab241bd8ced1bd81be1b92c9e7ae99d028f623be8eca3b97fee13217d9605
-generated: "2021-09-03T18:49:11.393303033+08:00"
+- name: nginx-ingress-controller
+  repository: https://charts.bitnami.com/bitnami
+  version: 7.6.21
+digest: sha256:c4b61abe755bbbcb6d56927fae6f3db267b52e422af10bfb693f27d74ed2cbe2
+generated: "2021-09-07T10:35:49.363456636+08:00"
