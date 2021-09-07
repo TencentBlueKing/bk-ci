@@ -25,17 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.config
+package com.tencent.devops.stream.resources
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.stream.api.ExternalStreamBadgeResource
+import com.tencent.devops.stream.pojo.v2.badge.StreamPipelineBadgeInfo
+import com.tencent.devops.stream.v2.service.StreamPipelineBadgeService
 
-@Component
-class StreamBadgeConfig {
-
-    @Value("\${badge.logoUrl:#{null}}")
-    val logoUrl: String? = null
-
-    @Value("\${badge.serverUrl:#{null}}")
-    val serverUrl: String? = null
+@RestResource
+class ExternalStreamBadgeResourceImpl(
+    private val streamPipelineBadgeService: StreamPipelineBadgeService
+) : ExternalStreamBadgeResource {
+    override fun getPipelineBadge(
+        gitProjectId: Long,
+        filePath: String,
+        branch: String?,
+        objectKind: String?
+    ): Result<StreamPipelineBadgeInfo> {
+        return Result(
+            streamPipelineBadgeService.get(
+                gitProjectId, filePath, branch, objectKind
+            )
+        )
+    }
 }

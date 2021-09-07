@@ -27,17 +27,16 @@
 
 package com.tencent.devops.stream.common
 
-@Suppress("MaxLineLength")
-enum class StreamPipelineBadgeType(val labelColor: String, val text: String, val color: String, val logo: String) {
+enum class StreamPipelineBadgeType(val text: String) {
     // 没有找到
-    NOT_FOUND("#182132", "not found", "#FF9C01", "stream"),
+    NOT_FOUND("not found"),
 
     // 从来没有构建
-    NEVER_BUILD("#182132", "never build", "#FF9C01", "stream"),
+    NEVER_BUILD("never build"),
 
     // 构建成功
-    SUCCEEDED("#182132", "succeeded", "#2DCB56", "stream"),
+    SUCCEEDED("succeeded"),
 
     // 构建失败
-    FAILED("#182132", "failed", "#EA3636", "stream");
+    FAILED("failed");
 }

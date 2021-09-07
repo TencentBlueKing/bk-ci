@@ -25,24 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.resources
+package com.tencent.devops.stream.pojo.v2.badge
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.ExternalStreamResource
-import com.tencent.devops.stream.v2.service.StreamPipelineBadgeService
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ExternalStreamResourceImpl(
-    private val streamPipelineBadgeService: StreamPipelineBadgeService
-) : ExternalStreamResource {
-    override fun getBadge(
-        gitProjectId: Long,
-        filePath: String,
-        branch: String?,
-        objectKind: String?
-    ): String {
-        return streamPipelineBadgeService.get(
-            gitProjectId, filePath, branch, objectKind
-        )
-    }
-}
+@ApiModel("流水线构建状态徽章信息")
+data class StreamPipelineBadgeInfo(
+    @ApiModelProperty("流水线名称")
+    val pipelineName: String,
+    @ApiModelProperty("最后一次构建状态描述")
+    val pipelineMessage: String,
+    @ApiModelProperty("最后一次构建状态")
+    val buildStatus: String
+)

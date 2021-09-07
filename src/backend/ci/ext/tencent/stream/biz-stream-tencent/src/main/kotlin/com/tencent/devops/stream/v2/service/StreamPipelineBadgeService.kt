@@ -27,48 +27,29 @@
 
 package com.tencent.devops.stream.v2.service
 
-import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.stream.common.StreamPipelineBadgeType
-import com.tencent.devops.stream.config.StreamBadgeConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
+import com.tencent.devops.stream.pojo.v2.badge.StreamPipelineBadgeInfo
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import sun.font.CreatedFontTracker.MAX_FILE_SIZE
 import java.net.URLDecoder
 
 @Service
 class StreamPipelineBadgeService @Autowired constructor(
     private val dslContext: DSLContext,
-    val badgeConfig: StreamBadgeConfig,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(StreamPipelineBadgeType::class.java)
-    }
-
-    fun get(gitProjectId: Long, filePath: String, branch: String?, objectKind: String?): String {
+    fun get(gitProjectId: Long, filePath: String, branch: String?, objectKind: String?): StreamPipelineBadgeInfo {
         val (pipelineName, type) = getType(gitProjectId, filePath, branch, objectKind)
-        val params = mapOf(
-            "color" to type.color,
-            "labelColor" to type.labelColor,
-            "label" to pipelineName,
-            "message" to type.text,
-            "logo" to "${badgeConfig.logoUrl}/${type.logo}.svg"
+        return StreamPipelineBadgeInfo(
+            pipelineName = pipelineName,
+            pipelineMessage = type.text,
+            buildStatus = type.name
         )
-        val url = "${badgeConfig.serverUrl}/release?${OkhttpUtils.joinParams(params)}"
-
-        OkhttpUtils.doGet(url).use { response ->
-            val body = response.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
-            logger.info("get badge body: $body")
-            return body
-        }
     }
 
     private fun getType(
