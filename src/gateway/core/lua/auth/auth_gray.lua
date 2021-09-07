@@ -43,7 +43,7 @@ end
 local route_tag = ngx.var.route_tag
 ngx.var.stream_folder = "gitci"
 if route_tag ~= '' and route_tag ~= nil then
-    if route_tag.find("stream") then
+    if string.find(route_tag, "stream") then
         ngx.var.stream_folder = "stream"
     end
 end
