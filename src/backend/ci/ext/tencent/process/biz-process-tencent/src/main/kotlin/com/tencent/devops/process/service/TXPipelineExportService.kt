@@ -45,6 +45,7 @@ import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -309,29 +310,14 @@ class TXPipelineExportService @Autowired constructor(
                     ifField = when (stage.stageControlOption?.runCondition) {
                         StageRunCondition.CUSTOM_CONDITION_MATCH -> stage.stageControlOption?.customCondition
                         StageRunCondition.CUSTOM_VARIABLE_MATCH -> {
-
-                            var ifStr = ""
-                            stage.stageControlOption?.customVariables?.forEachIndexed { index, nameAndValue ->
-                                ifStr += if (index == stage.stageControlOption?.customVariables?.size!! - 1) {
-                                    "${nameAndValue.key} == ${nameAndValue.value}"
-                                }else{
-                                    "${nameAndValue.key} == ${nameAndValue.value} && "
-                                }
-                            }
+                            val ifString = parseNameAndValueWithAnd(stage.stageControlOption?.customVariables)
                             if (stage.stageControlOption?.customVariables?.isEmpty() == true) null
-                            else ifStr
+                            else ifString
                         }
                         StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
-                            var ifStr = ""
-                            stage.stageControlOption?.customVariables?.forEachIndexed { index, nameAndValue ->
-                                ifStr += if (index == stage.stageControlOption?.customVariables?.size!! - 1) {
-                                    "${nameAndValue.key} == ${nameAndValue.value}"
-                                }else{
-                                    "${nameAndValue.key} == ${nameAndValue.value} && "
-                                }
-                            }
+                            val ifString = parseNameAndValueWithOr(stage.stageControlOption?.customVariables)
                             if (stage.stageControlOption?.customVariables?.isEmpty() == true) null
-                            else ifStr
+                            else ifString
                         }
                         else -> null
                     },
@@ -420,12 +406,19 @@ class TXPipelineExportService @Autowired constructor(
                         ),
                         container = null,
                         services = null,
-                        ifField = if (job.jobControlOption?.runCondition ==
-                            JobRunCondition.CUSTOM_CONDITION_MATCH
-                        ) {
-                            job.jobControlOption?.customCondition
-                        } else {
-                            null
+                        ifField = when (job.jobControlOption?.runCondition) {
+                            JobRunCondition.CUSTOM_CONDITION_MATCH -> job.jobControlOption?.customCondition
+                            JobRunCondition.CUSTOM_VARIABLE_MATCH -> {
+                                val ifString = parseNameAndValueWithAnd(job.jobControlOption?.customVariables)
+                                if (job.jobControlOption?.customVariables?.isEmpty() == true) null
+                                else ifString
+                            }
+                            JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                                val ifString = parseNameAndValueWithOr(job.jobControlOption?.customVariables)
+                                if (job.jobControlOption?.customVariables?.isEmpty() == true) null
+                                else ifString
+                            }
+                            else -> null
                         },
                         steps = getV2StepFromJob(
                             projectId = projectId,
@@ -519,12 +512,19 @@ class TXPipelineExportService @Autowired constructor(
                         runsOn = runsOn,
                         container = null,
                         services = null,
-                        ifField = if (job.jobControlOption?.runCondition ==
-                            JobRunCondition.CUSTOM_CONDITION_MATCH
-                        ) {
-                            job.jobControlOption?.customCondition
-                        } else {
-                            null
+                        ifField = when (job.jobControlOption?.runCondition) {
+                            JobRunCondition.CUSTOM_CONDITION_MATCH -> job.jobControlOption?.customCondition
+                            JobRunCondition.CUSTOM_VARIABLE_MATCH -> {
+                                val ifString = parseNameAndValueWithAnd(job.jobControlOption?.customVariables)
+                                if (job.jobControlOption?.customVariables?.isEmpty() == true) null
+                                else ifString
+                            }
+                            JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                                val ifString = parseNameAndValueWithOr(job.jobControlOption?.customVariables)
+                                if (job.jobControlOption?.customVariables?.isEmpty() == true) null
+                                else ifString
+                            }
+                            else -> null
                         },
                         steps = getV2StepFromJob(
                             projectId = projectId,
@@ -620,6 +620,16 @@ class TXPipelineExportService @Autowired constructor(
                             // bat插件上的
                             ifFiled = when (step.additionalOptions?.runCondition) {
                                 RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
+                                RunCondition.CUSTOM_VARIABLE_MATCH -> {
+                                    val ifString = parseNameAndValueWithAnd(step.additionalOptions?.customVariables)
+                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                                    else ifString
+                                }
+                                RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                                    val ifString = parseNameAndValueWithOr(step.additionalOptions?.customVariables)
+                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                                    else ifString
+                                }
                                 else -> null
                             },
                             uses = null,
@@ -647,12 +657,19 @@ class TXPipelineExportService @Autowired constructor(
                             name = step.name,
                             id = step.id,
                             // bat插件上的
-                            ifFiled = if (step.additionalOptions?.runCondition ==
-                                RunCondition.CUSTOM_CONDITION_MATCH
-                            ) {
-                                step.additionalOptions?.customCondition
-                            } else {
-                                null
+                            ifFiled = when (step.additionalOptions?.runCondition) {
+                                RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
+                                RunCondition.CUSTOM_VARIABLE_MATCH -> {
+                                    val ifString = parseNameAndValueWithAnd(step.additionalOptions?.customVariables)
+                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                                    else ifString
+                                }
+                                RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                                    val ifString = parseNameAndValueWithOr(step.additionalOptions?.customVariables)
+                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                                    else ifString
+                                }
+                                else -> null
                             },
                             uses = null,
                             with = null,
@@ -721,12 +738,19 @@ class TXPipelineExportService @Autowired constructor(
                             name = step.name,
                             id = step.id,
                             // 插件上的
-                            ifFiled = if (step.additionalOptions?.runCondition ==
-                                RunCondition.CUSTOM_CONDITION_MATCH
-                            ) {
-                                step.additionalOptions?.customCondition
-                            } else {
-                                null
+                            ifFiled = when (step.additionalOptions?.runCondition) {
+                                RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
+                                RunCondition.CUSTOM_VARIABLE_MATCH -> {
+                                    val ifString = parseNameAndValueWithAnd(step.additionalOptions?.customVariables)
+                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                                    else ifString
+                                }
+                                RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                                    val ifString = parseNameAndValueWithOr(step.additionalOptions?.customVariables)
+                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                                    else ifString
+                                }
+                                else -> null
                             },
                             uses = "${step.getAtomCode()}@${step.version}",
                             with = replaceMapWithDoubleCurlyBraces(
@@ -758,12 +782,19 @@ class TXPipelineExportService @Autowired constructor(
                             name = step.name,
                             id = step.id,
                             // 插件上的
-                            ifFiled = if (step.additionalOptions?.runCondition ==
-                                RunCondition.CUSTOM_CONDITION_MATCH
-                            ) {
-                                step.additionalOptions?.customCondition
-                            } else {
-                                null
+                            ifFiled = when (step.additionalOptions?.runCondition) {
+                                RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
+                                RunCondition.CUSTOM_VARIABLE_MATCH -> {
+                                    val ifString = parseNameAndValueWithAnd(step.additionalOptions?.customVariables)
+                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                                    else ifString
+                                }
+                                RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                                    val ifString = parseNameAndValueWithOr(step.additionalOptions?.customVariables)
+                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                                    else ifString
+                                }
+                                else -> null
                             },
                             uses = "${step.getAtomCode()}@${step.version}",
                             with = replaceMapWithDoubleCurlyBraces(
@@ -1228,12 +1259,19 @@ class TXPipelineExportService @Autowired constructor(
                     name = step.name,
                     id = step.id,
                     // 插件上的
-                    ifFiled = if (step.additionalOptions?.runCondition ==
-                        RunCondition.CUSTOM_CONDITION_MATCH
-                    ) {
-                        step.additionalOptions?.customCondition
-                    } else {
-                        null
+                    ifFiled = when (step.additionalOptions?.runCondition) {
+                        RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
+                        RunCondition.CUSTOM_VARIABLE_MATCH -> {
+                            val ifString = parseNameAndValueWithAnd(step.additionalOptions?.customVariables)
+                            if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                            else ifString
+                        }
+                        RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                            val ifString = parseNameAndValueWithOr(step.additionalOptions?.customVariables)
+                            if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                            else ifString
+                        }
+                        else -> null
                     },
                     uses = null,
                     with = replaceMapWithDoubleCurlyBraces(
@@ -1312,5 +1350,33 @@ class TXPipelineExportService @Autowired constructor(
             }
             return
         }
+    }
+
+    private fun parseNameAndValueWithAnd(
+        nameAndValueList: List<NameAndValue>? = emptyList()
+    ): String {
+        var ifString = ""
+        nameAndValueList?.forEachIndexed { index, nameAndValue ->
+            ifString += if (index == nameAndValueList.size - 1) {
+                "${nameAndValue.key} == ${nameAndValue.value}"
+            } else {
+                "${nameAndValue.key} == ${nameAndValue.value} && "
+            }
+        }
+        return ifString
+    }
+
+    private fun parseNameAndValueWithOr(
+        nameAndValueList: List<NameAndValue>? = emptyList()
+    ): String {
+        var ifString = ""
+        nameAndValueList?.forEachIndexed { index, nameAndValue ->
+            ifString += if (index == nameAndValueList.size - 1) {
+                "${nameAndValue.key} != ${nameAndValue.value}"
+            } else {
+                "${nameAndValue.key} != ${nameAndValue.value} || "
+            }
+        }
+        return ifString
     }
 }
