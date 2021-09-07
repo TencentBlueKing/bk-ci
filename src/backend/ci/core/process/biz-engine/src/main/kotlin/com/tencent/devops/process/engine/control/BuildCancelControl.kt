@@ -70,7 +70,8 @@ class BuildCancelControl @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val buildLogPrinter: BuildLogPrinter,
     @Autowired(required = false)
-    private val measureService: MeasureService?
+    private val measureService: MeasureService?,
+    private val dependOnControl: DependOnControl
 ) {
 
     companion object {
@@ -165,7 +166,7 @@ class BuildCancelControl @Autowired constructor(
 
     @Suppress("ALL")
     private fun cancelAllPendingTask(event: PipelineBuildCancelEvent, model: Model) {
-
+        val buildId = event.buildId
         val variables: Map<String, String> by lazy { buildVariableService.getAllVariable(event.buildId) }
         val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(buildId = event.buildId) }
         val stages = model.stages
@@ -183,6 +184,12 @@ class BuildCancelControl @Autowired constructor(
             }
             val stageStatus = BuildStatus.parse(stage.status)
             stage.containers.forEach C@{ container ->
+                val stageId = stage.id ?: ""
+                val containerId = container.id ?: ""
+                val pipelineContainer = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
+                    LOG.warn("ENGINE|$buildId|${event.source}|$stageId|j($containerId)|bad container")
+                    return@C
+                }
                 unlockMutexGroup(variables = variables, container = container,
                     buildId = event.buildId, projectId = event.projectId, stageId = stage.id!!
                 )
@@ -190,12 +197,14 @@ class BuildCancelControl @Autowired constructor(
                 val containerBuildStatus = BuildStatus.parse(container.status)
                 // 取消构建,当前运行的stage及当前stage下的job不能马上置为取消状态
                 if ((!containerBuildStatus.isFinish() && stageStatus != BuildStatus.RUNNING &&
-                        containerBuildStatus != BuildStatus.RUNNING) || containerBuildStatus == BuildStatus.PREPARE_ENV
+                        containerBuildStatus != BuildStatus.RUNNING) ||
+                    containerBuildStatus == BuildStatus.PREPARE_ENV ||
+                    dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED
                 ) {
                     pipelineRuntimeService.updateContainerStatus(
                         buildId = event.buildId,
-                        stageId = stage.id ?: "",
-                        containerId = container.id ?: "",
+                        stageId = stageId,
+                        containerId = containerId,
                         startTime = null,
                         endTime = LocalDateTime.now(),
                         buildStatus = BuildStatusSwitcher.jobStatusMaker.cancel(containerBuildStatus)

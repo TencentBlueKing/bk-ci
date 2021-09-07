@@ -78,6 +78,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import javax.ws.rs.NotAllowedException
 import javax.ws.rs.NotFoundException
 
 @Suppress("LongMethod", "LongParameterList", "ReturnCount")
@@ -121,6 +122,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             s.containers.forEach c@{
 
                 if (vmId.toString() == vmSeqId) {
+                    val container = pipelineRuntimeService.getContainer(buildId, s.id, vmSeqId)
+                        ?: throw NotFoundException("j($vmSeqId)|vmName($vmName) is not exist")
+                    // 如果取消等操作已经发出关机消息了，则不允许构建机认领任务
+                    if (container.status.isFinish()) {
+                        throw NotAllowedException("vmName($vmName) has been shutdown")
+                    }
                     // #3769 如果是已经启动完成并且不是网络故障重试的(retryCount>0), 都属于构建机的重复无效启动请求,要抛异常拒绝
                     Preconditions.checkTrue(
                         condition = !BuildStatus.parse(it.startVMStatus).isFinish() || retryCount > 0,
