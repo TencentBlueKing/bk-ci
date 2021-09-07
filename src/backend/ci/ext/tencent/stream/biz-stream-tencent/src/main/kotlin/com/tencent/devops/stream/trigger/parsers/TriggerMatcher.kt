@@ -488,12 +488,19 @@ class TriggerMatcher @Autowired constructor(
     }
 
     private fun isMrActionMatch(actionList: List<String>?, event: GitEvent): Boolean {
-        if (actionList == null || actionList.isEmpty()) {
-            return true
+        val realActionList = if (actionList.isNullOrEmpty()) {
+            // 缺省时使用默认值
+            listOf(
+                StreamMrEventAction.OPEN.value,
+                StreamMrEventAction.REOPEN.value,
+                StreamMrEventAction.PUSH_UPDATE.value
+            )
+        } else {
+            actionList
         }
 
         val mrAction = StreamMrEventAction.getActionValue(event as GitMergeRequestEvent) ?: false
-        actionList.forEach {
+        realActionList.forEach {
             if (it == mrAction) {
                 return true
             }
