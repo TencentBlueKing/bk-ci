@@ -32,6 +32,7 @@ import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.charset.Charset
 
 object BatScriptUtil {
     private const val setEnv = ":setEnv\r\n" +
@@ -152,9 +153,11 @@ object BatScriptUtil {
 //            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
 //            else -> Charsets.UTF_8
 //        }
-//        logger.info("The default charset is $charset")
 
-        file.writeText(command.toString())
+        val charset = Charset.defaultCharset()
+        logger.info("The default charset is $charset")
+
+        file.writeText(command.toString(), charset)
         logger.info("start to run windows script - ($command)")
         return file
     }
