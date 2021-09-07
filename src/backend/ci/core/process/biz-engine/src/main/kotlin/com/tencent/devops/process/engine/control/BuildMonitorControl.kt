@@ -90,6 +90,7 @@ class BuildMonitorControl @Autowired constructor(
             return true
         }
 
+        LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_MONITOR_START|ec=${event.executeCount}")
         return when {
             buildInfo.status.isReadyToRun() -> monitorQueueBuild(event, buildInfo)
             else -> {
@@ -116,8 +117,8 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun monitorContainer(event: PipelineBuildMonitorEvent): Int {
 
-        val containers = pipelineRuntimeService.listContainers(event.buildId)
-            .filter { !it.status.isFinish() && it.executeCount == event.executeCount }
+        val containers = pipelineRuntimeService.listContainers(event.buildId) // #5090 ==1 是为了兼容旧的监控数据
+            .filter { !it.status.isFinish() && (it.executeCount == event.executeCount || event.executeCount == 1) }
 
         var minInterval = Timeout.CONTAINER_MAX_MILLS
 
@@ -127,9 +128,6 @@ class BuildMonitorControl @Autowired constructor(
         }
 
         for (container in containers) {
-            if (container.executeCount != event.executeCount) { // 不属于当前构建，比如重试
-                continue
-            }
             val interval = container.checkNextContainerMonitorIntervals(event.userId)
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {
@@ -145,7 +143,7 @@ class BuildMonitorControl @Autowired constructor(
             .filter {
                 !it.status.isFinish() &&
                     it.status != BuildStatus.STAGE_SUCCESS &&
-                    it.executeCount == event.executeCount
+                    (it.executeCount == event.executeCount || event.executeCount == 1) // #5090 ==1 是为了兼容旧的监控数据
             }
 
         var minInterval = Timeout.STAGE_MAX_MILLS
@@ -156,9 +154,6 @@ class BuildMonitorControl @Autowired constructor(
         }
 
         for (stage in stages) {
-            if (stage.executeCount != event.executeCount) { // 不属于当前构建，比如重试
-                continue
-            }
             val interval = stage.checkNextStageMonitorIntervals(event.userId)
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {

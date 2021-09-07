@@ -1011,7 +1011,7 @@ class PipelineRuntimeService @Autowired constructor(
                                     it.status = BuildStatus.QUEUE.ordinal
                                     it.startTime = null
                                     it.endTime = null
-                                    it.executeCount += 1
+                                    it.executeCount  = context.executeCount
                                     updateContainerExistsRecord.add(it)
                                     return@findHistoryContainer
                                 }
