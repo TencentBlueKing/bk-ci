@@ -292,8 +292,13 @@ export default {
             commit(SET_PROJECT_ATOMS, {
                 projectRecommendAtomMap: atoms
             })
+            let page = 1
+            const { projectUnRecommendAtomMap, projectData } = state
+            if ((Object.keys(projectUnRecommendAtomMap).length / projectData.pageSize) !== (projectData.page - 1)) {
+                page = projectData.page - 1 || 1
+            }
             commit(SET_PROJECT_DATA, {
-                page: state.projectData.page - 1
+                page
             })
         } else {
             commit(SET_PROJECT_UNRECOMMEN_ATOMS, {

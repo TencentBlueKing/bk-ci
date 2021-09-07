@@ -88,7 +88,7 @@
     "pipelineNameInputTips": "Please enter a name for this pipeline within 40 letters",
     "pipelineDesc": "Description",
     "pipelineDescInputTips": "Please describe this pipeline within 100 letters",
-    "buildDescInputTips": "${{DATE:\"yyyyMMdd\"}}.${{BUILD_NO_OF_DAY}}",
+    "buildDescInputTips": "$(Date:yyyyMMdd)$(Rev:.r)",
     "buildNumRuleWarn": "The parts beyond the length limit will be cut off",
     "jobIdTips": "Not required, Field only support English letter, numbers and underscores and must be unique in this pipeline",
     "nameInputTips": "Please enter a name",
