@@ -46,9 +46,9 @@ class StreamPipelineBadgeService @Autowired constructor(
     fun get(gitProjectId: Long, filePath: String, branch: String?, objectKind: String?): StreamPipelineBadgeInfo {
         val (pipelineName, type) = getType(gitProjectId, filePath, branch, objectKind)
         return StreamPipelineBadgeInfo(
-            pipelineName = pipelineName,
-            pipelineMessage = type.text,
-            buildStatus = type.name
+            label = pipelineName,
+            message = type.text,
+            status = type.name
         )
     }
 

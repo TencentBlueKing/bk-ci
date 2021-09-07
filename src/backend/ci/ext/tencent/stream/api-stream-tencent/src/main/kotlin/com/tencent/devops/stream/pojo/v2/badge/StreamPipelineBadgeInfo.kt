@@ -33,9 +33,9 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("流水线构建状态徽章信息")
 data class StreamPipelineBadgeInfo(
     @ApiModelProperty("流水线名称")
-    val pipelineName: String,
+    val label: String,
     @ApiModelProperty("最后一次构建状态描述")
-    val pipelineMessage: String,
+    val message: String,
     @ApiModelProperty("最后一次构建状态")
-    val buildStatus: String
+    val status: String
 )
