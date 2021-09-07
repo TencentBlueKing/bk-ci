@@ -54,7 +54,6 @@ class StreamPipelineBadgeService @Autowired constructor(
     }
 
     fun get(gitProjectId: Long, filePath: String, branch: String?, objectKind: String?): String {
-        val url = "${badgeConfig.serverUrl}/release"
         val (pipelineName, type) = getType(gitProjectId, filePath, branch, objectKind)
         val params = mapOf(
             "color" to type.color,
@@ -63,7 +62,9 @@ class StreamPipelineBadgeService @Autowired constructor(
             "message" to pipelineName,
             "logo" to "${badgeConfig.logoUrl}/${type.logo}.svg"
         )
-        OkhttpUtils.doGet("$url?${OkhttpUtils.joinParams(params)}").use { response ->
+        val url = "${badgeConfig.serverUrl}/release?${OkhttpUtils.joinParams(params)}"
+
+        OkhttpUtils.doGet(url).use { response ->
             val body = response.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
             logger.info("get badge body: $body")
             return body
