@@ -55,7 +55,6 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.image.exception.UnknownImageType
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import javafx.scene.paint.Stop
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.jooq.DSLContext
