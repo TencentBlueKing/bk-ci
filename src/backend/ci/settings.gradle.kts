@@ -105,6 +105,7 @@ include(":core:quality:model-quality")
 include(":core:dockerhost")
 include(":core:dockerhost:api-dockerhost")
 include(":core:dockerhost:biz-dockerhost")
+include(":core:dockerhost:biz-dockerhost-sample")
 include(":core:dockerhost:boot-dockerhost")
 include(":core:dockerhost:plugin-dockerhost-codecc")
 

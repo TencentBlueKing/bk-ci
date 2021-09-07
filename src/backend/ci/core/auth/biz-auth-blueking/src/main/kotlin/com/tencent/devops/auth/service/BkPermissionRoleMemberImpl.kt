@@ -31,8 +31,8 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleMemberImpl
-import org.springframework.stereotype.Service
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
 class BkPermissionRoleMemberImpl @Autowired constructor(
