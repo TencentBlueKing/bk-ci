@@ -39,4 +39,13 @@ else
     ngx.header["X-DEVOPS-GRAY"] = "false"
 end
 
+-- TODO 临时功能 , stream切换后要删除
+local route_tag = ngx.var.route_tag
+ngx.var.stream_folder = "gitci"
+if route_tag ~= '' and route_tag ~= nil then
+    if route_tag.find("stream") then
+        ngx.var.stream_folder = "stream"
+    end
+end
+
 ngx.exit(200)
