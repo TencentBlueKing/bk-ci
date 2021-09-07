@@ -58,8 +58,8 @@ class StreamPipelineBadgeService @Autowired constructor(
         val params = mapOf(
             "color" to type.color,
             "labelColor" to type.labelColor,
-            "label" to type.text,
-            "message" to pipelineName,
+            "label" to pipelineName,
+            "message" to type.text,
             "logo" to "${badgeConfig.logoUrl}/${type.logo}.svg"
         )
         val url = "${badgeConfig.serverUrl}/release?${OkhttpUtils.joinParams(params)}"
