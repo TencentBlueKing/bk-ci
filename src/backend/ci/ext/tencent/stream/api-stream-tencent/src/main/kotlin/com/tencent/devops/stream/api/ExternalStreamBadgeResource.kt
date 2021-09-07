@@ -54,7 +54,7 @@ interface ExternalStreamBadgeResource {
         @PathParam("gitProjectId")
         gitProjectId: Long,
         @ApiParam("流水线文件名称", required = true)
-        @QueryParam("filePath")
+        @QueryParam("file_path")
         filePath: String,
         @ApiParam("分支名称", required = false)
         @QueryParam("branch")
