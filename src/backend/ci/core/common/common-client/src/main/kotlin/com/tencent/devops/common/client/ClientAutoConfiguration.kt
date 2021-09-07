@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.cloud.client.discovery.DiscoveryClient
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -65,8 +65,8 @@ class ClientAutoConfiguration {
         clientErrorDecoder: ClientErrorDecoder,
         commonConfig: CommonConfig,
         objectMapper: ObjectMapper,
-        @Autowired(required = false) discoveryClient: DiscoveryClient?
-    ) = Client(discoveryClient, clientErrorDecoder, commonConfig, objectMapper)
+        @Autowired(required = false) compositeDiscoveryClient: CompositeDiscoveryClient?
+    ) = Client(compositeDiscoveryClient, clientErrorDecoder, commonConfig, objectMapper)
 
     @Bean
     fun consulFilter() = ConsulFilter()

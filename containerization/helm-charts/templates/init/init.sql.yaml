@@ -41,5 +41,5 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              cat *.sql|mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}
+              for SQL in *.sql; do mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}< $SQL; done
       restartPolicy: OnFailure

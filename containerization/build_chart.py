@@ -6,7 +6,7 @@ import humps
 files = os.listdir('.')
 replace_pattern = re.compile(r'__BK_[A-Z_]*__')
 replace_dict = {}
-config_parent = '../../support-files/templates/'
+config_parent = '../support-files/templates/'
 template_parent = './helm-charts/templates/configmap/tpl/'
 
 # 创建目录
@@ -51,7 +51,7 @@ include_dict = {
 }
 
 # 读取变量映射
-env_file = open('../bkenv.properties', 'r')
+env_file = open('../scripts/bkenv.properties', 'r')
 value_re = re.compile(r'')
 for line in env_file:
     if line.startswith('BK_'):
