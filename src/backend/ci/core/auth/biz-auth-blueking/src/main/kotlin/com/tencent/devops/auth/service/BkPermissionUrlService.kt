@@ -43,7 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-@Service
+@Service("permissionUrlService")
 class BkPermissionUrlService @Autowired constructor(
     val iamEsbService: IamEsbService,
     @Autowired(required = false) // v3 才会有
