@@ -141,6 +141,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         val userGroupInfos = permissionRoleMemberService.getUserGroups(extProjectId, userId)
         if (userGroupInfos != null && userGroupInfos.isNotEmpty()) {
             iamCacheService.cacheProjectUser(userId, projectCode)
+            checkProjectUser = true
         }
         return checkProjectUser
     }
