@@ -68,6 +68,8 @@ spec:
           env:
             - name: MS_NAME
               value: store
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
             - name: JVM_XMS
               value: {{ .Values.store.env.JVM_XMS }}
             - name: JVM_XMX

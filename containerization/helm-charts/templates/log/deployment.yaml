@@ -68,6 +68,8 @@ spec:
           env:
             - name: MS_NAME
               value: log
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
             - name: JVM_XMS
               value: {{ .Values.log.env.JVM_XMS }}
             - name: JVM_XMX
