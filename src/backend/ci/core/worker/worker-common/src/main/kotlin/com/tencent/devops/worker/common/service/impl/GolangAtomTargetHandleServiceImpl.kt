@@ -25,9 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:dockerhost:biz-dockerhost"))
-    api(project(":core:dockerhost:plugin-dockerhost-codecc"))
-    api(project(":core:dockerhost:biz-dockerhost-sample"))
-    api("com.squareup.okhttp3:okhttp")
+package com.tencent.devops.worker.common.service.impl
+
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+import com.tencent.devops.worker.common.service.AtomTargetHandleService
+import org.slf4j.LoggerFactory
+
+class GolangAtomTargetHandleServiceImpl : AtomTargetHandleService {
+
+    private val logger = LoggerFactory.getLogger(GolangAtomTargetHandleServiceImpl::class.java)
+
+    override fun handleAtomTarget(
+        target: String,
+        osType: OSType,
+        buildHostType: BuildHostTypeEnum,
+        systemEnvVariables: Map<String, String>,
+        buildEnvs: List<BuildEnv>,
+        postEntryParam: String?
+    ): String {
+        var convertTarget = target
+        if (!postEntryParam.isNullOrBlank()) {
+            convertTarget = "$target --postAction=$postEntryParam"
+        }
+        logger.info("handleAtomTarget convertTarget:$convertTarget")
+        return convertTarget
+    }
 }
