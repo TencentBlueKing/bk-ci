@@ -38,12 +38,16 @@ class ProjectRouteTagService @Autowired constructor(
     @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
     private val tag: String? = null
 
+    @Value("\${prod.tag:#{null}}")
+    private val prodTag: String? = null
+
     // 判断当前项目流量与当前集群匹配
     fun checkProjectTag(projectId: String): Boolean {
         val routerTag = projectService.getByEnglishName(projectId)?.routerTag ?: return false
         // 默认集群是不会有routerTag的信息
         if (routerTag.isNullOrEmpty()) {
-            return true
+            // 只有默认集群在routerTag为空的时候才返回true
+            return tag == prodTag
         }
         return tag == routerTag
     }

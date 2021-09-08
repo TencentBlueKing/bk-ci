@@ -36,6 +36,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -45,11 +46,11 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceProjectTagResource {
     @GET
-    @Path("/checkProject/router")
+    @Path("/checkProject/{projectId}/router")
     @ApiOperation("判断项目指向是否一致")
     fun checkProjectRouter(
         @ApiParam("项目id", required = true)
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
 }
