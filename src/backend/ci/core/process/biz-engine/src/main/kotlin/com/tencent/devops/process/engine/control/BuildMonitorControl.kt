@@ -105,11 +105,11 @@ class BuildMonitorControl @Autowired constructor(
         val stageMinInt = monitorStage(event)
         val jobMinInt = monitorContainer(event)
 
-        // #5090 有任何一方出现超时，都应该退出监控
-        if (jobMinInt < Timeout.CONTAINER_MAX_MILLS && stageMinInt < Timeout.STAGE_MAX_MILLS) {
-            event.delayMills = min(jobMinInt, stageMinInt)
-            LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_MONITOR_CONTINUE|Interval=${event.delayMills}")
+        val minInterval = min(jobMinInt, stageMinInt)
 
+        if (minInterval < min(Timeout.CONTAINER_MAX_MILLS, Timeout.STAGE_MAX_MILLS)) {
+            LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_MONITOR_CONTINUE|Interval=$minInterval")
+            event.delayMills = minInterval
             pipelineEventDispatcher.dispatch(event)
         }
         return true
@@ -212,7 +212,8 @@ class BuildMonitorControl @Autowired constructor(
             )
         }
 
-        return interval
+        // 每次Check间隔不能大于10分钟，防止长时间延迟消息被大量堆积
+        return interval.coerceAtMost(TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong()).toInt())
     }
 
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Int {
@@ -255,7 +256,8 @@ class BuildMonitorControl @Autowired constructor(
             )
         }
 
-        return interval
+        // 每次Check间隔不能大于10分钟，防止长时间延迟消息被大量堆积
+        return interval.coerceAtMost(TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong()).toInt())
     }
 
     private fun monitorQueueBuild(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Boolean {
