@@ -136,12 +136,17 @@ object MarketBuildUtils {
         var result = str.replace("{$PROJECT_ID}", param.projectId)
             .replace("{$PIPELINE_ID}", param.pipelineId)
             .replace("{$USER_ID}", param.userId)
+            .replace("%7B$PROJECT_ID%7D", param.projectId)
+            .replace("%7B$PIPELINE_ID%7D", param.pipelineId)
+            .replace("%7B$USER_ID%7D", param.userId)
 
         inputMap.forEach { (key, value) ->
             result = result.replace("{$key}", value.toString())
+                .replace("%7B$key%7D", value.toString())
         }
 
         // 没有变量值的变量默认置空
         return result.replace(Regex("\\{.*}"), "")
+            .replace(Regex("%7B.*%7D"), "")
     }
 }
