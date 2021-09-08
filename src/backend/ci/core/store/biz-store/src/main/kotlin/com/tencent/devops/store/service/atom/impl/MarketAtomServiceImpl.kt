@@ -568,6 +568,18 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return getAtomVersion(atomId, userId)
     }
 
+    /**
+     * 根据插件标识获取插件最新版本详情
+     */
+    override fun getNewestAtomInfoByCode(userId: String, atomCode: String): Result<AtomVersion?> {
+        val record = marketAtomDao.getNewestAtomByCode(dslContext, atomCode)
+        return (if (null == record) {
+            Result(data = null)
+        } else {
+            getAtomVersion(record.id, userId)
+        })
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun getAtomVersion(atomId: String, userId: String): Result<AtomVersion?> {
         val record = marketAtomDao.getAtomById(dslContext, atomId)

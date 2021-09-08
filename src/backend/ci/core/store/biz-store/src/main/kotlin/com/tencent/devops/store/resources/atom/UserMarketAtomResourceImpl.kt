@@ -135,11 +135,18 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.deleteAtom(userId, atomCode)
     }
 
+    override fun getNewestAtomInfoByCode(userId: String, atomCode: String): Result<AtomVersion?> {
+        TODO("Not yet implemented")
+    }
+
     override fun getAtomYmlInfo(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
         return Result(marketAtomService.generateCiYaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag ?: false))
     }
 
     override fun getAtomYmlV2Info(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
-        return Result(marketAtomService.generateCiV2Yaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag ?: false))
+        return Result(marketAtomService.generateCiV2Yaml(
+            atomCode = atomCode,
+            defaultShowFlag = defaultShowFlag ?: false)
+        )
     }
 }

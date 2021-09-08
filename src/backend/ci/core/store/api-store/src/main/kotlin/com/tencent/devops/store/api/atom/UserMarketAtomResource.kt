@@ -232,6 +232,18 @@ interface UserMarketAtomResource {
         atomCode: String
     ): Result<Boolean>
 
+    @ApiOperation("根据插件标识获取插件最新版本详情")
+    @GET
+    @Path("/atoms/{atomCode}/newest/detail")
+    fun getNewestAtomInfoByCode(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("atomCode", required = true)
+        @PathParam("atomCode")
+        atomCode: String
+    ): Result<AtomVersion?>
+
     @ApiOperation("查看插件的yml信息")
     @GET
     @Path("/atoms/{atomCode}/yml/detail")

@@ -165,4 +165,9 @@ interface MarketAtomService {
      * 查找带post属性的插件
      */
     fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp>
+
+    /**
+     * 根据插件标识获取插件最新版本详情
+     */
+    fun getNewestAtomInfoByCode(userId: String, atomCode: String): Result<AtomVersion?>
 }
