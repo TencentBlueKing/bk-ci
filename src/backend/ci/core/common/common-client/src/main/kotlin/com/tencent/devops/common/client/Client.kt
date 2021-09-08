@@ -84,6 +84,7 @@ class Client @Autowired constructor(
     }
 
     private val beanCaches: LoadingCache<KClass<*>, *> = CacheBuilder.newBuilder()
+        .expireAfterWrite(1, TimeUnit.SECONDS)//TODO 测试用
         .maximumSize(1000).build(object : CacheLoader<KClass<*>, Any>() {
             override fun load(p0: KClass<*>): Any {
                 return getImpl(p0)
