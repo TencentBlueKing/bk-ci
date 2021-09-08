@@ -1,0 +1,11 @@
+parameters:
+  - name: username
+    type: string
+    values:
+      - aaa
+      - bbb
+      - ccc
+
+variables:
+  RES_REPOA_VAR2_USERNAME:
+    value: ${{ parameters.username }}

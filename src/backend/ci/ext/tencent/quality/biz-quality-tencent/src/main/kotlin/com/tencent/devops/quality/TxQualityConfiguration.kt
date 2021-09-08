@@ -96,7 +96,7 @@ class TxQualityConfiguration {
     )
 
     @Bean
-    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
     fun qualityUrlBean(
         @Autowired client: Client
     ) = GitCIQualityPipelineUrlBeanImpl(client)

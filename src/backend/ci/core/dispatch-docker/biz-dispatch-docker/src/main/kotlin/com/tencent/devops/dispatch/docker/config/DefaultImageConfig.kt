@@ -59,6 +59,22 @@ class DefaultImageConfig {
     @Value("\${dispatch.agentLessRegistryPassword:#{null}}")
     val agentLessRegistryPassword: String? = null
 
+    // docker构建资源默认配置
+    @Value("\${dispatch.docker.memoryLimitBytes:34359738368}")
+    var memory: Long = 34359738368L // 1024 * 1024 * 1024 * 32 Memory limit in bytes. 32G
+
+    @Value("\${dispatch.docker.cpuPeriod:10000}")
+    var cpuPeriod: Int = 10000 // Limit the CPU CFS (Completely Fair Scheduler) period
+
+    @Value("\${dispatch.docker.cpuQuota:160000}")
+    var cpuQuota: Int = 160000 // Limit the CPU CFS (Completely Fair Scheduler) period
+
+    @Value("\${dispatch.docker.blkioDeviceWriteBps:125829120}")
+    var blkioDeviceWriteBps: Long = 125829120 // 默认磁盘IO写速率：120M/s
+
+    @Value("\${dispatch.docker.blkioDeviceReadBps:125829120}")
+    var blkioDeviceReadBps: Long = 125829120 // 默认磁盘IO读速率：120M/s
+
     fun getAgentLessCompleteUri(): String {
         return if (agentLessRegistryUrl.isNullOrBlank()) {
             agentLessImageName?.trim()?.removePrefix("/")

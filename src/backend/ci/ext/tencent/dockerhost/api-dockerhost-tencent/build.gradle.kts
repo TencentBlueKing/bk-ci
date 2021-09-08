@@ -28,6 +28,7 @@
 dependencies {
     api(project(":ext:tencent:common:common-digest-tencent"))
     api(project(":core:dockerhost:api-dockerhost"))
+    api(project(":core:dispatch:api-dispatch"))
 }
 
 plugins {

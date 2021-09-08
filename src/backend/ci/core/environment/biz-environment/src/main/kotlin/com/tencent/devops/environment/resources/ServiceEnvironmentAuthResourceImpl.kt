@@ -58,8 +58,8 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
                 return authEnvService.searchEnv(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
-                    limit = page.offset.toInt(),
-                    offset = page.limit.toInt(),
+                    limit = page.limit.toInt(),
+                    offset = page.offset.toInt(),
                     token = token
                 )
             }
@@ -83,8 +83,8 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
                 return authNodeService.searchNode(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
-                    limit = page.offset.toInt(),
-                    offset = page.limit.toInt(),
+                    limit = page.limit.toInt(),
+                    offset = page.offset.toInt(),
                     token = token
                 )
             }
