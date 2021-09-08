@@ -82,6 +82,7 @@ class AuthProjectService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = it.englishName
             entity.displayName = it.projectName
+            entity.iamApprover = arrayListOf(it.creator)
             entityList.add(entity)
         }
         logger.info("entityInfo $entityList")
