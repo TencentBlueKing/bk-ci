@@ -60,7 +60,7 @@ object MarketBuildUtils {
         ArrayBlockingQueue(16000)
     )
 
-    fun beforeDelete(inputMap: Map<*, *>, atomCode: String, param: BeforeDeleteParam, codeccApi: CodeccApi) {
+    fun beforeDelete(inputMap: Map<String, Any>, atomCode: String, param: BeforeDeleteParam, codeccApi: CodeccApi) {
         logger.info("start to do before delete: $inputMap, $atomCode")
         marketBuildExecutorService.execute {
             val bkAtomHookUrl = inputMap.getOrDefault(
@@ -78,7 +78,7 @@ object MarketBuildUtils {
                 return@execute
             }
 
-            doHttp(bkAtomHookUrl, bkAtomHookUrlMethod, bkAtomHookBody, param)
+            doHttp(bkAtomHookUrl, bkAtomHookUrlMethod, bkAtomHookBody, param, inputMap)
         }
     }
 
@@ -86,9 +86,10 @@ object MarketBuildUtils {
         bkAtomHookUrl: String,
         bkAtomHookUrlMethod: String,
         bkAtomHookBody: String,
-        param: BeforeDeleteParam
+        param: BeforeDeleteParam,
+        inputMap: Map<String, Any>
     ) {
-        val url = resolveParam(bkAtomHookUrl, param)
+        val url = resolveParam(bkAtomHookUrl, param, inputMap)
         var request = Request.Builder()
             .url(url)
 
@@ -99,11 +100,11 @@ object MarketBuildUtils {
                 request = request.get()
             }
             HttpMethod.POST -> {
-                val requestBody = resolveParam(bkAtomHookBody, param)
+                val requestBody = resolveParam(bkAtomHookBody, param, inputMap)
                 request = request.post(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             }
             HttpMethod.PUT -> {
-                val requestBody = resolveParam(bkAtomHookBody, param)
+                val requestBody = resolveParam(bkAtomHookBody, param, inputMap)
                 request = request.put(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             }
             HttpMethod.DELETE -> {
@@ -131,9 +132,15 @@ object MarketBuildUtils {
         return "DELETE"
     }
 
-    private fun resolveParam(str: String, param: BeforeDeleteParam): String {
-        return str.replace("{$PROJECT_ID}", param.projectId)
+    private fun resolveParam(str: String, param: BeforeDeleteParam, inputMap: Map<String, Any>): String {
+        var result = str.replace("{$PROJECT_ID}", param.projectId)
             .replace("{$PIPELINE_ID}", param.pipelineId)
             .replace("{$USER_ID}", param.userId)
+
+        inputMap.forEach { (key, value) ->
+            result = result.replace("{$key}", value.toString())
+        }
+
+        return result
     }
 }
