@@ -76,8 +76,12 @@ class MicroServiceTarget<T> constructor(
         } else tag
 
         instances.forEach { serviceInstance ->
-            if (serviceInstance is ConsulServiceInstance && serviceInstance.tags.contains(useConsulTag)) {
+            if (serviceInstance is ConsulServiceInstance) {
                 // 已经用过的不选择
+                if (serviceInstance.tags.contains(useConsulTag) && !usedInstance.contains(serviceInstance.url())) {
+                    matchTagInstances.add(serviceInstance)
+                }
+            } else {
                 if (!usedInstance.contains(serviceInstance.url())) {
                     matchTagInstances.add(serviceInstance)
                 }
