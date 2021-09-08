@@ -25,32 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.constant
+package com.tencent.devops.stream.trigger.timer.quartz
 
-object MQ {
+import com.tencent.devops.stream.trigger.timer.SchedulerManager
+import org.quartz.Scheduler
+import org.quartz.impl.StdSchedulerFactory
 
-    // 接受流水线结束的广播事件
-    const val QUEUE_PIPELINE_BUILD_FINISH_STREAM = "q.engine.pipeline.build.stream"
+class QuartzSchedulerManager : SchedulerManager() {
 
-    // Stream webhook请求
-    const val EXCHANGE_STREAM_REQUEST_EVENT = "e.stream.request.event"
-    const val ROUTE_STREAM_REQUEST_EVENT = "r.stream.request.event"
-    const val QUEUE_STREAM_REQUEST_EVENT = "q.stream.request.event"
+    private var scheduler: Scheduler = StdSchedulerFactory().scheduler
 
-    // Stream Mr webhook 冲突检查
-    const val EXCHANGE_STREAM_MR_CONFLICT_CHECK_EVENT = "e.stream.mr.conflict.check.event"
-    const val ROUTE_STREAM_MR_CONFLICT_CHECK_EVENT = "r.stream.mr.conflict.check.event"
-    const val QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT = "q.stream.mr.conflict.check.event"
+    private val triggerGroup = "bkTriggerGroup"
 
-    // Stream 每条流水线的触发构建请求
-    const val EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT = "e.stream.trigger.pipeline.event"
-    const val ROUTE_STREAM_TRIGGER_PIPELINE_EVENT = "r.stream.trigger.pipeline.event"
-    const val QUEUE_STREAM_TRIGGER_PIPELINE_EVENT = "q.stream.trigger.pipeline.event"
+    private val jobGroup = "bkJobGroup"
 
-    // 定时变更广播exchange ====================================
-    const val ENGINE_STREAM_LISTENER_EXCHANGE = "e.engine.stream.listener"
-    const val EXCHANGE_STREAM_TIMER_CHANGE_FANOUT = "e.engine.stream.timer.change"
+    init {
+        scheduler.listenerManager.addJobListener(QuartzTraceJobListener())
+        scheduler.start()
+    }
 
-    const val ROUTE_STREAM_TIMER = "r.engine.stream.timer"
-    const val QUEUE_STREAM_TIMER = "q.engine.stream.timer"
+    override fun getJobGroup(): String {
+        return jobGroup
+    }
+
+    override fun getTriggerGroup(): String {
+        return triggerGroup
+    }
+
+    override fun getScheduler(): Scheduler {
+        return scheduler
+    }
 }

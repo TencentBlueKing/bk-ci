@@ -25,32 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.constant
+package com.tencent.devops.stream.trigger.timer.util
 
-object MQ {
+import org.quartz.TriggerUtils
+import org.quartz.impl.triggers.CronTriggerImpl
+import java.util.Date
 
-    // 接受流水线结束的广播事件
-    const val QUEUE_PIPELINE_BUILD_FINISH_STREAM = "q.engine.pipeline.build.stream"
+object CronExpressionUtils {
 
-    // Stream webhook请求
-    const val EXCHANGE_STREAM_REQUEST_EVENT = "e.stream.request.event"
-    const val ROUTE_STREAM_REQUEST_EVENT = "r.stream.request.event"
-    const val QUEUE_STREAM_REQUEST_EVENT = "q.stream.request.event"
+    // 有效时间间隔60s
+    private const val VALID_TIME_INTERVAL = 60 * 1000
 
-    // Stream Mr webhook 冲突检查
-    const val EXCHANGE_STREAM_MR_CONFLICT_CHECK_EVENT = "e.stream.mr.conflict.check.event"
-    const val ROUTE_STREAM_MR_CONFLICT_CHECK_EVENT = "r.stream.mr.conflict.check.event"
-    const val QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT = "q.stream.mr.conflict.check.event"
+    /**
+     * 计算cron表达式接下来的执行时间
+     * @param cron cron表达式
+     * @param numTimes 输出几次
+     */
+    fun getRecentTriggerTime(
+        cron: String,
+        numTimes: Int = 2
+    ): List<Date> {
+        val trigger = CronTriggerImpl()
+        trigger.cronExpression = cron
+        return TriggerUtils.computeFireTimes(trigger, null, numTimes)
+    }
 
-    // Stream 每条流水线的触发构建请求
-    const val EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT = "e.stream.trigger.pipeline.event"
-    const val ROUTE_STREAM_TRIGGER_PIPELINE_EVENT = "r.stream.trigger.pipeline.event"
-    const val QUEUE_STREAM_TRIGGER_PIPELINE_EVENT = "q.stream.trigger.pipeline.event"
-
-    // 定时变更广播exchange ====================================
-    const val ENGINE_STREAM_LISTENER_EXCHANGE = "e.engine.stream.listener"
-    const val EXCHANGE_STREAM_TIMER_CHANGE_FANOUT = "e.engine.stream.timer.change"
-
-    const val ROUTE_STREAM_TIMER = "r.engine.stream.timer"
-    const val QUEUE_STREAM_TIMER = "q.engine.stream.timer"
+    /**
+     * 为了防止流水线执行太频繁，需要控制cron表达式执行时间间隔，不能秒级执行
+     */
+    fun isValidTimeInterval(cron: String): Boolean {
+        val recentTriggerTimes = getRecentTriggerTime(cron)
+        // 如果最近2次执行时间为空，表示表达式已经不会运行
+        if (recentTriggerTimes.isEmpty() || recentTriggerTimes.size == 1) {
+            return true
+        }
+        val interval = recentTriggerTimes[1].time - recentTriggerTimes[0].time
+        return interval >= VALID_TIME_INTERVAL
+    }
 }

@@ -25,32 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.constant
+package com.tencent.devops.stream.trigger.timer.pojo
 
-object MQ {
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 
-    // 接受流水线结束的广播事件
-    const val QUEUE_PIPELINE_BUILD_FINISH_STREAM = "q.engine.pipeline.build.stream"
-
-    // Stream webhook请求
-    const val EXCHANGE_STREAM_REQUEST_EVENT = "e.stream.request.event"
-    const val ROUTE_STREAM_REQUEST_EVENT = "r.stream.request.event"
-    const val QUEUE_STREAM_REQUEST_EVENT = "q.stream.request.event"
-
-    // Stream Mr webhook 冲突检查
-    const val EXCHANGE_STREAM_MR_CONFLICT_CHECK_EVENT = "e.stream.mr.conflict.check.event"
-    const val ROUTE_STREAM_MR_CONFLICT_CHECK_EVENT = "r.stream.mr.conflict.check.event"
-    const val QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT = "q.stream.mr.conflict.check.event"
-
-    // Stream 每条流水线的触发构建请求
-    const val EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT = "e.stream.trigger.pipeline.event"
-    const val ROUTE_STREAM_TRIGGER_PIPELINE_EVENT = "r.stream.trigger.pipeline.event"
-    const val QUEUE_STREAM_TRIGGER_PIPELINE_EVENT = "q.stream.trigger.pipeline.event"
-
-    // 定时变更广播exchange ====================================
-    const val ENGINE_STREAM_LISTENER_EXCHANGE = "e.engine.stream.listener"
-    const val EXCHANGE_STREAM_TIMER_CHANGE_FANOUT = "e.engine.stream.timer.change"
-
-    const val ROUTE_STREAM_TIMER = "r.engine.stream.timer"
-    const val QUEUE_STREAM_TIMER = "q.engine.stream.timer"
-}
+data class StreamTimer(
+    val projectId: String,
+    val pipelineId: String,
+    val userId: String,
+    val crontabExpressions: List<String>,
+    val gitProjectId: Long,
+    val branchs: List<String>,
+    val always: Boolean,
+    val channelCode: ChannelCode
+)
