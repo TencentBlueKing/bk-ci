@@ -255,6 +255,12 @@ setup_ci_dockerhost (){
   env_line_set "$start_env" "LD_LIBRARY_PATH" "$BK_CI_HOME/$proj/sigar/"
 }
 
+setup_ci_turbo (){
+  local proj=$1
+  setup_ci__ms_common "$proj" || return 11
+  render_ci quartz  # 渲染 #etc#ci#thirdparty#quartz.properties
+}
+
 # 校验网关关键配置, 设置家目录, 设置启动用户或setcap?
 setup_ci_gateway (){
   #check_empty_var BK_CI_DATA_DIR BK_CI_HOME BK_CI_LOGS_DIR || return 15
