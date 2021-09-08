@@ -44,8 +44,10 @@ class ApiGatewayUtil {
     fun isAuth() = apiGatewayAuth
 
     fun getChannelCode(): ChannelCode {
-        return if (consulTag.contains("stream") or consulTag.contains("gitci")) {
+        return if (consulTag.contains("stream") || consulTag.contains("gitci")) {
             ChannelCode.GIT
+        } else if (consulTag.contains("auto")) {
+            ChannelCode.GONGFENGSCAN
         } else {
             ChannelCode.BS
         }
