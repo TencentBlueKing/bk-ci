@@ -406,18 +406,12 @@ abstract class ImageReleaseService {
                 (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
                 imageId = imageRecord.id
-                val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-                    val imageVersion = marketImageVersionLogDao.getImageVersion(context, imageId)
-                    imageVersion.releaseType
-                } else {
-                    releaseType.releaseType.toByte()
-                }
                 updateMarketImage(
                     context = context,
                     userId = userId,
                     imageId = imageId,
                     imageSize = "",
-                    releaseType = finalReleaseType,
+                    releaseType = releaseType.releaseType.toByte(),
                     marketImageUpdateRequest = marketImageUpdateRequest
                 )
             } else {

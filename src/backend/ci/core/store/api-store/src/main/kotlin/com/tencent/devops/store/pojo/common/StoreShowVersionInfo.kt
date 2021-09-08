@@ -25,36 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.pojo.common
 
-enum class ReleaseTypeEnum(val releaseType: Int) {
-    NEW(0), // 新上架
-    INCOMPATIBILITY_UPGRADE(1), // 非兼容性升级
-    COMPATIBILITY_UPGRADE(2), // 兼容性功能更新
-    COMPATIBILITY_FIX(3), // 兼容性问题修正
-    CANCEL_RE_RELEASE(4), // 取消发布后重新发布
-    HIS_VERSION_UPGRADE(5); // 历史大版本下的小版本更新
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    fun isDefaultShow(): Boolean = this == COMPATIBILITY_UPGRADE || this == COMPATIBILITY_UPGRADE
-
-    companion object {
-
-        fun getReleaseTypeObj(releaseType: Int): ReleaseTypeEnum? {
-            values().forEach { enumObj ->
-                if (enumObj.releaseType == releaseType) {
-                    return enumObj
-                }
-            }
-            return null
-        }
-
-        fun getReleaseType(releaseType: Int): String {
-            values().forEach { enumObj ->
-                if (enumObj.releaseType == releaseType) {
-                    return enumObj.name
-                }
-            }
-            return NEW.name
-        }
-    }
-}
+@ApiModel("回显版本信息")
+data class StoreShowVersionInfo(
+    @ApiModelProperty("版本号", required = true)
+    val version: String,
+    @ApiModelProperty("发布类型", required = true)
+    val releaseType: String
+)

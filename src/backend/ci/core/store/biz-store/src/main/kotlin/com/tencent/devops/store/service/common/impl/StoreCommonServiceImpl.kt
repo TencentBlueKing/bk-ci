@@ -53,6 +53,7 @@ import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreBuildInfo
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreCommonService
@@ -109,9 +110,9 @@ class StoreCommonServiceImpl @Autowired constructor(
      * 获取正确的升级版本号
      */
     override fun getRequireVersion(
-        reqVersion: String,
         dbVersion: String,
-        releaseType: ReleaseTypeEnum
+        releaseType: ReleaseTypeEnum,
+        reqVersion: String?
     ): List<String> {
         var requireVersionList = listOf(INIT_VERSION)
         if (dbVersion.isBlank()) {
@@ -135,11 +136,13 @@ class StoreCommonServiceImpl @Autowired constructor(
                 requireVersionList = listOf(dbVersion)
             }
             ReleaseTypeEnum.HIS_VERSION_UPGRADE -> {
-                val reqVersionParts = reqVersion.split(".")
-                requireVersionList = listOf(
-                    "${reqVersionParts[0]}.${secondVersionPart.toInt() + 1}.0",
-                    "${reqVersionParts[0]}.$secondVersionPart.${thirdVersionPart.toInt() + 1}"
-                )
+                if (!reqVersion.isNullOrBlank()) {
+                    val reqVersionParts = reqVersion.split(".")
+                    requireVersionList = listOf(
+                        "${reqVersionParts[0]}.$secondVersionPart.${thirdVersionPart.toInt() + 1}",
+                        "${reqVersionParts[0]}.${secondVersionPart.toInt() + 1}.0"
+                    )
+                }
             }
             else -> {
             }
@@ -242,5 +245,28 @@ class StoreCommonServiceImpl @Autowired constructor(
         storeStatisticTotalDao.deleteStoreStatisticTotal(context, storeCode, storeType)
         storeStatisticDailyDao.deleteDailyStatisticData(context, storeCode, storeType)
         return true
+    }
+
+    override fun getStoreShowVersionInfo(
+        cancelFlag: Boolean,
+        releaseType: ReleaseTypeEnum?,
+        version: String?
+    ): StoreShowVersionInfo {
+        val showReleaseType = when {
+            cancelFlag -> {
+                ReleaseTypeEnum.CANCEL_RE_RELEASE
+            }
+            releaseType?.isDefaultShow() == true -> {
+                releaseType
+            }
+            releaseType == null -> {
+                ReleaseTypeEnum.NEW
+            }
+            else -> {
+                ReleaseTypeEnum.COMPATIBILITY_FIX
+            }
+        }
+        val showVersion = getRequireVersion(version ?: "", showReleaseType)[0]
+        return StoreShowVersionInfo(showVersion, showReleaseType.name)
     }
 }

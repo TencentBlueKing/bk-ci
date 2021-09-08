@@ -602,6 +602,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     defaultMessage = classifyName
                 )
             } else classifyName
+            val releaseType = if (record["releaseType"] != null) {
+                ReleaseTypeEnum.getReleaseTypeObj((record["releaseType"] as Byte).toInt())
+            } else null
+            val atomStatus = AtomStatusEnum.getAtomStatus((record["atomStatus"] as Byte).toInt())
+            val version = record["version"] as? String
+            val cancelFlag = atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.name
+            val showVersionInfo = storeCommonService.getStoreShowVersionInfo(cancelFlag, releaseType, version)
             Result(
                 AtomVersion(
                     atomId = atomId,
@@ -622,10 +629,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     summary = record["summary"] as? String,
                     description = record["description"] as? String,
                     version = record["version"] as? String,
-                    atomStatus = AtomStatusEnum.getAtomStatus((record["atomStatus"] as Byte).toInt()),
-                    releaseType = if (record["releaseType"] != null) {
-                        ReleaseTypeEnum.getReleaseType((record["releaseType"] as Byte).toInt())
-                    } else null,
+                    atomStatus = atomStatus,
+                    releaseType = releaseType?.name,
                     versionContent = record["versionContent"] as? String,
                     language = record["language"] as? String,
                     codeSrc = record["codeSrc"] as? String,
@@ -654,7 +659,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     // 开启插件yml显示
                     yamlFlag = true,
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
-                    dailyStatisticList = getRecentDailyStatisticList(atomCode)
+                    dailyStatisticList = getRecentDailyStatisticList(atomCode),
+                    showVersionInfo = showVersionInfo
                 )
             )
         }

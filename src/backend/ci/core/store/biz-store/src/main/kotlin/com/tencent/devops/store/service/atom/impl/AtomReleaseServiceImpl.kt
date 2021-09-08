@@ -99,6 +99,7 @@ import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
+import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -406,12 +407,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
                 atomId = atomRecord.id
-                val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-                    val atomVersion = marketAtomVersionLogDao.getAtomVersion(context, atomId)
-                    atomVersion.releaseType
-                } else {
-                    releaseType.releaseType.toByte()
-                }
                 updateMarketAtom(
                     context = context,
                     userId = userId,
@@ -419,7 +414,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomStatus = atomStatus,
                     classType = classType,
                     props = props,
-                    releaseType = finalReleaseType,
+                    releaseType = releaseType.releaseType.toByte(),
                     marketAtomUpdateRequest = marketAtomUpdateRequest,
                     atomEnvRequest = atomEnvRequest
                 )
@@ -977,8 +972,19 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         latestUpgradeTime = pubTime
                     )
                 )
-                val latestFlag = if (atomReleaseRequest.releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
-                    // 历史大版本下的小版本更新不把latestFlag置为true
+                // 查找插件最近一个已经发布的版本
+                val releaseAtomRecords = marketAtomDao.getReleaseAtomsByCode(context, atomCode, 1)
+                val newestReleaseAtomRecord = releaseAtomRecords?.get(0)
+                var newestReleaseFlag = false
+                if (newestReleaseAtomRecord != null) {
+                    // 比较当前版本是否比最近一个已经发布的版本新
+                    val requestVersion = atomReleaseRequest.version
+                    val newestReleaseVersion = newestReleaseAtomRecord.version
+                    newestReleaseFlag = StoreUtils.isGreaterVersion(requestVersion, newestReleaseVersion)
+                }
+                val releaseType = atomReleaseRequest.releaseType
+                val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE && !newestReleaseFlag) {
+                    // 历史大版本下的小版本更新不把latestFlag置为true（当前发布的版本不是最新的已发布版本）
                     null
                 } else {
                     // 清空旧版本LATEST_FLAG
