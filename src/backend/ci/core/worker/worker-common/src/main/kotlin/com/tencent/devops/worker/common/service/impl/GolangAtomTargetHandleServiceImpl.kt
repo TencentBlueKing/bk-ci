@@ -27,18 +27,15 @@
 
 package com.tencent.devops.worker.common.service.impl
 
-import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
-import com.tencent.devops.worker.common.NODEJS_PATH_ENV
 import com.tencent.devops.worker.common.service.AtomTargetHandleService
 import org.slf4j.LoggerFactory
 
-class NodeJsAtomTargetHandleServiceImpl : AtomTargetHandleService {
+class GolangAtomTargetHandleServiceImpl : AtomTargetHandleService {
 
-    private val logger = LoggerFactory.getLogger(NodeJsAtomTargetHandleServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(GolangAtomTargetHandleServiceImpl::class.java)
 
     override fun handleAtomTarget(
         target: String,
@@ -48,39 +45,9 @@ class NodeJsAtomTargetHandleServiceImpl : AtomTargetHandleService {
         buildEnvs: List<BuildEnv>,
         postEntryParam: String?
     ): String {
-        logger.info("handleAtomTarget target:$target,osType:$osType,buildHostType:$buildHostType")
-        val machineNodeSwitch = systemEnvVariables["machineNodeSwitch"]
-        if (machineNodeSwitch != null && machineNodeSwitch.toBoolean()) {
-            var nodeEnvFlag = false
-            try {
-                // 探测构建机上是否有node环境
-                CommonScriptUtils.execute("node -v")
-                nodeEnvFlag = true
-            } catch (ignored: Throwable) {
-                logger.warn("No node environment", ignored)
-            }
-            if (nodeEnvFlag) {
-                // 如果构建机上有安装node，则直接使用户配置的node插件启动命令
-                return target
-            }
-        }
         var convertTarget = target
-        // 当构建机为公共构建机并且用户未为job执行环境选择nodejs依赖情况则用系统默认配置的nodejs环境执行
-        if (buildHostType == BuildHostTypeEnum.PUBLIC) {
-            var flag = false
-            buildEnvs.forEach {
-                if (it.name == NODEJS) {
-                    flag = true
-                    return@forEach
-                }
-            }
-            if (!flag) {
-                val executePath = systemEnvVariables[NODEJS_PATH_ENV]
-                convertTarget = "$executePath$target"
-            }
-        }
         if (!postEntryParam.isNullOrBlank()) {
-            convertTarget = "$target --post-action=$postEntryParam"
+            convertTarget = "$target --postAction=$postEntryParam"
         }
         logger.info("handleAtomTarget convertTarget:$convertTarget")
         return convertTarget
