@@ -56,7 +56,7 @@ class MarketBuildLessAtomElementBizPlugin constructor(
     ) = Unit
 
     override fun beforeDelete(element: MarketBuildLessAtomElement, param: BeforeDeleteParam) {
-        val inputMap = element.data["input"] as Map<*, *>
+        val inputMap = element.data["input"] as Map<String, Any>
         MarketBuildUtils.beforeDelete(inputMap, element.getAtomCode(), param, codeccApi)
     }
 
