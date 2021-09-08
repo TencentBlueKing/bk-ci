@@ -25,26 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.project.service
 
-import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
-@ApiModel("代码库模型-基本信息")
-data class RepositoryInfo(
-    @ApiModelProperty("仓库ID", required = false)
-    val repositoryId: Long?,
-    @ApiModelProperty("仓库哈希ID", required = false)
-    val repositoryHashId: String?,
-    @ApiModelProperty("仓库别名", required = true)
-    val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    val url: String,
-    @ApiModelProperty("类型", required = true)
-    val type: ScmType,
-    @ApiModelProperty("最后更新时间", required = true)
-    val updatedTime: Long,
-    @ApiModelProperty("创建人", required = false)
-    val createUser: String? = null
-)
+@Service
+class ProjectRouteTagService @Autowired constructor(
+    val projectService: ProjectService
+) {
+    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
+    private val tag: String? = null
+
+    @Value("\${prod.tag:#{null}}")
+    private val prodTag: String? = null
+
+    // 判断当前项目流量与当前集群匹配
+    fun checkProjectTag(projectId: String): Boolean {
+        val routerTag = projectService.getByEnglishName(projectId)?.routerTag ?: return false
+        // 默认集群是不会有routerTag的信息
+        if (routerTag.isNullOrEmpty()) {
+            // 只有默认集群在routerTag为空的时候才返回true
+            return tag == prodTag
+        }
+        return tag == routerTag
+    }
+}
