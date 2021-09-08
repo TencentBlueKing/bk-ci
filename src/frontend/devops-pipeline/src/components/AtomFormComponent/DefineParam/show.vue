@@ -127,7 +127,7 @@
                 if (isMultipleParam(valueType)) {
                     const isString = typeof value === 'string'
                     const isArray = Array.isArray(value)
-                    return isString ? (value.length ? (value).split(',') : []) : (isArray ? value : [])
+                    return isString ? (value.split(',').filter(i => i.trim() !== '')) : (isArray ? value : [])
                 }
                 return value
             },
