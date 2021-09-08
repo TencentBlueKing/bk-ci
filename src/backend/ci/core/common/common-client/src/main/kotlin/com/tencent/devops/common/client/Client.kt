@@ -47,6 +47,7 @@ import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import feign.okhttp.OkHttpClient
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -277,7 +278,7 @@ class Client @Autowired constructor(
             }
         }
 
-        return if (serviceSuffix.isNullOrBlank()) {
+        return if (serviceSuffix.isNullOrBlank()||StringUtils.isNotBlank(System.getenv("NAMESPACE"))) {
             serviceName
         } else {
             "$serviceName$serviceSuffix"
