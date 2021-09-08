@@ -136,7 +136,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     }
 
     override fun getNewestAtomInfoByCode(userId: String, atomCode: String): Result<AtomVersion?> {
-        TODO("Not yet implemented")
+        return marketAtomService.getNewestAtomInfoByCode(userId, atomCode)
     }
 
     override fun getAtomYmlInfo(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
