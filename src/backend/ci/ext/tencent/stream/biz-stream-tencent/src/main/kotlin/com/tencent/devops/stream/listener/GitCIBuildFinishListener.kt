@@ -37,8 +37,6 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
@@ -69,6 +67,9 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.stream.utils.CommitCheckUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -192,31 +193,38 @@ class GitCIBuildFinishListener @Autowired constructor(
                 }
 
                 // 推送结束构建消息,当人工触发时不推送CommitCheck消息
-                if (objectKind != OBJECT_KIND_MANUAL) {
+                if (objectKind != TGitObjectKind.MANUAL.value) {
                     if (isV2) {
                         // gitRequestEvent中存的为mriid不是mrid
-                        val mrEvent = if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
-                            try {
-                                objectMapper.readValue<GitMergeRequestEvent>(record["EVENT"] as String)
-                            } catch (e: Throwable) {
-                                logger.error("push commit check get mergeId error ${e.message}")
-                                null
-                            }
-                        } else {
+                        val gitEvent = try {
+                            objectMapper.readValue<GitEvent>(record["EVENT"] as String)
+                        } catch (e: Throwable) {
+                            logger.error("push commit check get mergeId error ${e.message}")
                             null
+                        }
+
+                        // 这里做个兼容，如果因为上面转换有问题，不能影响发送CommitCheck
+                        if (gitEvent != null) {
+                            if (!CommitCheckUtils.needSendCheck(gitEvent)) {
+                                return
+                            }
                         }
 
                         gitCheckService.pushCommitCheck(
                             commitId = commitId,
                             description = getDescByBuildStatus(buildStatus, pipeline.displayName),
-                            mergeRequestId = mrEvent?.object_attributes?.id ?: 0L,
+                            mergeRequestId = if (gitEvent is GitMergeRequestEvent) {
+                                gitEvent.object_attributes.id
+                            } else {
+                                0L
+                            },
                             buildId = buildFinishEvent.buildId,
                             userId = buildFinishEvent.userId,
                             status = state,
                             context = "${pipeline.filePath}@${objectKind.toUpperCase()}",
                             gitCIBasicSetting = v2GitSetting!!,
                             pipelineId = buildFinishEvent.pipelineId,
-                            block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess() &&
+                            block = (objectKind == TGitObjectKind.MERGE_REQUEST.value && !buildStatus.isSuccess() &&
                                 v2GitSetting.enableMrBlock),
                             reportData = qualityService.getQualityGitMrResult(
                                 client = client,
