@@ -33,9 +33,9 @@ import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
+import org.apache.commons.lang3.StringUtils
 import org.springframework.cloud.client.ServiceInstance
-import org.springframework.cloud.client.discovery.DiscoveryClient
-import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
 import java.util.concurrent.ConcurrentHashMap
 
@@ -43,23 +43,25 @@ import java.util.concurrent.ConcurrentHashMap
 class MicroServiceTarget<T> constructor(
     private val serviceName: String,
     private val type: Class<T>,
-    private val discoveryClient: DiscoveryClient,
+    private val compositeDiscoveryClient: CompositeDiscoveryClient,
     private val tag: String?
 ) : FeignTarget<T> {
 
     private val errorInfo =
         MessageCodeUtil.generateResponseDataObject<String>(ERROR_SERVICE_NO_FOUND, arrayOf(serviceName))
 
+    private val namespace = System.getenv("NAMESPACE")
+
     private val usedInstance = ConcurrentHashMap<String, ServiceInstance>()
 
     private fun choose(serviceName: String): ServiceInstance {
-        val svrName = if (discoveryClient is ConsulDiscoveryClient) {
+        val svrName = if (StringUtils.isBlank(namespace)) {
             serviceName
         } else {
             "bkci-$serviceName" // TODO
         }
 
-        val instances = discoveryClient.getInstances(svrName)
+        val instances = compositeDiscoveryClient.getInstances(svrName)
             ?: throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
         if (instances.isEmpty()) {
             throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
