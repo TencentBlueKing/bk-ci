@@ -141,6 +141,7 @@ object MarketBuildUtils {
             result = result.replace("{$key}", value.toString())
         }
 
-        return result
+        // 没有变量值的变量默认置空
+        return result.replace(Regex("\\{.*}"), "")
     }
 }
