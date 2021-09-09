@@ -207,7 +207,8 @@ class DockerHostBuildService(
                 "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
-                .withCmd("/bin/sh", ENTRY_POINT_CMD)
+//                .withCmd("/bin/sh", ENTRY_POINT_CMD)
+                .withCmd("/bin/sh","sleep 2000s")//TODO DEBUG 
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                 .withHostConfig(
