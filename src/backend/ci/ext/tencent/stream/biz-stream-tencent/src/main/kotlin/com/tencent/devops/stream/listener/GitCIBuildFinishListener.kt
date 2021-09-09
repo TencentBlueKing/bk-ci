@@ -114,9 +114,9 @@ class GitCIBuildFinishListener @Autowired constructor(
     @Value("\${rtx.v2GitUrl:#{null}}")
     private val v2GitUrl: String? = null
 
-    private val buildSuccessDesc = "Your pipeline「%s」 is succeed."
-    private val buildCancelDesc = "Your pipeline「%s」 was cancelled."
-    private val buildFailedDesc = "Your pipeline「%s」 is failed."
+    private val buildSuccessDesc = "Your pipeline「%s」 is succeed"
+    private val buildCancelDesc = "Your pipeline「%s」 was cancelled"
+    private val buildFailedDesc = "Your pipeline「%s」 is failed"
 
     @RabbitListener(
         bindings = [(QueueBinding(
@@ -244,7 +244,6 @@ class GitCIBuildFinishListener @Autowired constructor(
                                 pipelineName = pipeline.displayName,
                                 event = buildFinishEvent
                             ),
-                            isFinish = true,
                             targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                                 homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
                                 projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),

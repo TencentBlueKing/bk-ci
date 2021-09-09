@@ -86,7 +86,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    private val buildRunningDesc = "Your pipeline「%s」is running..."
+    private val buildRunningDesc = "Your pipeline「%s」is running"
 
     abstract fun gitStartBuild(
         pipeline: GitProjectPipeline,
@@ -202,7 +202,6 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                     status = GitCICommitCheckState.PENDING,
                     context = "${pipeline.filePath}@${event.objectKind.toUpperCase()}",
                     gitCIBasicSetting = gitCIBasicSetting,
-                    isFinish = false,
                     targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                         homePage = streamGitConfig.tGitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
                         projectName = GitCommonUtils.getRepoName(gitCIBasicSetting.gitHttpUrl, gitCIBasicSetting.name),
