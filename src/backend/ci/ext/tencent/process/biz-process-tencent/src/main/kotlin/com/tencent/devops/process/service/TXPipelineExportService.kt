@@ -1227,11 +1227,13 @@ class TXPipelineExportService @Autowired constructor(
         }
         val realExistingOutputElements =
             distinctMap.values.groupBy { it.stageLocation?.id }
-        realExistingOutputElements.forEach {
-            if (it.key == pipelineExportV2YamlConflictMapItem.conflictForStage?.id || it.value.size < 2) return@forEach
-            val names = it.value.map { _it -> _it.stepAtom?.name }
+        realExistingOutputElements.keys.reversed().forEach {
+            if (it == pipelineExportV2YamlConflictMapItem.conflictForStage?.id ||
+                realExistingOutputElements[it]?.size!! < 2
+            ) return
+            val names = realExistingOutputElements[it]?.map { _it -> _it.stepAtom?.name }
             val conflictElements = outputConflictMap[key]
-            val item = it.value.map { _it ->
+            val item = realExistingOutputElements[it]?.map { _it ->
                 PipelineExportV2YamlConflictMapItem(
                     conflictForStage = _it.stageLocation?.copy(),
                     conflictForJob = _it.jobLocation?.copy(),
@@ -1240,7 +1242,7 @@ class TXPipelineExportService @Autowired constructor(
                         name = _it.stepAtom?.name
                     )
                 )
-            }
+            } ?: return@forEach
             if (!conflictElements.isNullOrEmpty()) {
                 conflictElements.add(item)
             } else {
