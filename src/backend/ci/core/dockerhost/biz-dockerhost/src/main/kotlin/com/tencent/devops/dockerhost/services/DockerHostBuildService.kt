@@ -231,15 +231,15 @@ class DockerHostBuildService(
                 )
                 .exec()
 
-            logger.info("Created container $container")
-            httpLongDockerCli.startContainerCmd(container.id).exec()
-
             if (StringUtils.isNotBlank(namespace)) {
                 httpLongDockerCli.copyArchiveToContainerCmd(container.id)
                     .withHostResource("/data/workspace/agent-package/script/init.sh")
                     .withRemotePath("/data/")
                     .exec()
             }
+
+            logger.info("Created container $container")
+            httpLongDockerCli.startContainerCmd(container.id).exec()
 
             return container.id
         } catch (er: Throwable) {
