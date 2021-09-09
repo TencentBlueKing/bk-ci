@@ -279,7 +279,7 @@ class TXPipelineExportService @Autowired constructor(
             }
             val pipelineExportV2YamlConflictMapItem =
                 PipelineExportV2YamlConflictMapItem(
-                    Stage = PipelineExportV2YamlConflictMapBaseItem(
+                    stage = PipelineExportV2YamlConflictMapBaseItem(
                         id = stage.id,
                         name = stage.name
                     )
@@ -336,7 +336,7 @@ class TXPipelineExportService @Autowired constructor(
         if (stage.finally) {
             val pipelineExportV2YamlConflictMapItem =
                 PipelineExportV2YamlConflictMapItem(
-                    Stage = PipelineExportV2YamlConflictMapBaseItem(
+                    stage = PipelineExportV2YamlConflictMapBaseItem(
                         id = stage.id,
                         name = stage.name
                     )
@@ -378,7 +378,7 @@ class TXPipelineExportService @Autowired constructor(
             } else {
                 "unknown_job"
             }
-            pipelineExportV2YamlConflictMapItem.Job =
+            pipelineExportV2YamlConflictMapItem.job =
                 PipelineExportV2YamlConflictMapBaseItem(
                     id = it.id,
                     name = it.name
@@ -580,7 +580,7 @@ class TXPipelineExportService @Autowired constructor(
             val retryTimes = if (originRetryTimes > 1) originRetryTimes else null
             val timeoutMinutes = if (originTimeout < 480) originTimeout else null
             val continueOnError = if (element.additionalOptions?.continueWhenFailed == true) true else null
-            pipelineExportV2YamlConflictMapItem.Step =
+            pipelineExportV2YamlConflictMapItem.step =
                 PipelineExportV2YamlConflictMapBaseItem(
                     id = element.id,
                     name = element.name
@@ -666,8 +666,8 @@ class TXPipelineExportService @Autowired constructor(
                             val outputWithNamespace = if (namespace.isNullOrBlank()) key else "${namespace}_$key"
                             val conflictElements = output2Elements[outputWithNamespace]
                             val item = MarketBuildAtomElementWithLocation(
-                                stageLocation = pipelineExportV2YamlConflictMapItem.Stage?.copy(),
-                                jobLocation = pipelineExportV2YamlConflictMapItem.Job?.copy(),
+                                stageLocation = pipelineExportV2YamlConflictMapItem.stage?.copy(),
+                                jobLocation = pipelineExportV2YamlConflictMapItem.job?.copy(),
                                 stepAtom = step
                             )
                             if (!conflictElements.isNullOrEmpty()) {
@@ -1228,16 +1228,16 @@ class TXPipelineExportService @Autowired constructor(
         val realExistingOutputElements =
             distinctMap.values.groupBy { it.stageLocation?.id }
         realExistingOutputElements.keys.reversed().forEach {
-            if (it == pipelineExportV2YamlConflictMapItem.Stage?.id ||
+            if (it == pipelineExportV2YamlConflictMapItem.stage?.id ||
                 realExistingOutputElements[it]?.size!! < 2
             ) return
             val names = realExistingOutputElements[it]?.map { _it -> _it.stepAtom?.name }
             val conflictElements = outputConflictMap[key]
             val itemElements = realExistingOutputElements[it]?.map { _it ->
                 PipelineExportV2YamlConflictMapItem(
-                    Stage = _it.stageLocation?.copy(),
-                    Job = _it.jobLocation?.copy(),
-                    Step = PipelineExportV2YamlConflictMapBaseItem(
+                    stage = _it.stageLocation?.copy(),
+                    job = _it.jobLocation?.copy(),
+                    step = PipelineExportV2YamlConflictMapBaseItem(
                         id = _it.stepAtom?.id,
                         name = _it.stepAtom?.name
                     )
@@ -1245,9 +1245,9 @@ class TXPipelineExportService @Autowired constructor(
             } ?: return@forEach
             val item = mutableListOf(
                 PipelineExportV2YamlConflictMapItem(
-                    Stage = pipelineExportV2YamlConflictMapItem.Stage?.copy(),
-                    Job = pipelineExportV2YamlConflictMapItem.Job?.copy(),
-                    Step = pipelineExportV2YamlConflictMapItem.Stage?.copy()
+                    stage = pipelineExportV2YamlConflictMapItem.stage?.copy(),
+                    job = pipelineExportV2YamlConflictMapItem.job?.copy(),
+                    step = pipelineExportV2YamlConflictMapItem.stage?.copy()
                 )
             )
             item.addAll(itemElements)
