@@ -1247,7 +1247,7 @@ class TXPipelineExportService @Autowired constructor(
                 PipelineExportV2YamlConflictMapItem(
                     stage = pipelineExportV2YamlConflictMapItem.stage?.copy(),
                     job = pipelineExportV2YamlConflictMapItem.job?.copy(),
-                    step = pipelineExportV2YamlConflictMapItem.stage?.copy()
+                    step = pipelineExportV2YamlConflictMapItem.step?.copy()
                 )
             )
             item.addAll(itemElements)
