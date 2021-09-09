@@ -666,13 +666,6 @@ class TXPipelineExportService @Autowired constructor(
                                 stepAtom = step
                             )
                             if (!conflictElements.isNullOrEmpty()) {
-                                conflictElements.forEachIndexed { index, it ->
-                                    if (it.stageLocation?.id == item.stageLocation?.id &&
-                                        it.jobLocation?.id == item.jobLocation?.id
-                                    ) {
-                                        conflictElements.removeAt(index)
-                                    }
-                                }
                                 conflictElements.add(item)
                             } else {
                                 output2Elements[outputWithNamespace] = mutableListOf(item)
@@ -1228,8 +1221,12 @@ class TXPipelineExportService @Autowired constructor(
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
         iisExportFile: Boolean
     ) {
+        val distinctMap = HashMap<String?, MarketBuildAtomElementWithLocation>()
+        existingOutputElements.forEach {
+            distinctMap[it.jobLocation?.id] = it
+        }
         val realExistingOutputElements =
-            existingOutputElements.distinctBy { it.jobLocation?.id }.groupBy { it.stageLocation?.id }
+            distinctMap.values.groupBy { it.stageLocation?.id }
         realExistingOutputElements.forEach {
             if (it.key == pipelineExportV2YamlConflictMapItem.conflictForStage?.id || it.value.size < 2) return@forEach
             val names = it.value.map { _it -> _it.stepAtom?.name }
