@@ -66,7 +66,7 @@ class CustomizeArchiveGetTask : ITask() {
         // 匹配文件
         val files = downloadPaths.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
-        }.flatMap { srcPath ->
+        }.filter { it.isNotBlank() }.flatMap { srcPath ->
 
             val fileList = archiveGetResourceApi.getFileDownloadUrls(
                 userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",

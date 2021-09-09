@@ -74,7 +74,7 @@ class BuildArchiveGetTask : ITask() {
         LoggerService.addNormalLine("archive get notFoundContinue: $notFoundContinue")
         val files = srcPaths.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
-        }.flatMap { srcPath ->
+        }.filter { it.isNotBlank() }.flatMap { srcPath ->
 
             logger.info("[$buildId]|pipelineId=$pipelineId|srcPath=$srcPath")
             val fileList = archiveGetResourceApi.getFileDownloadUrls(
