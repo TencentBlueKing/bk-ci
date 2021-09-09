@@ -1256,6 +1256,7 @@ class TXPipelineExportService @Autowired constructor(
                     params = arrayOf(key, names.toString())
                 )
             }
+            return
         }
     }
 }
