@@ -62,7 +62,6 @@ import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.pojo.DockerRunPortBinding
 import com.tencent.devops.dockerhost.utils.CommonUtils
-import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
 import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.dockerhost.utils.SigarUtil
 import com.tencent.devops.process.engine.common.VMUtils
@@ -208,7 +207,7 @@ class DockerHostBuildService(
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
 //                .withCmd("/bin/sh", ENTRY_POINT_CMD)
-                .withCmd("tail -f /dev/null")//TODO DEBUG
+                .withCmd("/bin/bash", "-c", "tail -f /dev/null")//TODO DEBUG
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                 .withHostConfig(
@@ -234,7 +233,7 @@ class DockerHostBuildService(
             logger.info("Created container $container")
             httpLongDockerCli.startContainerCmd(container.id).exec()
 
-            if(StringUtils.isNotBlank(namespace)){
+            if (StringUtils.isNotBlank(namespace)) {
                 httpLongDockerCli.copyArchiveToContainerCmd(container.id)
                     .withHostResource("/data/workspace/agent-package/script/init.sh")
                     .withRemotePath("/data/")
