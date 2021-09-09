@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.Constants
@@ -66,6 +67,7 @@ import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.dockerhost.utils.SigarUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
+import org.apache.http.conn.util.InetAddressUtils
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
@@ -79,6 +81,7 @@ import javax.annotation.PostConstruct
 @Component
 class DockerHostBuildService(
     private val dockerHostConfig: DockerHostConfig,
+    private val commonConfig: CommonConfig,
     private val environment: Environment,
     private val dockerHostBuildApi: DockerHostBuildResourceApi,
     private val dockerHostBuildLogResourceApi: DockerHostBuildLogResourceApi,
@@ -169,13 +172,17 @@ class DockerHostBuildService(
                     // logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} containerName: ${container.names[0]}")
                     val containerName = container.names[0]
                     if (containerName.contains(getDockerRunStopPattern(dockerHostBuildInfo))) {
-                        logger.info("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
-                                "stop dockerRun container, containerId: ${container.id}")
+                        logger.info(
+                            "${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
+                                    "stop dockerRun container, containerId: ${container.id}"
+                        )
                         httpLongDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
                     }
                 } catch (e: Exception) {
-                    logger.error("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
-                            "Stop dockerRun container failed, containerId: ${container.id}", e)
+                    logger.error(
+                        "${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
+                                "Stop dockerRun container failed, containerId: ${container.id}", e
+                    )
                 }
             }
         }
@@ -200,16 +207,18 @@ class DockerHostBuildService(
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                .withHostConfig(HostConfig()
-                    .withCapAdd(Capability.SYS_PTRACE)
-                    .withMemory(dockerBuildInfo.dockerResource.memoryLimitBytes)
-                    .withMemorySwap(dockerBuildInfo.dockerResource.memoryLimitBytes)
-                    .withCpuQuota(dockerBuildInfo.dockerResource.cpuQuota.toLong())
-                    .withCpuPeriod(dockerBuildInfo.dockerResource.cpuPeriod.toLong())
+                .withHostConfig(
+                    HostConfig()
+                        .withCapAdd(Capability.SYS_PTRACE)
+                        .withMemory(dockerBuildInfo.dockerResource.memoryLimitBytes)
+                        .withMemorySwap(dockerBuildInfo.dockerResource.memoryLimitBytes)
+                        .withCpuQuota(dockerBuildInfo.dockerResource.cpuQuota.toLong())
+                        .withCpuPeriod(dockerBuildInfo.dockerResource.cpuPeriod.toLong())
 /*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
                     .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
-                    .withBinds(binds)
-                    .withNetworkMode("bridge"))
+                        .withBinds(binds)
+                        .withNetworkMode("bridge")
+                )
                 .exec()
 
             logger.info("Created container $container")
@@ -255,13 +264,18 @@ class DockerHostBuildService(
                 exitCode = containerState.exitCodeLong ?: 0L
             }
         } catch (e: Exception) {
-            logger.error("[${dockerBuildInfo.buildId}]|[${dockerBuildInfo.vmSeqId}] waitAgentUp failed. containerId: $containerId", e)
+            logger.error(
+                "[${dockerBuildInfo.buildId}]|[${dockerBuildInfo.vmSeqId}] waitAgentUp failed. containerId: $containerId",
+                e
+            )
         }
 
         if (exitCode != 0L && DockerExitCodeEnum.getValue(exitCode) != null) {
             val errorCodeEnum = DockerExitCodeEnum.getValue(exitCode)!!.errorCodeEnum
-            logger.error("[${dockerBuildInfo.buildId}]|[${dockerBuildInfo.vmSeqId}] waitAgentUp failed. " +
-                    "${errorCodeEnum.formatErrorMessage}. containerId: $containerId")
+            logger.error(
+                "[${dockerBuildInfo.buildId}]|[${dockerBuildInfo.vmSeqId}] waitAgentUp failed. " +
+                        "${errorCodeEnum.formatErrorMessage}. containerId: $containerId"
+            )
             throw ContainerException(
                 errorCodeEnum = errorCodeEnum,
                 message = "Failed to wait agent up. ${errorCodeEnum.formatErrorMessage}"
@@ -421,6 +435,11 @@ class DockerHostBuildService(
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                 .withHostConfig(hostConfig)
                 .withWorkingDir(dockerHostConfig.volumeWorkspace)
+                .apply {
+                    if (dockerHostConfig.publicHostIP != null && InetAddressUtils.isIPv4Address(dockerHostConfig.publicHostIP)) {
+                        withHostConfig(HostConfig().withExtraHosts("${commonConfig.devopsOuterHostGateWay}:${dockerHostConfig.publicHostIP}"))
+                    }
+                }
 
             if (!(dockerRunParam.command.isEmpty() || dockerRunParam.command.equals("[]"))) {
                 createContainerCmd.withCmd(dockerRunParam.command)
@@ -520,13 +539,15 @@ class DockerHostBuildService(
                 val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
                 if (cpuUsagePer >= elasticityCpuThreshold) {
                     // 上报负载超额预警到数据平台
-                    dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-                        "containerName" to container.names[0],
-                        "containerId" to container.id,
-                        "cpuUsagePer" to cpuUsagePer.toString(),
-                        "memUsagePer" to "",
-                        "statistics" to JsonUtil.toJson(statistics)
-                    ))
+                    dockerHostBuildLogResourceApi.sendFormatLog(
+                        mapOf(
+                            "containerName" to container.names[0],
+                            "containerId" to container.id,
+                            "cpuUsagePer" to cpuUsagePer.toString(),
+                            "memUsagePer" to "",
+                            "statistics" to JsonUtil.toJson(statistics)
+                        )
+                    )
 
                     // 重置容器负载
                     resetContainer(container.id)
@@ -535,18 +556,21 @@ class DockerHostBuildService(
 
                 if (statistics.memoryStats != null &&
                     statistics.memoryStats.usage != null &&
-                    statistics.memoryStats.limit != null) {
+                    statistics.memoryStats.limit != null
+                ) {
                     val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
                     val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
                     if (memUsage >= elasticityMemThreshold) {
                         // 上报负载超额预警到数据平台
-                        dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-                            "containerName" to container.names[0],
-                            "containerId" to container.id,
-                            "cpuUsagePer" to cpuUsagePer.toString(),
-                            "memUsagePer" to memUsage.toString(),
-                            "statistics" to JsonUtil.toJson(statistics)
-                        ))
+                        dockerHostBuildLogResourceApi.sendFormatLog(
+                            mapOf(
+                                "containerName" to container.names[0],
+                                "containerId" to container.id,
+                                "cpuUsagePer" to cpuUsagePer.toString(),
+                                "memUsagePer" to memUsage.toString(),
+                                "statistics" to JsonUtil.toJson(statistics)
+                            )
+                        )
 
                         resetContainer(container.id)
                     }
@@ -577,8 +601,10 @@ class DockerHostBuildService(
             .withMemoryReservation(memReservation)
             .withCpuPeriod(cpuPeriod)
             .withCpuQuota(cpuQuota).exec()
-        logger.info("<<<< Trigger container reset, containerId: $containerId," +
-            " memReservation: $memReservation, cpuPeriod: $cpuPeriod, cpuQuota: $cpuQuota")
+        logger.info(
+            "<<<< Trigger container reset, containerId: $containerId," +
+                    " memReservation: $memReservation, cpuPeriod: $cpuPeriod, cpuQuota: $cpuQuota"
+        )
     }
 
     fun clearContainers() {
