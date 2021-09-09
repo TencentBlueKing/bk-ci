@@ -25,7 +25,6 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              rm -rf *;
               cp -r -n /data/workspace/agent-package ./agent-package;
               if [ ! -f "./agent-package/jre/linux/jre.zip" ]; then
                 wget "https://github.com/stubenhuang/jre/raw/main/linux/jre.zip";
