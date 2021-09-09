@@ -208,7 +208,7 @@ class DockerHostBuildService(
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
 //                .withCmd("/bin/sh", ENTRY_POINT_CMD)
-                .withCmd("sleep 2000s")//TODO DEBUG
+                .withCmd("bash")//TODO DEBUG
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                 .withHostConfig(
