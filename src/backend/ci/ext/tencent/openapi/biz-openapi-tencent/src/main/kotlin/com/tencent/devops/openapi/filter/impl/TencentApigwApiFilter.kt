@@ -66,10 +66,11 @@ class TencentApigwApiFilter(
         private const val apigwSourceHeader = "X-DEVOPS-APIGW-TYPE"
     }
 
-    enum class ApiType(val startContextPath: String) {
-        DEFAULT("/api/apigw/"),
-        USER("/api/apigw-user/"),
-        APP("/api/apigw-app/");
+    enum class ApiType(val startContextPath: String, val verify: Boolean) {
+        DEFAULT("/api/apigw/", true),
+        USER("/api/apigw-user/", true),
+        APP("/api/apigw-app/", true),
+        OP("/api/op/", false);
 
         companion object {
             fun parseType(path: String): ApiType? {
@@ -87,8 +88,10 @@ class TencentApigwApiFilter(
     override fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
         // path为为空的时候，直接退出
         val path = requestContext.uriInfo.requestUri.path
-        // 判断是否需要处理apigw
+        // 判断是否为合法的路径
         val apiType = ApiType.parseType(path) ?: return false
+        // 如果是op的接口访问直接跳过jwt认证
+        if (!apiType.verify) return true
 
         logger.info("FILTER| url=$path")
         val bkApiJwt = requestContext.getHeaderString(jwtHeader)

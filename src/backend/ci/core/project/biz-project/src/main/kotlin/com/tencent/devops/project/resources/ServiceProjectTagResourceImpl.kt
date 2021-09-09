@@ -25,26 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.project.resources
 
-import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.ServiceProjectTagResource
+import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.service.ProjectRouteTagService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("代码库模型-基本信息")
-data class RepositoryInfo(
-    @ApiModelProperty("仓库ID", required = false)
-    val repositoryId: Long?,
-    @ApiModelProperty("仓库哈希ID", required = false)
-    val repositoryHashId: String?,
-    @ApiModelProperty("仓库别名", required = true)
-    val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    val url: String,
-    @ApiModelProperty("类型", required = true)
-    val type: ScmType,
-    @ApiModelProperty("最后更新时间", required = true)
-    val updatedTime: Long,
-    @ApiModelProperty("创建人", required = false)
-    val createUser: String? = null
-)
+@RestResource
+class ServiceProjectTagResourceImpl @Autowired constructor(
+    val projectRouteTag: ProjectRouteTagService
+) : ServiceProjectTagResource {
+    override fun checkProjectRouter(projectId: String): Result<Boolean> {
+        return Result(projectRouteTag.checkProjectTag(projectId))
+    }
+}

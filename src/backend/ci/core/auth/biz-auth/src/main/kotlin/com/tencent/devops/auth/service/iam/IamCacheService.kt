@@ -17,16 +17,16 @@ class IamCacheService @Autowired constructor(
     val policyService: PolicyService?
 ) {
 
-    // 用户-管理员项目 缓存， 10分钟有效时间
+    // 用户-管理员项目 缓存， 5分钟有效时间
     private val projectManager = CacheBuilder.newBuilder()
         .maximumSize(5000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String, List<String>>()
 
-    // 用户-project_view项目 缓存， 10分钟有效时间
+    // 用户-project_view项目 缓存， 1分钟有效时间
     private val projectViewCache = CacheBuilder.newBuilder()
         .maximumSize(5000)
-        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
         .build<String, Set<String>>()
 
     // 用户 -- action下策略

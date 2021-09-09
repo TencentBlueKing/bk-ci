@@ -25,26 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.project.api.service
 
-import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.project.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("代码库模型-基本信息")
-data class RepositoryInfo(
-    @ApiModelProperty("仓库ID", required = false)
-    val repositoryId: Long?,
-    @ApiModelProperty("仓库哈希ID", required = false)
-    val repositoryHashId: String?,
-    @ApiModelProperty("仓库别名", required = true)
-    val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    val url: String,
-    @ApiModelProperty("类型", required = true)
-    val type: ScmType,
-    @ApiModelProperty("最后更新时间", required = true)
-    val updatedTime: Long,
-    @ApiModelProperty("创建人", required = false)
-    val createUser: String? = null
-)
+@Api(tags = ["SERVICE_TAG"], description = "项目流量信息")
+@Path("/service/projects/tag")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceProjectTagResource {
+    @GET
+    @Path("/checkProject/{projectId}/router")
+    @ApiOperation("判断项目指向是否一致")
+    fun checkProjectRouter(
+        @ApiParam("项目id", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Boolean>
+}
