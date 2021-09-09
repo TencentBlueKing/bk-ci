@@ -68,8 +68,10 @@ spec:
           env:
             - name: MS_NAME
               value: dispatch
-            - name: NAMESPACE
+             - name: NAMESPACE
               value: {{ .Release.Namespace }}
+             - name: SERVICE_PREFIX
+              value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
               value: {{ .Values.dispatch.env.JVM_XMS }}
             - name: JVM_XMX
@@ -80,6 +82,8 @@ spec:
             - "-c"
             - |
               cp /data/workspace/backend.bkci.sh .;
+              mkdir -p {{ .Values.config.bkCiHome }};
+              ln -s {{ .Values.persistence.mountPath }}/agent-package {{ .Values.config.bkCiHome }}/agent-package;
               /bin/bash backend.bkci.sh;
           livenessProbe:
             httpGet:
@@ -99,3 +103,15 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 5
             successThreshold: 1
+          volumeMounts:
+            - name: storage
+              mountPath: {{ .Values.persistence.mountPath }}
+      volumes:
+        - name: storage
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "common.names.fullname" . }}-storage{{- end }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+

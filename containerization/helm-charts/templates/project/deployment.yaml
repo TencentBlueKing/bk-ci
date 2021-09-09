@@ -68,8 +68,10 @@ spec:
           env:
             - name: MS_NAME
               value: project
-            - name: NAMESPACE
+             - name: NAMESPACE
               value: {{ .Release.Namespace }}
+             - name: SERVICE_PREFIX
+              value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
               value: {{ .Values.project.env.JVM_XMS }}
             - name: JVM_XMX

@@ -21,8 +21,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
 
     -- 容器环境
     if ngx.var.namespace ~= '' and ngx.var.namespace ~= nil then
-        -- TODO
-        return 'bkci-' .. service_name .. '.' .. ngx.var.namespace .. '.svc.cluster.local'
+        return ngx.var.service_prefix .. '-' .. service_name .. '.' .. ngx.var.namespace .. '.svc.cluster.local'
     end
 
     -- 获取consul查询域名

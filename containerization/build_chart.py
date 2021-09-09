@@ -18,13 +18,15 @@ default_value_dict = {
     'bkCiHttpPort': '80',
     'bkCiRedisDb': '0',
     'bkCiAuthProvider': 'sample',
-    'bkCiHost': 'devops.paasv3-test.woa.com',
     'bkCiLogStorageType': 'elasticsearch',
     'bkCiEsClusterName': 'devops',
     'bkCiProcessEventConcurrent': '10',
     'bkCiLogsDir': '/data/logs',
     'bkCiHome': '/data/bkee/ci',
-    'bkCiGatewayDnsAddr': 'local=on'
+    'bkCiGatewayDnsAddr': 'local=on',
+    # TODO 
+    'bkCiHost': 'devops.paasv3-test.woa.com',
+    'bkCiPublicUrl':'devops.paasv3-test.woa.com'
 }
 
 # include 模板
@@ -114,6 +116,7 @@ for env in gateway_envs:
         gateway_config_file.write(env.replace(
             "__", "")+": {{ .Values.config."+humps.camelize(env.replace("__", "").lower())+" | quote }}\n")
 gateway_config_file.write('NAMESPACE: {{ .Release.Namespace }}\n')
+gateway_config_file.write('SERVICE_PREFIX: {{ include "common.names.fullname" . }}\n')
 gateway_config_file.write('{{- end -}}')
 
 gateway_config_file.flush()

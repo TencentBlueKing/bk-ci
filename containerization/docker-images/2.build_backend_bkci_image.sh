@@ -3,7 +3,6 @@ set -e
 # 排除掉前端和agent两个大文件夹,缩小体积
 cat << EOF > ./.dockerignore
 ./ci/frontend
-./ci/agent-package
 EOF
 
 echo "######################## BUILD BKCI BACKEND IMAGE START... ########################"

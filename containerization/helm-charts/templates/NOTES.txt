@@ -1,11 +1,6 @@
 # TODO
-1. 把value完善好
-2. ingress
-3. 将服务改写为k8s调用模式
-4. 可能要挂载pv , dockerhost要怎么解决
-
-1. influxdb?
-2. nfs?
-3. 检查mysql?
-4. auth?
-5. helm的配置怎么自动化同步?
+2. 服务发现用k8s
+4. dockerhost要怎么解决
+4. 检查mysql?
+5. auth?
+9. agent-package/jre 怎么处理?
