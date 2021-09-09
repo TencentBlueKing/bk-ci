@@ -70,6 +70,7 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.utils.CommitCheckUtils
+import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -94,7 +95,8 @@ class GitCIBuildFinishListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val qualityService: QualityService,
-    private val gitCheckService: GitCheckService
+    private val gitCheckService: GitCheckService,
+    private val triggerMessageUtil: StreamTriggerMessageUtils
 ) {
 
     @Value("\${rtx.corpid:#{null}}")
@@ -212,7 +214,17 @@ class GitCIBuildFinishListener @Autowired constructor(
 
                         gitCheckService.pushCommitCheck(
                             commitId = commitId,
-                            description = getDescByBuildStatus(buildStatus, pipeline.displayName),
+                            description = triggerMessageUtil.getCommitCheckDesc(
+                                prefix = getDescByBuildStatus(buildStatus, pipeline.displayName),
+                                objectKind = objectKind,
+                                action = if (gitEvent is GitMergeRequestEvent) {
+                                    gitEvent.object_attributes.action
+                                } else {
+                                    ""
+                                },
+                                branch = event.branch,
+                                userId = buildFinishEvent.userId
+                            ),
                             mergeRequestId = if (gitEvent is GitMergeRequestEvent) {
                                 gitEvent.object_attributes.id
                             } else {
