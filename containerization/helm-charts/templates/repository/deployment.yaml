@@ -68,9 +68,9 @@ spec:
           env:
             - name: MS_NAME
               value: repository
-             - name: NAMESPACE
+            - name: NAMESPACE
               value: {{ .Release.Namespace }}
-             - name: SERVICE_PREFIX
+            - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
               value: {{ .Values.repository.env.JVM_XMS }}

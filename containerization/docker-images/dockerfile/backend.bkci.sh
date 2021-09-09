@@ -25,8 +25,8 @@ java_argv+=(
   "-Ddevops_gateway=$DEVOPS_GATEWAY"
   "-Dserver.port=$API_PORT" # 强制覆盖配置文件里的端口.
   "-Dbksvc=bk-ci-$MS_NAME"
-  "-Dspring.cloud.kubernetes.config.sources[0].name=bkci-common"
-  "-Dspring.cloud.kubernetes.config.sources[1].name=bkci-$MS_NAME"
+  "-Dspring.cloud.kubernetes.config.sources[0].name=${SERVICE_PREFIX:-bkci}-common"
+  "-Dspring.cloud.kubernetes.config.sources[1].name=${SERVICE_PREFIX:-bkci}-${MS_NAME}"
 )
 
 echo "run java"
