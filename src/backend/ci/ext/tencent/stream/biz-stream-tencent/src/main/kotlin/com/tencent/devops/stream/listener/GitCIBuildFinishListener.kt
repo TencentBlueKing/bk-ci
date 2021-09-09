@@ -222,7 +222,6 @@ class GitCIBuildFinishListener @Autowired constructor(
                                 } else {
                                     ""
                                 },
-                                branch = event.branch,
                                 userId = buildFinishEvent.userId
                             ),
                             mergeRequestId = if (gitEvent is GitMergeRequestEvent) {

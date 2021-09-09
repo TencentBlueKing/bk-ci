@@ -56,7 +56,6 @@ class StreamTriggerMessageUtils @Autowired constructor(
                 prefix,
                 objectKind,
                 extensionAction ?: "",
-                branch,
                 userId
             )
         }
@@ -66,21 +65,20 @@ class StreamTriggerMessageUtils @Autowired constructor(
         prefix: String,
         objectKind: String,
         action: String,
-        branch: String,
         userId: String
     ): String {
         val messageTitle = when (objectKind) {
             TGitObjectKind.MERGE_REQUEST.value -> {
-                " Triggered by $userId. [$action]"
+                "$prefix Triggered by $userId. [$action]"
             }
             TGitObjectKind.MANUAL.value -> {
-                " Triggered by $userId. [manual]"
+                "$prefix Triggered by $userId. [manual]"
             }
             TGitObjectKind.TAG_PUSH.value -> {
-                " Triggered by $userId. [tag-push]"
+                "$prefix Triggered by $userId. [tag-push]"
             }
             else -> {
-                " Triggered by $userId. [push]"
+                "$prefix Triggered by $userId. [push]"
             }
         }
         return messageTitle
