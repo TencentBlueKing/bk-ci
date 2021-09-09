@@ -52,5 +52,7 @@ data class Credential(
     @ApiModelProperty("凭据内容", required = true)
     val v4: String? = null,
     @ApiModelProperty("最后更新者", required = true)
-    val updateUser: String? = null
+    val updateUser: String? = null,
+    @ApiModelProperty("创建人", required = true)
+    val createUser: String? = null
 )
