@@ -7,6 +7,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.MarketBuildAtomElementWithLocation
 import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapItem
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -60,12 +61,17 @@ class TXPipelineExportServiceTest {
         )
         val variables = mapOf("haha" to "value")
         val output2Elements = mutableMapOf(
-            "aaaa" to mutableListOf(
-                MarketBuildAtomElement(
-                    name = "名称",
-                    id = "stepId"
+            "aaaa" to
+                mutableListOf(
+                    MarketBuildAtomElementWithLocation(
+                        stageLocation = null,
+                        jobLocation = null,
+                        stepAtom = MarketBuildAtomElement(
+                            name = "名称",
+                            id = "stepId"
+                        )
+                    )
                 )
-            )
         )
         val resultMap = txPipelineExportService.replaceMapWithDoubleCurlyBraces(
             inputMap = inputMap,
@@ -95,9 +101,13 @@ class TXPipelineExportServiceTest {
         val variables = mapOf("haha" to "value")
         val output2Elements = mutableMapOf(
             "aaaa" to mutableListOf(
-                MarketBuildAtomElement(
-                    name = "名称",
-                    id = "stepId"
+                MarketBuildAtomElementWithLocation(
+                    stageLocation = null,
+                    jobLocation = null,
+                    stepAtom = MarketBuildAtomElement(
+                        name = "名称",
+                        id = "stepId"
+                    )
                 )
             )
         )
@@ -146,9 +156,13 @@ class TXPipelineExportServiceTest {
         val variables = mapOf("haha" to "value")
         val output2Elements = mutableMapOf(
             "aaaa" to mutableListOf(
-                MarketBuildAtomElement(
-                    name = "名称",
-                    id = "stepId"
+                MarketBuildAtomElementWithLocation(
+                    stageLocation = null,
+                    jobLocation = null,
+                    stepAtom = MarketBuildAtomElement(
+                        name = "名称",
+                        id = "stepId"
+                    )
                 )
             )
         )
