@@ -208,7 +208,7 @@ class DockerHostBuildService(
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
 //                .withCmd("/bin/sh", ENTRY_POINT_CMD)
-                .withCmd("bash")//TODO DEBUG
+                .withCmd("tail -f /dev/null")//TODO DEBUG
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                 .withHostConfig(
