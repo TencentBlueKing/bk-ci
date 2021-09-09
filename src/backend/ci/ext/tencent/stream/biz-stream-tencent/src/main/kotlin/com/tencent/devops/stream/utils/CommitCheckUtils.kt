@@ -25,31 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.v2
+package com.tencent.devops.stream.utils
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
+import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 
-@ApiModel("V2版本多选搜索过滤历史参数")
-data class GitCIBuildHistorySearch(
-    @ApiModelProperty("第几页", required = false)
-    val page: Int?,
-    @ApiModelProperty("每页多少条", required = false)
-    val pageSize: Int?,
-    @ApiModelProperty("分支", required = false)
-    val branch: Set<String>?,
-    @ApiModelProperty("fork库分支", required = false)
-    val sourceGitProjectId: Set<String>?,
-    @ApiModelProperty("触发人", required = false)
-    val triggerUser: Set<String>?,
-    @ApiModelProperty("流水线ID", required = false)
-    val pipelineId: String?,
-    @ApiModelProperty("Commit Msg", required = false)
-    val commitMsg: String?,
-    @ApiModelProperty("Event", required = false)
-    val event: Set<TGitObjectKind>?,
-    @ApiModelProperty("构建状态", required = false)
-    val status: Set<BuildStatus>?
-)
+object CommitCheckUtils {
+
+    fun needSendCheck(request: GitRequestEvent): Boolean {
+        val event = request.gitEvent ?: return false
+        return when (event) {
+            is GitMergeRequestEvent -> {
+                val action = StreamMrEventAction.getActionValue(event) ?: return false
+                !(action == StreamMrEventAction.CLOSE.value || action == StreamMrEventAction.MERGE.value)
+            }
+            else -> {
+                request.objectKind != TGitObjectKind.MANUAL.value
+            }
+        }
+    }
+
+    // TODO: Finish阶段专用，后续重构参数时看是否可以干掉
+    fun needSendCheck(gitEvent: GitEvent): Boolean {
+        return when (gitEvent) {
+            is GitMergeRequestEvent -> {
+                val action = StreamMrEventAction.getActionValue(gitEvent) ?: return false
+                !(action == StreamMrEventAction.CLOSE.value || action == StreamMrEventAction.MERGE.value)
+            }
+            else -> {
+                true
+            }
+        }
+    }
+}

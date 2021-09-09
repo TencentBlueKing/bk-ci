@@ -29,8 +29,6 @@ package com.tencent.devops.stream.trigger.v2
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
@@ -57,6 +55,8 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.stream.utils.CommitCheckUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -187,7 +187,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId, ymlVersion)
             // 推送启动构建消息,当人工触发时不推送构建消息
-            if (event.objectKind != OBJECT_KIND_MANUAL) {
+            if (CommitCheckUtils.needSendCheck(event)) {
                 gitCheckService.pushCommitCheck(
                     commitId = event.commitId,
                     description = if (event.description.isNullOrBlank()) {
@@ -208,7 +208,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                         pipelineId = pipeline.pipelineId,
                         buildId = buildId
                     ),
-                    block = (event.objectKind == OBJECT_KIND_MERGE_REQUEST && gitCIBasicSetting.enableMrBlock),
+                    block = (event.objectKind == TGitObjectKind.MERGE_REQUEST.value && gitCIBasicSetting.enableMrBlock),
                     pipelineId = pipeline.pipelineId
                 )
             }
@@ -232,7 +232,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                 reasonDetail = e.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
                 gitProjectId = event.gitProjectId,
                 sendCommitCheck = true,
-                commitCheckBlock = (event.objectKind == OBJECT_KIND_MERGE_REQUEST),
+                commitCheckBlock = (event.objectKind == TGitObjectKind.MERGE_REQUEST.value),
                 version = ymlVersion
             )
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
