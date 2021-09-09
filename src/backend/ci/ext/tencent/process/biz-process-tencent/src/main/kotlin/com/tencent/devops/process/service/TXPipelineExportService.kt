@@ -666,6 +666,13 @@ class TXPipelineExportService @Autowired constructor(
                                 stepAtom = step
                             )
                             if (!conflictElements.isNullOrEmpty()) {
+                                conflictElements.forEachIndexed { index, it ->
+                                    if (it.stageLocation?.id == item.stageLocation?.id &&
+                                        it.jobLocation?.id == item.jobLocation?.id
+                                    ) {
+                                        conflictElements.removeAt(index)
+                                    }
+                                }
                                 conflictElements.add(item)
                             } else {
                                 output2Elements[outputWithNamespace] = mutableListOf(item)
