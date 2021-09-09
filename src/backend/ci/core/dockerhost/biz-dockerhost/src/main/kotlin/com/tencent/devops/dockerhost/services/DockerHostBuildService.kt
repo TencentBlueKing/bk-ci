@@ -244,7 +244,7 @@ class DockerHostBuildService(
             return container.id
         } catch (er: Throwable) {
             logger.error(er.toString())
-            logger.error(er.message)
+            logger.error(er.message,er)//TODO DEBUG
             log(
                 buildId = dockerBuildInfo.buildId,
                 red = true,
