@@ -8,7 +8,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
  */
 data class PipelineExportV2YamlData(
     val yamlStr: String,
-    val conflictMap: Map<String, List<PipelineExportV2YamlConflictMapItem>>
+    val conflictMap: Map<String, List<List<PipelineExportV2YamlConflictMapItem>>>
 )
 
 data class PipelineExportV2YamlConflictMapItem(
