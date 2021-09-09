@@ -67,6 +67,7 @@ import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.dockerhost.utils.SigarUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
+import org.apache.commons.lang3.StringUtils
 import org.apache.http.conn.util.InetAddressUtils
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
@@ -91,6 +92,8 @@ class DockerHostBuildService(
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
     }
+
+    private val namespace = System.getenv("NAMESPACE")
 
     fun checkImage(
         buildId: String,
@@ -218,11 +221,24 @@ class DockerHostBuildService(
                     .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
                         .withBinds(binds)
                         .withNetworkMode("bridge")
+                        .apply {
+                            // 手动配置host
+                            if (dockerHostConfig.publicHostIP != null && InetAddressUtils.isIPv4Address(dockerHostConfig.publicHostIP)) {
+                                withExtraHosts("${commonConfig.devopsOuterHostGateWay}:${dockerHostConfig.publicHostIP}")
+                            }
+                        }
                 )
                 .exec()
 
             logger.info("Created container $container")
             httpLongDockerCli.startContainerCmd(container.id).exec()
+
+            if(StringUtils.isNotBlank(namespace)){
+                httpLongDockerCli.copyArchiveToContainerCmd(container.id)
+                    .withHostResource("/data/workspace/agent-package/script/init.sh")
+                    .withRemotePath("/data/")
+                    .exec()
+            }
 
             return container.id
         } catch (er: Throwable) {
@@ -432,14 +448,8 @@ class DockerHostBuildService(
             val createContainerCmd = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withEnv(env)
-                .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                 .withHostConfig(hostConfig)
                 .withWorkingDir(dockerHostConfig.volumeWorkspace)
-                .apply {
-                    if (dockerHostConfig.publicHostIP != null && InetAddressUtils.isIPv4Address(dockerHostConfig.publicHostIP)) {
-                        withHostConfig(HostConfig().withExtraHosts("${commonConfig.devopsOuterHostGateWay}:${dockerHostConfig.publicHostIP}"))
-                    }
-                }
 
             if (!(dockerRunParam.command.isEmpty() || dockerRunParam.command.equals("[]"))) {
                 createContainerCmd.withCmd(dockerRunParam.command)
