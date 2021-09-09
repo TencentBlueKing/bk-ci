@@ -114,9 +114,9 @@ class GitCIBuildFinishListener @Autowired constructor(
     @Value("\${rtx.v2GitUrl:#{null}}")
     private val v2GitUrl: String? = null
 
-    private val buildSuccessDesc = "Your pipeline「%s」 is succeed"
-    private val buildCancelDesc = "Your pipeline「%s」 was cancelled"
-    private val buildFailedDesc = "Your pipeline「%s」 is failed"
+    private val buildSuccessDesc = "Your pipeline「%s」 is succeed."
+    private val buildCancelDesc = "Your pipeline「%s」 was cancelled."
+    private val buildFailedDesc = "Your pipeline「%s」 is failed."
 
     @RabbitListener(
         bindings = [(QueueBinding(

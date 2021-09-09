@@ -71,16 +71,16 @@ class StreamTriggerMessageUtils @Autowired constructor(
     ): String {
         val messageTitle = when (objectKind) {
             TGitObjectKind.MERGE_REQUEST.value -> {
-                "$prefix, $action by $userId."
+                " Triggered by $userId. [$action]"
             }
             TGitObjectKind.MANUAL.value -> {
-                "$prefix, [$branch] Manual Triggered by $userId."
+                " Triggered by $userId. [manual]"
             }
             TGitObjectKind.TAG_PUSH.value -> {
-                "$prefix, Tag [$branch] pushed by $userId."
+                " Triggered by $userId. [tag-push]"
             }
             else -> {
-                "$prefix, pushed by $userId."
+                " Triggered by $userId. [push]"
             }
         }
         return messageTitle

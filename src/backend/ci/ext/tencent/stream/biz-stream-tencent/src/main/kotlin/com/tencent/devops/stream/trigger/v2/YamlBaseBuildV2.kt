@@ -86,7 +86,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    private val buildRunningDesc = "Your pipeline「%s」is running"
+    private val buildRunningDesc = "Your pipeline「%s」is running."
 
     abstract fun gitStartBuild(
         pipeline: GitProjectPipeline,
