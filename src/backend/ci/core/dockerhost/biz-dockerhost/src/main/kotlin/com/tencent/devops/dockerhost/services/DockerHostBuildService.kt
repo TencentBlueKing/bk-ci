@@ -231,12 +231,12 @@ class DockerHostBuildService(
                 )
                 .exec()
 
-            if (StringUtils.isNotBlank(namespace)) {
-                httpLongDockerCli.copyArchiveToContainerCmd(container.id)
-                    .withHostResource("/data/workspace/agent-package/script/init.sh")
-                    .withRemotePath("/data/")
-                    .exec()
-            }
+//            if (StringUtils.isNotBlank(namespace)) {
+//                httpLongDockerCli.copyArchiveToContainerCmd(container.id)
+//                    .withHostResource("/data/workspace/agent-package/script/init.sh")
+//                    .withDirChildrenOnly()
+//                    .exec()
+//            }
 
             logger.info("Created container $container")
             httpLongDockerCli.startContainerCmd(container.id).exec()
