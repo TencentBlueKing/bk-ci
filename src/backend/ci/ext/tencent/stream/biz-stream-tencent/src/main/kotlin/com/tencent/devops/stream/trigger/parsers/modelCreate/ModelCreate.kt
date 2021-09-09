@@ -38,10 +38,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
@@ -74,7 +71,8 @@ class ModelCreate @Autowired constructor(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
         yaml: ScriptBuildYaml,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        isTimeTrigger: Boolean
     ): Model {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, gitBasicSetting, yaml)
@@ -91,22 +89,6 @@ class ModelCreate @Autowired constructor(
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
         triggerElementList.add(manualTriggerElement)
 
-        if (yaml.triggerOn?.schedules != null &&
-            yaml.triggerOn?.schedules!!.cron != null
-        ) {
-            val timerTrigger = TimerTriggerElement(
-                id = "T-1-1-2",
-                name = "定时触发",
-                advanceExpression = listOf(
-                    yaml.triggerOn!!.schedules!!.cron!!
-                )
-            )
-            timerTrigger.additionalOptions = ElementAdditionalOptions(
-                runCondition = RunCondition.PRE_TASK_SUCCESS
-            )
-            triggerElementList.add(timerTrigger)
-        }
-
         val originEvent = try {
             objectMapper.readValue<GitEvent>(event.event)
         } catch (e: Exception) {
@@ -119,7 +101,8 @@ class ModelCreate @Autowired constructor(
             gitBasicSetting = gitBasicSetting,
             event = event,
             v2GitUrl = v2GitUrl,
-            originEvent = originEvent
+            originEvent = originEvent,
+            isTimeTrigger = isTimeTrigger
         )
 
         val triggerContainer = TriggerContainer(

@@ -94,59 +94,6 @@ class GitRequestEventBuildDao {
         }
     }
 
-    fun saveWhole(
-        dslContext: DSLContext,
-        eventId: Long,
-        originYaml: String,
-        parsedYaml: String,
-        normalizedYaml: String,
-        gitProjectId: Long,
-        branch: String,
-        objectKind: String,
-        triggerUser: String,
-        commitMsg: String?,
-        sourceGitProjectId: Long?,
-        pipelineId: String,
-        buildId: String,
-        buildStatus: BuildStatus,
-        version: String?
-    ) {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            dslContext.insertInto(
-                this,
-                EVENT_ID,
-                ORIGIN_YAML,
-                PARSED_YAML,
-                NORMALIZED_YAML,
-                GIT_PROJECT_ID,
-                BRANCH,
-                OBJECT_KIND,
-                COMMIT_MESSAGE,
-                TRIGGER_USER,
-                SOURCE_GIT_PROJECT_ID,
-                PIPELINE_ID,
-                BUILD_ID,
-                BUILD_STATUS,
-                VERSION
-            ).values(
-                eventId,
-                originYaml,
-                parsedYaml,
-                normalizedYaml,
-                gitProjectId,
-                branch,
-                objectKind,
-                commitMsg,
-                triggerUser,
-                sourceGitProjectId,
-                pipelineId,
-                buildId,
-                buildStatus.name,
-                version
-            ).execute()
-        }
-    }
-
     fun retryUpdate(
         dslContext: DSLContext,
         gitBuildId: Long
@@ -239,19 +186,6 @@ class GitRequestEventBuildDao {
         }
     }
 
-    fun getByEventId(
-        dslContext: DSLContext,
-        eventId: Long
-    ): List<TGitRequestEventBuildRecord> {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectFrom(this)
-                .where(EVENT_ID.eq(eventId))
-                .and(BUILD_ID.isNotNull)
-                .orderBy(UPDATE_TIME.desc())
-                .fetch()
-        }
-    }
-
     fun getByGitBuildId(
         dslContext: DSLContext,
         gitBuildId: Long
@@ -292,7 +226,7 @@ class GitRequestEventBuildDao {
             "GROUP BY BRANCH, SOURCE_GIT_PROJECT_ID\n" +
             "order by EVENT_ID desc"
         val result = dslContext.fetch(sql)
-        return if (null == result || result.isEmpty()) {
+        return if (result.isEmpty()) {
             emptyList()
         } else {
             val branchBuildsList = mutableListOf<BranchBuilds>()
@@ -322,14 +256,14 @@ class GitRequestEventBuildDao {
         pageSize: Int?,
         keyword: String?
     ): List<TGitRequestEventBuildRecord> {
-        var buildRecords = listOf<TGitRequestEventBuildRecord>()
+        var buildRecords: List<TGitRequestEventBuildRecord>
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
                 .where(BUILD_ID.isNotNull)
                 .and(GIT_PROJECT_ID.eq(gitProjectId))
             if (!keyword.isNullOrBlank()) {
                 // 针对fork库的特殊分支名 namespace:branchName 进行查询
-                if (keyword!!.contains(":")) {
+                if (keyword.contains(":")) {
                     dsl.and(BRANCH.like("%${keyword.split(":")[1]}%"))
                         .and(SOURCE_GIT_PROJECT_ID.isNotNull)
                         .and(SOURCE_GIT_PROJECT_ID.notEqual(gitProjectId))
@@ -360,61 +294,6 @@ class GitRequestEventBuildDao {
         }
     }
 
-    fun getMergeRequestBuildList(
-        dslContext: DSLContext,
-        gitProjectId: Long,
-        page: Int,
-        pageSize: Int
-    ): List<TGitRequestEventBuildRecord> {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectFrom(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(OBJECT_KIND.eq("merge_request"))
-                .and(BUILD_ID.isNotNull)
-                .orderBy(EVENT_ID.desc())
-                .limit(pageSize).offset((page - 1) * pageSize)
-                .fetch()
-        }
-    }
-
-    fun getMergeRequestBuildCount(dslContext: DSLContext, gitProjectId: Long): Long {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(OBJECT_KIND.eq("merge_request"))
-                .and(BUILD_ID.isNotNull)
-                .orderBy(EVENT_ID.desc())
-                .fetchOne(0, Long::class.java)!!
-        }
-    }
-
-    fun getRequestEventBuildCount(
-        dslContext: DSLContext,
-        gitProjectId: Long,
-        branchName: String?,
-        triggerUser: String?,
-        pipelineId: String?
-    ): Long {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val dsl = dslContext.selectCount()
-                .from(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(BUILD_ID.isNotNull)
-            if (!branchName.isNullOrBlank()) {
-                dsl.and(BRANCH.eq(branchName))
-            }
-            if (!triggerUser.isNullOrBlank()) {
-                dsl.and(TRIGGER_USER.eq(triggerUser))
-            }
-            if (!pipelineId.isNullOrBlank()) {
-                dsl.and(PIPELINE_ID.eq(pipelineId))
-            }
-            return dsl.orderBy(EVENT_ID.desc())
-                .fetchOne(0, Long::class.java)!!
-        }
-    }
-
     fun getRequestEventBuildList(
         dslContext: DSLContext,
         gitProjectId: Long,
@@ -430,7 +309,7 @@ class GitRequestEventBuildDao {
                 .and(BUILD_ID.isNotNull)
             if (!branchName.isNullOrBlank()) {
                 // 针对fork库的特殊分支名 namespace:branchName 进行查询
-                if (sourceGitProjectId != null && branchName!!.contains(":")) {
+                if (sourceGitProjectId != null && branchName.contains(":")) {
                     dsl.and(BRANCH.eq(branchName.split(":")[1]))
                         .and(SOURCE_GIT_PROJECT_ID.eq(sourceGitProjectId))
                 } else {
@@ -447,21 +326,6 @@ class GitRequestEventBuildDao {
                 dsl.and(OBJECT_KIND.eq(event))
             }
             return dsl.orderBy(EVENT_ID.desc())
-                .fetch()
-        }
-    }
-
-    fun getLastEventByPipelineId(
-        dslContext: DSLContext,
-        gitProjectId: Long,
-        pipelineId: String
-    ): List<TGitRequestEventBuildRecord> {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectFrom(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .orderBy(ID.desc())
-                .limit(1)
                 .fetch()
         }
     }
@@ -619,14 +483,6 @@ class GitRequestEventBuildDao {
                         .groupBy(GIT_PROJECT_ID)
                         .having(GIT_PROJECT_ID.`in`(gitProjectIds)))
                 ).fetch()
-        }
-    }
-
-    fun isBuildExist(dslContext: DSLContext, buildId: String): Boolean {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectCount().from(this)
-                .where(BUILD_ID.eq(buildId))
-                .fetchOne(0, Int::class.java)!! > 0
         }
     }
 }

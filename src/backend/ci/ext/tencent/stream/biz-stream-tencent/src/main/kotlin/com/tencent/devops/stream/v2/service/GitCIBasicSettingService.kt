@@ -205,6 +205,18 @@ class GitCIBasicSettingService @Autowired constructor(
         )
     }
 
+    fun updateProjectInfo(projectInfo: GitCIProjectInfo) {
+        gitCIBasicSettingDao.updateInfoSetting(
+            dslContext = dslContext,
+            gitProjectId = projectInfo.gitProjectId.toLong(),
+            gitProjectName = projectInfo.name,
+            url = projectInfo.gitSshUrl ?: "",
+            homePage = projectInfo.homepage ?: "",
+            httpUrl = projectInfo.gitHttpsUrl ?: "",
+            sshUrl = projectInfo.gitSshUrl ?: ""
+        )
+    }
+
     private fun refresh(it: TGitBasicSettingRecord) {
         try {
             val projectResult = requestGitProjectInfo(it.id)

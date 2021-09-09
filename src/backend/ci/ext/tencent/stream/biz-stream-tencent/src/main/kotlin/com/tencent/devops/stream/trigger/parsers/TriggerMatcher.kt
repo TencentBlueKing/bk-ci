@@ -32,8 +32,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerBaseException
 import com.tencent.devops.stream.common.exception.TriggerException
@@ -72,7 +73,8 @@ class TriggerMatcher @Autowired constructor(
         event: GitEvent,
         gitRequestEvent: GitRequestEvent,
         pipeline: GitProjectPipeline,
-        originYaml: String
+        originYaml: String,
+        gitProjectInfo: GitCIProjectInfo
     ): Pair<Boolean, Boolean> {
         val newYaml = try {
             // 触发器需要将 on: 转为 TriggerOn:
@@ -102,7 +104,8 @@ class TriggerMatcher @Autowired constructor(
         return isMatch(
             triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
             event = event,
-            gitRequestEvent = gitRequestEvent
+            gitRequestEvent = gitRequestEvent,
+            gitProjectInfo = gitProjectInfo
         )
     }
 
@@ -110,40 +113,42 @@ class TriggerMatcher @Autowired constructor(
     private fun isMatch(
         triggerOn: TriggerOn,
         event: GitEvent,
-        gitRequestEvent: GitRequestEvent
+        gitRequestEvent: GitRequestEvent,
+        gitProjectInfo: GitCIProjectInfo
     ): Pair<Boolean, Boolean> {
         val eventBranch = getBranch(event)
         val eventTag = getTag(event)
         val eventType = getEventType(event)
 
+        var isTrigger = false
+        var isTime = false
         if (triggerOn.mr != null || triggerOn.push != null || triggerOn.tag != null) {
-            when (eventType) {
-                CodeEventType.PUSH -> {
-                    if (isPushMatch(triggerOn, eventBranch, event)) return Pair(first = true, second = false)
+            isTrigger = when (eventType) {
+                TGitObjectKind.PUSH -> {
+                    isPushMatch(triggerOn, eventBranch, event)
                 }
-                CodeEventType.TAG_PUSH -> {
-                    if (isTagPushMatch(triggerOn, eventTag, event)) return Pair(first = true, second = false)
+                TGitObjectKind.TAG_PUSH -> {
+                    isTagPushMatch(triggerOn, eventTag, event)
                 }
-                CodeEventType.MERGE_REQUEST -> {
-                    if (
-                        isMrMatch(
-                            triggerOn = triggerOn,
-                            eventBranch = eventBranch,
-                            event = event,
-                            gitRequestEvent = gitRequestEvent
-                        )
-                    ) return Pair(first = true, second = false)
+                TGitObjectKind.MERGE_REQUEST -> {
+                    isMrMatch(
+                        triggerOn = triggerOn,
+                        eventBranch = eventBranch,
+                        event = event,
+                        gitRequestEvent = gitRequestEvent
+                    )
                 }
                 else -> {
-                    return Pair(first = false, second = false)
+                    false
                 }
             }
         } else if (triggerOn.schedules != null) {
-            if (isSchedulesMatch(triggerOn, eventBranch)) return Pair(first = false, second = true)
+            isTime = eventType == TGitObjectKind.PUSH &&
+                isSchedulesMatch(triggerOn, eventBranch, gitProjectInfo.defaultBranch!!)
         }
 
         logger.info("The triggerOn doesn't match the git event($event)")
-        return Pair(first = false, second = false)
+        return Pair(first = isTrigger, second = isTime)
     }
 
     private fun isPushMatch(triggerOn: TriggerOn, eventBranch: String, event: GitEvent): Boolean {
@@ -258,10 +263,14 @@ class TriggerMatcher @Autowired constructor(
         return false
     }
 
-    private fun isSchedulesMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
-        // TODO 需要进一步迭代定时任务的检查与分支匹配检测
+    // 定时任务的触发只涉及到 默认分支修改yaml后的定时任务更新，没有触发构建的逻辑
+    private fun isSchedulesMatch(triggerOn: TriggerOn, eventBranch: String, defaultBranch: String): Boolean {
         if (triggerOn.schedules == null || triggerOn.schedules?.cron.isNullOrBlank()) {
             logger.info("The schedules cron is invalid($eventBranch)")
+            return false
+        }
+        if (eventBranch != defaultBranch) {
+            logger.info("The schedules trigger branch $eventBranch is not default branch $defaultBranch")
             return false
         }
         return true
@@ -536,12 +545,12 @@ class TriggerMatcher @Autowired constructor(
         }
     }
 
-    private fun getEventType(event: GitEvent): CodeEventType {
+    private fun getEventType(event: GitEvent): TGitObjectKind {
         return when (event) {
-            is GitPushEvent -> CodeEventType.PUSH
-            is GitTagPushEvent -> CodeEventType.TAG_PUSH
-            is GitMergeRequestEvent -> CodeEventType.MERGE_REQUEST
-            else -> CodeEventType.PUSH
+            is GitPushEvent -> TGitObjectKind.PUSH
+            is GitTagPushEvent -> TGitObjectKind.TAG_PUSH
+            is GitMergeRequestEvent -> TGitObjectKind.MERGE_REQUEST
+            else -> TGitObjectKind.PUSH
         }
     }
 

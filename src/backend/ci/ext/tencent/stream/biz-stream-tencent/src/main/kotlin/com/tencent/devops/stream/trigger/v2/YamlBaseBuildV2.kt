@@ -53,8 +53,6 @@ import com.tencent.devops.stream.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
-import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import org.jooq.DSLContext
@@ -93,7 +91,8 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
         originYaml: String,
         parsedYaml: String?,
         normalizedYaml: String,
-        gitBuildId: Long?
+        gitBuildId: Long?,
+        isTimeTrigger: Boolean
     ): BuildId?
 
     fun savePipeline(
@@ -180,8 +179,8 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
         try {
             logger.info("GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
-            buildId =
-                startupPipelineBuild(processClient, gitBuildId, model, event, gitCIBasicSetting, pipeline.pipelineId)
+            buildId = startupPipelineBuild(processClient, model, event, gitCIBasicSetting, pipeline.pipelineId)
+
             logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)
@@ -251,7 +250,6 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
 
     private fun startupPipelineBuild(
         processClient: ServicePipelineResource,
-        gitBuildId: Long,
         model: Model,
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
@@ -286,20 +284,5 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
             return true
         }
         return false
-    }
-
-    fun installMarketAtom(gitCIBasicSetting: GitCIBasicSetting, userId: String, atomCode: String) {
-        val projectCodes = ArrayList<String>()
-        projectCodes.add(gitCIBasicSetting.projectCode!!)
-        try {
-            client.get(ServiceMarketAtomResource::class).installAtom(
-                userId = userId,
-                channelCode = channelCode,
-                installAtomReq = InstallAtomReq(projectCodes, atomCode)
-            )
-        } catch (e: Throwable) {
-            logger.error("install atom($atomCode) failed, exception:", e)
-            // 可能之前安装过，继续执行不退出
-        }
     }
 }

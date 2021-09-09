@@ -226,7 +226,8 @@ class ManualTriggerService @Autowired constructor(
             parsedYaml = parsedYaml,
             originYaml = originYaml,
             normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
-            gitBuildId = gitBuildId
+            gitBuildId = gitBuildId,
+            isTimeTrigger = false
         )
     }
 

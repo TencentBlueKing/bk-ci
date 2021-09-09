@@ -75,13 +75,12 @@ import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
 
-@Suppress("ALL")
+@Suppress("MaximumLineLength")
 object ScriptYmlUtils {
 
     private val logger = LoggerFactory.getLogger(ScriptYmlUtils::class.java)
 
     //    private const val dockerHubUrl = "https://index.docker.io/v1/"
-    private const val dockerHubUrl = ""
 
     private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
@@ -92,6 +91,8 @@ object ScriptYmlUtils {
     // 用户编写的触发器语法和实际对象不一致
     private const val userTrigger = "on"
     private const val formatTrigger = "triggerOn"
+
+    private const val MAX_SCHEDULES_BRANCHES = 3
 
     /**
      * 1、解决锚点
@@ -181,60 +182,7 @@ object ScriptYmlUtils {
         return newValue
     }
 
-//    fun parseImage(imageNameInput: String): Triple<String, String, String> {
-//        val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
-//        val arry = imageNameStr.split(":")
-//        if (arry.size == 1) {
-//            val str = imageNameStr.split("/")
-//            return if (str.size == 1) {
-//                Triple(dockerHubUrl, imageNameStr, "latest")
-//            } else {
-//                Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
-//            }
-//        } else if (arry.size == 2) {
-//            val str = imageNameStr.split("/")
-//            when {
-//                str.size == 1 -> return Triple(dockerHubUrl, arry[0], arry[1])
-//                str.size >= 2 -> return if (str[0].contains(":")) {
-//                    Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
-//                } else {
-//                    if (str.last().contains(":")) {
-//                        val nameTag = str.last().split(":")
-//                        Triple(
-//                            str[0],
-//                            imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]),
-//                            nameTag[1]
-//                        )
-//                    } else {
-//                        Triple(str[0], str.last(), "latest")
-//                    }
-//                }
-//                else -> {
-//                    logger.error("image name invalid: $imageNameStr")
-//                    throw Exception("image name invalid.")
-//                }
-//            }
-//        } else if (arry.size == 3) {
-//            val str = imageNameStr.split("/")
-//            if (str.size >= 2) {
-//                val tail = imageNameStr.removePrefix(str[0] + "/")
-//                val nameAndTag = tail.split(":")
-//                if (nameAndTag.size != 2) {
-//                    logger.error("image name invalid: $imageNameStr")
-//                    throw Exception("image name invalid.")
-//                }
-//                return Triple(str[0], nameAndTag[0], nameAndTag[1])
-//            } else {
-//                logger.error("image name invalid: $imageNameStr")
-//                throw Exception("image name invalid.")
-//            }
-//        } else {
-//            logger.error("image name invalid: $imageNameStr")
-//            throw Exception("image name invalid.")
-//        }
-//    }
-
-    fun formatYamlCustom(yamlStr: String): String {
+    private fun formatYamlCustom(yamlStr: String): String {
         val sb = StringBuilder()
         val br = BufferedReader(StringReader(yamlStr))
         var line: String? = br.readLine()
@@ -252,9 +200,17 @@ object ScriptYmlUtils {
     }
 
     fun checkYaml(preScriptBuildYaml: PreTemplateScriptBuildYaml, yaml: String) {
+        checkTriggerOn(preScriptBuildYaml)
         checkVariable(preScriptBuildYaml)
         checkStage(preScriptBuildYaml)
         checkExtend(yaml)
+    }
+
+    private fun checkTriggerOn(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
+        if (preScriptBuildYaml.triggerOn?.schedules?.branches?.size != null &&
+            preScriptBuildYaml.triggerOn.schedules.branches.size > MAX_SCHEDULES_BRANCHES) {
+            throw YamlFormatException("定时任务的最大执行分支数不能超过: $MAX_SCHEDULES_BRANCHES")
+        }
     }
 
     private fun checkVariable(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
@@ -379,10 +335,12 @@ object ScriptYmlUtils {
             val runsOn = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(preRunsOn), RunsOn::class.java)
             return if (runsOn.container != null) {
                 try {
-                    val container = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container::class.java)
+                    val container =
+                        YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container::class.java)
                     runsOn.copy(container = container)
                 } catch (e: Exception) {
-                    val container = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container2::class.java)
+                    val container =
+                        YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container2::class.java)
                     runsOn.copy(container = container)
                 }
             } else {

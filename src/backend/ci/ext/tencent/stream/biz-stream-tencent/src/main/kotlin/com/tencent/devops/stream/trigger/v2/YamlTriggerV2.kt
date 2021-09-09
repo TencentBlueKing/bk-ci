@@ -97,11 +97,15 @@ class YamlTriggerV2 @Autowired constructor(
             return false
         }
 
+        val gitProjectInfo =
+            scmService.getProjectInfoRetry(gitToken.accessToken, gitRequestEvent.gitProjectId.toString())
+
         val (isTrigger, isTiming) = triggerMatcher.isMatch(
             event = event,
             gitRequestEvent = gitRequestEvent,
             pipeline = gitProjectPipeline,
-            originYaml = originYaml
+            originYaml = originYaml,
+            gitProjectInfo = gitProjectInfo
         )
 
         if (!isTrigger && !isTiming) {
@@ -141,7 +145,7 @@ class YamlTriggerV2 @Autowired constructor(
         }
 
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
-        gitBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
+        gitBasicSettingService.updateProjectInfo(gitProjectInfo)
 
         if (isTrigger) {
             // 正常匹配仓库操作触发
@@ -149,6 +153,7 @@ class YamlTriggerV2 @Autowired constructor(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                     "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
             )
+            // TODO：后续将这个移到后面启动构建处
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
@@ -171,7 +176,8 @@ class YamlTriggerV2 @Autowired constructor(
                 parsedYaml = parsedYaml,
                 originYaml = originYaml,
                 normalizedYaml = normalizedYaml,
-                gitBuildId = gitBuildId
+                gitBuildId = gitBuildId,
+                isTimeTrigger = false
             )
             return true
         }
@@ -187,7 +193,8 @@ class YamlTriggerV2 @Autowired constructor(
                 parsedYaml = parsedYaml,
                 originYaml = originYaml,
                 normalizedYaml = normalizedYaml,
-                gitBuildId = null
+                gitBuildId = null,
+                isTimeTrigger = true
             )
         }
         return true

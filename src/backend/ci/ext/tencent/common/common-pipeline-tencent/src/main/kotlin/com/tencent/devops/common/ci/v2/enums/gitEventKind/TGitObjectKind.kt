@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.ci.v2.enums.gitEventKind
 
+//TODO:  后续开源中应该将其抽象汇总为Stream的触发方式
 enum class TGitObjectKind(val value: String) {
     PUSH("push"),
     TAG_PUSH("tag_push"),
@@ -39,5 +40,7 @@ enum class TGitObjectKind(val value: String) {
         const val OBJECT_KIND_PUSH = "push"
         const val OBJECT_KIND_TAG_PUSH = "tag_push"
         const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
+        // 定时触发在Stream中本质是定时器使用PUSH触发，所以不在上面维护
+        const val OBJECT_KIND_SCHEDULE = "schedule"
     }
 }

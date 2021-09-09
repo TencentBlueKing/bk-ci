@@ -29,8 +29,8 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -74,7 +74,8 @@ object ModelParameters {
         gitBasicSetting: GitCIBasicSetting,
         event: GitRequestEvent,
         v2GitUrl: String?,
-        originEvent: GitEvent?
+        originEvent: GitEvent?,
+        isTimeTrigger: Boolean
     ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
 
@@ -131,7 +132,7 @@ object ModelParameters {
                 GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
             }
             else -> {
-                startParams[PIPELINE_GIT_EVENT] = OBJECT_KIND_MANUAL
+                startParams[PIPELINE_GIT_EVENT] = TGitObjectKind.OBJECT_KIND_MANUAL
                 startParams[PIPELINE_GIT_REPO_URL] = gitBasicSetting.gitHttpUrl
                 GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
             }
@@ -152,6 +153,11 @@ object ModelParameters {
         }
         startParams[PIPELINE_GIT_REPO_NAME] = repoProjectName
         startParams[PIPELINE_GIT_REPO_GROUP] = repoGroupName
+
+        // 定时任务设置启动方式和执行分支
+        if (isTimeTrigger) {
+            startParams[CommonVariables.CI_START_TYPE] = TGitObjectKind.OBJECT_KIND_SCHEDULE
+        }
 
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())
