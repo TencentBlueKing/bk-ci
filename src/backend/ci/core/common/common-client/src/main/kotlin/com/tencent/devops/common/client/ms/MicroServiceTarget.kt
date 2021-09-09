@@ -51,6 +51,7 @@ class MicroServiceTarget<T> constructor(
         MessageCodeUtil.generateResponseDataObject<String>(ERROR_SERVICE_NO_FOUND, arrayOf(serviceName))
 
     private val namespace = System.getenv("NAMESPACE")
+    private val serviceSuffix = System.getenv("SERVICE_PREFIX")
 
     private val usedInstance = ConcurrentHashMap<String, ServiceInstance>()
 
@@ -58,7 +59,7 @@ class MicroServiceTarget<T> constructor(
         val svrName = if (StringUtils.isBlank(namespace)) {
             serviceName
         } else {
-            "bkci-$serviceName" // TODO
+            "$serviceSuffix-$serviceName"
         }
 
         val instances = compositeDiscoveryClient.getInstances(svrName)
