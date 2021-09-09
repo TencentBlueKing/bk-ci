@@ -12,9 +12,9 @@ data class PipelineExportV2YamlData(
 )
 
 data class PipelineExportV2YamlConflictMapItem(
-    val conflictForStage: PipelineExportV2YamlConflictMapBaseItem? = null,
-    var conflictForJob: PipelineExportV2YamlConflictMapBaseItem? = null,
-    var conflictForStep: PipelineExportV2YamlConflictMapBaseItem? = null
+    val Stage: PipelineExportV2YamlConflictMapBaseItem? = null,
+    var Job: PipelineExportV2YamlConflictMapBaseItem? = null,
+    var Step: PipelineExportV2YamlConflictMapBaseItem? = null
 )
 
 data class PipelineExportV2YamlConflictMapBaseItem(
