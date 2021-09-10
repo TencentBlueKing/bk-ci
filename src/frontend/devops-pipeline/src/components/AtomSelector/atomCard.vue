@@ -1,10 +1,11 @@
 <template>
     <section @click="handleUpdateAtomType(atom.atomCode)">
         <div class="atom-logo">
-            <img :src="atom.logoUrl" alt="">
+            <img v-if="atom.logoUrl" :src="atom.logoUrl" alt="">
+            <logo v-else class="devops-icon" :name="getIconByCode(atom.atomCode)" size="50" />
         </div>
         <div class="atom-info-content">
-            <span v-if="isProjectAtom">
+            <span v-if="isProjectAtom && isRecommend">
                 <span
                     v-if="!('uninstallFlag' in atom) && !atom.defaultFlag & atomCode !== atom.atomCode"
                     class="remove-atom"
@@ -20,7 +21,7 @@
                     <logo class="remove-icon" name="minus" size="14" />
                 </span>
             </span>
-            <span v-else>
+            <span v-else-if="!isProjectAtom && isRecommend">
                 <span
                     v-if="!atom.installed && !atom.defaultFlag"
                     :class="{ 'install-atom': true, 'install-disabled': !atom.installFlag }"
@@ -31,35 +32,36 @@
             </span>
             <p class="atom-name">
                 <a class="atom-link">
+                    {{ atom.name }}
                     <span @click.stop="handleGoDocs(atom.docsLink)">
-                        {{ atom.name }}
                         <logo v-if="atom.docsLink" class="jump-icon" name="tiaozhuan" size="14" style="fill:#3c96ff; position:relative; top:2px;" />
                     </span>
                     <span class="fire-num">
-                        <logo v-if="atom.recentExecuteNum >= 50000" class="fire-icon" name="fire-red" size="14" style="fill:#3c96ff; position:relative; top:2px;" />
-                        <logo v-else class="fire-icon" name="fire" size="14" style="fill:#3c96ff; position:relative; top:2px;" />
+                        <logo v-if="atom.recentExecuteNum >= 50000" class="fire-icon" name="fire-red" size="14" style="position:relative; top:2px;" />
+                        <logo v-else class="fire-red-icon" name="fire" size="14" style="position:relative; top:2px;" />
                         {{ getHeatNum(atom.recentExecuteNum) }}
                     </span>
                     <bk-rate class="atom-rate" width="10" :rate.sync="atom.score" :edit="false" />
                 </a>
             </p>
-            <p class="desc">{{ atom.summary }}</p>
-            <p class="atom-label">
+            <p :class="{ 'desc': true, 'desc-height': !atom.labelList }">{{ atom.summary }}</p>
+            <span v-if="atom.labelList" class="atom-label">
                 <span
                     v-for="(label, labelIndex) in atom.labelList"
                     :key="labelIndex">
                     {{ label.labelName }}
                 </span>
-            </p>
+            </span>
+            <div v-else style="padding-bottom: 10px;"></div>
             <span
                 v-if="!isRecommend && (atom.os && atom.os.length > 0)"
                 class="allow-os-list"
                 v-bk-tooltips="{ content: osTips(atom.os), zIndex: 99999 }">
-                <template v-for="(os, osIndex) in atom.os">
-                    <i :key="osIndex" style="margin-right: 3px;" :class="`os-tag devops-icon icon-${os.toLowerCase()}`" />
+                <template>
+                    <i v-for="(os, osIndex) in atom.os" :key="osIndex" style="margin-right: 3px;" :class="`os-tag devops-icon icon-${os.toLowerCase()}`" />
                 </template>
             </span>
-            <p class="atom-update-time" v-if="atom.modifier">{{ atom.modifier }} 更新于 {{ formatDiff(atom.updateTime) }}</p>
+            <p class="atom-update-time" v-if="atom.publisher">{{ atom.publisher }} 更新于 {{ formatDiff(atom.updateTime) }}</p>
             <span class="atom-active" v-if="atomCode === atom.atomCode">
                 <i class="devops-icon icon-check-1" />
             </span>
@@ -138,6 +140,14 @@
              */
             osTips (os) {
                 return `${this.$t('适用于')}${os.join(' / ')}`
+            },
+
+            /**
+             * 默认logo
+             */
+            getIconByCode (atomCode) {
+                const svg = document.getElementById(atomCode)
+                return svg ? atomCode : 'placeholder'
             },
 
             /**

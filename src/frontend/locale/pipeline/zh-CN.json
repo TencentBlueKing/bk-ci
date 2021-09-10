@@ -759,7 +759,7 @@
         "addMetaData": "新增元数据",
         "introVersionTips": "可以在插件中引用该变量,用于设置版本号或其他需要用到该变量的地方",
         "chooseAtom": "请选择一个插件",
-        "searchTips": "输入后回车搜索",
+        "searchTips": "搜索插件",
         "notInstall": "未安装",
         "noPermToInstall": "无权限安装该插件",
         "notIntroduce": "不推荐使用",

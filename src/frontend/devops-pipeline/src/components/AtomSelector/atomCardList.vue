@@ -533,7 +533,7 @@
         .unRecommend-atom-item {
             display: flex;
             padding: 10px 20px;
-            max-height: 75px;
+            max-height: 80px;
             width: 100%;
             overflow: hidden;
             cursor: pointer;
@@ -544,6 +544,7 @@
                 transition-timing-function: ease-in;
                 .atom-info-content .atom-update-time {
                     opacity: 1;
+                    transition: all .2s ease-out;
                 }
                 .atom-info-content .atom-name .atom-link .jump-icon {
                     opacity: 1;
@@ -563,6 +564,7 @@
                     transition-timing-function: ease-in;
                     .atom-update-time {
                         opacity: 1;
+                        transition: all .3s ease-out;
                     }
                 }
             }
@@ -657,11 +659,14 @@
                     word-wrap: break-word;
                     -webkit-line-clamp: 2;
                     -webkit-box-orient: vertical;
-                    margin-bottom: 10px;
+                }
+                .desc-height {
+                    margin-bottom: 8px;
                 }
                 .atom-label {
                     display: inline-block;
                     opacity: 0;
+                    padding: 10px 0;
                     span {
                         display: inline-block;
                         height: 20px;
@@ -683,7 +688,9 @@
                 .atom-update-time {
                     display: flex;
                     flex-direction: row-reverse;
-                    left: 340px;
+                    position: absolute;
+                    right: 10px;
+                    bottom: -2px;
                     padding-top: 2px;
                     font-size: 12px;
                     color: #C5C7D1;
@@ -708,6 +715,9 @@
                     }
                 }
             }
+        }
+        .unRecommend-atom-item {
+            cursor: not-allowed;
         }
    }
     .unInstall-tips,

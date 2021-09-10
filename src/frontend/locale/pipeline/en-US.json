@@ -755,7 +755,7 @@
         "addMetaData": " Add meta data",
         "introVersionTips": " You can use this variable from plugins to set version number or apply it to other places that require the presence of it",
         "chooseAtom": " Please select a plugin",
-        "searchTips": "Then press Enter to search",
+        "searchTips": "Search plugins",
         "notInstall": "Not installed yet",
         "noPermToInstall": " No permission to install this plugin",
         "notIntroduce": " Not recommended to use",
