@@ -928,7 +928,7 @@ class TXPipelineExportService @Autowired constructor(
                     pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                     iisExportFile = iisExportFile
                 )
-                "\${{ steps.${existingOutputElements.first().stepAtom?.id}.outputs.$originKey }}"
+                "\${{ steps.${existingOutputElements.last().stepAtom?.id}.outputs.$originKey }}"
             } else if (!variables?.get(originKey).isNullOrBlank()) {
                 "\${{ variables.$originKey }}"
             } else {
