@@ -111,10 +111,6 @@ class CheckPauseReviewStageCmd(
         }
     }
 
-    private fun stageCheckIn() {
-
-    }
-
     private fun saveStageReviewParams(stage: PipelineBuildStage) {
         val reviewVariables = mutableMapOf<String, Any>()
         // # 4531 遍历全部审核组的参数，后序覆盖前序的同名变量
