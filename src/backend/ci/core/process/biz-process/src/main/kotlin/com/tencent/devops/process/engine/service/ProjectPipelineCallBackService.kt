@@ -86,7 +86,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         validAuth(userId, projectId, BkAuthGroup.MANAGER)
         // 验证url的合法性
         val regex = Regex(
-            pattern = "(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]",
+            pattern = "http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)",
             option = RegexOption.IGNORE_CASE
         )
         val regexResult = url.matches(regex)
