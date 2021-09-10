@@ -426,7 +426,6 @@ class PipelineStageService @Autowired constructor(
         } else {
             Pair(stage.checkOut, ControlPointPosition.AFTER_POSITION)
         }
-        if (check?.ruleIds.isNullOrEmpty()) return true
         return try {
             val request = BuildCheckParamsV3(
                 projectId = event.projectId,
