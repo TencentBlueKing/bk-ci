@@ -154,11 +154,10 @@ class PipelineStageService @Autowired constructor(
     fun checkQualityFailStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
             val allStageStatus = stageBuildDetailService.stageCheckQuality(
-                buildId = buildId,
-                stageId = stageId,
+                buildId = buildId, stageId = stageId,
                 controlOption = controlOption!!,
-                checkIn = checkIn,
-                checkOut = checkOut
+                buildStatus = BuildStatus.FAILED,
+                checkIn = checkIn, checkOut = checkOut
             )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -184,11 +183,10 @@ class PipelineStageService @Autowired constructor(
     fun checkQualityPassStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
             val allStageStatus = stageBuildDetailService.stageCheckQuality(
-                buildId = buildId,
-                stageId = stageId,
+                buildId = buildId, stageId = stageId,
                 controlOption = controlOption!!,
-                checkIn = checkIn,
-                checkOut = checkOut
+                buildStatus = BuildStatus.RUNNING,
+                checkIn = checkIn, checkOut = checkOut
             )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
