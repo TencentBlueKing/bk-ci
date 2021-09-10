@@ -35,7 +35,7 @@ import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 
 @ElementBiz
-class MarketBuildAtomElementBizPlugin constructor() : ElementBizPlugin<MarketBuildAtomElement> {
+class MarketBuildAtomElementBizPlugin : ElementBizPlugin<MarketBuildAtomElement> {
 
     override fun elementClass(): Class<MarketBuildAtomElement> {
         return MarketBuildAtomElement::class.java
