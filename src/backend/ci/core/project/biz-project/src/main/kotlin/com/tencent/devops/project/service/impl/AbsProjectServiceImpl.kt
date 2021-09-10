@@ -452,6 +452,26 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun listByChannel(limit: Int, offset: Int, projectChannelCode: ProjectChannelCode): Page<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val list = ArrayList<ProjectVO>()
+            projectDao.listByChannel(dslContext, limit, offset, projectChannelCode).map {
+                list.add(ProjectUtils.packagingBean(it, emptySet()))
+            }
+            val count = projectDao.getCount(dslContext)
+            logger.info("list count$count")
+            return Page(
+                count = count,
+                page = limit,
+                pageSize = offset,
+                records = list
+            )
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
     /**
      * 获取用户已的可访问项目列表
      */

@@ -39,7 +39,7 @@ class WebSocketDispatcher(
 ) : EventDispatcher<WebsocketPush> {
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(WebSocketDispatcher::class.java)
     }
 
     override fun dispatch(vararg events: WebsocketPush) {

@@ -181,7 +181,7 @@ class StartActionTaskContainerCmd(
                     containerContext.buildStatus = BuildStatusSwitcher.jobStatusMaker.forceFinish(t.status)
                 } else {
                     continueWhenFailure = true
-                    if (needTerminate) { // #4301 强制终止的标志为失败，不管是不是设置了失败继续[P0]
+                    if (needTerminate || t.status.isCancel()) { // #4301 强制终止的标志为失败，不管是不是设置了失败继续[P0]
                         containerContext.buildStatus = BuildStatusSwitcher.jobStatusMaker.forceFinish(t.status)
                     }
                 }
@@ -373,18 +373,6 @@ class StartActionTaskContainerCmd(
 
         var toDoTask: PipelineBuildTask? = null
 
-        val pipelineBuildTask = containerContext.containerTasks
-            .filter { it.taskId.startsWith(VMUtils.getStopVmLabel()) } // 找构建环境关机任务
-            .getOrNull(0) // 取第一个关机任务，如果没有返回空
-
-        if (pipelineBuildTask?.status?.isFinish() == false) { // 如果未执行过，则取该任务作为后续执行任务
-            toDoTask = pipelineBuildTask
-            LOG.info("ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
-                "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}")
-            // 此处多余，待确认后移除
-            pipelineTaskService.pauseBuild(task = currentTask)
-            containerContext.event.actionType = ActionType.START
-        }
         containerContext.buildStatus = BuildStatus.PAUSE
 
         return toDoTask

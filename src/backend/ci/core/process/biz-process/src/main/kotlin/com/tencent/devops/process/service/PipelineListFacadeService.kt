@@ -1058,7 +1058,8 @@ class PipelineListFacadeService @Autowired constructor(
                     pipelineDesc = it.pipelineDesc,
                     taskCount = it.taskCount,
                     isDelete = it.delete,
-                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId)
+                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId),
+                    id = it.id
                 )
             }
         } finally {
@@ -1434,7 +1435,7 @@ class PipelineListFacadeService @Autowired constructor(
         return pipelineRepositoryService.listPipelineIdByName(projectId, pipelineNames, filterDelete)
     }
 
-    fun getPipelineId(
+    fun getProjectPipelineId(
         projectCode: String
     ): List<PipelineIdInfo> {
         val pipelineIdInfos = pipelineInfoDao.listByProject(dslContext, projectCode)
@@ -1443,5 +1444,61 @@ class PipelineListFacadeService @Autowired constructor(
             idInfos.add(PipelineIdInfo(it.get("pipelineId") as String, it.get("id") as Long))
         }
         return idInfos
+    }
+
+    fun getPipelineId(
+        projectId: String,
+        pipelineId: String
+    ): PipelineIdInfo? {
+        val pipelineInfo = pipelineInfoDao.getPipelineId(dslContext, projectId, pipelineId) ?: return null
+        return PipelineIdInfo(
+            id = pipelineInfo.id,
+            pipelineId = pipelineId
+        )
+    }
+
+    fun getByPipelineIds(
+        pipelineIds: Set<String>
+    ): List<SimplePipeline> {
+        val pipelineInfos = pipelineInfoDao.listInfoByPipelineIds(
+            dslContext = dslContext,
+            pipelineIds = pipelineIds,
+            projectId = null
+        )
+        return pipelineInfos.map {
+            SimplePipeline(
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                pipelineName = it.pipelineName,
+                pipelineDesc = it.pipelineDesc,
+                taskCount = it.taskCount,
+                isDelete = it.delete,
+                instanceFromTemplate = false,
+                id = it.id,
+                createUser = it.creator
+            )
+        }
+    }
+
+    fun getByAutoIds(
+        ids: List<Int>
+    ): List<SimplePipeline> {
+        val pipelines = pipelineInfoDao.getPieplineByAutoId(
+            dslContext = dslContext,
+            ids = ids
+        )
+        return pipelines.map {
+            SimplePipeline(
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                pipelineName = it.pipelineName,
+                pipelineDesc = it.pipelineDesc,
+                taskCount = it.taskCount,
+                isDelete = it.delete,
+                instanceFromTemplate = false,
+                id = it.id,
+                createUser = it.creator
+            )
+        }
     }
 }

@@ -1,0 +1,17 @@
+.DS_Store
+node_modules/
+webpack_cache/
+dist/
+yarn-debug.log*
+yarn-error.log*
+test/unit/coverage
+*.bak*
+.vscode/
+commitInfo.js
+
+# Editor directories and files
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

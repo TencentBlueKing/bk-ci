@@ -140,9 +140,10 @@
                 top:77px;
                 &.retry-count-input {
                     top: 117px;
-                    width: auto;
+                    width: 260px;
                     .bk-form-content {
                         display: inline-block;
+                        width: 150px;
                     };
                 }
             }

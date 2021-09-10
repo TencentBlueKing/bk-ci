@@ -30,6 +30,7 @@ package com.tencent.devops.environment.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
@@ -37,6 +38,8 @@ import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.SharedProjectInfo
+import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -232,4 +235,78 @@ interface UserEnvironmentResource {
         @PathParam("projectId")
         projectId: String
     ): Result<List<EnvWithPermission>>
+
+    @ApiOperation("分页获取环境共享列表")
+    @GET
+    @Path("/{projectId}/{envHashId}/list")
+    fun listShareEnv(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam("项目名称", required = false)
+        @QueryParam("name")
+        name: String? = null,
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int? = null,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int? = null
+    ): Result<Page<SharedProjectInfo>>
+
+    @ApiOperation("设置环境共享")
+    @POST
+    @Path("/{projectId}/{envHashId}/share")
+    fun setShareEnv(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam(value = "共享的项目列表", required = true)
+        sharedProjects: SharedProjectInfoWrap
+    ): Result<Boolean>
+
+    @ApiOperation("按环境删除环境共享")
+    @DELETE
+    @Path("/{projectId}/{envHashId}/share")
+    fun deleteShareEnv(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String
+    ): Result<Boolean>
+
+    @ApiOperation("按项目删除环境共享")
+    @DELETE
+    @Path("/{projectId}/{envHashId}/{sharedProjectId}/sharedProject")
+    fun deleteShareEnvBySharedProj(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam("共享的项目id", required = true)
+        @PathParam("sharedProjectId")
+        sharedProjectId: String
+    ): Result<Boolean>
 }

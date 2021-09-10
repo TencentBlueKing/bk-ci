@@ -68,6 +68,6 @@ class GithubTokenService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(GithubTokenService::class.java)
     }
 }

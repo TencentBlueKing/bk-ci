@@ -79,4 +79,7 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_INFLUX_QUERY_MEM_INFO_FAIL = "2105033" // 环境管理：查询构建机内存信息失败: {0}
     const val ERROR_NODE_INFLUX_QUERY_DISK_INFO_FAIL = "2105034" // 环境管理：查询构建机磁盘信息失败: {0}
     const val ERROR_NODE_INFLUX_QUERY_NET_INFO_FAIL = "2105035" // 环境管理：查询构建机网络信息失败: {0}
+    const val ERROR_NODE_SHARE_PROJECT_EMPTY = "2105036" // 环境管理：共享的项目列表为空
+    const val ERROR_NODE_SHARE_PROJECT_TYPE_ERROR = "2105037" // 环境管理：仅构建环境支持共享
+    const val ERROR_NODE_NAME_INVALID_CHARACTER = "2105038" // 环境管理：环境名称包含非法字符@
 }

@@ -116,6 +116,5 @@ export const defaultBuildNo = {
     buildNoType: buildNoRules[2].value
 }
 
-export const TOGGLE_REVIEW_DIALOG = 'TOGGLE_REVIEW_DIALOG'
 export const TOGGLE_STAGE_REVIEW_PANEL = 'TOGGLE_STAGE_REVIEW_PANEL'
 export const SET_IMPORTED_JSON = 'SET_IMPORTED_JSON'
