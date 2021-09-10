@@ -37,5 +37,6 @@ data class StreamTimer(
     val gitProjectId: Long,
     val branchs: List<String>,
     val always: Boolean,
-    val channelCode: ChannelCode
+    val channelCode: ChannelCode,
+    val eventId: Long
 )

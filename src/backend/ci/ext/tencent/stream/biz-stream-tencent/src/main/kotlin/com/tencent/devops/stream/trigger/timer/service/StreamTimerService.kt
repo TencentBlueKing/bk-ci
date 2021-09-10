@@ -190,7 +190,8 @@ class StreamTimerService @Autowired constructor(
             } catch (e: IllegalArgumentException) {
                 logger.warn("Unkown channel code", e)
                 return null
-            }
+            },
+            eventId = timerRecord.eventId
         )
     }
 

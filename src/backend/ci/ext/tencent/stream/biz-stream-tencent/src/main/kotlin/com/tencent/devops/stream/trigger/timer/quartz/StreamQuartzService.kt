@@ -192,6 +192,7 @@ class StreamJobBean(
                         gitProjectId = streamTimer.gitProjectId,
                         branchs = streamTimer.branchs,
                         always = streamTimer.always,
+                        eventId = streamTimer.eventId,
                         channelCode = streamTimer.channelCode
                     )
                 )

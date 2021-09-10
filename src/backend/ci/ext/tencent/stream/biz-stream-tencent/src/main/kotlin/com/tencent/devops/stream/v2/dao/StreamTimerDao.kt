@@ -55,7 +55,8 @@ class StreamTimerDao {
                     GIT_PROJECT_ID,
                     BRANCHS,
                     ALWAYS,
-                    CHANNEL
+                    CHANNEL,
+                    EVENT_ID
                 ).values(
                     projectId,
                     pipelineId,
@@ -65,7 +66,8 @@ class StreamTimerDao {
                     gitProjectId,
                     JsonUtil.toJson(branchs),
                     always,
-                    channelCode.name
+                    channelCode.name,
+                    eventId
                 )
                     .onDuplicateKeyUpdate()
                     .set(CREATE_TIME, LocalDateTime.now())
@@ -75,6 +77,7 @@ class StreamTimerDao {
                     .set(BRANCHS, JsonUtil.toJson(branchs))
                     .set(ALWAYS, always)
                     .set(CHANNEL, channelCode.name)
+                    .set(EVENT_ID, eventId)
                     .execute()
             }
         }
