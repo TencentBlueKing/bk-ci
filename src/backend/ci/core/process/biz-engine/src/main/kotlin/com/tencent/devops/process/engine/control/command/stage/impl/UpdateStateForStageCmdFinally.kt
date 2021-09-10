@@ -131,15 +131,18 @@ class UpdateStateForStageCmdFinally(
         }
 
         // #5019 在结束阶段做stage准出判断
-        if (!pipelineStageService.checkQualityPassed(event, stage, commandContext.variables, false)) {
-
+        if (pipelineStageService.checkQualityPassed(event, stage, commandContext.variables, false)) {
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_PASSED|${event.stageId}")
+            commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_PASS.name
+        } else {
             commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_FAIL.name
             commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
             commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_OUT"
             pipelineStageService.checkQualityFailStage(userId = event.userId, buildStage = commandContext.stage)
-
             return finishBuild(commandContext = commandContext)
-        } else if (nextStage != null) {
+        }
+
+        if (nextStage != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|gotoFinal=$gotoFinal|" +
                 "next_s(${nextStage.stageId})|e=${stage.executeCount}|summary=${commandContext.latestSummary}")
             event.sendNextStage(source = "From_s(${stage.stageId})", stageId = nextStage.stageId)
