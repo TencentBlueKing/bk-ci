@@ -27,11 +27,15 @@
 
 package com.tencent.devops.process.engine.atom.plugin
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.plugin.codecc.CodeccApi
-import com.tencent.devops.plugin.codecc.CodeccUtils
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.pojo.atom.PipelineAtom
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -51,6 +55,19 @@ object MarketBuildUtils {
 
     private val logger = LoggerFactory.getLogger(MarketBuildUtils::class.java)
 
+    private val atomCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .build<String, PipelineAtom?>(object : CacheLoader<String, PipelineAtom?>() {
+            override fun load(atomCodeAndVersion: String): PipelineAtom? {
+                val client = SpringContextUtil.getBean(Client::class.java)
+                val arr = atomCodeAndVersion.split("|")
+                val atomCode = arr[0]
+                val atomVersion = arr[1]
+                return client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, atomVersion).data
+            }
+        })
+
     @Suppress("ALL")
     private val marketBuildExecutorService = ThreadPoolExecutor(
         Runtime.getRuntime().availableProcessors(),
@@ -60,23 +77,27 @@ object MarketBuildUtils {
         ArrayBlockingQueue(16000)
     )
 
-    fun beforeDelete(inputMap: Map<String, Any>, atomCode: String, param: BeforeDeleteParam, codeccApi: CodeccApi) {
-        logger.info("start to do before delete: $inputMap, $atomCode")
+    fun beforeDelete(inputMap: Map<String, Any>, atomCode: String, atomVersion: String, param: BeforeDeleteParam) {
+        logger.info("start to do before delete: $inputMap, $atomCode, $atomVersion")
         marketBuildExecutorService.execute {
             val bkAtomHookUrl = inputMap.getOrDefault(
                 BK_ATOM_HOOK_URL,
-                getDefaultHookUrl(atomCode = atomCode, codeccApi = codeccApi, channelCode = param.channelCode)
+                getDefaultHookUrl(atomCode = atomCode, atomVersion = atomVersion, channelCode = param.channelCode)
             ) as String
-            val bkAtomHookUrlMethod = inputMap.getOrDefault(
-                key = BK_ATOM_HOOK_URL_METHOD,
-                defaultValue = getDefaultHookMethod(atomCode)
-            ) as String
-            val bkAtomHookBody = inputMap.getOrDefault(BK_ATOM_HOOK_URL_BODY, "") as String
 
             if (bkAtomHookUrl.isBlank()) {
                 logger.info("bk atom hook url is blank: $atomCode")
                 return@execute
             }
+
+            val bkAtomHookUrlMethod = inputMap.getOrDefault(
+                key = BK_ATOM_HOOK_URL_METHOD,
+                defaultValue = getDefaultHookMethod(atomCode, atomVersion)
+            ) as String
+            val bkAtomHookBody = inputMap.getOrDefault(
+                BK_ATOM_HOOK_URL_BODY,
+                getDefaultHookBody(atomCode, atomVersion)
+            ) as String
 
             doHttp(bkAtomHookUrl, bkAtomHookUrlMethod, bkAtomHookBody, param, inputMap)
         }
@@ -119,17 +140,29 @@ object MarketBuildUtils {
     }
 
     @Suppress("ALL")
-    private fun getDefaultHookUrl(atomCode: String, codeccApi: CodeccApi, channelCode: ChannelCode): String {
-        if (!CodeccUtils.isCodeccNewAtom(atomCode)) return ""
+    private fun getDefaultHookUrl(atomCode: String, atomVersion: String, channelCode: ChannelCode): String {
         if (channelCode != ChannelCode.BS) return ""
-        return codeccApi.getExecUrl(
-            path = "/ms/task/api/service/task/pipeline/stop?userName={userId}&pipelineId={$PIPELINE_ID}"
-        )
+        val bkAtomHookUrlItem = atomCache.get("$atomCode|$atomVersion")?.props?.get(BK_ATOM_HOOK_URL)
+        if (bkAtomHookUrlItem != null && bkAtomHookUrlItem is Map<*, *>) {
+            return bkAtomHookUrlItem["default"]?.toString() ?: ""
+        }
+        return ""
     }
 
-    private fun getDefaultHookMethod(atomCode: String): String {
-        if (!CodeccUtils.isCodeccNewAtom(atomCode)) return "GET"
-        return "DELETE"
+    private fun getDefaultHookMethod(atomCode: String, atomVersion: String): String {
+        val bkAtomHookUrlItem = atomCache.get("$atomCode|$atomVersion")?.props?.get(BK_ATOM_HOOK_URL_METHOD)
+        if (bkAtomHookUrlItem != null && bkAtomHookUrlItem is Map<*, *>) {
+            return bkAtomHookUrlItem["default"]?.toString() ?: "GET"
+        }
+        return "GET"
+    }
+
+    private fun getDefaultHookBody(atomCode: String, atomVersion: String): String {
+        val bkAtomHookUrlItem = atomCache.get("$atomCode|$atomVersion")?.props?.get(BK_ATOM_HOOK_URL_BODY)
+        if (bkAtomHookUrlItem != null && bkAtomHookUrlItem is Map<*, *>) {
+            return bkAtomHookUrlItem["default"]?.toString() ?: ""
+        }
+        return ""
     }
 
     private fun resolveParam(str: String, param: BeforeDeleteParam, inputMap: Map<String, Any>): String {
