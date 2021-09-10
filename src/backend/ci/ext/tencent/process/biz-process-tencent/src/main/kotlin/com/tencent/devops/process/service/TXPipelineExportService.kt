@@ -664,6 +664,13 @@ class TXPipelineExportService @Autowired constructor(
                     if (output != null && !(output as MutableMap<String, Any>).isNullOrEmpty()) {
                         output.keys.forEach { key ->
                             val outputWithNamespace = if (namespace.isNullOrBlank()) key else "${namespace}_$key"
+                            if (!namespace.isNullOrBlank()) {
+                                pipelineExportV2YamlConflictMapItem.step =
+                                    PipelineExportV2YamlConflictMapBaseItem(
+                                        id = namespace,
+                                        name = element.name
+                                    )
+                            }
                             val conflictElements = output2Elements[outputWithNamespace]
                             val item = MarketBuildAtomElementWithLocation(
                                 stageLocation = pipelineExportV2YamlConflictMapItem.stage?.copy(),
@@ -920,6 +927,11 @@ class TXPipelineExportService @Autowired constructor(
             val originKey = matcher.group(1).trim()
             // 假设匹配到了前序插件的output则优先引用，否则引用全局变量
             val existingOutputElements = output2Elements[originKey]
+            val namespace = existingOutputElements?.last()?.stepAtom?.data?.get("namespace") as String?
+            val originKeyWithNamespace = if (!namespace.isNullOrBlank()) {
+                originKey.replace(existingOutputElements?.first()?.stepAtom?.id ?: "", "")
+            } else originKey
+
             val realValue = if (!existingOutputElements.isNullOrEmpty()) {
                 checkConflictOutput(
                     key = originKey,
@@ -928,11 +940,11 @@ class TXPipelineExportService @Autowired constructor(
                     pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                     iisExportFile = iisExportFile
                 )
-                "\${{ steps.${existingOutputElements.last().stepAtom?.id}.outputs.$originKey }}"
+                "\${{ steps.${existingOutputElements.last().stepAtom?.id}.outputs.$originKeyWithNamespace }}"
             } else if (!variables?.get(originKey).isNullOrBlank()) {
-                "\${{ variables.$originKey }}"
+                "\${{ variables.$originKeyWithNamespace }}"
             } else {
-                "\${{ $originKey }}"
+                "\${{ $originKeyWithNamespace }}"
             }
             newValue = newValue.replace(matcher.group(), realValue)
         }
