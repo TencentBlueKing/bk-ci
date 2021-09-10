@@ -36,7 +36,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.BuildVariableService
 
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

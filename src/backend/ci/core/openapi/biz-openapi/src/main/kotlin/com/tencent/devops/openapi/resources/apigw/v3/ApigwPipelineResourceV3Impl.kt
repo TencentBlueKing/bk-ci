@@ -30,9 +30,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwPipelineResourceV3
+import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
@@ -47,7 +47,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwPipelineResourceV3Impl @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val apiGatewayUtil: ApiGatewayUtil
 ) :
     ApigwPipelineResourceV3 {
     override fun status(
@@ -70,15 +71,14 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipeline: Model,
-        channelCode: ChannelCode?
+        pipeline: Model
     ): Result<PipelineId> {
         logger.info("Create pipeline at project:$projectId")
         return client.get(ServicePipelineResource::class).create(
             userId = userId,
             projectId = projectId,
             pipeline = pipeline,
-            channelCode = channelCode ?: ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -88,8 +88,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        pipeline: Model,
-        channelCode: ChannelCode?
+        pipeline: Model
     ): Result<Boolean> {
         logger.info("Edit a pipeline at project:$projectId, pipelineId:$pipelineId")
         return client.get(ServicePipelineResource::class).edit(
@@ -97,7 +96,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             pipeline = pipeline,
-            channelCode = channelCode ?: ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -107,8 +106,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        modelAndSetting: PipelineModelAndSetting,
-        channelCode: ChannelCode?
+        modelAndSetting: PipelineModelAndSetting
     ): Result<DeployPipelineResult> {
         logger.info("updatePipeline|project:$projectId|userId:$userId|pipelineId:$pipelineId")
         return client.get(ServicePipelineResource::class).updatePipeline(
@@ -116,7 +114,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             modelAndSetting = modelAndSetting,
-            channelCode = channelCode ?: ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -125,15 +123,14 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        modelAndSetting: PipelineModelAndSetting,
-        channelCode: ChannelCode?
+        modelAndSetting: PipelineModelAndSetting
     ): Result<PipelineId> {
         logger.info("uploadPipeline|project:$projectId|userId:$userId")
         return client.get(ServicePipelineResource::class).uploadPipeline(
             userId = userId,
             projectId = projectId,
             modelAndSetting = modelAndSetting,
-            channelCode = channelCode ?: ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -142,15 +139,14 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String,
-        channelCode: ChannelCode?
+        pipelineId: String
     ): Result<Model> {
         logger.info("Get a pipeline at project:$projectId, pipelineId:$pipelineId")
         return client.get(ServicePipelineResource::class).getWithPermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = channelCode ?: ChannelCode.BS,
+            channelCode = apiGatewayUtil.getChannelCode(),
             checkPermission = true
         )
     }
@@ -160,7 +156,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        channelCode: ChannelCode?,
         pipelineIds: List<String>
     ): Result<List<PipelineWithModel>> {
         logger.info("Get batch pipelines at project:$projectId, pipelineIds:$pipelineIds")
@@ -168,7 +163,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineIds = pipelineIds,
-            channelCode = channelCode ?: ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -177,15 +172,14 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String,
-        channelCode: ChannelCode?
+        pipelineId: String
     ): Result<Boolean> {
         logger.info("Delete a pipeline at project:$projectId, pipelineId:$pipelineId")
         return client.get(ServicePipelineResource::class).delete(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = channelCode ?: ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -210,8 +204,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         page: Int?,
-        pageSize: Int?,
-        channelCode: ChannelCode?
+        pageSize: Int?
     ): Result<Page<Pipeline>> {
         logger.info("get pipelines by user, userId:$userId")
         return client.get(ServicePipelineResource::class).list(
@@ -219,7 +212,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
             projectId = projectId,
             page = page,
             pageSize = pageSize,
-            channelCode = channelCode ?: ChannelCode.BS,
+            channelCode = apiGatewayUtil.getChannelCode(),
             checkPermission = true
         )
     }
