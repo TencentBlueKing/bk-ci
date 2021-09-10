@@ -10,7 +10,7 @@
 
 #### 1.2、安装gradle
 
-​     bk-ci使用gradle作为构建工具，gradle的版本建议使用4.8-4.10，gradle可以直接从gradle官网下载下来安装即可（gradle官网地址详见：[gradle官网](https://gradle.org/)）。
+​     bk-ci使用gradle作为构建工具，gradle的版本建议使用6.7，gradle可以直接从gradle官网下载下来安装即可（gradle官网地址详见：[gradle官网](https://gradle.org/)）。
 
 #### 1.3、安装IDE开发工具
 
