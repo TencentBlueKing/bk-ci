@@ -27,7 +27,7 @@
 
 dependencies {
     api(project(":core:dispatch:api-dispatch"))
-    api("io.fabric8:kubernetes-client:4.8.0")
+    api("io.fabric8:kubernetes-client")
 }
 
 plugins {

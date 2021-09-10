@@ -26,6 +26,7 @@
  */
 
 dependencies {
+    api("com.google.code.gson:gson")
     api(project(":core:common:common-web"))
     api(project(":core:common:common-scm"))
     api(project(":core:repository:api-repository"))

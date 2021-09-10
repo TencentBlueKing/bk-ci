@@ -25,7 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import nu.studer.gradle.jooq.JooqGenerate
-import org.gradle.api.tasks.compile.AbstractCompile
 
 plugins {
     id("nu.studer.jooq")

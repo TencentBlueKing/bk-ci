@@ -574,7 +574,7 @@ class DockerHostBuildService(
         val cpuPeriod = dockerHostConfig.elasticityCpuPeriod ?: 10000
         val cpuQuota = dockerHostConfig.elasticityCpuQuota ?: 80000
         httpDockerCli.updateContainerCmd(containerId)
-            .withMemoryReservation(memReservation)
+            .withMemory(memReservation)
             .withCpuPeriod(cpuPeriod)
             .withCpuQuota(cpuQuota).exec()
         logger.info("<<<< Trigger container reset, containerId: $containerId," +
