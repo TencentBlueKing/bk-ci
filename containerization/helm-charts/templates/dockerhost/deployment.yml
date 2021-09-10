@@ -1,0 +1,130 @@
+#dockerhost Deployment
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "common.names.fullname" . }}-dockerhost
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: dockerhost
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: dockerhost
+  replicas: {{ .Values.dockerhost.replicas }}
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: dockerhost
+        {{- if .Values.dockerhost.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.dockerhost.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.common.serviceAccount }}
+      {{- if .Values.dockerhost.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.dockerhost.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dockerhost.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.dockerhost.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.dockerhost.podAffinityPreset "component" "dockerhost" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.dockerhost.podAntiAffinityPreset "component" "dockerhost" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.dockerhost.nodeAffinityPreset.type "key" .Values.dockerhost.nodeAffinityPreset.key "values" .Values.dockerhost.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.dockerhost.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.dockerhost.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dockerhost.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.dockerhost.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dockerhost.priorityClassName }}
+      priorityClassName: {{ .Values.dockerhost.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.dockerhost.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.dockerhost.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}        
+      containers:
+        - name: dockerhost
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.dockerhost.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.dockerhost.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.dockerhost.resources }}
+          resources: {{- toYaml .Values.dockerhost.resources | nindent 12 }}
+          {{- end }}
+          resources:
+            requests:
+              cpu: {{ .Values.dockerhost.resources.requests.cpu | quote }}
+              memory: {{ .Values.dockerhost.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.dockerhost.resources.limits.cpu | quote }}
+              memory: {{ .Values.dockerhost.resources.limits.memory | quote }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: dockerhost
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: JVM_XMS
+              value: {{ .Values.dockerhost.env.JVM_XMS }}
+            - name: JVM_XMX
+              value: {{ .Values.dockerhost.env.JVM_XMX }}
+            - name: devops_gateway
+              value: {{ .Values.config.bkCiPublicUrl }}
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          workingDir: /data/workspace/dockerhost
+          {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
+          command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              cp /data/workspace/backend.bkci.sh .;
+              yum -y install sysstat;
+              echo "POD_IP: ${POD_IP}";
+              echo 'INSERT IGNORE INTO `devops_ci_dispatch`.`T_DISPATCH_PIPELINE_DOCKER_IP_INFO` (`DOCKER_IP`, `DOCKER_HOST_PORT`, `CAPACITY`, `USED_NUM`, `ENABLE`, `GRAY_ENV`, `GMT_CREATE`, `GMT_MODIFIED`, `CPU_LOAD`, `MEM_LOAD`, `DISK_LOAD`, `DISK_IO_LOAD`, `SPECIAL_ON`, `CLUSTER_NAME`) VALUES ("'${POD_IP}'", "80", "0", "0", 1, 0, NOW(), NOW(), "1", "6", "10", "0", 0, "COMMON")' | mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }};
+              /bin/bash backend.bkci.sh;
+          livenessProbe:
+            httpGet:
+              path: /management/health/livenessState
+              port: http
+            initialDelaySeconds: 300
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          volumeMounts:
+            - name: storage
+              mountPath: {{ .Values.persistence.mountPath }}
+          volumeMounts:
+            - name: docker
+              mountPath: /usr/bin/docker
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+      volumes:
+        - name: docker
+          hostPath: 
+              path: /usr/bin/docker
+        - name: docker-sock
+          hostPath: 
+              path: /var/run/docker.sock
+      hostAliases:
+       - ip: {{ .Values.config.bkCiPublicHostIp }}
+         hostnames:
+         - {{ .Values.config.bkCiPublicUrl }}

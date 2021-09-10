@@ -26,7 +26,8 @@ default_value_dict = {
     'bkCiGatewayDnsAddr': 'local=on',
     # TODO 
     'bkCiHost': 'devops.paasv3-test.woa.com',
-    'bkCiPublicUrl':'devops.paasv3-test.woa.com'
+    'bkCiPublicUrl':'devops.paasv3-test.woa.com',
+    'bkCiPublicHostIp':'9.135.34.65'
 }
 
 # include 模板
