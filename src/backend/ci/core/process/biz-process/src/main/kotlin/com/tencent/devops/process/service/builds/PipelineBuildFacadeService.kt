@@ -846,9 +846,6 @@ class PipelineBuildFacadeService(
                     reviewRequest = reviewRequest
                 )
             } else {
-                // TODO 暂时兼容前端显示的变量刷新，下次发版去掉
-                buildStage.controlOption!!.stageControlOption.reviewParams = reviewRequest?.reviewParams
-                buildStage.controlOption!!.stageControlOption.triggered = true
                 pipelineStageService.startStage(
                     userId = userId,
                     buildStage = buildStage,
