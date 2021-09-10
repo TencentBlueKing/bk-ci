@@ -39,7 +39,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
-import org.omg.PortableInterceptor.SUCCESSFUL
 import org.springframework.stereotype.Service
 
 @Suppress("LongParameterList", "MagicNumber")
