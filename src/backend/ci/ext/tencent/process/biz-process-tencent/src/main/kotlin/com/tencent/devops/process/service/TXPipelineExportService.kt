@@ -664,13 +664,6 @@ class TXPipelineExportService @Autowired constructor(
                     if (output != null && !(output as MutableMap<String, Any>).isNullOrEmpty()) {
                         output.keys.forEach { key ->
                             val outputWithNamespace = if (namespace.isNullOrBlank()) key else "${namespace}_$key"
-                            if (!namespace.isNullOrBlank()) {
-                                pipelineExportV2YamlConflictMapItem.step =
-                                    PipelineExportV2YamlConflictMapBaseItem(
-                                        id = namespace,
-                                        name = element.name
-                                    )
-                            }
                             val conflictElements = output2Elements[outputWithNamespace]
                             val item = MarketBuildAtomElementWithLocation(
                                 stageLocation = pipelineExportV2YamlConflictMapItem.stage?.copy(),
@@ -940,7 +933,11 @@ class TXPipelineExportService @Autowired constructor(
                     pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                     iisExportFile = iisExportFile
                 )
-                "\${{ steps.${existingOutputElements.last().stepAtom?.id}.outputs.$originKeyWithNamespace }}"
+                if (namespace.isNullOrBlank()) {
+                    "\${{ steps.${existingOutputElements.last().stepAtom?.id}.outputss.$originKeyWithNamespace }}"
+                } else {
+                    "\${{ steps.$namespace.outputs.$originKeyWithNamespace }}"
+                }
             } else if (!variables?.get(originKey).isNullOrBlank()) {
                 "\${{ variables.$originKeyWithNamespace }}"
             } else {
