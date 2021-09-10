@@ -446,7 +446,7 @@ class PipelineStageService @Autowired constructor(
             result.success
         } catch (ignore: Throwable) {
             logger.error("ENGINE|${event.buildId}|${event.source}|inOrOut=$inOrOut|" +
-                "STAGE_QUALITY_CHECK_OUT_ERROR|${event.stageId}", ignore)
+                "STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)
             false
         }
     }

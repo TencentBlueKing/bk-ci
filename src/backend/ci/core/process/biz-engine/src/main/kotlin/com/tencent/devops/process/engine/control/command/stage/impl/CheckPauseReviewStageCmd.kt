@@ -69,7 +69,7 @@ class CheckPauseReviewStageCmd(
         } else if (commandContext.buildStatus.isReadyToRun()) {
 
             // 只用第一次进入时做准入质量红线检查
-            if (stage.checkIn?.ruleIds.isNullOrEmpty() && !stage.checkIn?.status.isNullOrBlank()) {
+            if (stage.checkIn?.ruleIds.isNullOrEmpty()) {
                 LOG.info("ENGINE|${event.buildId}|${event.source}|SKIP_QUALITY_CHECK_IN|${event.stageId}")
             } else if (pipelineStageService.checkQualityPassed(event, stage, commandContext.variables, true)) {
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_PASSED|${event.stageId}")
