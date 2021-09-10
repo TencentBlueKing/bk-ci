@@ -132,7 +132,6 @@ class StageBuildDetailService(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = BuildStatus.PAUSE.name
-                    stage.reviewStatus = BuildStatus.REVIEWING.name
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.startEpoch = System.currentTimeMillis()
                     stage.checkIn = checkIn
@@ -165,7 +164,6 @@ class StageBuildDetailService(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = ""
-                    stage.reviewStatus = BuildStatus.REVIEW_ABORT.name
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
@@ -195,7 +193,6 @@ class StageBuildDetailService(
             override fun onFindStage(stage: Stage, model: Model): Traverse {
                 if (stage.id == stageId) {
                     update = true
-                    stage.reviewStatus = BuildStatus.QUALITY_CHECK_FAIL.name
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
@@ -256,7 +253,6 @@ class StageBuildDetailService(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = BuildStatus.QUEUE.name
-                    stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
