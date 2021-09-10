@@ -170,6 +170,15 @@ object JsonUtil {
         return getObjectMapper().writeValueAsString(bean)!!
     }
 
+    fun toUnformattedJson(bean: Any): String {
+        if (ReflectUtil.isNativeType(bean) || bean is String) {
+            return bean.toString()
+        }
+        return ObjectMapper()
+            .apply { setSerializationInclusion(JsonInclude.Include.NON_NULL) }
+            .writeValueAsString(bean)!!
+    }
+
     /**
      * 将对象转可修改的Map,
      * 注意：会忽略掉值为空串和null的属性
