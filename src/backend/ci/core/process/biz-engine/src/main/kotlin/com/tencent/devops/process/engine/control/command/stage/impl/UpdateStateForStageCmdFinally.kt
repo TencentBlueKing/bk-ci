@@ -133,7 +133,7 @@ class UpdateStateForStageCmdFinally(
         // #5019 在结束阶段做stage准出判断
         if (pipelineStageService.checkQualityPassed(event, stage, commandContext.variables, false)) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_PASSED|${event.stageId}")
-            commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_PASS.name
+            commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_PASS.name
         } else {
             commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_FAIL.name
             commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
