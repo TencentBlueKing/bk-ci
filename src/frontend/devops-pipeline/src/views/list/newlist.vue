@@ -631,7 +631,6 @@
                             isRunning: false,
                             status: status || 'not_built'
                         }
-
                         // 单独修改当前任务是否在执行的状态, 拼接右下角按钮
                         switch (feConfig.status) {
                             case 'error':
@@ -645,6 +644,19 @@
                                     }],
                                     isRunning: !isKnowErrorPipeline,
                                     status: isKnowErrorPipeline ? 'known_error' : 'error'
+                                }
+                                break
+                            case 'cancel':
+                                const isKnowCancelPipeline = !!knownErrorList[`${this.projectId}_${pipelineId}_${item.latestBuildId}`]
+                                feConfig = {
+                                    ...feConfig,
+                                    customBtns: isKnowCancelPipeline ? [] : [{
+                                        icon: 'check-1',
+                                        text: this.$t('newlist.known'),
+                                        handler: 'error-noticed'
+                                    }],
+                                    isRunning: !isKnowCancelPipeline,
+                                    status: isKnowCancelPipeline ? 'known_cancel' : 'cancel'
                                 }
                                 break
                             case 'running':
@@ -831,10 +843,20 @@
                 localStorage.setItem('pipelineKnowError', JSON.stringify(knownErrorList))
                 // 更新DOM节点的样式
                 if (this.pipelineFeConfMap[pipelineId]) {
-                    this.pipelineFeConfMap[pipelineId] = {
-                        ...this.pipelineFeConfMap[pipelineId],
-                        status: 'known_error',
-                        isRunning: false
+                    // 取消状态流水线
+                    if (this.pipelineFeConfMap[pipelineId].status === 'cancel') {
+                        this.pipelineFeConfMap[pipelineId] = {
+                            ...this.pipelineFeConfMap[pipelineId],
+                            status: 'known_cancel',
+                            isRunning: false
+                        }
+                    } else {
+                        // 失败状态流水线
+                        this.pipelineFeConfMap[pipelineId] = {
+                            ...this.pipelineFeConfMap[pipelineId],
+                            status: 'known_error',
+                            isRunning: false
+                        }
                     }
                 }
             },
@@ -844,7 +866,6 @@
             async terminatePipeline (pipelineId) {
                 const { $store, projectId } = this
                 const feConfig = this.pipelineFeConfMap[pipelineId]
-
                 if (!feConfig.buttonAllow.terminatePipeline) return
 
                 this.pipelineFeConfMap[pipelineId].buttonAllow.terminatePipeline = false
@@ -859,7 +880,7 @@
                     this.pipelineFeConfMap[pipelineId] = {
                         ...this.pipelineFeConfMap[pipelineId],
                         isRunning: false,
-                        status: 'known_error'
+                        status: 'known_cancel'
                     }
                 } catch (err) {
                     this.handleError(err, [{
@@ -1223,6 +1244,9 @@
             &.success {
                 color: $successColor;
             }
+            &.cancel {
+                color: $cancelColor;
+            }
             &.error,
             &.known_error {
                 color: $dangerColor;
@@ -1241,10 +1265,18 @@
                 border-radius: 3px;
                 border: 1px solid transparent;
             }
-            &.success {
+            &.success,
+            &.stage_success {
                 &:before {
                     border-color: $successColor;
                     background-color: #cdffe2;
+                }
+            }
+            &.cancel,
+            &.known_cancel {
+                &:before {
+                    border-color: $cancelColor;
+                    background-color: #c9ff83;
                 }
             }
             &.error,
@@ -1256,6 +1288,13 @@
             }
             .text-link {
                 font-size: 14px;
+            }
+            .build-status-tips {
+                width: 8px;
+                height: 20px;
+                position: absolute;
+                left: 18px;
+                cursor: pointer;
             }
         }
     }

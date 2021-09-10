@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
@@ -38,6 +39,7 @@ import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.regex.Pattern
 
@@ -54,7 +56,8 @@ object CommandLineUtils {
         prefix: String = "",
         executeErrorMessage: String? = null,
         buildId: String? = null,
-        elementId: String? = null
+        elementId: String? = null,
+        charSetType: String? = CharSetType.UTF_8.name
     ): String {
 
         val result = StringBuilder()
@@ -64,9 +67,27 @@ object CommandLineUtils {
         if (workspace != null) {
             executor.workingDirectory = workspace
         }
-        val contextLogFile = if (!buildId.isNullOrBlank()) { ScriptEnvUtils.getContextFile(buildId) } else { null }
+        val contextLogFile = if (!buildId.isNullOrBlank()) {
+            ScriptEnvUtils.getContextFile(buildId)
+        } else {
+            null
+        }
+
+        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
+            CharSetType.UTF_8 -> "UTF-8"
+            CharSetType.GBK -> "GBK"
+            else -> "UTF-8"
+        }
 
         val outputStream = object : LogOutputStream() {
+            override fun processBuffer() {
+                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
+                privateStringField.isAccessible = true
+                val buffer = privateStringField.get(this) as ByteArrayOutputStream
+                processLine(buffer.toString(charset))
+                buffer.reset()
+            }
+
             override fun processLine(line: String?, level: Int) {
                 if (line == null)
                     return
@@ -86,6 +107,14 @@ object CommandLineUtils {
         }
 
         val errorStream = object : LogOutputStream() {
+            override fun processBuffer() {
+                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
+                privateStringField.isAccessible = true
+                val buffer = privateStringField.get(this) as ByteArrayOutputStream
+                processLine(buffer.toString(charset))
+                buffer.reset()
+            }
+
             override fun processLine(line: String?, level: Int) {
                 if (line == null) {
                     return

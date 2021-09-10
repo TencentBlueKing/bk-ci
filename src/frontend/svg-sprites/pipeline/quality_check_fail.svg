@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="28px" height="28px" viewBox="0 0 28 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>自动触发-stage正常执行</title>
+    <g id="流水线" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard-Copy" transform="translate(-40.000000, -637.000000)">
+            <g id="自动触发-stage正常执行" transform="translate(40.000000, 637.000000)">
+                <g id="Group-9-Copy">
+                    <g id="编组-11-copy">
+                        <g id="编组-2">
+                            <rect id="矩形" stroke="#FF5656" fill="#FFFFFF" x="0.5" y="0.5" width="27" height="27" rx="13.5"></rect>
+                            <path d="M14,5 C18.9705627,5 23,9.02943725 23,14 C23,18.9705627 18.9705627,23 14,23 C9.02943725,23 5,18.9705627 5,14 C5,9.02943725 9.02943725,5 14,5 Z M16.923135,9 L12.6153514,9 L11,16.6666073 L13.6923243,16.6666073 L13.1538379,21 L18,13.0000445 L15.3076757,13.0000445 L16.923135,9 Z" id="Combined-Shape" fill="#FF5656"></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -7,7 +7,7 @@
                 width: percentage
             }">
             <i class="devops-icon icon-check-1 success status-icon" v-if="hasIcon && status === 'success'"></i>
-            <i class="devops-icon icon-exclamation error status-icon" v-if="hasIcon && status === 'error' || status === 'known_error'"></i>
+            <i class="devops-icon icon-exclamation error status-icon" v-if="hasIcon && status === 'error' || status === 'known_error' || status === 'cancel' || status === 'known_cancel'"></i>
         </div>
     </div>
 </template>
@@ -62,6 +62,9 @@
             &.known_error {
                 background: linear-gradient(to right, $dangerColor, #ff7979);
             }
+            &.cancel {
+                background: linear-gradient(to right, $cancelColor, #f6b022);
+            }
             .devops-icon {
                 position: absolute;
                 top: 50%;
@@ -73,6 +76,7 @@
                 &.success {
                     right: 10px;
                 }
+                &.cancel,
                 &.error,
                 &.known_error {
                     left: 10px;

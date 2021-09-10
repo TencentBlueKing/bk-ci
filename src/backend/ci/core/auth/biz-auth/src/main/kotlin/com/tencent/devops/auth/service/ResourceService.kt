@@ -128,7 +128,7 @@ class ResourceService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(ResourceService::class.java)
         const val DEFAULTSYSTEM = "ci"
     }
 }

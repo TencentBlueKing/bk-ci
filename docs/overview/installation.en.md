@@ -40,10 +40,10 @@ The following directories are explained in detail.
 
 - CentOS 7.x
 - JDK 1.8
-- Gradle 4.8
+- Gradle 6.7
 - Redis 2.8.17
 - MySQL 5.7
-- ES 5.6
+- ES 7.4
 - RabbitMQ 3.7.15 [RabbitMQ Installation Document](../install/rabbitmq.en.md)
 - Consul 1.0+ [Consul Installation](../install/consul.en.md)
 

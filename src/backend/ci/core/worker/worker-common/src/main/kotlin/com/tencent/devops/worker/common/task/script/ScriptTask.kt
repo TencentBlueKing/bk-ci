@@ -37,11 +37,17 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.enums.CharSetType
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
+import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
@@ -60,15 +66,17 @@ open class ScriptTask : ITask() {
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_INPUT_INVAILD
         )
+        val charSetType = taskParams["charSetType"] ?: CharSetType.UTF_8.name
+
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
         val archiveFileIfExecFail = taskParams["archiveFile"]
         val script = URLDecoder.decode(taskParams["script"]
-                ?: throw TaskExecuteException(
-                    errorMsg = "Empty build script content",
-                    errorType = ErrorType.USER,
-                    errorCode = ErrorCode.USER_INPUT_INVAILD
-                ), "UTF-8").replace("\r", "")
+            ?: throw TaskExecuteException(
+                errorMsg = "Empty build script content",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            ), "UTF-8").replace("\r", "")
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId
@@ -90,18 +98,34 @@ open class ScriptTask : ITask() {
                 elementId = buildTask.elementId,
                 script = script,
                 taskParam = taskParams,
-                runtimeVariables = variables,
+                runtimeVariables = variables.plus(TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)),
                 projectId = projectId,
                 dir = workspace,
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
                 continueNoneZero = continueNoneZero.toBoolean(),
-                errorMessage = "Fail to run the plugin"
+                errorMessage = "Fail to run the plugin",
+                charSetType = if (BuildScriptType.valueOf(scriptType) == BuildScriptType.BAT) {
+                    charSetType
+                } else null
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
             if (!archiveFileIfExecFail.isNullOrBlank()) {
                 LoggerService.addRedLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
-                val count = ArchiveUtils.archivePipelineFiles(archiveFileIfExecFail!!, workspace, buildVariables)
+                val token = RepoServiceFactory.getInstance().getRepoToken(
+                    userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                    projectId = buildVariables.projectId,
+                    repoName = "pipeline",
+                    path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+                    type = TokenType.UPLOAD,
+                    expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
+                )
+                val count = ArchiveUtils.archivePipelineFiles(
+                    filePath = archiveFileIfExecFail,
+                    workspace = workspace,
+                    buildVariables = buildVariables,
+                    token = token
+                )
                 if (count == 0) {
                     LoggerService.addRedLine("脚本执行失败之后没有匹配到任何待归档文件")
                 }

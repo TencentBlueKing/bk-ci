@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("日志状态")
-enum class LogStatus(private val status: Int) {
+enum class LogStatus(val status: Int) {
     @ApiModelProperty("查询成功")
     SUCCEED(0),
     @ApiModelProperty("日志为空")
@@ -47,5 +47,17 @@ enum class LogStatus(private val status: Int) {
     @JsonValue
     fun jsonValue(): Int {
         return status
+    }
+    companion object {
+        fun parse(status: Int): LogStatus {
+            return when (status) {
+                0 -> SUCCEED
+                1 -> EMPTY
+                2 -> CLEAN
+                3 -> CLOSED
+                999 -> FAIL
+                else -> FAIL
+            }
+        }
     }
 }

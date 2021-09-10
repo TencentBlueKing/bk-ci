@@ -36,7 +36,6 @@ import org.springframework.stereotype.Repository
 import com.fasterxml.jackson.module.kotlin.readValue
 
 @Repository
-@Suppress("ALL")
 class SignIpaInfoDao {
 
     fun saveSignInfo(
@@ -127,18 +126,6 @@ class SignIpaInfoDao {
                 userId = record.userId,
                 wildcard = record.wildcard
             )
-        }
-    }
-
-    fun getSignInfoContent(
-        dslContext: DSLContext,
-        resignId: String
-    ): String? {
-        with(TSignIpaInfo.T_SIGN_IPA_INFO) {
-            val record = dslContext.selectFrom(this)
-                .where(RESIGN_ID.eq(resignId))
-                .fetchOne()
-            return record?.requestContent
         }
     }
 }

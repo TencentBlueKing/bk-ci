@@ -173,6 +173,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM_FEATURE` (
   `PRIVATE_REASON` varchar(256) DEFAULT NULL,
   `DELETE_FLAG` bit(1) DEFAULT b'0',
   `YAML_FLAG` bit(1) DEFAULT b'0',
+  `QUALITY_FLAG` bit(1) DEFAULT b'0',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `uni_inx_taf_code` (`ATOM_CODE`),
   KEY `inx_taf_delete_flag` (`DELETE_FLAG`),

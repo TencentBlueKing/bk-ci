@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.callback.AuthConstants
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.ProjectService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,8 +58,8 @@ class AuthProjectService @Autowired constructor(
             offset = page.offset.toInt()
             limit = page.limit.toInt()
         }
-        val projectRecords = projectService.list(limit, offset)
-        val count = projectRecords?.count ?: 0L
+        val projectRecords = projectService.listByChannel(limit, offset, ProjectChannelCode.BS)
+        val count = projectRecords?.count
         val projectInfo = mutableListOf<InstanceInfoDTO>()
         projectRecords?.records?.map {
             val entity = InstanceInfoDTO()
@@ -81,6 +82,7 @@ class AuthProjectService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = it.englishName
             entity.displayName = it.projectName
+            entity.iamApprover = arrayListOf(it.creator)
             entityList.add(entity)
         }
         logger.info("entityInfo $entityList")
@@ -110,6 +112,6 @@ class AuthProjectService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(AuthProjectService::class.java)
     }
 }
