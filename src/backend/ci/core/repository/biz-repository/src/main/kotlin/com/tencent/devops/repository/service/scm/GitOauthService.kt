@@ -189,9 +189,13 @@ class GitOauthService @Autowired constructor(
         }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
-        val projectUsers = authProjectApi.getProjectUsers(repoAuthServiceCode, buildBasicInfo.projectId)
-        logger.info("projectId: ${buildBasicInfo.projectId}, projectUsers: $projectUsers")
-        if (!projectUsers.contains(userId)) {
+        val projectUserCheck = authProjectApi.isProjectUser(
+            user = userId,
+            serviceCode = repoAuthServiceCode,
+            projectCode = buildBasicInfo.projectId,
+            group = null
+        )
+        if (!projectUserCheck) {
             throw RemoteServiceException(
                 "user permission denied: userId=$userId, projectCode=${buildBasicInfo.projectId}"
             )

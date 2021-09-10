@@ -457,7 +457,11 @@
         "constraintMode": "约束模式",
         "constraintModeTips": "不能自由调整流水线编排，可通过模版更新实例",
         "noTemplateTips": "请先选择模板",
-        "noSearchResult": "未搜索到任何的结果"
+        "noSearchResult": "未搜索到任何的结果",
+        "success": "成功",
+        "failed": "失败",
+        "cancel": "用户取消",
+        "stageSuccess": "Stage成功"
     },
     "subpage": {
         "saveAndExec": "保存并执行",

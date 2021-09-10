@@ -44,8 +44,9 @@ class ObjectReplaceEnvVarUtilTest {
         envMap["jsonStrEnvVar"] = "{\"abc\":\"123\"}"
     }
 
-    private val jsonExcept = "{\n" +
-        "  \"abc\" : \"变量替换测试_{\\\"abc\\\":\\\"123\\\"}\"\n" +
+    private val lineSeparator = System.getProperty("line.separator")
+    private val jsonExcept = "{$lineSeparator" +
+        "  \"abc\" : \"变量替换测试_{\\\"abc\\\":\\\"123\\\"}\"$lineSeparator" +
         "}"
 
     private val arrayJsonExcept = "[ \"变量替换测试_{\\\"abc\\\":\\\"123\\\"}\" ]"

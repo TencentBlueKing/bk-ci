@@ -454,7 +454,11 @@
         "constraintMode": "Constraint mode",
         "constraintModeTips": "You can‘t arrange the pipeline freely and should update the instance through template",
         "noTemplateTips": " Please select a template first",
-        "noSearchResult": " No results found"
+        "noSearchResult": " No results found",
+        "success": "Success",
+        "failed": "Failed",
+        "cancel": "Cancel",
+        "stageSuccess": "Stage success"
     },
     "subpage": {
         "saveAndExec": " Save and run",

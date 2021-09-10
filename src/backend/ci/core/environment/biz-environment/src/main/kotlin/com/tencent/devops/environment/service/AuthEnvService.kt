@@ -76,6 +76,7 @@ class AuthEnvService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = it.envHashId
             entity.displayName = it.name
+            entity.iamApprover = arrayListOf(it.createdUser)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${envInfos.size.toLong()}")

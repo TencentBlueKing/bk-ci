@@ -1474,7 +1474,8 @@ class PipelineListFacadeService @Autowired constructor(
                 taskCount = it.taskCount,
                 isDelete = it.delete,
                 instanceFromTemplate = false,
-                id = it.id
+                id = it.id,
+                createUser = it.creator
             )
         }
     }
@@ -1495,7 +1496,8 @@ class PipelineListFacadeService @Autowired constructor(
                 taskCount = it.taskCount,
                 isDelete = it.delete,
                 instanceFromTemplate = false,
-                id = it.id
+                id = it.id,
+                createUser = it.creator
             )
         }
     }

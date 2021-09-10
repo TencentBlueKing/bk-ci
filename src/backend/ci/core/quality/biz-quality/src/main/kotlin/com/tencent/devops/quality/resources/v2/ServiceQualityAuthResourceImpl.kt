@@ -56,8 +56,8 @@ class ServiceQualityAuthResourceImpl @Autowired constructor(
                 return authQualityService.searchQualityRule(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
-                    limit = page.offset.toInt(),
-                    offset = page.limit.toInt(),
+                    limit = page.limit.toInt(),
+                    offset = page.offset.toInt(),
                     token = token
                 )
             }
@@ -81,8 +81,8 @@ class ServiceQualityAuthResourceImpl @Autowired constructor(
                 return authQualityService.searchQualityGroup(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
-                    limit = page.offset.toInt(),
-                    offset = page.limit.toInt(),
+                    limit = page.limit.toInt(),
+                    offset = page.offset.toInt(),
                     token = token
                 )
             }
