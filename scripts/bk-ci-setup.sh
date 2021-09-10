@@ -27,7 +27,7 @@ LAN_IP=${LAN_IP:-$(ip route show | grep -Pom 1 "(?<=src )[0-9.]+")}
 
 BKCE_RENDER_CMD="$CTRL_DIR/bin/render_tpl"  # 蓝鲸社区版的render, 需要env文件及$BK_HOME.
 CI_RENDER_CMD="$(dirname "$0")/render_tpl"  # bk-ci里的默认读取本地的bkenv.properties文件.
-GEN_DOCKER_CONF_CMD="$(dirname "$0a")/bk-ci-gen-docker-conf.sh"
+GEN_DOCKER_CONF_CMD="$(dirname "$0")/bk-ci-gen-docker-conf.sh"
 
 # 批量检查变量名为空的情况.
 check_empty_var (){
@@ -258,7 +258,11 @@ setup_ci_dockerhost (){
 setup_ci_turbo (){
   local proj=$1
   setup_ci__ms_common "$proj" || return 11
-  render_ci quartz  # 渲染 #etc#ci#thirdparty#quartz.properties
+  # turbo日志路径为 turbo-devops/turbo-devops.log
+  update_link_to_target "$MS_DIR/logs/$MS_NAME.log" "$MS_LOGS_DIR/$MS_NAME-$BK_CI_CONSUL_DISCOVERY_TAG/$MS_NAME-$BK_CI_CONSUL_DISCERY_TAG.log" || return 3
+  # 需要自定义启动参数.
+  env_line_set "$start_env" "JAVA_OPTS" "-Dturbo.thirdparty.propdir=$BK_HOME/etc/ci/thirdparty"
+  render_ci quartz  # 额外渲染 #etc#ci#thirdparty#quartz.properties
 }
 
 # 校验网关关键配置, 设置家目录, 设置启动用户或setcap?
