@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.HttpMethod
 
 object MarketBuildUtils {
+    private const val INPUT_PARAM = "input"
     private const val BK_ATOM_HOOK_URL = "bk_atom_del_hook_url"
     private const val BK_ATOM_HOOK_URL_METHOD = "bk_atom_del_hook_url_method"
     private const val BK_ATOM_HOOK_URL_BODY = "bk_atom_del_hook_url_body"
@@ -86,7 +87,7 @@ object MarketBuildUtils {
             ) as String
 
             if (bkAtomHookUrl.isBlank()) {
-                logger.info("bk atom hook url is blank: $atomCode")
+                logger.info("bk atom hook url is blank: $atomCode, $atomVersion")
                 return@execute
             }
 
@@ -142,7 +143,11 @@ object MarketBuildUtils {
     @Suppress("ALL")
     private fun getDefaultHookUrl(atomCode: String, atomVersion: String, channelCode: ChannelCode): String {
         if (channelCode != ChannelCode.BS) return ""
-        val bkAtomHookUrlItem = atomCache.get("$atomCode|$atomVersion")?.props?.get(BK_ATOM_HOOK_URL)
+        val inputMap = atomCache.get("$atomCode|$atomVersion")?.props?.get(INPUT_PARAM)
+        if (inputMap == null || inputMap !is Map<*, *>) {
+            return ""
+        }
+        val bkAtomHookUrlItem = inputMap[BK_ATOM_HOOK_URL]
         if (bkAtomHookUrlItem != null && bkAtomHookUrlItem is Map<*, *>) {
             return bkAtomHookUrlItem["default"]?.toString() ?: ""
         }
@@ -150,7 +155,11 @@ object MarketBuildUtils {
     }
 
     private fun getDefaultHookMethod(atomCode: String, atomVersion: String): String {
-        val bkAtomHookUrlItem = atomCache.get("$atomCode|$atomVersion")?.props?.get(BK_ATOM_HOOK_URL_METHOD)
+        val inputMap = atomCache.get("$atomCode|$atomVersion")?.props?.get(INPUT_PARAM)
+        if (inputMap == null || inputMap !is Map<*, *>) {
+            return ""
+        }
+        val bkAtomHookUrlItem = inputMap[BK_ATOM_HOOK_URL_METHOD]
         if (bkAtomHookUrlItem != null && bkAtomHookUrlItem is Map<*, *>) {
             return bkAtomHookUrlItem["default"]?.toString() ?: "GET"
         }
@@ -158,7 +167,11 @@ object MarketBuildUtils {
     }
 
     private fun getDefaultHookBody(atomCode: String, atomVersion: String): String {
-        val bkAtomHookUrlItem = atomCache.get("$atomCode|$atomVersion")?.props?.get(BK_ATOM_HOOK_URL_BODY)
+        val inputMap = atomCache.get("$atomCode|$atomVersion")?.props?.get(INPUT_PARAM)
+        if (inputMap == null || inputMap !is Map<*, *>) {
+            return ""
+        }
+        val bkAtomHookUrlItem = inputMap[BK_ATOM_HOOK_URL_BODY]
         if (bkAtomHookUrlItem != null && bkAtomHookUrlItem is Map<*, *>) {
             return bkAtomHookUrlItem["default"]?.toString() ?: ""
         }
