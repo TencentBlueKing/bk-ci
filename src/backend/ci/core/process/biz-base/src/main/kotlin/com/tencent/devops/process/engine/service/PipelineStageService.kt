@@ -295,7 +295,7 @@ class PipelineStageService @Autowired constructor(
                 action = ManualReviewAction.ABORT,
                 suggest = if (timeout == true) "TIMEOUT" else reviewRequest?.suggest
             )
-            // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
+            // 5019 暂时只有准入有审核逻辑，准出待产品规划
             checkIn?.status = BuildStatus.REVIEW_ABORT.name
             stageBuildDetailService.stageCancel(
                 buildId = buildId, stageId = stageId, controlOption = controlOption!!,

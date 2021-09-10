@@ -139,9 +139,7 @@ class CheckPauseReviewStageCmd(
         if (event.source == BS_MANUAL_START_STAGE || stage.checkIn?.manualTrigger != true) {
             return false
         }
-        // TODO 下次发布去掉对triggered的判断
-        return stage.checkIn?.groupToReview() != null ||
-            stage.controlOption?.stageControlOption?.triggered != true
+        return stage.checkIn?.groupToReview() != null
     }
 
     companion object {
