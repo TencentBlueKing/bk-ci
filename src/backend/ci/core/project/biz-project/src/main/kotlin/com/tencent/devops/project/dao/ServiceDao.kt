@@ -38,6 +38,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("ComplexMethod", "LongMethod")
 class ServiceDao {
 
     fun getServiceList(dslContext: DSLContext): Result<TServiceRecord> {
