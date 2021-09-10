@@ -286,11 +286,19 @@ export default {
     setProjectPageOver: async ({ commit }, payload) => {
         commit(IS_PROJECT_PAGE_OVER, payload)
     },
-    updateProjectAtoms: async ({ commit }, payload) => {
+    updateProjectAtoms: async ({ state, commit }, payload) => {
         const { atoms, recommend } = payload
         if (recommend) {
             commit(SET_PROJECT_ATOMS, {
                 projectRecommendAtomMap: atoms
+            })
+            let page = 1
+            const { projectUnRecommendAtomMap, projectData } = state
+            if ((Object.keys(projectUnRecommendAtomMap).length / projectData.pageSize) !== (projectData.page - 1)) {
+                page = projectData.page - 1 || 1
+            }
+            commit(SET_PROJECT_DATA, {
+                page
             })
         } else {
             commit(SET_PROJECT_UNRECOMMEN_ATOMS, {
@@ -379,7 +387,8 @@ export default {
                 const projectData = {
                     page: ++page,
                     pageSize,
-                    keyword
+                    keyword,
+                    count: atomList.count
                 }
                 commit(IS_PROJECT_PAGE_OVER, isProjectPageOver)
                 commit(SET_PROJECT_DATA, projectData)
