@@ -922,7 +922,7 @@ class TXPipelineExportService @Autowired constructor(
             val existingOutputElements = output2Elements[originKey]
             val namespace = existingOutputElements?.last()?.stepAtom?.data?.get("namespace") as String?
             val originKeyWithNamespace = if (!namespace.isNullOrBlank()) {
-                originKey.replace(existingOutputElements?.first()?.stepAtom?.id ?: "", "")
+                originKey.replace("${namespace}_", "")
             } else originKey
 
             val realValue = if (!existingOutputElements.isNullOrEmpty()) {
@@ -934,7 +934,7 @@ class TXPipelineExportService @Autowired constructor(
                     iisExportFile = iisExportFile
                 )
                 if (namespace.isNullOrBlank()) {
-                    "\${{ steps.${existingOutputElements.last().stepAtom?.id}.outputss.$originKeyWithNamespace }}"
+                    "\${{ steps.${existingOutputElements.last().stepAtom?.id}.outputs.$originKeyWithNamespace }}"
                 } else {
                     "\${{ steps.$namespace.outputs.$originKeyWithNamespace }}"
                 }
