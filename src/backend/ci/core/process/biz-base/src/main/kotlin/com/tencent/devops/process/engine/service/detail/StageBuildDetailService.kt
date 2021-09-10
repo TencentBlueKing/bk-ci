@@ -178,14 +178,15 @@ class StageBuildDetailService(
         }, BuildStatus.STAGE_SUCCESS)
     }
 
-    fun stageCheckQualityFail(
+    fun stageCheckQuality(
         buildId: String,
         stageId: String,
         controlOption: PipelineBuildStageControlOption,
         checkIn: StagePauseCheck?,
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
-        logger.info("[$buildId]|stage_cancel|stageId=$stageId")
+        logger.info("[$buildId]|stage_check_quality|stageId=$stageId" +
+            "|checkIn=$checkIn|checkOut=$checkOut")
         var allStageStatus: List<BuildStageStatus>? = null
         update(buildId, object : ModelInterface {
             var update = false

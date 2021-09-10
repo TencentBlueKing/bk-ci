@@ -153,7 +153,7 @@ class PipelineStageService @Autowired constructor(
 
     fun checkQualityFailStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
-            val allStageStatus = stageBuildDetailService.stageCheckQualityFail(
+            val allStageStatus = stageBuildDetailService.stageCheckQuality(
                 buildId = buildId,
                 stageId = stageId,
                 controlOption = controlOption!!,
@@ -175,6 +175,36 @@ class PipelineStageService @Autowired constructor(
             pipelineEventDispatcher.dispatch(
                 PipelineBuildWebSocketPushEvent(
                     source = "checkQualityFailStage", projectId = projectId, pipelineId = pipelineId,
+                    userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
+                )
+            )
+        }
+    }
+
+    fun checkQualityPassStage(userId: String, buildStage: PipelineBuildStage) {
+        with(buildStage) {
+            val allStageStatus = stageBuildDetailService.stageCheckQuality(
+                buildId = buildId,
+                stageId = stageId,
+                controlOption = controlOption!!,
+                checkIn = checkIn,
+                checkOut = checkOut
+            )
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                pipelineBuildStageDao.updateStatus(
+                    dslContext = context, buildId = buildId,
+                    stageId = stageId, controlOption = controlOption!!,
+                    buildStatus = BuildStatus.QUALITY_CHECK_PASS,
+                    checkIn = checkIn, checkOut = checkOut
+                )
+                pipelineBuildDao.updateBuildStageStatus(
+                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                )
+            }
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildWebSocketPushEvent(
+                    source = "checkQualityPassStage", projectId = projectId, pipelineId = pipelineId,
                     userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
                 )
             )

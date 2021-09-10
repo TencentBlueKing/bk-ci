@@ -72,6 +72,7 @@ class CheckPauseReviewStageCmd(
             if (pipelineStageService.checkQualityPassed(event, stage, commandContext.variables, true)) {
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_PASSED|${event.stageId}")
                 commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_PASS.name
+                pipelineStageService.checkQualityPassStage(event.userId, commandContext.stage)
             } else {
                 // #4732 优先判断是否能通过质量红线检查
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_FAILED|${event.stageId}")
