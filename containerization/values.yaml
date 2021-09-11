@@ -22,16 +22,16 @@ nginx-ingress-controller:
 
 # 镜像配置
 gatewayImage:
-  registry: mirrors.tencent.com
+  registry: mirrors.tencent.com/stuben
   repository: bkci/gateway
   tag: 0.0.1
-  pullPolicy: Never # TODO
+  pullPolicy: IfNotPresent 
   pullSecrets: []
 backendImage:
-  registry: mirrors.tencent.com
+  registry: mirrors.tencent.com/stuben
   repository: bkci/backend
   tag: 0.0.1
-  pullPolicy: Never # TODO
+  pullPolicy: IfNotPresent 
   pullSecrets: []
 
 # 内部数据源配置
