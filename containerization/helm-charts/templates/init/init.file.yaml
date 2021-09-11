@@ -25,13 +25,17 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              cp -r -n /data/workspace/agent-package ./agent-package;
+              if [ ! -d "./agent-package" ]; then
+                cp -r -n /data/workspace/agent-package ./agent-package;
+              fi;
               if [ ! -f "./agent-package/jre/linux/jre.zip" ]; then
                 wget "https://github.com/stubenhuang/jre/raw/main/linux/jre.zip";
                 mv jre.zip ./agent-package/jre/linux/
               fi;
-              mkdir -p artifactory;
-              cp -r -n /data/workspace/support-files/file ./artifactory/file;
+              if [ ! -d "./artifactory/file" ]; then
+                mkdir -p artifactory;
+                cp -r -n /data/workspace/support-files/file ./artifactory/file;
+              if;
           volumeMounts:
             - name: storage
               mountPath: {{ .Values.persistence.mountPath }}
