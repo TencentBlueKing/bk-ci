@@ -259,7 +259,7 @@ setup_ci_turbo (){
   local proj=$1
   setup_ci__ms_common "$proj" || return 11
   # turbo日志路径为 turbo-devops/turbo-devops.log
-  update_link_to_target "$MS_DIR/logs/$MS_NAME.log" "$MS_LOGS_DIR/$MS_NAME-$BK_CI_CONSUL_DISCOVERY_TAG/$MS_NAME-$BK_CI_CONSUL_DISCERY_TAG.log" || return 3
+  update_link_to_target "$MS_DIR/logs/$MS_NAME.log" "$MS_LOGS_DIR/$MS_NAME-$BK_CI_CONSUL_DISCOVERY_TAG/$MS_NAME-$BK_CI_CONSUL_DISCOVERY_TAG.log" || return 3
   # 需要自定义启动参数.
   env_line_set "$start_env" "JAVA_OPTS" "-Dturbo.thirdparty.propdir=$BK_HOME/etc/ci/thirdparty"
   render_ci quartz  # 额外渲染 #etc#ci#thirdparty#quartz.properties
