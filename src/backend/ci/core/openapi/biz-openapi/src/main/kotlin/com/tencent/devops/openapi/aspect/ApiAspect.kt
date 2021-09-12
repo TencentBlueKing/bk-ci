@@ -64,6 +64,7 @@ class ApiAspect(
             "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
             "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
+    @Suppress("ComplexMethod")
     fun beforeMethod(jp: JoinPoint) {
         if (!apiGatewayUtil.isAuth()) {
             return

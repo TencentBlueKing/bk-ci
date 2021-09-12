@@ -178,8 +178,9 @@ CREATE TABLE IF NOT EXISTS `T_SERVICE` (
   `weight` int(11) DEFAULT NULL,
   `gray_iframe_url` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `service_name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8;
+  UNIQUE KEY `service_name` (`name`),
+  UNIQUE KEY `IDX_UNIQUE_ENGLISH_NAME` (`english_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for T_SERVICE_TYPE

@@ -104,6 +104,7 @@ class StartActionTaskContainerCmd(
      * 如遇到[BuildStatus.isReadyToRun]待执行任务，则检查是否可以执行，
      *  包括「是否条件跳过」「当前是否构建机启动失败」「Post Action检查」等等，通过方能成为待执行的任务
      */
+    @Suppress("ComplexMethod", "NestedBlockDepth")
     private fun findTask(containerContext: ContainerContext): PipelineBuildTask? {
         var toDoTask: PipelineBuildTask? = null
         var continueWhenFailure = false // 失败继续

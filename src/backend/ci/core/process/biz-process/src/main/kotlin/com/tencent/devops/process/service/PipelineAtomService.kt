@@ -74,6 +74,7 @@ import javax.servlet.http.HttpServletResponse
 
 @Service
 @RefreshScope
+@Suppress("NestedBlockDepth", "LongMethod", "LongParameterList", "MagicNumber")
 class PipelineAtomService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
