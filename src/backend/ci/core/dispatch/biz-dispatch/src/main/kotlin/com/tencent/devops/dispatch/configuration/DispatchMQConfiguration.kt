@@ -74,7 +74,7 @@ class DispatchMQConfiguration @Autowired constructor() {
         @Autowired thirdAgentDispatchExchange: DirectExchange
     ): Binding {
         return BindingBuilder.bind(thirdAgentDispatchStartQueue).to(thirdAgentDispatchExchange)
-            .with(MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
+            .with(MQ.ROUTE_AGENT_STARTUP)
     }
 
     @Bean

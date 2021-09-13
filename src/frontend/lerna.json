@@ -7,7 +7,8 @@
     "devops-ticket",
     "devops-atomstore",
     "devops-artifactory",
-    "devops-quality"
+    "devops-quality",
+    "devops-turbo"
   ],
   "npmClient": "yarn",
   "version": "independent",

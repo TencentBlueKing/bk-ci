@@ -529,7 +529,8 @@ class CredentialServiceImpl @Autowired constructor(
                 v2 = credentialHelper.credentialMixer,
                 v3 = credentialHelper.credentialMixer,
                 v4 = credentialHelper.credentialMixer,
-                updateUser = it.updateUser
+                updateUser = it.updateUser,
+                createUser = it.credentialUserId
             )
         }
     }
