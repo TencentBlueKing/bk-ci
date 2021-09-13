@@ -629,4 +629,17 @@ class GitRequestEventBuildDao {
                 .fetchOne(0, Int::class.java)!! > 0
         }
     }
+
+    fun getBuildCountByPipelineId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String
+    ): Long {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectCount().from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
 }

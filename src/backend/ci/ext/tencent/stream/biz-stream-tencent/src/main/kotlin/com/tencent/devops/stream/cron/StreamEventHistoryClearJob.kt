@@ -30,16 +30,15 @@ package com.tencent.devops.stream.cron
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.config.StreamCronConfig
+import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
-import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.stream.v2.dao.GitUserMessageDao
 import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.Callable
@@ -55,6 +54,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val streamCronConfig: StreamCronConfig,
+    private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
@@ -65,12 +65,12 @@ class StreamEventHistoryClearJob @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StreamEventHistoryClearJob::class.java)
         private const val LOCK_KEY = "StreamEventHistoryClear"
         private const val DEFAULT_PAGE_SIZE = 100
-        private const val STREAM_EVENT_HISTORY_CLEAR_GIT_PROJECT_ID_KEY =
-            "stream:event:history:clear:git:project:id"
-        private const val STREAM_EVENT_HISTORY_CLEAR_GIT_PROJECT_LIST_KEY =
-            "stream:event:history:clear:git:project:list"
-        private const val STREAM_EVENT_HISTORY_CLEAR_THREAD_SET_KEY =
-            "stream:event:history:clear:thread:set"
+        private const val STREAM_PIPELINE_BUILD_HISTORY_CLEAR_GIT_PROJECT_ID_KEY =
+            "stream:pipeline:build:history:clear:git:project:id"
+        private const val STREAM_PIPELINE_BUILD_HISTORY_CLEAR_GIT_PROJECT_LIST_KEY =
+            "stream:pipeline:build:history:clear:git:project:list"
+        private const val STREAM_PIPELINE_BUILD_HISTORY_CLEAR_THREAD_SET_KEY =
+            "stream:pipeline:build:history:clear:thread:set"
         private var executor: ThreadPoolExecutor? = null
     }
 
@@ -78,7 +78,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
     fun init() {
         logger.info("start init streamEventHistoryClearJob")
         // 启动的时候删除redis中存储的清理线程集合，防止redis中的线程信息因为服务异常停了无法删除
-        redisOperation.delete(STREAM_EVENT_HISTORY_CLEAR_THREAD_SET_KEY, true)
+        redisOperation.delete(STREAM_PIPELINE_BUILD_HISTORY_CLEAR_THREAD_SET_KEY, true)
     }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 12000)
@@ -108,7 +108,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
             }
             // 查询project表中的项目数据处理
             val gitProjectIdListConfig = redisOperation.get(
-                key = STREAM_EVENT_HISTORY_CLEAR_GIT_PROJECT_LIST_KEY,
+                key = STREAM_PIPELINE_BUILD_HISTORY_CLEAR_GIT_PROJECT_LIST_KEY,
                 isDistinguishCluster = true
             )
             // 组装查询项目的条件
@@ -133,9 +133,10 @@ class StreamEventHistoryClearJob @Autowired constructor(
                 }
                 // 判断线程是否正在处理任务，如正在处理则不分配新任务(定时任务12秒执行一次，线程启动到往set集合设置编号耗费时间很短，故不加锁)
                 if (!redisOperation.isMember(
-                        key = STREAM_EVENT_HISTORY_CLEAR_THREAD_SET_KEY,
+                        key = STREAM_PIPELINE_BUILD_HISTORY_CLEAR_THREAD_SET_KEY,
                         item = index.toString(),
-                        isDistinguishCluster = true)
+                        isDistinguishCluster = true
+                    )
                 ) {
                     doClearBus(
                         threadNo = index,
@@ -162,7 +163,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
         return executor!!.submit(Callable<Boolean> {
             var handleProjectPrimaryId =
                 redisOperation.get(
-                    key = "$threadName:$STREAM_EVENT_HISTORY_CLEAR_GIT_PROJECT_ID_KEY",
+                    key = "$threadName:$STREAM_PIPELINE_BUILD_HISTORY_CLEAR_GIT_PROJECT_ID_KEY",
                     isDistinguishCluster = true
                 )?.toLong()
             if (handleProjectPrimaryId == null) {
@@ -171,7 +172,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
                 if (handleProjectPrimaryId >= maxThreadProjectPrimaryId) {
                     // 已经清理完全部项目的流水线的过期构建记录，再重新开始清理
                     redisOperation.delete(
-                        key = "$threadName:$STREAM_EVENT_HISTORY_CLEAR_GIT_PROJECT_ID_KEY",
+                        key = "$threadName:$STREAM_PIPELINE_BUILD_HISTORY_CLEAR_GIT_PROJECT_ID_KEY",
                         isDistinguishCluster = true
                     )
                     logger.info("streamEventHistoryClear $threadName reStart")
@@ -180,7 +181,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
             }
             // 将线程编号存入redis集合
             redisOperation.sadd(
-                STREAM_EVENT_HISTORY_CLEAR_THREAD_SET_KEY,
+                STREAM_PIPELINE_BUILD_HISTORY_CLEAR_THREAD_SET_KEY,
                 threadNo.toString(),
                 isDistinguishCluster = true
             )
@@ -196,22 +197,19 @@ class StreamEventHistoryClearJob @Autowired constructor(
                 } else {
                     streamBasicSettingService.getBasicSettingList(gitProjectIdList = gitProjectIdList)
                 }
+                // 根据项目依次查询T_GIT_PIPELINE_RESOURCE表中的流水线数据处理
                 basicSettingIdList?.forEach { id ->
                     if (id > maxHandleProjectPrimaryId) {
                         maxHandleProjectPrimaryId = id
                     }
-                    val eventCount = gitRequestEventDao.getRequestCount(dslContext, id)
-                    if (eventCount < streamCronConfig.maxEventHandleNum) {
-                        return@forEach
-                    }
-                    clearEventBuildData(id)
+                    clearPipelineBuildData(id)
                 }
             } catch (ignore: Exception) {
                 logger.warn("streamEventHistoryClear doClearBus failed", ignore)
             } finally {
                 // 释放redis集合中的线程编号
                 redisOperation.sremove(
-                    key = STREAM_EVENT_HISTORY_CLEAR_THREAD_SET_KEY,
+                    key = STREAM_PIPELINE_BUILD_HISTORY_CLEAR_THREAD_SET_KEY,
                     values = threadNo.toString(),
                     isDistinguishCluster = true
                 )
@@ -220,51 +218,57 @@ class StreamEventHistoryClearJob @Autowired constructor(
         })
     }
 
-    private fun clearEventBuildData(
+    private fun clearPipelineBuildData(
         gitProjectId: Long
     ) {
         // 获取当前项目下流水线记录的最小主键EventID值
-        var minId = gitRequestEventDao.getMinByGitProjectId(dslContext, gitProjectId)
+        var minId = gitPipelineResourceDao.getMinByGitProjectId(dslContext, gitProjectId)
         do {
-            logger.info("streamEventHistoryClear clearEventBuildData gitProjectId:$gitProjectId,minId:$minId")
-            val eventIdList = gitRequestEventDao.getEventsByGitProjectId(
+            logger.info("streamEventHistoryClear clearPipelineBuildData gitProjectId:$gitProjectId,minId:$minId")
+            val pipelineIdList = gitPipelineResourceDao.getPipelineIdListByProjectId(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
                 minId = minId,
                 limit = DEFAULT_PAGE_SIZE.toLong()
-            )?.map { it.getValue(0) as Long }
-            if (!eventIdList.isNullOrEmpty()) {
+            )?.map { it.getValue(0) as String }
+            if (!pipelineIdList.isNullOrEmpty()) {
                 // 重置minId的值
-                minId = (gitRequestEventDao.get(dslContext, eventIdList.last())?.id ?: 0L) + 1
-            }
-            val deleteEventIdList = if (eventIdList.isNullOrEmpty()) {
-                null
-            } else {
-                gitRequestEventDao.getClearDeleteEventIdList(
+                minId = (gitPipelineResourceDao.getPipelineById(
                     dslContext = dslContext,
                     gitProjectId = gitProjectId,
-                    eventIdList = eventIdList,
-                    gapDays = streamCronConfig.deletedEventStoreDays.toLong()
-                )?.map { it.getValue(0) as Long }
+                    pipelineId = pipelineIdList.last()
+                )?.id ?: 0L) + 1
             }
-            deleteEventIdList?.forEach { eventId ->
-                clearDeleteEventData(eventId, gitProjectId)
+            pipelineIdList?.forEach { pipelineId ->
+                logger.info("streamEventHistoryClear start..............")
+                cleanNormalPipelineData(pipelineId, gitProjectId)
             }
-        } while (eventIdList?.size == DEFAULT_PAGE_SIZE)
+        } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
     }
 
-    private fun clearDeleteEventData(
-        eventId: Long,
+    private fun cleanNormalPipelineData(
+        pipelineId: String,
         gitProjectId: Long
     ) {
-        // 删除Event对应的构建记录
-        clearEventHistoryData(eventId, gitProjectId)
-        gitRequestEventDao.deleteById(dslContext, eventId)
+        // 判断构建记录是否超过系统展示的最大数量，如果超过则需清理超量的数据
+        // TODO: notbuild和message和event清理
+        val maxPipelineBuildNum =
+            gitRequestEventBuildDao.getBuildCountByPipelineId(dslContext, gitProjectId, pipelineId)
+        val maxBuildNum = maxPipelineBuildNum - streamCronConfig.maxPipelineHandleNum
+        if (maxBuildNum > 0) {
+            logger.info("streamEventHistoryClear start.............")
+            cleanBuildHistoryData(
+                pipelineId = pipelineId,
+                gitProjectId = gitProjectId,
+                maxBuildNum = maxBuildNum.toInt()
+            )
+        }
     }
 
-    private fun clearEventHistoryData(
-        eventId: Long,
-        gitProjectId: Long
+    private fun cleanBuildHistoryData(
+        pipelineId: String,
+        gitProjectId: Long,
+        maxBuildNum: Int? = null
     ) {
 
     }

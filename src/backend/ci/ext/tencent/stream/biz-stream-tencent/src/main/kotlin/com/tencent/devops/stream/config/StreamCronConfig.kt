@@ -42,6 +42,6 @@ class StreamCronConfig {
     @Value("\${cron.clear.maxEveryProjectHandleNum:5}")
     val maxEveryProjectHandleNum: Int = 5
 
-     @Value("\${cron.clear.maxEventHandleNum:10000}")
-    val maxEventHandleNum: Int = 5
+     @Value("\${cron.clear.maxPipelineHandleNum:10000}")
+    val maxPipelineHandleNum: Int = 10000
 }
