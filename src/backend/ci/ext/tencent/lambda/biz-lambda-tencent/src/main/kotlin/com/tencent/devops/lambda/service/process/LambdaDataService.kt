@@ -374,7 +374,7 @@ class LambdaDataService @Autowired constructor(
         taskMap["GIT_URL"] = gitUrl
         taskMap["GIT_PROJECT_NAME"] = GitUtils.getProjectName(gitUrl)
         taskMap["WASH_TIME"] = LocalDateTime.now().format(dateTimeFormatter)
-        taskMap["atomCode"] = atomCode
+        taskMap["ATOM_CODE"] = atomCode
         taskMap.remove("TASK_PARAMS")
 
         kafkaClient.send(KafkaTopic.LANDUN_GIT_TASK_TOPIC, JsonUtil.toJson(taskMap))
