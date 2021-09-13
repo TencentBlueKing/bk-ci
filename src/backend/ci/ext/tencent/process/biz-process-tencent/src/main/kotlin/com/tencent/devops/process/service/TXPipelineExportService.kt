@@ -921,15 +921,14 @@ class TXPipelineExportService @Autowired constructor(
             // 假设匹配到了前序插件的output则优先引用，否则引用全局变量
             val existingOutputElements = output2Elements[originKey]
             var lastExistingOutputElements = MarketBuildAtomElementWithLocation()
-            existingOutputElements?.reversed()?.forEach {
-                if (it.jobLocation?.id == pipelineExportV2YamlConflictMapItem.job?.id ||
+            run outside@{
+                existingOutputElements?.reversed()?.forEach { if (it.jobLocation?.id == pipelineExportV2YamlConflictMapItem.job?.id ||
                     it.stageLocation?.id != pipelineExportV2YamlConflictMapItem.stage?.id
                 ) {
                     lastExistingOutputElements = it
-                    return ""
-                }
+                    return@outside
+                } }
             }
-
             val namespace = lastExistingOutputElements.stepAtom?.data?.get("namespace") as String?
             val originKeyWithNamespace = if (!namespace.isNullOrBlank()) {
                 originKey.replace("${namespace}_", "")
