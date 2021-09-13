@@ -79,8 +79,8 @@ object MarketBuildUtils {
     )
 
     fun beforeDelete(inputMap: Map<String, Any>, atomCode: String, atomVersion: String, param: BeforeDeleteParam) {
-        logger.info("start to do before delete: $inputMap, $atomCode, $atomVersion")
         marketBuildExecutorService.execute {
+            logger.info("start to do before delete: $inputMap, $atomCode, $atomVersion")
             val bkAtomHookUrl = inputMap.getOrDefault(
                 BK_ATOM_HOOK_URL,
                 getDefaultHookUrl(atomCode = atomCode, atomVersion = atomVersion, channelCode = param.channelCode)
