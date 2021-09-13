@@ -339,7 +339,7 @@ class LambdaDataService @Autowired constructor(
                 }
                 "checkout" -> {
                     // post action阶段不需要统计
-                    if (taskParamsMap["TASK_NAME"] == "POST：checkout") {
+                    if (task.taskName == "POST：checkout") {
                         return
                     }
                     val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
