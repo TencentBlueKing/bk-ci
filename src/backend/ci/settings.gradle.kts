@@ -27,6 +27,18 @@
 
 rootProject.name = "bk-ci-backend"
 
+pluginManagement {
+    val devopsBootVersion: String by settings
+    plugins {
+        id("com.tencent.devops.boot") version devopsBootVersion
+    }
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 // Single CI Service
 include(":boot-assembly")
 
@@ -93,6 +105,7 @@ include(":core:quality:model-quality")
 include(":core:dockerhost")
 include(":core:dockerhost:api-dockerhost")
 include(":core:dockerhost:biz-dockerhost")
+include(":core:dockerhost:biz-dockerhost-sample")
 include(":core:dockerhost:boot-dockerhost")
 include(":core:dockerhost:plugin-dockerhost-codecc")
 

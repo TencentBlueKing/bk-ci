@@ -1,9 +1,7 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -13,7 +11,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -26,33 +24,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-plugins {
-    kotlin
-    id("com.github.johnrengelman.shadow")
-    application
-}
-
-tasks {
-    getByName<Jar>("jar") {
-        from("src/main/resources") {
-            include("*.*")
-        }
-
-        manifest {
-            attributes(mapOf("WorkerAgent-Version" to project.version))
-        }
-    }
-
-    named<ShadowJar>("shadowJar") {
-        mergeServiceFiles()
-        destinationDirectory.set(File("${rootDir}/release"))
-        archiveClassifier.set("")
-        archiveVersion.set("")
-        isZip64 = true
-    }
-
-    getByName("installDist") {
-        enabled = false
-    }
+dependencies {
+    api(project(":core:dockerhost:biz-dockerhost"))
 }

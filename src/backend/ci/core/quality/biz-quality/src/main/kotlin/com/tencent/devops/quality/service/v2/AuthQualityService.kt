@@ -80,22 +80,23 @@ class AuthQualityService @Autowired constructor(
     fun getQualityRuleInfoByIds(encodeIds: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
         val ids = encodeIds?.map { HashUtil.decodeIdToLong(it.toString()) }
         authTokenApi.checkToken(token)
-        val certInfos = qualityRuleDao.listByIds(
+        val qualityRuleInfos = qualityRuleDao.listByIds(
             dslContext = dslContext,
             ruleIds = ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
-        if (certInfos == null || certInfos.isEmpty()) {
+        if (qualityRuleInfos == null || qualityRuleInfos.isEmpty()) {
             logger.info("$ids 无红线规则")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
-        certInfos?.map {
+        qualityRuleInfos?.map {
             val entity = InstanceInfoDTO()
             entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
+            entity.iamApprover = arrayListOf(it.createUser)
             entityInfo.add(entity)
         }
-        logger.info("entityInfo $entityInfo, count ${certInfos.size.toLong()}")
+        logger.info("entityInfo $entityInfo, count ${qualityRuleInfos.size.toLong()}")
         return result.buildFetchInstanceResult(entityInfo)
     }
 
@@ -176,6 +177,7 @@ class AuthQualityService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
+            entity.iamApprover = arrayListOf(it.creator)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${qualityGroupInfos.size.toLong()}")

@@ -47,5 +47,7 @@ data class SimplePipeline(
     @ApiModelProperty("是否模板实例化的流水线", required = true)
     val instanceFromTemplate: Boolean,
     @ApiModelProperty("自增id", required = true)
-    val id: Long?
+    val id: Long?,
+    @ApiModelProperty("创建人", required = false)
+    val createUser: String? = null
 )

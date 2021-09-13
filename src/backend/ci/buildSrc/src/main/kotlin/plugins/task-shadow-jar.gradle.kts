@@ -24,33 +24,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-package com.tencent.devops.dockerhost.pojo
+plugins {
+    id("com.github.johnrengelman.shadow")
+    application
+}
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+tasks {
+    getByName<Jar>("jar") {
+        from("src/main/resources") {
+            include("*.*")
+        }
 
-@ApiModel("DockerBuild")
-data class DockerBuildParamNew(
-    @ApiModelProperty("基础镜像凭证", required = true)
-    val ticket: List<Triple<String, String, String>>,
-    @ApiModelProperty("镜像名称", required = true)
-    val imageName: String,
-    @ApiModelProperty("镜像TAG", required = true)
-    val imageTag: String,
-    @ApiModelProperty("构建目录", required = false)
-    val buildDir: String? = ".",
-    @ApiModelProperty("Dockerfile", required = false)
-    val dockerFile: String? = "Dockerfile",
-    @ApiModelProperty("repoAddr", required = true)
-    val repoAddr: String,
-    @ApiModelProperty("userName", required = true)
-    val userName: String,
-    @ApiModelProperty("password", required = true)
-    val password: String,
-    @ApiModelProperty("构建的参数", required = true)
-    val args: List<String>,
-    @ApiModelProperty("host配置", required = true)
-    val host: List<String>
+        manifest {
+            attributes(mapOf("WorkerAgent-Version" to project.version))
+        }
+    }
 
-)
+    named<ShadowJar>("shadowJar") {
+        mergeServiceFiles()
+        destinationDirectory.set(File("${rootDir}/release"))
+        archiveClassifier.set("")
+        archiveVersion.set("")
+        isZip64 = true
+    }
+
+    getByName("installDist") {
+        enabled = false
+    }
+}
