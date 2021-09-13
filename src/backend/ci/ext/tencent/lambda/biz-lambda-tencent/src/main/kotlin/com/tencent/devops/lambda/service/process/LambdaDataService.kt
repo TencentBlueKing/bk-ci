@@ -67,6 +67,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.json.simple.JSONObject
 import org.slf4j.LoggerFactory
@@ -371,6 +372,7 @@ class LambdaDataService @Autowired constructor(
     private fun sendGitTask2Kafka(atomCode: String, task: TPipelineBuildTaskRecord, gitUrl: String) {
         val taskMap = task.intoMap()
         taskMap["GIT_URL"] = gitUrl
+        taskMap["GIT_PROJECT_NAME"] = GitUtils.getProjectName(gitUrl)
         taskMap["WASH_TIME"] = LocalDateTime.now().format(dateTimeFormatter)
         taskMap["atomCode"] = atomCode
         taskMap.remove("TASK_PARAMS")
