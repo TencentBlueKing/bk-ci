@@ -30,24 +30,24 @@ package com.tencent.devops.project.pojo.service
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-/**
- *   Date on 2018-12-05.
- */
-@ApiModel("服务-创建模型")
-data class ServiceCreateInfo(
-    @ApiModelProperty("服务名称，英文名，不传则从中文名中读取 流水线(Pipeline)")
+@ApiModel("服务-修改模型 只传要修改的字段,其他放空表示不修改)")
+data class ServiceUpdateInfo(
+    @ApiModelProperty("服务ID，如果为空，则使用englishName作为主键进行检索更新，如果是要更新englishName，则该字段作为检索字段不能为空")
+    var serviceId: Long?,
+    @ApiModelProperty("服务名称，英文名")
     var englishName: String?,
-    @ApiModelProperty("服务名称，中文名, 例如 流水线(Pipeline)", required = true)
-    val name: String,
-    @ApiModelProperty("服务类型ID，1:项目管理 2:开发 3:测试 4:部署 5:运营 6:安全 8:管理工具", required = true)
-    val serviceTypeId: Long,
+    @ApiModelProperty("服务名称，中文名")
+    val name: String?,
+    @ApiModelProperty("服务类型ID，1:项目管理 2:开发 3:测试 4:部署 5:运营 6:安全 8:管理工具")
+    val serviceTypeId: Long?,
     @ApiModelProperty("是否展示项目列表")
-    val showProjectList: Boolean = true,
+    val showProjectList: Boolean?,
     @ApiModelProperty("是否在服务导航条上显示")
-    val showNav: Boolean = true,
+    val showNav: Boolean?,
     @ApiModelProperty("服务状态 ok=正常(可用) planning=规划中(灰色不可用) new=新上线(可用)")
-    val status: String = "ok",
-
+    val status: String?,
+    @ApiModelProperty("是否被软删除，变成不可见")
+    val deleted: Boolean?,
     @ApiModelProperty("链接1，例如 /pipeline/")
     val link: String?,
     @ApiModelProperty("链接2与链接1保持一样，例如 /pipeline/")
@@ -56,20 +56,20 @@ data class ServiceCreateInfo(
     val injectType: String?,
     @ApiModelProperty("iframeUrl")
     val iframeUrl: String?,
-    @ApiModelProperty("grayIframeUrl")
+    @ApiModelProperty("grayIframeUrl 目前没用")
     val grayIframeUrl: String?,
     @ApiModelProperty("cssUrl")
     val cssUrl: String?,
     @ApiModelProperty("jsUrl")
     val jsUrl: String?,
-    @ApiModelProperty("grayCssUrl")
+    @ApiModelProperty("grayCssUrl 目前没用")
     val grayCssUrl: String?,
-    @ApiModelProperty("grayJsUrl")
+    @ApiModelProperty("grayJsUrl 目前没用")
     val grayJsUrl: String?,
     @ApiModelProperty("projectIdType")
     val projectIdType: String?,
     @ApiModelProperty("权重")
-    val weight: Int,
+    val weight: Int?,
     @ApiModelProperty("logo地址")
     val logoUrl: String?,
     @ApiModelProperty("支持webSocket的页面")

@@ -30,7 +30,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.GrayTestInfo
 import com.tencent.devops.project.pojo.service.GrayTestListInfo
 import com.tencent.devops.project.pojo.service.OPPServiceVO
@@ -38,6 +37,7 @@ import com.tencent.devops.project.pojo.service.ServiceCreateInfo
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceType
 import com.tencent.devops.project.pojo.service.ServiceTypeModify
+import com.tencent.devops.project.pojo.service.ServiceUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -58,6 +58,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/services")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList", "TooManyFunctions")
 interface OPProjectServiceResource {
 
     @POST
@@ -70,9 +71,9 @@ interface OPProjectServiceResource {
         @ApiParam("服务类型名", required = true)
         @PathParam("title")
         title: String,
-        @ApiParam("权重", required = true)
-        @PathParam("weight")
-        weight: Int
+        @ApiParam("权重", required = false)
+        @QueryParam("weight")
+        weight: Int = 0
     ): Result<ServiceType>
 
     @DELETE
@@ -142,17 +143,6 @@ interface OPProjectServiceResource {
         serviceCreateInfo: ServiceCreateInfo
     ): Result<OPPServiceVO>
 
-    @PUT
-    @Path("/")
-    @ApiOperation("批量修改服务")
-    fun updateServiceUrlByBatch(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("修改服务的js和css连接", required = true)
-        serviceUpdateUrls: List<ServiceUpdateUrls>
-    ): Result<Int>
-
     @DELETE
     @Path("/{serviceId}")
     @ApiOperation("删除服务")
@@ -167,7 +157,7 @@ interface OPProjectServiceResource {
 
     @PUT
     @Path("/{serviceId}")
-    @ApiOperation("修改服务信息")
+    @ApiOperation("根据ServiceId来修改服务信息")
     fun updateService(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
@@ -176,7 +166,21 @@ interface OPProjectServiceResource {
         @PathParam("serviceId")
         serviceId: Long,
         @ApiParam("修改服务所需信息", required = true)
-        serviceCreateInfo: ServiceCreateInfo
+        serviceUpdateInfo: ServiceUpdateInfo
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/update/{englishName}")
+    @ApiOperation("根据服务英文名称修改服务信息")
+    fun updateServiceByName(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("服务英文名（唯一)", required = true)
+        @PathParam("englishName")
+        englishName: String,
+        @ApiParam("修改服务所需信息", required = true)
+        serviceUpdateInfo: ServiceUpdateInfo
     ): Result<Boolean>
 
     @GET
