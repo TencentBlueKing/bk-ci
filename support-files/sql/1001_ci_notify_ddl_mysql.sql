@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS `T_WEWORK_NOTIFY_MESSAGE_TEMPLATE`
     `TITLE`              varchar(256)          DEFAULT NULL,
     `BODY`               mediumtext   NOT NULL,
     `CREATE_TIME`        datetime(6)     NOT NULL DEFAULT NOW(6),
-    `UPDATE_TIME`        datetime(6)     NOT NULL DEFAULT NOW(6),
+    `UPDATE_TIME`        datetime(6)     DEFAULT NULL ,
     PRIMARY KEY (`ID`),
     KEY `idx_templateId` (`COMMON_TEMPLATE_ID`)
 ) ENGINE = InnoDB
