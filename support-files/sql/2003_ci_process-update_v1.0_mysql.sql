@@ -12,7 +12,6 @@ BEGIN
     SET AUTOCOMMIT = 0;
     SELECT DATABASE() INTO db;
 
-    SELECT DATABASE() INTO db;
     IF EXISTS(SELECT 1
               FROM information_schema.statistics
               WHERE TABLE_SCHEMA = db
