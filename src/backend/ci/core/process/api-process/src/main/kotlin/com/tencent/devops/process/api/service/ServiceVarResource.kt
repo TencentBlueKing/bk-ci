@@ -64,7 +64,7 @@ interface ServiceVarResource {
         @QueryParam("buildId")
         buildId: String,
         @ApiParam(value = "变量名称", required = false)
-        @QueryParam("varName")
-        varName: String?
+        @QueryParam("contextName")
+        contextName: String?
     ): Result<Map<String, String>>
 }

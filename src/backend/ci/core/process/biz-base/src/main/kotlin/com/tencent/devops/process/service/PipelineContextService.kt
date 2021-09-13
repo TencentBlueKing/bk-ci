@@ -46,7 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PipelineContextService@Autowired constructor(
+class PipelineContextService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService
 ) {
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
@@ -68,6 +68,17 @@ class PipelineContextService@Autowired constructor(
         }
 
         return varMap
+    }
+
+    fun getAllBuildContext(buildVar: Map<String, String>): Map<String, String> {
+        val allContext = buildVar.toMutableMap()
+        // 将流水线变量按预置映射关系做替换
+        PipelineVarUtil.fillContextVarMap(allContext, buildVar)
+        return allContext
+    }
+
+    fun getBuildContext(buildVar: Map<String, String>, contextName: String): String? {
+        return PipelineVarUtil.fetchContextInBuildVars(contextName, buildVar)
     }
 
     private fun buildCiContext(
