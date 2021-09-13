@@ -43,7 +43,7 @@ class TXPipelineExportServiceTest {
             variables = mutableMapOf(),
             outputConflictMap = mutableMapOf(),
             pipelineExportV2YamlConflictMapItem = PipelineExportV2YamlConflictMapItem(),
-            iisExportFile = true
+            exportFile = true
         )
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
         Assert.assertEquals(result, "null")
@@ -79,7 +79,7 @@ class TXPipelineExportServiceTest {
             variables = variables,
             outputConflictMap = mutableMapOf(),
             pipelineExportV2YamlConflictMapItem = PipelineExportV2YamlConflictMapItem(),
-            iisExportFile = true
+            exportFile = true
         )
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
         println(result)
@@ -117,7 +117,7 @@ class TXPipelineExportServiceTest {
             variables = variables,
             outputConflictMap = mutableMapOf(),
             pipelineExportV2YamlConflictMapItem = PipelineExportV2YamlConflictMapItem(),
-            iisExportFile = true
+            exportFile = true
         )
         println(resultMap)
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
@@ -172,7 +172,7 @@ class TXPipelineExportServiceTest {
             variables = variables,
             outputConflictMap = mutableMapOf(),
             pipelineExportV2YamlConflictMapItem = PipelineExportV2YamlConflictMapItem(),
-            iisExportFile = true
+            exportFile = true
         )
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
         println(result)
