@@ -169,7 +169,7 @@ data class StagePauseCheck(
             }
         }
         reviewDesc = EnvUtils.parseEnv(reviewDesc, variables)
-        reviewParams?.forEach { it.value = it.parseValueWithType(variables) }
+        reviewParams?.forEach { it.parseValueWithType(variables) }
     }
 
     /**

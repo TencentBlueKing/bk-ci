@@ -27,8 +27,6 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.atom
 
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -58,7 +56,8 @@ data class ManualReviewParam(
             when (valueType) {
                 ManualReviewParamType.BOOLEAN -> variables[key].toBoolean()
                 ManualReviewParamType.MULTIPLE -> try {
-                    JsonUtil.getObjectMapper().readValue(variables[key]!!) as List<String>
+                    // TODO 将入库保存的字符串转回数组对象
+                    throw Exception("${variables[key]} mapping error.")
                 } catch (ignore: Throwable) {
                     variables[key]
                 }
