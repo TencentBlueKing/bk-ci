@@ -28,6 +28,7 @@ package com.tencent.devops.lambda.service.process
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -111,6 +112,7 @@ class LambdaDataService @Autowired constructor(
             return
         }
         pushTaskDetail(task)
+        pushGitTaskInfo(event, task)
     }
 
     fun makeUpBuildHistory(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Boolean {
@@ -293,15 +295,15 @@ class LambdaDataService @Autowired constructor(
                     val gitRepository = client.get(ServiceRepositoryResource::class)
                         .get(event.projectId, repositoryHashId.toString(), RepositoryType.ID)
                     gitUrl = gitRepository.data!!.url
-                    sendGitTask2Kafka(task, gitUrl)
+                    sendGitTask2Kafka(atomCode as String, task, gitUrl)
                 }
                 "gitCodeRepoCommon" -> {
                     val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
                     val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
                     gitUrl = inputMap["repositoryUrl"].toString()
-                    sendGitTask2Kafka(task, gitUrl)
+                    sendGitTask2Kafka(atomCode as String, task, gitUrl)
                 }
-                "gitCodeRepo", "PullFromGithub", "GitLab" -> {
+                 "PullFromGithub", "GitLab" -> {
                     val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
                     val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
                     val repositoryHashId = if (atomCode == "Gitlab") {
@@ -312,18 +314,65 @@ class LambdaDataService @Autowired constructor(
                     val gitRepository = client.get(ServiceRepositoryResource::class)
                         .get(event.projectId, repositoryHashId, RepositoryType.ID)
                     gitUrl = gitRepository.data!!.url
-                    sendGitTask2Kafka(task, gitUrl)
+                    sendGitTask2Kafka(atomCode as String, task, gitUrl)
+                }
+                "gitCodeRepo" -> {
+                    val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
+                    val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
+                    val repositoryType = inputMap["repositoryType"].toString()
+                    val repositoryHashId = inputMap["repositoryHashId"] as String?
+                    val repositoryName = inputMap["repositoryName"] as String?
+                    val repositoryConfig = RepositoryConfig(
+                        repositoryHashId = repositoryHashId,
+                        repositoryName = repositoryName,
+                        repositoryType = RepositoryType.parseType(repositoryType)
+                    )
+
+                    val gitRepository = client.get(ServiceRepositoryResource::class)
+                        .get(projectId = event.projectId, repositoryId = repositoryConfig.getRepositoryId(),
+                            repositoryType = RepositoryType.parseType(repositoryType))
+                    gitUrl = gitRepository.data!!.url
+                    if (gitUrl.isNotBlank()) {
+                        sendGitTask2Kafka(atomCode as String, task, gitUrl)
+                    }
+                }
+                "checkout" -> {
+                    val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
+                    val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
+                    val repositoryType = inputMap["repositoryType"].toString()
+                    gitUrl = when (repositoryType) {
+                        "URL" -> inputMap["repositoryUrl"].toString()
+                        "ID", "NAME" -> {
+                            val repositoryHashId = inputMap["repositoryHashId"] as String?
+                            val repositoryName = inputMap["repositoryName"] as String?
+                            val repositoryConfig = RepositoryConfig(
+                                repositoryHashId = repositoryHashId,
+                                repositoryName = repositoryName,
+                                repositoryType = RepositoryType.parseType(repositoryType)
+                            )
+
+                            val gitRepository = client.get(ServiceRepositoryResource::class)
+                                .get(projectId = event.projectId, repositoryId = repositoryConfig.getRepositoryId(),
+                                    repositoryType = RepositoryType.parseType(repositoryType))
+                            gitRepository.data!!.url
+                        }
+                        else -> ""
+                    }
+                    if (gitUrl.isNotBlank()) {
+                        sendGitTask2Kafka(atomCode as String, task, gitUrl)
+                    }
                 }
             }
-        } catch (e: Exception) {
-            logger.error("Push git task to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
+        } catch (ignore: Exception) {
+            logger.error("Push git task to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", ignore)
         }
     }
 
-    private fun sendGitTask2Kafka(task: TPipelineBuildTaskRecord, gitUrl: String) {
+    private fun sendGitTask2Kafka(atomCode: String, task: TPipelineBuildTaskRecord, gitUrl: String) {
         val taskMap = task.intoMap()
         taskMap["GIT_URL"] = gitUrl
         taskMap["WASH_TIME"] = LocalDateTime.now().format(dateTimeFormatter)
+        taskMap["atomCode"] = atomCode
         taskMap.remove("TASK_PARAMS")
 
         kafkaClient.send(KafkaTopic.LANDUN_GIT_TASK_TOPIC, JsonUtil.toJson(taskMap))
