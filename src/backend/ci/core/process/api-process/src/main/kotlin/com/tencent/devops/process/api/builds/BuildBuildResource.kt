@@ -239,4 +239,19 @@ interface BuildBuildResource {
         @ApiParam("", required = true)
         redisAtomsBuild: RedisAtomsBuild
     ): Result<Boolean>
+
+    @ApiOperation("获取子流水线变量")
+    @GET
+    @Path("/detailUrl")
+    fun getBuildDetailUrl(
+        @ApiParam("projectId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("pipelineId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String
+    ): Result<String>
 }

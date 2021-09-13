@@ -81,6 +81,10 @@ class PipelineContextService @Autowired constructor(
         return PipelineVarUtil.fetchContextInBuildVars(contextName, buildVar)
     }
 
+    fun getBuildVarName(contextName: String): String? {
+        return PipelineVarUtil.fetchVarName(contextName)
+    }
+
     private fun buildCiContext(
         varMap: MutableMap<String, String>,
         buildVar: Map<String, String>

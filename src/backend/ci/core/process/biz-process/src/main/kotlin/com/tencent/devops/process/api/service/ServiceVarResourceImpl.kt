@@ -53,7 +53,7 @@ class ServiceVarResourceImpl @Autowired constructor(
         } else {
             val context = pipelineContextService.getBuildContext(buildVars, contextName)
             if (context.isNullOrEmpty()) {
-                Result(mapOf())
+                Result(emptyMap())
             } else {
                 Result(mapOf(contextName to context))
             }

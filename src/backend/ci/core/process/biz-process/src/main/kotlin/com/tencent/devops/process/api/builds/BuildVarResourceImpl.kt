@@ -53,11 +53,16 @@ class BuildVarResourceImpl @Autowired constructor(
         return Result(buildVariableService.getAllVariable(buildId))
     }
 
-    override fun getContextVar(buildId: String, projectId: String, pipelineId: String): Result<Map<String, String>> {
+    override fun getContextVariableByName(
+        buildId: String,
+        projectId: String,
+        pipelineId: String,
+        contextName: String,
+    ): Result<String?> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
         checkPermission(projectId = projectId, pipelineId = pipelineId)
-        val buildVars = buildVariableService.getAllVariable(buildId)
-        return Result(pipelineContextService.getAllBuildContext(buildVars))
+        val varName = pipelineContextService.getBuildVarName(contextName) ?: return Result(null)
+        return Result(buildVariableService.getVariable(buildId, varName))
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {

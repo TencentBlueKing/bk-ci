@@ -65,7 +65,7 @@ interface BuildVarResource {
     @ApiOperation("获取指定构建或指定构建下的上下文变量")
     @Path("/context/get")
     @GET
-    fun getContextVar(
+    fun getContextVariableByName(
         @ApiParam(value = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
@@ -74,6 +74,9 @@ interface BuildVarResource {
         projectId: String,
         @ApiParam(value = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
-        pipelineId: String
-    ): Result<Map<String, String>>
+        pipelineId: String,
+        @ApiParam(value = "变量名称", required = true)
+        @QueryParam("contextName")
+        contextName: String
+    ): Result<String?>
 }

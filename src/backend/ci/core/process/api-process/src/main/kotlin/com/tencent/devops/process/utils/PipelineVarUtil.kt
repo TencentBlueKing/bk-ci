@@ -153,10 +153,17 @@ object PipelineVarUtil {
     }
 
     /**
-     * 填充CI预置变量
+     * 获取CI预置变量
      */
     fun fetchContextInBuildVars(contextKey: String, buildVar: Map<String, String>): String? {
         return buildVar[contextVarMappingBuildVar[contextKey]]
+    }
+
+    /**
+     * 获取CI预置变量名
+     */
+    fun fetchVarName(contextKey: String): String? {
+        return contextVarMappingBuildVar[contextKey]
     }
 
     /**
