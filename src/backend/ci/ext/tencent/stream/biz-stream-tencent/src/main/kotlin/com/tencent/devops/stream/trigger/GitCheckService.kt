@@ -42,9 +42,9 @@ import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.repository.api.ServiceRepositoryGitCheckResource
+import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.ExecuteSource
 import com.tencent.devops.repository.pojo.RepositoryGitCheck
-import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -258,7 +258,7 @@ class GitCheckService @Autowired constructor(
                 mrRequestId = mergeRequestId,
                 reportData = reportData
             )
-            client.getScm(ServiceGitResource::class).addCommitCheck(request)
+            client.get(ServiceScmOauthResource::class).addCommitCheck(request)
             return gitProjectId
         }
     }
