@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.model.stream.tables.TGitBasicSetting
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -241,6 +242,40 @@ class GitCIBasicSettingDao {
                 .where(ID.`in`(projectIds))
                 .and(ENABLE_CI.eq(true))
                 .fetch()
+        }
+    }
+
+    fun getMaxId(
+        dslContext: DSLContext,
+        gitProjectIdList: List<Long>? = null
+    ): Long {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            val baseStep = dslContext.select(DSL.max(ID)).from(this)
+            if (!gitProjectIdList.isNullOrEmpty()) {
+                baseStep.where(ID.`in`(gitProjectIdList))
+            }
+            return baseStep.fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun getBasicSettingList(
+        dslContext: DSLContext,
+        gitProjectIdList: List<Long>? = null,
+        minId: Long? = null,
+        maxId: Long? = null
+    ): List<TGitBasicSettingRecord> {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            val conditions = mutableListOf<Condition>()
+            if (!gitProjectIdList.isNullOrEmpty()) {
+                conditions.add(ID.`in`(gitProjectIdList))
+            }
+            if (minId != null) {
+                conditions.add(ID.ge(minId))
+            }
+            if (maxId != null) {
+                conditions.add(ID.lt(maxId))
+            }
+            return dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 }
