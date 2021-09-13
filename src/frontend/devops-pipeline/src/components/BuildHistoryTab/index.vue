@@ -1,7 +1,7 @@
 <template>
     <div>
         <empty-tips v-if="hasNoPermission" :show-lock="true" v-bind="emptyTipsConfig"></empty-tips>
-        <infinite-scroll v-else class="build-history-tab-content" ref="infiniteScroll" :data-fetcher="requestHistory" :item-height="42" scroll-box-class-name="bkdevops-pipeline-history" v-slot="slotProps">
+        <infinite-scroll v-else class="build-history-tab-content" ref="infiniteScroll" :data-fetcher="requestHistory" :page-size="pageSize" :scroll-box-class-name="scrollBoxCls" v-slot="slotProps">
             <filter-bar v-if="showFilterBar" @query="slotProps.queryList" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
             <build-history-table v-if="!slotProps.isLoading" :loading-more="slotProps.isLoadingMore" :current-pipeline-version="currentPipelineVersion" @update-table="updateBuildHistoryList" :build-list="slotProps.list" :columns="shownColumns" :empty-tips-config="isEmptyList ? emptyTipsConfig : null" :show-log="showLog"></build-history-table>
             <bk-dialog
@@ -55,6 +55,7 @@
                 shownColumns: initShownColumns,
                 tempColumns: initShownColumns,
                 hasNoPermission: false,
+                pageSize: 24,
                 currentPipelineVersion: '',
                 currentBuildNo: '',
                 currentBuildNum: '',
@@ -71,6 +72,9 @@
             ...mapState('atom', [
                 'isPropertyPanelVisible'
             ]),
+            scrollBoxCls () {
+                return 'bkdevops-pipeline-history'
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -164,6 +168,8 @@
         },
 
         async created () {
+            const { pageSize } = this
+            this.pageSize = document.body.scrollHeight > 42 * pageSize ? Math.ceil(document.body.scrollHeight / 42) : pageSize
             await this.handlePathQuery()
         },
 

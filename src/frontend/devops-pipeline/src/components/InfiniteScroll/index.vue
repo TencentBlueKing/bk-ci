@@ -15,10 +15,6 @@
                 type: Function,
                 deafult: () => () => {}
             },
-            itemHeight: {
-                type: Number,
-                isRequired: true
-            },
             scrollBoxClassName: {
                 type: String,
                 isRequired: true
@@ -41,14 +37,10 @@
         },
 
         mounted () {
-            const { currentPage, pageSize, scrollBoxClassName, itemHeight } = this
+            const { currentPage, pageSize, scrollBoxClassName } = this
             const scrollTable = document.querySelector(`.${scrollBoxClassName}`)
             const len = currentPage * pageSize
-            let firstScreenSize = len
-            if (Number.isInteger(itemHeight)) {
-                firstScreenSize = scrollTable.scrollHeight > itemHeight * len ? Math.ceil(scrollTable.scrollHeight / itemHeight) : len
-            }
-            this.queryList(1, firstScreenSize)
+            this.queryList(1, len)
 
             this.throttleScroll = throttle(this.handleScroll, 500)
             if (scrollTable) {
@@ -93,8 +85,7 @@
                     ]
 
                     this.currentPage = Math.ceil(this.list.length / pageSize)
-
-                    this.hasNext = this.currentPage < res.totalPages
+                    this.hasNext = this.list.length < res.count
                     this.totals = res.count
                     return res
                 }
