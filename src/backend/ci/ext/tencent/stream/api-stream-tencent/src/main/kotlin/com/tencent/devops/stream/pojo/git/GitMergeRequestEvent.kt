@@ -28,7 +28,7 @@
 package com.tencent.devops.stream.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 
 /**
 {
@@ -94,7 +94,7 @@ data class GitMergeRequestEvent(
     val object_attributes: GitMRAttributes
 ) : GitEvent() {
     companion object {
-        const val classType = OBJECT_KIND_MERGE_REQUEST
+        const val classType = TGitObjectKind.OBJECT_KIND_MERGE_REQUEST
     }
 }
 

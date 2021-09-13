@@ -6,13 +6,13 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
-import com.tencent.devops.stream.trigger.GitCITriggerService
+import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.utils.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceStreamTriggerResourceImpl @Autowired constructor(
-    private val gitCITriggerService: GitCITriggerService,
+    private val manualTriggerService: ManualTriggerService,
     private val permissionService: GitCIV2PermissionService
 ) : ServiceStreamTriggerResource {
 
@@ -40,7 +40,7 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                 commitId = commitId
             )
         }
-        return Result(gitCITriggerService.triggerBuild(userId, pipelineId, new))
+        return Result(manualTriggerService.triggerBuild(userId, pipelineId, new))
     }
 
     private fun checkParam(userId: String) {
