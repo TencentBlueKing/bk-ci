@@ -63,7 +63,6 @@ stages:
           mysqlUser: root
           mysqlPasswd: root
         run: | 
-          rm -rf ~/.gradle/caches;
           cd src/backend/ci/ext/tencent
           ../../gradlew -DmysqlURL=$mysqlURL \
                         -DmysqlUser=$mysqlUser \
