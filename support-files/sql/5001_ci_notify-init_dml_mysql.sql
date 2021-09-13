@@ -38,10 +38,6 @@ REPLACE INTO  `T_COMMON_NOTIFY_MESSAGE_TEMPLATE` (`ID`, `TEMPLATE_CODE`, `TEMPLA
 REPLACE INTO  `T_COMMON_NOTIFY_MESSAGE_TEMPLATE` (`ID`, `TEMPLATE_CODE`, `TEMPLATE_NAME`, `NOTIFY_TYPE_SCOPE`, `PRIORITY`, `SOURCE`) VALUES  ("f5c17a3f5dcd4c9ea7cf7a16a16e7135","ATOM_COLLABORATOR_APPLY_REFUSE","插件协作开发申请被拒的消息通知模板",'[ "EMAIL", "WEWORK" ]',1,0);
 
 
-
-
-
-
 -- 企业微信流水线执行消息模板
 REPLACE INTO  `T_WEWORK_NOTIFY_MESSAGE_TEMPLATE` (`ID`, `COMMON_TEMPLATE_ID`, `CREATOR`, `MODIFIOR`, `SENDER`, `TITLE`, `BODY`, `CREATE_TIME`, `UPDATE_TIME`) VALUES  ("0696ed183dca43ceb0963c99710f1f25","1be5b658d4aa465a9f9a1d0af44c8384","system",'',"DevOps","【蓝盾质量红线】拦截通知-待审核","${title}\n所属项目：${projectName}\n触发人：${cc}\n拦截时间：${time}\n${result}\n流水线链接：${url}","2021-09-13 17:13:58",null);
 REPLACE INTO  `T_WEWORK_NOTIFY_MESSAGE_TEMPLATE` (`ID`, `COMMON_TEMPLATE_ID`, `CREATOR`, `MODIFIOR`, `SENDER`, `TITLE`, `BODY`, `CREATE_TIME`, `UPDATE_TIME`) VALUES  ("16b3188f363247ec81923fff2ee4cafd","cff00f19e6884862b6f9afe0f608e91e","system",'',"DevOps","蓝盾流水线【${pipelineName}】#${buildNum} 构建成功","✔️${successContent}","2021-09-13 17:13:58",null);
