@@ -27,11 +27,13 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.charset.Charset
 
 object BatScriptUtil {
     private const val setEnv = ":setEnv\r\n" +
@@ -147,14 +149,16 @@ object BatScriptUtil {
                 newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
             ))
 
-//        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
-//            CharSetType.UTF_8 -> Charsets.UTF_8
-//            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
-//            else -> Charsets.UTF_8
-//        }
-//        logger.info("The default charset is $charset")
+        // #4601 没有指定编码字符集时采用获取系统的默认字符集
+        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
+            CharSetType.UTF_8 -> Charsets.UTF_8
+            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
+            else -> Charset.defaultCharset()
+        }
 
-        file.writeText(command.toString())
+        logger.info("The default charset is $charset")
+
+        file.writeText(command.toString(), charset)
         logger.info("start to run windows script - ($command)")
         return file
     }
