@@ -72,7 +72,6 @@ import java.text.MessageFormat
 import java.time.LocalDateTime
 import javax.servlet.http.HttpServletResponse
 
-@Suppress("ALL")
 @Service
 @RefreshScope
 @Suppress("NestedBlockDepth", "LongMethod", "LongParameterList", "MagicNumber")
