@@ -27,6 +27,9 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.atom
 
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -45,5 +48,24 @@ data class ManualReviewParam(
     @ApiModelProperty("下拉框列表")
     val options: List<ManualReviewParamPair>? = null,
     @ApiModelProperty("中文名称", required = false)
-    val chineseName: String? = null
-)
+    val chineseName: String? = null,
+) {
+    /**
+     *  变量值处理，如果是已有值则直接使用，如果是变量引用则做替换
+     */
+    fun parseValueWithType(variables: Map<String, String>): Any? {
+        return if (variables.containsKey(key) && !variables[key].isNullOrBlank()) {
+            when (valueType) {
+                ManualReviewParamType.BOOLEAN -> variables[key].toBoolean()
+                ManualReviewParamType.MULTIPLE -> try {
+                    JsonUtil.getObjectMapper().readValue(variables[key]!!) as List<String>
+                } catch (ignore: Throwable) {
+                    variables[key]
+                }
+                else -> variables[key]
+            }
+        } else {
+            ObjectReplaceEnvVarUtil.replaceEnvVar(value, variables)
+        }
+    }
+}
