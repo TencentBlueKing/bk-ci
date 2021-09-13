@@ -922,12 +922,14 @@ class TXPipelineExportService @Autowired constructor(
             val existingOutputElements = output2Elements[originKey]
             var lastExistingOutputElements = MarketBuildAtomElementWithLocation()
             run outside@{
-                existingOutputElements?.reversed()?.forEach { if (it.jobLocation?.id == pipelineExportV2YamlConflictMapItem.job?.id ||
-                    it.stageLocation?.id != pipelineExportV2YamlConflictMapItem.stage?.id
-                ) {
-                    lastExistingOutputElements = it
-                    return@outside
-                } }
+                existingOutputElements?.reversed()?.forEach {
+                    if (it.jobLocation?.id == pipelineExportV2YamlConflictMapItem.job?.id ||
+                        it.stageLocation?.id != pipelineExportV2YamlConflictMapItem.stage?.id
+                    ) {
+                        lastExistingOutputElements = it
+                        return@outside
+                    }
+                }
             }
             val namespace = lastExistingOutputElements.stepAtom?.data?.get("namespace") as String?
             val originKeyWithNamespace = if (!namespace.isNullOrBlank()) {
