@@ -79,9 +79,9 @@ class JobQuotaBusinessService @Autowired constructor(
      * job启动时记录
      */
     fun insertRunningJob(projectId: String, vmType: JobQuotaVmType, buildId: String, vmSeqId: String) {
-//        runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId)
-//        redisOperation.sadd(QUOTA_PROJECT_ALL_KEY, projectId) // 所有项目集合
-//        checkWarning(projectId, vmType)
+        runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId)
+        redisOperation.sadd(QUOTA_PROJECT_ALL_KEY, projectId) // 所有项目集合
+        checkWarning(projectId, vmType)
     }
 
     /**
@@ -89,7 +89,7 @@ class JobQuotaBusinessService @Autowired constructor(
      * vmSeqId可能为空
      */
     fun deleteRunningJob(projectId: String, buildId: String, vmSeqId: String?) {
-//        jobAgentFinish(projectId, buildId, vmSeqId)
+        jobAgentFinish(projectId, buildId, vmSeqId)
     }
 
     private fun jobAgentFinish(projectId: String, buildId: String, vmSeqId: String?) {
@@ -123,14 +123,14 @@ class JobQuotaBusinessService @Autowired constructor(
      * agent成功启动时更新
      */
     fun updateAgentStartTime(projectId: String, buildId: String, vmSeqId: String) {
-//        runningJobsDao.updateAgentStartTime(dslContext, projectId, buildId, vmSeqId)
+        runningJobsDao.updateAgentStartTime(dslContext, projectId, buildId, vmSeqId)
     }
 
     /**
      * agent结束时更新
      */
     fun updateRunningTime(projectId: String, buildId: String, vmSeqId: String) {
-//        jobAgentFinish(projectId, buildId, vmSeqId)
+        jobAgentFinish(projectId, buildId, vmSeqId)
     }
 
     /**

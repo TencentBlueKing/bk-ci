@@ -113,16 +113,22 @@ class JobQuotaService constructor(
         vmType: JobQuotaVmType?
     ): Boolean {
         if (vmType == null) {
-            logger.warn("vmType is null, job quota check will be skipped.")
+            logger.warn("VmType is null, job quota check will be skipped.")
             return true
         }
+
+        if (!jobQuotaEnable) {
+            logger.info("${vmType.name}|$projectId Job Quota has not been opened. Check skipped.")
+            return true
+        }
+
         val jobStatus = try {
             client.get(ServiceJobQuotaBusinessResource::class).getRunningJobCount(projectId, vmType).data ?: return true
         } catch (e: Throwable) {
             logger.warn("Get running job count failed.", e)
             return true
         }
-        logger.info("Check job quota...")
+
         with(jobStatus) {
             if (runningJobCount >= jobQuota) {
                 buildLogPrinter.addRedLine(
@@ -149,7 +155,7 @@ class JobQuotaService constructor(
                 )
             }
 
-            if (runningJobTime >= timeQuota * 60 * 60 * 1000) {
+/*            if (runningJobTime >= timeQuota * 60 * 60 * 1000) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "当前项目下本月已执行的【${vmType.displayName}】JOB时间达到配额最大值，已执行JOB时间：" +
@@ -172,8 +178,8 @@ class JobQuotaService constructor(
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
                 )
-            }
-            logger.info("Check job quota finish.")
+            }*/
+            logger.info("Check job quota finish. DO NEXT.")
             return true
         }
     }
