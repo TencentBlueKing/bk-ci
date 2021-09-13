@@ -30,6 +30,4 @@ dependencies {
     api(project(":core:store:biz-store-image-sample"))
 }
 
-plugins {
-   `task-spring-boot-package`
-}
+

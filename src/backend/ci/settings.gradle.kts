@@ -27,6 +27,18 @@
 
 rootProject.name = "bk-ci-backend"
 
+pluginManagement {
+    val devopsBootVersion: String by settings
+    plugins {
+        id("com.tencent.devops.boot") version devopsBootVersion
+    }
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 // Single CI Service
 include(":boot-assembly")
 

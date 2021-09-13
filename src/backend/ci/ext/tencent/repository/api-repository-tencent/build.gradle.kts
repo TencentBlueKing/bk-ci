@@ -31,7 +31,6 @@ dependencies {
     api(project(":core:repository:api-repository"))
 }
 
-
 plugins{
     `task-deploy-to-maven`
 }

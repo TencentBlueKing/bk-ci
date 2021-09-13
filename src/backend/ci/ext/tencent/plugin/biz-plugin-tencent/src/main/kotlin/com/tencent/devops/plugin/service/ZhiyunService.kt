@@ -99,7 +99,7 @@ class ZhiyunService @Autowired constructor(
                             .addFormDataPart("para[description]", para.description)
                             .addFormDataPart("para[clean]", para.clean)
                             .addFormDataPart("para[ciInstId]", para.buildId)
-                            .addFormDataPart("para[codeUrl]", para.codeUrl)
+                            .addFormDataPart("para[codeUrl]", para.codeUrl!!)
                             .build()
                         Request.Builder()
                             .header("apikey", zhiyunConfig.apiKey)
