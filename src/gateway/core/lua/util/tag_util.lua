@@ -116,7 +116,7 @@ function _M:get_frontend_path(tag, project)
         local red, err = redisUtil:new()
         if not red then
             ngx.log(ngx.ERR, "tag failed to new redis ", err)
-            return tag
+            return config.static_dir
         end
         local red_key = "ci:frontend:path:" .. tag
         if project == "codecc" then

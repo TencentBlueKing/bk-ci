@@ -70,10 +70,10 @@ class ExtendRabbitMQConfiguration {
         val connectionFactory = CachingConnectionFactory()
         connectionFactory.host = config.host
         connectionFactory.port = config.port
-        connectionFactory.username = username
-        connectionFactory.setPassword(password)
-        connectionFactory.virtualHost = virtualHost
-        connectionFactory.setAddresses(addresses)
+        connectionFactory.username = username!!
+        connectionFactory.setPassword(password!!)
+        connectionFactory.virtualHost = virtualHost!!
+        connectionFactory.setAddresses(addresses!!)
         if (channelCacheSize != null && channelCacheSize!! > 0) {
             connectionFactory.channelCacheSize = channelCacheSize!!
         }

@@ -191,6 +191,7 @@ class AuthPipelineService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = entityId
             entity.displayName = it.pipelineName
+            entity.iamApprover = arrayListOf(it.createUser)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${pipelineInfos.size.toLong()}")

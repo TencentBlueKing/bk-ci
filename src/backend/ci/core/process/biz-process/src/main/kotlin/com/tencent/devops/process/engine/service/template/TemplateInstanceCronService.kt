@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.template.TemplateInstanceBaseStatus
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
+import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -91,6 +92,13 @@ class TemplateInstanceCronService @Autowired constructor(
             )
             templateInstanceBaseList?.forEach { templateInstanceBase ->
                 val baseId = templateInstanceBase.id
+                val projectId = templateInstanceBase.projectId
+                val projectRouterTagCheck = client.get(ServiceProjectTagResource::class).checkProjectRouter(projectId).data
+                if (!projectRouterTagCheck!!) {
+                    logger.info("project $projectId router tag is not this cluster")
+                    return@forEach
+                }
+
                 // 把模板批量更新记录状态置为”实例化中“
                 templateInstanceBaseDao.updateTemplateInstanceBase(
                     dslContext = dslContext,
@@ -98,7 +106,6 @@ class TemplateInstanceCronService @Autowired constructor(
                     status = TemplateInstanceBaseStatus.INSTANCING.name,
                     userId = "system"
                 )
-                val projectId = templateInstanceBase.projectId
                 val successPipelines = ArrayList<String>()
                 val failurePipelines = ArrayList<String>()
                 val templateInstanceItemCount = templateInstanceItemDao.getTemplateInstanceItemCountByBaseId(

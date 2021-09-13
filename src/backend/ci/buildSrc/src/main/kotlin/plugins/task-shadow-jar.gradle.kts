@@ -24,21 +24,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-package com.tencent.devops.project.pojo.service
+plugins {
+    id("com.github.johnrengelman.shadow")
+    application
+}
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+tasks {
+    getByName<Jar>("jar") {
+        from("src/main/resources") {
+            include("*.*")
+        }
 
-/**
- *   Date on 2018-12-05.
- */
-@ApiModel("服务-修改模型")
-data class ServiceUrlUpdateInfo(
-    @ApiModelProperty("服务名称", required = true)
-    val name: String,
-    @ApiModelProperty("cssUrl")
-    val cssUrl: String,
-    @ApiModelProperty("jsUrl")
-    val jsUrl: String
-)
+        manifest {
+            attributes(mapOf("WorkerAgent-Version" to project.version))
+        }
+    }
+
+    named<ShadowJar>("shadowJar") {
+        mergeServiceFiles()
+        destinationDirectory.set(File("${rootDir}/release"))
+        archiveClassifier.set("")
+        archiveVersion.set("")
+        isZip64 = true
+    }
+
+    getByName("installDist") {
+        enabled = false
+    }
+}
