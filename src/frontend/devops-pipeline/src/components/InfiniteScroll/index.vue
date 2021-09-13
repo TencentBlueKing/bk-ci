@@ -15,6 +15,10 @@
                 type: Function,
                 deafult: () => () => {}
             },
+            itemHeight: {
+                type: Number,
+                isRequired: true
+            },
             scrollBoxClassName: {
                 type: String,
                 isRequired: true
@@ -37,11 +41,15 @@
         },
 
         mounted () {
-            const { currentPage, pageSize, scrollBoxClassName } = this
-            const len = currentPage * pageSize
-            this.queryList(1, len)
-
+            const { currentPage, pageSize, scrollBoxClassName, itemHeight } = this
             const scrollTable = document.querySelector(`.${scrollBoxClassName}`)
+            const len = currentPage * pageSize
+            let firstScreenSize = len
+            if (Number.isInteger(itemHeight)) {
+                firstScreenSize = scrollTable.scrollHeight > itemHeight * len ? Math.ceil(scrollTable.scrollHeight / itemHeight) : len
+            }
+            this.queryList(1, firstScreenSize)
+
             this.throttleScroll = throttle(this.handleScroll, 500)
             if (scrollTable) {
                 scrollTable.addEventListener('scroll', this.throttleScroll)
@@ -69,7 +77,6 @@
             handleScroll (e) {
                 const { target } = e
                 const { hasNext, setScrollTop, scrollLoadMore, isLoadingMore } = this
-
                 setScrollTop(e.target.scrollTop)
                 const offset = e.target.scrollHeight - (e.target.offsetHeight + e.target.scrollTop)
                 if (offset <= SCROLL_THRESHOLD && hasNext && !isLoadingMore) { // scroll to end
