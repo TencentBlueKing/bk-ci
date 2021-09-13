@@ -125,7 +125,7 @@ class TXPipelineExportService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             isGitCI = isGitCI,
-            iisExportFile = true
+            exportFile = true
         )
         return exportToFile(pair.first, pair.second.name)
     }
@@ -150,7 +150,7 @@ class TXPipelineExportService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         isGitCI: Boolean = false,
-        iisExportFile: Boolean = false
+        exportFile: Boolean = false
     ): Triple<String, Model, Map<String, List<List<PipelineExportV2YamlConflictMapItem>>>> {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -222,7 +222,7 @@ class TXPipelineExportService @Autowired constructor(
                     output2Elements = output2Elements,
                     variables = variables,
                     outputConflictMap = outputConflictMap,
-                    iisExportFile = iisExportFile
+                    exportFile = exportFile
                 ),
                 extends = null,
                 resources = null,
@@ -236,7 +236,7 @@ class TXPipelineExportService @Autowired constructor(
                     output2Elements = output2Elements,
                     variables = variables,
                     outputConflictMap = outputConflictMap,
-                    iisExportFile = iisExportFile
+                    exportFile = exportFile
                 )
             )
         } catch (t: Throwable) {
@@ -270,7 +270,7 @@ class TXPipelineExportService @Autowired constructor(
         output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
         variables: Map<String, String>?,
         outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
-        iisExportFile: Boolean
+        exportFile: Boolean
     ): List<PreStage> {
         val stages = mutableListOf<PreStage>()
         model.stages.drop(1).forEach { stage ->
@@ -294,7 +294,7 @@ class TXPipelineExportService @Autowired constructor(
                 variables = variables,
                 outputConflictMap = outputConflictMap,
                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                iisExportFile = iisExportFile
+                exportFile = exportFile
             )
             val tags = mutableListOf<String>()
             stage.tag?.forEach {
@@ -331,7 +331,7 @@ class TXPipelineExportService @Autowired constructor(
         output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
         variables: Map<String, String>?,
         outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
-        iisExportFile: Boolean
+        exportFile: Boolean
     ): Map<String, PreJob>? {
         if (stage.finally) {
             val pipelineExportV2YamlConflictMapItem =
@@ -351,7 +351,7 @@ class TXPipelineExportService @Autowired constructor(
                 variables = variables,
                 outputConflictMap = outputConflictMap,
                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                iisExportFile = iisExportFile
+                exportFile = exportFile
             )
         }
         return null
@@ -367,7 +367,7 @@ class TXPipelineExportService @Autowired constructor(
         variables: Map<String, String>?,
         outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
-        iisExportFile: Boolean
+        exportFile: Boolean
     ): Map<String, PreJob>? {
         val jobs = mutableMapOf<String, PreJob>()
         stage.containers.forEach {
@@ -411,7 +411,7 @@ class TXPipelineExportService @Autowired constructor(
                             variables = variables,
                             outputConflictMap = outputConflictMap,
                             pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                            iisExportFile = iisExportFile
+                            exportFile = exportFile
                         ),
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
@@ -510,7 +510,7 @@ class TXPipelineExportService @Autowired constructor(
                             variables = variables,
                             outputConflictMap = outputConflictMap,
                             pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                            iisExportFile = iisExportFile
+                            exportFile = exportFile
                         ),
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
@@ -537,7 +537,7 @@ class TXPipelineExportService @Autowired constructor(
         variables: Map<String, String>?,
         outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
-        iisExportFile: Boolean
+        exportFile: Boolean
     ): List<V2Step> {
         val stepList = mutableListOf<V2Step>()
 
@@ -612,7 +612,7 @@ class TXPipelineExportService @Autowired constructor(
                                 variables = variables,
                                 outputConflictMap = outputConflictMap,
                                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                                iisExportFile = iisExportFile
+                                exportFile = exportFile
                             ),
                             checkout = null
                         )
@@ -643,7 +643,7 @@ class TXPipelineExportService @Autowired constructor(
                                 variables = variables,
                                 outputConflictMap = outputConflictMap,
                                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                                iisExportFile = iisExportFile
+                                exportFile = exportFile
                             ),
                             checkout = null
                         )
@@ -691,7 +691,7 @@ class TXPipelineExportService @Autowired constructor(
                         relyMap = relyList?.data?.get(step.getAtomCode()),
                         outputConflictMap = outputConflictMap,
                         pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                        iisExportFile = iisExportFile
+                        exportFile = exportFile
                     )
                     if (!checkoutAtom) stepList.add(
                         V2Step(
@@ -712,7 +712,7 @@ class TXPipelineExportService @Autowired constructor(
                                 relyMap = relyList?.data?.get(step.getAtomCode()),
                                 outputConflictMap = outputConflictMap,
                                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                                iisExportFile = iisExportFile
+                                exportFile = exportFile
                             ),
                             timeoutMinutes = timeoutMinutes,
                             continueOnError = continueOnError,
@@ -748,7 +748,7 @@ class TXPipelineExportService @Autowired constructor(
                                 relyMap = relyList?.data?.get(step.getAtomCode()),
                                 outputConflictMap = outputConflictMap,
                                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                                iisExportFile = iisExportFile
+                                exportFile = exportFile
                             ),
                             timeoutMinutes = timeoutMinutes,
                             continueOnError = continueOnError,
@@ -811,7 +811,7 @@ class TXPipelineExportService @Autowired constructor(
         relyMap: Map<String, Any>? = null,
         outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
-        iisExportFile: Boolean
+        exportFile: Boolean
     ): Map<String, Any?>? {
         if (inputMap.isNullOrEmpty()) {
             return null
@@ -839,7 +839,7 @@ class TXPipelineExportService @Autowired constructor(
                                         variables = variables,
                                         outputConflictMap = outputConflictMap,
                                         pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                                        iisExportFile = iisExportFile
+                                        exportFile = exportFile
                                     )
                                     return@lit
                                 }
@@ -857,7 +857,7 @@ class TXPipelineExportService @Autowired constructor(
                 variables = variables,
                 outputConflictMap = outputConflictMap,
                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                iisExportFile = iisExportFile
+                exportFile = exportFile
             )
         }
         return result
@@ -869,7 +869,7 @@ class TXPipelineExportService @Autowired constructor(
         variables: Map<String, String>?,
         outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
-        iisExportFile: Boolean
+        exportFile: Boolean
     ): Any {
         if (value is String) {
             return replaceStringWithDoubleCurlyBraces(
@@ -878,7 +878,7 @@ class TXPipelineExportService @Autowired constructor(
                 variables = variables,
                 outputConflictMap = outputConflictMap,
                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                iisExportFile = iisExportFile
+                exportFile = exportFile
             )
         }
         if (value is List<*>) {
@@ -892,7 +892,7 @@ class TXPipelineExportService @Autowired constructor(
                             variables = variables,
                             outputConflictMap = outputConflictMap,
                             pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                            iisExportFile = iisExportFile
+                            exportFile = exportFile
                         )
                     )
                 } else {
@@ -911,7 +911,7 @@ class TXPipelineExportService @Autowired constructor(
         variables: Map<String, String>?,
         outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
-        iisExportFile: Boolean
+        exportFile: Boolean
     ): String {
         val pattern = Pattern.compile("\\\$\\{([^{}]+?)}")
         val matcher = pattern.matcher(value)
@@ -942,7 +942,7 @@ class TXPipelineExportService @Autowired constructor(
                     existingOutputElements = existingOutputElements!!,
                     outputConflictMap = outputConflictMap,
                     pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                    iisExportFile = iisExportFile
+                    exportFile = exportFile
                 )
                 if (namespace.isNullOrBlank()) {
                     "\${{ steps.${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace }}"
@@ -1123,7 +1123,7 @@ class TXPipelineExportService @Autowired constructor(
         variables: Map<String, String>?,
         outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
-        iisExportFile: Boolean
+        exportFile: Boolean
     ): String {
         val regex = Regex("setEnv\\s+(\"?.*\"?)\\s*\\n?")
         val foundMatches = regex.findAll(script)
@@ -1143,7 +1143,7 @@ class TXPipelineExportService @Autowired constructor(
             variables = variables,
             outputConflictMap = outputConflictMap,
             pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-            iisExportFile = iisExportFile
+            exportFile = exportFile
         )
     }
 
@@ -1161,7 +1161,7 @@ class TXPipelineExportService @Autowired constructor(
         relyMap: Map<String, Any>? = null,
         outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
-        iisExportFile: Boolean
+        exportFile: Boolean
     ): Boolean {
         if (inputMap == null || atomCode.isBlank() || !checkoutAtomCodeSet.contains(atomCode)) return false
         logger.info("[$projectId] addCheckoutAtom export with atomCode($atomCode), inputMap=$inputMap, step=$step")
@@ -1217,7 +1217,7 @@ class TXPipelineExportService @Autowired constructor(
                         relyMap = relyMap,
                         outputConflictMap = outputConflictMap,
                         pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                        iisExportFile = iisExportFile
+                        exportFile = exportFile
                     ),
                     timeoutMinutes = timeoutMinutes,
                     continueOnError = continueOnError,
@@ -1239,7 +1239,7 @@ class TXPipelineExportService @Autowired constructor(
         existingOutputElements: MutableList<MarketBuildAtomElementWithLocation>,
         outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
-        iisExportFile: Boolean
+        exportFile: Boolean
     ) {
         val distinctMap = HashMap<String?, MarketBuildAtomElementWithLocation>()
         existingOutputElements.forEach {
@@ -1276,7 +1276,7 @@ class TXPipelineExportService @Autowired constructor(
             } else {
                 outputConflictMap[key] = mutableListOf(item.toList())
             }
-            if (iisExportFile) {
+            if (exportFile) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = ProcessMessageCode.ERROR_EXPORT_OUTPUT_CONFLICT,
