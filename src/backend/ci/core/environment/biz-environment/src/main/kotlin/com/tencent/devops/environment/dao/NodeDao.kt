@@ -590,7 +590,7 @@ class NodeDao {
     ): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(DISPLAY_NAME.like("$%$displayName%")))
+                .where(PROJECT_ID.eq(projectId).and(DISPLAY_NAME.like("%$displayName%")))
                 .orderBy(CREATED_TIME.desc())
                 .limit(limit).offset(offset)
                 .fetch()

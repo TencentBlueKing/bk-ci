@@ -58,8 +58,8 @@ class ServiceTicketAuthResourceImpl @Autowired constructor(
                 return authCertService.searchCert(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
-                    limit = page.offset.toInt(),
-                    offset = page.limit.toInt(),
+                    limit = page.limit.toInt(),
+                    offset = page.offset.toInt(),
                     token = token
                 )
             }
@@ -88,8 +88,8 @@ class ServiceTicketAuthResourceImpl @Autowired constructor(
                 return authCredentialService.searchCredential(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
-                    limit = page.offset.toInt(),
-                    offset = page.limit.toInt(),
+                    limit = page.limit.toInt(),
+                    offset = page.offset.toInt(),
                     token = token
                 )
             }

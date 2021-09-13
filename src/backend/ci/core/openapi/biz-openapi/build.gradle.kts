@@ -34,8 +34,8 @@ dependencies {
     api(project(":core:environment:api-environment"))
     api(project(":core:artifactory:api-artifactory-sample"))
     api(project(":core:common:common-client"))
-    api("io.jsonwebtoken:jjwt-api:0.10.8")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.10.8")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.10.8")
+    api("io.jsonwebtoken:jjwt-api")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson")
     api("org.springframework.boot:spring-boot-starter-aop")
 }

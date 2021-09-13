@@ -72,8 +72,8 @@ class AuthPipelineService @Autowired constructor(
                 return searchPipeline(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
-                    limit = page.offset.toInt(),
-                    offset = page.limit.toInt(),
+                    limit = page.limit.toInt(),
+                    offset = page.offset.toInt(),
                     token = token,
                     returnPipelineId = returnPipelineId!!
                 )
@@ -191,6 +191,7 @@ class AuthPipelineService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = entityId
             entity.displayName = it.pipelineName
+            entity.iamApprover = arrayListOf(it.createUser)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${pipelineInfos.size.toLong()}")
