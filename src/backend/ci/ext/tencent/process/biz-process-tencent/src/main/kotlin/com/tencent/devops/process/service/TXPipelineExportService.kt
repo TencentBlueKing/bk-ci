@@ -920,21 +920,31 @@ class TXPipelineExportService @Autowired constructor(
             val originKey = matcher.group(1).trim()
             // 假设匹配到了前序插件的output则优先引用，否则引用全局变量
             val existingOutputElements = output2Elements[originKey]
-            val namespace = existingOutputElements?.last()?.stepAtom?.data?.get("namespace") as String?
+            var lastExistingOutputElements = MarketBuildAtomElementWithLocation()
+            existingOutputElements?.reversed()?.forEach {
+                if (it.jobLocation?.id == pipelineExportV2YamlConflictMapItem.job?.id ||
+                    it.stageLocation?.id != pipelineExportV2YamlConflictMapItem.stage?.id
+                ) {
+                    lastExistingOutputElements = it
+                    return ""
+                }
+            }
+
+            val namespace = lastExistingOutputElements.stepAtom?.data?.get("namespace") as String?
             val originKeyWithNamespace = if (!namespace.isNullOrBlank()) {
                 originKey.replace("${namespace}_", "")
             } else originKey
 
-            val realValue = if (!existingOutputElements.isNullOrEmpty()) {
+            val realValue = if (lastExistingOutputElements.stepAtom != null) {
                 checkConflictOutput(
                     key = originKey,
-                    existingOutputElements = existingOutputElements,
+                    existingOutputElements = existingOutputElements!!,
                     outputConflictMap = outputConflictMap,
                     pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                     iisExportFile = iisExportFile
                 )
                 if (namespace.isNullOrBlank()) {
-                    "\${{ steps.${existingOutputElements.last().stepAtom?.id}.outputs.$originKeyWithNamespace }}"
+                    "\${{ steps.${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace }}"
                 } else {
                     "\${{ steps.$namespace.outputs.$originKeyWithNamespace }}"
                 }
