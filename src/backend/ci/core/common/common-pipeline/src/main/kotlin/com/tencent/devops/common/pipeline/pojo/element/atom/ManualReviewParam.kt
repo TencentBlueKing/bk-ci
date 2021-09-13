@@ -51,8 +51,8 @@ data class ManualReviewParam(
     /**
      *  变量值处理，如果是已有值则直接使用，如果是变量引用则做替换
      */
-    fun parseValueWithType(variables: Map<String, String>): Any? {
-        return if (variables.containsKey(key) && !variables[key].isNullOrBlank()) {
+    fun parseValueWithType(variables: Map<String, String>) {
+        value = if (variables.containsKey(key) && !variables[key].isNullOrBlank()) {
             when (valueType) {
                 ManualReviewParamType.BOOLEAN -> variables[key].toBoolean()
                 ManualReviewParamType.MULTIPLE -> try {
