@@ -46,7 +46,7 @@ data class ManualReviewParam(
     @ApiModelProperty("下拉框列表")
     val options: List<ManualReviewParamPair>? = null,
     @ApiModelProperty("中文名称", required = false)
-    val chineseName: String? = null,
+    val chineseName: String? = null
 ) {
     /**
      *  变量值处理，如果是已有值则直接使用，如果是变量引用则做替换

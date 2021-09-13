@@ -3,7 +3,6 @@ package com.tencent.devops.common.pipeline.pojo.element.atom
 import org.junit.Assert
 import org.junit.Test
 
-
 internal class ManualReviewParamTest {
 
     @Test
