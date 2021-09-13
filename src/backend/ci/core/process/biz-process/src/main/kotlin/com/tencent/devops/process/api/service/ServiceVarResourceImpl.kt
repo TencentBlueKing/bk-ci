@@ -40,4 +40,8 @@ class ServiceVarResourceImpl @Autowired constructor(
         return if (varName.isNullOrBlank()) Result(buildVariableService.getAllVariable(buildId))
         else Result(mapOf(varName!! to (buildVariableService.getVariable(buildId, varName) ?: "")))
     }
+
+    override fun getContextVar(buildId: String, varName: String?): Result<Map<String, String>> {
+        TODO("Not yet implemented")
+    }
 }
