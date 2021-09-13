@@ -68,8 +68,8 @@ class CheckPauseReviewStageCmd(
             commandContext.cmdFlowState = CmdFlowState.BREAK
         } else if (commandContext.buildStatus.isReadyToRun()) {
 
-            // 只用第一次进入时做准入质量红线检查
-            if (stage.checkIn?.ruleIds.isNullOrEmpty()) {
+            // #5019 只用第一次进入时做准入质量红线检查，如果是审核后的检查则跳过红线
+            if (stage.checkIn?.ruleIds.isNullOrEmpty() || event.source == BS_MANUAL_START_STAGE) {
                 LOG.info("ENGINE|${event.buildId}|${event.source}|SKIP_QUALITY_CHECK_IN|${event.stageId}")
             } else if (pipelineStageService.checkQualityPassed(event, stage, commandContext.variables, true)) {
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_PASSED|${event.stageId}")
