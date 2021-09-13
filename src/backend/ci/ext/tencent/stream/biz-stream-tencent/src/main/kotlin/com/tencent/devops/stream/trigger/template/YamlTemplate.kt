@@ -84,7 +84,7 @@ class YamlTemplate(
         token: String?,
         gitProjectId: Long,
         targetRepo: String?,
-        ref: String,
+        ref: String?,
         personalAccessToken: String?,
         fileName: String
     ) -> String
@@ -895,7 +895,7 @@ class YamlTemplate(
                     null,
                     sourceProjectId,
                     repo.repository,
-                    repo.ref ?: triggerRef,
+                    repo.ref,
                     repo.credentials?.personalAccessToken,
                     path
                 )
@@ -910,7 +910,7 @@ class YamlTemplate(
             null,
             sourceProjectId,
             repo.repository,
-            repo.ref ?: triggerRef,
+            repo.ref,
             repo.credentials?.personalAccessToken,
             path
         )
