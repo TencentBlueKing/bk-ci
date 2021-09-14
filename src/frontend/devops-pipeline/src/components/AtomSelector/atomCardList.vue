@@ -32,7 +32,8 @@
             </template>
             <!-- 空数据 -->
             <template v-if="!RecommendAtomLength && !fetchingAtomList">
-                <empty size="small" type="no-atoms" />
+                <empty v-if="!projectAtomKeyWord && !storeAtomKeyWord" size="small" />
+                <empty v-else size="small" type="no-atoms" />
             </template>
         </div>
         <div v-if="category !== 'TRIGGER'" :class="{ 'fixed-tool': true, 'active': isToolActive }" @click="isToolActive = !isToolActive">
@@ -54,7 +55,8 @@
                 <p v-if="isUnRecommendStorePageOver && tabName === 'storeAtom'" class="page-over">{{ $t('editPage.loadedAllAtom') }}</p>
             </template>
             <template v-else>
-                <empty size="small" type="no-atoms" />
+                <empty v-if="!projectAtomKeyWord && !storeAtomKeyWord" size="small" />
+                <empty v-else size="small" type="no-atoms" />
             </template>
         </div>
     </section>
@@ -112,7 +114,9 @@
                 'getStoreRecommendAtomMap',
                 'getStoreUnRecommendAtomMap',
                 'getAtomClassifyMap',
-                'innerActiveName'
+                'innerActiveName',
+                'projectAtomKeyWord',
+                'storeAtomKeyWord'
             ]),
             ...mapState('atom', [
                 'fetchingAtomList',
@@ -648,7 +652,10 @@
                     }
                 }
                 .un-remove {
-                    background-color: #EA3636;
+                    background-color: #C4C6CC;
+                    &:hover {
+                        background-color: #EA3636;
+                    }
                 }
                 .atom-name {
                     display: flex;

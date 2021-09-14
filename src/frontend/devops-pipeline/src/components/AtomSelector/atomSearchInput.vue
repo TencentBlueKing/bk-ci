@@ -54,9 +54,6 @@
                 handler (value) {
                     if (value && value === this.tabName) {
                         this.searchKey = ''
-                        setTimeout(() => {
-                            this.$refs.searchStr.focus()
-                        }, 0)
                     }
                 },
                 immediate: true

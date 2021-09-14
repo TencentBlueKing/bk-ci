@@ -262,5 +262,7 @@ export default {
     getStoreRecommendAtomMap: state => state.storeRecommendAtomMap,
     getStoreUnRecommendAtomMap: state => state.storeUnRecommendAtomMap,
     getAtomClassifyMap: state => state.atomClassifyMap,
-    innerActiveName: state => state.innerActiveName
+    innerActiveName: state => state.innerActiveName,
+    projectAtomKeyWord: state => state.projectData.keyword,
+    storeAtomKeyWord: state => state.storeData.keyword
 }
