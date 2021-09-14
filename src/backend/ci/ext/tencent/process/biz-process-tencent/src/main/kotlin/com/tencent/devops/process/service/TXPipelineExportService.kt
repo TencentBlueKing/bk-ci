@@ -53,6 +53,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -618,26 +619,7 @@ class TXPipelineExportService @Autowired constructor(
                             name = step.name,
                             id = step.id,
                             // bat插件上的
-                            ifFiled = when (step.additionalOptions?.runCondition) {
-                                RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
-                                RunCondition.CUSTOM_VARIABLE_MATCH -> {
-                                    val ifString = parseNameAndValueWithAnd(step.additionalOptions?.customVariables)
-                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
-                                    else ifString
-                                }
-                                RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
-                                    val ifString = parseNameAndValueWithOr(step.additionalOptions?.customVariables)
-                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
-                                    else ifString
-                                }
-                                RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
-                                    RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name
-                                RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
-                                    RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name
-                                RunCondition.PRE_TASK_FAILED_ONLY ->
-                                    RunCondition.PRE_TASK_FAILED_ONLY.name
-                                else -> null
-                            },
+                            ifFiled = parseStepIfFiled(step = step),
                             uses = null,
                             with = null,
                             timeoutMinutes = timeoutMinutes,
@@ -663,26 +645,7 @@ class TXPipelineExportService @Autowired constructor(
                             name = step.name,
                             id = step.id,
                             // bat插件上的
-                            ifFiled = when (step.additionalOptions?.runCondition) {
-                                RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
-                                RunCondition.CUSTOM_VARIABLE_MATCH -> {
-                                    val ifString = parseNameAndValueWithAnd(step.additionalOptions?.customVariables)
-                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
-                                    else ifString
-                                }
-                                RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
-                                    val ifString = parseNameAndValueWithOr(step.additionalOptions?.customVariables)
-                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
-                                    else ifString
-                                }
-                                RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
-                                    RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name
-                                RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
-                                    RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name
-                                RunCondition.PRE_TASK_FAILED_ONLY ->
-                                    RunCondition.PRE_TASK_FAILED_ONLY.name
-                                else -> null
-                            },
+                            ifFiled = parseStepIfFiled(step = step),
                             uses = null,
                             with = null,
                             timeoutMinutes = timeoutMinutes,
@@ -750,26 +713,7 @@ class TXPipelineExportService @Autowired constructor(
                             name = step.name,
                             id = step.id,
                             // 插件上的
-                            ifFiled = when (step.additionalOptions?.runCondition) {
-                                RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
-                                RunCondition.CUSTOM_VARIABLE_MATCH -> {
-                                    val ifString = parseNameAndValueWithAnd(step.additionalOptions?.customVariables)
-                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
-                                    else ifString
-                                }
-                                RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
-                                    val ifString = parseNameAndValueWithOr(step.additionalOptions?.customVariables)
-                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
-                                    else ifString
-                                }
-                                RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
-                                    RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name
-                                RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
-                                    RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name
-                                RunCondition.PRE_TASK_FAILED_ONLY ->
-                                    RunCondition.PRE_TASK_FAILED_ONLY.name
-                                else -> null
-                            },
+                            ifFiled = parseStepIfFiled(step = step),
                             uses = "${step.getAtomCode()}@${step.version}",
                             with = replaceMapWithDoubleCurlyBraces(
                                 inputMap = inputMap,
@@ -800,26 +744,7 @@ class TXPipelineExportService @Autowired constructor(
                             name = step.name,
                             id = step.id,
                             // 插件上的
-                            ifFiled = when (step.additionalOptions?.runCondition) {
-                                RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
-                                RunCondition.CUSTOM_VARIABLE_MATCH -> {
-                                    val ifString = parseNameAndValueWithAnd(step.additionalOptions?.customVariables)
-                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
-                                    else ifString
-                                }
-                                RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
-                                    val ifString = parseNameAndValueWithOr(step.additionalOptions?.customVariables)
-                                    if (step.additionalOptions?.customVariables?.isEmpty() == true) null
-                                    else ifString
-                                }
-                                RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
-                                    RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name
-                                RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
-                                    RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name
-                                RunCondition.PRE_TASK_FAILED_ONLY ->
-                                    RunCondition.PRE_TASK_FAILED_ONLY.name
-                                else -> null
-                            },
+                            ifFiled = parseStepIfFiled(step = step),
                             uses = "${step.getAtomCode()}@${step.version}",
                             with = replaceMapWithDoubleCurlyBraces(
                                 inputMap = inputMap,
@@ -1283,26 +1208,7 @@ class TXPipelineExportService @Autowired constructor(
                     name = step.name,
                     id = step.id,
                     // 插件上的
-                    ifFiled = when (step.additionalOptions?.runCondition) {
-                        RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
-                        RunCondition.CUSTOM_VARIABLE_MATCH -> {
-                            val ifString = parseNameAndValueWithAnd(step.additionalOptions?.customVariables)
-                            if (step.additionalOptions?.customVariables?.isEmpty() == true) null
-                            else ifString
-                        }
-                        RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
-                            val ifString = parseNameAndValueWithOr(step.additionalOptions?.customVariables)
-                            if (step.additionalOptions?.customVariables?.isEmpty() == true) null
-                            else ifString
-                        }
-                        RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
-                            RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name
-                        RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
-                            RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name
-                        RunCondition.PRE_TASK_FAILED_ONLY ->
-                            RunCondition.PRE_TASK_FAILED_ONLY.name
-                        else -> null
-                    },
+                    ifFiled = parseStepIfFiled(step = step),
                     uses = null,
                     with = replaceMapWithDoubleCurlyBraces(
                         inputMap = inputMap,
@@ -1326,6 +1232,29 @@ class TXPipelineExportService @Autowired constructor(
             logger.error("[$projectId] addCheckoutAtom failed to convert atom[$atomCode]: ", e)
         }
         return false
+    }
+
+    private fun parseStepIfFiled(step: Element): String? {
+        return when (step.additionalOptions?.runCondition) {
+            RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
+            RunCondition.CUSTOM_VARIABLE_MATCH -> {
+                val ifString = parseNameAndValueWithAnd(step.additionalOptions?.customVariables)
+                if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                else ifString
+            }
+            RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                val ifString = parseNameAndValueWithOr(step.additionalOptions?.customVariables)
+                if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                else ifString
+            }
+            RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
+                RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name
+            RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
+                RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name
+            RunCondition.PRE_TASK_FAILED_ONLY ->
+                RunCondition.PRE_TASK_FAILED_ONLY.name
+            else -> null
+        }
     }
 
     private fun checkConflictOutput(
