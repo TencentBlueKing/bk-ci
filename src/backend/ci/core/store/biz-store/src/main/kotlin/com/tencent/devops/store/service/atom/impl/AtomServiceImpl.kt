@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.constant.KEY_DOCSLINK
@@ -190,7 +191,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         .build(object : CacheLoader<String, Map<String, String>>() {
             override fun load(projectId: String): Map<String, String> {
                 val elementMapData = serviceGetPipelineAtoms(
-                    userId = "",
+                    userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
                     serviceScope = null,
                     jobType = null,
                     os = null,
@@ -218,15 +219,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         serviceScope: String?,
         jobType: String?,
         os: String?,
-        projectCode: String?,
+        projectCode: String,
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
+        queryProjectAtomFlag: Boolean,
         page: Int,
         pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
-        if (!projectCode.isNullOrBlank()) {
+        if (queryProjectAtomFlag) {
             // 根据token校验用户有没有查询该项目的权限
             val validateFlag: Boolean?
             try {
@@ -268,11 +270,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         serviceScope: String?,
         jobType: String?,
         os: String?,
-        projectCode: String?,
+        projectCode: String,
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
+        queryProjectAtomFlag: Boolean,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
@@ -282,7 +285,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             serviceScope = serviceScope,
             jobType = jobType,
             os = os,
-            projectCode = projectCode,
+            projectCode = if (queryProjectAtomFlag) projectCode else null,
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
@@ -303,20 +306,23 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         var memberDataMap: Map<String, MutableList<String>>? = null
         var installedAtomList: List<String>? = null
         var userDeptList: List<Int>? = null
-        if (!projectCode.isNullOrBlank() && !atomCodeSet.isNullOrEmpty()) {
+        if (!atomCodeSet.isNullOrEmpty()) {
+            installedAtomList = storeProjectRelDao.getValidStoreCodesByProject(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                storeCodes = atomCodeSet,
+                storeType = StoreTypeEnum.ATOM
+            )?.map { it.value1() }
+        }
+        if (queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
             atomPipelineCntMap = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
                 atomCodes = atomCodeSet.joinToString(","),
                 projectCode = projectCode
             ).data
+        } else if (!queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
             val atomCodeList = atomCodeSet.toList()
             atomVisibleDataMap = storeCommonService.generateStoreVisibleData(atomCodeList, StoreTypeEnum.ATOM)
             memberDataMap = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
-            installedAtomList = storeProjectRelDao.getValidStoreCodesByProject(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                storeCodes = atomCodeList,
-                storeType = StoreTypeEnum.ATOM
-            )?.map { it.value1() }
             userDeptList = storeUserService.getUserDeptList(userId)
         }
         pipelineAtoms?.forEach {
@@ -341,7 +347,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val atomType = it[KEY_ATOM_TYPE] as Byte
             val atomStatus = it[KEY_ATOM_STATUS] as Byte
             val atomPipelineCnt = atomPipelineCntMap?.get(atomCode)
-            val installFlag = if (projectCode.isNullOrBlank()) storeCommonService.generateInstallFlag(
+            val installFlag = if (!queryProjectAtomFlag) storeCommonService.generateInstallFlag(
                 defaultFlag = it[KEY_DEFAULT_FLAG] as Boolean,
                 members = memberDataMap?.get(atomCode),
                 userId = userId,
@@ -390,7 +396,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             serviceScope = serviceScope,
             jobType = jobType,
             os = os,
-            projectCode = projectCode,
+            projectCode = if (queryProjectAtomFlag) projectCode else null,
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
@@ -725,8 +731,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                             context, userId, AtomFeatureRequest(
                             atomCode = atomCode,
                             recommendFlag = recommendFlag,
-                            yamlFlag = atomUpdateRequest.yamlFlag,
-                            qualityFlag = atomUpdateRequest.qualityFlag
+                            yamlFlag = atomUpdateRequest.yamlFlag
                         )
                         )
                     } else {
@@ -734,8 +739,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                             context, userId, AtomFeatureRequest(
                             atomCode = atomCode,
                             recommendFlag = recommendFlag,
-                            yamlFlag = atomUpdateRequest.yamlFlag,
-                            qualityFlag = atomUpdateRequest.qualityFlag
+                            yamlFlag = atomUpdateRequest.yamlFlag
                         )
                         )
                     }
