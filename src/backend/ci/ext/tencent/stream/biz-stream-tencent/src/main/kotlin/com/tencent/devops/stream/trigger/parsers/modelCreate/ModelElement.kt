@@ -83,11 +83,11 @@ class ModelElement @Autowired constructor(
                 customEnv = getElementEnv(step.env),
                 runCondition = when {
                     step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
-                    RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name in step.ifFiled ?: "" ->
+                    RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name == step.ifFiled ?: "" ->
                         RunCondition.PRE_TASK_FAILED_BUT_CANCEL
-                    RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name in step.ifFiled ?: "" ->
+                    RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name == step.ifFiled ?: "" ->
                         RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
-                    RunCondition.PRE_TASK_FAILED_ONLY.name in step.ifFiled ?: "" ->
+                    RunCondition.PRE_TASK_FAILED_ONLY.name == step.ifFiled ?: "" ->
                         RunCondition.PRE_TASK_FAILED_ONLY
                     else -> RunCondition.CUSTOM_CONDITION_MATCH
                 },
