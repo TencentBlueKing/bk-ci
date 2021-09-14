@@ -67,7 +67,7 @@ interface BuildVarResource {
     @GET
     fun getContextVariableByName(
         @ApiParam(value = "构建ID", required = true)
-        @QueryParam("buildId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @ApiParam(value = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
