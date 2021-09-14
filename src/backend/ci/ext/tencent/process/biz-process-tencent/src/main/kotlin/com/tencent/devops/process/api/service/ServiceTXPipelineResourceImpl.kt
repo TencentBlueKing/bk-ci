@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.PipelineExportV2YamlData
 import com.tencent.devops.process.service.TXPipelineExportService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -37,7 +38,11 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceTXPipelineResourceImpl @Autowired constructor(
     private val pipelineExportService: TXPipelineExportService
 ) : ServiceTXPipelineResource {
-    override fun exportPipelineGitCI(userId: String, projectId: String, pipelineId: String): Result<String> {
+    override fun exportPipelineGitCI(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<PipelineExportV2YamlData> {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
         return Result(pipelineExportService.exportV2YamlStr(userId, projectId, pipelineId, true))
