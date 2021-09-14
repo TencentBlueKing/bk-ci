@@ -72,6 +72,8 @@ rabbitmq:
     default_permissions.write = .*
 influxdb:
   enabled: true
+  image:
+    tag: 1.8.3-debian-10-r88
   auth:
     admin:
       username: user
