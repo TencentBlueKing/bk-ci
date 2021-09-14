@@ -64,7 +64,6 @@ class StartContainerStageCmd(
         // 执行成功则结束本次事件处理，否则要尝试下一stage
         judgeStageContainer(commandContext)
         commandContext.latestSummary = "from_s(${commandContext.stage.stageId})"
-//        }
         commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
 
