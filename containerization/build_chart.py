@@ -2,6 +2,7 @@
 import os
 import re
 import humps
+import json
 
 files = os.listdir('.')
 replace_pattern = re.compile(r'__BK_[A-Z_]*__')
@@ -23,12 +24,10 @@ default_value_dict = {
     'bkCiProcessEventConcurrent': '10',
     'bkCiLogsDir': '/data/logs',
     'bkCiHome': '/data/bkee/ci',
-    'bkCiGatewayDnsAddr': 'local=on',
-    # TODO 
-    'bkCiHost': 'devops.paasv3-test.woa.com',
-    'bkCiPublicUrl':'devops.paasv3-test.woa.com',
-    'bkCiPublicHostIp':'9.135.34.65'
+    'bkCiGatewayDnsAddr': 'local=on'
 }
+
+default_value_dict.update(json.load(open('./values.json')))
 
 # include 模板
 include_dict = {

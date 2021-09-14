@@ -38,3 +38,4 @@ containerization/helm-charts/values.yaml
 containerization/helm-charts/templates/configmap/tpl/
 containerization/docker-images/ci
 containerization/docker-images/*.gz
+containerization/values.json
