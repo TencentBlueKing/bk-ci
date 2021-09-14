@@ -295,7 +295,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 if (isV2) {
                     // 获取需要进行替换的variables
                     val variables =
-                        client.get(ServiceVarResource::class).getBuildVar(buildId = build.id, varName = null).data
+                        client.get(ServiceVarResource::class).getContextVar(buildId = build.id, contextName = null).data
                     val notices = YamlUtil.getObjectMapper().readValue(
                         event.normalizedYaml, ScriptBuildYaml::class.java
                     ).notices
