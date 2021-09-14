@@ -41,6 +41,7 @@ import com.tencent.devops.monitoring.util.EmailModuleData
 import com.tencent.devops.monitoring.util.EmailUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.commons.lang3.tuple.MutablePair
 import org.elasticsearch.action.search.SearchRequest
@@ -62,6 +63,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
+import javax.xml.parsers.DocumentBuilderFactory
 
 @Component
 @RefreshScope
@@ -213,6 +215,48 @@ class MonitorNotifyJob @Autowired constructor(
                 }
             }
         }
+    }
+
+    private fun coverage(startTime: Long): EmailModuleData? {
+        // 蓝盾插件的项目ID列表
+
+        // TODO CodeCC的数据 , 后面可以删除
+
+        // 工蜂项目的插件列表
+        val potAuthUrl =
+            "http://idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Ftableau.pot.woa.com%2Fapi%2F3.4%2Fauth%2Fsignin"
+        val potAuthResp = OkhttpUtils.doPost(
+            potAuthUrl,
+            """{"credentials":{"name":"viewer","password":"viewer","site":{"contentUrl":""}}}"""
+        )
+
+        var siteId: String? = null
+        var token: String? = null
+        if (potAuthResp.isSuccessful) {
+            potAuthResp.body()?.let {
+                val builderFactory = DocumentBuilderFactory.newInstance()
+                builderFactory.isValidating = false
+                builderFactory.isIgnoringElementContentWhitespace = true
+                val builder = builderFactory.newDocumentBuilder()
+                val document = builder.parse(it.byteStream())
+                siteId =
+                    document.getElementsByTagName("site").item(0).attributes.getNamedItem("id").nodeValue
+                token =
+                    document.getElementsByTagName("credentials").item(0).attributes.getNamedItem("token").nodeValue
+            }
+        }
+
+        val potDataUrl =
+            "http://idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Ftableau.pot.woa.com%2Fapi%2F3.4%2Fsites%2F${siteId}%2Fviews%2F89799275-a07e-4a21-ada4-c52f8b449ff6%2Fdata"
+        val potDataResp = OkhttpUtils.doGet(potDataUrl, mapOf("x-tableau-auth" to token!!))
+        if (potDataResp.isSuccessful) {
+            val potSet = potDataResp.body()?.run {
+                IOUtils.readLines(byteStream(), Charsets.UTF_8).filter { it.contains("提交次数") }
+                    .map { it.split(",")[0] }.toSet()
+            }
+        }
+
+        return null
     }
 
     private fun dispatchTime(startTime: Long): EmailModuleData {
