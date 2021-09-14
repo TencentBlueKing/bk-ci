@@ -317,7 +317,7 @@ export default {
     /**
      * 获取项目下插件
      */
-    fetchProjectAtoms: async ({ commit, state }, { projectCode, category, recommendFlag, os }) => {
+    fetchProjectAtoms: async ({ commit, state }, { projectCode, category, recommendFlag, os, queryProjectAtomFlag }) => {
         let projectData, unRecommendProjectData, page, pageSize, keyword
         if (recommendFlag) {
             // 适用插件
@@ -352,6 +352,7 @@ export default {
                     category,
                     projectCode,
                     os,
+                    queryProjectAtomFlag,
                     jobType,
                     recommendFlag,
                     page,
@@ -418,7 +419,7 @@ export default {
     /**
      * 获取研发商店插件
      */
-    fetchStoreAtoms: async ({ commit, state }, { classifyId, recommendFlag, category, os }) => {
+    fetchStoreAtoms: async ({ commit, state }, { projectCode, classifyId, recommendFlag, category, os, queryProjectAtomFlag }) => {
         let storeData, unRecommendStoreData, page, pageSize, keyword
         if (recommendFlag) {
             // 适用插件
@@ -449,10 +450,12 @@ export default {
 
             const { data: atomList } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
                 params: {
+                    projectCode,
                     classifyId,
                     recommendFlag,
                     category,
                     os,
+                    queryProjectAtomFlag,
                     jobType,
                     page,
                     pageSize,

@@ -62,6 +62,7 @@
     "copySuc": "Duplicated successfully ",
     "deleteSuc": "Delete successfully ",
     "noData": "No data",
+    "atomEmpty": "No plugins, try a different keyword",
     "atom": "Plugin",
     "icon": "Icon",
     "version": "Version",

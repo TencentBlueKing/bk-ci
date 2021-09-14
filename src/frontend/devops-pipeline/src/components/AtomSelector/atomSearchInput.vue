@@ -73,7 +73,9 @@
         methods: {
             ...mapActions('atom', [
                 'setProjectData',
+                'setUnRecommendProjectData',
                 'setStoreData',
+                'setUnRecommendStoreData',
                 'fetchProjectAtoms',
                 'fetchStoreAtoms'
             ]),
@@ -96,11 +98,23 @@
                     page: 1,
                     keyword: this.searchKey
                 })
+                this.setUnRecommendProjectData({
+                    page: 1,
+                    keyword: this.searchKey
+                })
                 this.fetchProjectAtoms({
                     projectCode: this.$route.params.projectId,
                     category: this.category,
                     recommendFlag: true,
-                    os: this.os
+                    os: this.os,
+                    queryProjectAtomFlag: true
+                })
+                this.fetchProjectAtoms({
+                    projectCode: this.$route.params.projectId,
+                    category: this.category,
+                    recommendFlag: false,
+                    os: this.os,
+                    queryProjectAtomFlag: true
                 })
             },
             searchStoreAtom () {
@@ -108,11 +122,25 @@
                     page: 1,
                     keyword: this.searchKey
                 })
+                this.setUnRecommendStoreData({
+                    page: 1,
+                    keyword: this.searchKey
+                })
                 this.fetchStoreAtoms({
+                    projectCode: this.$route.params.projectId,
                     classifyId: this.innerActiveName === 'all' ? undefined : this.classifyId,
                     recommendFlag: true,
                     category: this.category,
-                    os: this.os
+                    os: this.os,
+                    queryProjectAtomFlag: false
+                })
+                this.fetchStoreAtoms({
+                    projectCode: this.$route.params.projectId,
+                    classifyId: this.innerActiveName === 'all' ? undefined : this.classifyId,
+                    recommendFlag: false,
+                    category: this.category,
+                    os: this.os,
+                    queryProjectAtomFlag: false
                 })
             }
         }

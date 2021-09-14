@@ -62,6 +62,7 @@
     "copySuc": "复制成功",
     "deleteSuc": "删除成功",
     "noData": "暂无数据",
+    "atomEmpty": "没找到插件，换个关键字试试",
     "atom": "插件",
     "icon": "图标",
     "version": "版本",

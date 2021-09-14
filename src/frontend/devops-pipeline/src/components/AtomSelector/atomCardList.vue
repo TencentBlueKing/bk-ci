@@ -10,10 +10,11 @@
             </span>
         </div>
         <div ref="atomListDom" class="recommend-atom-list">
+            <!-- 插件卡片 -->
             <atom-card
                 v-for="(recommendAtom, key, index) in curRecommendAtomMap"
                 :key="index"
-                :class="{ 'recommend-atom-item': true, 'active': atomCode === recommendAtom.atomCode }"
+                :class="{ 'recommend-atom-item': true, 'active': atomCode === recommendAtom.atomCode, 'not-installFlag': !recommendAtom.installFlag && !isProjectAtom }"
                 @close="close"
                 :atom="recommendAtom"
                 :atom-index="index"
@@ -24,18 +25,21 @@
                 :atom-code="atomCode"
                 @update-atoms="handelUpdateAtom" />
             <div v-if="isRecommendMoreLoading" class="loading-more" slot="append"><i class="devops-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></div>
-            <template v-if="RecommendAtomLength">
+            <!-- 全部加载完毕 -->
+            <template v-if="RecommendAtomLength && !fetchingAtomList">
                 <p v-if="isProjectPageOver && tabName === 'projectAtom'" class="page-over">{{ $t('editPage.loadedAllAtom') }}</p>
                 <p v-if="isStorePageOver && tabName === 'storeAtom'" class="page-over">{{ $t('editPage.loadedAllAtom') }}</p>
             </template>
-            <template v-else>
-                <p class="page-empty">{{ $t('empty') }}</p>
+            <!-- 空数据 -->
+            <template v-if="!RecommendAtomLength && !fetchingAtomList">
+                <empty size="small" type="no-atoms" />
             </template>
         </div>
         <div v-if="category !== 'TRIGGER'" :class="{ 'fixed-tool': true, 'active': isToolActive }" @click="isToolActive = !isToolActive">
             {{ $t('editPage.fixedTips') }} ({{ unRecommendAtomLength }})
             <span class="devops-icon icon-angle-right"></span>
         </div>
+        <!-- 不适用插件 -->
         <div :class="{ 'unRecommend-atom-list': true, 'show-unRecommend': isToolActive }">
             <atom-card
                 class="unRecommend-atom-item"
@@ -50,7 +54,7 @@
                 <p v-if="isUnRecommendStorePageOver && tabName === 'storeAtom'" class="page-over">{{ $t('editPage.loadedAllAtom') }}</p>
             </template>
             <template v-else>
-                <p class="page-empty">{{ $t('empty') }}</p>
+                <empty size="small" type="no-atoms" />
             </template>
         </div>
     </section>
@@ -58,11 +62,13 @@
 
 <script>
     import { mapGetters, mapActions, mapState } from 'vuex'
+    import Empty from '@/components/common/empty'
     import atomCard from './atomCard'
 
     export default {
         components: {
-            atomCard
+            atomCard,
+            Empty
         },
         props: {
             // 选中的Tab(项目插件/研发商店)
@@ -249,13 +255,15 @@
                             projectCode: this.$route.params.projectId,
                             category: this.category,
                             recommendFlag: true,
-                            os: this.os
+                            os: this.os,
+                            queryProjectAtomFlag: true
                         })
                         this.fetchProjectAtoms({
                             projectCode: this.$route.params.projectId,
                             category: this.category,
                             recommendFlag: false,
-                            os: this.os
+                            os: this.os,
+                            queryProjectAtomFlag: true
                         })
                         setTimeout(() => {
                             const recommendDom = document.getElementsByClassName('recommend-atom-list')[0]
@@ -276,16 +284,20 @@
                             keyword: ''
                         })
                         this.fetchStoreAtoms({
+                            projectCode: this.$route.params.projectId,
                             classifyId: this.innerActiveName === 'all' ? undefined : this.classifyId,
                             recommendFlag: true,
                             category: this.category,
-                            os: this.os
+                            os: this.os,
+                            queryProjectAtomFlag: false
                         })
                         this.fetchStoreAtoms({
+                            projectCode: this.$route.params.projectId,
                             classifyId: undefined,
                             recommendFlag: false,
                             category: this.category,
-                            os: this.os
+                            os: this.os,
+                            queryProjectAtomFlag: false
                         })
                         setTimeout(() => {
                             const recommendDom = document.getElementsByClassName('recommend-atom-list')[1]
@@ -305,10 +317,12 @@
                     keyword: ''
                 })
                 this.fetchStoreAtoms({
+                    projectCode: this.$route.params.projectId,
                     classifyId: this.innerActiveName === 'all' ? undefined : this.classifyId,
                     category: this.category,
                     recommendFlag: true,
-                    os: this.os
+                    os: this.os,
+                    queryProjectAtomFlag: false
                 })
                 this.$nextTick(() => {
                     this.$refs.atomListDom.scrollTo(0, 0)
@@ -368,10 +382,12 @@
                                 const scrollY = recommendDom.scrollTop
                                 if (scrollHeight - innerHeight - scrollY < 100) {
                                     this.fetchStoreAtoms({
+                                        projectCode: this.$route.params.projectId,
                                         classifyId: this.innerActiveName === 'all' ? undefined : this.classifyId,
                                         recommendFlag: true,
                                         category: this.category,
-                                        os: this.os
+                                        os: this.os,
+                                        queryProjectAtomFlag: false
                                     })
                                     clearTimeout(this.unRecommendTimer)
                                 }
@@ -399,7 +415,8 @@
                                             projectCode: this.$route.params.projectId,
                                             category: this.category,
                                             recommendFlag: false,
-                                            os: this.os
+                                            os: this.os,
+                                            queryProjectAtomFlag: true
                                         }
                                     )
                                     clearTimeout(this.timer)
@@ -419,10 +436,12 @@
                                 const unRecommendDomScrollY = unRecommendDom.scrollTop
                                 if (unRecommendDomScrollHeight - unRecommendDomInnerHeight - unRecommendDomScrollY < 100) {
                                     this.fetchStoreAtoms({
+                                        projectCode: this.$route.params.projectId,
                                         classifyId: undefined,
                                         recommendFlag: false,
                                         category: this.category,
-                                        os: this.os
+                                        os: this.os,
+                                        queryProjectAtomFlag: false
                                     })
                                     clearTimeout(this.unRecommendTimer)
                                 }
@@ -478,7 +497,7 @@
             transition: all .3s;
         }
             ::-webkit-scrollbar {
-                width: 0;
+                width: 5px;
             }
         .show-unRecommend {
             height: 290px;
@@ -568,6 +587,9 @@
                         transition: all .3s ease-out;
                     }
                 }
+            }
+            &.not-installFlag {
+                cursor: not-allowed;
             }
             .atom-logo {
                 width: 50px;
@@ -684,7 +706,7 @@
                 .allow-os-list {
                     position: relative;
                     right: 65px;
-                    top: 15px;
+                    top: 4px;
                 }
                 .atom-update-time {
                     display: flex;

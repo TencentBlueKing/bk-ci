@@ -38,11 +38,14 @@
             const {
                 type
             } = this
-
             switch (type) {
                 case 'no-result':
                     this.calcSrc = noResult
                     this.calcAlt = this.$t('newlist.noSearchResult')
+                    break
+                case 'no-atoms':
+                    this.calcSrc = noData
+                    this.calcAlt = this.$t('atomEmpty')
                     break
                 default:
                     this.calcSrc = noData
