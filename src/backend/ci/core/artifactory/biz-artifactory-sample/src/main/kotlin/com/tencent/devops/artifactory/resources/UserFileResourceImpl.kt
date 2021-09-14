@@ -28,8 +28,12 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.user.UserFileResource
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -38,14 +42,47 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
 
+@Suppress("ThrowsCount")
 @RestResource
 class UserFileResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : UserFileResource {
 
+    private fun checkParam(userId: String, projectId: String, path: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (path.isBlank()) {
+            throw ErrorCodeException(errorCode = ArtifactoryMessageCode.INVALID_CUSTOM_ARTIFACTORY_PATH)
+        }
+    }
+
+    override fun uploadToPath(
+        userId: String,
+        projectId: String,
+        path: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?> {
+        checkParam(userId, projectId, path)
+        val url = archiveFileService.uploadFile(
+            userId = userId,
+            projectId = projectId,
+            filePath = path,
+            inputStream = inputStream,
+            disposition = disposition,
+            fileType = FileTypeEnum.BK_CUSTOM,
+            fileChannelType = FileChannelTypeEnum.WEB_SHOW
+        )
+        return Result(url)
+    }
+
     override fun uploadFile(
         userId: String,
-        projectId: String?,
+        projectCode: String?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
@@ -53,7 +90,7 @@ class UserFileResourceImpl @Autowired constructor(
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
-            projectId = projectId,
+            projectId = projectCode,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW
         )
         return Result(url)

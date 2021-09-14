@@ -73,7 +73,7 @@ import java.nio.file.Paths
 import javax.ws.rs.NotFoundException
 
 @Component
-@Suppress("ALL")
+@Suppress("UNUSED", "LongParameterList", "LargeClass", "TooManyFunctions", "MagicNumber", "ThrowsCount")
 class DefaultBkRepoClient constructor(
     private val objectMapper: ObjectMapper
 ) {
@@ -106,8 +106,8 @@ class DefaultBkRepoClient constructor(
             createGenericRepo(userId, projectId, REPO_CUSTOM)
             createGenericRepo(userId, projectId, REPO_REPORT)
             true
-        } catch (e: Exception) {
-            logger.error("create repo resource error", e)
+        } catch (ignore: Exception) {
+            logger.error("BKSystemErrorMonitor|BK-REPO|create repo resource error", ignore)
             false
         }
     }
@@ -349,8 +349,8 @@ class DefaultBkRepoClient constructor(
                         metadata = mapOf(METADATA_DISPLAY_NAME to metadata.getValue("buildNum")))
                 }
             }
-        } catch (e: Exception) {
-            logger.warn("set pipeline displayName failed")
+        } catch (ignore: Exception) {
+            logger.warn("set pipeline displayName failed", ignore)
         }
     }
 
@@ -610,10 +610,22 @@ class DefaultBkRepoClient constructor(
     }
 
     fun downloadFile(userId: String, projectId: String, repoName: String, fullPath: String, destFile: File) {
-        downloadFile(userId, projectId, repoName, fullPath, destFile.outputStream())
+        downloadFile(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            fullPath = fullPath,
+            outputStream = destFile.outputStream()
+        )
     }
 
-    fun downloadFile(userId: String, projectId: String, repoName: String, fullPath: String, outputStream: OutputStream) {
+    fun downloadFile(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        outputStream: OutputStream
+    ) {
         val url = "${getBkRepoUrl()}/generic/$projectId/$repoName/${fullPath.removePrefix("/")}"
         val request = Request.Builder().url(url)
             .header("Authorization", bkRepoAuthorization)
@@ -776,7 +788,7 @@ class DefaultBkRepoClient constructor(
             }.toMutableList())
             ruleList.add(metadataRule)
         }
-        var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+        val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
         return query(userId, projectId, rule, page, pageSize)
     }
@@ -852,7 +864,7 @@ class DefaultBkRepoClient constructor(
             }.toMutableList(), Rule.NestedRule.RelationType.AND)
             ruleList.add(metadataRule)
         }
-        var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+        val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
         return query(userId, projectId, rule, page, pageSize)
     }

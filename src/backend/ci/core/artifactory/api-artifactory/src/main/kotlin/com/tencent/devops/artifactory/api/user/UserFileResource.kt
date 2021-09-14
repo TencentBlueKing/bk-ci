@@ -53,6 +53,26 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserFileResource {
 
+    @ApiOperation("上传文件到指定自定义仓库路径")
+    @POST
+    @Path("/file/uploadToPath")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun uploadToPath(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目代码", required = false)
+        @FormDataParam("projectId")
+        projectId: String,
+        @FormDataParam("path")
+        path: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream,
+        @FormDataParam("file")
+        disposition: FormDataContentDisposition
+    ): Result<String?>
+
     @ApiOperation("上传文件")
     @POST
     @Path("/file/upload")
