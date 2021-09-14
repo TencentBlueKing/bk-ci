@@ -56,11 +56,12 @@ interface AtomService {
         serviceScope: String?,
         jobType: String?,
         os: String?,
-        projectCode: String?,
+        projectCode: String,
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
+        queryProjectAtomFlag: Boolean = true,
         page: Int = 1,
         pageSize: Int = 10
     ): Result<AtomResp<AtomRespItem>?>
@@ -73,11 +74,12 @@ interface AtomService {
         serviceScope: String?,
         jobType: String?,
         os: String?,
-        projectCode: String?,
+        projectCode: String,
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
+        queryProjectAtomFlag: Boolean = true,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?>
