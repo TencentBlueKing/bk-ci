@@ -65,7 +65,9 @@ object MarketBuildUtils {
                 val arr = atomCodeAndVersion.split("|")
                 val atomCode = arr[0]
                 val atomVersion = arr[1]
-                return client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, atomVersion).data
+                val atom = client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, atomVersion).data
+                logger.info("get atom version info for : $atomCode, $atomVersion, $atom")
+                return atom
             }
         })
 
@@ -80,7 +82,7 @@ object MarketBuildUtils {
 
     fun beforeDelete(inputMap: Map<String, Any>, atomCode: String, atomVersion: String, param: BeforeDeleteParam) {
         marketBuildExecutorService.execute {
-            logger.info("start to do before delete: $inputMap, $atomCode, $atomVersion")
+            logger.info("start to do before delete: $atomCode, $atomVersion, $param")
             val bkAtomHookUrl = inputMap.getOrDefault(
                 BK_ATOM_HOOK_URL,
                 getDefaultHookUrl(atomCode = atomCode, atomVersion = atomVersion, channelCode = param.channelCode)
