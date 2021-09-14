@@ -35,6 +35,8 @@ import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.constant.GitCIConstant
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -131,10 +133,25 @@ class GitRepositoryConfService @Autowired constructor(
     fun saveGitCIConf(userId: String, repositoryConf: GitRepositoryConf): Boolean {
         logger.info("save git ci conf, repositoryConf: $repositoryConf")
         val gitRepoConf = gitCISettingDao.getSetting(dslContext, repositoryConf.gitProjectId)
+
+
+        // gitRepoConf为null表示新项目
         val projectCode = if (gitRepoConf?.projectCode == null) {
+            //根据url截取group + project的完整路径名称
+            var gitProjectName = if(repositoryConf?.gitHttpUrl != null ){
+                GitUtils.getDomainAndRepoName(repositoryConf?.gitHttpUrl).second
+            }else{
+                repositoryConf.name
+            }
+            // 可能存在group多层嵌套的情况:a/b/c/d/e/xx.git，超过t_project表的设置长度64，默认只保存后64位的长度
+            if (gitProjectName?.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH){
+                gitProjectName = gitProjectName.substring(gitProjectName.length - GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length)
+            }
+
             val projectResult = client.get(ServiceTxProjectResource::class).createGitCIProject(
-                repositoryConf.gitProjectId,
-                userId
+                gitProjectId = repositoryConf.gitProjectId,
+                userId = userId,
+                gitProjectName = gitProjectName
             )
             if (projectResult.isNotOk()) {
                 throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")

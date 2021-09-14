@@ -280,8 +280,9 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         }
     }
 
-    override fun createGitCIProject(gitProjectId: Long, userId: String): Result<ProjectVO> {
-        return Result(projectLocalService.createGitCIProject(userId, gitProjectId))
+    override fun createGitCIProject(gitProjectId: Long, userId: String, gitProjectName: String?): Result<ProjectVO> {
+        logger.info("STREAM|createGitCIProject|gitProjectName:$gitProjectName;gitProjectId:$gitProjectId,userId:$userId")
+        return Result(projectLocalService.createGitCIProject(userId, gitProjectId, gitProjectName))
     }
 
     override fun createProjectUser(
@@ -298,13 +299,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
                 checkManager = true
             )
         )
-//        return Result(projectIamV0Service.createUser2Project(
-//            createUser = createUser,
-//            userIds = createInfo.userIds!!,
-//            projectCode = createInfo.projectId,
-//            roleId = createInfo.roleId,
-//            roleName = createInfo.roleName
-//        ))
+
     }
 
     override fun createProjectUserByApp(
