@@ -33,7 +33,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineRuleDao
 import org.jooq.DSLContext
 import org.junit.Assert
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 class PipelineRuleServiceTest {
 
