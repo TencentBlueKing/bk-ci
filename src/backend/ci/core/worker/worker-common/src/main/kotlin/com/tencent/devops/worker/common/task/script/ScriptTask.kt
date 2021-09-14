@@ -147,7 +147,7 @@ open class ScriptTask : ITask() {
 
     open fun takeBuildEnvs(
         buildTask: BuildTask,
-        buildVariables: BuildVariables,
+        buildVariables: BuildVariables
     ): List<BuildEnv> = buildVariables.buildEnvs
 
     private fun setGatewayValue(workspace: File) {
