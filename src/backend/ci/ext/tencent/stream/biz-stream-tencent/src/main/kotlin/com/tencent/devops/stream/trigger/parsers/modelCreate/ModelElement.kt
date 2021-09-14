@@ -81,10 +81,15 @@ class ModelElement @Autowired constructor(
                 retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
                 customEnv = getElementEnv(step.env),
-                runCondition = if (step.ifFiled.isNullOrBlank()) {
-                    RunCondition.PRE_TASK_SUCCESS
-                } else {
-                    RunCondition.CUSTOM_CONDITION_MATCH
+                runCondition = when {
+                    step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
+                    RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name in step.ifFiled ?: "" ->
+                        RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+                    RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name in step.ifFiled ?: "" ->
+                        RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+                    RunCondition.PRE_TASK_FAILED_ONLY.name in step.ifFiled ?: "" ->
+                        RunCondition.PRE_TASK_FAILED_ONLY
+                    else -> RunCondition.CUSTOM_CONDITION_MATCH
                 },
                 customCondition = step.ifFiled
             )
@@ -261,7 +266,8 @@ class ModelElement @Autowired constructor(
                 NameAndValue(
                     key = it.key,
                     value = it.value.toString()
-                ))
+                )
+            )
         }
 
         return nameAndValueList

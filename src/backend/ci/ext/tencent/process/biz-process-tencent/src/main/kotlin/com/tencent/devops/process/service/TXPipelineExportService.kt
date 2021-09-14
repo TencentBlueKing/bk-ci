@@ -630,6 +630,12 @@ class TXPipelineExportService @Autowired constructor(
                                     if (step.additionalOptions?.customVariables?.isEmpty() == true) null
                                     else ifString
                                 }
+                                RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
+                                    RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name
+                                RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
+                                    RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name
+                                RunCondition.PRE_TASK_FAILED_ONLY ->
+                                    RunCondition.PRE_TASK_FAILED_ONLY.name
                                 else -> null
                             },
                             uses = null,
@@ -669,6 +675,12 @@ class TXPipelineExportService @Autowired constructor(
                                     if (step.additionalOptions?.customVariables?.isEmpty() == true) null
                                     else ifString
                                 }
+                                RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
+                                    RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name
+                                RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
+                                    RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name
+                                RunCondition.PRE_TASK_FAILED_ONLY ->
+                                    RunCondition.PRE_TASK_FAILED_ONLY.name
                                 else -> null
                             },
                             uses = null,
@@ -750,6 +762,12 @@ class TXPipelineExportService @Autowired constructor(
                                     if (step.additionalOptions?.customVariables?.isEmpty() == true) null
                                     else ifString
                                 }
+                                RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
+                                    RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name
+                                RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
+                                    RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name
+                                RunCondition.PRE_TASK_FAILED_ONLY ->
+                                    RunCondition.PRE_TASK_FAILED_ONLY.name
                                 else -> null
                             },
                             uses = "${step.getAtomCode()}@${step.version}",
@@ -794,6 +812,12 @@ class TXPipelineExportService @Autowired constructor(
                                     if (step.additionalOptions?.customVariables?.isEmpty() == true) null
                                     else ifString
                                 }
+                                RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
+                                    RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name
+                                RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
+                                    RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name
+                                RunCondition.PRE_TASK_FAILED_ONLY ->
+                                    RunCondition.PRE_TASK_FAILED_ONLY.name
                                 else -> null
                             },
                             uses = "${step.getAtomCode()}@${step.version}",
@@ -1271,6 +1295,12 @@ class TXPipelineExportService @Autowired constructor(
                             if (step.additionalOptions?.customVariables?.isEmpty() == true) null
                             else ifString
                         }
+                        RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
+                            RunCondition.PRE_TASK_FAILED_BUT_CANCEL.name
+                        RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
+                            RunCondition.PRE_TASK_FAILED_EVEN_CANCEL.name
+                        RunCondition.PRE_TASK_FAILED_ONLY ->
+                            RunCondition.PRE_TASK_FAILED_ONLY.name
                         else -> null
                     },
                     uses = null,
