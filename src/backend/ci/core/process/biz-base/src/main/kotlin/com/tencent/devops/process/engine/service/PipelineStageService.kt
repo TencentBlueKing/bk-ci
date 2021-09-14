@@ -409,11 +409,10 @@ class PipelineStageService @Autowired constructor(
     }
 
     /**
-     * @param event 流水线引擎Stage事件
-     * @param stage 该Stage的当前配置属性
-     * @param variables 上下文中的环境变量
-     * @param inOrOut 准入为true，准出为false
-     * @return 是否通过红线检查
+     * 流水线引擎Stage事件 [event]
+     * 该Stage的当前配置属性 [stage]
+     * 上下文中的环境变量 [variables]
+     * 控制当前检查是准入还是准出使用 [inOrOut] 准入为true，准出为false
      */
     fun checkQualityPassed(
         event: PipelineBuildStageEvent,

@@ -55,12 +55,7 @@ data class ManualReviewParam(
         value = if (variables.containsKey(key) && !variables[key].isNullOrBlank()) {
             when (valueType) {
                 ManualReviewParamType.BOOLEAN -> variables[key].toBoolean()
-                ManualReviewParamType.MULTIPLE -> try {
-                    // TODO 将入库保存的字符串转回数组对象
-                    throw Exception("${variables[key]} mapping error.")
-                } catch (ignore: Throwable) {
-                    variables[key]
-                }
+                // TODO 将入库保存的字符串转回数组对象
                 else -> variables[key]
             }
         } else {
