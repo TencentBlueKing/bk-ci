@@ -61,7 +61,8 @@ class BuildVarResourceImpl @Autowired constructor(
     ): Result<String?> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
         checkPermission(projectId = projectId, pipelineId = pipelineId)
-        val varName = pipelineContextService.getBuildVarName(contextName) ?: return Result(null)
+        // 如果无法替换上下文预置变量则保持原变量名去查取
+        val varName = pipelineContextService.getBuildVarName(contextName) ?: contextName
         return Result(buildVariableService.getVariable(buildId, varName))
     }
 

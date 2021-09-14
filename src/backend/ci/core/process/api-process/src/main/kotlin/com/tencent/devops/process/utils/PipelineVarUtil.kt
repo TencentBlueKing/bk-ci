@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
@@ -197,14 +198,14 @@ object PipelineVarUtil {
             // 从新转旧: 新流水线产生的变量 兼容在旧流水线中已经使用到的旧变量
             val oldVarName = newVarToOldVar(it.key)
             if (!oldVarName.isNullOrBlank()) {
-                allVars[oldVarName!!] = it.value // 旧变量写入，如果之前有了，则替换
+                allVars[oldVarName] = it.value // 旧变量写入，如果之前有了，则替换
                 allVars[it.key] = it.value // 新变量仍然写入
             } else {
                 // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
                 val newVarName = oldVarToNewVar(it.key)
                 // 新变量已经存在，忽略旧变量转换
                 if (!newVarName.isNullOrBlank() && !vars.contains(newVarName)) {
-                    allVars[newVarName!!] = it.value
+                    allVars[newVarName] = it.value
                 }
                 // 已经存在从新变量转化过来的旧变量，则不覆盖，放弃
                 if (!allVars.containsKey(it.key)) {
