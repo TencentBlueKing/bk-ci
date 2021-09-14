@@ -33,38 +33,21 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TIME_TRIGGER_KIND
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ALL")
+@Suppress("ComplexMethod")
 @Service
-class PipelineContextService@Autowired constructor(
+class PipelineContextService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService
 ) {
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
@@ -80,7 +63,7 @@ class PipelineContextService@Autowired constructor(
                     buildStepContext(c, varMap, buildVar)
                 }
             }
-            buildCiContext(varMap, modelDetail, buildVar)
+            buildCiContext(varMap, buildVar)
         } catch (ignore: Throwable) {
             logger.warn("BKSystemErrorMonitor|buildContextFailed|", ignore)
         }
@@ -88,55 +71,33 @@ class PipelineContextService@Autowired constructor(
         return varMap
     }
 
+    fun getAllBuildContext(buildVar: Map<String, String>): Map<String, String> {
+        val allContext = buildVar.toMutableMap()
+        // 将流水线变量按预置映射关系做替换
+        PipelineVarUtil.fillContextVarMap(allContext, buildVar)
+        return allContext
+    }
+
+    fun getBuildContext(buildVar: Map<String, String>, contextName: String): String? {
+        return PipelineVarUtil.fetchContextInBuildVars(contextName, buildVar)
+    }
+
+    fun getBuildVarName(contextName: String): String? {
+        return PipelineVarUtil.fetchVarName(contextName)
+    }
+
     private fun buildCiContext(
         varMap: MutableMap<String, String>,
-        modelDetail: ModelDetail,
         buildVar: Map<String, String>
     ) {
-        varMap["ci.pipeline_id"] = modelDetail.pipelineId
-        varMap["ci.pipeline_name"] = modelDetail.pipelineName
-        varMap["ci.actor"] = modelDetail.userId
-        if (!buildVar[PIPELINE_BUILD_ID].isNullOrBlank())
-            varMap["ci.build_id"] = buildVar[PIPELINE_BUILD_ID]!!
-        if (!buildVar[PIPELINE_BUILD_NUM].isNullOrBlank())
-            varMap["ci.build_num"] = buildVar[PIPELINE_BUILD_NUM]!!
-        if (!buildVar[PIPELINE_GIT_REF].isNullOrBlank())
-            varMap["ci.ref"] = buildVar[PIPELINE_GIT_REF]!!
-        if (!buildVar[PIPELINE_GIT_HEAD_REF].isNullOrBlank())
-            varMap["ci.head_ref"] = buildVar[PIPELINE_GIT_HEAD_REF]!!
-        if (!buildVar[PIPELINE_GIT_BASE_REF].isNullOrBlank())
-            varMap["ci.base_ref"] = buildVar[PIPELINE_GIT_BASE_REF]!!
-        if (!buildVar[PIPELINE_GIT_REPO].isNullOrBlank())
-            varMap["ci.repo"] = buildVar[PIPELINE_GIT_REPO]!!
-        if (!buildVar[PIPELINE_GIT_REPO_NAME].isNullOrBlank())
-            varMap["ci.repo_name"] = buildVar[PIPELINE_GIT_REPO_NAME]!!
-        if (!buildVar[PIPELINE_GIT_REPO_GROUP].isNullOrBlank())
-            varMap["ci.repo_group"] = buildVar[PIPELINE_GIT_REPO_GROUP]!!
-        if (!buildVar[PIPELINE_GIT_EVENT_CONTENT].isNullOrBlank())
-            varMap["ci.event_content"] = buildVar[PIPELINE_GIT_EVENT_CONTENT]!!
-        if (!buildVar[PIPELINE_GIT_SHA].isNullOrBlank())
-            varMap["ci.sha"] = buildVar[PIPELINE_GIT_SHA]!!
-        if (!buildVar[PIPELINE_GIT_SHA_SHORT].isNullOrBlank())
-            varMap["ci.sha_short"] = buildVar[PIPELINE_GIT_SHA_SHORT]!!
-        if (!buildVar[PIPELINE_GIT_COMMIT_MESSAGE].isNullOrBlank())
-            varMap["ci.commit_message"] = buildVar[PIPELINE_GIT_COMMIT_MESSAGE]!!
+        // 将流水线变量按预置映射关系做替换
+        PipelineVarUtil.fillContextVarMap(varMap, buildVar)
+
         // 特殊处理触发类型以免定时触发无法记录
         if (buildVar[PIPELINE_START_TYPE] == StartType.TIME_TRIGGER.name) {
             varMap["ci.event"] = PIPELINE_GIT_TIME_TRIGGER_KIND
         } else if (!buildVar[PIPELINE_GIT_EVENT].isNullOrBlank()) {
             varMap["ci.event"] = buildVar[PIPELINE_GIT_EVENT]!!
-        }
-        if (!buildVar[PIPELINE_GIT_REPO_URL].isNullOrBlank()) {
-            varMap["ci.repo_url"] = buildVar[PIPELINE_GIT_REPO_URL]!!
-        }
-        if (!buildVar[PIPELINE_GIT_BASE_REPO_URL].isNullOrBlank()) {
-            varMap["ci.base_repo_url"] = buildVar[PIPELINE_GIT_BASE_REPO_URL]!!
-        }
-        if (!buildVar[PIPELINE_GIT_HEAD_REPO_URL].isNullOrBlank()) {
-            varMap["ci.head_repo_url"] = buildVar[PIPELINE_GIT_HEAD_REPO_URL]!!
-        }
-        if (!buildVar[PIPELINE_GIT_MR_URL].isNullOrBlank()) {
-            varMap["ci.mr_url"] = buildVar[PIPELINE_GIT_MR_URL]!!
         }
     }
 
@@ -190,7 +151,7 @@ class PipelineContextService@Autowired constructor(
         buildVar.filterKeys { it.startsWith("steps.${e.id ?: ""}.outputs.") }.forEach { (t, u) ->
             outputMap["jobs.${c.jobId ?: c.id ?: ""}.$t"] = u
         }
-        buildVar.filterKeys { it.startsWith("jobs.${c.id ?: ""}.os") }.forEach { (t, u) ->
+        buildVar.filterKeys { it.startsWith("jobs.${c.id ?: ""}.os") }.forEach { (_, u) ->
             outputMap["jobs.${c.jobId ?: c.id ?: ""}.os"] = u
         }
         return outputMap
@@ -208,18 +169,6 @@ class PipelineContextService@Autowired constructor(
         }
         is NormalContainer -> {
             "IDC"
-        }
-        else -> {
-            ""
-        }
-    }
-
-    private fun getOs(c: Container) = when (c) {
-        is VMBuildContainer -> {
-            c.baseOS.name
-        }
-        is NormalContainer -> {
-            VMBaseOS.LINUX.name
         }
         else -> {
             ""

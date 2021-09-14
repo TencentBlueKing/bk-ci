@@ -35,6 +35,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,12 +44,26 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildVarResourceImpl @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineContextService: PipelineContextService
 ) : BuildVarResource {
     override fun getBuildVar(buildId: String, projectId: String, pipelineId: String): Result<Map<String, String>> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
         checkPermission(projectId = projectId, pipelineId = pipelineId)
         return Result(buildVariableService.getAllVariable(buildId))
+    }
+
+    override fun getContextVariableByName(
+        buildId: String,
+        projectId: String,
+        pipelineId: String,
+        contextName: String
+    ): Result<String?> {
+        checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
+        checkPermission(projectId = projectId, pipelineId = pipelineId)
+        // 如果无法替换上下文预置变量则保持原变量名去查取
+        val varName = pipelineContextService.getBuildVarName(contextName) ?: contextName
+        return Result(buildVariableService.getVariable(buildId, varName))
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {

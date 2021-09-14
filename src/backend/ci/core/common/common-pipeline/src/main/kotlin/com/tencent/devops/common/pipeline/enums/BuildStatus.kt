@@ -57,13 +57,14 @@ enum class BuildStatus(val statusName: String, val visible: Boolean) {
     STAGE_SUCCESS("阶段性完成", true), // 22 当Stage人工审核取消运行时，成功（Stage/Pipeline最终态）
     QUOTA_FAILED("配额不够失败", true), // 23 失败 (未使用）
     DEPENDENT_WAITING("依赖等待", true), // 24 依赖等待 等待依赖的job完成才会进入准备环境（Job中间态）
+    QUALITY_CHECK_PASS("质量红线检查通过", true), // 25 质量红线检查通过
     UNKNOWN("未知状态", false); // 99
 
     fun isFinish(): Boolean = isFailure() || isSuccess() || isCancel()
 
     fun isFailure(): Boolean = this == FAILED || isPassiveStop() || isTimeout() || this == QUOTA_FAILED
 
-    fun isSuccess(): Boolean = this == SUCCEED || this == SKIP || this == REVIEW_PROCESSED
+    fun isSuccess(): Boolean = this == SUCCEED || this == SKIP || this == REVIEW_PROCESSED || this == QUALITY_CHECK_PASS
 
     fun isCancel(): Boolean = this == CANCELED
 
