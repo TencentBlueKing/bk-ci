@@ -57,7 +57,7 @@ class BuildVarResourceImpl @Autowired constructor(
         buildId: String,
         projectId: String,
         pipelineId: String,
-        contextName: String,
+        contextName: String
     ): Result<String?> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
         checkPermission(projectId = projectId, pipelineId = pipelineId)
