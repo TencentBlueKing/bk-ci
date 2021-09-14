@@ -63,7 +63,7 @@ interface BuildVarResource {
     ): Result<Map<String, String>>
 
     @ApiOperation("获取指定构建或指定构建下的上下文变量")
-    @Path("/context/get")
+    @Path("/get_build_context")
     @GET
     fun getContextVariableByName(
         @ApiParam(value = "构建ID", required = true)

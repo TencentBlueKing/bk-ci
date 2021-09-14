@@ -240,9 +240,9 @@ interface BuildBuildResource {
         redisAtomsBuild: RedisAtomsBuild
     ): Result<Boolean>
 
-    @ApiOperation("获取子流水线变量")
+    @ApiOperation("获取当前构建的构建详情页")
     @GET
-    @Path("/detailUrl")
+    @Path("/detail_url")
     fun getBuildDetailUrl(
         @ApiParam("projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
