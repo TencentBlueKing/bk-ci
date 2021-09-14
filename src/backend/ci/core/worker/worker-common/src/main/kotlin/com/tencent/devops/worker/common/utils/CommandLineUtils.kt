@@ -41,6 +41,7 @@ import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.charset.Charset
 import java.util.regex.Pattern
 
 object CommandLineUtils {
@@ -76,7 +77,7 @@ object CommandLineUtils {
         val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
             CharSetType.UTF_8 -> "UTF-8"
             CharSetType.GBK -> "GBK"
-            else -> "UTF-8"
+            else -> Charset.defaultCharset().name()
         }
 
         val outputStream = object : LogOutputStream() {
