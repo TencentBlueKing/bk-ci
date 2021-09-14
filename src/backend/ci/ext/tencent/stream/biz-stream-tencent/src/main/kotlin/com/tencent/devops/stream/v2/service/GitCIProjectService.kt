@@ -35,9 +35,6 @@ import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import com.tencent.devops.common.api.pojo.Pagination
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
-import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -49,6 +46,7 @@ import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -169,7 +167,7 @@ class GitCIProjectService @Autowired constructor(
             return null
         }
         val messageTitle = when (event.objectKind) {
-            OBJECT_KIND_MERGE_REQUEST -> {
+            TGitObjectKind.MERGE_REQUEST.value -> {
                 val branch = GitCommonUtils.checkAndGetForkBranchName(
                     gitProjectId = gitProjectId,
                     sourceGitProjectId = event.sourceGitProjectId,
@@ -178,10 +176,10 @@ class GitCIProjectService @Autowired constructor(
                 )
                 "[$branch] Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
             }
-            OBJECT_KIND_MANUAL -> {
+            TGitObjectKind.MANUAL.value -> {
                 "[${event.branch}] Manual Triggered by ${event.userId}"
             }
-            OBJECT_KIND_TAG_PUSH -> {
+            TGitObjectKind.TAG_PUSH.value -> {
                 val eventMap = try {
                     objectMapper.readValue<GitTagPushEvent>(event.event)
                 } catch (e: Exception) {

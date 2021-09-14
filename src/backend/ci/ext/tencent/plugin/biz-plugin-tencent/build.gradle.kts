@@ -49,7 +49,7 @@ dependencies {
     api(project(":core:common:common-db"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":core:plugin:biz-plugin"))
-    api(group = "org.json", name = "json", version = "20180130")
-    api(group = "net.dongliu", name = "apk-parser", version = "2.5.3")
+    api("org.json:json")
+    api("net.dongliu:apk-parser")
     api("org.asynchttpclient:async-http-client")
 }

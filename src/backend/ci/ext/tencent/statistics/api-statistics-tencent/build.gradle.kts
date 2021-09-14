@@ -32,7 +32,6 @@ dependencies {
     api(project(":ext:tencent:project:api-project-tencent"))
 }
 
-
 plugins{
     `task-deploy-to-maven`
 }

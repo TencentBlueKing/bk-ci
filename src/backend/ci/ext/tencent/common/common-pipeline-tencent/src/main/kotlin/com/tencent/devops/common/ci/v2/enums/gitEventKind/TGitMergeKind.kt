@@ -1,5 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -27,32 +25,38 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-plugins {
-    kotlin
-    id("com.github.johnrengelman.shadow")
-    application
+package com.tencent.devops.common.ci.v2.enums.gitEventKind
+
+/*
+ * action字段
+ * open：新建MR
+ * close：MR被关闭
+ * reopen：MR重新被打开
+ * update：MR本身信息更新，或源分支有代码push
+ * merge：代码已合并
+ */
+enum class TGitMergeActionKind(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    UPDATE("update"),
+    MERGE("merge")
 }
 
-tasks {
-    getByName<Jar>("jar") {
-        from("src/main/resources") {
-            include("*.*")
-        }
-
-        manifest {
-            attributes(mapOf("WorkerAgent-Version" to project.version))
-        }
-    }
-
-    named<ShadowJar>("shadowJar") {
-        mergeServiceFiles()
-        destinationDirectory.set(File("${rootDir}/release"))
-        archiveClassifier.set("")
-        archiveVersion.set("")
-        isZip64 = true
-    }
-
-    getByName("installDist") {
-        enabled = false
-    }
+/*
+ * extension_action字段
+ * open：新建MR
+ * close：MR被关闭
+ * reopen：MR重新被打开
+ * update：MR本身信息更新
+ * push-update：源分支有代码push
+ * merge：代码已合并
+ */
+enum class TGitMergeExtensionActionKind(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    UPDATE("update"),
+    PUSH_UPDATE("push-update"),
+    MERGE("merge")
 }

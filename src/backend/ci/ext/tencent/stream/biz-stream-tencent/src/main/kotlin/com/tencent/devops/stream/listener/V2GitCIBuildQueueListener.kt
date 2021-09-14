@@ -89,12 +89,12 @@ class V2GitCIBuildQueueListener @Autowired constructor(
             gitProjectId = projectId.removePrefix("git_").toLong(),
             pipelineId = buildQueueEvent.pipelineId
         )
-        if (records.isEmpty()) {
+        if (records == null) {
             logger.error("can't find queueEvent: $buildQueueEvent pipeline in gitci")
             return
         }
         // 有定时任务过来时，复制当前流水线在Stream的最后一条记录，部分数据做替换生成新的记录
-        with(records.first()) {
+        with(records) {
             gitRequestEventBuildDao.saveWhole(
                 dslContext = dslContext,
                 eventId = eventId,

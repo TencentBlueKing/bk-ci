@@ -940,7 +940,7 @@ class GitService @Autowired constructor(
                 if (frontendGitFileDir.exists()) {
                     FileSystemUtils.deleteRecursively(frontendGitFileDir)
                 }
-                FileSystemUtils.copyRecursively(frontendProjectDir, frontendFileDir)
+                FileSystemUtils.copyRecursively(frontendProjectDir!!, frontendFileDir)
                 FileSystemUtils.deleteRecursively(frontendProjectDir)
             }
             // 3、重新生成git信息

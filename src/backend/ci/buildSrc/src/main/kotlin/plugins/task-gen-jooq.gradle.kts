@@ -1,5 +1,3 @@
-import nu.studer.gradle.jooq.JooqGenerate
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -26,19 +24,18 @@ import nu.studer.gradle.jooq.JooqGenerate
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
+import nu.studer.gradle.jooq.JooqGenerate
 
 plugins {
     id("nu.studer.jooq")
-    kotlin("jvm")
 }
 
-val jooqGenerator by project.configurations
-val api by project.configurations
+val jooqGenerator by configurations
+val api by configurations
 
 dependencies {
-    api("org.jooq:jooq")
     jooqGenerator("mysql:mysql-connector-java:8.0.22")
+    api("org.jooq:jooq")
 }
 
 val moduleNames = when (val moduleName = name.split("-")[1]) {
@@ -104,7 +101,7 @@ jooq {
                         println("mysqlUser : $mysqlUser")
                         println("mysqlPasswd : ${mysqlPasswd?.substring(0, 3)}****")
 
-                        driver = "com.mysql.jdbc.Driver"
+                        driver = "com.mysql.cj.jdbc.Driver"
                         url = "jdbc:mysql://$mysqlURL/$databaseName?useSSL=false"
                         user = mysqlUser
                         password = mysqlPasswd
@@ -140,10 +137,9 @@ jooq {
         }
     }
 
-    tasks.getByName<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileKotlin") {
+    tasks.getByName<AbstractCompile>("compileKotlin") {
         destinationDir = File("build/generated-src")
         tasks.matching { it is JooqGenerate }.forEach {
-            println("#task: ${it.name} , group: ${it.group}")
             dependsOn(it.name)
         }
     }

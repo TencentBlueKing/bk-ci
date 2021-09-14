@@ -28,7 +28,7 @@
 package com.tencent.devops.stream.pojo.v2
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.stream.pojo.enums.GitEventEnum
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -49,7 +49,7 @@ data class GitCIBuildHistorySearch(
     @ApiModelProperty("Commit Msg", required = false)
     val commitMsg: String?,
     @ApiModelProperty("Event", required = false)
-    val event: Set<GitEventEnum>?,
+    val event: Set<TGitObjectKind>?,
     @ApiModelProperty("构建状态", required = false)
     val status: Set<BuildStatus>?
 )
