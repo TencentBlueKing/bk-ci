@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
@@ -148,13 +149,13 @@ object BatScriptUtil {
                 newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
             ))
 
-//        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
-//            CharSetType.UTF_8 -> Charsets.UTF_8
-//            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
-//            else -> Charsets.UTF_8
-//        }
+        // #4601 没有指定编码字符集时采用获取系统的默认字符集
+        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
+            CharSetType.UTF_8 -> Charsets.UTF_8
+            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
+            else -> Charset.defaultCharset()
+        }
 
-        val charset = Charset.defaultCharset()
         logger.info("The default charset is $charset")
 
         file.writeText(command.toString(), charset)
