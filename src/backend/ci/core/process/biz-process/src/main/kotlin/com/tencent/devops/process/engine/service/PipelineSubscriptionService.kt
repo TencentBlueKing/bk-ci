@@ -13,6 +13,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.BuildVariableService
@@ -137,7 +138,7 @@ class PipelineSubscriptionService constructor(
             buildStatus.isFailure() -> {
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
                     SendNotifyMessageTemplateRequest(
-                        templateCode = PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE.templateCode,
+                        templateCode = PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE.templateCode,
                         receivers = setting.failReceiver.split(",").toMutableSet(),
                         notifyType = setting.failType.split(",").toMutableSet(),
                         titleParams = params,

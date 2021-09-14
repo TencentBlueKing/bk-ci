@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
 @Component
 class PipelineNotifyQueueListener(
     private val pipelineSubscriptionService: PipelineSubscriptionService,
-    pipelineEventDispatcher: PipelineEventDispatcher,
+    pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
     override fun execute(event: PipelineBuildFinishBroadCastEvent) {
