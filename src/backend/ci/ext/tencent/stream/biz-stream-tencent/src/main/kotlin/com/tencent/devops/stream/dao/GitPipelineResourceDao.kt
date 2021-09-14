@@ -29,7 +29,6 @@ package com.tencent.devops.stream.dao
 
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.model.stream.tables.TGitPipelineResource
-import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.pojo.PipelineSortType
 import org.jooq.Condition

@@ -53,7 +53,6 @@ import com.tencent.devops.stream.pojo.GitRepositoryConf
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.GitCINotifyTemplateEnum
 import com.tencent.devops.stream.pojo.enums.GitCINotifyType
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.rtxCustom.MessageType
 import com.tencent.devops.stream.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting

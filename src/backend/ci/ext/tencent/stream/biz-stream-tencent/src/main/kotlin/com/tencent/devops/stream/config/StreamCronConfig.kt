@@ -33,15 +33,12 @@ import org.springframework.stereotype.Component
 @Component
 class StreamCronConfig {
 
-    @Value("\${cron.clear.deletedEventStoreDays:30}")
-    val deletedEventStoreDays: Int = 30
-
     @Value("\${cron.clear.maxThreadHandleProjectNum:5}")
     val maxThreadHandleProjectNum: Int = 5
 
     @Value("\${cron.clear.maxEveryProjectHandleNum:5}")
     val maxEveryProjectHandleNum: Int = 5
 
-     @Value("\${cron.clear.maxPipelineHandleNum:10000}")
-    val maxPipelineHandleNum: Int = 10000
+    @Value("\${cron.clear.maxKeepNum:10000}")
+    val maxKeepNum: Int = 10000
 }

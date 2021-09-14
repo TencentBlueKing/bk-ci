@@ -34,9 +34,11 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
+import com.tencent.devops.stream.pojo.v2.message.UserMessageType
 import com.tencent.devops.stream.v2.dao.GitUserMessageDao
 import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -202,6 +204,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
                     if (id > maxHandleProjectPrimaryId) {
                         maxHandleProjectPrimaryId = id
                     }
+                    clearEventNotBuild(id)
                     clearPipelineBuildData(id)
                 }
             } catch (ignore: Exception) {
@@ -218,10 +221,47 @@ class StreamEventHistoryClearJob @Autowired constructor(
         })
     }
 
+    private fun clearEventNotBuild(
+        gitProjectId: Long
+    ) {
+        val totalBuildCount = gitRequestEventNotBuildDao.getCountByProjectId(dslContext, gitProjectId)
+        val needClearNum = totalBuildCount - streamCronConfig.maxKeepNum
+        if (needClearNum > 0) {
+            clearEventNotBuildData(gitProjectId, totalBuildCount, needClearNum)
+        }
+    }
+
+    //  EventBuild会膨胀所以需要单独清掉
+    private fun clearEventNotBuildData(
+        gitProjectId: Long,
+        totalBuildCount: Int,
+        needClearNum: Int
+    ) {
+        logger.info("streamEventHistoryClear EventNotBuild" +
+            "|$gitProjectId|totalBuildCount=$totalBuildCount|needClearNum=$needClearNum")
+        var totalHandleNum = 0
+        while (totalHandleNum < needClearNum) {
+            val realPageSize = if (DEFAULT_PAGE_SIZE + totalHandleNum <= needClearNum) {
+                DEFAULT_PAGE_SIZE
+            } else {
+                needClearNum - totalHandleNum
+            }
+            val idList = gitRequestEventNotBuildDao.getIdByProjectId(
+                dslContext,
+                gitProjectId,
+                handlePageSize = realPageSize
+            )?.map { result -> result.getValue(0) as Long }?.toSet()
+            if (!idList.isNullOrEmpty()) {
+                gitRequestEventNotBuildDao.deleteByIds(dslContext, idList)
+            }
+            totalHandleNum += realPageSize
+        }
+    }
+
     private fun clearPipelineBuildData(
         gitProjectId: Long
     ) {
-        // 获取当前项目下流水线记录的最小主键EventID值
+        // 获取当前项目下流水线记录的最小主键Pipeline值
         var minId = gitPipelineResourceDao.getMinByGitProjectId(dslContext, gitProjectId)
         do {
             logger.info("streamEventHistoryClear clearPipelineBuildData gitProjectId:$gitProjectId,minId:$minId")
@@ -251,16 +291,16 @@ class StreamEventHistoryClearJob @Autowired constructor(
         gitProjectId: Long
     ) {
         // 判断构建记录是否超过系统展示的最大数量，如果超过则需清理超量的数据
-        // TODO: notbuild和message和event清理
         val maxPipelineBuildNum =
             gitRequestEventBuildDao.getBuildCountByPipelineId(dslContext, gitProjectId, pipelineId)
-        val maxBuildNum = maxPipelineBuildNum - streamCronConfig.maxPipelineHandleNum
-        if (maxBuildNum > 0) {
+        val needClearNum = maxPipelineBuildNum - streamCronConfig.maxKeepNum
+        if (needClearNum > 0) {
             logger.info("streamEventHistoryClear start.............")
             cleanBuildHistoryData(
                 pipelineId = pipelineId,
                 gitProjectId = gitProjectId,
-                maxBuildNum = maxBuildNum.toInt()
+                totalBuildCount = maxPipelineBuildNum,
+                needClearNum = needClearNum.toInt()
             )
         }
     }
@@ -268,10 +308,40 @@ class StreamEventHistoryClearJob @Autowired constructor(
     private fun cleanBuildHistoryData(
         pipelineId: String,
         gitProjectId: Long,
-        maxBuildNum: Int? = null
+        totalBuildCount: Long,
+        needClearNum: Int
     ) {
-
+        logger.info("streamEventHistoryClear" +
+            "|$gitProjectId|$pipelineId|totalBuildCount=$totalBuildCount|needClearNum=$needClearNum")
+        var totalHandleNum = 0
+        while (totalHandleNum < needClearNum) {
+            val realPageSize = if (DEFAULT_PAGE_SIZE + totalHandleNum <= needClearNum) {
+                DEFAULT_PAGE_SIZE
+            } else {
+                needClearNum - totalHandleNum
+            }
+            val buildIdList = gitRequestEventBuildDao.getBuildIdAndEventIdByPipelineId(
+                dslContext,
+                gitProjectId,
+                pipelineId,
+                handlePageSize = realPageSize
+            )?.map { result -> Pair(result.getValue(0) as String, result.getValue(1) as Long) }
+            buildIdList?.forEach { (buildId, eventId) ->
+                // 删除相关的event和event相关的前面没有被删除的event，message，notBuild
+                dslContext.transaction { t ->
+                    val context = DSL.using(t)
+                    gitRequestEventDao.deleteById(context, eventId)
+                    gitRequestEventNotBuildDao.deleteByEventId(context, gitProjectId, eventId)
+                    gitUserMessageDao.deleteByMessageId(
+                        context,
+                        "git_$gitProjectId",
+                        eventId.toString(),
+                        UserMessageType.REQUEST
+                    )
+                    gitRequestEventBuildDao.deleteByBuildId(context, gitProjectId, pipelineId, buildId)
+                }
+            }
+            totalHandleNum += realPageSize
+        }
     }
-
 }
-

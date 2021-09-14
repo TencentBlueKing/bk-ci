@@ -27,9 +27,13 @@
 
 package com.tencent.devops.stream.dao
 
+import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
 import com.tencent.devops.model.stream.tables.TGitRequestEventNotBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventNotBuildRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -150,5 +154,54 @@ class GitRequestEventNotBuildDao {
 
     fun batchUpdateBuild(dslContext: DSLContext, builds: List<TGitRequestEventNotBuildRecord>) {
         dslContext.batchUpdate(builds).execute()
+    }
+
+    fun deleteByEventId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        eventId: Long
+    ): Int {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.deleteFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId)).and(EVENT_ID.eq(eventId))
+                .execute()
+        }
+    }
+
+    fun getCountByProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long
+    ): Int {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .count()
+        }
+    }
+
+    fun getIdByProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        handlePageSize: Int
+    ): Result<out Record>? {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(GIT_PROJECT_ID.eq(gitProjectId))
+            val baseStep = dslContext.select(ID)
+                .from(this)
+                .where(conditions)
+                .orderBy(ID.asc())
+            return baseStep.limit(handlePageSize).fetch()
+        }
+    }
+
+    fun deleteByIds(
+        dslContext: DSLContext,
+        ids: Set<Long>
+    ): Int {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.delete(this)
+                .where(ID.`in`(ids)).execute()
+        }
     }
 }

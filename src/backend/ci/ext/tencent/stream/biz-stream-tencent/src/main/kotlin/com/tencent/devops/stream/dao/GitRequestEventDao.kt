@@ -31,8 +31,6 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
-import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
-import com.tencent.devops.model.stream.tables.records.TGitRequestEventRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
