@@ -6,13 +6,14 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.engine.service.PipelineSubscriptionService
+import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.stereotype.Component
 
 @Component
 class PipelineNotifyQueueListener(
     private val pipelineSubscriptionService: PipelineSubscriptionService,
-    pipelineEventDispatcher: PipelineEventDispatcher
+    pipelineEventDispatcher: PipelineEventDispatcher,
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
     override fun execute(event: PipelineBuildFinishBroadCastEvent) {
@@ -25,12 +26,7 @@ class PipelineNotifyQueueListener(
                     MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                 }
             }
-            with(event) {
-                pipelineSubscriptionService.onPipelineShutdown(pipelineId = pipelineId,
-                    buildId = buildId,
-                    projectId = projectId,
-                    buildStatus = BuildStatus.parse(status))
-            }
+            this.onPipelineShutdown(event)
         } finally {
             MDC.remove(TraceTag.BIZID)
         }
@@ -38,5 +34,25 @@ class PipelineNotifyQueueListener(
 
     override fun run(event: PipelineBuildFinishBroadCastEvent) {
         this.execute(event)
+    }
+
+    private fun onPipelineShutdown(event: PipelineBuildFinishBroadCastEvent, retryCount: Int = 0) {
+        if (retryCount < 3) {
+            try {
+                with(event) {
+                    pipelineSubscriptionService.onPipelineShutdown(pipelineId = pipelineId,
+                        buildId = buildId,
+                        projectId = projectId,
+                        buildStatus = BuildStatus.parse(status))
+                }
+            } catch (e: Exception) {
+                LOG.warn("${event.buildId}|pipeline notify failed, retry count $retryCount", e)
+                this.onPipelineShutdown(event, retryCount + 1)
+            }
+        }
+    }
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(PipelineNotifyQueueListener::class.java)
     }
 }
