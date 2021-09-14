@@ -81,9 +81,9 @@ interface UserAtomResource {
         @ApiParam("操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
         @QueryParam("os")
         os: String?,
-        @ApiParam("项目编码", required = false)
+        @ApiParam("项目编码", required = true)
         @QueryParam("projectCode")
-        projectCode: String?,
+        projectCode: String,
         @ApiParam("插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
         @QueryParam("category")
         category: String?,
@@ -96,6 +96,9 @@ interface UserAtomResource {
         @ApiParam("搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
+        @ApiParam("查询项目插件标识", required = true)
+        @QueryParam("queryProjectAtomFlag")
+        queryProjectAtomFlag: Boolean = true,
         @ApiParam("页码", required = true)
         @QueryParam("page")
         page: Int = 1,

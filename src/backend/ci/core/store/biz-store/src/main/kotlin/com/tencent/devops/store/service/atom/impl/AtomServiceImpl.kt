@@ -219,15 +219,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         serviceScope: String?,
         jobType: String?,
         os: String?,
-        projectCode: String?,
+        projectCode: String,
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
+        queryProjectAtomFlag: Boolean,
         page: Int,
         pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
-        if (!projectCode.isNullOrBlank()) {
+        if (queryProjectAtomFlag) {
             // 根据token校验用户有没有查询该项目的权限
             val validateFlag: Boolean?
             try {
@@ -269,11 +270,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         serviceScope: String?,
         jobType: String?,
         os: String?,
-        projectCode: String?,
+        projectCode: String,
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
+        queryProjectAtomFlag: Boolean,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
@@ -283,7 +285,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             serviceScope = serviceScope,
             jobType = jobType,
             os = os,
-            projectCode = projectCode,
+            projectCode = if (queryProjectAtomFlag) projectCode else null,
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
@@ -304,18 +306,20 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         var memberDataMap: Map<String, MutableList<String>>? = null
         var installedAtomList: List<String>? = null
         var userDeptList: List<Int>? = null
-        if (!projectCode.isNullOrBlank() && !atomCodeSet.isNullOrEmpty()) {
-            atomPipelineCntMap = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
-                atomCodes = atomCodeSet.joinToString(","),
-                projectCode = projectCode
-            ).data
+        if (!atomCodeSet.isNullOrEmpty()) {
             installedAtomList = storeProjectRelDao.getValidStoreCodesByProject(
                 dslContext = dslContext,
                 projectCode = projectCode,
                 storeCodes = atomCodeSet,
                 storeType = StoreTypeEnum.ATOM
             )?.map { it.value1() }
-        } else if (projectCode.isNullOrBlank() && !atomCodeSet.isNullOrEmpty()) {
+        }
+        if (queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
+            atomPipelineCntMap = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
+                atomCodes = atomCodeSet.joinToString(","),
+                projectCode = projectCode
+            ).data
+        } else if (!queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
             val atomCodeList = atomCodeSet.toList()
             atomVisibleDataMap = storeCommonService.generateStoreVisibleData(atomCodeList, StoreTypeEnum.ATOM)
             memberDataMap = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
@@ -349,7 +353,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val atomType = it[KEY_ATOM_TYPE] as Byte
             val atomStatus = it[KEY_ATOM_STATUS] as Byte
             val atomPipelineCnt = atomPipelineCntMap?.get(atomCode)
-            val installFlag = if (projectCode.isNullOrBlank()) storeCommonService.generateInstallFlag(
+            val installFlag = if (!queryProjectAtomFlag) storeCommonService.generateInstallFlag(
                 defaultFlag = it[KEY_DEFAULT_FLAG] as Boolean,
                 members = memberDataMap?.get(atomCode),
                 userId = userId,
@@ -398,7 +402,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             serviceScope = serviceScope,
             jobType = jobType,
             os = os,
-            projectCode = projectCode,
+            projectCode = if (queryProjectAtomFlag) projectCode else null,
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,

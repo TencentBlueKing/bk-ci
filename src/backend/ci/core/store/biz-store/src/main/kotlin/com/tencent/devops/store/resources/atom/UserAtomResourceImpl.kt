@@ -55,11 +55,12 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         serviceScope: String?,
         jobType: String?,
         os: String?,
-        projectCode: String?,
+        projectCode: String,
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
+        queryProjectAtomFlag: Boolean,
         page: Int,
         pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
