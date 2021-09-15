@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.engine.service.PipelineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
@@ -43,12 +44,12 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
 
-@Suppress("ALL")
 @RestResource
 class BuildBuildResourceImpl @Autowired constructor(
     private val vmBuildService: PipelineVMBuildService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
-    private val subPipelineStartUpService: SubPipelineStartUpService
+    private val subPipelineStartUpService: SubPipelineStartUpService,
+    private val pipelineUrlBean: PipelineUrlBean
 ) : BuildBuildResource {
 
     @Deprecated("replace by BuildJobResourceImpl")
@@ -170,6 +171,10 @@ class BuildBuildResourceImpl @Autowired constructor(
         }
 
         return Result(pipelineBuildFacadeService.updateRedisAtoms(buildId, projectId, redisAtomsBuild))
+    }
+
+    override fun getBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): Result<String> {
+        return Result(pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId))
     }
 
     companion object {

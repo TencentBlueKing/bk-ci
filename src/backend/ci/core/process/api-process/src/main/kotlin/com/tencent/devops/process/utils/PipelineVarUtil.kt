@@ -28,6 +28,20 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 
 object PipelineVarUtil {
 
@@ -101,7 +115,55 @@ object PipelineVarUtil {
         "report.dynamic.root.url" to REPORT_DYNAMIC_ROOT_URL
     )
 
+    /**
+     * CI预置上下文转换映射关系
+     */
+    private val contextVarMappingBuildVar = mapOf(
+        "ci.pipeline_id" to PIPELINE_ID,
+        "ci.pipeline_name" to PIPELINE_NAME,
+        "ci.actor" to PIPELINE_START_USER_ID,
+        "ci.build_id" to PIPELINE_BUILD_ID,
+        "ci.build_num" to PIPELINE_BUILD_NUM,
+        "ci.ref" to PIPELINE_GIT_REF,
+        "ci.head_ref" to PIPELINE_GIT_HEAD_REF,
+        "ci.base_ref" to PIPELINE_GIT_BASE_REF,
+        "ci.repo" to PIPELINE_GIT_REPO,
+        "ci.repo_name" to PIPELINE_GIT_REPO_NAME,
+        "ci.repo_group" to PIPELINE_GIT_REPO_GROUP,
+        "ci.event_content" to PIPELINE_GIT_EVENT_CONTENT,
+        "ci.sha" to PIPELINE_GIT_SHA,
+        "ci.sha_short" to PIPELINE_GIT_SHA_SHORT,
+        "ci.commit_message" to PIPELINE_GIT_COMMIT_MESSAGE,
+        "ci.repo_url" to PIPELINE_GIT_REPO_URL,
+        "ci.base_repo_url" to PIPELINE_GIT_BASE_REPO_URL,
+        "ci.head_repo_url" to PIPELINE_GIT_HEAD_REPO_URL,
+        "ci.mr_url" to PIPELINE_GIT_MR_URL
+    )
+
     private val newVarMappingOldVar = oldVarMappingNewVar.map { kv -> kv.value to kv.key }.toMap()
+
+    /**
+     * 填充CI预置变量
+     */
+    fun fillContextVarMap(varMap: MutableMap<String, String>, buildVar: Map<String, String>) {
+        contextVarMappingBuildVar.forEach { (contextKey, varKey) ->
+            if (!buildVar[varKey].isNullOrBlank()) varMap[contextKey] = buildVar[varKey]!!
+        }
+    }
+
+    /**
+     * 获取CI预置变量
+     */
+    fun fetchContextInBuildVars(contextKey: String, buildVar: Map<String, String>): String? {
+        return buildVar[contextVarMappingBuildVar[contextKey]]
+    }
+
+    /**
+     * 获取CI预置变量名
+     */
+    fun fetchVarName(contextKey: String): String? {
+        return contextVarMappingBuildVar[contextKey]
+    }
 
     /**
      * 填充旧变量名，兼容用户在流水线中旧的写法
@@ -134,14 +196,14 @@ object PipelineVarUtil {
             // 从新转旧: 新流水线产生的变量 兼容在旧流水线中已经使用到的旧变量
             val oldVarName = newVarToOldVar(it.key)
             if (!oldVarName.isNullOrBlank()) {
-                allVars[oldVarName!!] = it.value // 旧变量写入，如果之前有了，则替换
+                allVars[oldVarName] = it.value // 旧变量写入，如果之前有了，则替换
                 allVars[it.key] = it.value // 新变量仍然写入
             } else {
                 // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
                 val newVarName = oldVarToNewVar(it.key)
                 // 新变量已经存在，忽略旧变量转换
                 if (!newVarName.isNullOrBlank() && !vars.contains(newVarName)) {
-                    allVars[newVarName!!] = it.value
+                    allVars[newVarName] = it.value
                 }
                 // 已经存在从新变量转化过来的旧变量，则不覆盖，放弃
                 if (!allVars.containsKey(it.key)) {
