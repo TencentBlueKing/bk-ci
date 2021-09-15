@@ -1412,8 +1412,8 @@ class TXPipelineExportService @Autowired constructor(
             "steps."
         } else if (!PipelineVarUtil.fetchVarName("ci.${nameAndValue.key}").isNullOrBlank()) {
             "ci."
-        } else if (!variables?.get(nameAndValue.key).isNullOrBlank()) {
+        } else {
             "variables."
-        } else ""
+        }
     }
 }
