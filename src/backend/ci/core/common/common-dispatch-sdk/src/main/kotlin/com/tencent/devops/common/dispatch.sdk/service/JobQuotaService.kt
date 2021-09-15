@@ -27,7 +27,10 @@
 
 package com.tencent.devops.common.dispatch.sdk.service
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
@@ -52,8 +55,8 @@ class JobQuotaService constructor(
     private val jobQuotaEnable: Boolean = false
 
     fun addRunningJob(projectId: String, vmType: JobQuotaVmType?, buildId: String, vmSeqId: String) {
-        if (null == vmType) {
-            logger.warn("vmType is null, job quota check will be skipped.")
+        if (null == vmType || !jobQuotaEnable) {
+            logger.warn("JobQuota not enabled or VmType is null, job quota check will be skipped.")
             return
         }
         logger.info("Add running job to dispatch:[$projectId|$vmType|$buildId|$vmSeqId]")
@@ -65,25 +68,38 @@ class JobQuotaService constructor(
     }
 
     fun removeRunningJob(projectId: String, buildId: String, vmSeqId: String?) {
-        logger.info("Remove running job to dispatch:[$projectId|$buildId|$vmSeqId]")
-        try {
-            client.get(ServiceJobQuotaBusinessResource::class).removeRunningJob(projectId, buildId, vmSeqId)
-        } catch (e: Throwable) {
-            logger.error("Remove running job quota failed.[$projectId]|[$buildId]|[$vmSeqId]", e)
+        if (jobQuotaEnable) {
+            logger.info("Remove running job to dispatch:[$projectId|$buildId|$vmSeqId]")
+            try {
+                client.get(ServiceJobQuotaBusinessResource::class).removeRunningJob(projectId, buildId, vmSeqId)
+            } catch (e: Throwable) {
+                logger.error("Remove running job quota failed.[$projectId]|[$buildId]|[$vmSeqId]", e)
+            }
         }
     }
 
-    fun checkJobQuota(startupEvent: PipelineAgentStartupEvent, vmType: JobQuotaVmType?): Boolean {
-        return checkJobQuotaBase(
-            projectId = startupEvent.projectId,
-            pipelineId = startupEvent.pipelineId,
-            buildId = startupEvent.buildId,
-            vmSeqId = startupEvent.vmSeqId,
-            containerId = startupEvent.containerId,
-            containerHashId = startupEvent.containerHashId,
-            executeCount = startupEvent.executeCount,
-            vmType = vmType
-        )
+    fun checkJobQuota(startupEvent: PipelineAgentStartupEvent, vmType: JobQuotaVmType?) {
+        with(startupEvent) {
+            if (!checkJobQuotaBase(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    containerId = containerId,
+                    containerHashId = containerHashId,
+                    executeCount = executeCount,
+                    vmType = vmType
+                )
+            ) {
+                logger.info("[$projectId]|[$buildId] Job quota excess, return.")
+                throw BuildFailureException(
+                    errorType = ErrorType.USER,
+                    errorCode = DispatchSdkErrorCode.JOB_QUOTA_EXCESS,
+                    formatErrorMessage = "JOB配额超限",
+                    errorMessage = "JOB配额超限"
+                )
+            }
+        }
     }
 
     fun checkJobQuotaAgentLess(
@@ -134,7 +150,7 @@ class JobQuotaService constructor(
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，" +
-                        "正在执行JOB数量：$runningJobCount, 配额: $jobQuota",
+                            "正在执行JOB数量：$runningJobCount, 配额: $jobQuota",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -146,9 +162,9 @@ class JobQuotaService constructor(
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经超过告警阈值，" +
-                        "正在执行JOB数量：$runningJobCount，配额：$jobQuota，" +
+                            "正在执行JOB数量：$runningJobCount，配额：$jobQuota，" +
                             "告警阈值：${normalizePercentage(jobThreshold.toDouble())}%，" +
-                        "当前已经使用：${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%",
+                            "当前已经使用：${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
