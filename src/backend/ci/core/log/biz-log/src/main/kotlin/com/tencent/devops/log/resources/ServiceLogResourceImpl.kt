@@ -148,7 +148,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String,
-        executeCount: Int?,
+        executeCount: Int?
     ): Result<QueryLogStatus> {
         return buildLogQueryService.getLogMode(
             userId = userId,
