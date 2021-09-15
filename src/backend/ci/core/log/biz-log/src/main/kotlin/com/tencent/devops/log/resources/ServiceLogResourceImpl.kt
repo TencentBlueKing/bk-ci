@@ -28,6 +28,7 @@
 package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
@@ -130,6 +131,22 @@ class ServiceLogResourceImpl @Autowired constructor(
             jobId = jobId,
             executeCount = executeCount,
             fileName = null
+        )
+    }
+
+    override fun getLogMode(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        tag: String,
+        executeCount: Int?,
+    ): Result<QueryLogStatus> {
+        return buildLogQueryService.getLogMode(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            executeCount = executeCount
         )
     }
 }
