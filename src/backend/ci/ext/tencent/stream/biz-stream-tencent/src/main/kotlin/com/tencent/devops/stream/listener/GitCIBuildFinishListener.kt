@@ -70,7 +70,6 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
