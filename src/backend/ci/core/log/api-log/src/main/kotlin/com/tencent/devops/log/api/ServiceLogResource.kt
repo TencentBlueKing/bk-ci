@@ -60,6 +60,9 @@ interface ServiceLogResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun getInitLogs(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -87,6 +90,9 @@ interface ServiceLogResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/more")
     fun getMoreLogs(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -126,6 +132,9 @@ interface ServiceLogResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/after")
     fun getAfterLogs(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -157,6 +166,9 @@ interface ServiceLogResource {
     @Path("/{projectId}/{pipelineId}/{buildId}/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadLogs(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -181,6 +193,9 @@ interface ServiceLogResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/mode")
     fun getLogMode(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

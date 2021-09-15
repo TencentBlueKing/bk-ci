@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.api.user
+package com.tencent.devops.artifactory.api.service
 
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -45,11 +45,11 @@ import javax.ws.rs.core.MediaType
 @Path("/user/artifactories/log")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserLogFileResource {
+interface ServiceLogFileResource {
 
     @ApiOperation("下载日志")
     @GET
-    @Path("plugin/{projectId}/{pipelineId}/{buildId}/{elementId}/{executeCount}")
+    @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/{executeCount}")
     fun getPluginLogUrl(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
