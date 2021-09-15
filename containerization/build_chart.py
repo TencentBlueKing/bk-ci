@@ -26,7 +26,10 @@ default_value_dict = {
     'bkCiHome': '/data/bkee/ci',
     'bkCiGatewayDnsAddr': 'local=on',
     'bkCiEnvironmentAgentCollectorOn': 'false',
-    'bkHttpSchema':'http'
+    'bkHttpSchema': 'http',
+    'bkCiHost': 'devops.example.com',
+    'bkCiPublicUrl': 'devops.example.com',
+    'bkCiPublicHostIp': '127.0.0.1'
 }
 
 default_value_dict.update(json.load(open('./values.json')))
