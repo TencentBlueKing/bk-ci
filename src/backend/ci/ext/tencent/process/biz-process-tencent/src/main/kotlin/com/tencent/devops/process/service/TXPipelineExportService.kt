@@ -1377,9 +1377,9 @@ class TXPipelineExportService @Autowired constructor(
         nameAndValueList?.forEachIndexed { index, nameAndValue ->
             val preStr = parseNameAndValueWithPreStr(output2Elements, nameAndValue, variables)
             ifString += if (index == nameAndValueList.size - 1) {
-                "$preStr${nameAndValue.key} == ${nameAndValue.value}"
+                "$preStr == ${nameAndValue.value}"
             } else {
-                "$preStr${nameAndValue.key} == ${nameAndValue.value} && "
+                "$preStr == ${nameAndValue.value} && "
             }
         }
         return ifString
@@ -1394,9 +1394,9 @@ class TXPipelineExportService @Autowired constructor(
         nameAndValueList?.forEachIndexed { index, nameAndValue ->
             val preStr = parseNameAndValueWithPreStr(output2Elements, nameAndValue, variables)
             ifString += if (index == nameAndValueList.size - 1) {
-                "$preStr${nameAndValue.key} != ${nameAndValue.value}"
+                "$preStr != ${nameAndValue.value}"
             } else {
-                "$preStr${nameAndValue.key} != ${nameAndValue.value} || "
+                "$preStr != ${nameAndValue.value} || "
             }
         }
         return ifString
@@ -1408,12 +1408,13 @@ class TXPipelineExportService @Autowired constructor(
         variables: Map<String, String>?
     ): String {
         val stepElement = output2Elements[nameAndValue.key]
+        val ciName = PipelineVarUtil.fetchReverseVarName("${nameAndValue.key}")
         return if (stepElement != null) {
-            "steps."
-        } else if (!PipelineVarUtil.fetchVarName("ci.${nameAndValue.key}").isNullOrBlank()) {
-            "ci."
+            "steps.${nameAndValue.key}"
+        } else if (!ciName.isNullOrBlank()) {
+            ciName
         } else {
-            "variables."
+            "variables.${nameAndValue.key}"
         }
     }
 }

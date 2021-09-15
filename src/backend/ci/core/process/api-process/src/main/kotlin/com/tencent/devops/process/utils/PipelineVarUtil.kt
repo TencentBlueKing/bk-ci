@@ -103,6 +103,13 @@ object PipelineVarUtil {
 
     private val newVarMappingOldVar = oldVarMappingNewVar.map { kv -> kv.value to kv.key }.toMap()
 
+    private val reverseContextVarMappingBuildVar =
+        contextVarMappingBuildVar.values.zip(contextVarMappingBuildVar.keys).toMap()
+
+    fun fetchReverseVarName(contextKey: String): String? {
+        return reverseContextVarMappingBuildVar[contextKey]
+    }
+
     /**
      * 填充旧变量名，兼容用户在流水线中旧的写法
      */
