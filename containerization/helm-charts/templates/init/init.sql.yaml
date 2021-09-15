@@ -41,5 +41,6 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              for SQL in *.sql; do mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}< $SQL; done
+              for SQL in *.sql; do mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}< $SQL; done ;
+              echo 'DELETE devops_ci_store.T_CONTAINER WHERE ID = "d51a712508c011e99792fa163e50f2b5";'|mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}
       restartPolicy: OnFailure

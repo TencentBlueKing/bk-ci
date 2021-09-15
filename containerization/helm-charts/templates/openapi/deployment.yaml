@@ -21,7 +21,7 @@ spec:
         {{- include "common.tplvalues.render" (dict "value" .Values.openapi.podLabels "context" $) | nindent 8 }}
         {{- end }}
     spec:
-      serviceAccountName: {{ .Values.common.serviceAccount }}
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.openapi.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.openapi.hostAliases "context" $) | nindent 8 }}
       {{- end }}

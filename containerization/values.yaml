@@ -1,7 +1,6 @@
-# 通用配置
-common:
-  namespace: default
-  serviceAccount: default
+# RBAC配置
+rbac:
+  serviceAccount: bkci
 
 ## Add labels to all the deployed resources
 commonLabels: {}
@@ -22,13 +21,13 @@ nginx-ingress-controller:
 
 # 镜像配置
 gatewayImage:
-  registry: mirrors.tencent.com/stuben
+  registry: mirrors.tencent.com/bkce
   repository: bkci/gateway
   tag: 0.0.1
   pullPolicy: IfNotPresent 
   pullSecrets: []
 backendImage:
-  registry: mirrors.tencent.com/stuben
+  registry: mirrors.tencent.com/bkce
   repository: bkci/backend
   tag: 0.0.1
   pullPolicy: IfNotPresent 

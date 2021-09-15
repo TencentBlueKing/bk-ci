@@ -41,3 +41,4 @@ containerization/docker-images/*.gz
 containerization/values.json
 src/backend/turbo/**/build/
 src/backend/turbo/release/
+src/backend/turbo/containerization/

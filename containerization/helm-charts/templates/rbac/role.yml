@@ -2,7 +2,7 @@
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: {{ .Values.common.namespace }}
+  namespace: {{ .Release.Namespace }}
   name: default-read-role
 rules:
   - apiGroups: ["", "extensions", "apps"]
@@ -13,10 +13,10 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: default-role-read-binding
-  namespace: {{ .Values.common.namespace }}
+  namespace: {{ .Release.Namespace }}
 subjects:
   - kind: ServiceAccount
-    name: {{ .Values.common.serviceAccount }}
+    name: {{ .Values.rbac.serviceAccount }}
     apiGroup: ""
 roleRef:
   kind: Role
@@ -39,9 +39,9 @@ metadata:
   name: default-role-read-binding
 subjects:
   - kind: ServiceAccount
-    name: {{ .Values.common.serviceAccount }}
+    name: {{ .Values.rbac.serviceAccount }}
     apiGroup: ""
-    namespace: {{ .Values.common.namespace }}
+    namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
   name: default-read-role
