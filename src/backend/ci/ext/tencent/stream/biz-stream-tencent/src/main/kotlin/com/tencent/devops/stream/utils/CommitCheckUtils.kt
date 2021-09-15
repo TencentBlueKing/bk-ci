@@ -29,35 +29,11 @@ package com.tencent.devops.stream.utils
 
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 
 object CommitCheckUtils {
 
     fun needSendCheck(request: GitRequestEvent): Boolean {
-        val event = request.gitEvent ?: return false
-        return when (event) {
-            is GitMergeRequestEvent -> {
-                val action = StreamMrEventAction.getActionValue(event) ?: return false
-                !(action == StreamMrEventAction.CLOSE.value || action == StreamMrEventAction.MERGE.value)
-            }
-            else -> {
-                request.objectKind != TGitObjectKind.MANUAL.value
-            }
-        }
-    }
-
-    // TODO: Finish阶段专用，后续重构参数时看是否可以干掉
-    fun needSendCheck(gitEvent: GitEvent): Boolean {
-        return when (gitEvent) {
-            is GitMergeRequestEvent -> {
-                val action = StreamMrEventAction.getActionValue(gitEvent) ?: return false
-                !(action == StreamMrEventAction.CLOSE.value || action == StreamMrEventAction.MERGE.value)
-            }
-            else -> {
-                true
-            }
-        }
+//        val event = request.gitEvent ?: return false
+        return request.objectKind != TGitObjectKind.MANUAL.value
     }
 }
