@@ -32,7 +32,8 @@ default_value_dict = {
     'bkCiPublicHostIp': '127.0.0.1'
 }
 
-default_value_dict.update(json.load(open('./values.json')))
+if os.path.isfile('./values.json'):
+    default_value_dict.update(json.load(open('./values.json')))
 
 # include 模板
 include_dict = {
