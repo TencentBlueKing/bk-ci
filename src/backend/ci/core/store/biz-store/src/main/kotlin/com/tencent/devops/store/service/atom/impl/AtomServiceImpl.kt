@@ -258,6 +258,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
+            queryProjectAtomFlag = queryProjectAtomFlag,
             keyword = keyword,
             page = page,
             pageSize = pageSize
