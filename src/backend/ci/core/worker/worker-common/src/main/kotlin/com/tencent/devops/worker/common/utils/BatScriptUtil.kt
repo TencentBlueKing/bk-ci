@@ -73,7 +73,7 @@ object BatScriptUtil {
         workspace: File = dir,
         print2Logger: Boolean = true,
         elementId: String? = null,
-        charSetType: String? = CharSetType.UTF_8.name
+        charSetType: String? = null
     ): String {
         try {
             val file = getCommandFile(
@@ -108,7 +108,7 @@ object BatScriptUtil {
         runtimeVariables: Map<String, String>,
         dir: File,
         workspace: File = dir,
-        charSetType: String? = CharSetType.UTF_8.name
+        charSetType: String? = null
     ): File {
         val tmpDir = System.getProperty("java.io.tmpdir")
         val file = if (tmpDir.isNullOrBlank()) {
@@ -149,11 +149,13 @@ object BatScriptUtil {
                 newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
             ))
 
+        // #4601 没有指定编码字符集时采用获取系统的默认字符集
         val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
             CharSetType.UTF_8 -> Charsets.UTF_8
             CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
-            else -> Charsets.UTF_8
+            else -> Charset.defaultCharset()
         }
+
         logger.info("The default charset is $charset")
 
         file.writeText(command.toString(), charset)

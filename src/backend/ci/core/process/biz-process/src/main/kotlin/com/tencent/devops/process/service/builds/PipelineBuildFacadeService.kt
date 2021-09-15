@@ -809,8 +809,8 @@ class PipelineBuildFacadeService(
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND,
-                defaultMessage = "(${group?.name ?: "default"})非Stage($stageId)当前待审核组",
-                params = arrayOf(stageId, reviewRequest?.id ?: "default")
+                defaultMessage = "(${group?.name ?: "Flow 1"})非Stage($stageId)当前待审核组",
+                params = arrayOf(stageId, reviewRequest?.id ?: "Flow 1")
             )
         }
 
@@ -846,9 +846,6 @@ class PipelineBuildFacadeService(
                     reviewRequest = reviewRequest
                 )
             } else {
-                // TODO 暂时兼容前端显示的变量刷新，下次发版去掉
-                buildStage.controlOption!!.stageControlOption.reviewParams = reviewRequest?.reviewParams
-                buildStage.controlOption!!.stageControlOption.triggered = true
                 pipelineStageService.startStage(
                     userId = userId,
                     buildStage = buildStage,
