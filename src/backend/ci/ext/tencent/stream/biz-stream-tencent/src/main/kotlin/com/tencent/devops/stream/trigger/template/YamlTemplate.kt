@@ -47,6 +47,7 @@ import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
 import org.slf4j.LoggerFactory
 
@@ -59,6 +60,9 @@ class YamlTemplate(
     val triggerUserId: String,
     val triggerRef: String,
     val triggerToken: String,
+    val forkGitToken: String?,
+    val changeSet: Set<String>?,
+    val event: GitEvent?,
 
     // 添加图防止远程库之间循环依赖
     val repoTemplateGraph: TemplateGraph<String>,
@@ -82,11 +86,14 @@ class YamlTemplate(
     // 获取模板文件函数，将模板替换过程与获取文件解耦，方便测试或链接其他代码库
     val getTemplateMethod: (
         token: String?,
+        forkGitToken: String?,
         gitProjectId: Long,
         targetRepo: String?,
         ref: String?,
         personalAccessToken: String?,
-        fileName: String
+        fileName: String,
+        changeSet: Set<String>?,
+        event: GitEvent?
     ) -> String
 
 ) {
@@ -692,11 +699,14 @@ class YamlTemplate(
             triggerUserId = triggerUserId,
             triggerRef = triggerRef,
             triggerToken = triggerToken,
+            forkGitToken = forkGitToken,
+            changeSet = changeSet,
             repo = toRepo,
             repoTemplateGraph = repoTemplateGraph,
             templateDeep = templateDeep,
             resTemplateType = templateType,
-            getTemplateMethod = getTemplateMethod
+            getTemplateMethod = getTemplateMethod,
+            event = event
         ).replace(parameters = parameters)
         // 替换后的远程模板去除不必要参数
         resYamlObject.resources = null
@@ -884,20 +894,26 @@ class YamlTemplate(
             val template = if (repo == null) {
                 getTemplateMethod(
                     triggerToken,
+                    forkGitToken,
                     triggerProjectId,
                     null,
                     triggerRef,
                     null,
-                    path
+                    path,
+                    changeSet,
+                    event
                 )
             } else {
                 getTemplateMethod(
+                    null,
                     null,
                     sourceProjectId,
                     repo.repository,
                     repo.ref,
                     repo.credentials?.personalAccessToken,
-                    path
+                    path,
+                    null,
+                    null
                 )
             }
             setTemplate(path, template)
@@ -908,11 +924,14 @@ class YamlTemplate(
     private fun getTemplate(path: String, repo: Repositories): String {
         val template = getTemplateMethod(
             null,
+            null,
             sourceProjectId,
             repo.repository,
             repo.ref,
             repo.credentials?.personalAccessToken,
-            path
+            path,
+            changeSet,
+            null
         )
         setTemplate(path, template)
         return templates[path]!!

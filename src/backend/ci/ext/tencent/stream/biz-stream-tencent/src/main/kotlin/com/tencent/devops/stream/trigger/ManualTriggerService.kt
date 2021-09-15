@@ -199,7 +199,9 @@ class ManualTriggerService @Autowired constructor(
             originYaml = originYaml,
             filePath = buildPipeline.filePath,
             pipelineId = buildPipeline.pipelineId,
-            pipelineName = buildPipeline.displayName
+            pipelineName = buildPipeline.displayName,
+            event = null,
+            changeSet = null
         )!!
         val parsedYaml = YamlCommonUtils.toYamlNotNull(objects.preYaml)
         val gitBuildId = gitRequestEventBuildDao.save(

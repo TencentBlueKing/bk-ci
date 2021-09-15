@@ -28,9 +28,14 @@
 package com.tencent.devops.stream.trigger.template
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.common.exception.YamlBlankException
+import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.v2.service.OauthService
 import com.tencent.devops.stream.v2.service.ScmService
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -41,7 +46,8 @@ import org.springframework.stereotype.Service
 class YamlTemplateService @Autowired constructor(
     private val oauthService: OauthService,
     private val scmService: ScmService,
-    private val ticketService: TicketService
+    private val ticketService: TicketService,
+    private val yamlVersion: YamlVersion
 ) {
 
     companion object {
@@ -61,21 +67,41 @@ class YamlTemplateService @Autowired constructor(
     @Throws(YamlBlankException::class, YamlFormatException::class, JsonProcessingException::class)
     fun getTemplate(
         token: String?,
+        forkToken: String?,
         gitProjectId: Long,
         targetRepo: String?,
         ref: String?,
         personalAccessToken: String?,
-        fileName: String
+        fileName: String,
+        changeSet: Set<String>?,
+        event: GitEvent?
     ): String {
         if (token != null) {
-            val defaultBranch = getDefaultBranch(token, gitProjectId.toString())
-            return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
-                token = token,
-                gitProjectId = gitProjectId.toString(),
-                ref = ref ?: defaultBranch,
-                fileName = templateDirectory + fileName,
-                useAccessToken = true
-            ).ifBlank { throw YamlBlankException(templateDirectory + fileName) })
+            // 获取触发库的模板需要对比版本问题
+            val content = if (event is GitMergeRequestEvent && event.object_attributes.action ==
+                TGitMergeActionKind.MERGE.value
+            ) {
+                val (result, orgYaml) = yamlVersion.checkYmlVersion(
+                    mrEvent = event,
+                    targetGitToken = token,
+                    sourceGitToken = forkToken,
+                    filePath = templateDirectory + fileName,
+                    changeSet = changeSet ?: emptySet()
+                )
+                if (!result) {
+                    throw YamlBehindException(templateDirectory + fileName)
+                }
+                orgYaml
+            } else {
+                scmService.getYamlFromGit(
+                    token = forkToken ?: token,
+                    gitProjectId = gitProjectId.toString(),
+                    ref = ref!!,
+                    fileName = templateDirectory + fileName,
+                    useAccessToken = true
+                ).ifBlank { throw YamlBlankException(templateDirectory + fileName) }
+            }
+            return ScriptYmlUtils.formatYaml(content)
         }
         if (personalAccessToken.isNullOrBlank()) {
             val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
