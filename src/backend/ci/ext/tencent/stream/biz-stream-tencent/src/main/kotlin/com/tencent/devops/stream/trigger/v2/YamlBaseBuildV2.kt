@@ -56,6 +56,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
@@ -183,7 +184,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
             logger.info("GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
             buildId =
-                startupPipelineBuild(processClient, gitBuildId, model, event, gitCIBasicSetting, pipeline.pipelineId)
+                startupPipelineBuild(processClient, gitBuildId, model, event, gitCIBasicSetting, pipeline.pipelineId, pipeline.displayName)
             logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)
@@ -255,14 +256,15 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
         model: Model,
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
-        pipelineId: String
+        pipelineId: String,
+        pipelineName: String
     ): String {
         processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipelineId, model, channelCode)
         return client.get(ServiceBuildResource::class).manualStartup(
             userId = event.userId,
             projectId = gitCIBasicSetting.projectCode!!,
             pipelineId = pipelineId,
-            values = mapOf(),
+            values = mapOf(PIPELINE_NAME to pipelineName),
             channelCode = channelCode
         ).data!!.id
     }
