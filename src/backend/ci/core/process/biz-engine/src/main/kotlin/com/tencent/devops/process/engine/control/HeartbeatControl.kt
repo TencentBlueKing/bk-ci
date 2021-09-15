@@ -77,6 +77,7 @@ class HeartbeatControl @Autowired constructor(
         }
     }
 
+    @Suppress("ReturnCount")
     private fun timeout(event: PipelineContainerAgentHeartBeatEvent, elapse: Long) {
         val buildInfo = pipelineRuntimeService.getBuildInfo(event.buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
