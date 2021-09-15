@@ -121,7 +121,7 @@ class YamlBuildV2 @Autowired constructor(
                     pipeline = pipeline,
                     event = event,
                     gitCIBasicSetting = gitBasicSetting,
-                    model = creatTriggerModel(pipeline)
+                    model = creatTriggerModel(gitBasicSetting)
                 )
             }
             // 如果事件未传gitBuildId说明是不做触发只做流水线保存
@@ -185,8 +185,8 @@ class YamlBuildV2 @Autowired constructor(
         }
     }
 
-    private fun creatTriggerModel(pipeline: GitProjectPipeline) = Model(
-        name = pipeline.displayName,
+    private fun creatTriggerModel(gitBasicSetting: GitCIBasicSetting) = Model(
+        name = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
         desc = "",
         stages = listOf(
             Stage(
