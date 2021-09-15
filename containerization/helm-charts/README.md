@@ -212,7 +212,7 @@ $ helm uninstall bkci
 | `bkCiGatewayRegionName`  | 网关的区域 | `""` |
 | `bkCiGatewaySsmTokenUrl`  | 网关用户认证token验证URL的路径 | `""` |
 | `bkCiHome`  | CI根目录 | `/data/bkee/ci` |
-| `bkCiHost`  | CI域名 | `` |
+| `bkCiHost`  | CI域名 | `devops.example.com` |
 | `bkCiHttpsPort`  | CI使用https时的端口 | `80` |
 | `bkCiHttpPort`  | CI使用http时的端口 | `80` |
 | `bkCiIamCallbackUser`  | 供iam系统发起回调时使用的用户名 | `""` |
@@ -244,7 +244,8 @@ $ helm uninstall bkci
 | `bkCiPaasLoginUrl`  | 跳转到蓝鲸登录服务主页 | `""` |
 | `bkCiPrivateUrl`  | 蓝鲸集群内使用的url, 如iam回调ci时 | `""` |
 | `bkCiProcessEventConcurrent`  | process并发保护 | `10` |
-| `bkCiPublicUrl`  | CI的域名 | `` |
+| `bkCiPublicUrl`  | CI的域名 | `devops.example.com` |
+| `bkCiPublicHostIp` | 对外IP | `127.0.0.1` |
 | `bkCiRabbitmqAddr`  | rabbitmq地址 | `""` |
 | `bkCiRabbitmqPassword`  | rabbitmq密码 | `""` |
 | `bkCiRabbitmqUser`  | rabbitmq用户 | `""` |
