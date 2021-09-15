@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
@@ -67,6 +68,7 @@ class GitCILogService @Autowired constructor(
         logger.info("get init logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
         return client.get(ServiceLogResource::class).getInitLogs(
+            userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
             projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
             pipelineId = pipeline.pipelineId,
             buildId = buildId,
@@ -90,6 +92,7 @@ class GitCILogService @Autowired constructor(
         logger.info("get after logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
         return client.get(ServiceLogResource::class).getAfterLogs(
+            userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
             projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
             pipelineId = pipeline.pipelineId,
             buildId = buildId,
