@@ -1413,8 +1413,8 @@ class TXPipelineExportService @Autowired constructor(
             "steps.${nameAndValue.key}"
         } else if (!ciName.isNullOrBlank()) {
             ciName
-        } else {
+        } else if (!variables?.get(nameAndValue.key).isNullOrBlank()) {
             "variables.${nameAndValue.key}"
-        }
+        } else "${nameAndValue.key}"
     }
 }
