@@ -29,6 +29,7 @@ package com.tencent.devops.openapi.resources.apigw.v3
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
@@ -150,6 +151,28 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             buildId = buildId,
             tag = tag,
             jobId = jobId,
+            executeCount = executeCount
+        )
+    }
+
+    override fun getLogMode(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        tag: String,
+        executeCount: Int?,
+    ): Result<QueryLogStatus> {
+        logger.info(
+            "downloadLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId]" +
+                "executeCount[$executeCount] tag[$tag]"
+        )
+        return client.get(ServiceLogResource::class).getLogMode(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
             executeCount = executeCount
         )
     }
