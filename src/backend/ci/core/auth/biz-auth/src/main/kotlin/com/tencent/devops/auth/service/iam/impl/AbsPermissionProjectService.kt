@@ -136,14 +136,12 @@ abstract class AbsPermissionProjectService @Autowired constructor(
             return true
         }
         var checkProjectUser = false
-        val projectUsers = getProjectGroupAndUserList(projectCode)
-        projectUsers.forEach {
-            // 此处可以考虑将list内的用户全部加到cache里面,但是要考虑userList过大占用较大内存
-            if (it.userIdList.contains(userId)) {
-                iamCacheService.cacheProjectUser(userId, projectCode)
-                checkProjectUser = true
-                return@forEach
-            }
+
+        val extProjectId = getProjectId(projectCode)
+        val userGroupInfos = permissionRoleMemberService.getUserGroups(extProjectId, userId)
+        if (userGroupInfos != null && userGroupInfos.isNotEmpty()) {
+            iamCacheService.cacheProjectUser(userId, projectCode)
+            checkProjectUser = true
         }
         return checkProjectUser
     }

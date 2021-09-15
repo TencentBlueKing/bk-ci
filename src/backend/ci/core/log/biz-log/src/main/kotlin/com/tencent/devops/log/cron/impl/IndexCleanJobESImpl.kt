@@ -34,7 +34,7 @@ import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.cron.IndexCleanJob
 import com.tencent.devops.log.util.IndexNameUtils.LOG_INDEX_PREFIX
-import org.elasticsearch.action.admin.indices.close.CloseIndexRequest
+import org.elasticsearch.client.indices.CloseIndexRequest
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest
 import org.elasticsearch.client.indices.GetIndexRequest
 import org.elasticsearch.client.RequestOptions

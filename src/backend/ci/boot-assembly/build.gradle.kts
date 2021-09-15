@@ -62,10 +62,6 @@ dependencies {
     implementation(project(":core:websocket:biz-websocket-blueking"))
 }
 
-plugins {
-   `task-spring-boot-package`
-}
-
 configurations.all {
     exclude(group = "javax.ws.rs", module = "jsr311-api")
 }

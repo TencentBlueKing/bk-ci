@@ -29,9 +29,5 @@ dependencies {
     api(project(":core:dockerhost:biz-dockerhost"))
     api(project(":core:dockerhost:plugin-dockerhost-codecc"))
     api(project(":core:dockerhost:biz-dockerhost-sample"))
-    api(("com.squareup.okhttp3:okhttp:3.14.4"))
-}
-
-plugins {
-   `task-spring-boot-package`
+    api("com.squareup.okhttp3:okhttp")
 }

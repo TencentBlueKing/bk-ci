@@ -24,15 +24,13 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 import java.net.URI
 
 plugins {
-    kotlin
-    maven
-    `kotlin-spring`
     `maven-publish`
     signing
+    maven
+    java
 }
 
 val sourceJar = tasks.register<Jar>("sourceJar") {
@@ -218,12 +216,6 @@ tasks.getByName("signMavenJavaPublication") {
     onlyIf {
         project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
     }
-}
-
-val api by project.configurations
-dependencies {
-    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    api("org.jetbrains.kotlin:kotlin-reflect")
 }
 
 tasks.getByName<Upload>("uploadArchives") {
