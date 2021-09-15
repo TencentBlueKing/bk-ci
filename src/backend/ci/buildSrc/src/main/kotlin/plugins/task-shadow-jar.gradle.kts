@@ -31,11 +31,6 @@ plugins {
     application
 }
 
-var agentVersion: String? = System.getProperty("agent_version")
-if (agentVersion == null) {
-    agentVersion = project.version as String
-}
-
 tasks {
     getByName<Jar>("jar") {
         from("src/main/resources") {
@@ -43,7 +38,7 @@ tasks {
         }
 
         manifest {
-            attributes(mapOf("Implementation-Version" to agentVersion))
+            attributes(mapOf("Implementation-Version" to project.version))
         }
     }
 
