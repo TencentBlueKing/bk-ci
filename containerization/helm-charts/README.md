@@ -290,7 +290,7 @@ $ helm uninstall bkci
 
 ```shell
 $ helm install bkci bkee/bkci \
-  --set global.imageRegistry=your.registry.com \
+  --set global.imageRegistry=your.registry.com \
   --set gateway.host=your.bkci.com
 ```
 
