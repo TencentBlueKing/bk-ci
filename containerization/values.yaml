@@ -23,13 +23,13 @@ nginx-ingress-controller:
 gatewayImage:
   registry: mirrors.tencent.com/bkce
   repository: bkci/gateway
-  tag: 0.0.1
+  tag: 1.16.0
   pullPolicy: IfNotPresent 
   pullSecrets: []
 backendImage:
   registry: mirrors.tencent.com/bkce
   repository: bkci/backend
-  tag: 0.0.1
+  tag: 1.16.0
   pullPolicy: IfNotPresent 
   pullSecrets: []
 

@@ -52,7 +52,7 @@ $ helm uninstall bkci
 |---|---|---|
 | `registry` | 镜像仓库 | `mirrors.tencent.com/bkce` |
 | `repository` | 镜像名称 | `bkci/gateway` / `bkci/backend` |
-| `tag` | 镜像tag | 0.0.1 |
+| `tag` | 镜像tag | `1.16.0` |
 | `pullPolicy` | 镜像拉取策略 | `IfNotPresent` |
 | `pullSecrets` | 镜像拉取Secret名称数组 | `[]` |
 
