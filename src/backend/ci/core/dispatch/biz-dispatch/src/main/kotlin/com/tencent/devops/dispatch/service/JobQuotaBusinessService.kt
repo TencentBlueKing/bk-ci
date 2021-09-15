@@ -210,7 +210,7 @@ class JobQuotaBusinessService @Autowired constructor(
 
     fun checkWarning(projectId: String, vmType: JobQuotaVmType) {
         try {
-            checkSystemWarn(vmType)
+            // checkSystemWarn(vmType)
             checkProjectWarn(projectId, vmType)
         } catch (e: Throwable) {
             LOG.error("Send alert exception:", e)
