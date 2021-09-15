@@ -39,3 +39,5 @@ containerization/helm-charts/templates/configmap/tpl/
 containerization/docker-images/ci
 containerization/docker-images/*.gz
 containerization/values.json
+src/backend/turbo/**/build/
+src/backend/turbo/release/

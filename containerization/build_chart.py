@@ -24,7 +24,9 @@ default_value_dict = {
     'bkCiProcessEventConcurrent': '10',
     'bkCiLogsDir': '/data/logs',
     'bkCiHome': '/data/bkee/ci',
-    'bkCiGatewayDnsAddr': 'local=on'
+    'bkCiGatewayDnsAddr': 'local=on',
+    'bkCiEnvironmentAgentCollectorOn': 'false',
+    'bkHttpSchema':'http'
 }
 
 default_value_dict.update(json.load(open('./values.json')))
