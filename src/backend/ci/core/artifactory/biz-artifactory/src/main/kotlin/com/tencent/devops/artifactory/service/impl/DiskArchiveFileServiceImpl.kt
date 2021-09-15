@@ -49,7 +49,6 @@ import com.tencent.devops.common.archive.FileDigestUtils
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -70,7 +69,8 @@ import java.time.LocalDateTime
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.NotFoundException
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("UNUSED", "TooManyFunctions", "UnusedPrivateMember", "NestedBlockDepth", "MagicNumber")
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = "local")
 class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     @Value("\${artifactory.archiveLocalBasePath:/data/bkee/public/ci/artifactory/}")
@@ -143,11 +143,10 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     ): Count {
         val sourcePathPattern = getSourcePath(projectId, artifactoryType, path)
         val sourceParentPath = sourcePathPattern.substring(0, sourcePathPattern.lastIndexOf(fileSeparator))
-        val destPath = getTargetPath(targetProjectId, targetPath)
         return doAcrossProjectCopy(
             sourceParentPath = sourceParentPath,
             sourcePathPattern = sourcePathPattern,
-            destPath = destPath,
+            destPath = targetPath,
             targetProjectId = targetProjectId
         )
     }
@@ -168,19 +167,6 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(path))
         }
         return pathBuilder.append(path.removePrefix("/")).toString()
-    }
-
-    private fun getTargetPath(targetProjectId: String, targetPath: String?): String {
-        val pathBuilder = StringBuilder(getBasePath())
-            .append(FileTypeEnum.BK_CUSTOM.fileType).append(fileSeparator)
-            .append(targetProjectId).append(fileSeparator)
-        if (targetPath == null) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf("targetPath"))
-        }
-        if (targetPath.contains("..")) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(targetPath))
-        }
-        return pathBuilder.append(targetPath.removePrefix("/")).toString()
     }
 
     fun uploadFileToRepo(destPath: String, file: File) {
@@ -265,7 +251,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         return Page(
             count = fileCount,
             page = page ?: 1,
-            pageSize = pageSize ?: 100,
+            pageSize = pageSize ?: DEFAULT_PAGESIZE,
             totalPages = totalPages,
             records = fileInfoList
         )
@@ -281,7 +267,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         buildId: String?
     ): String {
         val destPathBuilder = StringBuilder(getBasePath()).append(fileType.fileType).append(fileSeparator)
-        if (!projectId.isBlank()) {
+        if (projectId.isNotBlank()) {
             destPathBuilder.append(projectId).append(fileSeparator)
         }
 
@@ -302,7 +288,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         } else {
             destPathBuilder.append(pipelineId).append(fileSeparator).append(buildId)
             if (!customFilePath.isNullOrBlank()) {
-                destPathBuilder.append(fileSeparator).append(customFilePath!!.removePrefix(fileSeparator))
+                destPathBuilder.append(fileSeparator).append(customFilePath.removePrefix(fileSeparator))
             }
         }
         val destPath = destPathBuilder.toString()
@@ -370,9 +356,20 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         val uploadFileName = fileName ?: file.name
         val fileTypeStr = fileType?.fileType ?: "file"
         val destPath = if (null == filePath) {
-            "${getBasePath()}$fileSeparator${getFolderName()}$fileSeparator$${DefaultPathUtils.randomFileName()}"
+            "${getBasePath()}$fileSeparator$fileTypeStr$fileSeparator$${DefaultPathUtils.randomFileName()}"
         } else {
-            if (filePath.startsWith(getBasePath())) "$filePath" else "${getBasePath()}$fileSeparator$filePath"
+            // #5176 修正未对上传类型来决定存放路径的问题，统一在此生成归档路径，而不是由外部指定会存在内部路径泄露风险
+            if (fileType != null && !projectId.isNullOrBlank()) {
+                generateDestPath(
+                    fileType = fileType,
+                    projectId = projectId,
+                    customFilePath = filePath,
+                    pipelineId = null,
+                    buildId = null
+                )
+            } else {
+                "${getBasePath()}$fileSeparator$filePath"
+            }
         }
         logger.info("$uploadFileName destPath is:$destPath")
         uploadFileToRepo(destPath, file)
@@ -474,7 +471,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
                         filePath = subFile.absolutePath
                     )
                     if (!url.isNullOrBlank()) {
-                        fileUrlList.add(url!!)
+                        fileUrlList.add(url)
                     }
                 }
             }
@@ -487,7 +484,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
                 filePath = file.absolutePath
             )
             if (!url.isNullOrBlank()) {
-                fileUrlList.add(url!!)
+                fileUrlList.add(url)
             }
         }
         return GetFileDownloadUrlsResponse(fileUrlList)
@@ -513,34 +510,6 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             return generateFileDownloadUrl(fileChannelType, destPath)
         }
         return null
-    }
-
-    private fun generateFileDownloadUrl(fileChannelType: FileChannelTypeEnum, destPath: String): String {
-        logger.info("generateFileDownloadUrl, fileChannelType: $fileChannelType, destPath: $destPath")
-        val urlPrefix = when (fileChannelType) {
-            FileChannelTypeEnum.WEB_SHOW -> {
-                HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
-                    "/ms/artifactory/api/user/artifactories/file/download"
-            }
-            FileChannelTypeEnum.WEB_DOWNLOAD -> {
-                HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
-                    "/ms/artifactory/api/user/artifactories/file/download/local"
-            }
-            FileChannelTypeEnum.SERVICE -> {
-                HomeHostUtil.getHost(commonConfig.devopsApiGateway!!) +
-                    "/ms/artifactory/api/service/artifactories/file/download"
-            }
-            FileChannelTypeEnum.BUILD -> {
-                HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!) +
-                    "/ms/artifactory/api/build/artifactories/file/download"
-            }
-        }
-        val filePath = URLEncoder.encode("/$destPath", "UTF-8")
-        return if (fileChannelType == FileChannelTypeEnum.WEB_SHOW) {
-            "$urlPrefix/${URLEncoder.encode(filePath, "UTF-8")}"
-        } else {
-            "$urlPrefix?filePath=$filePath"
-        }
     }
 
     private fun doAcrossProjectCopy(
@@ -620,15 +589,12 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         return flag
     }
 
-    private fun getFolderName(): String {
-        return "file"
-    }
-
     override fun deleteFile(filePath: String) {
         FileSystemUtils.deleteRecursively(File("$archiveLocalBasePath/$filePath"))
     }
 
     companion object {
+        private const val DEFAULT_PAGESIZE = 100
         private val logger = LoggerFactory.getLogger(DiskArchiveFileServiceImpl::class.java)
     }
 }
