@@ -73,24 +73,6 @@ interface UserFileResource {
         disposition: FormDataContentDisposition
     ): Result<String?>
 
-    @ApiOperation("上传文件")
-    @POST
-    @Path("/file/upload")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun uploadFile(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目代码", required = false)
-        @FormDataParam("projectCode")
-        projectCode: String?,
-        @ApiParam("文件", required = true)
-        @FormDataParam("file")
-        inputStream: InputStream,
-        @FormDataParam("file")
-        disposition: FormDataContentDisposition
-    ): Result<String?>
-
     @ApiOperation("下载文件到本地")
     @GET
     @Path("/file/download/local")

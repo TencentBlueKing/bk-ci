@@ -143,11 +143,10 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     ): Count {
         val sourcePathPattern = getSourcePath(projectId, artifactoryType, path)
         val sourceParentPath = sourcePathPattern.substring(0, sourcePathPattern.lastIndexOf(fileSeparator))
-        val destPath = getTargetPath(targetProjectId, targetPath)
         return doAcrossProjectCopy(
             sourceParentPath = sourceParentPath,
             sourcePathPattern = sourcePathPattern,
-            destPath = destPath,
+            destPath = targetPath,
             targetProjectId = targetProjectId
         )
     }
@@ -168,19 +167,6 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(path))
         }
         return pathBuilder.append(path.removePrefix("/")).toString()
-    }
-
-    private fun getTargetPath(targetProjectId: String, targetPath: String?): String {
-        val pathBuilder = StringBuilder(getBasePath())
-            .append(FileTypeEnum.BK_CUSTOM.fileType).append(fileSeparator)
-            .append(targetProjectId).append(fileSeparator)
-        if (targetPath == null) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf("targetPath"))
-        }
-        if (targetPath.contains("..")) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(targetPath))
-        }
-        return pathBuilder.append(targetPath.removePrefix("/")).toString()
     }
 
     fun uploadFileToRepo(destPath: String, file: File) {
@@ -370,9 +356,20 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         val uploadFileName = fileName ?: file.name
         val fileTypeStr = fileType?.fileType ?: "file"
         val destPath = if (null == filePath) {
-            "${getBasePath()}${fileSeparator}file$fileSeparator$${DefaultPathUtils.randomFileName()}"
+            "${getBasePath()}$fileSeparator$fileTypeStr$fileSeparator$${DefaultPathUtils.randomFileName()}"
         } else {
-            if (filePath.startsWith(getBasePath())) "$filePath" else "${getBasePath()}$fileSeparator$filePath"
+            // #5176 修正未对上传类型来决定存放路径的问题，统一在此生成归档路径，而不是由外部指定会存在内部路径泄露风险
+            if (fileType != null && !projectId.isNullOrBlank()) {
+                generateDestPath(
+                    fileType = fileType,
+                    projectId = projectId,
+                    customFilePath = filePath,
+                    pipelineId = null,
+                    buildId = null
+                )
+            } else {
+                "${getBasePath()}$fileSeparator$filePath"
+            }
         }
         logger.info("$uploadFileName destPath is:$destPath")
         uploadFileToRepo(destPath, file)

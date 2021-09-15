@@ -80,22 +80,6 @@ class UserFileResourceImpl @Autowired constructor(
         return Result(url)
     }
 
-    override fun uploadFile(
-        userId: String,
-        projectCode: String?,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<String?> {
-        val url = archiveFileService.uploadFile(
-            userId = userId,
-            inputStream = inputStream,
-            disposition = disposition,
-            projectId = projectCode,
-            fileChannelType = FileChannelTypeEnum.WEB_SHOW
-        )
-        return Result(url)
-    }
-
     override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
         val validateResult = archiveFileService.validateUserDownloadFilePermission(userId, filePath)
         if (!validateResult) {
