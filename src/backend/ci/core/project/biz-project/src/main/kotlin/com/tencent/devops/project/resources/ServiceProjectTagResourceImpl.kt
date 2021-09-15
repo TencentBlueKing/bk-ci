@@ -1,5 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -27,32 +25,19 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-plugins {
-    kotlin
-    id("com.github.johnrengelman.shadow")
-    application
-}
+package com.tencent.devops.project.resources
 
-tasks {
-    getByName<Jar>("jar") {
-        from("src/main/resources") {
-            include("*.*")
-        }
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.ServiceProjectTagResource
+import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.service.ProjectRouteTagService
+import org.springframework.beans.factory.annotation.Autowired
 
-        manifest {
-            attributes(mapOf("WorkerAgent-Version" to project.version))
-        }
-    }
-
-    named<ShadowJar>("shadowJar") {
-        mergeServiceFiles()
-        destinationDirectory.set(File("${rootDir}/release"))
-        archiveClassifier.set("")
-        archiveVersion.set("")
-        isZip64 = true
-    }
-
-    getByName("installDist") {
-        enabled = false
+@RestResource
+class ServiceProjectTagResourceImpl @Autowired constructor(
+    val projectRouteTag: ProjectRouteTagService
+) : ServiceProjectTagResource {
+    override fun checkProjectRouter(projectId: String): Result<Boolean> {
+        return Result(projectRouteTag.checkProjectTag(projectId))
     }
 }

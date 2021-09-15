@@ -68,8 +68,9 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.utils.CommitCheckUtils
+import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -94,7 +95,8 @@ class GitCIBuildFinishListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val qualityService: QualityService,
-    private val gitCheckService: GitCheckService
+    private val gitCheckService: GitCheckService,
+    private val triggerMessageUtil: StreamTriggerMessageUtils
 ) {
 
     @Value("\${rtx.corpid:#{null}}")
@@ -203,16 +205,18 @@ class GitCIBuildFinishListener @Autowired constructor(
                             null
                         }
 
-                        // 这里做个兼容，如果因为上面转换有问题，不能影响发送CommitCheck
-                        if (gitEvent != null) {
-                            if (!CommitCheckUtils.needSendCheck(gitEvent)) {
-                                return
-                            }
-                        }
-
                         gitCheckService.pushCommitCheck(
                             commitId = commitId,
-                            description = getDescByBuildStatus(buildStatus, pipeline.displayName),
+                            description = triggerMessageUtil.getCommitCheckDesc(
+                                prefix = getDescByBuildStatus(buildStatus, pipeline.displayName),
+                                objectKind = objectKind,
+                                action = if (gitEvent is GitMergeRequestEvent) {
+                                    StreamMrEventAction.getActionValue(gitEvent) ?: ""
+                                } else {
+                                    ""
+                                },
+                                userId = buildFinishEvent.userId
+                            ),
                             mergeRequestId = if (gitEvent is GitMergeRequestEvent) {
                                 gitEvent.object_attributes.id
                             } else {
@@ -232,7 +236,6 @@ class GitCIBuildFinishListener @Autowired constructor(
                                 pipelineName = pipeline.displayName,
                                 event = buildFinishEvent
                             ),
-                            isFinish = true,
                             targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                                 homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
                                 projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
@@ -285,7 +288,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 if (isV2) {
                     // 获取需要进行替换的variables
                     val variables =
-                        client.get(ServiceVarResource::class).getBuildVar(buildId = build.id, varName = null).data
+                        client.get(ServiceVarResource::class).getContextVar(buildId = build.id, contextName = null).data
                     val notices = YamlUtil.getObjectMapper().readValue(
                         event.normalizedYaml, ScriptBuildYaml::class.java
                     ).notices

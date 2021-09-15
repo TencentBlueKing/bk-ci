@@ -57,6 +57,7 @@ import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.utils.CommitCheckUtils
+import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,7 +76,8 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
     private val websocketService: GitCIV2WebsocketService,
     private val gitPipelineBranchService: GitPipelineBranchService,
     private val gitCheckService: GitCheckService,
-    private val streamGitConfig: StreamGitConfig
+    private val streamGitConfig: StreamGitConfig,
+    private val triggerMessageUtil: StreamTriggerMessageUtils
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(YamlBaseBuildV2::class.java)
@@ -84,7 +86,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    private val buildRunningDesc = "Your pipeline「%s」is running..."
+    private val buildRunningDesc = "Your pipeline「%s」is running."
 
     abstract fun gitStartBuild(
         pipeline: GitProjectPipeline,
@@ -190,18 +192,16 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
             if (CommitCheckUtils.needSendCheck(event)) {
                 gitCheckService.pushCommitCheck(
                     commitId = event.commitId,
-                    description = if (event.description.isNullOrBlank()) {
+                    description = triggerMessageUtil.getCommitCheckDesc(
+                        event,
                         buildRunningDesc.format(pipeline.displayName)
-                    } else {
-                        event.description ?: ""
-                    },
+                    ),
                     mergeRequestId = event.mergeRequestId ?: 0L,
                     buildId = buildId,
                     userId = event.userId,
                     status = GitCICommitCheckState.PENDING,
                     context = "${pipeline.filePath}@${event.objectKind.toUpperCase()}",
                     gitCIBasicSetting = gitCIBasicSetting,
-                    isFinish = false,
                     targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                         homePage = streamGitConfig.tGitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
                         projectName = GitCommonUtils.getRepoName(gitCIBasicSetting.gitHttpUrl, gitCIBasicSetting.name),

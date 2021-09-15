@@ -402,7 +402,7 @@ export const nodeOverview = {
         ],
         yAxis: [
             {
-                boundaryGap: [0, '2%'],
+                boundaryGap: [0, '50%'],
                 type: 'value',
                 axisLine: {
                     show: true,
@@ -420,12 +420,13 @@ export const nodeOverview = {
                 axisLabel: {
                     color: '#868b97',
                     formatter (value, index) {
+                        console.log(value)
                         if ((value / (8 * 1024 * 1024 * 1024)) > 1) {
-                            return `${(value / (8 * 1024 * 1024 * 1024)).toFixed(0)}G`
+                            return `${(value / (8 * 1024 * 1024 * 1024)).toFixed(1)}G`
                         } else if ((value / (8 * 1024 * 1024)) > 1) {
-                            return `${(value / (8 * 1024 * 1024)).toFixed(0)}MB`
+                            return `${(value / (8 * 1024 * 1024)).toFixed(1)}MB`
                         } else if ((value / (8 * 1024)) > 1) {
-                            return `${(value / (8 * 1024)).toFixed(0)}KB`
+                            return `${(value / (8 * 1024)).toFixed(1)}KB`
                         } else {
                             return `${value / 8}B`
                         }

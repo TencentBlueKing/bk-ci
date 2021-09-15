@@ -62,6 +62,7 @@ import com.tencent.devops.stream.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreate
+import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -79,6 +80,7 @@ class YamlBuildV2 @Autowired constructor(
     gitPipelineBranchService: GitPipelineBranchService,
     gitCheckService: GitCheckService,
     streamGitConfig: StreamGitConfig,
+    triggerMessageUtil: StreamTriggerMessageUtils,
     private val dslContext: DSLContext,
     private val gitCIBasicSettingDao: GitCIBasicSettingDao,
     private val redisOperation: RedisOperation,
@@ -86,7 +88,7 @@ class YamlBuildV2 @Autowired constructor(
 ) : YamlBaseBuildV2<ScriptBuildYaml>(
     client, kafkaClient, dslContext, gitPipelineResourceDao,
     gitRequestEventBuildDao, gitCIEventSaveService, websocketService, gitPipelineBranchService,
-    gitCheckService, streamGitConfig
+    gitCheckService, streamGitConfig, triggerMessageUtil
 ) {
 
     companion object {

@@ -38,5 +38,5 @@ dependencies {
     api(project(":core:artifactory:api-artifactory-store"))
     api(project(":core:store:model-store"))
     testImplementation(project(":core:common:common-test"))
-    api("net.coobird:thumbnailator:0.4.8")
+    api("net.coobird:thumbnailator")
 }
