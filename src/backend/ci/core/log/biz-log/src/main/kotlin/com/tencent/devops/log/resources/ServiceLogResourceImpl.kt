@@ -46,6 +46,7 @@ class ServiceLogResourceImpl @Autowired constructor(
 ) : ServiceLogResource {
 
     override fun getInitLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -55,6 +56,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         return buildLogQueryService.getInitLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -66,6 +68,7 @@ class ServiceLogResourceImpl @Autowired constructor(
     }
 
     override fun getMoreLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -79,6 +82,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         return buildLogQueryService.getMoreLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -94,6 +98,7 @@ class ServiceLogResourceImpl @Autowired constructor(
     }
 
     override fun getAfterLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -104,6 +109,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         return buildLogQueryService.getAfterLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -116,6 +122,7 @@ class ServiceLogResourceImpl @Autowired constructor(
     }
 
     override fun downloadLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -124,6 +131,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Response {
         return buildLogQueryService.downloadLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -135,6 +143,7 @@ class ServiceLogResourceImpl @Autowired constructor(
     }
 
     override fun getLogMode(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -142,6 +151,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         executeCount: Int?,
     ): Result<QueryLogStatus> {
         return buildLogQueryService.getLogMode(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
