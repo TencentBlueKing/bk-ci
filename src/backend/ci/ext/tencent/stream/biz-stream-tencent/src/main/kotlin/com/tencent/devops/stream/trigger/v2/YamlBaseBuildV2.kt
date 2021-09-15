@@ -123,6 +123,11 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                 pipelineId = pipeline.pipelineId,
                 branch = event.branch
             )
+            websocketService.pushPipelineWebSocket(
+                projectId = "git_${gitCIBasicSetting.gitProjectId}",
+                pipelineId = pipeline.pipelineId,
+                userId = event.userId
+            )
         } else if (needReCreate(processClient, event, gitCIBasicSetting, pipeline)) {
             val oldPipelineId = pipeline.pipelineId
             // 先删除已有数据
@@ -149,6 +154,11 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                 pipelineId = pipeline.pipelineId,
                 branch = event.branch
             )
+            websocketService.pushPipelineWebSocket(
+                projectId = "git_${gitCIBasicSetting.gitProjectId}",
+                pipelineId = pipeline.pipelineId,
+                userId = event.userId
+            )
         } else if (pipeline.pipelineId.isNotBlank()) {
             // 编辑流水线model
             processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipeline.pipelineId, model, channelCode)
@@ -162,11 +172,6 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                 version = ymlVersion
             )
         }
-        websocketService.pushPipelineWebSocket(
-            projectId = "git_${gitCIBasicSetting.gitProjectId}",
-            pipelineId = pipeline.pipelineId,
-            userId = event.userId
-        )
     }
 
     fun startBuild(
