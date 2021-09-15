@@ -68,8 +68,8 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -205,20 +205,13 @@ class GitCIBuildFinishListener @Autowired constructor(
                             null
                         }
 
-                        // 这里做个兼容，如果因为上面转换有问题，不能影响发送CommitCheck
-                        if (gitEvent != null) {
-                            if (!CommitCheckUtils.needSendCheck(gitEvent)) {
-                                return
-                            }
-                        }
-
                         gitCheckService.pushCommitCheck(
                             commitId = commitId,
                             description = triggerMessageUtil.getCommitCheckDesc(
                                 prefix = getDescByBuildStatus(buildStatus, pipeline.displayName),
                                 objectKind = objectKind,
                                 action = if (gitEvent is GitMergeRequestEvent) {
-                                    gitEvent.object_attributes.action
+                                    StreamMrEventAction.getActionValue(gitEvent) ?: ""
                                 } else {
                                     ""
                                 },
