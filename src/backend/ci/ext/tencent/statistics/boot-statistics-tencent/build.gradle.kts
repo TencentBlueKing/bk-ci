@@ -28,8 +28,3 @@
 dependencies {
     api(project(":ext:tencent:statistics:biz-statistics-tencent"))
 }
-
-
-plugins{
-    `task-spring-boot-package`
-}

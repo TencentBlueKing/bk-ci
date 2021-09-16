@@ -37,8 +37,6 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
@@ -69,6 +67,10 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
+import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -93,7 +95,8 @@ class GitCIBuildFinishListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val qualityService: QualityService,
-    private val gitCheckService: GitCheckService
+    private val gitCheckService: GitCheckService,
+    private val triggerMessageUtil: StreamTriggerMessageUtils
 ) {
 
     @Value("\${rtx.corpid:#{null}}")
@@ -192,31 +195,40 @@ class GitCIBuildFinishListener @Autowired constructor(
                 }
 
                 // 推送结束构建消息,当人工触发时不推送CommitCheck消息
-                if (objectKind != OBJECT_KIND_MANUAL) {
+                if (objectKind != TGitObjectKind.MANUAL.value) {
                     if (isV2) {
                         // gitRequestEvent中存的为mriid不是mrid
-                        val mrEvent = if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
-                            try {
-                                objectMapper.readValue<GitMergeRequestEvent>(record["EVENT"] as String)
-                            } catch (e: Throwable) {
-                                logger.error("push commit check get mergeId error ${e.message}")
-                                null
-                            }
-                        } else {
+                        val gitEvent = try {
+                            objectMapper.readValue<GitEvent>(record["EVENT"] as String)
+                        } catch (e: Throwable) {
+                            logger.error("push commit check get mergeId error ${e.message}")
                             null
                         }
 
                         gitCheckService.pushCommitCheck(
                             commitId = commitId,
-                            description = getDescByBuildStatus(buildStatus, pipeline.displayName),
-                            mergeRequestId = mrEvent?.object_attributes?.id ?: 0L,
+                            description = triggerMessageUtil.getCommitCheckDesc(
+                                prefix = getDescByBuildStatus(buildStatus, pipeline.displayName),
+                                objectKind = objectKind,
+                                action = if (gitEvent is GitMergeRequestEvent) {
+                                    StreamMrEventAction.getActionValue(gitEvent) ?: ""
+                                } else {
+                                    ""
+                                },
+                                userId = buildFinishEvent.userId
+                            ),
+                            mergeRequestId = if (gitEvent is GitMergeRequestEvent) {
+                                gitEvent.object_attributes.id
+                            } else {
+                                0L
+                            },
                             buildId = buildFinishEvent.buildId,
                             userId = buildFinishEvent.userId,
                             status = state,
                             context = "${pipeline.filePath}@${objectKind.toUpperCase()}",
                             gitCIBasicSetting = v2GitSetting!!,
                             pipelineId = buildFinishEvent.pipelineId,
-                            block = (objectKind == OBJECT_KIND_MERGE_REQUEST && !buildStatus.isSuccess() &&
+                            block = (objectKind == TGitObjectKind.MERGE_REQUEST.value && !buildStatus.isSuccess() &&
                                 v2GitSetting.enableMrBlock),
                             reportData = qualityService.getQualityGitMrResult(
                                 client = client,
@@ -224,7 +236,6 @@ class GitCIBuildFinishListener @Autowired constructor(
                                 pipelineName = pipeline.displayName,
                                 event = buildFinishEvent
                             ),
-                            isFinish = true,
                             targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                                 homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
                                 projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
@@ -277,7 +288,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 if (isV2) {
                     // 获取需要进行替换的variables
                     val variables =
-                        client.get(ServiceVarResource::class).getBuildVar(buildId = build.id, varName = null).data
+                        client.get(ServiceVarResource::class).getContextVar(buildId = build.id, contextName = null).data
                     val notices = YamlUtil.getObjectMapper().readValue(
                         event.normalizedYaml, ScriptBuildYaml::class.java
                     ).notices

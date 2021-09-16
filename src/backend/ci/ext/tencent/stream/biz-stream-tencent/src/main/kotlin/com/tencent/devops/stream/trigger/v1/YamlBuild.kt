@@ -32,10 +32,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
-import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
-import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -108,6 +104,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -355,7 +352,7 @@ class YamlBuild @Autowired constructor(
         val gitToken = client.getScm(ServiceGitResource::class).getToken(gitProjectConf.gitProjectId).data!!
         logger.info("get token from scm success, gitToken: $gitToken")
         val gitCiCodeRepoInput = when (event.objectKind) {
-            OBJECT_KIND_PUSH -> {
+            TGitObjectKind.PUSH.value -> {
                 GitCiCodeRepoInput(
                     repositoryName = gitProjectConf.name,
                     repositoryUrl = gitProjectConf.gitHttpUrl,
@@ -366,7 +363,7 @@ class YamlBuild @Autowired constructor(
                     refName = event.commitId
                 )
             }
-            OBJECT_KIND_TAG_PUSH -> {
+            TGitObjectKind.TAG_PUSH.value -> {
                 GitCiCodeRepoInput(
                     repositoryName = gitProjectConf.name,
                     repositoryUrl = gitProjectConf.gitHttpUrl,
@@ -377,7 +374,7 @@ class YamlBuild @Autowired constructor(
                     refName = event.branch.removePrefix("refs/tags/")
                 )
             }
-            OBJECT_KIND_MERGE_REQUEST -> {
+            TGitObjectKind.MERGE_REQUEST.value -> {
                 // MR时fork库的源仓库URL会不同，需要单独拿出来处理
                 val gitEvent = objectMapper.readValue<GitEvent>(event.event) as GitMergeRequestEvent
                 GitCiCodeRepoInput(
@@ -401,7 +398,7 @@ class YamlBuild @Autowired constructor(
                     hookTargetUrl = gitProjectConf.gitHttpUrl
                 )
             }
-            OBJECT_KIND_MANUAL -> {
+            TGitObjectKind.MANUAL.value -> {
                 GitCiCodeRepoInput(
                     repositoryName = gitProjectConf.name,
                     repositoryUrl = gitProjectConf.gitHttpUrl,

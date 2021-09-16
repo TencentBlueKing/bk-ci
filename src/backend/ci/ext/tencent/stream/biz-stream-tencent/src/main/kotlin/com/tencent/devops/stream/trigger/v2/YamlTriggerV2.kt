@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.trigger.v2
 
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
@@ -38,7 +37,6 @@ import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerBaseException
 import com.tencent.devops.stream.common.exception.TriggerException.Companion.triggerError
@@ -53,17 +51,14 @@ import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.v2.YamlObjects
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
-import com.tencent.devops.stream.v2.common.CommonConst
-import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.v2.service.ScmService
 import com.tencent.devops.stream.trigger.template.YamlTemplate
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
-import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
 import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
-import com.tencent.devops.stream.v2.utils.V2WebHookMatcher
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import io.jsonwebtoken.io.IOException
+import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
+import com.tencent.devops.stream.trigger.parsers.YamlCheck
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,16 +70,15 @@ class YamlTriggerV2 @Autowired constructor(
     private val scmService: ScmService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitBasicSettingService: GitCIBasicSettingService,
-    private val gitCIEventSaveService: GitCIEventService,
     private val yamlTemplateService: YamlTemplateService,
-    private val v2WebHookMatcher: V2WebHookMatcher,
-    private val redisOperation: RedisOperation,
+    private val triggerMatcher: TriggerMatcher,
+    private val yamlCheck: YamlCheck,
     private val yamlBuildV2: YamlBuildV2
 ) : YamlTriggerInterface<YamlObjects> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(YamlTriggerV2::class.java)
-        private const val ymlVersion = "v2.0"
+        const val ymlVersion = "v2.0"
 
         // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
         private const val STREAM_TEMPLATE_ROOT_FILE = "STREAM_TEMPLATE_ROOT_FILE"
@@ -102,40 +96,12 @@ class YamlTriggerV2 @Autowired constructor(
         if (originYaml.isNullOrBlank()) {
             return false
         }
-        // 触发器需要将 on: 转为 TriggeriOn:
-        val (isTrigger, isTiming) = isMatch(
+
+        val (isTrigger, isTiming) = triggerMatcher.isMatch(
             event = event,
             gitRequestEvent = gitRequestEvent,
             pipeline = gitProjectPipeline,
-            originYaml = try {
-                ScriptYmlUtils.formatYaml(originYaml)
-            } catch (e: JsonProcessingException) {
-                triggerError(
-                    request = gitRequestEvent,
-                    event = event,
-                    pipeline = gitProjectPipeline,
-                    reason = TriggerReason.CI_YAML_INVALID,
-                    reasonParams = listOf(e.message ?: ""),
-                    yamls = Yamls(originYaml, null, null),
-                    commitCheck = CommitCheck(
-                        block = event is GitMergeRequestEvent,
-                        state = GitCICommitCheckState.FAILURE
-                    )
-                )
-            } catch (e: TypeCastException) {
-                triggerError(
-                    request = gitRequestEvent,
-                    event = event,
-                    pipeline = gitProjectPipeline,
-                    reason = TriggerReason.CI_YAML_INVALID,
-                    reasonParams = listOf(e.message ?: ""),
-                    yamls = Yamls(originYaml, null, null),
-                    commitCheck = CommitCheck(
-                        block = event is GitMergeRequestEvent,
-                        state = GitCICommitCheckState.FAILURE
-                    )
-                )
-            }
+            originYaml = originYaml
         )
 
         if (!isTrigger && !isTiming) {
@@ -227,38 +193,6 @@ class YamlTriggerV2 @Autowired constructor(
         return true
     }
 
-    fun isMatch(
-        event: GitEvent,
-        gitRequestEvent: GitRequestEvent,
-        pipeline: GitProjectPipeline,
-        originYaml: String
-    ): Pair<Boolean, Boolean> {
-        val newYaml =
-            try {
-                YamlUtil.getObjectMapper()
-                    .readValue(originYaml, object : TypeReference<NoReplaceTemplate>() {})
-            } catch (e: JsonProcessingException) {
-                triggerError(
-                    request = gitRequestEvent,
-                    event = event,
-                    pipeline = pipeline,
-                    reason = TriggerReason.CI_YAML_INVALID,
-                    reasonParams = listOf(e.message ?: ""),
-                    yamls = Yamls(originYaml, null, null),
-                    commitCheck = CommitCheck(
-                        block = event is GitMergeRequestEvent,
-                        state = GitCICommitCheckState.FAILURE
-                    )
-                )
-            }
-
-        return v2WebHookMatcher.isMatch(
-            triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
-            event = event,
-            gitRequestEvent = gitRequestEvent
-        )
-    }
-
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
     override fun prepareCIBuildYaml(
         gitToken: GitToken,
@@ -276,113 +210,32 @@ class YamlTriggerV2 @Autowired constructor(
         logger.info("input yamlStr: $originYaml")
         val isFork = (isMr) && gitRequestEvent.sourceGitProjectId != null &&
             gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
-        val preTemplateYamlObject = formatAndCheckYaml(
+        val preTemplateYamlObject = yamlCheck.formatAndCheckYaml(
             originYaml = originYaml,
             gitRequestEvent = gitRequestEvent,
-            pipelineId = pipelineId,
             filePath = filePath,
-            isMr = isMr,
-            pipelineName = pipelineName
-        ) ?: return null
+            isMr = isMr
+        )
         return replaceYamlTemplate(
             isFork = isFork,
             isMr = isMr,
             gitToken = gitToken,
             forkGitToken = forkGitToken,
             preTemplateYamlObject = preTemplateYamlObject,
-            filePath = filePath ?: STREAM_TEMPLATE_ROOT_FILE,
+            filePath = filePath.ifBlank { STREAM_TEMPLATE_ROOT_FILE },
             gitRequestEvent = gitRequestEvent,
-            pipelineId = pipelineId,
-            originYaml = originYaml,
-            pipelineName = pipelineName
+            originYaml = originYaml
         )
     }
 
     override fun checkYamlSchema(userId: String, yaml: String): Result<String> {
         return try {
-            checkYamlSchema(yaml)
+            yamlCheck.formatAndCheckYaml(yaml)
 
             Result("OK")
         } catch (e: Exception) {
             logger.error("Check yaml schema failed.", e)
             Result(1, "Invalid yaml: ${e.message}")
-        }
-    }
-
-    @Throws(
-        JsonProcessingException::class,
-        RuntimeException::class,
-        IOException::class,
-        Exception::class,
-        YamlFormatException::class
-    )
-    private fun checkYamlSchema(yaml: String): PreTemplateScriptBuildYaml {
-        val formatYamlStr = ScriptYmlUtils.formatYaml(yaml)
-        val yamlJsonStr = ScriptYmlUtils.convertYamlToJson(formatYamlStr)
-
-        val gitciYamlSchema = redisOperation.get(CommonConst.REDIS_STREAM_YAML_SCHEMA)
-            ?: throw RuntimeException("Check Schema is null.")
-
-        val (schemaPassed, errorMessage) = ScriptYmlUtils.validate(
-            schema = gitciYamlSchema,
-            yamlJson = yamlJsonStr
-        )
-
-        // 先做总体的schema校验
-        if (!schemaPassed) {
-            logger.warn("Check yaml schema failed. $errorMessage")
-            throw YamlFormatException(errorMessage)
-        }
-
-        val preTemplateYamlObject =
-            YamlUtil.getObjectMapper().readValue(formatYamlStr, PreTemplateScriptBuildYaml::class.java)
-        // 检查Yaml语法的格式问题
-        ScriptYmlUtils.checkYaml(preTemplateYamlObject, yaml)
-
-        return preTemplateYamlObject
-    }
-
-    @Throws(TriggerBaseException::class, ErrorCodeException::class)
-    private fun formatAndCheckYaml(
-        originYaml: String,
-        gitRequestEvent: GitRequestEvent,
-        pipelineId: String?,
-        pipelineName: String?,
-        filePath: String,
-        isMr: Boolean
-    ): PreTemplateScriptBuildYaml? {
-        return try {
-            checkYamlSchema(originYaml)
-        } catch (e: Throwable) {
-            logger.info("gitRequestEvent ${gitRequestEvent.id} git ci yaml is invalid", e)
-            val (block, message, reason) = when (e) {
-                is YamlFormatException, is CustomException -> {
-                    Triple(isMr, e.message, TriggerReason.CI_YAML_INVALID)
-                }
-                is IOException, is TypeCastException -> {
-                    Triple(isMr, e.message, TriggerReason.CI_YAML_INVALID)
-                }
-                // 指定异常直接扔出在外面统一处理
-                is TriggerBaseException, is ErrorCodeException -> {
-                    throw e
-                }
-                else -> {
-                    logger.error("event: ${gitRequestEvent.id} unknow error: ${e.message}")
-                    Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
-                }
-            }
-            triggerError(
-                request = gitRequestEvent,
-                filePath = filePath,
-                reason = reason,
-                reasonParams = listOf(message ?: ""),
-                yamls = Yamls(originYaml, null, null),
-                version = ymlVersion,
-                commitCheck = CommitCheck(
-                    block = block,
-                    state = GitCICommitCheckState.FAILURE
-                )
-            )
         }
     }
 
@@ -395,10 +248,8 @@ class YamlTriggerV2 @Autowired constructor(
         preTemplateYamlObject: PreTemplateScriptBuildYaml,
         filePath: String,
         gitRequestEvent: GitRequestEvent,
-        originYaml: String?,
-        pipelineId: String?,
-        pipelineName: String?
-    ): YamlObjects? {
+        originYaml: String?
+    ): YamlObjects {
         // 替换yaml文件中的模板引用
         try {
             val preYamlObject = YamlTemplate(

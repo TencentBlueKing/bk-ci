@@ -304,7 +304,7 @@ class LambdaDataService @Autowired constructor(
                     gitUrl = inputMap["repositoryUrl"].toString()
                     sendGitTask2Kafka(atomCode as String, task, gitUrl)
                 }
-                 "PullFromGithub", "GitLab" -> {
+                "PullFromGithub", "GitLab" -> {
                     val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
                     val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
                     val repositoryHashId = if (atomCode == "Gitlab") {
@@ -330,8 +330,10 @@ class LambdaDataService @Autowired constructor(
                     )
 
                     val gitRepository = client.get(ServiceRepositoryResource::class)
-                        .get(projectId = event.projectId, repositoryId = repositoryConfig.getRepositoryId(),
-                            repositoryType = RepositoryType.parseType(repositoryType))
+                        .get(
+                            projectId = event.projectId, repositoryId = repositoryConfig.getRepositoryId(),
+                            repositoryType = RepositoryType.parseType(repositoryType)
+                        )
                     gitUrl = gitRepository.data!!.url
                     if (gitUrl.isNotBlank()) {
                         sendGitTask2Kafka(atomCode as String, task, gitUrl)
@@ -357,8 +359,10 @@ class LambdaDataService @Autowired constructor(
                             )
 
                             val gitRepository = client.get(ServiceRepositoryResource::class)
-                                .get(projectId = event.projectId, repositoryId = repositoryConfig.getRepositoryId(),
-                                    repositoryType = RepositoryType.parseType(repositoryType))
+                                .get(
+                                    projectId = event.projectId, repositoryId = repositoryConfig.getRepositoryId(),
+                                    repositoryType = RepositoryType.parseType(repositoryType)
+                                )
                             gitRepository.data!!.url
                         }
                         else -> ""

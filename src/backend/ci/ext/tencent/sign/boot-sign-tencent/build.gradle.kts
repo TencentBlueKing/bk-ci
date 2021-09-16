@@ -29,8 +29,3 @@ dependencies {
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":ext:tencent:sign:biz-sign-tencent"))
 }
-
-
-plugins{
-    `task-spring-boot-package`
-}
