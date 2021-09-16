@@ -1,4 +1,4 @@
-USE devops_ci_codecc_dispatch;
+USE devops_ci_dispatch_codecc;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;

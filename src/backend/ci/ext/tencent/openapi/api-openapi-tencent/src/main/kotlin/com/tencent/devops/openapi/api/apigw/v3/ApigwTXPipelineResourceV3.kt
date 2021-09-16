@@ -1,8 +1,11 @@
 package com.tencent.devops.openapi.api.apigw.v3
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.PipelineExportV2YamlData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -24,8 +27,14 @@ interface ApigwTXPipelineResourceV3 {
     @GET
     @Path("/{pipelineId}/stream/yaml")
     fun exportPipelineGitCI(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam(value = "项目ID", required = true)
         @PathParam("projectId")
@@ -33,5 +42,5 @@ interface ApigwTXPipelineResourceV3 {
         @ApiParam(value = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String
-    ): Result<String>
+    ): Result<PipelineExportV2YamlData>
 }

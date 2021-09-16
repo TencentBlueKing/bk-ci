@@ -76,6 +76,7 @@ class AuthCertService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = it.certId
             entity.displayName = it.certId
+            entity.iamApprover = arrayListOf(it.creator)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${certInfos.size.toLong()}")
@@ -112,6 +113,6 @@ class AuthCertService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(AuthCertService::class.java)
     }
 }

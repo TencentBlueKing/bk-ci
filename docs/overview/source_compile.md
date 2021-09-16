@@ -62,7 +62,7 @@ yarn public
 
 - MySQL 5.7
 - JDK 1.8
-- Gradle 4.8 - 4.10 
+- Gradle 6.7
 
 #### 数据库初始化
 

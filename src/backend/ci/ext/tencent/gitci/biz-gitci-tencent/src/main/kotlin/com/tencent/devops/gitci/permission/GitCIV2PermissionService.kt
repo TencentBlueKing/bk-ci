@@ -34,7 +34,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
-import com.tencent.devops.gitci.v2.exception.GitCINoEnableException
+import com.tencent.devops.gitci.common.exception.GitCINoEnableException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -120,7 +120,7 @@ class GitCIV2PermissionService @Autowired constructor(
         if (result == null || !result) {
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                "用户不具备当前工蜂项目下开发者或更高权限"
+                "Permission denied."
             )
         }
     }

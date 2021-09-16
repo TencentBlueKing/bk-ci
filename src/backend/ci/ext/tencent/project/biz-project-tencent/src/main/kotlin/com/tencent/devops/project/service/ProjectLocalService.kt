@@ -48,7 +48,7 @@ import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.gitci.api.service.ServiceGitForAppResource
+import com.tencent.devops.stream.api.service.ServiceGitForAppResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -92,11 +92,12 @@ class ProjectLocalService @Autowired constructor(
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi,
     private val projectService: ProjectService,
-    private val projectIamV0Service: ProjectIamV0Service,
     private val projectTagService: ProjectTagService,
     private val client: Client,
     private val projectPermissionService: ProjectPermissionService,
-    private val txProjectServiceImpl: TxProjectServiceImpl
+    private val txProjectServiceImpl: TxProjectServiceImpl,
+    private val projectExtPermissionService: ProjectExtPermissionService,
+    private val projectIamV0Service: ProjectIamV0Service
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -627,12 +628,20 @@ class ProjectLocalService @Autowired constructor(
             }
         }
         if (isCreate) {
-            return projectIamV0Service.createUser2ProjectImpl(
-                userIds = arrayListOf(userId),
-                projectId = projectCode,
+            return projectExtPermissionService.createUser2Project(
+                createUser = "", // 应用态无需校验创建者身份
+                projectCode = projectCode,
                 roleId = roleId,
-                roleName = roleName
+                roleName = roleName,
+                userIds = arrayListOf(userId),
+                checkManager = false
             )
+//            return projectIamV0Service.createUser2ProjectImpl(
+//                userIds = arrayListOf(userId),
+//                projectId = projectCode,
+//                roleId = roleId,
+//                roleName = roleName
+//            )
         } else {
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))

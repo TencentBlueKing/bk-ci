@@ -65,7 +65,7 @@ class DevCloudService @Autowired constructor(
     private val devCloudClient: DevCloudClient
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(DevCloudService::class.java)
     }
 
     @Value("\${registry.host}")

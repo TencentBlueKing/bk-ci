@@ -44,7 +44,7 @@ class ServiceExperienceAuthResourceImpl @Autowired constructor(
     override fun experienceTaskInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
-        val projectId = callBackInfo.filter.parent.id
+        val projectId = callBackInfo.filter.parent?.id ?: "" // FETCH_INSTANCE_INFO场景下iam不会传parentId
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
                 return authExperienceService.getExperienceTask(
@@ -74,7 +74,7 @@ class ServiceExperienceAuthResourceImpl @Autowired constructor(
     override fun experienceGroup(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
-        val projectId = callBackInfo.filter.parent.id
+        val projectId = callBackInfo.filter.parent?.id ?: "" // FETCH_INSTANCE_INFO场景下iam不会传parentId
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
                 return authExperienceService.getExperienceGroup(

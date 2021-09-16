@@ -55,7 +55,7 @@ data class DetailWebsocketPush(
 ) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(DetailWebsocketPush::class.java)
         private val pipelineBuildService = SpringContextUtil.getBean(PipelineBuildFacadeService::class.java)
     }
 

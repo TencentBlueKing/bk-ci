@@ -116,7 +116,7 @@ class GitCIDetailService @Autowired constructor(
         return GitCIModelDetail(pipeline, realEvent, modelDetail)
     }
 
-    fun batchGetBuildDetail(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitCIBuildHistory> {
+    fun batchGetBuildHistory(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitCIBuildHistory> {
         val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"

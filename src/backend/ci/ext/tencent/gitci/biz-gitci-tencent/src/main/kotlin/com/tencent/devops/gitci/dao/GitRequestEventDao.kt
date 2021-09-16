@@ -30,7 +30,7 @@ package com.tencent.devops.gitci.dao
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.model.gitci.tables.TGitRequestEvent
+import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -116,9 +116,9 @@ class GitRequestEventDao {
                     mergeRequestId = record.mergeRequestId,
                     event = "", // record.event,
                     description = if (record.description.isNullOrBlank()) {
-                        record.description
-                    } else {
                         record.commitMessage
+                    } else {
+                        record.description
                     },
                     mrTitle = record.mrTitle
                 )
@@ -158,9 +158,9 @@ class GitRequestEventDao {
                     mergeRequestId = record.mergeRequestId,
                     event = record.event,
                     description = if (record.description.isNullOrBlank()) {
-                        record.description
-                    } else {
                         record.commitMessage
+                    } else {
+                        record.description
                     },
                     mrTitle = record.mrTitle
                 )
@@ -200,9 +200,9 @@ class GitRequestEventDao {
                         mergeRequestId = it.mergeRequestId,
                         event = "", // record.event,
                         description = if (it.description.isNullOrBlank()) {
-                            it.description
-                        } else {
                             it.commitMessage
+                        } else {
+                            it.description
                         },
                         mrTitle = it.mrTitle
                     )
@@ -245,9 +245,9 @@ class GitRequestEventDao {
                         mergeRequestId = it.mergeRequestId,
                         event = "", // record.event,
                         description = if (it.description.isNullOrBlank()) {
-                            it.description
-                        } else {
                             it.commitMessage
+                        } else {
+                            it.description
                         },
                         mrTitle = it.mrTitle
                     )
@@ -318,7 +318,8 @@ class GitRequestEventDao {
      */
     fun getRequestsById(
         dslContext: DSLContext,
-        requestIds: Set<Int>
+        requestIds: Set<Int>,
+        hasEvent: Boolean
     ): List<GitRequestEvent> {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             val records = dslContext.selectFrom(this)
@@ -343,11 +344,15 @@ class GitRequestEventDao {
                         userId = it.userName,
                         totalCommitCount = it.totalCommitCount,
                         mergeRequestId = it.mergeRequestId,
-                        event = "", // record.event,
-                        description = if (it.description.isNullOrBlank()) {
-                            it.description
+                        event = if (hasEvent) {
+                            it.event
                         } else {
+                            ""
+                        },
+                        description = if (it.description.isNullOrBlank()) {
                             it.commitMessage
+                        } else {
+                            it.description
                         },
                         mrTitle = it.mrTitle
                     )

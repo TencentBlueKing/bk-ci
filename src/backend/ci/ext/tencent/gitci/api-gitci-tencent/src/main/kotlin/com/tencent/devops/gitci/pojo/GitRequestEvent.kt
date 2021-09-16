@@ -35,36 +35,37 @@ import io.swagger.annotations.ApiModelProperty
 data class GitRequestEvent(
     @ApiModelProperty("ID")
     var id: Long?,
-    @ApiModelProperty("OBJECT_KIND")
+    @ApiModelProperty("事件类型")
     val objectKind: String,
-    @ApiModelProperty("OPERATION_KIND")
+    @ApiModelProperty("操作类型")
     val operationKind: String?,
-    @ApiModelProperty("EXTENSION_ACTION")
+    @ApiModelProperty("拓展操作")
     val extensionAction: String?,
-    @ApiModelProperty("GIT_PROJECT_ID")
+    @ApiModelProperty("工蜂项目ID")
     val gitProjectId: Long,
-    @ApiModelProperty("SOURCE_GIT_PROJECT_ID")
+    @ApiModelProperty("源工蜂项目ID")
     val sourceGitProjectId: Long?,
-    @ApiModelProperty("BRANCH")
+    @ApiModelProperty("分支名")
     val branch: String,
-    @ApiModelProperty("TARGET_BRANCH")
+    @ApiModelProperty("目标分支名")
     val targetBranch: String?,
-    @ApiModelProperty("COMMIT_ID")
+    @ApiModelProperty("提交ID")
     val commitId: String,
-    @ApiModelProperty(value = "COMMIT_MESSAGE", name = "数据库由原COMMIT_MSG改为COMMIT_MESSAGE")
+    @ApiModelProperty("提交说明")
     val commitMsg: String?,
-    @ApiModelProperty("COMMIT_TIMESTAMP")
+    @ApiModelProperty("提交时间")
     val commitTimeStamp: String?,
     @ApiModelProperty("用户")
     val userId: String,
-    @ApiModelProperty("TOTAL_COMMIT_COUNT")
+    @ApiModelProperty("提交总数")
     val totalCommitCount: Long,
-    @ApiModelProperty("MERGE_REQUEST_ID")
+    // todo: 这里保存的是MR 的 iid 不是 mrId
+    @ApiModelProperty("合并请求ID")
     val mergeRequestId: Long?,
-    @ApiModelProperty("EVENT")
+    @ApiModelProperty("事件原文")
     val event: String,
-    @ApiModelProperty("DESCRIPTION")
+    @ApiModelProperty("描述（已废弃）")
     var description: String?,
-    @ApiModelProperty("MR_TITLE")
+    @ApiModelProperty("合并请求标题")
     var mrTitle: String?
 )

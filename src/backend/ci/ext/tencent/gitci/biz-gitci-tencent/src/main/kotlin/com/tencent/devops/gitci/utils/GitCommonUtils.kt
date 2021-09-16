@@ -46,8 +46,13 @@ object GitCommonUtils {
 
     private const val projectPrefix = "git_"
 
+    // 获取 name/projectName格式的项目名称
     fun getRepoName(httpUrl: String, name: String): String {
-        return getRepoOwner(httpUrl) + "/" + name
+        return try {
+            getRepoOwner(httpUrl) + "/" + name
+        } catch (e: Throwable) {
+            name
+        }
     }
 
     fun getRepoOwner(httpUrl: String): String {
@@ -146,7 +151,8 @@ object GitCommonUtils {
                 realEvent = gitRequestEvent.copy(
                     // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
                     branch = if (sourceRepositoryConf != null) {
-                        "${sourceRepositoryConf.pathWithNamespace.split("/")[0]}:${gitRequestEvent.branch}"
+                        val path = sourceRepositoryConf.pathWithNamespace ?: sourceRepositoryConf.nameWithNamespace
+                        "${path.split("/")[0]}:${gitRequestEvent.branch}"
                     } else {
                         gitRequestEvent.branch
                     }
@@ -169,7 +175,8 @@ object GitCommonUtils {
                     .accessToken, sourceGitProjectId).data
                 // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
                 return if (sourceRepositoryConf != null) {
-                    "${sourceRepositoryConf.pathWithNamespace.split("/")[0]}:$branch"
+                    val path = sourceRepositoryConf.pathWithNamespace ?: sourceRepositoryConf.nameWithNamespace
+                    "${path.split("/")[0]}:$branch"
                 } else {
                     branch
                 }
@@ -192,6 +199,10 @@ object GitCommonUtils {
         }
     }
 
+    // 获取蓝盾项目名称
+    fun getCiProjectId(gitProjectId: Long) = "${projectPrefix}$gitProjectId"
+
+    @Throws(ParamBlankException::class)
     fun getCredential(
         client: Client,
         projectId: String,
@@ -205,7 +216,7 @@ object GitCommonUtils {
             encoder.encodeToString(pair.publicKey))
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             logger.error("Fail to get the credential($credentialId) of project($projectId) " +
-                    "because of ${credentialResult.message}")
+                "because of ${credentialResult.message}")
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }
 
@@ -218,35 +229,35 @@ object GitCommonUtils {
         val ticketMap = mutableMapOf<String, String>()
         val v1 = String(
             DHUtil.decrypt(
-            decoder.decode(credential.v1),
-            decoder.decode(credential.publicKey),
-            pair.privateKey))
+                decoder.decode(credential.v1),
+                decoder.decode(credential.publicKey),
+                pair.privateKey))
         ticketMap["v1"] = v1
 
         if (credential.v2 != null && credential.v2!!.isNotEmpty()) {
             val v2 = String(
                 DHUtil.decrypt(
-                decoder.decode(credential.v2),
-                decoder.decode(credential.publicKey),
-                pair.privateKey))
+                    decoder.decode(credential.v2),
+                    decoder.decode(credential.publicKey),
+                    pair.privateKey))
             ticketMap["v2"] = v2
         }
 
         if (credential.v3 != null && credential.v3!!.isNotEmpty()) {
             val v3 = String(
                 DHUtil.decrypt(
-                decoder.decode(credential.v3),
-                decoder.decode(credential.publicKey),
-                pair.privateKey))
+                    decoder.decode(credential.v3),
+                    decoder.decode(credential.publicKey),
+                    pair.privateKey))
             ticketMap["v3"] = v3
         }
 
         if (credential.v4 != null && credential.v4!!.isNotEmpty()) {
             val v4 = String(
                 DHUtil.decrypt(
-                decoder.decode(credential.v4),
-                decoder.decode(credential.publicKey),
-                pair.privateKey))
+                    decoder.decode(credential.v4),
+                    decoder.decode(credential.publicKey),
+                    pair.privateKey))
             ticketMap["v4"] = v4
         }
 

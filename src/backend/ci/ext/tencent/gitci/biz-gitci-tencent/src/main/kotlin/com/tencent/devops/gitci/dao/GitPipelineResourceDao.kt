@@ -28,8 +28,8 @@
 package com.tencent.devops.gitci.dao
 
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.model.gitci.tables.TGitPipelineResource
-import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
+import com.tencent.devops.model.stream.tables.TGitPipelineResource
+import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.pojo.PipelineSortType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -181,14 +181,16 @@ class GitPipelineResourceDao {
 
     fun getPipelinesInIds(
         dslContext: DSLContext,
-        gitProjectId: Long,
+        gitProjectId: Long?,
         pipelineIds: List<String>
     ): List<TGitPipelineResourceRecord> {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            return dslContext.selectFrom(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(PIPELINE_ID.`in`(pipelineIds))
-                .orderBy(UPDATE_TIME.desc())
+            val dsl = dslContext.selectFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+            if (gitProjectId != null) {
+                dsl.and(GIT_PROJECT_ID.eq(gitProjectId))
+            }
+            return dsl.orderBy(UPDATE_TIME.desc())
                 .fetch()
         }
     }
@@ -248,7 +250,7 @@ class GitPipelineResourceDao {
         pipelineId: String
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            return dslContext.delete(this)
+            return dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }

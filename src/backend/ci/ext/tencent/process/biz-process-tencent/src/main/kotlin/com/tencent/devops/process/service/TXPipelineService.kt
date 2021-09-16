@@ -460,7 +460,8 @@ class TXPipelineService @Autowired constructor(
                         displayName = element.name,
                         inputs = WindowsScriptInput(
                             content = element.script,
-                            scriptType = element.scriptType
+                            scriptType = element.scriptType,
+                            charSetType = element.charSetType
                         ),
                         condition = null
                     )

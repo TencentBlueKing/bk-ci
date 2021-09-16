@@ -188,8 +188,8 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.expireAt(getFinalKey(key, isDistinguishCluster), date)
     }
 
-    fun expire(key: String, expiredInSecond: Long, isDistinguishCluster: Boolean? = false) {
-        redisTemplate.expire(getFinalKey(key, isDistinguishCluster), expiredInSecond, TimeUnit.SECONDS)
+    fun expire(key: String, expiredInSecond: Long) {
+        redisTemplate.expire(key, expiredInSecond, TimeUnit.SECONDS)
     }
 
     fun <T> execute(action: RedisCallback<T>): T? {

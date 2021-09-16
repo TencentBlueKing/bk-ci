@@ -343,7 +343,7 @@ class PipelineBuildFacadeService(
                     params = arrayOf(buildId)
                 )
 
-            if (!buildInfo.status.isFinish()) {
+            if (!buildInfo.status.isFinish() && buildInfo.status != BuildStatus.STAGE_SUCCESS) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
                     defaultMessage = "重试已经启动，忽略重复的请求"
@@ -444,6 +444,8 @@ class PipelineBuildFacadeService(
                             }
                         )
                     }
+                    // #4531 重试完整构建时将所有stage的审核状态恢复
+                    pipelineStageService.retryRefreshStage(model)
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }
@@ -766,7 +768,7 @@ class PipelineBuildFacadeService(
         isCancel: Boolean,
         reviewRequest: StageReviewRequest?
     ) {
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
@@ -795,20 +797,31 @@ class PipelineBuildFacadeService(
                 defaultMessage = "构建Stage${stageId}不存在",
                 params = arrayOf(stageId)
             )
-        if (buildStage.controlOption?.stageControlOption?.triggerUsers?.contains(userId) != true) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                defaultMessage = "用户($userId)不在Stage($stageId)可执行名单",
-                params = arrayOf(buildId)
-            )
-        }
+
         if (buildStage.status.name != BuildStatus.PAUSE.name) throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
             defaultMessage = "Stage($stageId)未处于暂停状态",
-            params = arrayOf(buildId)
+            params = arrayOf(stageId)
         )
+        val group = buildStage.checkIn?.getReviewGroupById(reviewRequest?.id)
+        if (group?.id != buildStage.checkIn?.groupToReview()?.id) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND,
+                defaultMessage = "(${group?.name ?: "Flow 1"})非Stage($stageId)当前待审核组",
+                params = arrayOf(stageId, reviewRequest?.id ?: "Flow 1")
+            )
+        }
+
+        if (buildStage.checkIn?.reviewerContains(userId) != true) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                defaultMessage = "用户($userId)不在Stage($stageId)当前审核组可执行名单",
+                params = arrayOf(stageId)
+            )
+        }
 
         val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
         try {
@@ -826,12 +839,25 @@ class PipelineBuildFacadeService(
                     defaultMessage = "Stage启动失败![${interceptResult.message}]"
                 )
             }
-            if (isCancel) {
-                pipelineStageService.cancelStage(userId = userId, buildStage = buildStage)
+            val success = if (isCancel) {
+                pipelineStageService.cancelStage(
+                    userId = userId,
+                    buildStage = buildStage,
+                    reviewRequest = reviewRequest
+                )
             } else {
-                buildStage.controlOption!!.stageControlOption.reviewParams = reviewRequest?.reviewParams
-                pipelineStageService.startStage(userId = userId, buildStage = buildStage)
+                pipelineStageService.startStage(
+                    userId = userId,
+                    buildStage = buildStage,
+                    reviewRequest = reviewRequest
+                )
             }
+            if (!success) throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT,
+                defaultMessage = "审核Stage($stageId)数据异常",
+                params = arrayOf(stageId)
+            )
         } finally {
             runLock.unlock()
         }
@@ -1644,6 +1670,15 @@ class PipelineBuildFacadeService(
             val modelDetail = buildDetailService.get(buildId)
                 ?: return
             val alreadyCancelUser = modelDetail.cancelUserId
+
+            if (BuildStatus.parse(modelDetail.status).isFinish()) {
+                logger.warn("The build $buildId of project $projectId already finished ")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
+                    defaultMessage = "流水线已经被取消构建或已完成",
+                    params = arrayOf(alreadyCancelUser ?: "")
+                )
+            }
 
             if (modelDetail.pipelineId != pipelineId) {
                 logger.warn("shutdown error: input|$pipelineId| buildId-pipeline| ${modelDetail.pipelineId}| $buildId")

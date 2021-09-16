@@ -26,9 +26,7 @@
  */
 
 dependencies {
-    api(project(":core:monitoring:biz-monitoring-sample")) // 开源版实现
+    api(project(":core:monitoring:biz-monitoring-sample"))
 }
 
-plugins {
-   `task-spring-boot-package`
-}
+

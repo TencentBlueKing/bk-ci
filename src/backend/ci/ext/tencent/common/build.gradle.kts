@@ -29,7 +29,3 @@ subprojects {
     group = "com.tencent.bk.devops.ci.common"
     apply(plugin="task-deploy-to-maven")
 }
-
-plugins {
-    `task-deploy-to-maven`
-}

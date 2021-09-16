@@ -22,17 +22,30 @@ else
     ns_config = config.ns_devnet
 end
 
+-- 获取tag
 local tag = tagUtil:get_tag(ns_config)
+
+-- 根据tag路由front目录
+ngx.var.static_dir = tagUtil:get_frontend_path(tag, "ci")
+ngx.var.static_dir_codecc = tagUtil:get_frontend_path(tag, "codecc")
+
+-- 根据tag路由下载路径
+ngx.header["X-DEVOPS-GRAY-DIR"] = tagUtil:get_sub_path(tag)
+
+-- 灰度标志
 if tag == "gray" then
-    ngx.var.static_dir = config.static_dir_gray
-    ngx.var.static_dir_codecc = config.static_dir_codecc_gray
     ngx.header["X-DEVOPS-GRAY"] = "true"
 else
-    ngx.var.static_dir = config.static_dir
-    ngx.var.static_dir_codecc = config.static_dir_codecc
     ngx.header["X-DEVOPS-GRAY"] = "false"
 end
 
-ngx.header["X-DEVOPS-GRAY-DIR"] = tagUtil:get_sub_path(tag)
+-- TODO 临时功能 , stream切换后要删除
+local route_tag = ngx.var.route_tag
+ngx.var.stream_folder = "gitci"
+if route_tag ~= '' and route_tag ~= nil then
+    if string.find(route_tag, "stream") then
+        ngx.var.stream_folder = "stream"
+    end
+end
 
 ngx.exit(200)

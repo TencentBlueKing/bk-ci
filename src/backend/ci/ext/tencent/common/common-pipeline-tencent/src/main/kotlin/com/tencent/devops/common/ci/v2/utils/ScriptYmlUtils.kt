@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.ci.v2.utils
 
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -46,12 +47,12 @@ import com.tencent.devops.common.ci.v2.Stage
 import com.tencent.devops.common.ci.v2.TagRule
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.ci.v2.YmlVersion
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.Job
+import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
@@ -60,13 +61,19 @@ import com.tencent.devops.common.ci.v2.SchedulesRule
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeExtensionActionKind
+import com.tencent.devops.common.ci.v2.exception.YamlFormatException
+import com.tencent.devops.common.ci.v2.stageCheck.Flow
+import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
+import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
+import com.tencent.devops.common.ci.v2.stageCheck.StageReviews
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 object ScriptYmlUtils {
@@ -90,10 +97,10 @@ object ScriptYmlUtils {
      * 1、解决锚点
      * 2、yml string层面的格式化填充
      */
+    @Throws(JsonProcessingException::class)
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
-        val yamlNormal =
-            formatYamlCustom(yamlStr)
+        val yamlNormal = formatYamlCustom(yamlStr)
         // replace anchor tag
         val yaml = Yaml()
         val obj = yaml.load(yamlNormal) as Any
@@ -140,82 +147,93 @@ object ScriptYmlUtils {
         val matcher = pattern.matcher(value)
         while (matcher.find()) {
             val realValue = settingMap[matcher.group(1).trim()]
-            newValue = newValue!!.replace(matcher.group(), realValue ?: "")
+            // realValue为空时，保留默认value值，解决${ci.buildNum}的二次转换场景
+            newValue = newValue!!.replace(matcher.group(), realValue ?: value)
         }
 
         return newValue
     }
 
-    fun parseParameterValue(value: String?, settingMap: Map<String, String?>): String? {
+    fun parseParameterValue(value: String?, settingMap: Map<String, Any?>, paramType: ParametersType): String? {
         if (value.isNullOrBlank()) {
             return ""
         }
-
         var newValue = value
-        val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
+        // ScriptUtils.formatYaml会将所有的带上 "" 但替换时数组不需要"" 所以数组单独匹配
+        val pattern = when (paramType) {
+            ParametersType.ARRAY -> {
+                Pattern.compile("\"\\$\\{\\{([^{}]+?)}}\"")
+            }
+            else -> {
+                Pattern.compile("\\$\\{\\{([^{}]+?)}}")
+            }
+        }
         val matcher = pattern.matcher(value)
         while (matcher.find()) {
             if (settingMap.containsKey(matcher.group(1).trim())) {
                 val realValue = settingMap[matcher.group(1).trim()]
-                newValue = newValue!!.replace(matcher.group(), realValue ?: "")
+                if (realValue is List<*>) {
+                    newValue = newValue!!.replace(matcher.group(), JsonUtil.toJson(realValue))
+                } else {
+                    newValue = newValue!!.replace(matcher.group(), realValue.toString())
+                }
             }
         }
-
         return newValue
     }
 
-    fun parseImage(imageNameInput: String): Triple<String, String, String> {
-        val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
-        val arry = imageNameStr.split(":")
-        if (arry.size == 1) {
-            val str = imageNameStr.split("/")
-            return if (str.size == 1) {
-                Triple(dockerHubUrl, imageNameStr, "latest")
-            } else {
-                Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
-            }
-        } else if (arry.size == 2) {
-            val str = imageNameStr.split("/")
-            when {
-                str.size == 1 -> return Triple(dockerHubUrl, arry[0], arry[1])
-                str.size >= 2 -> return if (str[0].contains(":")) {
-                    Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
-                } else {
-                    if (str.last().contains(":")) {
-                        val nameTag = str.last().split(":")
-                        Triple(
-                            str[0],
-                            imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]),
-                            nameTag[1]
-                        )
-                    } else {
-                        Triple(str[0], str.last(), "latest")
-                    }
-                }
-                else -> {
-                    logger.error("image name invalid: $imageNameStr")
-                    throw Exception("image name invalid.")
-                }
-            }
-        } else if (arry.size == 3) {
-            val str = imageNameStr.split("/")
-            if (str.size >= 2) {
-                val tail = imageNameStr.removePrefix(str[0] + "/")
-                val nameAndTag = tail.split(":")
-                if (nameAndTag.size != 2) {
-                    logger.error("image name invalid: $imageNameStr")
-                    throw Exception("image name invalid.")
-                }
-                return Triple(str[0], nameAndTag[0], nameAndTag[1])
-            } else {
-                logger.error("image name invalid: $imageNameStr")
-                throw Exception("image name invalid.")
-            }
-        } else {
-            logger.error("image name invalid: $imageNameStr")
-            throw Exception("image name invalid.")
-        }
-    }
+//    fun parseImage(imageNameInput: String): Triple<String, String, String> {
+//        val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
+//        val arry = imageNameStr.split(":")
+//        if (arry.size == 1) {
+//            val str = imageNameStr.split("/")
+//            return if (str.size == 1) {
+//                Triple(dockerHubUrl, imageNameStr, "latest")
+//            } else {
+//                Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
+//            }
+//        } else if (arry.size == 2) {
+//            val str = imageNameStr.split("/")
+//            when {
+//                str.size == 1 -> return Triple(dockerHubUrl, arry[0], arry[1])
+//                str.size >= 2 -> return if (str[0].contains(":")) {
+//                    Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
+//                } else {
+//                    if (str.last().contains(":")) {
+//                        val nameTag = str.last().split(":")
+//                        Triple(
+//                            str[0],
+//                            imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]),
+//                            nameTag[1]
+//                        )
+//                    } else {
+//                        Triple(str[0], str.last(), "latest")
+//                    }
+//                }
+//                else -> {
+//                    logger.error("image name invalid: $imageNameStr")
+//                    throw Exception("image name invalid.")
+//                }
+//            }
+//        } else if (arry.size == 3) {
+//            val str = imageNameStr.split("/")
+//            if (str.size >= 2) {
+//                val tail = imageNameStr.removePrefix(str[0] + "/")
+//                val nameAndTag = tail.split(":")
+//                if (nameAndTag.size != 2) {
+//                    logger.error("image name invalid: $imageNameStr")
+//                    throw Exception("image name invalid.")
+//                }
+//                return Triple(str[0], nameAndTag[0], nameAndTag[1])
+//            } else {
+//                logger.error("image name invalid: $imageNameStr")
+//                throw Exception("image name invalid.")
+//            }
+//        } else {
+//            logger.error("image name invalid: $imageNameStr")
+//            throw Exception("image name invalid.")
+//        }
+//    }
 
     fun formatYamlCustom(yamlStr: String): String {
         val sb = StringBuilder()
@@ -248,7 +266,7 @@ object ScriptYmlUtils {
         preScriptBuildYaml.variables.forEach {
             val keyRegex = Regex("^[0-9a-zA-Z_]+$")
             if (!keyRegex.matches(it.key)) {
-                throw CustomException(Response.Status.BAD_REQUEST, "变量名称必须是英文字母、数字或下划线(_)")
+                throw YamlFormatException("变量名称必须是英文字母、数字或下划线(_)")
             }
         }
     }
@@ -258,7 +276,7 @@ object ScriptYmlUtils {
             (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
             (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null)
         ) {
-            throw CustomException(Response.Status.BAD_REQUEST, "stages, jobs, steps不能并列存在，只能存在其一")
+            throw YamlFormatException("stages, jobs, steps不能并列存在，只能存在其一")
         }
     }
 
@@ -270,10 +288,7 @@ object ScriptYmlUtils {
         yamlMap.forEach { (t, _) ->
             if (t != formatTrigger && t != "extends" && t != "version" &&
                 t != "resources" && t != "name" && t != "on") {
-                throw CustomException(
-                    status = Response.Status.BAD_REQUEST,
-                    message = "使用 extends 时顶级关键字只能有触发器 on 与 resources"
-                )
+                throw YamlFormatException("使用 extends 时顶级关键字只能有触发器 name, on , version 与 resources")
             }
         }
     }
@@ -292,7 +307,9 @@ object ScriptYmlUtils {
                                 runsOn = RunsOn(),
                                 steps = formatSteps(preScriptBuildYaml.steps)
                             )
-                        )
+                        ),
+                        checkIn = null,
+                        checkOut = null
                     )
                 )
             }
@@ -301,7 +318,9 @@ object ScriptYmlUtils {
                     Stage(
                         name = "stage_1",
                         id = randomString(stageNamespace),
-                        jobs = preJobs2Jobs(preScriptBuildYaml.jobs)
+                        jobs = preJobs2Jobs(preScriptBuildYaml.jobs),
+                        checkIn = null,
+                        checkOut = null
                     )
                 )
             }
@@ -322,7 +341,7 @@ object ScriptYmlUtils {
             GitCIEnvUtils.checkEnv(u.env)
 
             val services = mutableListOf<Service>()
-            u.services?.forEach { key, value ->
+            u.services?.forEach { (key, value) ->
                 services.add(
                     Service(
                         serviceId = key,
@@ -383,10 +402,19 @@ object ScriptYmlUtils {
         }
 
         val stepList = mutableListOf<Step>()
+        val stepIdSet = mutableSetOf<String>()
         oldSteps.forEach {
             if (it.uses == null && it.run == null && it.checkout == null) {
-                throw CustomException(Response.Status.BAD_REQUEST, "step必须包含uses或run或checkout!")
+                throw YamlFormatException("step必须包含uses或run或checkout!")
             }
+
+            // 校验stepId唯一性
+            if (it.id != null && stepIdSet.contains(it.id)) {
+                throw YamlFormatException("请确保step.id唯一性!(${it.id})")
+            } else if (it.id != null && !stepIdSet.contains(it.id)) {
+                stepIdSet.add(it.id)
+            }
+
             // 检测step env合法性
             GitCIEnvUtils.checkEnv(it.env)
 
@@ -410,27 +438,21 @@ object ScriptYmlUtils {
         return stepList
     }
 
-    private fun preStage2Stage(preStage: PreStage?): Stage? {
-        if (preStage == null) {
-            return null
-        }
-        return Stage(
-            id = preStage.id ?: randomString(stageNamespace),
-            name = preStage.name,
-            label = formatStageLabel(preStage.label),
-            ifField = preStage.ifField,
-            fastKill = preStage.fastKill ?: false,
-            jobs = preJobs2Jobs(preStage.jobs as Map<String, PreJob>)
-        )
-    }
-
     private fun preStages2Stages(preStageList: List<PreStage>?): List<Stage> {
         if (preStageList == null) {
             return emptyList()
         }
 
         val stageList = mutableListOf<Stage>()
+        val stageIdSet = mutableSetOf<String>()
         preStageList.forEach {
+            // 校验stageId唯一性
+            if (it.id != null && stageIdSet.contains(it.id)) {
+                throw YamlFormatException("请确保stage.id唯一性!(${it.id})")
+            } else if (it.id != null && !stageIdSet.contains(it.id)) {
+                stageIdSet.add(it.id)
+            }
+
             stageList.add(
                 Stage(
                     id = it.id ?: randomString(stageNamespace),
@@ -438,7 +460,9 @@ object ScriptYmlUtils {
                     label = formatStageLabel(it.label),
                     ifField = it.ifField,
                     fastKill = it.fastKill ?: false,
-                    jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>)
+                    jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>),
+                    checkIn = formatStageCheck(it.checkIn),
+                    checkOut = formatStageCheck(it.checkOut)
                 )
             )
         }
@@ -446,22 +470,36 @@ object ScriptYmlUtils {
         return stageList
     }
 
+    private fun formatStageCheck(preCheck: PreStageCheck?): StageCheck? {
+        if (preCheck == null) {
+            return null
+        }
+        return StageCheck(
+            reviews = if (preCheck.reviews != null) {
+                StageReviews(
+                    flows = preCheck.reviews.flows?.map {
+                        Flow(
+                            name = it.name,
+                            reviewers = anyToListString(it.reviewers)
+                        )
+                    },
+                    variables = preCheck.reviews.variables,
+                    description = preCheck.reviews.description
+                )
+            } else {
+                null
+            },
+            gates = preCheck.gates,
+            timeoutHours = preCheck.timeoutHours
+        )
+    }
+
     private fun formatStageLabel(labels: Any?): List<String> {
         if (labels == null) {
             return emptyList()
         }
 
-        val transLabels = try {
-            YamlUtil.getObjectMapper().readValue(
-                JsonUtil.toJson(labels),
-                List::class.java
-            ) as ArrayList<String>
-        } catch (e: MismatchedInputException) {
-            listOf(labels.toString())
-        } catch (e: Exception) {
-            logger.error("Format label  failed.", e)
-            listOf<String>()
-        }
+        val transLabels = anyToListString(labels)
 
         val newLabels = mutableListOf<String>()
         transLabels.forEach {
@@ -469,7 +507,7 @@ object ScriptYmlUtils {
             if (stageLabel != null) {
                 newLabels.add(stageLabel.id)
             } else {
-                throw CustomException(Response.Status.BAD_REQUEST, "请核对Stage标签是否正确")
+                throw YamlFormatException("请核对Stage标签是否正确")
             }
         }
 
@@ -524,8 +562,14 @@ object ScriptYmlUtils {
                 tag = TagRule(
                     tags = listOf("*")
                 ),
+                // TODO: 暂时使用工蜂的事件，等后续修改为Stream事件
                 mr = MrRule(
-                    targetBranches = listOf("*")
+                    targetBranches = listOf("*"),
+                    action = listOf(
+                        TGitMergeActionKind.OPEN.value,
+                        TGitMergeActionKind.REOPEN.value,
+                        TGitMergeExtensionActionKind.PUSH_UPDATE.value
+                    )
                 )
             )
         }
@@ -700,7 +744,7 @@ object ScriptYmlUtils {
     fun parseServiceImage(image: String): Pair<String, String> {
         val list = image.split(":")
         if (list.size != 2) {
-            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "GITCI Service镜像格式非法")
+            throw YamlFormatException("GITCI Service镜像格式非法")
         }
         return Pair(list[0], list[1])
     }
@@ -713,5 +757,19 @@ object ScriptYmlUtils {
             buf.append(secretSeed[num])
         }
         return buf.toString()
+    }
+
+    private fun anyToListString(value: Any): List<String> {
+        return try {
+            YamlUtil.getObjectMapper().readValue(
+                JsonUtil.toJson(value),
+                List::class.java
+            ) as ArrayList<String>
+        } catch (e: MismatchedInputException) {
+            listOf(value.toString())
+        } catch (e: Exception) {
+            logger.error("Format label  failed.", e)
+            listOf<String>()
+        }
     }
 }

@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.PipelineExportV2YamlData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -42,14 +43,14 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PIPELINE"], description = "服务-流水线资源")
-@Path("/service/pipelines/stream")
+@Path("/service/streams/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceTXPipelineResource {
 
     @ApiOperation("导出流水线yaml,gitci")
     @GET
-    @Path("/pipeline/{pipelineId}/projects/{projectId}/yaml/gitci")
+    @Path("/{pipelineId}/projects/{projectId}/yaml/gitci")
     fun exportPipelineGitCI(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -60,5 +61,5 @@ interface ServiceTXPipelineResource {
         @ApiParam(value = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String
-    ): Result<String>
+    ): Result<PipelineExportV2YamlData>
 }

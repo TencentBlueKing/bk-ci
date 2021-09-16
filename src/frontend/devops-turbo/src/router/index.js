@@ -1,65 +1,78 @@
+const home = () => import(/* webpackChunkName: 'home' */ '../views/index')
+// over-view
+const overview = () => import(/* webpackChunkName: 'overview' */ '../views/over-view/index.vue')
+// task
+const task = () => import(/* webpackChunkName: 'task' */ '../views/task/index.vue')
+const taskInit = () => import(/* webpackChunkName: 'task' */ '../views/task/init.vue')
+const taskList = () => import(/* webpackChunkName: 'task' */ '../views/task/list.vue')
+const taskDetail = () => import(/* webpackChunkName: 'task' */ '../views/task/detail.vue')
+const taskCreate = () => import(/* webpackChunkName: 'task' */ '../views/task/create.vue')
+const taskSuccess = () => import(/* webpackChunkName: 'task' */ '../views/task/success.vue')
+// history
+const history = () => import(/* webpackChunkName: 'history' */ '../views/history/index.vue')
+const historyList = () => import(/* webpackChunkName: 'history' */ '../views/history/list.vue')
+const historyDetail = () => import(/* webpackChunkName: 'history' */ '../views/history/detail.vue')
 
-const App = () => import(/* webpackChunkName: "turbo~home" */'../views/App')
-const Overviews = () => import(/* webpackChunkName: "turbo~overview" */'../views/Overview')
-const taskRegistration = () => import(/* webpackChunkName: "turbo~register" */'../views/TaskRegistration')
-const acceleration = () => import(/* webpackChunkName: "turbo~register" */'../views/Acceleration')
-const record = () => import(/* webpackChunkName: "turbo~register" */'../views/Record')
-
-const routes = [
+const routers = [
     {
         path: 'turbo/:projectId?',
-        component: App,
+        component: home,
         children: [
             {
-                path: '',
-                name: 'turboOverview',
-                component: Overviews,
-                meta: {
-                    title: '总览',
-                    header: 'turbo',
-                    logo: 'turbo',
-                    to: 'turboOverview'
-                }
-                // ,
-                // redirect: {
-                //     name: 'registration'
-                // }
+                path: 'overview',
+                name: 'overview',
+                component: overview
             },
             {
-                path: 'registration',
-                name: 'registration',
-                component: taskRegistration,
-                meta: {
-                    title: '任务注册',
-                    header: 'turbo',
-                    logo: 'turbo',
-                    to: 'turboOverview'
-                }
+                path: 'task',
+                name: 'task',
+                component: task,
+                children: [
+                    {
+                        path: '',
+                        name: 'taskList',
+                        component: taskList
+                    },
+                    {
+                        path: 'init',
+                        name: 'taskInit',
+                        component: taskInit
+                    },
+                    {
+                        path: 'detail/:id',
+                        name: 'taskDetail',
+                        component: taskDetail
+                    },
+                    {
+                        path: 'create',
+                        name: 'taskCreate',
+                        component: taskCreate
+                    },
+                    {
+                        path: 'success',
+                        name: 'taskSuccess',
+                        component: taskSuccess
+                    }
+                ]
             },
             {
-                path: 'acceleration',
-                name: 'acceleration',
-                component: acceleration,
-                meta: {
-                    title: '加速任务',
-                    header: 'turbo',
-                    logo: 'turbo',
-                    to: 'turboOverview'
-                }
-            },
-            {
-                path: 'record',
-                name: 'record',
-                component: record,
-                meta: {
-                    title: '加速记录',
-                    header: 'turbo',
-                    logo: 'turbo',
-                    to: 'turboOverview'
-                }
+                path: 'history',
+                component: history,
+                children: [
+                    {
+                        path: '',
+                        name: 'history',
+                        component: historyList
+                    },
+                    {
+                        path: 'detail/:id',
+                        name: 'historyDetail',
+                        component: historyDetail
+                    }
+                ]
             }
         ]
     }
 ]
 
-export default routes
+export default routers

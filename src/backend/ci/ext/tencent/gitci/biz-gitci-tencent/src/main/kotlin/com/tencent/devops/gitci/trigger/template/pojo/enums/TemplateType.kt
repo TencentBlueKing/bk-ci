@@ -36,5 +36,6 @@ enum class TemplateType(val text: String, val content: String) {
     JOB("job", "jobs"),
     STEP("step", "steps"),
     FINALLY("finally", "finally"),
-    EXTEND("extend", "extend")
+    EXTEND("extend", "extend"),
+    GATE("gate", "gates")
 }

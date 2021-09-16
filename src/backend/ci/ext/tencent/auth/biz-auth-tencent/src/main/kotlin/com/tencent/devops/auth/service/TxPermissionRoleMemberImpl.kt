@@ -49,9 +49,10 @@ class TxPermissionRoleMemberImpl @Autowired constructor(
         projectId: Int,
         roleId: Int,
         members: List<RoleMemberDTO>,
-        managerGroup: Boolean
+        managerGroup: Boolean,
+        checkAGradeManager: Boolean?
     ) {
-        super.createRoleMember(userId, projectId, roleId, members, managerGroup)
+        super.createRoleMember(userId, projectId, roleId, members, managerGroup, checkAGradeManager)
     }
 
     override fun deleteRoleMember(
