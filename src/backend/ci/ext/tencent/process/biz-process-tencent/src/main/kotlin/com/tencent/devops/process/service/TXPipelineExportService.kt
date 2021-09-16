@@ -316,6 +316,7 @@ class TXPipelineExportService @Autowired constructor(
                                 parseNameAndValueWithAnd(
                                     nameAndValueList = stage.stageControlOption?.customVariables,
                                     variables = variables,
+                                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                                     output2Elements = output2Elements
                                 )
                             if (stage.stageControlOption?.customVariables?.isEmpty() == true) null
@@ -325,6 +326,7 @@ class TXPipelineExportService @Autowired constructor(
                             val ifString = parseNameAndValueWithOr(
                                 nameAndValueList = stage.stageControlOption?.customVariables,
                                 variables = variables,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                                 output2Elements = output2Elements
                             )
                             if (stage.stageControlOption?.customVariables?.isEmpty() == true) null
@@ -424,6 +426,7 @@ class TXPipelineExportService @Autowired constructor(
                                     parseNameAndValueWithAnd(
                                         nameAndValueList = job.jobControlOption?.customVariables,
                                         variables = variables,
+                                        pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                                         output2Elements = output2Elements
                                     )
                                 if (job.jobControlOption?.customVariables?.isEmpty() == true) null
@@ -433,6 +436,7 @@ class TXPipelineExportService @Autowired constructor(
                                 val ifString = parseNameAndValueWithOr(
                                     nameAndValueList = job.jobControlOption?.customVariables,
                                     variables = variables,
+                                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                                     output2Elements = output2Elements
                                 )
                                 if (job.jobControlOption?.customVariables?.isEmpty() == true) null
@@ -539,6 +543,7 @@ class TXPipelineExportService @Autowired constructor(
                                     parseNameAndValueWithAnd(
                                         nameAndValueList = job.jobControlOption?.customVariables,
                                         variables = variables,
+                                        pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                                         output2Elements = output2Elements
                                     )
                                 if (job.jobControlOption?.customVariables?.isEmpty() == true) null
@@ -548,6 +553,7 @@ class TXPipelineExportService @Autowired constructor(
                                 val ifString = parseNameAndValueWithOr(
                                     nameAndValueList = job.jobControlOption?.customVariables,
                                     variables = variables,
+                                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                                     output2Elements = output2Elements
                                 )
                                 if (job.jobControlOption?.customVariables?.isEmpty() == true) null
@@ -650,6 +656,7 @@ class TXPipelineExportService @Autowired constructor(
                             ifFiled = parseStepIfFiled(
                                 step = step,
                                 variables = variables,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                                 output2Elements = output2Elements
                             ),
                             uses = null,
@@ -680,6 +687,7 @@ class TXPipelineExportService @Autowired constructor(
                             ifFiled = parseStepIfFiled(
                                 step = step,
                                 variables = variables,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                                 output2Elements = output2Elements
                             ),
                             uses = null,
@@ -752,6 +760,7 @@ class TXPipelineExportService @Autowired constructor(
                             ifFiled = parseStepIfFiled(
                                 step = step,
                                 variables = variables,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                                 output2Elements = output2Elements
                             ),
                             uses = "${step.getAtomCode()}@${step.version}",
@@ -787,6 +796,7 @@ class TXPipelineExportService @Autowired constructor(
                             ifFiled = parseStepIfFiled(
                                 step = step,
                                 variables = variables,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                                 output2Elements = output2Elements
                             ),
                             uses = "${step.getAtomCode()}@${step.version}",
@@ -1252,7 +1262,12 @@ class TXPipelineExportService @Autowired constructor(
                     name = step.name,
                     id = step.id,
                     // 插件上的
-                    ifFiled = parseStepIfFiled(step = step, variables = variables, output2Elements = output2Elements),
+                    ifFiled = parseStepIfFiled(
+                        step = step,
+                        variables = variables,
+                        pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                        output2Elements = output2Elements
+                    ),
                     uses = null,
                     with = replaceMapWithDoubleCurlyBraces(
                         inputMap = inputMap,
@@ -1281,6 +1296,7 @@ class TXPipelineExportService @Autowired constructor(
     private fun parseStepIfFiled(
         step: Element,
         variables: Map<String, String>?,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem?,
         output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>
     ): String? {
         return when (step.additionalOptions?.runCondition) {
@@ -1289,6 +1305,7 @@ class TXPipelineExportService @Autowired constructor(
                 val ifString = parseNameAndValueWithAnd(
                     nameAndValueList = step.additionalOptions?.customVariables,
                     variables = variables,
+                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                     output2Elements = output2Elements
                 )
                 if (step.additionalOptions?.customVariables?.isEmpty() == true) null
@@ -1298,6 +1315,7 @@ class TXPipelineExportService @Autowired constructor(
                 val ifString = parseNameAndValueWithOr(
                     nameAndValueList = step.additionalOptions?.customVariables,
                     variables = variables,
+                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                     output2Elements = output2Elements
                 )
                 if (step.additionalOptions?.customVariables?.isEmpty() == true) null
@@ -1370,12 +1388,18 @@ class TXPipelineExportService @Autowired constructor(
     private fun parseNameAndValueWithAnd(
         nameAndValueList: List<NameAndValue>? = emptyList(),
         variables: Map<String, String>?,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem?,
         output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>
     ): String {
 
         var ifString = ""
         nameAndValueList?.forEachIndexed { index, nameAndValue ->
-            val preStr = parseNameAndValueWithPreStr(output2Elements, nameAndValue, variables)
+            val preStr = parseNameAndValueWithPreStr(
+                output2Elements = output2Elements,
+                nameAndValue = nameAndValue,
+                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                variables = variables
+            )
             ifString += if (index == nameAndValueList.size - 1) {
                 "$preStr == ${nameAndValue.value}"
             } else {
@@ -1388,11 +1412,17 @@ class TXPipelineExportService @Autowired constructor(
     private fun parseNameAndValueWithOr(
         nameAndValueList: List<NameAndValue>? = emptyList(),
         variables: Map<String, String>?,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem?,
         output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>
     ): String {
         var ifString = ""
         nameAndValueList?.forEachIndexed { index, nameAndValue ->
-            val preStr = parseNameAndValueWithPreStr(output2Elements, nameAndValue, variables)
+            val preStr = parseNameAndValueWithPreStr(
+                output2Elements = output2Elements,
+                nameAndValue = nameAndValue,
+                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                variables = variables
+            )
             ifString += if (index == nameAndValueList.size - 1) {
                 "$preStr != ${nameAndValue.value}"
             } else {
@@ -1405,12 +1435,33 @@ class TXPipelineExportService @Autowired constructor(
     private fun parseNameAndValueWithPreStr(
         output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
         nameAndValue: NameAndValue,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem?,
         variables: Map<String, String>?
     ): String {
         val stepElement = output2Elements[nameAndValue.key]
         val ciName = PipelineVarUtil.fetchReverseVarName("${nameAndValue.key}")
         return if (stepElement != null) {
-            "steps.${nameAndValue.key}"
+            var lastExistingOutputElements = MarketBuildAtomElementWithLocation()
+            val keyStr = nameAndValue.key
+            run outside@{
+                stepElement.reversed().forEach {
+                    if (it.jobLocation?.id == pipelineExportV2YamlConflictMapItem?.job?.id ||
+                        it.stageLocation?.id != pipelineExportV2YamlConflictMapItem?.stage?.id
+                    ) {
+                        lastExistingOutputElements = it
+                        return@outside
+                    }
+                }
+            }
+            val namespace = lastExistingOutputElements.stepAtom?.data?.get("namespace") as String?
+            val originKeyWithNamespace = if (!namespace.isNullOrBlank()) {
+                keyStr?.replace("${namespace}_", "")
+            } else keyStr
+            if (namespace.isNullOrBlank()) {
+                "steps.${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
+            } else {
+                "steps.$namespace.outputs.$originKeyWithNamespace"
+            }
         } else if (!ciName.isNullOrBlank()) {
             ciName
         } else if (!variables?.get(nameAndValue.key).isNullOrBlank()) {
