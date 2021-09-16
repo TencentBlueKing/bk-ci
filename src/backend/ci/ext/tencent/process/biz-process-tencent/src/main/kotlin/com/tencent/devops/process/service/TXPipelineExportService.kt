@@ -1461,9 +1461,9 @@ class TXPipelineExportService @Autowired constructor(
             } else keyStr
             if (namespace.isNullOrBlank()) {
                 val stepID = lastExistingOutputElements.stepAtom?.id
-                if (stepID.isNullOrBlank()){
+                if (stepID.isNullOrBlank()) {
                     originKeyWithNamespace
-                }else{
+                } else {
                     "steps.${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
                 }
             } else {
