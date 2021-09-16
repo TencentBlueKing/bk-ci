@@ -15,12 +15,12 @@ class ExperienceRenewJob @Autowired constructor(
     @Scheduled(cron = "0 * * * * ?")
     @SuppressWarnings("MagicNumber", "NestedBlockDepth", "SwallowedException")
     fun jobRenew() {
-        bkRepoClient.setMetadata(
+        bkRepoClient.update(
             "admin",
             "stuben-test",
             "pipeline",
             "/p-537e0539c6cd4fc4a24230ea89052914/b-01810bbe654243c2919dbd1024d424cd/1-Dispatcher-sdk-1_Bash_1.log",
-            mapOf("test" to "1")
+            0
         )
 
         val fileDetail = bkRepoClient.getFileDetail(
