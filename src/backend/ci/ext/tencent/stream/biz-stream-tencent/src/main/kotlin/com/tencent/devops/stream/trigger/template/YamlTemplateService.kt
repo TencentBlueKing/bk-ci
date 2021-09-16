@@ -105,7 +105,7 @@ class YamlTemplateService @Autowired constructor(
         }
         if (personalAccessToken.isNullOrBlank()) {
             val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
-            val defaultBranch = getDefaultBranch(oAuthToken, targetRepo!!)
+            val defaultBranch = getDefaultBranch(oAuthToken, targetRepo!!, true)
             return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
                 token = oAuthToken,
                 gitProjectId = targetRepo,
@@ -127,7 +127,7 @@ class YamlTemplateService @Autowired constructor(
             } else {
                 key
             }
-            val defaultBranch = getDefaultBranch(personToken, targetRepo!!)
+            val defaultBranch = getDefaultBranch(personToken, targetRepo!!, false)
             return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
                 token = personToken,
                 gitProjectId = targetRepo,
@@ -138,8 +138,8 @@ class YamlTemplateService @Autowired constructor(
         }
     }
 
-    private fun getDefaultBranch(token: String, gitProjectId: String): String {
-        return scmService.getProjectInfoRetry(token, gitProjectId).defaultBranch!!
+    private fun getDefaultBranch(token: String, gitProjectId: String, useAccessToken: Boolean): String {
+        return scmService.getProjectInfoRetry(token, gitProjectId, useAccessToken).defaultBranch!!
     }
 
     private fun getKey(personalAccessToken: String): Pair<Boolean, String> {

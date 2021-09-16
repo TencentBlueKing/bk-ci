@@ -140,7 +140,8 @@ class ScmService @Autowired constructor(
 
     fun getProjectInfoRetry(
         token: String,
-        gitProjectId: String
+        gitProjectId: String,
+        useAccessToken: Boolean
     ): GitCIProjectInfo {
         logger.info("getProjectInfoRetry: [$gitProjectId|$token]")
         return retryFun(
@@ -150,7 +151,7 @@ class ScmService @Autowired constructor(
                 client.getScm(ServiceGitCiResource::class).getProjectInfo(
                     accessToken = token,
                     gitProjectId = gitProjectId,
-                    useAccessToken = true
+                    useAccessToken = useAccessToken
                 ).data!!
             }
         )
