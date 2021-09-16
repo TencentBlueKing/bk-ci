@@ -30,10 +30,10 @@ import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 import com.tencent.devops.notify.service.WeworkService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 
-@Service
 @Suppress("ALL")
+@ConditionalOnProperty(prefix = "notify", name = ["weworkChannel"], havingValue = "blueking")
 class BlueKingWeworkServiceImpl @Autowired constructor() : WeworkService {
 
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {

@@ -9,6 +9,9 @@ spring:
 server:
   port: __BK_CI_NOTIFY_API_PORT__
 
+notify:
+  weworkChannel: __BK_CI_NOTIFY_WEWORK_SEND_CHANNEL__  #发送企业微信的通道: weworkAgent 企业微信应用,blueking 蓝鲸消息通道, weworkRobot 企业微信机器人(待开放)
+
 wework:
   corpId:
   corpSecret:
