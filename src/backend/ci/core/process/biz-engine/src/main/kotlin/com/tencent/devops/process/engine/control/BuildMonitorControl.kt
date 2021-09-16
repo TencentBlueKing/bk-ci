@@ -266,10 +266,17 @@ class BuildMonitorControl @Autowired constructor(
         return coerceAtMost10Min(interval)
     }
 
+    @Suppress("LongMethod")
     private fun monitorQueueBuild(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Boolean {
         // 判断是否超时
         if (pipelineSettingService.isQueueTimeout(event.pipelineId, buildInfo.startTime!!)) {
-            LOG.info("ENGINE|${event.buildId}|BUILD_QUEUE_MONITOR_TIMEOUT|queue timeout")
+            val exitQueue = pipelineRuntimeExtService.existQueue(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                buildStatus = buildInfo.status
+            )
+            LOG.info("ENGINE|${event.buildId}|BUILD_QUEUE_MONITOR_TIMEOUT|queue timeout|exitQueue=$exitQueue")
             val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
                 params = arrayOf(event.buildId)

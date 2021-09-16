@@ -395,6 +395,7 @@ class PipelineBuildDao {
 
     fun updateStatus(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         oldBuildStatus: BuildStatus,
         newBuildStatus: BuildStatus
@@ -402,7 +403,7 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
-                .where(BUILD_ID.eq(buildId)).and(STATUS.eq(oldBuildStatus.ordinal))
+                .where(BUILD_ID.eq(buildId)).and(PROJECT_ID.eq(projectId)).and(STATUS.eq(oldBuildStatus.ordinal))
                 .execute()
         } == 1
     }

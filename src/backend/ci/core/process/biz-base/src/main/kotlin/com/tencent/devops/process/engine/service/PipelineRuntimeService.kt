@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -57,6 +58,8 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -1713,7 +1716,7 @@ class PipelineRuntimeService @Autowired constructor(
         currentBuildStatus: BuildStatus,
         errorInfoList: List<ErrorInfo>?
     ) {
-        if (currentBuildStatus.isReadyToRun()) {
+        if (currentBuildStatus.isReadyToRun() || currentBuildStatus.isNeverRun()) {
             // 减1,当作没执行过
             pipelineBuildSummaryDao.updateQueueCount(dslContext, latestRunningBuild.pipelineId, -1)
         } else {
@@ -1828,8 +1831,15 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getExecuteTime(buildId: String): Long {
+        val filter = setOf(
+            EnvControlTaskType.VM.name,
+            EnvControlTaskType.NORMAL.name,
+            QualityGateInElement.classType,
+            QualityGateOutElement.classType,
+            ManualReviewUserTaskElement.classType
+        )
         val executeTask = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
-            .filter { it.taskType != ManualReviewUserTaskElement.classType }
+            .filter { !filter.contains(it.taskType) }
         var executeTime = 0L
         val stageTotalTime = mutableMapOf<String, MutableMap<String, Long>>()
         executeTask.forEach { task ->
@@ -2023,8 +2033,14 @@ class PipelineRuntimeService @Autowired constructor(
         )?.buildId
     }
 
-    fun updateBuildInfoStatus2Queue(buildId: String, oldStatus: BuildStatus) {
-        pipelineBuildDao.updateStatus(dslContext, buildId, oldStatus, BuildStatus.QUEUE)
+    fun updateBuildInfoStatus2Queue(projectId: String, buildId: String, oldStatus: BuildStatus) {
+        pipelineBuildDao.updateStatus(
+            dslContext = dslContext,
+            projectId = buildId,
+            buildId = projectId,
+            oldBuildStatus = oldStatus,
+            newBuildStatus = BuildStatus.QUEUE
+        )
     }
 
     fun updateArtifactList(

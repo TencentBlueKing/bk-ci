@@ -70,7 +70,6 @@ import org.springframework.stereotype.Service
  * 构建控制器
  * @version 1.0
  */
-@Suppress("ALL")
 @Service
 class BuildEndControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -136,7 +135,7 @@ class BuildEndControl @Autowired constructor(
 
         LOG.info("ENGINE|$buildId|$source|BUILD_FINISH|$pipelineId|es=$status|bs=${buildInfo.status}")
 
-        fixTask(buildInfo, buildStatus)
+        fixTask(buildInfo)
 
         // 记录本流水线最后一次构建的状态
         pipelineRuntimeService.finishLatestRunningBuild(
@@ -228,7 +227,7 @@ class BuildEndControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo, buildStatus: BuildStatus) {
+    private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo) {
         val allBuildTask = pipelineRuntimeService.getAllBuildTask(buildId)
         val errorInfos = mutableListOf<ErrorInfo>()
         allBuildTask.forEach {
