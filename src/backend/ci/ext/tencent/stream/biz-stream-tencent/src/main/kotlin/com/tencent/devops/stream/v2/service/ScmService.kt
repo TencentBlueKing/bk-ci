@@ -244,21 +244,21 @@ class ScmService @Autowired constructor(
             if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status ||
                 e.httpStatus == GitCodeApiStatus.UNAUTHORIZED.status) {
                 error(
-                    logMessage = "getProjectInfo error ${e.errorMessage}",
+                    logMessage = "createNewFile error ${e.errorMessage}",
                     errorCode = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN,
                     exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN.formatErrorMessage
                         .format(userId, gitCICreateFile.branch)
                 )
             } else {
                 error(
-                    logMessage = "getProjectInfo error ${e.errorMessage}",
+                    logMessage = "createNewFile error ${e.errorMessage}",
                     errorCode = ErrorCodeEnum.CREATE_NEW_FILE_ERROR,
                     exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR.formatErrorMessage.format(e.errorMessage)
                 )
             }
         } catch (e: Exception) {
-            logger.error("getProjectInfo Exception: $e")
-            error(" getProjectInfo error ${e.message}", ErrorCodeEnum.GET_PROJECT_INFO_ERROR)
+            logger.error("createNewFile Exception: $e")
+            error(" createNewFile error ${e.message}", ErrorCodeEnum.CREATE_NEW_FILE_ERROR)
         }
         return false
     }

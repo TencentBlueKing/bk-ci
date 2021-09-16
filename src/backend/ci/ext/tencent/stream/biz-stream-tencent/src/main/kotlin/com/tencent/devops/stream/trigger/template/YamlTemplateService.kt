@@ -78,7 +78,7 @@ class YamlTemplateService @Autowired constructor(
     ): String {
         if (token != null) {
             // 获取触发库的模板需要对比版本问题
-            val content = if (event is GitMergeRequestEvent && event.object_attributes.action ==
+            val content = if (event is GitMergeRequestEvent && event.object_attributes.action !=
                 TGitMergeActionKind.MERGE.value
             ) {
                 val (result, orgYaml) = yamlVersion.checkYmlVersion(
