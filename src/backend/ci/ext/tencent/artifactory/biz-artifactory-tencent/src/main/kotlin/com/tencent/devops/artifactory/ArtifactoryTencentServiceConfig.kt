@@ -58,7 +58,7 @@ class ArtifactoryTencentServiceConfig {
      */
     @Bean
     @Primary
-    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
     fun gitciAgentUrlService(
         pipelineService: PipelineService,
         bkRepoService: BkRepoService,

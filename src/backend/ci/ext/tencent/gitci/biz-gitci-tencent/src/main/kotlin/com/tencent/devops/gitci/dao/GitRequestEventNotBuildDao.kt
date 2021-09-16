@@ -27,8 +27,8 @@
 
 package com.tencent.devops.gitci.dao
 
-import com.tencent.devops.model.gitci.tables.TGitRequestEventNotBuild
-import com.tencent.devops.model.gitci.tables.records.TGitRequestEventNotBuildRecord
+import com.tencent.devops.model.stream.tables.TGitRequestEventNotBuild
+import com.tencent.devops.model.stream.tables.records.TGitRequestEventNotBuildRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime

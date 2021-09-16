@@ -35,4 +35,5 @@ dependencies {
     api(project(":core:auth:model-auth"))
     testImplementation(project(":core:common:common-test"))
     api(project(":core:project:api-project"))
+    api("com.github.ben-manes.caffeine:caffeine")
 }
