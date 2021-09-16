@@ -27,6 +27,7 @@
 
 package com.tencent.devops.monitoring.job
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -750,4 +751,37 @@ class MonitorNotifyJob @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(MonitorNotifyJob::class.java)
     }
+}
+
+fun main() {
+//    response = requests.post(
+//        url="http://bk-data.apigw.o.oa.com/prod/v3/dataquery/query",
+//        headers={
+//            "Content-Type": "application/json; charset=utf-8",
+//        },
+//        data=json.dumps({
+//            "bkdata_authentication_method": "token",
+//            "bkdata_data_token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+//            "bk_app_code": "xxxx",
+//            "bk_app_secret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+//            "sql": "select dteventtimestamp as ts,count from 111_jeee_set_login where thedate=20160920  AND cc_set='303' AND biz_id='111' limit 1",
+//            "prefer_storage": ""
+//        })
+//    )
+
+    val url = "http://bkdata-tencent.apigw.o.oa.com/prod/v3/dataquery/query/"
+    val data = mapOf(
+        "bkdata_authentication_method" to "token",
+        "bkdata_data_token" to "boKSvZtHArySd51ci0c91LXE7DHSu6rI3mLqMOYL5UYkorJ9AuY6dDtLU4SMoYtk",
+        "bk_app_code" to "bkci",
+        "bk_app_secret" to "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<",
+        "sql" to "select count(1) from 100205_landun_git_task WHERE dtEventTimeStamp>='1631700371000'",
+        "prefer_storage" to "sql"
+    )
+
+    val response =
+        OkhttpUtils.doPost(url, JsonUtil.toJson(data), mapOf("Content-Type" to "application/json; charset=utf-8"))
+
+    println(response.body()!!.string())
+
 }
