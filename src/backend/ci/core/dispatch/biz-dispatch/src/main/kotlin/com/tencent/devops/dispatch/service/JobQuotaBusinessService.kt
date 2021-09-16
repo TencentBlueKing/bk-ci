@@ -191,7 +191,9 @@ class JobQuotaBusinessService @Autowired constructor(
                 val runningJobs = runningJobsDao.getAgentRunningJobs(dslContext, projectId, buildId, vmSeqId)
                 runningJobs.filter { it?.agentStartTime != null && it.vmType != null }.forEach {
                     val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
-                    incProjectJobRunningTime(projectId, JobQuotaVmType.parse(it.vmType), duration.toMillis())
+
+                    // 保存构建时间，单位秒
+                    incProjectJobRunningTime(projectId, JobQuotaVmType.parse(it.vmType), duration.toMillis() / 1000)
                     LOG.info("$projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(it.vmType)} >> Finish time: " +
                             "increase ${duration.toHours()} hours. >>>")
                 }
