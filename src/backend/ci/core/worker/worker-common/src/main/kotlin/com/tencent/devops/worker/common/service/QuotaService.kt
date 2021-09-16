@@ -49,7 +49,7 @@ object QuotaService {
             if (retryCount > 0) {
                 logger.warn("retry|time=$retryCount|addRunningAgent")
             }
-            quotaApi.removeRunningAgent(
+            quotaApi.addRunningAgent(
                 projectId = buildVariables.projectId,
                 buildId = buildVariables.buildId,
                 vmSeqId = buildVariables.vmSeqId,
