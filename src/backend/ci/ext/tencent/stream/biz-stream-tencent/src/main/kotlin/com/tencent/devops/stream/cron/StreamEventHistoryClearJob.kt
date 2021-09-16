@@ -207,6 +207,13 @@ class StreamEventHistoryClearJob @Autowired constructor(
                     clearEventNotBuild(id)
                     clearPipelineBuildData(id)
                 }
+                // 将当前已处理完的最大项目Id存入redis
+                redisOperation.set(
+                    key = "$threadName:$STREAM_PIPELINE_BUILD_HISTORY_CLEAR_GIT_PROJECT_ID_KEY",
+                    value = maxHandleProjectPrimaryId.toString(),
+                    expired = false,
+                    isDistinguishCluster = true
+                )
             } catch (ignore: Exception) {
                 logger.warn("streamEventHistoryClear doClearBus failed", ignore)
             } finally {
