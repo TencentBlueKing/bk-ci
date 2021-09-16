@@ -159,6 +159,7 @@ object JsonUtil {
         subModules.forEach { subModule ->
             objectMapper.registerModule(subModule)
             skipEmptyObjectMapper.registerModule(subModule)
+            unformattedObjectMapper.registerModule(subModule)
         }
     }
 
