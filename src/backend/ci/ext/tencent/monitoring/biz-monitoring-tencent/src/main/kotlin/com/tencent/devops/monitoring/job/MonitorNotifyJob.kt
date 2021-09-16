@@ -775,8 +775,8 @@ fun main() {
         "bkdata_data_token" to "boKSvZtHArySd51ci0c91LXE7DHSu6rI3mLqMOYL5UYkorJ9AuY6dDtLU4SMoYtk",
         "bk_app_code" to "bkci",
         "bk_app_secret" to "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<",
-        "sql" to "select count(1) from 100205_landun_git_task WHERE dtEventTimeStamp>='1631700371000'",
-        "prefer_storage" to "sql"
+        "sql" to "select * from 100205_landun_git_task.ignite WHERE dtEventTimeStamp>='1631700371000' LIMIT 1",
+        "prefer_storage" to ""
     )
 
     val response =
