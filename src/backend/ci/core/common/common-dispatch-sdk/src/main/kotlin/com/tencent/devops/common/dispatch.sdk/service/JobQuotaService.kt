@@ -48,9 +48,6 @@ class JobQuotaService constructor(
         private val logger = LoggerFactory.getLogger(JobQuotaService::class.java)
     }
 
-    @Value("\${dispatch.jobQuota.systemAlertReceiver:#{null}}")
-    private val alertReceiver: String? = null
-
     @Value("\${dispatch.jobQuota.enable}")
     private val jobQuotaEnable: Boolean = false
 
