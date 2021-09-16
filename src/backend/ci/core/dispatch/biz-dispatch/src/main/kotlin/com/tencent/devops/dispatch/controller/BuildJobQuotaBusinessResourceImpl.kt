@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.controller
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.api.BuildJobQuotaBusinessResource
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
@@ -36,25 +37,17 @@ import com.tencent.devops.dispatch.service.JobQuotaBusinessService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource@Suppress("ALL")
-class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
+class BuildJobQuotaBusinessResourceImpl @Autowired constructor(
     private val jobQuotaBusinessService: JobQuotaBusinessService
-) : ServiceJobQuotaBusinessResource {
-    override fun addRunningJob(
-        projectId: String,
-        vmType: JobQuotaVmType,
-        buildId: String,
-        vmSeqId: String
-    ): Result<Boolean> {
-        jobQuotaBusinessService.insertRunningJob(projectId, vmType, buildId, vmSeqId)
+) : BuildJobQuotaBusinessResource {
+
+    override fun addRunningAgent(projectId: String, buildId: String, vmSeqId: String): Result<Boolean> {
+        jobQuotaBusinessService.updateAgentStartTime(projectId, buildId, vmSeqId)
         return Result(true)
     }
 
-    override fun removeRunningJob(projectId: String, buildId: String, vmSeqId: String?): Result<Boolean> {
-        jobQuotaBusinessService.deleteRunningJob(projectId, buildId, vmSeqId)
+    override fun removeRunningAgent(projectId: String, buildId: String, vmSeqId: String): Result<Boolean> {
+        jobQuotaBusinessService.updateRunningTime(projectId, buildId, vmSeqId)
         return Result(true)
-    }
-
-    override fun getRunningJobCount(projectId: String, vmType: JobQuotaVmType): Result<JobQuotaStatus> {
-        return Result(jobQuotaBusinessService.getProjectRunningJobStatus(projectId, vmType))
     }
 }

@@ -48,6 +48,7 @@ import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
+import com.tencent.devops.worker.common.service.QuotaService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
@@ -68,8 +69,11 @@ object Runner {
         var failed = false
         try {
             logger.info("Start the worker ...")
-            // 启动成功了，报告process我已经启动了
+            // 启动成功, 报告process我已经启动了
             val buildVariables = EngineService.setStarted()
+
+            // 上报agent启动给quota
+            QuotaService.addRunningAgent(buildVariables)
 
             BuildEnv.setBuildId(buildVariables.buildId)
 
@@ -86,6 +90,7 @@ object Runner {
                 LoggerService.stop()
                 LoggerService.archiveLogFiles()
                 EngineService.endBuild()
+                QuotaService.removeRunningAgent(buildVariables)
                 Heartbeat.stop()
             }
         } catch (ignore: Exception) {

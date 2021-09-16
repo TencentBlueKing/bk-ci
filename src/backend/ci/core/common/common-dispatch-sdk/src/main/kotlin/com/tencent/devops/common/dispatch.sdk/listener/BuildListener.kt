@@ -86,13 +86,10 @@ interface BuildListener {
             // 校验流水线是否还在运行中
             dispatchService.checkRunning(event)
             // 校验构建资源配额是否超限
-            jobQuotaService.checkJobQuota(event, getVmType())
+            jobQuotaService.checkAndAddRunningJob(event, getVmType())
 
             val dispatchMessage = dispatchService.buildDispatchMessage(event)
             onStartup(dispatchMessage)
-
-            // 到这里说明JOB已经启动成功(但是不代表Agent启动成功)，开始累加JOB使用额度
-            jobQuotaService.addRunningJob(event.projectId, getVmType(), event.buildId, event.vmSeqId)
         } catch (e: BuildFailureException) {
             dispatchService.logRed(buildId = event.buildId,
                 containerHashId = event.containerHashId,

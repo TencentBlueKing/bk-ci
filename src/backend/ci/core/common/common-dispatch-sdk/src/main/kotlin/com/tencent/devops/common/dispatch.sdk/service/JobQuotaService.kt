@@ -54,6 +54,13 @@ class JobQuotaService constructor(
     @Value("\${dispatch.jobQuota.enable}")
     private val jobQuotaEnable: Boolean = false
 
+    fun checkAndAddRunningJob(startupEvent: PipelineAgentStartupEvent, vmType: JobQuotaVmType?) {
+        checkJobQuota(startupEvent, vmType)
+
+        // 到这里说明JOB已经开始启动(但是不代表Agent启动成功)，开始累加JOB使用额度
+        addRunningJob(startupEvent.projectId, vmType, startupEvent.buildId, startupEvent.vmSeqId)
+    }
+
     fun addRunningJob(projectId: String, vmType: JobQuotaVmType?, buildId: String, vmSeqId: String) {
         if (null == vmType || !jobQuotaEnable) {
             logger.warn("JobQuota not enabled or VmType is null, job quota check will be skipped.")
@@ -78,7 +85,7 @@ class JobQuotaService constructor(
         }
     }
 
-    fun checkJobQuota(startupEvent: PipelineAgentStartupEvent, vmType: JobQuotaVmType?) {
+    private fun checkJobQuota(startupEvent: PipelineAgentStartupEvent, vmType: JobQuotaVmType?) {
         with(startupEvent) {
             if (!checkJobQuotaBase(
                     projectId = projectId,

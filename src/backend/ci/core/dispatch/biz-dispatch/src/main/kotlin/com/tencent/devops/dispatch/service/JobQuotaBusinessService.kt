@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.service
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
@@ -92,33 +93,6 @@ class JobQuotaBusinessService @Autowired constructor(
         jobAgentFinish(projectId, buildId, vmSeqId)
     }
 
-    private fun jobAgentFinish(projectId: String, buildId: String, vmSeqId: String?) {
-        val redisLock = RedisLock(redisOperation, JOB_END_LOCK_KEY + projectId, 60L)
-        try {
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                val runningJobs = runningJobsDao.getAgentRunningJobs(dslContext, projectId, buildId, vmSeqId)
-                runningJobs.filter { it?.agentStartTime != null && it.vmType != null }.forEach {
-                    val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
-                    incProjectJobRunningTime(projectId, JobQuotaVmType.parse(it.vmType), duration.toMillis())
-                    LOG.info("<<<Finish time: $projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(it.vmType)} " +
-                        "increase ${duration.toHours()} hours. >>>")
-                }
-            } else {
-                LOG.info("<<< DeleteRunningJob get lock failed, not run>>>")
-            }
-        } catch (e: Throwable) {
-            LOG.error("DeleteRunningJob exception:", e)
-        } finally {
-            try {
-                runningJobsDao.delete(dslContext, projectId, buildId, vmSeqId)
-            } catch (e: Throwable) {
-                // do nothing
-            }
-            redisLock.unlock()
-        }
-    }
-
     /**
      * agent成功启动时更新
      */
@@ -158,38 +132,37 @@ class JobQuotaBusinessService @Autowired constructor(
      * 获取项目当月所有JOB已运行的时间，返回已运行的时间
      */
     fun getProjectRunningJobTime(projectId: String, vmType: JobQuotaVmType): Long {
-//        if (vmType == JobQuotaVmType.ALL) {
-//            // 所有运行中的耗时
-//            var runningTotalTime = 0L
-//            JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
-//                val runningJobs = runningJobsDao.getProjectRunningJobs(dslContext, projectId, type)
-//                runningJobs.filter { it?.agentStartTime != null }.forEach {
-//                    val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
-//                    runningTotalTime += duration.toMillis()
-//                }
-//            }
-//
-//            // 所有已经结束的耗时
-//            val finishRunJobTime = redisOperation.get(getProjectRunningTimeKey(projectId))
-//            runningTotalTime += (finishRunJobTime ?: "0").toLong()
-//
-//            return runningTotalTime
-//        } else {
-//            // 运行中的耗时
-//            val runningJobs = runningJobsDao.getProjectRunningJobs(dslContext, projectId, vmType)
-//            var runningTotalTime = 0L
-//            runningJobs.filter { it?.agentStartTime != null }.forEach {
-//                val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
-//                runningTotalTime += duration.toMillis()
-//            }
-//
-//            // 所有已经结束的耗时
-//            val finishRunJobTime = redisOperation.get(getProjectVmTypeRunningTimeKey(projectId, vmType))
-//            runningTotalTime += (finishRunJobTime ?: "0").toLong()
-//
-//            return runningTotalTime
-//        }
-        return 0
+        if (vmType == JobQuotaVmType.ALL) {
+            // 所有运行中的耗时
+            var runningTotalTime = 0L
+            JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
+                val runningJobs = runningJobsDao.getProjectRunningJobs(dslContext, projectId, type)
+                runningJobs.filter { it?.agentStartTime != null }.forEach {
+                    val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
+                    runningTotalTime += duration.toMillis()
+                }
+            }
+
+            // 所有已经结束的耗时
+            val finishRunJobTime = redisOperation.get(getProjectRunningTimeKey(projectId))
+            runningTotalTime += (finishRunJobTime ?: "0").toLong()
+
+            return runningTotalTime
+        } else {
+            // 运行中的耗时
+            val runningJobs = runningJobsDao.getProjectRunningJobs(dslContext, projectId, vmType)
+            var runningTotalTime = 0L
+            runningJobs.filter { it?.agentStartTime != null }.forEach {
+                val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
+                runningTotalTime += duration.toMillis()
+            }
+
+            // 所有已经结束的耗时
+            val finishRunJobTime = redisOperation.get(getProjectVmTypeRunningTimeKey(projectId, vmType))
+            runningTotalTime += (finishRunJobTime ?: "0").toLong()
+
+            return runningTotalTime
+        }
     }
 
     fun getProjectRunningJobStatus(projectId: String, vmType: JobQuotaVmType): JobQuotaStatus {
@@ -210,6 +183,7 @@ class JobQuotaBusinessService @Autowired constructor(
 
     fun checkWarning(projectId: String, vmType: JobQuotaVmType) {
         try {
+            // 暂时注释系统配额检测
             // checkSystemWarn(vmType)
             checkProjectWarn(projectId, vmType)
         } catch (e: Throwable) {
@@ -260,6 +234,34 @@ class JobQuotaBusinessService @Autowired constructor(
             else -> {
                 return true
             }
+        }
+    }
+
+    private fun jobAgentFinish(projectId: String, buildId: String, vmSeqId: String?) {
+        val redisLock = RedisLock(redisOperation, JOB_END_LOCK_KEY + projectId, 60L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                val runningJobs = runningJobsDao.getAgentRunningJobs(dslContext, projectId, buildId, vmSeqId)
+                LOG.info("$projectId|$buildId|$vmSeqId| JobQuota >> runningJobs: ${JsonUtil.toJson(runningJobs)}")
+                runningJobs.filter { it?.agentStartTime != null && it.vmType != null }.forEach {
+                    val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
+                    incProjectJobRunningTime(projectId, JobQuotaVmType.parse(it.vmType), duration.toMillis())
+                    LOG.info("<<<Finish time: $projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(it.vmType)} " +
+                            "increase ${duration.toHours()} hours. >>>")
+                }
+            } else {
+                LOG.info("<<< DeleteRunningJob get lock failed, not run>>>")
+            }
+        } catch (e: Throwable) {
+            LOG.error("DeleteRunningJob exception:", e)
+        } finally {
+            try {
+                runningJobsDao.delete(dslContext, projectId, buildId, vmSeqId)
+            } catch (e: Throwable) {
+                // do nothing
+            }
+            redisLock.unlock()
         }
     }
 
