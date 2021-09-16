@@ -256,8 +256,7 @@ class PipelineBuildService(
                 ), startType = startType, channelCode = channelCode
             )
             val paramsWithType = startParamsList.asSequence().plus(
-                BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version)
-            )
+                BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version))
                 .plus(BuildParameters(PIPELINE_START_USER_ID, userId))
                 .plus(BuildParameters(PIPELINE_START_TYPE, startType.name))
                 .plus(BuildParameters(PIPELINE_START_CHANNEL, channelCode.name))
