@@ -494,7 +494,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                model = JsonUtil.toJson(model),
+                model = JsonUtil.toJson(model, formatted = false),
                 channelCode = channelCode.name
             )
         )
@@ -602,7 +602,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                model = JsonUtil.toJson(model),
+                model = JsonUtil.toJson(model, formatted = false),
                 channelCode = channelCode.name
             )
         )

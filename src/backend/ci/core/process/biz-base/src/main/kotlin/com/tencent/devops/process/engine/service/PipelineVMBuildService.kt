@@ -485,7 +485,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     type = task.taskType,
                     params = task.taskParams.map {
                         val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(it.value, buildVariable)
-                        it.key to JsonUtil.toJson(obj)
+                        it.key to JsonUtil.toJson(obj, formatted = false)
                     }.filter {
                         !it.first.startsWith("@type")
                     }.toMap(),
