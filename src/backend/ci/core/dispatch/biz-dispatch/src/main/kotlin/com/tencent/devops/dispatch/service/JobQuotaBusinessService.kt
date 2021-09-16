@@ -246,19 +246,19 @@ class JobQuotaBusinessService @Autowired constructor(
                 runningJobs.filter { it?.agentStartTime != null && it.vmType != null }.forEach {
                     val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                     incProjectJobRunningTime(projectId, JobQuotaVmType.parse(it.vmType), duration.toMillis())
-                    LOG.info("<<<Finish time: $projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(it.vmType)} " +
+                    LOG.info("$projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(it.vmType)} >> Finish time: " +
                             "increase ${duration.toHours()} hours. >>>")
                 }
             } else {
-                LOG.info("<<< DeleteRunningJob get lock failed, not run>>>")
+                LOG.info("$projectId|$buildId|$vmSeqId >> DeleteRunningJob get lock failed, not run>>>")
             }
         } catch (e: Throwable) {
-            LOG.error("DeleteRunningJob exception:", e)
+            LOG.error("$projectId|$buildId|$vmSeqId >> Job agent finish exception:", e)
         } finally {
             try {
                 runningJobsDao.delete(dslContext, projectId, buildId, vmSeqId)
             } catch (e: Throwable) {
-                // do nothing
+                LOG.error("$projectId|$buildId|$vmSeqId >> DeleteRunningJob exception:", e)
             }
             redisLock.unlock()
         }
