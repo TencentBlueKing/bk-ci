@@ -1442,12 +1442,14 @@ class TXPipelineExportService @Autowired constructor(
         val ciName = PipelineVarUtil.fetchReverseVarName("${nameAndValue.key}")
         return if (stepElement != null) {
             var lastExistingOutputElements = MarketBuildAtomElementWithLocation()
-            val keyStr = nameAndValue.key
+            val keyStr = nameAndValue.key ?: ""
             run outside@{
-                stepElement.reversed().forEach {
+                stepElement.reversed().forEach lit@{
                     if (it.jobLocation?.id == pipelineExportV2YamlConflictMapItem?.job?.id ||
                         it.stageLocation?.id != pipelineExportV2YamlConflictMapItem?.stage?.id
                     ) {
+                        if (it.stepAtom?.id == pipelineExportV2YamlConflictMapItem?.step?.id)
+                            return@lit
                         lastExistingOutputElements = it
                         return@outside
                     }
@@ -1455,10 +1457,15 @@ class TXPipelineExportService @Autowired constructor(
             }
             val namespace = lastExistingOutputElements.stepAtom?.data?.get("namespace") as String?
             val originKeyWithNamespace = if (!namespace.isNullOrBlank()) {
-                keyStr?.replace("${namespace}_", "")
+                keyStr.replace("${namespace}_", "")
             } else keyStr
             if (namespace.isNullOrBlank()) {
-                "steps.${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
+                val stepID = lastExistingOutputElements.stepAtom?.id
+                if (stepID.isNullOrBlank()){
+                    originKeyWithNamespace
+                }else{
+                    "steps.${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
+                }
             } else {
                 "steps.$namespace.outputs.$originKeyWithNamespace"
             }
