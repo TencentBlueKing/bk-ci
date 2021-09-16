@@ -171,7 +171,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String,
-        executeCount: Int?,
+        executeCount: Int?
     ): Result<QueryLogStatus> {
         logger.info(
             "downloadLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId]" +

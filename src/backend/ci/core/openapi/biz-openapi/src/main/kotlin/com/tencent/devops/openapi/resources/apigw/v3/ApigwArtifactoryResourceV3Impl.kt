@@ -94,7 +94,7 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         elementId: String,
-        executeCount: String,
+        executeCount: String
     ): Result<Url> {
         return client.get(ServiceLogFileResource::class).getPluginLogUrl(
             userId = userId,
