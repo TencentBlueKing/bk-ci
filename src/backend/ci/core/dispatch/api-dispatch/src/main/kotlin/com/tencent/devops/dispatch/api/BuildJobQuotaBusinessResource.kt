@@ -43,21 +43,18 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_JOBS_PROJECT_QUOTA"], description = "Job配额管理")
-@Path("/service/jobs/running")
+@Path("/build/jobs/running")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceJobQuotaBusinessResource {
+interface BuildJobQuotaBusinessResource {
 
-    @ApiOperation("上报一个JOB启动")
+    @ApiOperation("上报一个Agent启动")
     @POST
-    @Path("/job/{projectId}/{vmType}/{buildId}/{vmSeqId}")
-    fun addRunningJob(
+    @Path("/agent/projects/{projectId}/builds/{buildId}/vmSeqIds/{vmSeqId}")
+    fun addRunningAgent(
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "vmType", required = true)
-        @PathParam("vmType")
-        vmType: JobQuotaVmType,
         @ApiParam(value = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
@@ -66,30 +63,18 @@ interface ServiceJobQuotaBusinessResource {
         vmSeqId: String
     ): Result<Boolean>
 
-    @ApiOperation("上报一个JOB结束")
+    @ApiOperation("上报一个Agent结束")
     @DELETE
-    @Path("/job/{projectId}/{buildId}/{vmSeqId}")
-    fun removeRunningJob(
+    @Path("/agent/projects/{projectId}/builds/{buildId}/vmSeqIds/{vmSeqId}")
+    fun removeRunningAgent(
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam(value = "vmSeqId", required = false)
+        @ApiParam(value = "vmSeqId", required = true)
         @PathParam("vmSeqId")
-        vmSeqId: String?
+        vmSeqId: String
     ): Result<Boolean>
-
-    @ApiOperation("获取项目下正在执行的JOB配额状态")
-    @GET
-    @Path("/count/{projectId}/{vmType}")
-    fun getRunningJobCount(
-        @ApiParam(value = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam(value = "构建机类型", required = true)
-        @PathParam("vmType")
-        vmType: JobQuotaVmType
-    ): Result<JobQuotaStatus>
 }

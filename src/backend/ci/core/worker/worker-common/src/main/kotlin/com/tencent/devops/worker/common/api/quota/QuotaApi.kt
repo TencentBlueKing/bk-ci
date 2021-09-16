@@ -25,36 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.controller
+package com.tencent.devops.worker.common.api.quota
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
-import com.tencent.devops.dispatch.pojo.JobQuotaStatus
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.dispatch.service.JobQuotaBusinessService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
-@RestResource@Suppress("ALL")
-class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
-    private val jobQuotaBusinessService: JobQuotaBusinessService
-) : ServiceJobQuotaBusinessResource {
-    override fun addRunningJob(
-        projectId: String,
-        vmType: JobQuotaVmType,
-        buildId: String,
-        vmSeqId: String
-    ): Result<Boolean> {
-        jobQuotaBusinessService.insertRunningJob(projectId, vmType, buildId, vmSeqId)
-        return Result(true)
-    }
+interface QuotaApi : WorkerRestApiSDK {
 
-    override fun removeRunningJob(projectId: String, buildId: String, vmSeqId: String?): Result<Boolean> {
-        jobQuotaBusinessService.deleteRunningJob(projectId, buildId, vmSeqId)
-        return Result(true)
-    }
-
-    override fun getRunningJobCount(projectId: String, vmType: JobQuotaVmType): Result<JobQuotaStatus> {
-        return Result(jobQuotaBusinessService.getProjectRunningJobStatus(projectId, vmType))
-    }
+    fun removeRunningAgent(projectId: String, buildId: String, vmSeqId: String, retryCount: Int): Result<Boolean>
+    fun addRunningAgent(projectId: String, buildId: String, vmSeqId: String, retryCount: Int): Result<Boolean>
 }
