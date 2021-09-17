@@ -107,11 +107,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
     }
 
     override fun archiveAtom(
+        atomCode: String,
+        atomVersion: String,
         filePath: String,
         destPath: String,
         workspace: File,
         buildVariables: BuildVariables
-    ): String? {
+    ): String {
         val files = ArchiveUtils.matchFiles(workspace, filePath.trim())
         if (files.isEmpty()) {
             throw ExecuteException("no found atom file: $filePath")
@@ -120,11 +122,23 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             throw ExecuteException("too many(${files.size}) atom files: $filePath")
         }
         val file = files[0]
-        uploadAtom(file, destPath, buildVariables)
+        uploadAtom(
+            atomCode = atomCode,
+            atomVersion = atomVersion,
+            file = file,
+            destPath = destPath,
+            buildVariables = buildVariables
+        )
         return file.inputStream().use { ShaUtils.sha1InputStream(it) }
     }
 
-    override fun uploadAtom(file: File, destPath: String, buildVariables: BuildVariables) {
+    override fun uploadAtom(
+        atomCode: String,
+        atomVersion: String,
+        file: File,
+        destPath: String,
+        buildVariables: BuildVariables
+    ) {
         val path = if (destPath.trim().endsWith(file.name)) {
             destPath.trim()
         } else {
@@ -154,7 +168,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         }
     }
 
-    override fun uploadAtomFile(file: File, fileType: FileTypeEnum, destPath: String) {
+    override fun uploadAtomFile(
+        atomCode: String,
+        atomVersion: String,
+        file: File,
+        fileType: FileTypeEnum,
+        destPath: String
+    ) {
         // 过滤掉用../尝试遍历上层目录的操作
         val purePath = purePath(destPath)
         val fileName = file.name
