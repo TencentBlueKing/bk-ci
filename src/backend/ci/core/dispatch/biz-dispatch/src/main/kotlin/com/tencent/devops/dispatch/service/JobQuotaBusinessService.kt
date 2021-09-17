@@ -44,6 +44,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -581,8 +582,8 @@ class JobQuotaBusinessService @Autowired constructor(
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 LOG.info("<<< Restore time monthly Start >>>")
-                // jobQuotaProjectRunTimeDao.delete(dslContext)
-                redisOperation.delete(getProjectMonthRunningTimeKey())
+                val lastMonth = LocalDateTime.now().minusMonths(1).month.name
+                redisOperation.delete(getProjectMonthRunningTimeKey(lastMonth))
             } else {
                 LOG.info("<<< Restore time monthly Has Running, Do Not Start>>>")
             }
@@ -637,8 +638,8 @@ class JobQuotaBusinessService @Autowired constructor(
         redisOperation.hIncrBy(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(projectId), time)
     }
 
-    private fun getProjectMonthRunningTimeKey(): String {
-        val currentMonth = LocalDateTime.now().month.name
+    private fun getProjectMonthRunningTimeKey(month: String? = null): String {
+        val currentMonth = month ?: LocalDateTime.now().month.name
         return "$PROJECT_RUNNING_TIME_KEY_PREFIX$currentMonth"
     }
 

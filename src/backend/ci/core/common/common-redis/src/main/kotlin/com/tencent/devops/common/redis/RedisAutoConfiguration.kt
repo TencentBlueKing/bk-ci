@@ -54,6 +54,8 @@ class RedisAutoConfiguration {
         template.setConnectionFactory(factory)
         template.keySerializer = StringRedisSerializer()
         template.valueSerializer = StringRedisSerializer()
+        template.hashValueSerializer = StringRedisSerializer()
+        template.hashKeySerializer = StringRedisSerializer()
         template.afterPropertiesSet()
         return RedisOperation(template, redisName)
     }
