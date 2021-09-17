@@ -51,7 +51,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         projectId: String,
         experienceId: Long,
         authPermission: AuthPermission,
-        message: String,
+        message: String
     ) {
         logger.info("StreamExperiencePermissionServiceImpl user:$user projectId: $projectId ")
         val permissionCheck = checkPermission(user, projectId)
