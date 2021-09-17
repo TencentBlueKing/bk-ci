@@ -34,14 +34,17 @@ import com.tencent.devops.notify.service.WeworkService
 import org.apache.commons.lang3.StringEscapeUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Configuration
 import org.springframework.stereotype.Service
 
-@Service
-class WeworkServiceImpl @Autowired constructor(
+@Configuration
+@ConditionalOnProperty(prefix = "notify", name = ["weworkChannel"], havingValue = "oldWework")
+class OldWeworkServiceImpl @Autowired constructor(
     private val wechatWorkService: WechatWorkService
 ) : WeworkService {
 
-    private val logger = LoggerFactory.getLogger(WeworkServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(OldWeworkServiceImpl::class.java)
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
         val uploadMediaResponse = wechatWorkService.uploadMedia(
             mediaType = UploadMediaType.valueOf(weworkNotifyMediaMessage.mediaType.name),
