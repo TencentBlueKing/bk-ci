@@ -48,10 +48,7 @@ class JobQuotaService constructor(
         private val logger = LoggerFactory.getLogger(JobQuotaService::class.java)
     }
 
-    @Value("\${dispatch.jobQuota.systemAlertReceiver:#{null}}")
-    private val alertReceiver: String? = null
-
-    @Value("\${dispatch.jobQuota.enable:false}")
+    @Value("\${dispatch.jobQuota.enable}")
     private val jobQuotaEnable: Boolean = false
 
     fun checkAndAddRunningJob(startupEvent: PipelineAgentStartupEvent, vmType: JobQuotaVmType?) {
@@ -178,30 +175,30 @@ class JobQuotaService constructor(
                 )
             }
 
-/*            if (runningJobTime >= timeQuota * 60 * 60 * 1000) {
+            if (runningJobTime >= timeQuota * 60 * 60) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "当前项目下本月已执行的【${vmType.displayName}】JOB时间达到配额最大值，已执行JOB时间：" +
-                        "${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时",
+                        "${String.format("%.2f", runningJobTime / 60 / 60)}小时, 配额: ${timeQuota}小时",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
                 )
-                return !jobQuotaEnable
+                // return !jobQuotaEnable
             }
 
-            if ((runningJobTime * 100) / (timeQuota * 60 * 60 * 1000) >= timeThreshold) {
+            if ((runningJobTime * 100) / (timeQuota * 60 * 60) >= timeThreshold) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "前项目下本月已执行的【${vmType.displayName}】JOB时间已经超过告警阈值，已执行JOB时间：" +
-                        "${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时，" +
+                        "${String.format("%.2f", runningJobTime / 60 / 60)}小时, 配额: ${timeQuota}小时，" +
                             "告警阈值：${normalizePercentage(timeThreshold.toDouble())}%，当前已经使用：" +
-                        "${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%",
+                        "${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60))}%",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
                 )
-            }*/
+            }
             logger.info("Check job quota finish. DO NEXT.")
             return true
         }

@@ -59,6 +59,18 @@ class RedisAutoConfiguration {
     }
 
     @Bean
+    fun redisStringHashOperation(@Autowired factory: RedisConnectionFactory): RedisOperation {
+        val template = RedisTemplate<String, String>()
+        template.setConnectionFactory(factory)
+        template.keySerializer = StringRedisSerializer()
+        template.valueSerializer = StringRedisSerializer()
+        template.hashValueSerializer = StringRedisSerializer()
+        template.hashKeySerializer = StringRedisSerializer()
+        template.afterPropertiesSet()
+        return RedisOperation(template, redisName)
+    }
+
+    @Bean
     fun simpleRateLimiter(@Autowired redisOperation: RedisOperation): SimpleRateLimiter {
         return SimpleRateLimiter(redisOperation)
     }
