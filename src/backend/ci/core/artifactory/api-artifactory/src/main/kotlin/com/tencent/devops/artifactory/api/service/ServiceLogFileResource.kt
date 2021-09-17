@@ -41,8 +41,8 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_ARTIFACTORY"], description = "仓库-文件管理")
-@Path("/user/artifactories/log")
+@Api(tags = ["SERVICE_ARTIFACTORY_LOG"], description = "仓库-日志文件管理")
+@Path("/service/artifactories/log")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceLogFileResource {
