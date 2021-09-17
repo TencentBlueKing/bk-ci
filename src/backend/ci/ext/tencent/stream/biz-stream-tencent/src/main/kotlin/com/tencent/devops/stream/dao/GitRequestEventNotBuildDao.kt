@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.dao
 
-import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
 import com.tencent.devops.model.stream.tables.TGitRequestEventNotBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventNotBuildRecord
 import org.jooq.Condition
