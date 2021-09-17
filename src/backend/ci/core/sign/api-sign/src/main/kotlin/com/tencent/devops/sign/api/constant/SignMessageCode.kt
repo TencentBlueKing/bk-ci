@@ -64,4 +64,5 @@ object SignMessageCode {
     const val ERROR_NOT_AUTH_UPLOAD = "2122016" // 无发起iOS重签名权限
     const val ERROR_UPLOAD_TOKEN_INVALID = "2122017" // 上传IPA使用的token不存在
     const val ERROR_UPLOAD_TOKEN_EXPIRED = "2122018" // 上传IPA使用的token已过期
+    const val ERROR_MP_PARSE_ERROR = "2122019" // 描述文件不存在
 }

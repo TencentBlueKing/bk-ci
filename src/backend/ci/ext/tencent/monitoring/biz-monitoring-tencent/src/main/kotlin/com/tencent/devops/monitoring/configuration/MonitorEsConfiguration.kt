@@ -54,12 +54,9 @@ class MonitorEsConfiguration {
     private var password: String? = null
 
     @Bean
-    fun restHighLevelClient(restClient: RestClient): RestHighLevelClient {
-        return RestHighLevelClient(restClient)
+    fun restHighLevelClient(restClientBuilder: RestClientBuilder): RestHighLevelClient {
+        return RestHighLevelClient(restClientBuilder)
     }
-
-    @Bean
-    fun restClient(restClientBuilder: RestClientBuilder): RestClient = restClientBuilder.build()
 
     @Bean
     fun restClientBuilder(): RestClientBuilder {

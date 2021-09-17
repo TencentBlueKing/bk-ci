@@ -48,6 +48,10 @@ class TencentProjectProxyServiceImpl @Autowired constructor(
     private val tag: String? = null
 
     override fun checkProject(projectId: String, userId: String): Boolean {
+        if (!tag.isNullOrBlank() && tag.contains(IGNORETAG)) {
+            return true
+        }
+
         try {
             val redisKey = WebsocketKeys.PROJECT_USER_REDIS_KEY + tag + userId
             val redisData = redisOperation.get(redisKey)
@@ -72,7 +76,8 @@ class TencentProjectProxyServiceImpl @Autowired constructor(
             return if (privilegeProjectCodeList.contains(projectId)) {
                 true
             } else {
-                logger.warn("changePage checkProject fail, user:$userId,projectId:$projectId,projectList:$privilegeProjectCodeList")
+                logger.warn("changePage checkProject fail:" +
+                    " user:$userId,projectId:$projectId,projectList:$privilegeProjectCodeList")
                 false
             }
         } catch (e: Exception) {
@@ -84,5 +89,6 @@ class TencentProjectProxyServiceImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(TencentProjectProxyServiceImpl::class.java)
+        const val IGNORETAG = "gitci"
     }
 }

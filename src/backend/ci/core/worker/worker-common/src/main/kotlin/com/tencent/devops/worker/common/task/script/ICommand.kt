@@ -49,7 +49,8 @@ interface ICommand {
         buildEnvs: List<BuildEnv>,
         continueNoneZero: Boolean = false,
         errorMessage: String? = null,
-        elementId: String? = null
+        elementId: String? = null,
+        charSetType: String? = null
     )
 
     fun parseTemplate(buildId: String, command: String, data: Map<String, String>, dir: File): String {

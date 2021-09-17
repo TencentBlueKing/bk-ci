@@ -40,9 +40,11 @@ val codeccToolUrlPathMap = mapOf(
         "?buildId=##buildId##&status=7&sortField=createBuildNumber",
     "DUPC" to "/console/codecc/##projectId##/task/##taskId##/defect/##detail##/list" +
         "?buildId=##buildId##&status=7&sortField=createBuildNumber",
-    "STANDARD" to "/console/codecc/##projectId##/task/##taskId##/defect/standard/list?dimension=STANDARD",
-    "SECURITY" to "/console/codecc/##projectId##/task/##taskId##/defect/security/list?dimension=SECURITY",
-    "DEFECT" to "/console/codecc/##projectId##/task/##taskId##/defect/defect/list?dimension=DEFECT")
+    "STANDARD" to "/console/codecc/##projectId##/task/##taskId##/defect/standard/list?dimension=STANDARD&" +
+        "buildId=##buildId##",
+    "SECURITY" to "/console/codecc/##projectId##/task/##taskId##/defect/security/list?dimension=SECURITY&" +
+        "buildId=##buildId##",
+    "DEFECT" to "/console/codecc/##projectId##/task/##taskId##/defect/defect/list?dimension=DEFECT&buildId=##buildId##")
 
 const val DEFAULT_CODECC_URL = "/console/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list" +
     "?buildId=##buildId##&status=7&sortField=createBuildNumber"

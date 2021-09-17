@@ -29,8 +29,8 @@ package com.tencent.devops.gitci.dao
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.gitci.pojo.GitProjectConf
-import com.tencent.devops.model.gitci.tables.TGitProjectConf
-import com.tencent.devops.model.gitci.tables.records.TGitProjectConfRecord
+import com.tencent.devops.model.stream.tables.TGitProjectConf
+import com.tencent.devops.model.stream.tables.records.TGitProjectConfRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result

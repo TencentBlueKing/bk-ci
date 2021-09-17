@@ -150,7 +150,7 @@ class GitCIProjectService @Autowired constructor(
                 projectCode = project?.projectCode,
                 public = it.public,
                 name = it.name,
-                nameWithNamespace = it.nameWithNamespace,
+                nameWithNamespace = it.pathWithNamespace,
                 httpsUrlToRepo = it.httpsUrlToRepo,
                 webUrl = it.webUrl,
                 avatarUrl = it.avatarUrl,

@@ -30,12 +30,9 @@ package com.tencent.devops.sign.utils
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
 import java.io.File
-import java.io.IOException
 import java.io.InputStream
-import java.io.OutputStream
 import java.security.MessageDigest
 
-@Suppress("ALL")
 object IpaFileUtil {
     private const val bufferSize = 8 * 1024
 
@@ -46,55 +43,23 @@ object IpaFileUtil {
         inputStream: InputStream,
         target: File
     ): String? {
-        var outputStream: OutputStream? = null
-        try {
-            // 如果文件存在，则删除
-            if (target.exists()) {
-                target.delete()
-            }
-            outputStream = target.outputStream()
+        // 如果文件存在，则删除
+        if (target.exists()) {
+            target.delete()
+        }
+        target.outputStream().use { out ->
             val md5 = MessageDigest.getInstance("MD5")
             var bytesCopied: Long = 0
             val buffer = ByteArray(bufferSize)
             var bytes = inputStream.read(buffer)
             while (bytes >= 0) {
-                outputStream.write(buffer, 0, bytes)
+                out.write(buffer, 0, bytes)
                 md5.update(buffer, 0, bytes)
                 bytesCopied += bytes
                 bytes = inputStream.read(buffer)
             }
             return Hex.encodeHexString(md5.digest())
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return null
-        } finally {
-            try {
-                outputStream?.close()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
         }
-    }
-
-    /*
-    *  创建目录
-    * */
-    fun mkdirs(dir: File): Boolean {
-        if (!dir.exists()) {
-            dir.mkdirs()
-            return true
-        }
-        if (dir.exists() && !dir.isDirectory) {
-            dir.deleteOnExit()
-            dir.mkdirs()
-            return true
-        }
-        if (dir.exists() && dir.isDirectory && !dir.canWrite()) {
-            dir.deleteOnExit()
-            dir.mkdirs()
-            return true
-        }
-        return true
     }
 
     /**

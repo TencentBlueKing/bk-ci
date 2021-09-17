@@ -27,8 +27,8 @@
 
 package com.tencent.devops.gitci.dao
 
-import com.tencent.devops.model.gitci.tables.TGitCiServicesConf
-import com.tencent.devops.model.gitci.tables.records.TGitCiServicesConfRecord
+import com.tencent.devops.model.stream.tables.TGitCiServicesConf
+import com.tencent.devops.model.stream.tables.records.TGitCiServicesConfRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
