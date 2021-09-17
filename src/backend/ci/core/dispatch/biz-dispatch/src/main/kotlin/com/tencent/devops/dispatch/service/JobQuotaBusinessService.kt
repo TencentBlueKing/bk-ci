@@ -29,15 +29,19 @@ package com.tencent.devops.dispatch.service
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.dispatch.dao.JobQuotaProjectRunTimeDao
 import com.tencent.devops.dispatch.dao.RunningJobsDao
+import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.model.dispatch.tables.records.TDispatchRunningJobsRecord
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -48,6 +52,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 @Suppress("ALL")
@@ -58,7 +63,8 @@ class JobQuotaBusinessService @Autowired constructor(
     private val jobQuotaProjectRunTimeDao: JobQuotaProjectRunTimeDao,
     private val dslContext: DSLContext,
     private val client: Client,
-    private val profile: Profile
+    private val profile: Profile,
+    private val jobQuotaInterface: JobQuotaInterface
 ) {
 /*    @Value("\${dispatch.jobQuota.systemAlertReceiver:#{null}}")
     private val systemAlertReceiver: String? = null
@@ -184,7 +190,7 @@ class JobQuotaBusinessService @Autowired constructor(
     }*/
 
     private fun jobAgentFinish(projectId: String, buildId: String, vmSeqId: String?) {
-        val redisLock = RedisLock(redisStringHashOperation, JOB_END_LOCK_KEY + projectId, 60L)
+        val redisLock = RedisLock(redisStringHashOperation, "$JOB_END_LOCK_KEY$buildId$vmSeqId", 60L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
@@ -195,7 +201,20 @@ class JobQuotaBusinessService @Autowired constructor(
                     // 保存构建时间，单位秒
                     incProjectJobRunningTime(projectId, JobQuotaVmType.parse(it.vmType), duration.toMillis() / 1000)
                     LOG.info("$projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(it.vmType)} >> Finish time: " +
-                            "increase ${duration.toHours()} hours. >>>")
+                            "increase ${duration.toMillis() / 1000} seconds. >>>")
+
+                    // 保存构建记录
+                    jobQuotaInterface.saveJobQuotaHistory(
+                        JobQuotaHistory(
+                            projectId = it.projectId,
+                            buildId = it.buildId,
+                            vmSeqId = it.vmSeqId,
+                            executeCount = 1,
+                            vmType = it.vmType,
+                            createTime = it.createdTime.format(dateTimeFormatter),
+                            agentStartTime = it.agentStartTime.format(dateTimeFormatter),
+                            agentFinishTime = LocalDateTime.now().format(dateTimeFormatter)
+                    ))
                 }
             } else {
                 LOG.info("$projectId|$buildId|$vmSeqId >> DeleteRunningJob get lock failed, not run>>>")
@@ -710,7 +729,9 @@ class JobQuotaBusinessService @Autowired constructor(
         private const val TIMEOUT_DAYS = 7L
         private const val CHECK_RUNNING_DAYS = 1L
         private const val QUOTA_PROJECT_ALL_KEY = "project_time_quota_all_key"
+
         private val LOG = LoggerFactory.getLogger(JobQuotaBusinessService::class.java)
+        private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
