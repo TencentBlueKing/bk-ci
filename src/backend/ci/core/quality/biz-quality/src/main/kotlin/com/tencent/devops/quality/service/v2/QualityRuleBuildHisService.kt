@@ -106,6 +106,11 @@ class QualityRuleBuildHisService constructor(
                     return
                 }
             }
+            else -> {
+                if (NumberUtils.isDigits(requestIndicator.threshold)) {
+                    return
+                }
+            }
         }
         throw IllegalArgumentException("指标[${requestIndicator.enName}]值类型为[${indicator.thresholdType}]，" +
             "请修改红线阈值[${requestIndicator.threshold}]")
