@@ -64,7 +64,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         user: String,
         projectId: String,
         experienceId: Long,
-        experienceName: String,
+        experienceName: String
     ) {
         return
     }
@@ -72,7 +72,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
     override fun filterExperience(
         user: String,
         projectId: String,
-        authPermissions: Set<AuthPermission>,
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>> {
         if (!checkPermission(user, projectId)) {
             return emptyMap()
@@ -90,7 +90,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         projectId: String,
         groupId: Long,
         authPermission: AuthPermission,
-        message: String,
+        message: String
     ) {
         logger.info("validateGroupPermission user:$userId projectId: $projectId ")
         val permissionCheck = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
@@ -109,7 +109,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         groupId: Long,
-        groupName: String,
+        groupName: String
     ) {
         return
     }
@@ -117,7 +117,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
     override fun modifyGroupResource(
         projectId: String,
         groupId: Long,
-        groupName: String,
+        groupName: String
     ) {
         return
     }
@@ -129,7 +129,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
     override fun filterGroup(
         user: String,
         projectId: String,
-        authPermissions: Set<AuthPermission>,
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>> {
         if (!checkPermission(user, projectId)) {
             return emptyMap()
