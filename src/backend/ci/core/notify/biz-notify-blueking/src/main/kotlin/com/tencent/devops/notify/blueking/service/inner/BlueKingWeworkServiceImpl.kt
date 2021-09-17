@@ -24,17 +24,24 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.service
+package com.tencent.devops.notify.blueking.service.inner
 
-import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+import com.tencent.devops.notify.service.WeworkService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Configuration
 
-interface WeworkService {
+@Configuration
+@ConditionalOnProperty(prefix = "notify", name = ["weworkChannel"], havingValue = "blueking")
+class BlueKingWeworkServiceImpl @Autowired constructor() : WeworkService {
 
-    fun sendMqMsg(message: WeworkNotifyMessageWithOperation) = Unit
+    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
+        TODO("Not yet implemented")
+    }
 
-    fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage)
-
-    fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage)
+    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
+        TODO("Not yet implemented")
+    }
 }
