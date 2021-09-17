@@ -25,41 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.stream.common
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.PipelineExportV2YamlData
-import com.tencent.devops.process.service.TXPipelineExportService
-import org.springframework.beans.factory.annotation.Autowired
+enum class StreamPipelineBadgeType(val text: String) {
+    // 没有找到
+    NOT_FOUND("not found"),
 
-@RestResource
-class ServiceTXPipelineResourceImpl @Autowired constructor(
-    private val pipelineExportService: TXPipelineExportService
-) : ServiceTXPipelineResource {
-    override fun exportPipelineGitCI(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ): Result<PipelineExportV2YamlData> {
-        checkParam(userId, projectId)
-        checkPipelineId(pipelineId)
-        return Result(pipelineExportService.exportV2YamlStr(userId, projectId, pipelineId, true))
-    }
+    // 从来没有构建
+    NEVER_BUILD("never build"),
 
-    private fun checkParam(userId: String, projectId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-    }
+    // 构建成功
+    SUCCEEDED("succeeded"),
 
-    private fun checkPipelineId(pipelineId: String) {
-        if (pipelineId.isBlank()) {
-            throw ParamBlankException("Invalid pipelineId")
-        }
-    }
+    // 构建失败
+    FAILED("failed");
 }

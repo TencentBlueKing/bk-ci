@@ -46,7 +46,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
-import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
@@ -80,7 +79,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
-@Suppress("LongMethod", "LongParameterList", "ReturnCount")
+@Suppress("LongMethod", "LongParameterList", "ReturnCount", "TooManyFunctions")
 @Service
 class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -104,6 +103,22 @@ class EngineVMBuildService @Autowired(required = false) constructor(
      * 构建机报告启动完毕
      */
     fun buildVMStarted(buildId: String, vmSeqId: String, vmName: String, retryCount: Int): BuildVariables {
+        val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
+        try {
+            containerIdLock.lock()
+            return handleStartUpVMBus(buildId, vmSeqId, vmName, retryCount)
+        } finally {
+            containerIdLock.unlock()
+        }
+    }
+
+    @Suppress("ThrowsCount")
+    private fun handleStartUpVMBus(
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        retryCount: Int
+    ): BuildVariables {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         Preconditions.checkNotNull(buildInfo, NotFoundException("Pipeline build ($buildId) is not exist"))
         LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
@@ -111,7 +126,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val variablesWithType = buildVariableService.getAllVariableWithType(buildId)
         val model = containerBuildDetailService.getBuildModel(buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
-
         var vmId = 1
 
         model!!.stages.forEachIndexed { index, s ->
@@ -121,6 +135,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             s.containers.forEach c@{
 
                 if (vmId.toString() == vmSeqId) {
+                    val container = pipelineRuntimeService.getContainer(buildId, s.id, vmSeqId)
+                        ?: throw NotFoundException("j($vmSeqId)|vmName($vmName) is not exist")
+                    // 如果取消等操作已经发出关机消息了，则不允许构建机认领任务
+                    if (container.status.isFinish()) {
+                        throw OperationException("vmName($vmName) has been shutdown")
+                    }
                     // #3769 如果是已经启动完成并且不是网络故障重试的(retryCount>0), 都属于构建机的重复无效启动请求,要抛异常拒绝
                     Preconditions.checkTrue(
                         condition = !BuildStatus.parse(it.startVMStatus).isFinish() || retryCount > 0,
@@ -129,7 +149,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     var timeoutMills: Long? = null
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
                     val buildEnvs = if (it is VMBuildContainer) {
-                        timeoutMills = Timeout.transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
+                        timeoutMills = transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
                         if (it.buildEnv == null) {
                             emptyList<BuildEnv>()
                         } else {
@@ -146,7 +166,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         }
                     } else {
                         if (it is NormalContainer) {
-                            timeoutMills = Timeout.transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
+                            timeoutMills = transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
                         }
                         emptyList()
                     }

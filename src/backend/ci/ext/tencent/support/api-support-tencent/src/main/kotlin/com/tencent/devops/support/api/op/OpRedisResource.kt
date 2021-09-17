@@ -25,41 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.support.api.op
 
-import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.PipelineExportV2YamlData
-import com.tencent.devops.process.service.TXPipelineExportService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.support.model.redis.UpdateRedisValueRequest
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ServiceTXPipelineResourceImpl @Autowired constructor(
-    private val pipelineExportService: TXPipelineExportService
-) : ServiceTXPipelineResource {
-    override fun exportPipelineGitCI(
+@Api(tags = ["OP_REDIS"], description = "OP-REDIS")
+@Path("/op/redis")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpRedisResource {
+
+    @ApiOperation("更新redis缓存值")
+    @PUT
+    @Path("/value/update")
+    fun updateRedisValue(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        projectId: String,
-        pipelineId: String
-    ): Result<PipelineExportV2YamlData> {
-        checkParam(userId, projectId)
-        checkPipelineId(pipelineId)
-        return Result(pipelineExportService.exportV2YamlStr(userId, projectId, pipelineId, true))
-    }
-
-    private fun checkParam(userId: String, projectId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-    }
-
-    private fun checkPipelineId(pipelineId: String) {
-        if (pipelineId.isBlank()) {
-            throw ParamBlankException("Invalid pipelineId")
-        }
-    }
+        @ApiParam(value = "更新redis缓存值请求报文体", required = true)
+        updateRedisValueRequest: UpdateRedisValueRequest
+    ): Result<Boolean>
 }

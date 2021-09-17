@@ -25,41 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.support.model.redis
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.PipelineExportV2YamlData
-import com.tencent.devops.process.service.TXPipelineExportService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceTXPipelineResourceImpl @Autowired constructor(
-    private val pipelineExportService: TXPipelineExportService
-) : ServiceTXPipelineResource {
-    override fun exportPipelineGitCI(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ): Result<PipelineExportV2YamlData> {
-        checkParam(userId, projectId)
-        checkPipelineId(pipelineId)
-        return Result(pipelineExportService.exportV2YamlStr(userId, projectId, pipelineId, true))
-    }
-
-    private fun checkParam(userId: String, projectId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-    }
-
-    private fun checkPipelineId(pipelineId: String) {
-        if (pipelineId.isBlank()) {
-            throw ParamBlankException("Invalid pipelineId")
-        }
-    }
-}
+@ApiModel("更新redis缓存值请求报文体")
+data class UpdateRedisValueRequest(
+    @ApiModelProperty("更新方法名称", required = true)
+    val methodName: String,
+    @ApiModelProperty("key", required = true)
+    val key: String,
+    @ApiModelProperty("值", required = true)
+    val value: String,
+    @ApiModelProperty("hashKey", required = false)
+    val hashKey: String? = null,
+    @ApiModelProperty("超时时间", required = false)
+    val expiredInSecond: Long? = null,
+    @ApiModelProperty("是否超时", required = false)
+    val expired: Boolean? = true,
+    @ApiModelProperty("是否区分集群", required = false)
+    val isDistinguishCluster: Boolean? = false
+)

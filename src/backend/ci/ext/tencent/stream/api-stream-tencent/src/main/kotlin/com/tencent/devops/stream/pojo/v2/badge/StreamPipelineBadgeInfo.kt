@@ -25,41 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.stream.pojo.v2.badge
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.PipelineExportV2YamlData
-import com.tencent.devops.process.service.TXPipelineExportService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceTXPipelineResourceImpl @Autowired constructor(
-    private val pipelineExportService: TXPipelineExportService
-) : ServiceTXPipelineResource {
-    override fun exportPipelineGitCI(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ): Result<PipelineExportV2YamlData> {
-        checkParam(userId, projectId)
-        checkPipelineId(pipelineId)
-        return Result(pipelineExportService.exportV2YamlStr(userId, projectId, pipelineId, true))
-    }
-
-    private fun checkParam(userId: String, projectId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-    }
-
-    private fun checkPipelineId(pipelineId: String) {
-        if (pipelineId.isBlank()) {
-            throw ParamBlankException("Invalid pipelineId")
-        }
-    }
-}
+@ApiModel("流水线构建状态徽章信息")
+data class StreamPipelineBadgeInfo(
+    @ApiModelProperty("流水线名称")
+    val label: String,
+    @ApiModelProperty("最后一次构建状态描述")
+    val message: String,
+    @ApiModelProperty("最后一次构建状态")
+    val status: String
+)

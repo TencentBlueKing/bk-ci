@@ -25,41 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.stream.api
 
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.PipelineExportV2YamlData
-import com.tencent.devops.process.service.TXPipelineExportService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.stream.pojo.v2.badge.StreamPipelineBadgeInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ServiceTXPipelineResourceImpl @Autowired constructor(
-    private val pipelineExportService: TXPipelineExportService
-) : ServiceTXPipelineResource {
-    override fun exportPipelineGitCI(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ): Result<PipelineExportV2YamlData> {
-        checkParam(userId, projectId)
-        checkPipelineId(pipelineId)
-        return Result(pipelineExportService.exportV2YamlStr(userId, projectId, pipelineId, true))
-    }
+@Api(tags = ["EXTERNAL_STREAM"], description = "外部-STREAM资源获取")
+@Path("/external/stream")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ExternalStreamBadgeResource {
 
-    private fun checkParam(userId: String, projectId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-    }
-
-    private fun checkPipelineId(pipelineId: String) {
-        if (pipelineId.isBlank()) {
-            throw ParamBlankException("Invalid pipelineId")
-        }
-    }
+    @ApiOperation("获取流水线徽章信息")
+    @GET
+    @Path("/projects/{gitProjectId}/pipelines/badge")
+    fun getPipelineBadge(
+        @ApiParam("Git仓库ID", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam("流水线文件名称", required = true)
+        @QueryParam("file_path")
+        filePath: String,
+        @ApiParam("分支名称", required = false)
+        @QueryParam("branch")
+        branch: String?,
+        @ApiParam("触发方式", required = false)
+        @QueryParam("object_kind")
+        objectKind: String?
+    ): Result<StreamPipelineBadgeInfo>
 }

@@ -25,41 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.stream.resources
 
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.PipelineExportV2YamlData
-import com.tencent.devops.process.service.TXPipelineExportService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.stream.api.ExternalStreamBadgeResource
+import com.tencent.devops.stream.pojo.v2.badge.StreamPipelineBadgeInfo
+import com.tencent.devops.stream.v2.service.StreamPipelineBadgeService
 
 @RestResource
-class ServiceTXPipelineResourceImpl @Autowired constructor(
-    private val pipelineExportService: TXPipelineExportService
-) : ServiceTXPipelineResource {
-    override fun exportPipelineGitCI(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ): Result<PipelineExportV2YamlData> {
-        checkParam(userId, projectId)
-        checkPipelineId(pipelineId)
-        return Result(pipelineExportService.exportV2YamlStr(userId, projectId, pipelineId, true))
-    }
-
-    private fun checkParam(userId: String, projectId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-    }
-
-    private fun checkPipelineId(pipelineId: String) {
-        if (pipelineId.isBlank()) {
-            throw ParamBlankException("Invalid pipelineId")
-        }
+class ExternalStreamBadgeResourceImpl(
+    private val streamPipelineBadgeService: StreamPipelineBadgeService
+) : ExternalStreamBadgeResource {
+    override fun getPipelineBadge(
+        gitProjectId: Long,
+        filePath: String,
+        branch: String?,
+        objectKind: String?
+    ): Result<StreamPipelineBadgeInfo> {
+        return Result(
+            streamPipelineBadgeService.get(
+                gitProjectId, filePath, branch, objectKind
+            )
+        )
     }
 }
