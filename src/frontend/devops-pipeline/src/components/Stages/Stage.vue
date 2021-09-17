@@ -297,7 +297,7 @@
             reviewTooltip (stageControl = {}) {
                 const reviewGroups = stageControl.reviewGroups || []
                 const curReviewGroup = reviewGroups.find((review) => (review.status === undefined)) || {}
-                const canTriggerStage = (curReviewGroup.reviewers || []).includes(this.$userInfo.username)
+                const canTriggerStage = (curReviewGroup.reviewers || []).includes(this.$userInfo ? this.$userInfo.username : '')
                 const isStagePause = stageControl.status !== 'REVIEWING'
                 return {
                     content: canTriggerStage ? this.$t('editPage.toCheck') : this.$t('editPage.noAuthToCheck'),
