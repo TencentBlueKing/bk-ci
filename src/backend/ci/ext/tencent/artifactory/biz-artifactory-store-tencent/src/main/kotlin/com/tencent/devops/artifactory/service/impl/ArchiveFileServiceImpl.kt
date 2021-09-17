@@ -27,14 +27,17 @@
 
 package com.tencent.devops.artifactory.service.impl
 
-import com.tencent.devops.artifactory.config.BkRepoExtServiceConfig
-import com.tencent.devops.artifactory.service.ArchiveExtServicePkgService
+import com.tencent.devops.artifactory.config.BkRepoStoreConfig
+import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.api.ServiceExtServiceArchiveResource
+import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,38 +47,47 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 
 @Service
-class ArchiveExtServicePkgServiceImpl : ArchiveExtServicePkgService {
+class ArchiveFileServiceImpl : ArchiveFileService {
 
-    private val logger = LoggerFactory.getLogger(ArchiveExtServicePkgServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(ArchiveFileServiceImpl::class.java)
 
     @Autowired
     private lateinit var bkRepoConfig: BkRepoConfig
     @Autowired
-    private lateinit var bkRepoExtServiceConfig: BkRepoExtServiceConfig
+    private lateinit var bkRepoStoreConfig: BkRepoStoreConfig
     @Autowired
     private lateinit var bkRepoClient: BkRepoClient
     @Autowired
     private lateinit var client: Client
 
-    override fun archiveExtService(
+    override fun archiveFile(
         userId: String,
         projectCode: String,
-        serviceCode: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
         version: String,
         destPath: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<Boolean> {
-        logger.info("archiveExtService userId is:$userId,projectCode info is:$projectCode,serviceCode is:$serviceCode")
-        logger.info("archiveExtService version is:$version,file info is:$disposition")
-        // 校验用户上传的扩展服务包是否合法
-        val verifyExtServicePackageResult = client.get(ServiceExtServiceArchiveResource::class).verifyExtServicePackageByUserId(userId, serviceCode)
-        logger.info("verifyExtServicePackageResult is:$verifyExtServicePackageResult")
-        if (verifyExtServicePackageResult.isNotOk()) {
-            return Result(verifyExtServicePackageResult.status, verifyExtServicePackageResult.message, null)
+        logger.info("archiveFile params:[$userId|$projectCode|$storeType|$storeCode|$version|$destPath")
+        // 校验用户上传的文件是否合法
+        val verifyResult = client.get(ServiceStoreResource::class).isStoreMember(
+            storeCode = storeCode,
+            storeType = storeType,
+            userId = userId
+        )
+        if (verifyResult.isNotOk() || verifyResult.data != true) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(storeCode)
+            )
         }
-        // 上传扩展服务包到仓库
-        val fileName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
+        // 上传文件到仓库
+        val fileName = String(
+            bytes = disposition.fileName.toByteArray(Charset.forName("ISO8859-1")),
+            charset = Charset.forName("UTF-8")
+        )
         val index = fileName.lastIndexOf(".")
         val fileSuffix = fileName.substring(index + 1)
         val file = Files.createTempFile(UUIDUtil.generate(), ".$fileSuffix").toFile()
@@ -85,14 +97,14 @@ class ArchiveExtServicePkgServiceImpl : ArchiveExtServicePkgService {
         try {
             bkRepoClient.uploadLocalFile(
                 userId = userId,
-                projectId = bkRepoExtServiceConfig.bkrepoExtServiceProjectName,
+                projectId = bkRepoStoreConfig.bkrepoExtServiceProjectName,
                 repoName = bkRepoConfig.bkrepoPkgRepoName,
                 path = destPath,
                 file = file,
                 gatewayFlag = false,
                 bkrepoApiUrl = bkRepoConfig.bkrepoApiUrl,
-                userName = bkRepoExtServiceConfig.bkrepoExtServiceUserName,
-                password = bkRepoExtServiceConfig.bkrepoExtServicePassword
+                userName = bkRepoStoreConfig.bkrepoExtServiceUserName,
+                password = bkRepoStoreConfig.bkrepoExtServicePassword
             )
         } finally {
             file.delete()

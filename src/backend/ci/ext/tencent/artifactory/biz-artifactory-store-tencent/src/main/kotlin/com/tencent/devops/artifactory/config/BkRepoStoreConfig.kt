@@ -25,33 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.config
+package com.tencent.devops.artifactory.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 /**
- * 仓库配置
+ * 研发商店仓库配置
  */
 @Component
-class BkRepoConfig {
+class BkRepoStoreConfig {
 
-    // 蓝盾新仓库api接口地址
-    @Value("\${bkrepo.bkrepoApiUrl:}")
-    val bkrepoApiUrl: String = ""
+    // 蓝盾新仓库研发商店项目名称
+    @Value("\${bkrepo.store.projectName:bk-store}")
+    val bkrepoStoreProjectName: String = "bk-store"
 
-    // 蓝盾新仓库静态资源仓库名称
-    @Value("\${bkrepo.staticRepoName:static}")
-    val bkrepoStaticRepoName: String = "static"
+    // 蓝盾新仓库研发商店用户名
+    @Value("\${bkrepo.store.userName:g_bkstore}")
+    val bkrepoStoreUserName: String = "g_bkstore"
 
-    // 蓝盾新仓库执行包仓库名称
-    @Value("\${bkrepo.pkgRepoName:generic-local}")
-    val bkrepoPkgRepoName: String = "generic-local"
+    // 蓝盾新仓库研发商店密码
+    @Value("\${bkrepo.store.password:}")
+    val bkrepoStorePassword: String = ""
 
-    // 蓝盾新仓库docker仓库名称
-    @Value("\${bkrepo.dockerRepoName:docker-local}")
-    val bkrepoDockerRepoName: String = "docker-local"
+    // 蓝盾新仓库微扩展项目名称
+    @Value("\${bkrepo.extService.projectName:bk-extension}")
+    val bkrepoExtServiceProjectName: String = "bk-extension"
 
-    @Value("\${bkrepo.logRepoCredentialsKey:}")
-    lateinit var logRepoCredentialsKey: String
+    // 蓝盾新仓库微扩展用户名
+    @Value("\${bkrepo.extService.userName:bk_extension}")
+    val bkrepoExtServiceUserName: String = "bk_extension"
+
+    // 蓝盾新仓库微扩展密码
+    @Value("\${bkrepo.extService.password:}")
+    val bkrepoExtServicePassword: String = ""
 }

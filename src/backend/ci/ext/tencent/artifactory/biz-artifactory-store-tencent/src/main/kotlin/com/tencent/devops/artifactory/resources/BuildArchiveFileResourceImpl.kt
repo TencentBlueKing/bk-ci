@@ -25,26 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.config
+package com.tencent.devops.artifactory.resources
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.artifactory.api.BuildArchiveFileResource
+import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
 
-/**
- * 扩展服务仓库配置
- */
-@Component
-class BkRepoExtServiceConfig {
+@RestResource
+class BuildArchiveFileResourceImpl @Autowired constructor(
+    private val archiveFileService: ArchiveFileService
+) : BuildArchiveFileResource {
 
-    // 蓝盾新仓库扩展服务项目名称
-    @Value("\${bkrepo.extService.projectName}")
-    val bkrepoExtServiceProjectName: String = ""
-
-    // 蓝盾新仓库扩展服务用户名
-    @Value("\${bkrepo.extService.userName}")
-    val bkrepoExtServiceUserName: String = ""
-
-    // 蓝盾新仓库扩展服务密码
-    @Value("\${bkrepo.extService.password}")
-    val bkrepoExtServicePassword: String = ""
+    override fun archiveFile(
+        userId: String,
+        projectCode: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        destPath: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<Boolean> {
+        return archiveFileService.archiveFile(
+            userId = userId,
+            projectCode = projectCode,
+            storeType = storeType,
+            storeCode = storeCode,
+            version = version,
+            destPath = destPath,
+            inputStream = inputStream,
+            disposition = disposition
+        )
+    }
 }

@@ -25,38 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.artifactory.service
 
-import com.tencent.devops.artifactory.api.BuildArchiveExtServiceResource
-import com.tencent.devops.artifactory.service.ArchiveExtServicePkgService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
-@RestResource
-class BuildArchiveExtServiceResourceImpl @Autowired constructor(
-    private val archiveExtServicePkgService: ArchiveExtServicePkgService
-) : BuildArchiveExtServiceResource {
+interface ArchiveFileService {
 
-    override fun archiveExtService(
+    /**
+     * 归档文件
+     */
+    fun archiveFile(
         userId: String,
         projectCode: String,
-        serviceCode: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
         version: String,
         destPath: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<Boolean> {
-        return archiveExtServicePkgService.archiveExtService(
-            userId = userId,
-            projectCode = projectCode,
-            serviceCode = serviceCode,
-            version = version,
-            destPath = destPath,
-            inputStream = inputStream,
-            disposition = disposition
-        )
-    }
+    ): Result<Boolean>
 }
