@@ -109,7 +109,7 @@ interface ApigwArtifactoryResourceV3 {
         pageSize: Int?
     ): Result<Page<FileInfo>>
 
-    @ApiOperation("下载熔断归档的全量日志")
+    @ApiOperation("下载熔断归档的全量日志（开源版暂未实现）")
     @GET
     @Path("/log/{pipelineId}/{buildId}/{elementId}/{executeCount}")
     fun getPluginLogUrl(
