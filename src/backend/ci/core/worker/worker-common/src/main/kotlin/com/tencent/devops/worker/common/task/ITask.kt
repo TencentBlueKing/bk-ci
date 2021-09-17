@@ -52,27 +52,10 @@ abstract class ITask {
             val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
             if (additionalOptions?.enableCustomEnv == true && additionalOptions.customEnv?.isNotEmpty() == true) {
                 val variables = buildVariables.variables.toMutableMap()
-                additionalOptions.customEnv!!.filter { !it.key.isNullOrBlank() }.forEach {
-                    variables[it.key!!] = it.value ?: ""
+                additionalOptions.customEnv!!.forEach {
+                    if (!it.key.isNullOrBlank()) variables[it.key!!] = it.value ?: ""
                 }
-                return execute(
-                    buildTask,
-                    BuildVariables(
-                        buildId = buildVariables.buildId,
-                        vmSeqId = buildVariables.vmSeqId,
-                        vmName = buildVariables.vmName,
-                        projectId = buildVariables.projectId,
-                        pipelineId = buildVariables.pipelineId,
-                        variables = variables,
-                        buildEnvs = buildVariables.buildEnvs,
-                        containerId = buildVariables.containerId,
-                        containerHashId = buildVariables.containerHashId,
-                        variablesWithType = buildVariables.variablesWithType,
-                        timeoutMills = buildVariables.timeoutMills,
-                        containerType = buildVariables.containerType
-                    ),
-                    workspace
-                )
+                return execute(buildTask, buildVariables.copy(variables = variables), workspace)
             }
         }
         execute(buildTask, buildVariables, workspace)
