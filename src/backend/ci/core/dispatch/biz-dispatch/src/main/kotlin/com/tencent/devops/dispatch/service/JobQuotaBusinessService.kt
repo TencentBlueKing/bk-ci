@@ -29,19 +29,17 @@ package com.tencent.devops.dispatch.service
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.dao.JobQuotaProjectRunTimeDao
 import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.model.dispatch.tables.records.TDispatchRunningJobsRecord
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -57,7 +55,6 @@ import java.time.format.DateTimeFormatter
 @Service
 @Suppress("ALL")
 class JobQuotaBusinessService @Autowired constructor(
-    private val redisStringHashOperation: RedisOperation,
     private val jobQuotaManagerService: JobQuotaManagerService,
     private val runningJobsDao: RunningJobsDao,
     private val jobQuotaProjectRunTimeDao: JobQuotaProjectRunTimeDao,
@@ -77,7 +74,7 @@ class JobQuotaBusinessService @Autowired constructor(
      */
     fun insertRunningJob(projectId: String, vmType: JobQuotaVmType, buildId: String, vmSeqId: String) {
         runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId)
-        redisStringHashOperation.sadd(QUOTA_PROJECT_ALL_KEY, projectId) // 所有项目集合
+        getRedisStringSerializerOperation().sadd(QUOTA_PROJECT_ALL_KEY, projectId) // 所有项目集合
         // checkWarning(projectId, vmType)
     }
 
@@ -140,7 +137,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
 
             // 所有已经结束的耗时
-            val finishRunJobTime = redisStringHashOperation.hget(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(projectId))
+            val finishRunJobTime = getRedisStringSerializerOperation().hget(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(projectId))
             runningTotalTime += (finishRunJobTime ?: "0").toLong()
 
             return runningTotalTime
@@ -154,7 +151,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
 
             // 所有已经结束的耗时
-            val finishRunJobTime = redisStringHashOperation.hget(
+            val finishRunJobTime = getRedisStringSerializerOperation().hget(
                 getProjectMonthRunningTimeKey(),
                 getProjectVmTypeRunningTimeKey(projectId, vmType)
             )
@@ -190,7 +187,7 @@ class JobQuotaBusinessService @Autowired constructor(
     }*/
 
     private fun jobAgentFinish(projectId: String, buildId: String, vmSeqId: String?) {
-        val redisLock = RedisLock(redisStringHashOperation, "$JOB_END_LOCK_KEY$buildId$vmSeqId", 60L)
+        val redisLock = RedisLock(getRedisStringSerializerOperation(), "$JOB_END_LOCK_KEY$buildId$vmSeqId", 60L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
@@ -541,7 +538,7 @@ class JobQuotaBusinessService @Autowired constructor(
     @Scheduled(cron = "0 0 1 * * ?")
     fun clearTimeOutJobRecord() {
         LOG.info("start to clear timeout job record")
-        val redisLock = RedisLock(redisStringHashOperation, TIMER_OUT_LOCK_KEY, 60L)
+        val redisLock = RedisLock(getRedisStringSerializerOperation(), TIMER_OUT_LOCK_KEY, 60L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
@@ -559,7 +556,7 @@ class JobQuotaBusinessService @Autowired constructor(
 
     fun restoreProjectJobTime(projectId: String?, vmType: JobQuotaVmType) {
         if (projectId == null && vmType != JobQuotaVmType.ALL) { // restore all project with vmType
-            val projectSet = redisStringHashOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
+            val projectSet = getRedisStringSerializerOperation().getSetMembers(QUOTA_PROJECT_ALL_KEY)
             if (null != projectSet && projectSet.isNotEmpty()) {
                 projectSet.forEach { project ->
                     restoreWithVmType(project, vmType)
@@ -574,19 +571,19 @@ class JobQuotaBusinessService @Autowired constructor(
     }
 
     private fun restoreWithVmType(project: String, vmType: JobQuotaVmType) {
-        val time = redisStringHashOperation.hget(
+        val time = getRedisStringSerializerOperation().hget(
             getProjectMonthRunningTimeKey(),
             getProjectVmTypeRunningTimeKey(project, vmType)) ?: "0"
-        val totalTime = redisStringHashOperation.hget(
+        val totalTime = getRedisStringSerializerOperation().hget(
             getProjectMonthRunningTimeKey(),
             getProjectRunningTimeKey(project)) ?: "0"
         val reduiceTime = (totalTime.toLong() - time.toLong())
-        redisStringHashOperation.hset(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(project), if (reduiceTime < 0) {
+        getRedisStringSerializerOperation().hset(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(project), if (reduiceTime < 0) {
             "0"
         } else {
             reduiceTime.toString()
         })
-        redisStringHashOperation.hset(getProjectMonthRunningTimeKey(), getProjectVmTypeRunningTimeKey(project, vmType), "0")
+        getRedisStringSerializerOperation().hset(getProjectMonthRunningTimeKey(), getProjectVmTypeRunningTimeKey(project, vmType), "0")
     }
 
     /**
@@ -595,13 +592,13 @@ class JobQuotaBusinessService @Autowired constructor(
     @Scheduled(cron = "0 0 0 1 * ?")
     fun restoreTimeMonthly() {
         LOG.info("start to clear time monthly")
-        val redisLock = RedisLock(redisStringHashOperation, TIMER_RESTORE_LOCK_KEY, 60L)
+        val redisLock = RedisLock(getRedisStringSerializerOperation(), TIMER_RESTORE_LOCK_KEY, 60L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 LOG.info("<<< Restore time monthly Start >>>")
                 val lastMonth = LocalDateTime.now().minusMonths(1).month.name
-                redisStringHashOperation.delete(getProjectMonthRunningTimeKey(lastMonth))
+                getRedisStringSerializerOperation().delete(getProjectMonthRunningTimeKey(lastMonth))
             } else {
                 LOG.info("<<< Restore time monthly Has Running, Do Not Start>>>")
             }
@@ -652,8 +649,8 @@ class JobQuotaBusinessService @Autowired constructor(
             return
         }
         //
-        redisStringHashOperation.hIncrBy(getProjectMonthRunningTimeKey(), getProjectVmTypeRunningTimeKey(projectId, vmType), time)
-        redisStringHashOperation.hIncrBy(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(projectId), time)
+        getRedisStringSerializerOperation().hIncrBy(getProjectMonthRunningTimeKey(), getProjectVmTypeRunningTimeKey(projectId, vmType), time)
+        getRedisStringSerializerOperation().hIncrBy(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(projectId), time)
     }
 
     private fun getProjectMonthRunningTimeKey(month: String? = null): String {
@@ -679,6 +676,10 @@ class JobQuotaBusinessService @Autowired constructor(
             result[type.displayName] = records
         }
         return result
+    }
+
+    private fun getRedisStringSerializerOperation(): RedisOperation {
+        return SpringContextUtil.getBean(RedisOperation::class.java, "redisStringHashOperation")
     }
 
     @Scheduled(cron = "0 0 2 * * ?")

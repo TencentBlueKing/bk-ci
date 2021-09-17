@@ -29,7 +29,7 @@ package com.tencent.devops.dispatch.service
 
 import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 
-class JobQuotaInterfaceImpl : JobQuotaInterface{
+class JobQuotaInterfaceImpl : JobQuotaInterface {
     /**
      * 保存Job配额相关构建记录
      */

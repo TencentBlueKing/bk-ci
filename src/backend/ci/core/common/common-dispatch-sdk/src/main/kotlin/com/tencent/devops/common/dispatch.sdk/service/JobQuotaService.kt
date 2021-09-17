@@ -48,7 +48,7 @@ class JobQuotaService constructor(
         private val logger = LoggerFactory.getLogger(JobQuotaService::class.java)
     }
 
-    @Value("\${dispatch.jobQuota.enable}")
+    @Value("\${dispatch.jobQuota.enable:false}")
     private val jobQuotaEnable: Boolean = false
 
     fun checkAndAddRunningJob(startupEvent: PipelineAgentStartupEvent, vmType: JobQuotaVmType?) {
