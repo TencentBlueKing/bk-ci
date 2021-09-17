@@ -82,6 +82,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Date
 import com.tencent.devops.stream.constant.MQ as StreamMQ
+import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 
 @Service
 class GitCIBuildFinishListener @Autowired constructor(
