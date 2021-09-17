@@ -27,6 +27,7 @@
 
 package com.tencent.devops.monitoring.job
 
+import com.google.common.collect.Sets
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
@@ -68,7 +69,16 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 @Component
 @RefreshScope
-@SuppressWarnings("LongParameterList", "TooManyFunctions", "TooGenericExceptionCaught", "MagicNumber")
+@SuppressWarnings(
+    "LongParameterList",
+    "TooManyFunctions",
+    "TooGenericExceptionCaught",
+    "MagicNumber",
+    "LongMethod",
+    "LargeClass",
+    "TooGenericExceptionThrown",
+    "ThrowsCount"
+)
 class MonitorNotifyJob @Autowired constructor(
     private val client: Client,
     private val influxdbClient: InfluxdbClient,
@@ -145,6 +155,12 @@ class MonitorNotifyJob @Autowired constructor(
     @Value("\${sla.oteam.target.job.time:#{null}}")
     private var oteamJobTimeTarget: Int? = null
 
+    @Value("\${esb.appCode:#{null}}")
+    val appCode: String = ""
+
+    @Value("\${esb.appSecret:#{null}}")
+    val appSecret: String = ""
+
     /**
      * 每天发送日报
      */
@@ -195,7 +211,8 @@ class MonitorNotifyJob @Autowired constructor(
             userStatus(startTime, endTime),
             commitCheck(startTime, endTime),
             codecc(startTime, endTime),
-            dispatchTime(startTime)
+            dispatchTime(startTime),
+            oteamCoverage(startTime, endTime)
         )
 
         // 发送邮件
@@ -218,46 +235,87 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
-    private fun coverage(startTime: Long): EmailModuleData? {
-        // 蓝盾插件的项目ID列表
-
-        // TODO CodeCC的数据 , 后面可以删除
-
-        // 工蜂项目的插件列表
-        val potAuthUrl =
-            "http://idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Ftableau.pot.woa.com%2Fapi%2F3.4%2Fauth%2Fsignin"
-        val potAuthResp = OkhttpUtils.doPost(
-            potAuthUrl,
-            """{"credentials":{"name":"viewer","password":"viewer","site":{"contentUrl":""}}}"""
-        )
-
-        var siteId: String? = null
-        var token: String? = null
-        if (potAuthResp.isSuccessful) {
-            potAuthResp.body()?.let {
-                val builderFactory = DocumentBuilderFactory.newInstance()
-                builderFactory.isValidating = false
-                builderFactory.isIgnoringElementContentWhitespace = true
-                val builder = builderFactory.newDocumentBuilder()
-                val document = builder.parse(it.byteStream())
-                siteId =
-                    document.getElementsByTagName("site").item(0).attributes.getNamedItem("id").nodeValue
-                token =
-                    document.getElementsByTagName("credentials").item(0).attributes.getNamedItem("token").nodeValue
+    private fun oteamCoverage(startTime: Long, endTime: Long): EmailModuleData {
+        try {
+            // 蓝盾插件的项目列表
+            val url = "http://bkdata-tencent.apigw.o.oa.com/prod/v3/dataquery/query/"
+            val data = mapOf(
+                "bkdata_authentication_method" to "token",
+                "bkdata_data_token" to "boKSvZtHArySd51ci0c91LXE7DHSu6rI3mLqMOYL5UYkorJ9AuY6dDtLU4SMoYtk",
+                "bk_app_code" to appCode,
+                "bk_app_secret" to appSecret,
+                "sql" to "select distinct(GIT_PROJECT_NAME) from 100205_landun_git_task.ignite " +
+                        "WHERE dtEventTimeStamp>='$startTime' AND dtEventTimeStamp<'$endTime'",
+                "prefer_storage" to ""
+            )
+            val gitResponse =
+                OkhttpUtils.doPost(
+                    url,
+                    JsonUtil.toJson(data),
+                    mapOf("Content-Type" to "application/json; charset=utf-8")
+                )
+            if (!gitResponse.isSuccessful) {
+                throw RuntimeException("gitResponse is failed , $gitResponse")
+            } else if (gitResponse.body() == null) {
+                throw RuntimeException("gitResponse is empty ")
             }
-        }
+            val gitTaskBean = JsonUtil.to(gitResponse.body()!!.string(), GitTaskBean::class.java)
+            val gitPluginProjects = gitTaskBean.data.list.map { it.values.first() }.toSet()
 
-        val potDataUrl =
-            "http://idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Ftableau.pot.woa.com%2Fapi%2F3.4%2Fsites%2F${siteId}%2Fviews%2F89799275-a07e-4a21-ada4-c52f8b449ff6%2Fdata"
-        val potDataResp = OkhttpUtils.doGet(potDataUrl, mapOf("x-tableau-auth" to token!!))
-        if (potDataResp.isSuccessful) {
-            val potSet = potDataResp.body()?.run {
-                IOUtils.readLines(byteStream(), Charsets.UTF_8).filter { it.contains("提交次数") }
-                    .map { it.split(",")[0] }.toSet()
+            // 工蜂项目列表
+            val potAuthUrl =
+                "http://idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Ftableau.pot.woa.com%2Fapi%2F3.4%2Fauth%2Fsignin"
+            val potAuthResp = OkhttpUtils.doPost(
+                potAuthUrl,
+                """{"credentials":{"name":"viewer","password":"viewer","site":{"contentUrl":""}}}"""
+            )
+            var siteId: String? = null
+            var token: String? = null
+            if (potAuthResp.isSuccessful) {
+                potAuthResp.body()?.let {
+                    val builderFactory = DocumentBuilderFactory.newInstance()
+                    builderFactory.isValidating = false
+                    builderFactory.isIgnoringElementContentWhitespace = true
+                    val builder = builderFactory.newDocumentBuilder()
+                    val document = builder.parse(it.byteStream())
+                    siteId =
+                        document.getElementsByTagName("site").item(0).attributes.getNamedItem("id").nodeValue
+                    token =
+                        document.getElementsByTagName("credentials").item(0).attributes.getNamedItem("token").nodeValue
+                } ?: throw RuntimeException("potAuthResp is empty")
+            } else {
+                throw RuntimeException("potAuthResp is failed , $potAuthResp")
             }
-        }
+            val potDataUrl =
+                "http://idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Ftableau.pot.woa.com" +
+                        "%2Fapi%2F3.4%2Fsites%2F$siteId%2Fviews%2F89799275-a07e-4a21-ada4-c52f8b449ff6%2Fdata"
+            val potDataResp = OkhttpUtils.doGet(potDataUrl, mapOf("x-tableau-auth" to token!!))
+            val potProjects = if (potDataResp.isSuccessful) {
+                potDataResp.body()?.run {
+                    IOUtils.readLines(byteStream(), Charsets.UTF_8).filter { it.contains("提交次数") }
+                        .map { it.split(",")[0] }.toSet()
+                } ?: throw RuntimeException("potDataResp is empty")
+            } else {
+                throw RuntimeException("potDataResp is failed , $potDataResp")
+            }
 
-        return null
+            // 占比
+            val percent = 100.0 * Sets.intersection(gitPluginProjects, potProjects).size / potProjects.size
+
+            return EmailModuleData(
+                "Oteam",
+                listOf(Triple("覆盖度", percent, "https://techmap.woa.com/oteam/8524/operation/coverage")),
+                "https://techmap.woa.com/oteam/8524/operation/coverage",
+                "比例"
+            )
+        } catch (e: Exception) {
+            logger.warn("get oteamCoverage error", e)
+            return EmailModuleData(
+                "Oteam",
+                emptyList(),
+                "https://techmap.woa.com/oteam/8524/operation/coverage"
+            )
+        }
     }
 
     private fun dispatchTime(startTime: Long): EmailModuleData {
@@ -753,35 +811,24 @@ class MonitorNotifyJob @Autowired constructor(
     }
 }
 
-fun main() {
-//    response = requests.post(
-//        url="http://bk-data.apigw.o.oa.com/prod/v3/dataquery/query",
-//        headers={
-//            "Content-Type": "application/json; charset=utf-8",
-//        },
-//        data=json.dumps({
-//            "bkdata_authentication_method": "token",
-//            "bkdata_data_token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-//            "bk_app_code": "xxxx",
-//            "bk_app_secret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-//            "sql": "select dteventtimestamp as ts,count from 111_jeee_set_login where thedate=20160920  AND cc_set='303' AND biz_id='111' limit 1",
-//            "prefer_storage": ""
-//        })
-//    )
+data class GitTaskBean(
+    val result: Boolean,
+    val message: String,
+    val code: String,
+    val data: GitTaskData,
+    val error: String?
+)
 
-    val url = "http://bkdata-tencent.apigw.o.oa.com/prod/v3/dataquery/query/"
-    val data = mapOf(
-        "bkdata_authentication_method" to "token",
-        "bkdata_data_token" to "boKSvZtHArySd51ci0c91LXE7DHSu6rI3mLqMOYL5UYkorJ9AuY6dDtLU4SMoYtk",
-        "bk_app_code" to "bkci",
-        "bk_app_secret" to "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<",
-        "sql" to "select * from 100205_landun_git_task.ignite WHERE dtEventTimeStamp>='1631700371000' LIMIT 1",
-        "prefer_storage" to ""
-    )
-
-    val response =
-        OkhttpUtils.doPost(url, JsonUtil.toJson(data), mapOf("Content-Type" to "application/json; charset=utf-8"))
-
-    println(response.body()!!.string())
-
-}
+@SuppressWarnings("ConstructorParameterNaming")
+data class GitTaskData(
+    val result_table_scan_range: Map<*, *>,
+    val cluster: String,
+    val totalRecords: Int,
+    val timetaken: Double,
+    val list: List<Map<String, String>>,
+    val bksql_call_elapsed_time: Int,
+    val device: String,
+    val result_table_ids: List<String>,
+    val select_fields_order: List<String>,
+    val sql: String
+)
