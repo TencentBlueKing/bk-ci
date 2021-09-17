@@ -184,7 +184,8 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
             logger.info("GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
             buildId =
-                startupPipelineBuild(processClient, gitBuildId, model, event, gitCIBasicSetting, pipeline.pipelineId, pipeline.displayName)
+                startupPipelineBuild(processClient, gitBuildId, model, event, gitCIBasicSetting,
+                    pipeline.pipelineId, pipeline.displayName)
             logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)

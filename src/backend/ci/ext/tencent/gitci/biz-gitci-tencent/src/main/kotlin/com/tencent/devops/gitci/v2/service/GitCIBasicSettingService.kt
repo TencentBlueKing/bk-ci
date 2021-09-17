@@ -163,7 +163,8 @@ class GitCIBasicSettingService @Autowired constructor(
 
             // 可能存在group多层嵌套的情况:a/b/c/d/e/xx.git，超过t_project表的设置长度64，默认只保存后64位的长度
             if (gitProjectName?.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
-                gitProjectName = gitProjectName.substring(gitProjectName.length - GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length)
+                gitProjectName = gitProjectName.substring(gitProjectName.length -
+                    GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length)
             }
 
             val projectResult =

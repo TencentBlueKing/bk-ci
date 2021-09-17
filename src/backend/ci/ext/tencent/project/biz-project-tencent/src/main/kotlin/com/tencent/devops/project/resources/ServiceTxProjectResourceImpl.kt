@@ -281,7 +281,6 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     override fun createGitCIProject(gitProjectId: Long, userId: String, gitProjectName: String?): Result<ProjectVO> {
-        logger.info("STREAM|createGitCIProject|gitProjectName:$gitProjectName;gitProjectId:$gitProjectId,userId:$userId")
         return Result(projectLocalService.createGitCIProject(userId, gitProjectId, gitProjectName))
     }
 
