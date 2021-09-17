@@ -299,7 +299,6 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
                 checkManager = true
             )
         )
-
     }
 
     override fun createProjectUserByApp(

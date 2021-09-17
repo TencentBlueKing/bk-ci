@@ -154,14 +154,14 @@ class GitCIBasicSettingService @Autowired constructor(
         if (gitRepoConf?.projectCode == null) {
 
             // 根据url截取group + project的完整路径名称
-            var gitProjectName = if(setting?.gitHttpUrl != null ){
+            var gitProjectName = if (setting?.gitHttpUrl != null) {
                 GitUtils.getDomainAndRepoName(setting?.gitHttpUrl).second
-            }else{
+            } else {
                 setting.name
             }
 
             // 可能存在group多层嵌套的情况:a/b/c/d/e/xx.git，超过t_project表的设置长度64，默认只保存后64位的长度
-            if (gitProjectName?.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH){
+            if (gitProjectName?.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 gitProjectName = gitProjectName.substring(gitProjectName.length - GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length)
             }
             val projectResult =
@@ -169,7 +169,7 @@ class GitCIBasicSettingService @Autowired constructor(
                     gitProjectId = setting.gitProjectId,
                     userId = userId,
                     gitProjectName = gitProjectName
-                    )
+                )
             if (projectResult.isNotOk()) {
                 throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")
             }
