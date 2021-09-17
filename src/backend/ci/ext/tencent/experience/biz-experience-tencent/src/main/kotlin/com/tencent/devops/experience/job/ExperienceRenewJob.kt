@@ -1,6 +1,10 @@
 package com.tencent.devops.experience.job
 
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.experience.dao.ExperienceDao
+import com.tencent.devops.experience.dao.ExperiencePublicDao
+import org.apache.commons.collections4.ListUtils
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.context.config.annotation.RefreshScope
@@ -10,27 +14,47 @@ import org.springframework.stereotype.Component
 @Component
 @RefreshScope
 class ExperienceRenewJob @Autowired constructor(
+    val dslContext: DSLContext,
+    val experiencePublicDao: ExperiencePublicDao,
+    val experienceDao: ExperienceDao,
     val bkRepoClient: BkRepoClient
 ) {
-    @Scheduled(cron = "0 * * * * ?")
+    @Scheduled(cron = "0 * * * * ?") // TODO 改成一天一次
     @SuppressWarnings("MagicNumber", "NestedBlockDepth", "SwallowedException")
     fun jobRenew() {
-        bkRepoClient.update(
-            "admin",
-            "stuben-test",
-            "pipeline",
-            "/p-537e0539c6cd4fc4a24230ea89052914/b-01810bbe654243c2919dbd1024d424cd/1-Dispatcher-sdk-1_Bash_1.log",
-            0
-        )
+        logger.info("experience renew start ... ")
 
-        val fileDetail = bkRepoClient.getFileDetail(
-            "admin",
-            "stuben-test",
-            "pipeline",
-            "/p-537e0539c6cd4fc4a24230ea89052914/b-01810bbe654243c2919dbd1024d424cd/1-Dispatcher-sdk-1_Bash_1.log"
-        )
+        val updateList = mutableListOf<Pair<String/*projectId*/, String/*path*/>>()
 
-        logger.info("file detail is : {}", fileDetail)
+        try {
+            val recordIds = experiencePublicDao.listAllRecordId(dslContext)?.map { it.get(0, Long::class.java) }
+            ListUtils.partition(recordIds, 100).forEach { rids ->
+                experienceDao.list(dslContext, rids).forEach { record ->
+                    if (record.artifactoryType.toUpperCase() == "PIPELINE") {
+                        updateList.add(Pair(record.projectId, record.artifactoryPath))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("get records failed !", e)
+        }
+
+        for (updatePair in updateList) {
+            try {
+                bkRepoClient.update(
+                    "admin",
+                    updatePair.first,
+                    "pipeline",
+                    updatePair.second,
+                    0
+                )
+            } catch (e: Exception) {
+                logger.error("update pair:$updatePair failed", e)
+            }
+            logger.info("update pair:$updatePair success")
+        }
+
+        logger.info("experience renew finish ... ")
     }
 
     companion object {
