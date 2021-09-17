@@ -32,22 +32,11 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.annotation.SkipLogField
 import org.junit.Assert
 import org.junit.Test
-import java.io.File
 
 /**
  * @version 1.0
  */
 class JsonUtilTest {
-
-    @Test
-    fun toUnformattedJson() {
-        val file = File("/Users/ypsun/Downloads/demo.json")
-        val expect = JsonUtil.toMap(file.readText())
-        val formatted = JsonUtil.toJson(expect)
-        println(formatted.length)
-        val unformatted = JsonUtil.toJson(expect, false)
-        println(unformatted.length)
-    }
 
     @Test
     fun toMutableMapSkipEmpty() {
