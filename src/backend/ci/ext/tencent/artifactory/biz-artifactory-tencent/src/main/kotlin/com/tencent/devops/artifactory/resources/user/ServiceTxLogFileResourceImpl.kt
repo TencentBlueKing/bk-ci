@@ -25,50 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.resources.apigw.v2
+package com.tencent.devops.artifactory.resources.user
 
+import com.tencent.devops.artifactory.api.service.ServiceLogFileResource
+import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.artifactory.service.LogFileService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.log.api.ServiceLogResource
-import com.tencent.devops.common.log.pojo.QueryLogs
-import com.tencent.devops.openapi.api.apigw.v2.ApigwLogResourceV2
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwLogResourceV2Impl @Autowired constructor(
-    private val client: Client
-) : ApigwLogResourceV2 {
-    override fun getInitLogs(
-        appCode: String?,
-        apigwType: String?,
+class ServiceTxLogFileResourceImpl(
+    private val logFileService: LogFileService
+) : ServiceLogFileResource {
+
+    override fun getPluginLogUrl(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
-        debug: Boolean?,
-        elementId: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): Result<QueryLogs> {
-        logger.info(
-            "getInitLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] debug[$debug] " +
-                "elementId[$elementId] jobId[$jobId]"
+        elementId: String,
+        executeCount: String
+    ): Result<Url> {
+        return Result(
+            logFileService.getPluginLogUrl(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                elementId,
+                executeCount
+            )
         )
-        return client.get(ServiceLogResource::class).getInitLogs(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            tag = elementId,
-            jobId = jobId,
-            executeCount = executeCount,
-            debug = debug
-        )
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ApigwLogResourceV2Impl::class.java)
     }
 }
