@@ -62,7 +62,7 @@ object KafkaTopic {
     const val STREAM_BUILD_INFO_TOPIC = "tendata-bkdevops-topic-stream-build-info"
 
     // quota topic
-    const val JOB_QUOTA_HISYORY_TOPIC = "endata-bkdevops-topic-job-quota-history"
+    const val JOB_QUOTA_HISYORY_TOPIC = "tendata-bkdevops-topic-job-quota-history"
 
     const val BUILD_ATOM_METRICS_TOPIC_PREFIX = "tendata-bkdevops-topic-build-atom-metrics"
 }
