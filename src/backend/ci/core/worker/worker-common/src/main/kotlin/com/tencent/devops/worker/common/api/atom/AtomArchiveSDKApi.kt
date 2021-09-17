@@ -63,11 +63,31 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
      */
     fun getAtomSensitiveConf(atomCode: String): Result<List<SensitiveConfResp>?>
 
-    fun archiveAtom(filePath: String, destPath: String, workspace: File, buildVariables: BuildVariables): String?
+    @Suppress("LongParameterList")
+    fun archiveAtom(
+        atomCode: String,
+        atomVersion: String,
+        filePath: String,
+        destPath: String,
+        workspace: File,
+        buildVariables: BuildVariables
+    ): String
 
-    fun uploadAtom(file: File, destPath: String, buildVariables: BuildVariables)
+    fun uploadAtom(
+        atomCode: String,
+        atomVersion: String,
+        file: File,
+        destPath: String,
+        buildVariables: BuildVariables
+    )
 
-    fun uploadAtomFile(file: File, fileType: FileTypeEnum, destPath: String)
+    fun uploadAtomFile(
+        atomCode: String,
+        atomVersion: String,
+        file: File,
+        fileType: FileTypeEnum,
+        destPath: String
+    )
 
     fun downloadAtom(atomFilePath: String, file: File)
 
