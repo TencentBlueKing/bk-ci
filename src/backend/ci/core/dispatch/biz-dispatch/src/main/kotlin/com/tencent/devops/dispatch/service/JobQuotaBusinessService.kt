@@ -44,7 +44,6 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -53,7 +52,7 @@ import java.time.LocalDateTime
 @Service
 @Suppress("ALL")
 class JobQuotaBusinessService @Autowired constructor(
-    private val redisOperation: RedisOperation,
+    private val redisStringHashOperation: RedisOperation,
     private val jobQuotaManagerService: JobQuotaManagerService,
     private val runningJobsDao: RunningJobsDao,
     private val jobQuotaProjectRunTimeDao: JobQuotaProjectRunTimeDao,
@@ -72,7 +71,7 @@ class JobQuotaBusinessService @Autowired constructor(
      */
     fun insertRunningJob(projectId: String, vmType: JobQuotaVmType, buildId: String, vmSeqId: String) {
         runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId)
-        redisOperation.sadd(QUOTA_PROJECT_ALL_KEY, projectId) // 所有项目集合
+        redisStringHashOperation.sadd(QUOTA_PROJECT_ALL_KEY, projectId) // 所有项目集合
         // checkWarning(projectId, vmType)
     }
 
@@ -135,7 +134,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
 
             // 所有已经结束的耗时
-            val finishRunJobTime = redisOperation.hget(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(projectId))
+            val finishRunJobTime = redisStringHashOperation.hget(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(projectId))
             runningTotalTime += (finishRunJobTime ?: "0").toLong()
 
             return runningTotalTime
@@ -149,7 +148,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
 
             // 所有已经结束的耗时
-            val finishRunJobTime = redisOperation.hget(
+            val finishRunJobTime = redisStringHashOperation.hget(
                 getProjectMonthRunningTimeKey(),
                 getProjectVmTypeRunningTimeKey(projectId, vmType)
             )
@@ -185,7 +184,7 @@ class JobQuotaBusinessService @Autowired constructor(
     }*/
 
     private fun jobAgentFinish(projectId: String, buildId: String, vmSeqId: String?) {
-        val redisLock = RedisLock(redisOperation, JOB_END_LOCK_KEY + projectId, 60L)
+        val redisLock = RedisLock(redisStringHashOperation, JOB_END_LOCK_KEY + projectId, 60L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
@@ -523,7 +522,7 @@ class JobQuotaBusinessService @Autowired constructor(
     @Scheduled(cron = "0 0 1 * * ?")
     fun clearTimeOutJobRecord() {
         LOG.info("start to clear timeout job record")
-        val redisLock = RedisLock(redisOperation, TIMER_OUT_LOCK_KEY, 60L)
+        val redisLock = RedisLock(redisStringHashOperation, TIMER_OUT_LOCK_KEY, 60L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
@@ -541,7 +540,7 @@ class JobQuotaBusinessService @Autowired constructor(
 
     fun restoreProjectJobTime(projectId: String?, vmType: JobQuotaVmType) {
         if (projectId == null && vmType != JobQuotaVmType.ALL) { // restore all project with vmType
-            val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
+            val projectSet = redisStringHashOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
             if (null != projectSet && projectSet.isNotEmpty()) {
                 projectSet.forEach { project ->
                     restoreWithVmType(project, vmType)
@@ -556,19 +555,19 @@ class JobQuotaBusinessService @Autowired constructor(
     }
 
     private fun restoreWithVmType(project: String, vmType: JobQuotaVmType) {
-        val time = redisOperation.hget(
+        val time = redisStringHashOperation.hget(
             getProjectMonthRunningTimeKey(),
             getProjectVmTypeRunningTimeKey(project, vmType)) ?: "0"
-        val totalTime = redisOperation.hget(
+        val totalTime = redisStringHashOperation.hget(
             getProjectMonthRunningTimeKey(),
             getProjectRunningTimeKey(project)) ?: "0"
         val reduiceTime = (totalTime.toLong() - time.toLong())
-        redisOperation.hset(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(project), if (reduiceTime < 0) {
+        redisStringHashOperation.hset(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(project), if (reduiceTime < 0) {
             "0"
         } else {
             reduiceTime.toString()
         })
-        redisOperation.hset(getProjectMonthRunningTimeKey(), getProjectVmTypeRunningTimeKey(project, vmType), "0")
+        redisStringHashOperation.hset(getProjectMonthRunningTimeKey(), getProjectVmTypeRunningTimeKey(project, vmType), "0")
     }
 
     /**
@@ -577,13 +576,13 @@ class JobQuotaBusinessService @Autowired constructor(
     @Scheduled(cron = "0 0 0 1 * ?")
     fun restoreTimeMonthly() {
         LOG.info("start to clear time monthly")
-        val redisLock = RedisLock(redisOperation, TIMER_RESTORE_LOCK_KEY, 60L)
+        val redisLock = RedisLock(redisStringHashOperation, TIMER_RESTORE_LOCK_KEY, 60L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 LOG.info("<<< Restore time monthly Start >>>")
                 val lastMonth = LocalDateTime.now().minusMonths(1).month.name
-                redisOperation.delete(getProjectMonthRunningTimeKey(lastMonth))
+                redisStringHashOperation.delete(getProjectMonthRunningTimeKey(lastMonth))
             } else {
                 LOG.info("<<< Restore time monthly Has Running, Do Not Start>>>")
             }
@@ -634,8 +633,8 @@ class JobQuotaBusinessService @Autowired constructor(
             return
         }
         //
-        redisOperation.hIncrBy(getProjectMonthRunningTimeKey(), getProjectVmTypeRunningTimeKey(projectId, vmType), time)
-        redisOperation.hIncrBy(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(projectId), time)
+        redisStringHashOperation.hIncrBy(getProjectMonthRunningTimeKey(), getProjectVmTypeRunningTimeKey(projectId, vmType), time)
+        redisStringHashOperation.hIncrBy(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(projectId), time)
     }
 
     private fun getProjectMonthRunningTimeKey(month: String? = null): String {
