@@ -206,9 +206,9 @@ class QualityControlPointDao {
 
                 // 测试为空，代表quality.json被删了，直接把生产的也删了
                 if (testControlPoint == null) {
-                    transactionContext.deleteFrom(this)
-                        .where(ELEMENT_TYPE.eq(elementType))
-                        .execute()
+//                    transactionContext.deleteFrom(this)
+//                        .where(ELEMENT_TYPE.eq(elementType))
+//                        .execute()
                     return@transaction
                 }
 
