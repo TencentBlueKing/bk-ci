@@ -1,11 +1,12 @@
 <template>
-    <section @click="handleUpdateAtomType(atom.atomCode)">
+    <section @click="handleUpdateAtomType(atom)">
         <div class="atom-logo">
             <img v-if="atom.logoUrl" :src="atom.logoUrl" alt="">
             <logo v-else class="devops-icon" :name="getIconByCode(atom.atomCode)" size="50" />
         </div>
         <div class="atom-info-content">
             <span v-if="isProjectAtom && isRecommend">
+                <!-- 移除按钮 -->
                 <span
                     v-if="!('uninstallFlag' in atom) && !atom.defaultFlag & atomCode !== atom.atomCode"
                     class="remove-atom"
@@ -13,21 +14,31 @@
                     @click.stop="handleUnInstallAtom(atom)">
                     <logo class="remove-icon" name="minus" size="14" />
                 </span>
+                <!-- 正在适用插件,无法移除 -->
                 <span
                     v-if="('uninstallFlag' in atom && !atom.defaultFlag) || atomCode === atom.atomCode"
                     :class="{ 'un-remove': !atom.uninstallFlag }"
                     v-bk-tooltips="{ content: `${$t('editPage.unRemoveAtom')}`, zIndex: 99999, delay: 200 }"
-                    @click.stop="handleUnInstallAtom(atom)">
+                    @click.stop>
                     <logo class="remove-icon" name="minus" size="14" />
                 </span>
             </span>
             <span v-else-if="!isProjectAtom && isRecommend">
+                <!-- 安装按钮 -->
                 <span
                     v-if="!atom.installed && !atom.defaultFlag"
                     :class="{ 'install-atom': true, 'install-disabled': !atom.installFlag }"
                     v-bk-tooltips="{ content: !atom.installFlag ? `${$t('editPage.noInstallPerm')}` : `${$t('editPage.installAtom')}`, zIndex: 99999, delay: 200 }"
                     @click.stop="handleInstallAtom(atom)">
                     <i class="bk-icon left-icon icon-devops-icon icon-plus install-icon" style="position:relative; font-size: 24px;" />
+                </span>
+                <!-- 移除按钮 -->
+                <span
+                    v-if="atom.installed && !atom.defaultFlag"
+                    class="remove-atom"
+                    v-bk-tooltips="{ content: `${$t('editPage.removeAtom')}`, zIndex: 99999, delay: 200 }"
+                    @click.stop="handleUnInstallAtom(atom)">
+                    <logo class="remove-icon" name="minus" size="14" />
                 </span>
             </span>
             <p class="atom-name">
@@ -44,15 +55,20 @@
                     <bk-rate class="atom-rate" width="10" :rate.sync="atom.score" :edit="false" />
                 </a>
             </p>
-            <p :class="{ 'desc': true, 'desc-height': !atom.labelList }">{{ atom.summary }}</p>
-            <span v-if="atom.labelList" class="atom-label">
-                <span
-                    v-for="(label, labelIndex) in atom.labelList"
-                    :key="labelIndex">
-                    {{ label.labelName }}
+            <template>
+                <p v-if="atom.summary" :class="{ 'desc': true, 'desc-height': !atom.labelList }">{{ atom.summary }}</p>
+                <div v-else style="padding-bottom: 30px;"></div>
+            </template>
+            <template>
+                <span v-if="atom.labelList" class="atom-label">
+                    <span
+                        v-for="(label, labelIndex) in atom.labelList"
+                        :key="labelIndex">
+                        {{ label.labelName }}
+                    </span>
                 </span>
-            </span>
-            <div v-else style="padding-bottom: 10px;"></div>
+                <div v-else style="padding-bottom: 10px;"></div>
+            </template>
             <span
                 v-if="!isRecommend && (atom.os && atom.os.length > 0)"
                 class="allow-os-list"
@@ -112,7 +128,8 @@
         computed: {
             ...mapGetters('atom', [
                 'getDefaultVersion',
-                'getAtomModal'
+                'getAtomModal',
+                'getStoreRecommendAtomMap'
             ]),
             projectCode () {
                 return this.$route.params.projectId
@@ -132,7 +149,8 @@
                 'updateAtomType',
                 'fetchAtomModal',
                 'installAtom',
-                'unInstallAtom'
+                'unInstallAtom',
+                'updateStoreAtoms'
             ]),
             formatDiff,
             /**
@@ -155,8 +173,9 @@
              *
              * @param atomCode 插件名 Code
              */
-            handleUpdateAtomType (atomCode) {
-                if (!this.isProjectAtom || !this.isRecommend) return
+            handleUpdateAtomType (atom) {
+                const { atomCode, installed } = atom
+                if (!this.isRecommend || !installed) return
                 const { elementIndex, container, updateAtomType, getAtomModal, fetchAtomModal, getDefaultVersion } = this
                 const version = getDefaultVersion(atomCode)
                 const atomModal = getAtomModal({
@@ -185,6 +204,8 @@
                     atomCode,
                     reasonList: this.defaultReasons
                 }).then(() => {
+                    const atoms = this.getStoreRecommendAtomMap
+                    atoms[atomCode].installed = false
                     this.$emit('update-atoms', {
                         isRecommend: this.isRecommend,
                         atomCode
@@ -210,8 +231,14 @@
                     atomCode
                 }
                 this.installAtom(param).then(() => {
+                    const atoms = this.getStoreRecommendAtomMap
+                    atoms[atomCode].installed = true
+                    this.updateStoreAtoms({
+                        atoms: atoms,
+                        recommend: true
+                    })
                     this.$bkMessage({
-                        message: this.$t('editPage.installSuc'),
+                        message: this.$t('editPage.installAtomSuc'),
                         theme: 'success',
                         extCls: 'install-tips'
                     })

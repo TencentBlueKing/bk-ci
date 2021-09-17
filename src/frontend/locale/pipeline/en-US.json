@@ -770,6 +770,7 @@
         "envUseTips": "Usable under compiling environment, please switch to the corresponding type of job and then try again",
         "noEnvUseTips": " This plugin is usable within agentless job, please switch to the corresponding type of job and then try again ",
         "installSuc": "Installed successfully",
+        "installAtomSuc": "Successfully installed to the project, click the plugin line to select",
         "loadingData": "Loading data",
         "failToGetData": " Failed to get data",
         "badLink": " The format of this link is incorrect",

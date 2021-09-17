@@ -338,7 +338,7 @@
                 const { isRecommend, atomCode } = payload
                 const atoms = isRecommend ? this.curRecommendAtomMap : this.curUnRecommendAtomMap
                 for (const key in atoms) {
-                    if (key === atomCode) this.$delete(atoms, atomCode)
+                    if (key === atomCode && this.isProjectAtom) this.$delete(atoms, atomCode)
                 }
 
                 this.updateProjectAtoms({
@@ -350,6 +350,7 @@
             // 适用插件滚动加载
             recommendScrollLoading () {
                 if (this.activeTab === 'projectAtom') {
+                    console.log(this.isProjectPageOver)
                     if (!this.isProjectPageOver && !this.isRecommendThrottled && !this.isRecommendMoreLoading) {
                         this.isRecommendThrottled = true
                         this.recommendTimer = setTimeout(() => {
@@ -366,7 +367,8 @@
                                             projectCode: this.$route.params.projectId,
                                             category: this.category,
                                             recommendFlag: true,
-                                            os: this.os
+                                            os: this.os,
+                                            queryProjectAtomFlag: true
                                         }
                                     )
                                     clearTimeout(this.recommendTimer)
@@ -566,6 +568,7 @@
                 max-height: 150px;
                 background-color: #F5F6FA;
                 transition-timing-function: ease-in;
+                .atom-info-content .allow-os-list,
                 .atom-info-content .atom-update-time {
                     opacity: 1;
                     transition: all .2s ease-out;
@@ -714,6 +717,7 @@
                     position: relative;
                     right: 65px;
                     top: 4px;
+                    opacity: 0;
                 }
                 .atom-update-time {
                     display: flex;

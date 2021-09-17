@@ -312,7 +312,9 @@ export default {
     updateStoreAtoms: async ({ commit }, payload) => {
         const { atoms, recommend } = payload
         const mutation = recommend ? SET_STORE_ATOMS : SET_STORE_UNRECOMMEN_ATOMS
-        commit(mutation, atoms)
+        commit(mutation, {
+            storeRecommendAtomMap: atoms
+        })
     },
     /**
      * 获取项目下插件
@@ -387,7 +389,10 @@ export default {
             
             if (recommendFlag && category === 'TASK') {
                 // 保存请求页码、搜索关键字
+                console.log(Object.keys(state.projectRecommendAtomMap).length, 'Object.keys(state.projectRecommendAtomMap).length')
+                console.log(atomList.count, 'atomList.count')
                 const isProjectPageOver = Object.keys(state.projectRecommendAtomMap).length === atomList.count
+                console.log(isProjectPageOver)
                 const projectData = {
                     page: ++page,
                     pageSize,

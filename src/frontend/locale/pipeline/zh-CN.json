@@ -774,6 +774,7 @@
         "envUseTips": "编译环境下可用，请切换到对应Job类型后重试",
         "noEnvUseTips": "该插件在无编译环境下可用，请切换到对应Job类型后重试",
         "installSuc": "安装成功",
+        "installAtomSuc": "成功安装到项目，点击插件行即可选中",
         "loadingData": "获取数据中",
         "failToGetData": "获取列表数据失败",
         "badLink": "链接格式不正确",
