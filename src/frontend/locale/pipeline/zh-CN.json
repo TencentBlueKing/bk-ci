@@ -820,7 +820,6 @@
         "confirmMsg": "离开后，新编辑的数据将会丢失",
         "confirmTitle": "确认要离开",
         "operateSuc": "操作成功",
-        "addImage": "新增自定义构建镜像",
         "publicResTips": "由蓝盾官方提供的构建集群，你无需担心资源不足、安全等问题。",
         "seeMore": "查看更多",
         "docker": {
