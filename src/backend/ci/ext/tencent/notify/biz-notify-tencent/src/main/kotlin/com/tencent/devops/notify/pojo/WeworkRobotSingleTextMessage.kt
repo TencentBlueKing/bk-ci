@@ -49,7 +49,7 @@ data class WeworkRobotSingleTextMessage (
     @ApiModelProperty("消息类型")
     val msgtype: String = "text",
     @ApiModelProperty("文本内容")
-    val test: WeworkTextContentMessage,
+    val text: WeworkTextContentMessage,
     /**
      * 该消息只有指定的群成员或小黑板成员可见（其他成员不可见），有且只有chatid指定了一个群或一个小黑板的时候生效，多个userid用‘|’分隔
      */

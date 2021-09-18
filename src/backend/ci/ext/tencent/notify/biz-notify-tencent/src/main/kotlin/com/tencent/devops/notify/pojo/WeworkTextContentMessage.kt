@@ -37,7 +37,7 @@ data class WeworkTextContentMessage (
      * 文本内容，最长不超过2048个字节，必须是utf8编码
      */
     @ApiModelProperty("文本内容")
-    val context: String,
+    val content: String,
 
     /**
      * 提醒群中的指定成员(@某个成员)，@all表示提醒所有人，如果开发者获取不到userid，可以使用mentioned_mobile_list，目前 mentioned_list 暂不支持小黑板

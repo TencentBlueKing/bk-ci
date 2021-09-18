@@ -81,8 +81,8 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 weworkNotifyTextMessage.receivers.forEach {
                     val singleTextMessage = WeworkRobotSingleTextMessage(
                         chatid = chunkedReceivers(weworkNotifyTextMessage.receivers),
-                        test = WeworkTextContentMessage(
-                            context = weworkNotifyTextMessage.message,
+                        text = WeworkTextContentMessage(
+                            content = weworkNotifyTextMessage.message,
                             mentionedList = null,
                             mentionedMobileList = null
                         ),
@@ -125,7 +125,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
                     throw RemoteServiceException(
                         httpStatus = it.code(),
                         responseContent = responseBody,
-                        errorMessage = "send wework robot message failed",
+                        errorMessage = "send wework robot message failed：${sendMessageResp.errMsg}",
                         errorCode = sendMessageResp.errCode
                     )
                 }
