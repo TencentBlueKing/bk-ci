@@ -52,6 +52,6 @@ interface OpStreamCheckResource {
         gitProjectId: Long?,
         @ApiParam(value = "流水线ID", required = true)
         @QueryParam("pipelineId")
-        pipelineId: String
+        pipelineId: String?
     )
 }
