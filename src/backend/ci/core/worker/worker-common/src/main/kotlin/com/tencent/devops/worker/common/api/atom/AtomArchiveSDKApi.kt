@@ -37,6 +37,7 @@ import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 import java.io.File
 
+@Suppress("LongParameterList")
 interface AtomArchiveSDKApi : WorkerRestApiSDK {
     /**
      * 获取插件信息
@@ -63,7 +64,6 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
      */
     fun getAtomSensitiveConf(atomCode: String): Result<List<SensitiveConfResp>?>
 
-    @Suppress("LongParameterList")
     fun archiveAtom(
         atomCode: String,
         atomVersion: String,
