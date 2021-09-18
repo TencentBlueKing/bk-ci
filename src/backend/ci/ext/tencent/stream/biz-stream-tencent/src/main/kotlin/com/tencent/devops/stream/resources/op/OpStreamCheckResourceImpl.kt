@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpStreamCheckResourceImpl @Autowired constructor(
     private val streamAsyncService: StreamAsyncService
 ) : OpStreamCheckResource {
-    override fun checkBranches(gitProjectId: Long?, pipelineId: String) {
+    override fun checkBranches(gitProjectId: Long?, pipelineId: String?) {
         streamAsyncService.checkPipelineBranch(gitProjectId, pipelineId)
     }
 }
