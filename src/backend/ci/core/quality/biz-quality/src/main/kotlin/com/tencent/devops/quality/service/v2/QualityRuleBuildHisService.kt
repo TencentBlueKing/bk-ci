@@ -92,6 +92,8 @@ class QualityRuleBuildHisService constructor(
         requestIndicator: RuleCreateRequestV3.CreateRequestIndicator,
         indicator: QualityIndicator
     ) {
+        logger.info("start to check build his indicator: " +
+            "${indicator.enName}, ${indicator.thresholdType}, ${indicator.threshold}")
         when (indicator.thresholdType) {
             QualityDataType.INT -> {
                 if (NumberUtils.isDigits(requestIndicator.threshold)) {
