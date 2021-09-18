@@ -262,6 +262,13 @@ class MonitorNotifyJob @Autowired constructor(
             val gitTaskBean = JsonUtil.to(gitResponse.body()!!.string(), GitTaskBean::class.java)
             val gitPluginProjects = gitTaskBean.data.list.map { it.values.first() }.toSet()
 
+            // TODO
+            logger.info("git plugin size: ${gitPluginProjects.size}")
+            gitPluginProjects.forEach {
+                logger.info("git plugin project : $it")
+            }
+            logger.info("==============================================")
+
             // 工蜂项目列表
             val potAuthUrl =
                 "http://idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Ftableau.pot.woa.com%2Fapi%2F3.4%2Fauth%2Fsignin"
@@ -298,6 +305,12 @@ class MonitorNotifyJob @Autowired constructor(
             } else {
                 throw RuntimeException("potDataResp is failed , $potDataResp")
             }
+            // TODO
+            logger.info("pot projects size: ${potProjects.size}")
+            potProjects.forEach {
+                logger.info("pot project : $it")
+            }
+            logger.info("==============================================")
 
             // 占比
             val percent = 100.0 * Sets.intersection(gitPluginProjects, potProjects).size / potProjects.size
