@@ -141,7 +141,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     private fun chunkedReceivers(receivers: Collection<String>): String {
-        return receivers.joinToString { "|" }
+        return receivers.joinToString("|", "","", -1)
     }
 
     private fun saveResult(receivers: Collection<String>, body: String, success: Boolean, errMsg: String?) {

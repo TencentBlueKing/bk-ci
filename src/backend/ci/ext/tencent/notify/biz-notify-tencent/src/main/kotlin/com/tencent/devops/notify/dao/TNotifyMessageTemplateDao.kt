@@ -52,7 +52,7 @@ import java.time.LocalDateTime
  *
  */
 @Repository
-class NotifyMessageTemplateDao {
+class TNotifyMessageTemplateDao {
     /**
      * 根据模板代码和模板名称搜索公共消息模板
      */

@@ -33,7 +33,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
-class CommonNotifyMessageTemplateDao {
+class TCommonNotifyMessageTemplateDao {
     /**
      * 根据模板代码和模板名称获取公共消息模板
      */
