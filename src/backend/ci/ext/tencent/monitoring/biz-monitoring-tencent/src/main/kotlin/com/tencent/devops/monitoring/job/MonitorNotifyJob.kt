@@ -245,7 +245,7 @@ class MonitorNotifyJob @Autowired constructor(
                 "bk_app_code" to appCode,
                 "bk_app_secret" to appSecret,
                 "sql" to "select distinct(GIT_PROJECT_NAME) from 100205_landun_git_task.ignite " +
-                        "WHERE dtEventTimeStamp>='$startTime' AND dtEventTimeStamp<'$endTime'",
+                        "WHERE dtEventTimeStamp>='$startTime' AND dtEventTimeStamp<'$endTime' limit 100000",
                 "prefer_storage" to ""
             )
             val gitResponse =
