@@ -237,7 +237,7 @@ class MonitorNotifyJob @Autowired constructor(
 
     private fun oteamCoverage(startTime: Long): EmailModuleData {
         try {
-            // 蓝盾插件的项目列表 TODO
+            // 蓝盾插件的项目列表
             val url = "http://bkdata-tencent.apigw.o.oa.com/prod/v3/dataquery/query/"
             val data = mapOf(
                 "bkdata_authentication_method" to "token",
@@ -247,7 +247,7 @@ class MonitorNotifyJob @Autowired constructor(
                 "sql" to """
                     SELECT distinct( projectName)
                     FROM 100205_build_atom_metrics_git.hdfs
-                    WHERE thedate='20210918'
+                    WHERE thedate='${DateFormatUtils.format(startTime + 1000, "yyyyMMdd")}'
                     LIMIT 1000000
                 """.trimIndent(),
                 "prefer_storage" to ""
@@ -265,13 +265,7 @@ class MonitorNotifyJob @Autowired constructor(
             }
             val gitTaskBean = JsonUtil.to(gitResponse.body()!!.string(), GitTaskBean::class.java)
             val gitPluginProjects = gitTaskBean.data.list.map { it.values.first() }.toSet()
-
-            // TODO
             logger.info("git plugin size: ${gitPluginProjects.size}")
-            gitPluginProjects.forEach {
-                logger.info("git plugin project : $it")
-            }
-            logger.info("==============================================")
 
             // 工蜂项目列表
             val potAuthUrl =
@@ -309,12 +303,7 @@ class MonitorNotifyJob @Autowired constructor(
             } else {
                 throw RuntimeException("potDataResp is failed , $potDataResp")
             }
-            // TODO
             logger.info("pot projects size: ${potProjects.size}")
-            potProjects.forEach {
-                logger.info("pot project : $it")
-            }
-            logger.info("==============================================")
 
             // 占比
             val percent = 100.0 * Sets.intersection(gitPluginProjects, potProjects).size / potProjects.size
