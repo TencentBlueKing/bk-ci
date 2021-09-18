@@ -51,6 +51,8 @@ import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -58,8 +60,9 @@ import org.springframework.stereotype.Service
 @Service
 class StreamScmService @Autowired constructor(
     private val client: Client,
+    private val dslContext: DSLContext,
     private val oauthService: StreamOauthService,
-    private val gitCIBasicSettingService: GitCIBasicSettingService
+    private val gitCIBasicSettingDao: GitCIBasicSettingDao
 ) {
 
     companion object {
@@ -429,8 +432,8 @@ class StreamScmService @Autowired constructor(
 
     private fun getOauthToken(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
         return if (isEnableUser) {
-            val setting = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
-            oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
+            val setting = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
+            oauthService.getAndCheckOauthToken(setting!!.enableUserId).accessToken
         } else {
             return oauthService.getAndCheckOauthToken(userId).accessToken
         }
