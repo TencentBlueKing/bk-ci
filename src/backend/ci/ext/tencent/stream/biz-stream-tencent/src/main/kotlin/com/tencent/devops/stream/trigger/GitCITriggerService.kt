@@ -710,7 +710,14 @@ class GitCITriggerService @Autowired constructor(
     ): List<String> {
         val ciFileList =
             triggerExceptionService.handleErrorCode(request = gitRequestEvent,
-                action = { streamScmService.getFileTreeFromGit(gitToken, gitRequestEvent, ciFileDirectoryName, isMrEvent) }
+                action = {
+                    streamScmService.getFileTreeFromGit(
+                        gitToken = gitToken,
+                        gitRequestEvent = gitRequestEvent,
+                        filePath = ciFileDirectoryName,
+                        isMrEvent = isMrEvent
+                    )
+                }
             )?.filter { it.name.endsWith(ciFileExtensionYml) || it.name.endsWith(ciFileExtensionYaml) }
         return ciFileList?.map { ciFileDirectoryName + File.separator + it.name }?.toList() ?: emptyList()
     }
