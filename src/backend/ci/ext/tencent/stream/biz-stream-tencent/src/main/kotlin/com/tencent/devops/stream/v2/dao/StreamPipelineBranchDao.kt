@@ -92,13 +92,15 @@ class StreamPipelineBranchDao {
         pipelineIds: Set<String>
     ): List<TStreamPipelineBranchRecord>? {
         with(TStreamPipelineBranch.T_STREAM_PIPELINE_BRANCH) {
-            val updates = dslContext.select(DSL.max(UPDATE_TIME)).from(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
-                .asTable("updates")
             return dslContext.selectFrom(this)
-                .where(UPDATE_TIME.`in`(updates.field("UPDATE_TIME")))
-                .fetch()
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(
+                    UPDATE_TIME.`in`(
+                        dslContext.select(UPDATE_TIME)
+                            .from(this)
+                            .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
+                    )
+                ).fetch()
         }
     }
 
