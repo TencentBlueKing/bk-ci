@@ -88,8 +88,10 @@ class QualityRuleBuildHisService constructor(
         }
     }
 
-    private fun checkThresholdType(requestIndicator: RuleCreateRequestV3.CreateRequestIndicator,
-                                   indicator: QualityIndicator) {
+    private fun checkThresholdType(
+        requestIndicator: RuleCreateRequestV3.CreateRequestIndicator,
+        indicator: QualityIndicator
+    ) {
         when (indicator.thresholdType) {
             QualityDataType.INT -> {
                 if (NumberUtils.isDigits(requestIndicator.threshold)) {
