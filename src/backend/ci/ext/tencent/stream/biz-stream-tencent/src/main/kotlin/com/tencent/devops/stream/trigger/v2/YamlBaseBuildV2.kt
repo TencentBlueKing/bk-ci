@@ -49,15 +49,16 @@ import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.GitCIV2WebsocketService
-import com.tencent.devops.stream.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
+import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -74,7 +75,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitCIEventSaveService: GitCIEventService,
     private val websocketService: GitCIV2WebsocketService,
-    private val gitPipelineBranchService: GitPipelineBranchService,
+    private val streamPipelineBranchService: StreamPipelineBranchService,
     private val gitCheckService: GitCheckService,
     private val streamGitConfig: StreamGitConfig,
     private val triggerMessageUtil: StreamTriggerMessageUtils
@@ -117,12 +118,6 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                 pipeline = pipeline,
                 version = ymlVersion
             )
-            // 新建流水线时保存流水线-分支记录
-            gitPipelineBranchService.save(
-                gitProjectId = gitCIBasicSetting.gitProjectId,
-                pipelineId = pipeline.pipelineId,
-                branch = event.branch
-            )
             websocketService.pushPipelineWebSocket(
                 projectId = "git_${gitCIBasicSetting.gitProjectId}",
                 pipelineId = pipeline.pipelineId,
@@ -147,12 +142,11 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                 pipeline = pipeline,
                 version = ymlVersion
             )
-            // 对于需要删了重建的，删除流水线-分支记录在重建
-            gitPipelineBranchService.deleteBranch(pipelineId = oldPipelineId, branch = null)
-            gitPipelineBranchService.save(
+            // 对于需要删了重建的，删除旧的流水线-分支记录
+            streamPipelineBranchService.deleteBranch(
                 gitProjectId = gitCIBasicSetting.gitProjectId,
-                pipelineId = pipeline.pipelineId,
-                branch = event.branch
+                pipelineId = oldPipelineId,
+                branch = null
             )
             websocketService.pushPipelineWebSocket(
                 projectId = "git_${gitCIBasicSetting.gitProjectId}",
@@ -188,11 +182,22 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
             logger.info("GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
             buildId =
-                startupPipelineBuild(processClient, gitBuildId, model, event, gitCIBasicSetting, pipeline.pipelineId)
+                startupPipelineBuild(processClient, model, event, gitCIBasicSetting, pipeline.pipelineId)
             logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId, ymlVersion)
+            // 成功构建的添加 流水线-分支 记录
+            if (!event.isFork() &&
+                (event.objectKind == TGitObjectKind.PUSH.value ||
+                event.objectKind == TGitObjectKind.MERGE_REQUEST.value)
+            ) {
+                streamPipelineBranchService.saveOrUpdate(
+                    gitProjectId = gitCIBasicSetting.gitProjectId,
+                    pipelineId = pipeline.pipelineId,
+                    branch = event.branch
+                )
+            }
             // 推送启动构建消息,当人工触发时不推送构建消息
             if (CommitCheckUtils.needSendCheck(event)) {
                 gitCheckService.pushCommitCheck(
@@ -256,7 +261,6 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
 
     private fun startupPipelineBuild(
         processClient: ServicePipelineResource,
-        gitBuildId: Long,
         model: Model,
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,

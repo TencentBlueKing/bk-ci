@@ -83,7 +83,6 @@ import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.utils.GitCIParameterUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.trigger.GitCIEventService
-import com.tencent.devops.stream.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -105,6 +104,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -125,7 +125,7 @@ class YamlBuild @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val gitCIParameterUtils: GitCIParameterUtils,
     private val gitCIEventSaveService: GitCIEventService,
-    private val gitPipelineBranchService: GitPipelineBranchService
+    private val streamPipelineBranchService: StreamPipelineBranchService
 ) : YamlBaseBuild<CIBuildYaml>(
     client,
     scmClient,
@@ -134,7 +134,7 @@ class YamlBuild @Autowired constructor(
     gitPipelineResourceDao,
     gitRequestEventBuildDao,
     gitCIEventSaveService,
-    gitPipelineBranchService
+    streamPipelineBranchService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(YamlBuild::class.java)

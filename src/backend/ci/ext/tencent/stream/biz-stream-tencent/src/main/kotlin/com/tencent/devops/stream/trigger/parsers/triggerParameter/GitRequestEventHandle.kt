@@ -47,7 +47,7 @@ object GitRequestEventHandle {
             id = null,
             objectKind = TGitObjectKind.PUSH.value,
             operationKind = gitPushEvent.operation_kind,
-            extensionAction = null,
+            extensionAction = gitPushEvent.action_kind,
             gitProjectId = gitPushEvent.project_id,
             sourceGitProjectId = null,
             branch = gitPushEvent.ref.removePrefix("refs/heads/"),
