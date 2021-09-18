@@ -29,10 +29,16 @@ package com.tencent.devops.worker.common.api.store
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
+import com.tencent.devops.artifactory.pojo.enums.BkRepoTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -40,7 +46,9 @@ import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_NO
@@ -48,9 +56,12 @@ import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
+import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
+import com.tencent.devops.worker.common.api.utils.ApiUrlUtils
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
+import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -131,20 +142,21 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     }
 
     override fun uploadAtom(file: File, destPath: String, buildVariables: BuildVariables) {
-        val jfrogPath = if (destPath.trim().endsWith(file.name)) {
+        val uploadFilePath = if (destPath.trim().endsWith(file.name)) {
             destPath.trim()
         } else {
             destPath.trim().removePrefix("/") + "/" + file.name
         }
-
+        val userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
+        // 上传至jfrog
         LoggerService.addNormalLine("归档插件文件 >>> ${file.name}")
 
-        val url = StringBuilder("/atom/result/$jfrogPath")
+        val url = StringBuilder("/atom/result/$uploadFilePath")
         with(buildVariables) {
             url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
             url.append(";$ARCHIVE_PROPS_PIPELINE_ID=${encodeProperty(pipelineId)}")
             url.append(";$ARCHIVE_PROPS_BUILD_ID=${encodeProperty(buildId)}")
-            url.append(";$ARCHIVE_PROPS_USER_ID=${encodeProperty(variables[PIPELINE_START_USER_ID] ?: "")}")
+            url.append(";$ARCHIVE_PROPS_USER_ID=${encodeProperty(userId)}")
             url.append(";$ARCHIVE_PROPS_BUILD_NO=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
             url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
         }
@@ -157,6 +169,32 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         } catch (e: Exception) {
             LoggerService.addNormalLine(e.message ?: "")
             throw RuntimeException("AtomArchive fail: $responseContent")
+        }
+        // 上传至bkrepo
+        val uploadFileUrl = ApiUrlUtils.generateStoreUploadFileUrl(
+            repoType = BkRepoTypeEnum.GENERIC,
+            projectId = buildVariables.projectId,
+            storeType = StoreTypeEnum.ATOM,
+            storeCode = serviceCode,
+            version = serviceVersion,
+            destPath = uploadFilePath
+        )
+        val headers = mapOf(AUTH_HEADER_USER_ID to userId)
+        val uploadResult = ApiFactory.create(ArchiveSDKApi::class).uploadFile(
+            url = uploadFileUrl,
+            destPath = destPath,
+            file = file,
+            headers = headers,
+            isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+        )
+        logger.info("uploadFileResult: $uploadResult")
+        val uploadFlag = uploadResult.data
+        if (uploadFlag == null || !uploadFlag) {
+            throw TaskExecuteException(
+                errorMsg = "upload file:${file.name} fail",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
+            )
         }
     }
 

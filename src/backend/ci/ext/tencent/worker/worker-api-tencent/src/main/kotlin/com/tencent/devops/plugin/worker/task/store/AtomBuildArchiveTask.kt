@@ -67,7 +67,7 @@ class AtomBuildArchiveTask : ITask() {
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
 
-        val fileSha = downloadAtom(filePath, destPath, workspace, buildVariables)
+        val fileSha = archiveAtom(filePath, destPath, workspace, buildVariables)
 
         val frontendFilePath = taskParams["frontendFilePath"]
         // 判断是否是自定义UI类型的插件，如果是则需要把前端文件上传至仓库的路径
@@ -150,12 +150,12 @@ class AtomBuildArchiveTask : ITask() {
         )
     }
 
-    private fun downloadAtom(
+    private fun archiveAtom(
         filePath: String,
         destPath: String,
         workspace: File,
         buildVariables: BuildVariables
-    ): String? {
+    ): String {
         val fileSha = atomApi.archiveAtom(filePath, destPath, workspace, buildVariables)
         if (fileSha.isNullOrBlank()) {
             throw TaskExecuteException(

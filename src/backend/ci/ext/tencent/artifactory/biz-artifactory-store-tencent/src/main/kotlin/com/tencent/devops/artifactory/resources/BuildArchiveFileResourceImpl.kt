@@ -28,6 +28,7 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.BuildArchiveFileResource
+import com.tencent.devops.artifactory.pojo.enums.BkRepoTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -43,7 +44,8 @@ class BuildArchiveFileResourceImpl @Autowired constructor(
 
     override fun archiveFile(
         userId: String,
-        projectCode: String,
+        repoType: BkRepoTypeEnum,
+        projectId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
@@ -53,7 +55,8 @@ class BuildArchiveFileResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return archiveFileService.archiveFile(
             userId = userId,
-            projectCode = projectCode,
+            repoType = repoType,
+            projectId = projectId,
             storeType = storeType,
             storeCode = storeCode,
             version = version,

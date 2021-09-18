@@ -28,6 +28,7 @@
 package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.config.BkRepoStoreConfig
+import com.tencent.devops.artifactory.pojo.enums.BkRepoTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -62,7 +63,8 @@ class ArchiveFileServiceImpl : ArchiveFileService {
 
     override fun archiveFile(
         userId: String,
-        projectCode: String,
+        repoType: BkRepoTypeEnum,
+        projectId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
@@ -70,7 +72,7 @@ class ArchiveFileServiceImpl : ArchiveFileService {
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<Boolean> {
-        logger.info("archiveFile params:[$userId|$projectCode|$storeType|$storeCode|$version|$destPath")
+        logger.info("archiveFile params:[$userId|$repoType|$projectId|$storeType|$storeCode|$version|$destPath")
         // 校验用户上传的文件是否合法
         val verifyResult = client.get(ServiceStoreResource::class).isStoreMember(
             storeCode = storeCode,
@@ -94,17 +96,37 @@ class ArchiveFileServiceImpl : ArchiveFileService {
         file.outputStream().use {
             inputStream.copyTo(it)
         }
+        // 根据仓库类型获取仓库名称
+        val repoName = when (repoType) {
+            BkRepoTypeEnum.GENERIC -> {
+                bkRepoConfig.bkrepoPkgRepoName
+            }
+            BkRepoTypeEnum.DOCKER -> {
+                bkRepoConfig.bkrepoDockerRepoName
+            }
+            BkRepoTypeEnum.STATIC -> {
+                bkRepoConfig.bkrepoStaticRepoName
+            }
+        }
+        var projectName = bkRepoStoreConfig.bkrepoStoreProjectName
+        var userName = bkRepoStoreConfig.bkrepoStoreUserName
+        var password = bkRepoStoreConfig.bkrepoStorePassword
+        if (storeType == StoreTypeEnum.SERVICE) {
+            projectName = bkRepoStoreConfig.bkrepoExtServiceProjectName
+            userName = bkRepoStoreConfig.bkrepoExtServiceUserName
+            password = bkRepoStoreConfig.bkrepoExtServicePassword
+        }
         try {
             bkRepoClient.uploadLocalFile(
                 userId = userId,
-                projectId = bkRepoStoreConfig.bkrepoExtServiceProjectName,
-                repoName = bkRepoConfig.bkrepoPkgRepoName,
+                projectId = projectName,
+                repoName = repoName,
                 path = destPath,
                 file = file,
                 gatewayFlag = false,
                 bkrepoApiUrl = bkRepoConfig.bkrepoApiUrl,
-                userName = bkRepoStoreConfig.bkrepoExtServiceUserName,
-                password = bkRepoStoreConfig.bkrepoExtServicePassword
+                userName = userName,
+                password = password
             )
         } finally {
             file.delete()
