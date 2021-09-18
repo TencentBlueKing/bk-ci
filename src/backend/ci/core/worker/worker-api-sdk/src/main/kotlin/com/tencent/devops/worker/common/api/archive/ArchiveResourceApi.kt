@@ -175,7 +175,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun uploadFile(
         url: String,
-        destPath: String,
         file: File,
         headers: Map<String, String>?,
         isVmBuildEnv: Boolean
