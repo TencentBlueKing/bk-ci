@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.resources.op
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.op.OpStreamCheckResource
 import com.tencent.devops.stream.v2.service.StreamAsyncService
@@ -36,7 +37,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpStreamCheckResourceImpl @Autowired constructor(
     private val streamAsyncService: StreamAsyncService
 ) : OpStreamCheckResource {
-    override fun checkBranches(gitProjectId: Long?, pipelineId: String?) {
+    override fun checkBranches(gitProjectId: Long?, pipelineId: String?): Result<Boolean> {
         streamAsyncService.checkPipelineBranch(gitProjectId, pipelineId)
+        return Result(true)
     }
 }

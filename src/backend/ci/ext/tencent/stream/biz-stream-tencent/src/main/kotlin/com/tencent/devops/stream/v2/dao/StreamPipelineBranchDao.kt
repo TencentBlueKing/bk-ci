@@ -106,6 +106,14 @@ class StreamPipelineBranchDao {
         }
     }
 
+    fun getMinGitProjectId(
+        dslContext: DSLContext
+    ): Long {
+        with(TStreamPipelineBranch.T_STREAM_PIPELINE_BRANCH) {
+            return dslContext.select(DSL.min(GIT_PROJECT_ID)).from(this).fetchOne(0, Long::class.java)!!
+        }
+    }
+
     fun isGitProjectExist(
         dslContext: DSLContext,
         gitProjectId: Long

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.api.op
 
+import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -53,5 +54,5 @@ interface OpStreamCheckResource {
         @ApiParam(value = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String?
-    )
+    ): Result<Boolean>
 }

@@ -47,17 +47,20 @@ class StreamAsyncService @Autowired constructor(
 
     @Async("pipelineBranchCheckExecutor")
     fun checkPipelineBranch(gitProjectId: Long?, pipelineId: String?) {
+        logger.info("async check and delete pipeline branch start......")
         if (gitProjectId == null) {
-            var realId = streamPipelineBranchDao.getMaxGitProjectId(dslContext)
-            while (realId > 0) {
-                if (streamPipelineBranchDao.isGitProjectExist(dslContext, realId)) {
-                    checkBranch(realId, null)
+            var realMaxId = streamPipelineBranchDao.getMaxGitProjectId(dslContext)
+            val minId = streamPipelineBranchDao.getMinGitProjectId(dslContext)
+            while (realMaxId > 0) {
+                if (streamPipelineBranchDao.isGitProjectExist(dslContext, minId)) {
+                    checkBranch(realMaxId, null)
                 }
-                realId--
+                realMaxId--
             }
         } else {
             checkBranch(gitProjectId, pipelineId)
         }
+        logger.info("async check and delete pipeline branch end")
     }
 
     private fun checkBranch(gitProjectId: Long, pipelineId: String?) {
