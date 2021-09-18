@@ -27,7 +27,6 @@
 
 package com.tencent.devops.worker.common.api.atom
 
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
@@ -37,7 +36,6 @@ import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 import java.io.File
 
-@Suppress("LongParameterList")
 interface AtomArchiveSDKApi : WorkerRestApiSDK {
     /**
      * 获取插件信息
@@ -67,13 +65,12 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
     fun archiveAtom(
         atomCode: String,
         atomVersion: String,
-        filePath: String,
+        file: File,
         destPath: String,
-        workspace: File,
         buildVariables: BuildVariables
     ): String
 
-    fun uploadAtom(
+    fun uploadAtomPkgFile(
         atomCode: String,
         atomVersion: String,
         file: File,
@@ -81,12 +78,12 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
         buildVariables: BuildVariables
     )
 
-    fun uploadAtomFile(
+    fun uploadAtomStaticFile(
         atomCode: String,
         atomVersion: String,
         file: File,
-        fileType: FileTypeEnum,
-        destPath: String
+        destPath: String,
+        buildVariables: BuildVariables
     )
 
     fun downloadAtom(atomFilePath: String, file: File)
