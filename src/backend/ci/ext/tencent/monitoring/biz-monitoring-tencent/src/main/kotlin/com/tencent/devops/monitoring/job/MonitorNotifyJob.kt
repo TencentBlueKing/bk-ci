@@ -212,7 +212,7 @@ class MonitorNotifyJob @Autowired constructor(
             commitCheck(startTime, endTime),
             codecc(startTime, endTime),
             dispatchTime(startTime),
-            oteamCoverage(startTime, endTime)
+            oteamCoverage(startTime)
         )
 
         // 发送邮件
@@ -235,17 +235,21 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
-    private fun oteamCoverage(startTime: Long, endTime: Long): EmailModuleData {
+    private fun oteamCoverage(startTime: Long): EmailModuleData {
         try {
-            // 蓝盾插件的项目列表
+            // 蓝盾插件的项目列表 TODO
             val url = "http://bkdata-tencent.apigw.o.oa.com/prod/v3/dataquery/query/"
             val data = mapOf(
                 "bkdata_authentication_method" to "token",
                 "bkdata_data_token" to "boKSvZtHArySd51ci0c91LXE7DHSu6rI3mLqMOYL5UYkorJ9AuY6dDtLU4SMoYtk",
                 "bk_app_code" to appCode,
                 "bk_app_secret" to appSecret,
-                "sql" to "select distinct(GIT_PROJECT_NAME) from 100205_landun_git_task.ignite " +
-                        "WHERE dtEventTimeStamp>='$startTime' AND dtEventTimeStamp<'$endTime' limit 100000",
+                "sql" to """
+                    SELECT distinct( projectName)
+                    FROM 100205_build_atom_metrics_git.hdfs
+                    WHERE thedate='20210918'
+                    LIMIT 1000000
+                """.trimIndent(),
                 "prefer_storage" to ""
             )
             val gitResponse =
