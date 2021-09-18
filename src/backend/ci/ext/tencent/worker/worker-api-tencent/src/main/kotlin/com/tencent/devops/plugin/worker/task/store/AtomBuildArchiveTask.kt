@@ -27,20 +27,19 @@
 
 package com.tencent.devops.plugin.worker.task.store
 
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
-import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
-import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.store.pojo.atom.AtomEnv
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -66,8 +65,27 @@ class AtomBuildArchiveTask : ITask() {
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
+        val buildVariable = buildTask.buildVariable
+        val atomCode = buildVariable!!["atomCode"] ?: throw TaskExecuteException(
+            errorMsg = "need atomCode param",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
+        )
+        val atomVersion = buildVariable["version"] ?: throw TaskExecuteException(
+            errorMsg = "need version param",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
+        )
+        val preCmd = buildVariable["preCmd"]
+        val target = buildVariable["target"]
 
-        val fileSha = archiveAtom(filePath, destPath, workspace, buildVariables)
+        val fileSha = archiveAtom(
+            atomCode = atomCode,
+            atomVersion = atomVersion,
+            file = File(workspace, filePath),
+            destPath = destPath,
+            buildVariables = buildVariables
+        )
 
         val frontendFilePath = taskParams["frontendFilePath"]
         // 判断是否是自定义UI类型的插件，如果是则需要把前端文件上传至仓库的路径
@@ -83,27 +101,15 @@ class AtomBuildArchiveTask : ITask() {
             fileList.forEach {
                 val relativePath = baseFileDirPath.relativize(Paths.get(it.canonicalPath)).toString()
                 val fileSeparator = System.getProperty("file.separator")
-                atomApi.uploadAtomFile(
+                atomApi.uploadAtomStaticFile(
+                    atomCode = atomCode,
+                    atomVersion = atomVersion,
                     file = it,
-                    fileType = FileTypeEnum.BK_PLUGIN_FE,
-                    destPath = frontendDestPath + fileSeparator + relativePath
+                    destPath = frontendDestPath + fileSeparator + relativePath,
+                    buildVariables = buildVariables
                 )
             }
         }
-
-        val buildVariable = buildTask.buildVariable
-        val atomCode = buildVariable!!["atomCode"] ?: throw TaskExecuteException(
-            errorMsg = "need atomCode param",
-            errorType = ErrorType.USER,
-            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
-        )
-        val atomVersion = buildVariable["version"] ?: throw TaskExecuteException(
-            errorMsg = "need version param",
-            errorType = ErrorType.USER,
-            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
-        )
-        val preCmd = buildVariable["preCmd"]
-        val target = buildVariable["target"]
 
         val atomEnv = atomEnv(projectId = buildVariables.projectId, atomCode = atomCode, atomVersion = atomVersion)
 
@@ -151,13 +157,20 @@ class AtomBuildArchiveTask : ITask() {
     }
 
     private fun archiveAtom(
-        filePath: String,
+        atomCode: String,
+        atomVersion: String,
+        file: File,
         destPath: String,
-        workspace: File,
         buildVariables: BuildVariables
     ): String {
-        val fileSha = atomApi.archiveAtom(filePath, destPath, workspace, buildVariables)
-        if (fileSha.isNullOrBlank()) {
+        val fileSha = atomApi.archiveAtom(
+            atomCode = atomCode,
+            atomVersion = atomVersion,
+            file = file,
+            destPath = destPath,
+            buildVariables = buildVariables
+        )
+        if (fileSha.isBlank()) {
             throw TaskExecuteException(
                 errorMsg = "atom file check sha fail!",
                 errorType = ErrorType.USER,

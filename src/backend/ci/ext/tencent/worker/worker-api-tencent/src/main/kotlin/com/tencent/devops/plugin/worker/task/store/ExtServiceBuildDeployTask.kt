@@ -129,7 +129,6 @@ class ExtServiceBuildDeployTask : ITask() {
         val headers = mapOf(AUTH_HEADER_USER_ID to userId)
         val uploadResult = archiveApi.uploadFile(
             url = uploadFileUrl,
-            destPath = destPath,
             file = file,
             headers = headers,
             isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
