@@ -81,6 +81,21 @@ class ScmService @Autowired constructor(
         )
     }
 
+    // 销毁工蜂超级token
+    @Throws(ErrorCodeException::class)
+    fun clearToken(
+        gitProjectId: Long,
+        token: String
+    ): Boolean {
+        return retryFun(
+            log = "$gitProjectId clear token fail",
+            apiErrorCode = ErrorCodeEnum.CLEAR_TOKEN_ERROR,
+            action = {
+                client.getScm(ServiceGitCiResource::class).clearToken(token).data ?: false
+            }
+        )
+    }
+
     // 针对刚开始的获取项目信息获取超级token，遇到报错一定是项目不存在返回项目不存在信息
     fun getTokenForProject(
         gitProjectId: String
@@ -384,7 +399,7 @@ class ScmService @Autowired constructor(
     }
 
     fun getFileTreeFromGit(
-        gitToken: GitToken,
+        gitToken: String,
         gitRequestEvent: GitRequestEvent,
         filePath: String,
         isMrEvent: Boolean = false
@@ -397,7 +412,7 @@ class ScmService @Autowired constructor(
                 client.getScm(ServiceGitResource::class).getGitCIFileTree(
                     gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
                     path = filePath,
-                    token = gitToken.accessToken,
+                    token = gitToken,
                     ref = getTriggerBranch(gitRequestEvent.branch)
                 ).data ?: emptyList()
             }
