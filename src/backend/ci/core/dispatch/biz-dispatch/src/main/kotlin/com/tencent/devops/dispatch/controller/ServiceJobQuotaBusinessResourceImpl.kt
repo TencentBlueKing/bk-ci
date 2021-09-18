@@ -35,26 +35,38 @@ import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.service.JobQuotaBusinessService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource@Suppress("ALL")
+@RestResource
 class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
     private val jobQuotaBusinessService: JobQuotaBusinessService
 ) : ServiceJobQuotaBusinessResource {
-    override fun addRunningJob(
+    override fun checkAndAddRunningJob(
         projectId: String,
         vmType: JobQuotaVmType,
         buildId: String,
-        vmSeqId: String
+        vmSeqId: String,
+        executeCount: Int,
+        containerId: String,
+        containerHashId: String?
     ): Result<Boolean> {
-        jobQuotaBusinessService.insertRunningJob(projectId, vmType, buildId, vmSeqId)
+        jobQuotaBusinessService.checkAndAddRunningJob(
+            projectId = projectId,
+            vmType = vmType,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            executeCount = executeCount,
+            containerId = containerId,
+            containerHashId = containerHashId
+        )
         return Result(true)
     }
 
-    override fun removeRunningJob(projectId: String, buildId: String, vmSeqId: String?): Result<Boolean> {
-        jobQuotaBusinessService.deleteRunningJob(projectId, buildId, vmSeqId)
+    override fun removeRunningJob(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        executeCount: Int
+    ): Result<Boolean> {
+        jobQuotaBusinessService.deleteRunningJob(projectId, buildId, vmSeqId, executeCount)
         return Result(true)
-    }
-
-    override fun getRunningJobCount(projectId: String, vmType: JobQuotaVmType): Result<JobQuotaStatus> {
-        return Result(jobQuotaBusinessService.getProjectRunningJobStatus(projectId, vmType))
     }
 }

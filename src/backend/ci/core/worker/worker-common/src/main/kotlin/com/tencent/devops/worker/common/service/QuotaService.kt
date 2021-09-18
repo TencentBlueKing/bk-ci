@@ -28,7 +28,9 @@
 package com.tencent.devops.worker.common.service
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.quota.QuotaApi
 import com.tencent.devops.worker.common.utils.HttpRetryUtils
@@ -44,6 +46,8 @@ object QuotaService {
      * agent启动成功时上报agent运行
      */
     fun addRunningAgent(buildVariables: BuildVariables) {
+        val pipelineRetryCount = ParameterUtils.getListValueByKey(
+            buildVariables.variablesWithType, PIPELINE_RETRY_COUNT) ?: "0"
         var retryCount = 0
         val result = HttpRetryUtils.retry {
             if (retryCount > 0) {
@@ -53,6 +57,7 @@ object QuotaService {
                 projectId = buildVariables.projectId,
                 buildId = buildVariables.buildId,
                 vmSeqId = buildVariables.vmSeqId,
+                executeCount = pipelineRetryCount.toInt() + 1,
                 retryCount = retryCount++
             )
         }
@@ -65,6 +70,9 @@ object QuotaService {
      * 构建结束时在quota中移除运行agent
      */
     fun removeRunningAgent(buildVariables: BuildVariables) {
+        val pipelineRetryCount = ParameterUtils.getListValueByKey(
+            buildVariables.variablesWithType, PIPELINE_RETRY_COUNT) ?: "0"
+
         var retryCount = 0
         val result = HttpRetryUtils.retry {
             if (retryCount > 0) {
@@ -74,6 +82,7 @@ object QuotaService {
                 projectId = buildVariables.projectId,
                 buildId = buildVariables.buildId,
                 vmSeqId = buildVariables.vmSeqId,
+                executeCount = pipelineRetryCount.toInt() + 1,
                 retryCount = retryCount++
             )
         }
