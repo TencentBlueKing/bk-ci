@@ -90,7 +90,8 @@ class ManualTriggerService @Autowired constructor(
             displayName = existsPipeline.displayName,
             enabled = existsPipeline.enabled,
             creator = existsPipeline.creator,
-            latestBuildInfo = null
+            latestBuildInfo = null,
+            latestBuildBranch = null
         )
 
         // 流水线未启用在手动触发处直接报错

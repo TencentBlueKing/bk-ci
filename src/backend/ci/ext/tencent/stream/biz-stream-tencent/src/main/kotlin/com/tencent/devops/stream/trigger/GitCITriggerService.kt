@@ -143,7 +143,8 @@ class GitCITriggerService @Autowired constructor(
                     displayName = it.displayName,
                     enabled = it.enabled,
                     creator = it.creator,
-                    latestBuildInfo = null
+                    latestBuildInfo = null,
+                    latestBuildBranch = null
                 )
             }
 
@@ -290,7 +291,8 @@ class GitCITriggerService @Autowired constructor(
                     filePath = filePath,
                     enabled = true,
                     creator = gitRequestEvent.userId,
-                    latestBuildInfo = null
+                    latestBuildInfo = null,
+                    latestBuildBranch = null
                 )
             }
             // 针对每个流水线处理异常

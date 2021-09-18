@@ -50,7 +50,8 @@ class GitCIV2PipelineService @Autowired constructor(
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val scmService: ScmService,
     private val redisOperation: RedisOperation,
-    private val websocketService: GitCIV2WebsocketService
+    private val websocketService: GitCIV2WebsocketService,
+    private val streamPipelineBranchService: StreamPipelineBranchService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIV2PipelineService::class.java)
@@ -82,6 +83,11 @@ class GitCIV2PipelineService @Autowired constructor(
             records = emptyList()
         )
         val count = pipelineResourceDao.getPipelineCount(dslContext, gitProjectId)
+        // 获取流水线最后一次构建分支
+        val pipelineBranchMap = streamPipelineBranchService.getPipelinesLastBuildBranch(
+            gitProjectId,
+            pipelineIds = pipelines.map { it.pipelineId }.toSet()
+        )
         return Page(
             count = count.toLong(),
             page = pageNotNull,
@@ -95,7 +101,8 @@ class GitCIV2PipelineService @Autowired constructor(
                     displayName = it.displayName,
                     enabled = it.enabled,
                     creator = it.creator,
-                    latestBuildInfo = null
+                    latestBuildInfo = null,
+                    latestBuildBranch = pipelineBranchMap?.get(it.pipelineId) ?: "master"
                 )
             }
         )
@@ -118,7 +125,8 @@ class GitCIV2PipelineService @Autowired constructor(
                 displayName = it.displayName,
                 enabled = it.enabled,
                 creator = it.creator,
-                latestBuildInfo = null
+                latestBuildInfo = null,
+                latestBuildBranch = null
             )
         }
     }
@@ -141,7 +149,8 @@ class GitCIV2PipelineService @Autowired constructor(
             displayName = pipeline.displayName,
             enabled = pipeline.enabled,
             creator = pipeline.creator,
-            latestBuildInfo = null
+            latestBuildInfo = null,
+            latestBuildBranch = null
         )
     }
 
