@@ -171,7 +171,7 @@ interface BuildListener {
             logger.warn("Fail to handle the shutdown message - ($event)", t)
         } finally {
             val jobQuotaService = getJobQuotaService()
-            jobQuotaService.removeRunningJob(event.projectId, event.buildId, event.vmSeqId)
+            jobQuotaService.removeRunningJob(event.projectId, event.buildId, event.vmSeqId, event.executeCount)
         }
     }
 

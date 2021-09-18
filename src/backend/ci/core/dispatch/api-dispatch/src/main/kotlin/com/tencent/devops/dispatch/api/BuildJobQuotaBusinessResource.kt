@@ -40,17 +40,18 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_JOBS_PROJECT_QUOTA"], description = "Job配额管理")
-@Path("/build/jobs/running")
+@Path("/build/quotas/running")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildJobQuotaBusinessResource {
 
     @ApiOperation("上报一个Agent启动")
     @POST
-    @Path("/agent/projects/{projectId}/builds/{buildId}/vmSeqIds/{vmSeqId}")
+    @Path("/agent/projects/{projectId}/builds/{buildId}/vmSeqs/{vmSeqId}")
     fun addRunningAgent(
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
@@ -60,12 +61,15 @@ interface BuildJobQuotaBusinessResource {
         buildId: String,
         @ApiParam(value = "vmSeqId", required = true)
         @PathParam("vmSeqId")
-        vmSeqId: String
+        vmSeqId: String,
+        @ApiParam(value = "executeCount", required = true)
+        @QueryParam("executeCount")
+        executeCount: Int
     ): Result<Boolean>
 
     @ApiOperation("上报一个Agent结束")
     @DELETE
-    @Path("/agent/projects/{projectId}/builds/{buildId}/vmSeqIds/{vmSeqId}")
+    @Path("/agent/projects/{projectId}/builds/{buildId}/vmSeqs/{vmSeqId}")
     fun removeRunningAgent(
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
@@ -75,6 +79,9 @@ interface BuildJobQuotaBusinessResource {
         buildId: String,
         @ApiParam(value = "vmSeqId", required = true)
         @PathParam("vmSeqId")
-        vmSeqId: String
+        vmSeqId: String,
+        @ApiParam(value = "executeCount", required = true)
+        @QueryParam("executeCount")
+        executeCount: Int
     ): Result<Boolean>
 }

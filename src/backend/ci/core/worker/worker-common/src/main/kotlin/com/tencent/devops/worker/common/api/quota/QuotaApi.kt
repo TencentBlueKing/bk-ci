@@ -32,6 +32,19 @@ import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface QuotaApi : WorkerRestApiSDK {
 
-    fun removeRunningAgent(projectId: String, buildId: String, vmSeqId: String, retryCount: Int): Result<Boolean>
-    fun addRunningAgent(projectId: String, buildId: String, vmSeqId: String, retryCount: Int): Result<Boolean>
+    fun removeRunningAgent(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        executeCount: Int,
+        retryCount: Int
+    ): Result<Boolean>
+
+    fun addRunningAgent(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        executeCount: Int,
+        retryCount: Int
+    ): Result<Boolean>
 }

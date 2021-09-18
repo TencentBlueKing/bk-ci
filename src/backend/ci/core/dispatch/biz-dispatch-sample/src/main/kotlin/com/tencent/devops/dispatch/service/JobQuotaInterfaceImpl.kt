@@ -28,7 +28,9 @@
 package com.tencent.devops.dispatch.service
 
 import com.tencent.devops.dispatch.pojo.JobQuotaHistory
+import org.springframework.stereotype.Service
 
+@Service
 class JobQuotaInterfaceImpl : JobQuotaInterface {
     /**
      * 保存Job配额相关构建记录

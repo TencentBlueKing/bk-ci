@@ -45,10 +45,12 @@ class QuotaResourceApi : AbstractBuildResourceApi(), QuotaApi {
         projectId: String,
         buildId: String,
         vmSeqId: String,
+        executeCount: Int,
         retryCount: Int
     ): Result<Boolean> {
         try {
-            val path = "/ms/dispatch/api/build/jobs/running/agent/projects/$projectId/builds/$buildId/vmSeqIds/$vmSeqId"
+            val path = "/ms/dispatch/api/build/quotas/running/agent/projects/$projectId/" +
+                    "builds/$buildId/vmSeqs/$vmSeqId?executeCount=$executeCount"
             val request = buildDelete(path)
             val errorMessage = "Quota上报agent运行结束状态失败"
             val responseContent = request(
@@ -69,10 +71,12 @@ class QuotaResourceApi : AbstractBuildResourceApi(), QuotaApi {
         projectId: String,
         buildId: String,
         vmSeqId: String,
+        executeCount: Int,
         retryCount: Int
     ): Result<Boolean> {
         try {
-            val path = "/ms/dispatch/api/build/jobs/running/agent/projects/$projectId/builds/$buildId/vmSeqIds/$vmSeqId"
+            val path = "/ms/dispatch/api/build/quotas/running/agent/projects/$projectId/" +
+                    "builds/$buildId/vmSeqs/$vmSeqId?executeCount=$executeCount"
             val request = buildPost(path)
             val errorMessage = "Quota上报agent开始运行失败"
             val responseContent = request(
