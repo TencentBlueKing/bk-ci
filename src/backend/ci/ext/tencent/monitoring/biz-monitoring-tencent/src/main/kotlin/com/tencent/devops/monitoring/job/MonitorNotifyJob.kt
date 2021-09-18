@@ -161,6 +161,27 @@ class MonitorNotifyJob @Autowired constructor(
     @Value("\${esb.appSecret:#{null}}")
     val appSecret: String = ""
 
+    @Value("\${bkdata.url:#{null}}")
+    val bkdataUrl: String = ""
+
+    @Value("\${bkdata.token:#{null}}")
+    val bkdataToken: String = ""
+
+    @Value("\${pot.sign.url:#{null}}")
+    val potSignUrl: String = ""
+
+    @Value("\${pot.sign.user:#{null}}")
+    val potSignUser: String = ""
+
+    @Value("\${pot.sign.password:#{null}}")
+    val potSignPassword: String = ""
+
+    @Value("\${pot.view.url:#{null}}")
+    val potViewUrl: String = ""
+
+    @Value("\${pot.view.id:#{null}}")
+    val potViewId: String = ""
+
     /**
      * 每天发送日报
      */
@@ -238,10 +259,10 @@ class MonitorNotifyJob @Autowired constructor(
     private fun oteamCoverage(startTime: Long): EmailModuleData {
         try {
             // 蓝盾插件的项目列表
-            val url = "http://bkdata-tencent.apigw.o.oa.com/prod/v3/dataquery/query/"
+            val url = bkdataUrl
             val data = mapOf(
                 "bkdata_authentication_method" to "token",
-                "bkdata_data_token" to "boKSvZtHArySd51ci0c91LXE7DHSu6rI3mLqMOYL5UYkorJ9AuY6dDtLU4SMoYtk",
+                "bkdata_data_token" to bkdataToken,
                 "bk_app_code" to appCode,
                 "bk_app_secret" to appSecret,
                 "sql" to """
@@ -268,11 +289,9 @@ class MonitorNotifyJob @Autowired constructor(
             logger.info("git plugin size: ${gitPluginProjects.size}")
 
             // 工蜂项目列表
-            val potAuthUrl =
-                "http://idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Ftableau.pot.woa.com%2Fapi%2F3.4%2Fauth%2Fsignin"
             val potAuthResp = OkhttpUtils.doPost(
-                potAuthUrl,
-                """{"credentials":{"name":"viewer","password":"viewer","site":{"contentUrl":""}}}"""
+                potSignUrl,
+                """{"credentials":{"name":"$potSignUser","password":"$potSignPassword","site":{"contentUrl":""}}}"""
             )
             var siteId: String? = null
             var token: String? = null
@@ -291,9 +310,7 @@ class MonitorNotifyJob @Autowired constructor(
             } else {
                 throw RuntimeException("potAuthResp is failed , $potAuthResp")
             }
-            val potDataUrl =
-                "http://idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Ftableau.pot.woa.com" +
-                        "%2Fapi%2F3.4%2Fsites%2F$siteId%2Fviews%2F89799275-a07e-4a21-ada4-c52f8b449ff6%2Fdata"
+            val potDataUrl = potViewUrl.replace("##siteId##", siteId!!).replace("##viewId##", potViewId)
             val potDataResp = OkhttpUtils.doGet(potDataUrl, mapOf("x-tableau-auth" to token!!))
             val potProjects = if (potDataResp.isSuccessful) {
                 potDataResp.body()?.run {
