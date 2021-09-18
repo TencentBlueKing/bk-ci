@@ -25,15 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.artifactory.resources.user
 
-import com.tencent.devops.artifactory.api.user.UserLogFileResource
+import com.tencent.devops.artifactory.api.service.ServiceLogFileResource
 import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.artifactory.service.LogFileService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 
 @RestResource
-class UserLogFileResourceImpl : UserLogFileResource {
+class ServiceTxLogFileResourceImpl(
+    private val logFileService: LogFileService
+) : ServiceLogFileResource {
 
     override fun getPluginLogUrl(
         userId: String,
@@ -43,6 +46,15 @@ class UserLogFileResourceImpl : UserLogFileResource {
         elementId: String,
         executeCount: String
     ): Result<Url> {
-        TODO("not implemented")
+        return Result(
+            logFileService.getPluginLogUrl(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                elementId,
+                executeCount
+            )
+        )
     }
 }
