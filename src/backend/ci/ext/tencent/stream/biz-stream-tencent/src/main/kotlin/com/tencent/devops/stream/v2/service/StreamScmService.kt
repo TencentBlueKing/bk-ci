@@ -56,14 +56,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ScmService @Autowired constructor(
+class StreamScmService @Autowired constructor(
     private val client: Client,
-    private val oauthService: OauthService,
+    private val oauthService: StreamOauthService,
     private val gitCIBasicSettingService: GitCIBasicSettingService
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ScmService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamScmService::class.java)
         const val PROJECT_PERMISSION_ERROR = "[%s] No permissions"
     }
 

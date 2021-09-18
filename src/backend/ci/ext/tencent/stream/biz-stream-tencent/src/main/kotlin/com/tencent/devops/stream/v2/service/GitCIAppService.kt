@@ -16,10 +16,10 @@ import org.springframework.stereotype.Service
 @SuppressWarnings("LongParameterList")
 class GitCIAppService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val scmService: ScmService,
+    private val streamScmService: StreamScmService,
     private val gitCIBasicSettingDao: GitCIBasicSettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val oauthService: OauthService
+    private val oauthService: StreamOauthService
 ) {
 
     fun getGitCIProjectList(
@@ -29,7 +29,7 @@ class GitCIAppService @Autowired constructor(
         searchName: String?
     ): Pagination<AppProjectVO> {
         val token = oauthService.getAndCheckOauthToken(userId).accessToken
-        val projectIdMap = scmService.getProjectList(
+        val projectIdMap = streamScmService.getProjectList(
             accessToken = token,
             userId = userId,
             page = page,

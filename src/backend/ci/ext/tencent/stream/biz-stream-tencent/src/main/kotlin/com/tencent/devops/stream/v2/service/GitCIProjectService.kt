@@ -55,8 +55,8 @@ class GitCIProjectService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val scmService: ScmService,
-    private val oauthService: OauthService,
+    private val streamScmService: StreamScmService,
+    private val oauthService: StreamOauthService,
     private val gitCIBasicSettingDao: GitCIBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao
@@ -86,7 +86,7 @@ class GitCIProjectService @Autowired constructor(
             pageSize
         }
         val token = oauthService.getAndCheckOauthToken(userId).accessToken
-        val gitProjects = scmService.getProjectList(
+        val gitProjects = streamScmService.getProjectList(
             accessToken = token,
             userId = userId,
             page = realPage,

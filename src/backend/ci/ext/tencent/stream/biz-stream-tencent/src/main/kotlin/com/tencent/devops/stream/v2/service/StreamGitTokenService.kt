@@ -27,58 +27,44 @@
 
 package com.tencent.devops.stream.v2.service
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.stream.common.StreamPipelineBadgeType
-import com.tencent.devops.stream.dao.GitPipelineResourceDao
-import com.tencent.devops.stream.dao.GitRequestEventBuildDao
-import com.tencent.devops.stream.pojo.v2.badge.StreamPipelineBadgeInfo
-import org.jooq.DSLContext
+import com.github.benmanes.caffeine.cache.Caffeine
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLDecoder
+import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
 
 @Service
-class StreamPipelineBadgeService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val pipelineResourceDao: GitPipelineResourceDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+class StreamGitTokenService @Autowired constructor(
+    private val streamScmService: StreamScmService
 ) {
-    fun get(gitProjectId: Long, filePath: String, branch: String?, objectKind: String?): StreamPipelineBadgeInfo {
-        val (pipelineName, type) = getType(gitProjectId, filePath, branch, objectKind)
-        return StreamPipelineBadgeInfo(
-            label = pipelineName,
-            message = type.text,
-            status = type.name
-        )
+
+    private val tokenCache = Caffeine.newBuilder()
+        .maximumSize(100000)
+        .expireAfterAccess(30, TimeUnit.MINUTES)
+        .build<Long/*gitProjectId*/, String/*api token*/>()
+
+    fun getToken(gitProjectId: Long): String {
+        val token = tokenCache.getIfPresent(gitProjectId)
+        return if (token.isNullOrBlank()) {
+            val newToken = streamScmService.getToken(gitProjectId.toString()).accessToken
+            logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=$newToken")
+            tokenCache.put(gitProjectId, newToken)
+            newToken
+        } else token
     }
 
-    private fun getType(
-        gitProjectId: Long,
-        filePath: String,
-        branch: String?,
-        objectKind: String?
-    ): Pair<String, StreamPipelineBadgeType> {
-        val realFilePath = URLDecoder.decode(filePath, "UTF-8")
-        val pipeline = pipelineResourceDao.getPipelineByFile(
-            dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            filePath = realFilePath
-        )
-        if (pipeline?.pipelineId.isNullOrBlank()) {
-            return Pair(realFilePath, StreamPipelineBadgeType.NOT_FOUND)
+    fun clearToken(gitProjectId: Long): Boolean {
+        val token = tokenCache.getIfPresent(gitProjectId)
+        if (token.isNullOrBlank()) return true
+        val cleared = streamScmService.clearToken(gitProjectId, token)
+        logger.info("STREAM|clearToken|gitProjectId=$gitProjectId|token=$token cleared=$cleared")
+        if (cleared) {
+            tokenCache.invalidate(gitProjectId)
         }
-        val buildHistory = gitRequestEventBuildDao.getLastEventByPipelineId(
-            dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            pipelineId = pipeline!!.pipelineId,
-            branch = branch,
-            objectKind = objectKind
-        ) ?: return Pair(pipeline.displayName, StreamPipelineBadgeType.NEVER_BUILD)
+        return cleared
+    }
 
-        return if (BuildStatus.parse(buildHistory.buildStatus).isSuccess()) {
-            Pair(pipeline.displayName, StreamPipelineBadgeType.SUCCEEDED)
-        } else {
-            Pair(pipeline.displayName, StreamPipelineBadgeType.FAILED)
-        }
+    companion object {
+        private val logger = LoggerFactory.getLogger(StreamGitTokenService::class.java)
     }
 }

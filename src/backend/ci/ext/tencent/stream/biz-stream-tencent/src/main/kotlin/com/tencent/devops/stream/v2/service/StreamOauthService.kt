@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service
 import java.lang.RuntimeException
 
 @Service
-class OauthService @Autowired constructor(
+class StreamOauthService @Autowired constructor(
     private val client: Client,
     private val gitCIBasicSettingService: GitCIBasicSettingService
 ) {

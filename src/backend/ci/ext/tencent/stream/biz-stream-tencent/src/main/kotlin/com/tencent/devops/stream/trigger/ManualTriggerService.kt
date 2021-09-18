@@ -46,7 +46,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEven
 import com.tencent.devops.stream.trigger.v1.YamlBuild
 import com.tencent.devops.stream.trigger.v2.YamlBuildV2
 import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
-import com.tencent.devops.stream.v2.service.OauthService
+import com.tencent.devops.stream.v2.service.StreamOauthService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,7 +56,7 @@ import javax.ws.rs.core.Response
 @Service
 class ManualTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val oauthService: OauthService,
+    private val oauthService: StreamOauthService,
     private val yamlTriggerFactory: YamlTriggerFactory,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
@@ -192,7 +192,7 @@ class ManualTriggerService @Autowired constructor(
     ) {
         val token = oauthService.getAndCheckOauthToken(userId)
         val objects = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
-            gitToken = token,
+            gitToken = token.accessToken,
             forkGitToken = null,
             gitRequestEvent = gitRequestEvent,
             isMr = false,

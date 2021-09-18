@@ -43,25 +43,25 @@ import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
-import com.tencent.devops.stream.v2.service.ScmService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 
-@Service
-class MergeConflictCheckService @Autowired constructor(
+@Component
+class MergeConflictCheck @Autowired constructor(
     private val dslContext: DSLContext,
     private val rabbitTemplate: RabbitTemplate,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val scmService: ScmService,
+    private val streamScmService: StreamScmService,
     private val gitCIEventService: GitCIEventService,
     private val triggerExceptionService: TriggerExceptionService
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(MergeConflictCheckService::class.java)
+        private val logger = LoggerFactory.getLogger(MergeConflictCheck::class.java)
     }
 
     /**
@@ -86,7 +86,7 @@ class MergeConflictCheckService @Autowired constructor(
         val mrInfo = triggerExceptionService.handleErrorCode(
             request = gitRequestEvent,
             action = {
-                scmService.getMergeInfo(
+                streamScmService.getMergeInfo(
                     gitProjectId = projectId,
                     mergeRequestId = mrRequestId,
                     token = gitToken
@@ -146,7 +146,7 @@ class MergeConflictCheckService @Autowired constructor(
         val projectId = gitRequestEvent.gitProjectId
         val mrRequestId = (event as GitMergeRequestEvent).object_attributes.id
         val mrInfo = try {
-            scmService.getMergeInfo(
+            streamScmService.getMergeInfo(
                 gitProjectId = projectId,
                 mergeRequestId = mrRequestId,
                 token = token

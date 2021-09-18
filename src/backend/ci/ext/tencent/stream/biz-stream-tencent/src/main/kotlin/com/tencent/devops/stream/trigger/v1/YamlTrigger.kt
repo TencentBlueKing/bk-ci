@@ -46,7 +46,6 @@ import com.tencent.devops.stream.service.GitRepositoryConfService
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.utils.GitCIWebHookMatcher
 import com.tencent.devops.stream.trigger.GitCIEventService
-import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -67,8 +66,8 @@ class YamlTrigger @Autowired constructor(
 ) : YamlTriggerInterface<CIBuildYaml> {
 
     override fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
+        gitToken: String,
+        forkGitToken: String?,
         gitRequestEvent: GitRequestEvent,
         gitProjectPipeline: GitProjectPipeline,
         event: GitEvent,
@@ -155,8 +154,8 @@ class YamlTrigger @Autowired constructor(
     }
 
     override fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
+        gitToken: String,
+        forkGitToken: String?,
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,

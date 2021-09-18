@@ -34,7 +34,6 @@ import com.tencent.devops.stream.common.exception.GitCINoEnableException
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -45,7 +44,9 @@ import org.springframework.stereotype.Service
 class GitCIBasicSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao
+    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
+    private val streamGitTokenService: StreamGitTokenService,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIBasicSettingService::class.java)
@@ -227,10 +228,8 @@ class GitCIBasicSettingService @Autowired constructor(
 
     private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
         return try {
-            val accessToken =
-                client.getScm(ServiceGitCiResource::class).getToken(gitProjectId.toString()).data!!.accessToken
-            client.getScm(ServiceGitCiResource::class)
-                .getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true).data
+            val accessToken = streamGitTokenService.getToken(gitProjectId)
+            streamScmService.getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true)
         } catch (e: Throwable) {
             logger.error("requestGitProjectInfo, msg: ${e.message}")
             return null

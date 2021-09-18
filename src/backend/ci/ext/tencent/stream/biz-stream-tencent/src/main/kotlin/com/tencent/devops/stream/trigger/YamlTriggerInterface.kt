@@ -31,13 +31,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.repository.pojo.oauth.GitToken
 
 interface YamlTriggerInterface<T> {
 
     fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
+        gitToken: String,
+        forkGitToken: String?,
         gitRequestEvent: GitRequestEvent,
         gitProjectPipeline: GitProjectPipeline,
         event: GitEvent,
@@ -46,8 +45,8 @@ interface YamlTriggerInterface<T> {
     ): Boolean
 
     fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
+        gitToken: String,
+        forkGitToken: String?,
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,

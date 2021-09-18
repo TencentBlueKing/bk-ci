@@ -31,8 +31,8 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.common.exception.YamlBlankException
-import com.tencent.devops.stream.v2.service.OauthService
-import com.tencent.devops.stream.v2.service.ScmService
+import com.tencent.devops.stream.v2.service.StreamOauthService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,8 +40,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class YamlTemplateService @Autowired constructor(
-    private val oauthService: OauthService,
-    private val scmService: ScmService,
+    private val oauthService: StreamOauthService,
+    private val streamScmService: StreamScmService,
     private val ticketService: TicketService
 ) {
 
@@ -71,7 +71,7 @@ class YamlTemplateService @Autowired constructor(
         fileName: String
     ): String {
         if (token != null) {
-            return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
+            return ScriptYmlUtils.formatYaml(streamScmService.getYamlFromGit(
                 token = token,
                 gitProjectId = gitProjectId.toString(),
                 ref = ref,
@@ -81,7 +81,7 @@ class YamlTemplateService @Autowired constructor(
         }
         if (personalAccessToken.isNullOrBlank()) {
             val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
-            return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
+            return ScriptYmlUtils.formatYaml(streamScmService.getYamlFromGit(
                 token = oAuthToken,
                 gitProjectId = targetRepo!!,
                 ref = ref,
@@ -102,7 +102,7 @@ class YamlTemplateService @Autowired constructor(
             } else {
                 key
             }
-            return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
+            return ScriptYmlUtils.formatYaml(streamScmService.getYamlFromGit(
                 token = personToken,
                 gitProjectId = targetRepo!!,
                 ref = ref,

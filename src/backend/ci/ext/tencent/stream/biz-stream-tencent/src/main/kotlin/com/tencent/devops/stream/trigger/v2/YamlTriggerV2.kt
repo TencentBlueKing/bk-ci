@@ -51,12 +51,11 @@ import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.v2.YamlObjects
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
-import com.tencent.devops.stream.v2.service.ScmService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.stream.trigger.template.YamlTemplate
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
-import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.YamlCheck
 import org.jooq.DSLContext
@@ -67,7 +66,7 @@ import org.springframework.stereotype.Component
 @Component
 class YamlTriggerV2 @Autowired constructor(
     private val dslContext: DSLContext,
-    private val scmService: ScmService,
+    private val streamScmService: StreamScmService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitBasicSettingService: GitCIBasicSettingService,
     private val yamlTemplateService: YamlTemplateService,
@@ -85,8 +84,8 @@ class YamlTriggerV2 @Autowired constructor(
     }
 
     override fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
+        gitToken: String,
+        forkGitToken: String?,
         gitRequestEvent: GitRequestEvent,
         gitProjectPipeline: GitProjectPipeline,
         event: GitEvent,
@@ -195,8 +194,8 @@ class YamlTriggerV2 @Autowired constructor(
 
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
     override fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
+        gitToken: String,
+        forkGitToken: String?,
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
@@ -243,8 +242,8 @@ class YamlTriggerV2 @Autowired constructor(
     private fun replaceYamlTemplate(
         isFork: Boolean,
         isMr: Boolean,
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
+        gitToken: String,
+        forkGitToken: String?,
         preTemplateYamlObject: PreTemplateScriptBuildYaml,
         filePath: String,
         gitRequestEvent: GitRequestEvent,
@@ -255,14 +254,14 @@ class YamlTriggerV2 @Autowired constructor(
             val preYamlObject = YamlTemplate(
                 yamlObject = preTemplateYamlObject,
                 filePath = filePath,
-                triggerProjectId = scmService.getProjectId(isFork, gitRequestEvent),
+                triggerProjectId = streamScmService.getProjectId(isFork, gitRequestEvent),
                 triggerUserId = gitRequestEvent.userId,
                 sourceProjectId = gitRequestEvent.gitProjectId,
                 triggerRef = gitRequestEvent.branch,
                 triggerToken = if (isFork) {
-                    forkGitToken!!.accessToken
+                    forkGitToken!!
                 } else {
-                    gitToken.accessToken
+                    gitToken
                 },
                 repo = null,
                 repoTemplateGraph = TemplateGraph(),

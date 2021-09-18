@@ -71,6 +71,7 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -96,7 +97,8 @@ class GitCIBuildFinishListener @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val qualityService: QualityService,
     private val gitCheckService: GitCheckService,
-    private val triggerMessageUtil: StreamTriggerMessageUtils
+    private val triggerMessageUtil: StreamTriggerMessageUtils,
+    private val streamGitTokenService: StreamGitTokenService
 ) {
 
     @Value("\${rtx.corpid:#{null}}")
@@ -332,6 +334,9 @@ class GitCIBuildFinishListener @Autowired constructor(
                         build = build
                     )
                 }
+
+                // 销毁该项目当前的token缓存
+                streamGitTokenService.clearToken(gitProjectId)
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)
