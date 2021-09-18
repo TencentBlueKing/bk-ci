@@ -25,48 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.resources
+package com.tencent.devops.stream.resources.op
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.OpGitProjectResource
-import com.tencent.devops.stream.pojo.GitProjectConfWithPage
-import com.tencent.devops.stream.service.GitProjectConfService
+import com.tencent.devops.stream.api.op.OpStreamCheckResource
+import com.tencent.devops.stream.v2.service.StreamAsyncService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpGitProjectResourceImpl @Autowired constructor(
-    private val gitProjectConfService: GitProjectConfService
-) : OpGitProjectResource {
-
-    override fun create(gitProjectId: Long, name: String, url: String, enable: Boolean): Result<Boolean> {
-        return Result(gitProjectConfService.create(gitProjectId, name, url, enable))
-    }
-
-    override fun delete(gitProjectId: Long): Result<Boolean> {
-        return Result(gitProjectConfService.delete(gitProjectId))
-    }
-
-    override fun list(
-        gitProjectId: Long?,
-        name: String?,
-        url: String?,
-        page: Int,
-        pageSize: Int
-    ): Result<GitProjectConfWithPage> {
-        return Result(
-            GitProjectConfWithPage(
-                gitProjectConfService.count(gitProjectId, name, url),
-                gitProjectConfService.list(gitProjectId, name, url, page, pageSize)
-            )
-        )
-    }
-
-    override fun fixPipelineInfo(): Result<Int> {
-        return Result(gitProjectConfService.fixPipelineVersion())
-    }
-
-    override fun update(gitProjectId: Long, name: String?, url: String?, enable: Boolean?): Result<Boolean> {
-        return Result(gitProjectConfService.update(gitProjectId, name, url, enable))
+class OpStreamCheckResourceImpl @Autowired constructor(
+    private val streamAsyncService: StreamAsyncService
+) : OpStreamCheckResource {
+    override fun checkBranches(gitProjectId: Long?, pipelineId: String) {
+        streamAsyncService.checkPipelineBranch(gitProjectId, pipelineId)
     }
 }

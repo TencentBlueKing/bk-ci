@@ -262,6 +262,29 @@ class ScmService @Autowired constructor(
         ).data
     }
 
+    fun getProjectBranchesRetry(
+        token: String,
+        gitProjectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): List<String>? {
+        return retryFun(
+            log = "getProjectBranchesRetry: [$gitProjectId] error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR,
+            action = {
+                client.getScm(ServiceGitCiResource::class).getBranches(
+                    token = token,
+                    gitProjectId = gitProjectId,
+                    page = page ?: 1,
+                    pageSize = pageSize ?: 20,
+                    search = null,
+                    orderBy = null,
+                    sort = null
+                ).data
+            }
+        )
+    }
+
     fun getProjectBranches(
         token: String,
         gitProjectId: String,

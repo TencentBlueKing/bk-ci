@@ -25,12 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.resources
+package com.tencent.devops.stream.resources.op
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.OpGitCIServicesResource
+import com.tencent.devops.stream.api.op.OpGitCIServicesResource
 import com.tencent.devops.stream.pojo.GitCIServicesConf
 import com.tencent.devops.stream.service.GitCIServicesConfService
 import org.springframework.beans.factory.annotation.Autowired
