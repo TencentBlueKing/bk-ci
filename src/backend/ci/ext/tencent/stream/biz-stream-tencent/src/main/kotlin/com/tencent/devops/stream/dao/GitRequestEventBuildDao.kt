@@ -430,7 +430,8 @@ class GitRequestEventBuildDao {
         commitMsg: String?,
         buildStatus: Set<String>?,
         limit: Int,
-        offset: Int
+        offset: Int,
+        pipelineIds: Set<String>?
     ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return getRequestEventBuildListMultiple(
@@ -442,7 +443,8 @@ class GitRequestEventBuildDao {
                 pipelineId = pipelineId,
                 event = event,
                 commitMsg = commitMsg,
-                buildStatus = buildStatus
+                buildStatus = buildStatus,
+                pipelineIds = pipelineIds
             ).orderBy(EVENT_ID.desc(), CREATE_TIME.desc()).limit(limit).offset(offset).fetch()
         }
     }
@@ -456,7 +458,8 @@ class GitRequestEventBuildDao {
         pipelineId: String?,
         event: Set<String>?,
         commitMsg: String?,
-        buildStatus: Set<String>?
+        buildStatus: Set<String>?,
+        pipelineIds: Set<String>?
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return getRequestEventBuildListMultiple(
@@ -468,7 +471,8 @@ class GitRequestEventBuildDao {
                 pipelineId = pipelineId,
                 event = event,
                 commitMsg = commitMsg,
-                buildStatus = buildStatus
+                buildStatus = buildStatus,
+                pipelineIds = pipelineIds
             ).count()
         }
     }
@@ -482,7 +486,8 @@ class GitRequestEventBuildDao {
         pipelineId: String?,
         event: Set<String>?,
         commitMsg: String?,
-        buildStatus: Set<String>?
+        buildStatus: Set<String>?,
+        pipelineIds: Set<String>?
     ): SelectConditionStep<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
@@ -518,6 +523,9 @@ class GitRequestEventBuildDao {
             }
             if (!buildStatus.isNullOrEmpty()) {
                 dsl.and(BUILD_STATUS.`in`(buildStatus))
+            }
+            if (!pipelineIds.isNullOrEmpty()) {
+                dsl.and(PIPELINE_ID.`in`(pipelineIds))
             }
             return dsl
         }
