@@ -31,14 +31,17 @@ import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.lang.RuntimeException
+import org.jooq.DSLContext
 
 @Service
 class StreamOauthService @Autowired constructor(
     private val client: Client,
-    private val gitCIBasicSettingService: GitCIBasicSettingService
+    private val dslContext: DSLContext,
+    private val gitCIBasicSettingDao: GitCIBasicSettingDao
 ) {
 
     fun getAndCheckOauthToken(
@@ -65,7 +68,7 @@ class StreamOauthService @Autowired constructor(
     fun getGitCIEnableToken(
         gitProjectId: Long
     ): GitToken {
-        val userId = gitCIBasicSettingService.getGitCIConf(gitProjectId)?.enableUserId
+        val userId = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)?.enableUserId
             ?: throw RuntimeException("工蜂项目${gitProjectId}未开启Stream")
         return try {
             client.get(ServiceOauthResource::class).gitGet(userId).data!!
