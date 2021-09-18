@@ -51,8 +51,8 @@ class StreamAsyncService @Autowired constructor(
         if (gitProjectId == null) {
             var realMaxId = streamPipelineBranchDao.getMaxGitProjectId(dslContext)
             val minId = streamPipelineBranchDao.getMinGitProjectId(dslContext)
-            while (realMaxId > 0) {
-                if (streamPipelineBranchDao.isGitProjectExist(dslContext, minId)) {
+            while (realMaxId > minId) {
+                if (streamPipelineBranchDao.isGitProjectExist(dslContext, realMaxId)) {
                     checkBranch(realMaxId, null)
                 }
                 realMaxId--
