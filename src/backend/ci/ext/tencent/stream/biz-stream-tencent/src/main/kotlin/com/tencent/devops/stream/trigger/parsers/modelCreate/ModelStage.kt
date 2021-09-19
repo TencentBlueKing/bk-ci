@@ -203,7 +203,8 @@ class ModelStage @Autowired constructor(
         val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
         stageCheck.gates?.forEach GateEach@{ gate ->
             val indicators = gate.rule.map { rule ->
-                val (atomCode, mid) = rule.split(".")
+                // threshold可能包含小数，所以把最后的一部分都取出来在分割
+                val (atomCode, mid) = getAtomCodeAndOther(rule)
                 var op = ""
                 run breaking@{
                     operations.keys.forEach {
@@ -275,5 +276,13 @@ class ModelStage @Autowired constructor(
             }
         }
         return null
+    }
+
+    private fun getAtomCodeAndOther(rule: String): Pair<String, String> {
+        val index = rule.indexOfFirst { it == '.' }
+        return Pair(
+            rule.substring(0 until index),
+            rule.substring((index + 1) until rule.length)
+        )
     }
 }

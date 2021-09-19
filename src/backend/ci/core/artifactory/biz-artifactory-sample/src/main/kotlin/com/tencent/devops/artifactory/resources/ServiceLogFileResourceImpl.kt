@@ -1,5 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -27,32 +25,24 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-plugins {
-    kotlin
-    id("com.github.johnrengelman.shadow")
-    application
-}
+package com.tencent.devops.artifactory.resources
 
-tasks {
-    getByName<Jar>("jar") {
-        from("src/main/resources") {
-            include("*.*")
-        }
+import com.tencent.devops.artifactory.api.service.ServiceLogFileResource
+import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 
-        manifest {
-            attributes(mapOf("WorkerAgent-Version" to project.version))
-        }
-    }
+@RestResource
+class ServiceLogFileResourceImpl : ServiceLogFileResource {
 
-    named<ShadowJar>("shadowJar") {
-        mergeServiceFiles()
-        destinationDirectory.set(File("${rootDir}/release"))
-        archiveClassifier.set("")
-        archiveVersion.set("")
-        isZip64 = true
-    }
-
-    getByName("installDist") {
-        enabled = false
+    override fun getPluginLogUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: String
+    ): Result<Url> {
+        TODO("not implemented")
     }
 }

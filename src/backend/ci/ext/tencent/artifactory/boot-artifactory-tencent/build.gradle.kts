@@ -31,7 +31,3 @@ dependencies {
     api(project(":ext:tencent:artifactory:biz-artifactory-tencent"))
     api(project(":ext:tencent:artifactory:biz-artifactory-push-tencent"))
 }
-
-plugins {
-    `task-spring-boot-package`
-}

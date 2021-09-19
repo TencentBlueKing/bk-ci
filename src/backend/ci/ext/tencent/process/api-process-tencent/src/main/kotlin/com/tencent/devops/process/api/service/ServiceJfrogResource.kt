@@ -58,10 +58,17 @@ interface ServiceJfrogResource {
 
     @ApiOperation("根据流水线id和构建id对，获取build num")
     @POST
-    // @Path("/projects/{projectId}/getBuildNoByBuildIds")
     @Path("/{projectId}/getBuildNoByBuildIds")
+    @Deprecated("use ServiceJfrogResource.getBuildNoByBuildIdsNew")
     fun getBuildNoByBuildIds(
         @ApiParam("项目id", required = true)
+        buildIds: Set<String>
+    ): Result<Map<String, String>>
+
+    @ApiOperation("根据构建id对，获取build num")
+    @POST
+    @Path("//getBuildNoByBuildIds")
+    fun getBuildNoByBuildIdsNew(
         buildIds: Set<String>
     ): Result<Map<String, String>>
 }

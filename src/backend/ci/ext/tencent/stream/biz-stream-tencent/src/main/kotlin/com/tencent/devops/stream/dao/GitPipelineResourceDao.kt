@@ -89,47 +89,6 @@ class GitPipelineResourceDao {
         }
     }
 
-    fun savePipeline(
-        dslContext: DSLContext,
-        gitProjectId: Long,
-        projectCode: String,
-        pipelineId: String,
-        filePath: String,
-        displayName: String,
-        enabled: Boolean,
-        creator: String?,
-        latestBuildId: String?,
-        manualTrigger: Boolean? = false,
-        version: String?
-    ): Int {
-        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            return dslContext.insertInto(
-                this,
-                PIPELINE_ID,
-                GIT_PROJECT_ID,
-                FILE_PATH,
-                DISPLAY_NAME,
-                CREATOR,
-                ENABLED,
-                LATEST_BUILD_ID,
-                VERSION,
-                CREATE_TIME,
-                UPDATE_TIME
-            ).values(
-                pipelineId,
-                gitProjectId,
-                filePath,
-                displayName,
-                creator,
-                enabled,
-                latestBuildId,
-                version,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-            ).execute()
-        }
-    }
-
     fun updatePipelineBuildInfo(
         dslContext: DSLContext,
         pipeline: GitProjectPipeline,
@@ -220,17 +179,6 @@ class GitPipelineResourceDao {
         }
     }
 
-    fun deleteByGitProjectId(
-        dslContext: DSLContext,
-        gitProjectId: Long
-    ): Int {
-        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            return dslContext.delete(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .execute()
-        }
-    }
-
     fun enablePipelineById(
         dslContext: DSLContext,
         pipelineId: String,
@@ -278,30 +226,6 @@ class GitPipelineResourceDao {
         }
     }
 
-    fun getLastUpdatePipelines(
-        dslContext: DSLContext,
-        limit: Int,
-        lastUpdateTime: LocalDateTime
-    ): List<TGitPipelineResourceRecord> {
-        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            return dslContext.selectFrom(this)
-                .where(UPDATE_TIME.le(lastUpdateTime))
-                .limit(limit)
-                .fetch()
-        }
-    }
-
-    fun deleteLastUpdatePipelines(
-        dslContext: DSLContext,
-        ids: Set<Long>
-    ): Int {
-        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            return dslContext.deleteFrom(this)
-                .where(ID.`in`(ids))
-                .execute()
-        }
-    }
-
     fun getPipelines(
         dslContext: DSLContext,
         gitProjectId: Long
@@ -338,9 +262,23 @@ class GitPipelineResourceDao {
                 PipelineSortType.CREATE_TIME -> {
                     dsl.orderBy(CREATE_TIME)
                 }
+                else -> dsl.orderBy(UPDATE_TIME)
             }
             return dsl.limit(limit).offset(offset)
                 .fetch()
+        }
+    }
+
+    fun getPipelineByFile(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        filePath: String
+    ): TGitPipelineResourceRecord? {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(FILE_PATH.eq(filePath))
+                .fetchAny()
         }
     }
 }

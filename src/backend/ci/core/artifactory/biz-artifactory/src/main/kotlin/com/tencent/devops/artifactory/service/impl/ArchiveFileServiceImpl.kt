@@ -38,16 +38,17 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 import java.net.URLDecoder
+import java.net.URLEncoder
 import java.nio.charset.Charset
 
-@Suppress("ALL")
+@Suppress("MagicNumber")
 abstract class ArchiveFileServiceImpl : ArchiveFileService {
 
     @Autowired
@@ -122,7 +123,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             pipelineIds = setOf(pipelineId)
         ).data!![pipelineId] ?: ""
         val buildNum = servicePipelineResource.getBuildNoByBuildIds(setOf(buildId)).data!![buildId] ?: ""
-        val props: Map<String, String?>? = mapOf(
+        val props: Map<String, String?> = mapOf(
             "pipelineId" to pipelineId,
             "pipelineName" to pipelineName,
             "buildId" to buildId,
@@ -176,7 +177,30 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         return flag
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ArchiveFileServiceImpl::class.java)
+    protected fun generateFileDownloadUrl(fileChannelType: FileChannelTypeEnum, destPath: String): String {
+        val urlPrefix = when (fileChannelType) {
+            FileChannelTypeEnum.WEB_SHOW -> {
+                HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
+                    "/ms/artifactory/api/user/artifactories/file/download"
+            }
+            FileChannelTypeEnum.WEB_DOWNLOAD -> {
+                HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
+                    "/ms/artifactory/api/user/artifactories/file/download/local"
+            }
+            FileChannelTypeEnum.SERVICE -> {
+                HomeHostUtil.getHost(commonConfig.devopsApiGateway!!) +
+                    "/ms/artifactory/api/service/artifactories/file/download"
+            }
+            FileChannelTypeEnum.BUILD -> {
+                HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!) +
+                    "/ms/artifactory/api/build/artifactories/file/download"
+            }
+        }
+        val filePath = URLEncoder.encode("/$destPath", "UTF-8")
+        return if (fileChannelType == FileChannelTypeEnum.WEB_SHOW) {
+            "$urlPrefix/${URLEncoder.encode(filePath, "UTF-8")}"
+        } else {
+            "$urlPrefix?filePath=$filePath"
+        }
     }
 }

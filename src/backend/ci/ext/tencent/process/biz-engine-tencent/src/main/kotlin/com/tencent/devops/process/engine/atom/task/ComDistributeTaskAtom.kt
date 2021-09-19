@@ -50,7 +50,7 @@ import com.tencent.devops.process.esb.SourceIp
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory

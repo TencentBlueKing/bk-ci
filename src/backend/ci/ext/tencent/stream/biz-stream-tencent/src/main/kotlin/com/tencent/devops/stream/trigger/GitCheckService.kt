@@ -42,9 +42,9 @@ import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.repository.api.ServiceRepositoryGitCheckResource
+import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.ExecuteSource
 import com.tencent.devops.repository.pojo.RepositoryGitCheck
-import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,7 +63,6 @@ class GitCheckService @Autowired constructor(
 
     fun pushCommitCheck(
         gitCIBasicSetting: GitCIBasicSetting,
-        isFinish: Boolean,
         commitId: String,
         description: String,
         mergeRequestId: Long,
@@ -96,7 +95,6 @@ class GitCheckService @Autowired constructor(
                 userId = userId
             ),
             gitCIBasicSetting = gitCIBasicSetting,
-            isFinish = isFinish,
             context = context,
             description = description,
             targetUrl = targetUrl,
@@ -104,10 +102,9 @@ class GitCheckService @Autowired constructor(
         )
     }
 
-    // todo: 后期修改1、增加filePath字段 2、去掉isFinish(旧数据已经改完了) 3、修改RepositoryConfig增加兼容Stream
+    // todo: 后期修改1、增加filePath字段 2、修改RepositoryConfig增加兼容Stream
     private fun pushCommitCheck(
         event: GitCommitCheckEvent,
-        isFinish: Boolean,
         gitCIBasicSetting: GitCIBasicSetting,
         context: String,
         targetUrl: String,
@@ -149,7 +146,6 @@ class GitCheckService @Autowired constructor(
                 context = context,
                 event = event,
                 targetUrl = targetUrl,
-                isFinish = isFinish,
                 description = description,
                 gitCIBasicSetting = gitCIBasicSetting,
                 buildNum = buildNum,
@@ -163,7 +159,6 @@ class GitCheckService @Autowired constructor(
         context: String,
         event: GitCommitCheckEvent,
         targetUrl: String,
-        isFinish: Boolean,
         description: String,
         gitCIBasicSetting: GitCIBasicSetting,
         buildNum: String,
@@ -194,29 +189,22 @@ class GitCheckService @Autowired constructor(
                         event = event,
                         targetUrl = targetUrl,
                         // 兼容旧数据，如果结束是发送还是空记录肯定是旧数据
-                        context = if (isFinish) {
-                            context.split("@").first()
-                        } else {
-                            context
-                        },
+                        context = context,
                         description = description,
                         gitCIBasicSetting = gitCIBasicSetting
                     )
-                    // 兼容旧数据，旧数据只发不存
-                    if (!isFinish) {
-                        gitCheckClient.createGitCheck(
-                            gitCheck = RepositoryGitCheck(
-                                gitCheckId = -1,
-                                pipelineId = pipelineId,
-                                buildNumber = buildNum.toInt(),
-                                repositoryId = gitCIBasicSetting.gitProjectId.toString(),
-                                repositoryName = getProjectName(gitCIBasicSetting),
-                                commitId = commitId,
-                                context = context,
-                                source = ExecuteSource.STREAM
-                            )
+                    gitCheckClient.createGitCheck(
+                        gitCheck = RepositoryGitCheck(
+                            gitCheckId = -1,
+                            pipelineId = pipelineId,
+                            buildNumber = buildNum.toInt(),
+                            repositoryId = gitCIBasicSetting.gitProjectId.toString(),
+                            repositoryName = getProjectName(gitCIBasicSetting),
+                            commitId = commitId,
+                            context = context,
+                            source = ExecuteSource.STREAM
                         )
-                    }
+                    )
                 } else {
                     if (buildNum.toInt() >= record.buildNumber) {
                         addCommitCheck(
@@ -224,7 +212,8 @@ class GitCheckService @Autowired constructor(
                             targetUrl = targetUrl,
                             context = record.context,
                             description = description,
-                            gitCIBasicSetting = gitCIBasicSetting
+                            gitCIBasicSetting = gitCIBasicSetting,
+                            reportData = reportData
                         )
                         gitCheckClient.updateGitCheck(
                             gitCheckId = record.gitCheckId,
@@ -269,7 +258,7 @@ class GitCheckService @Autowired constructor(
                 mrRequestId = mergeRequestId,
                 reportData = reportData
             )
-            client.getScm(ServiceGitResource::class).addCommitCheck(request)
+            client.get(ServiceScmOauthResource::class).addCommitCheck(request)
             return gitProjectId
         }
     }

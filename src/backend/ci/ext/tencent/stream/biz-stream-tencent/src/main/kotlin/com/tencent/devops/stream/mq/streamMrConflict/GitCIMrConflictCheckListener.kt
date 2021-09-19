@@ -29,6 +29,7 @@ package com.tencent.devops.stream.mq.streamMrConflict
 
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.GitCITriggerService
+import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.trigger.parsers.MergeConflict
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -45,7 +46,8 @@ class GitCIMrConflictCheckListener @Autowired
 constructor(
     private val mergeConflict: MergeConflict,
     private val gitCITriggerService: GitCITriggerService,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val triggerExceptionService: TriggerExceptionService
 ) {
 
     @RabbitListener(
@@ -75,18 +77,26 @@ constructor(
         }
         // 未检查完成，继续进入延时队列
         if (!isFinish && checkEvent.retryTime > 0) {
-            logger.warn("Retry to check gitci mr request conflict " +
-                "event [${checkEvent.gitRequestEvent}|${checkEvent.retryTime}]")
+            logger.warn(
+                "Retry to check gitci mr request conflict " +
+                        "event [${checkEvent.gitRequestEvent}|${checkEvent.retryTime}]"
+            )
             checkEvent.retryTime--
             GitCIMrConflictCheckDispatcher.dispatch(rabbitTemplate, checkEvent)
         } else {
             if (isTrigger) {
-                gitCITriggerService.matchAndTriggerPipeline(
-                    gitRequestEvent = checkEvent.gitRequestEvent,
-                    event = checkEvent.event,
-                    path2PipelineExists = checkEvent.path2PipelineExists,
-                    gitProjectConf = checkEvent.gitProjectConf
-                )
+                triggerExceptionService.handle(
+                    requestEvent = checkEvent.gitRequestEvent,
+                    gitEvent = checkEvent.event,
+                    basicSetting = checkEvent.gitProjectConf
+                ) {
+                    gitCITriggerService.matchAndTriggerPipeline(
+                        gitRequestEvent = checkEvent.gitRequestEvent,
+                        event = checkEvent.event,
+                        path2PipelineExists = checkEvent.path2PipelineExists,
+                        gitProjectConf = checkEvent.gitProjectConf
+                    )
+                }
             }
         }
     }

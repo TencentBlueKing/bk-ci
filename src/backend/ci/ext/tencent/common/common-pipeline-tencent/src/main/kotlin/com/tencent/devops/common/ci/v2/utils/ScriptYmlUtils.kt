@@ -148,7 +148,8 @@ object ScriptYmlUtils {
         val matcher = pattern.matcher(value)
         while (matcher.find()) {
             val realValue = settingMap[matcher.group(1).trim()]
-            newValue = newValue!!.replace(matcher.group(), realValue ?: "")
+            // realValue为空时，保留默认value值，解决${ci.buildNum}的二次转换场景
+            newValue = newValue!!.replace(matcher.group(), realValue ?: value)
         }
 
         return newValue
