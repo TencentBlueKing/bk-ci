@@ -142,7 +142,8 @@ class YamlBuildV2 @Autowired constructor(
                         gitProjectId = event.gitProjectId,
                         branchs = yaml.triggerOn?.schedules?.branches ?: listOf(event.branch),
                         always = yaml.triggerOn?.schedules?.always ?: false,
-                        channelCode = channelCode
+                        channelCode = channelCode,
+                        eventId = event.id!!
                     )
                 )
             }
