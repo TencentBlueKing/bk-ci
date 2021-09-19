@@ -29,7 +29,7 @@ package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.config.BkRepoStoreConfig
 import com.tencent.devops.artifactory.pojo.enums.BkRepoTypeEnum
-import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.artifactory.service.ArchiveStoreFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
@@ -48,9 +48,9 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 
 @Service
-class ArchiveFileServiceImpl : ArchiveFileService {
+class ArchiveStoreFileServiceImpl : ArchiveStoreFileService {
 
-    private val logger = LoggerFactory.getLogger(ArchiveFileServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(ArchiveStoreFileServiceImpl::class.java)
 
     @Autowired
     private lateinit var bkRepoConfig: BkRepoConfig

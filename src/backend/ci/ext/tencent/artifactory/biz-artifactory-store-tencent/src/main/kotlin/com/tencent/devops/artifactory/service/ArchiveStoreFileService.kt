@@ -33,7 +33,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
 
-interface ArchiveFileService {
+interface ArchiveStoreFileService {
 
     /**
      * 归档文件
