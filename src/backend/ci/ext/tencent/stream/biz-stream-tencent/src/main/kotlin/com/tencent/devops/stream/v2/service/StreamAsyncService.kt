@@ -41,7 +41,7 @@ class StreamAsyncService @Autowired constructor(
     private val scmService: ScmService
 ) {
     companion object {
-        private val pageSize = 1000L
+        private const val pageSize = 1000L
         private val logger = LoggerFactory.getLogger(StreamAsyncService::class.java)
     }
 
