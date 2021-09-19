@@ -178,6 +178,11 @@ class ModelElement @Autowired constructor(
                         inputMap["refName"] = event.branch
                     }
                 }
+                // 定时触发根据传入的分支参数触发
+                TGitObjectKind.SCHEDULE.value -> {
+                    inputMap["pullType"] = "BRANCH"
+                    inputMap["refName"] = event.branch
+                }
                 else -> {
                     inputMap["pullType"] = "COMMIT_ID"
                     inputMap["refName"] = event.commitId

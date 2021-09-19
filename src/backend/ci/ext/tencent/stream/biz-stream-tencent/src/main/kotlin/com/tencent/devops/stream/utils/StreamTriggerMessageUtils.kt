@@ -43,6 +43,9 @@ class StreamTriggerMessageUtils @Autowired constructor(
                 }
                 "[${eventMap?.create_from}] Tag [${event.branch}] pushed by ${event.userId}"
             }
+            TGitObjectKind.SCHEDULE.value ->{
+                "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] schedule"
+            }
             else -> {
                 "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
             }
@@ -76,6 +79,9 @@ class StreamTriggerMessageUtils @Autowired constructor(
             }
             TGitObjectKind.TAG_PUSH.value -> {
                 "$prefix Triggered by $userId. [tag-push]"
+            }
+            TGitObjectKind.SCHEDULE.value -> {
+                "$prefix Triggered by stream [schedule]"
             }
             else -> {
                 "$prefix Triggered by $userId. [push]"

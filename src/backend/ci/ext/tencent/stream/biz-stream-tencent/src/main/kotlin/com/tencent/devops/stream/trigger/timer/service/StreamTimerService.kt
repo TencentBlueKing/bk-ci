@@ -191,7 +191,8 @@ class StreamTimerService @Autowired constructor(
                 logger.warn("Unkown channel code", e)
                 return null
             },
-            eventId = timerRecord.eventId
+            eventId = timerRecord.eventId,
+            originYaml = timerRecord.originYaml
         )
     }
 

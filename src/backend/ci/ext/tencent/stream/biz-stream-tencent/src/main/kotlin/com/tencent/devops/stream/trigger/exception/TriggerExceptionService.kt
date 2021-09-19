@@ -33,8 +33,8 @@ class TriggerExceptionService @Autowired constructor(
 
     fun <T> handle(
         requestEvent: GitRequestEvent,
-        gitEvent: GitEvent,
-        basicSetting: GitCIBasicSetting,
+        gitEvent: GitEvent?,
+        basicSetting: GitCIBasicSetting?,
         action: () -> T?
     ): T? {
         try {
@@ -42,18 +42,20 @@ class TriggerExceptionService @Autowired constructor(
         } catch (triggerE: TriggerBaseException) {
             return handleTriggerException(triggerE)
         } catch (e: Throwable) {
-            // 触发只要出了异常就把Mr锁定取消，防止出现工蜂项目无法合并
-            logger.error("Trigger handle catch Throwable ${e.message}")
-
-            val mrEvent = gitEvent is GitMergeRequestEvent
-            if (basicSetting.enableMrBlock && mrEvent) {
-                noPipelineCommitCheck(
-                    gitRequestEvent = requestEvent,
-                    block = false,
-                    state = GitCICommitCheckState.FAILURE,
-                    gitCIBasicSetting = basicSetting
-                )
+            if (gitEvent != null && basicSetting != null) {
+                // 触发只要出了异常就把Mr锁定取消，防止出现工蜂项目无法合并
+                logger.error("Trigger handle catch Throwable ${e.message}")
+                val mrEvent = gitEvent is GitMergeRequestEvent
+                if (basicSetting.enableMrBlock && mrEvent) {
+                    noPipelineCommitCheck(
+                        gitRequestEvent = requestEvent,
+                        block = false,
+                        state = GitCICommitCheckState.FAILURE,
+                        gitCIBasicSetting = basicSetting
+                    )
+                }
             }
+
             gitCIEventService.saveTriggerNotBuildEvent(
                 userId = requestEvent.userId,
                 eventId = requestEvent.id!!,

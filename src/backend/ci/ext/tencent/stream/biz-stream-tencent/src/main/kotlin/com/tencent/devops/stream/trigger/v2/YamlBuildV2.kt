@@ -143,12 +143,12 @@ class YamlBuildV2 @Autowired constructor(
                         branchs = yaml.triggerOn?.schedules?.branches ?: listOf(event.branch),
                         always = yaml.triggerOn?.schedules?.always ?: false,
                         channelCode = channelCode,
-                        eventId = event.id!!
+                        eventId = event.id!!,
+                        originYaml = originYaml
                     )
                 )
             }
 
-            // 如果事件未传gitBuildId，说明是不做触发只做流水线保存的定时任务
             return if (gitBuildId != null) {
                 startBuildPipeline(
                     pipeline = pipeline,
@@ -158,12 +158,6 @@ class YamlBuildV2 @Autowired constructor(
                     gitBasicSetting = gitBasicSetting
                 )
             } else {
-                saveTimerPipeline(
-                    pipeline = pipeline,
-                    event = event,
-                    yaml = yaml,
-                    gitBasicSetting = gitBasicSetting
-                )
                 null
             }
         } catch (e: Throwable) {
@@ -242,24 +236,10 @@ class YamlBuildV2 @Autowired constructor(
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
-        val model = modelCreate.createPipelineModel(event, gitBasicSetting, yaml, pipeline, false)
+        val model = modelCreate.createPipelineModel(event, gitBasicSetting, yaml, pipeline)
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
         savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
-    }
-
-    private fun saveTimerPipeline(
-        pipeline: GitProjectPipeline,
-        event: GitRequestEvent,
-        yaml: ScriptBuildYaml,
-        gitBasicSetting: GitCIBasicSetting
-    ) {
-        logger.info("Git request save pipeline, pipeline:$pipeline, event: $event, yaml: $yaml")
-
-        // create or refresh pipeline
-        val model = modelCreate.createPipelineModel(event, gitBasicSetting, yaml, pipeline, true)
-        logger.info("Git request , pipeline:$pipeline, model: $model")
-        savePipeline(pipeline, event, gitBasicSetting, model)
     }
 }

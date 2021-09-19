@@ -47,16 +47,16 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
 @Service
 class GitCIProjectService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val client: Client,
-    private val objectMapper: ObjectMapper,
     private val scmService: ScmService,
     private val oauthService: OauthService,
+    private val streamTriggerMessageUtils: StreamTriggerMessageUtils,
     private val gitCIBasicSettingDao: GitCIBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao
@@ -166,32 +166,6 @@ class GitCIProjectService @Autowired constructor(
         if (event == null) {
             return null
         }
-        val messageTitle = when (event.objectKind) {
-            TGitObjectKind.MERGE_REQUEST.value -> {
-                val branch = GitCommonUtils.checkAndGetForkBranchName(
-                    gitProjectId = gitProjectId,
-                    sourceGitProjectId = event.sourceGitProjectId,
-                    branch = event.branch,
-                    client = client
-                )
-                "[$branch] Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
-            }
-            TGitObjectKind.MANUAL.value -> {
-                "[${event.branch}] Manual Triggered by ${event.userId}"
-            }
-            TGitObjectKind.TAG_PUSH.value -> {
-                val eventMap = try {
-                    objectMapper.readValue<GitTagPushEvent>(event.event)
-                } catch (e: Exception) {
-                    logger.error("event as GitTagPushEvent error ${e.message}")
-                    null
-                }
-                "[${eventMap?.create_from}] Tag [${event.branch}] pushed by ${event.userId}"
-            }
-            else -> {
-                "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
-            }
-        }
-        return messageTitle
+        return streamTriggerMessageUtils.getEventMessageTitle(event, gitProjectId)
     }
 }

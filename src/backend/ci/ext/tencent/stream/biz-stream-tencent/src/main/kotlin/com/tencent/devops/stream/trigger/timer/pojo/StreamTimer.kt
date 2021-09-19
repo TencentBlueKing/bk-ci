@@ -38,5 +38,6 @@ data class StreamTimer(
     val branchs: List<String>,
     val always: Boolean,
     val channelCode: ChannelCode,
-    val eventId: Long
+    val eventId: Long,
+    val originYaml: String
 )

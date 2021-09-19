@@ -183,7 +183,7 @@ class YamlTriggerV2 @Autowired constructor(
         }
 
         if (isTiming) {
-            // 只有定时任务的保存任务
+            // 只有定时任务的只注册定时事件
             logger.warn("Only schedules matched, only save the pipeline, " +
                 "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
             yamlBuildV2.gitStartBuild(

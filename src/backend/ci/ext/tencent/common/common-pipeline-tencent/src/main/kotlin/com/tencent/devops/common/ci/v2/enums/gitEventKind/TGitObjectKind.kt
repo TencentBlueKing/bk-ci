@@ -32,7 +32,8 @@ enum class TGitObjectKind(val value: String) {
     PUSH("push"),
     TAG_PUSH("tag_push"),
     MERGE_REQUEST("merge_request"),
-    MANUAL("manual");
+    MANUAL("manual"),
+    SCHEDULE("schedule");
 
     // 方便Json初始化使用常量保存，需要同步维护
     companion object {

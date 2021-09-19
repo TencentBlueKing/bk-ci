@@ -193,7 +193,8 @@ class StreamJobBean(
                         branchs = streamTimer.branchs,
                         always = streamTimer.always,
                         eventId = streamTimer.eventId,
-                        channelCode = streamTimer.channelCode
+                        channelCode = streamTimer.channelCode,
+                        originYaml = streamTimer.originYaml
                     )
                 )
             } catch (ignored: Exception) {

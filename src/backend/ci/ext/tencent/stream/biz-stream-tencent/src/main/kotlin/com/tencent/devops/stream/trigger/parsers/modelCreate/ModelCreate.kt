@@ -71,8 +71,7 @@ class ModelCreate @Autowired constructor(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
         yaml: ScriptBuildYaml,
-        pipeline: GitProjectPipeline,
-        isTimeTrigger: Boolean
+        pipeline: GitProjectPipeline
     ): Model {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, gitBasicSetting, yaml)
@@ -101,8 +100,7 @@ class ModelCreate @Autowired constructor(
             gitBasicSetting = gitBasicSetting,
             event = event,
             v2GitUrl = v2GitUrl,
-            originEvent = originEvent,
-            isTimeTrigger = isTimeTrigger
+            originEvent = originEvent
         )
 
         val triggerContainer = TriggerContainer(

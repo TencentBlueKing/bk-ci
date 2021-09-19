@@ -49,6 +49,7 @@ data class StreamTimerBuildEvent(
     val branchs: List<String>,
     val always: Boolean,
     val eventId: Long,
+    val originYaml: String,
     override var actionType: ActionType = ActionType.START,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

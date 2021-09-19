@@ -74,8 +74,7 @@ object ModelParameters {
         gitBasicSetting: GitCIBasicSetting,
         event: GitRequestEvent,
         v2GitUrl: String?,
-        originEvent: GitEvent?,
-        isTimeTrigger: Boolean
+        originEvent: GitEvent?
     ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
 
@@ -153,11 +152,6 @@ object ModelParameters {
         }
         startParams[PIPELINE_GIT_REPO_NAME] = repoProjectName
         startParams[PIPELINE_GIT_REPO_GROUP] = repoGroupName
-
-        // 定时任务设置启动方式和执行分支
-        if (isTimeTrigger) {
-            startParams[CommonVariables.CI_START_TYPE] = TGitObjectKind.OBJECT_KIND_SCHEDULE
-        }
 
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())
