@@ -29,7 +29,6 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.COMPONENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -124,9 +123,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         version: String
     ): Result<Boolean> {
         val dbVersion = atomRecord.version
-        if (INIT_VERSION == dbVersion && releaseType == ReleaseTypeEnum.NEW) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(version))
-        }
         val dbOsList = if (!StringUtils.isEmpty(atomRecord.os)) JsonUtil.getObjectMapper().readValue(
             atomRecord.os,
             List::class.java
@@ -151,7 +147,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 arrayOf(version, requireVersionList.toString())
             )
         }
-        if (dbVersion.isNotBlank()) {
+        if (dbVersion.isNotBlank() && releaseType != ReleaseTypeEnum.NEW) {
             // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
             val atomFinalStatusList = listOf(
                 AtomStatusEnum.AUDIT_REJECT.status.toByte(),
