@@ -202,7 +202,8 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
                 // V1不发送通知
                 sendCommitCheck = false,
                 commitCheckBlock = false,
-                version = null
+                version = null,
+                branch = event.branch
             )
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
         }

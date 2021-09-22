@@ -245,7 +245,8 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                 gitProjectId = event.gitProjectId,
                 sendCommitCheck = true,
                 commitCheckBlock = (event.objectKind == TGitObjectKind.MERGE_REQUEST.value),
-                version = ymlVersion
+                version = ymlVersion,
+                branch = event.branch
             )
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
         } finally {

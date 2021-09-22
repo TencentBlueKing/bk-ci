@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.v2.dao
 
 import com.tencent.devops.model.stream.tables.TStreamPipelineBranch
-import com.tencent.devops.model.stream.tables.records.TStreamPipelineBranchRecord
 import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -83,24 +82,6 @@ class StreamPipelineBranchDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BRANCH.eq(branch))
                 .execute()
-        }
-    }
-
-    fun getLastBuildBranch(
-        dslContext: DSLContext,
-        gitProjectId: Long,
-        pipelineIds: Set<String>
-    ): List<TStreamPipelineBranchRecord>? {
-        with(TStreamPipelineBranch.T_STREAM_PIPELINE_BRANCH) {
-            return dslContext.selectFrom(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(
-                    UPDATE_TIME.`in`(
-                        dslContext.select(UPDATE_TIME)
-                            .from(this)
-                            .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
-                    )
-                ).fetch()
         }
     }
 
