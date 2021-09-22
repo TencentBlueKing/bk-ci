@@ -106,7 +106,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
 @Suppress("ALL")
@@ -403,7 +402,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)
-            if (StringUtils.isEmpty(atomRecord.version) ||
+            if (releaseType == ReleaseTypeEnum.NEW ||
                 (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
                 atomId = atomRecord.id
