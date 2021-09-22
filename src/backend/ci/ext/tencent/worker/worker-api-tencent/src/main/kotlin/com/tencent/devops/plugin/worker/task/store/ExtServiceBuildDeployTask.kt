@@ -28,7 +28,7 @@
 package com.tencent.devops.plugin.worker.task.store
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.artifactory.pojo.enums.BkRepoTypeEnum
+import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -113,7 +113,7 @@ class ExtServiceBuildDeployTask : ITask() {
         //  开始上传扩展服务执行包到蓝盾新仓库
         val file = File(workspace, filePath)
         val uploadFileUrl = ApiUrlUtils.generateStoreUploadFileUrl(
-            repoType = BkRepoTypeEnum.GENERIC,
+            repoName = BkRepoEnum.GENERIC.repoName,
             projectId = buildVariables.projectId,
             storeType = StoreTypeEnum.SERVICE,
             storeCode = serviceCode,

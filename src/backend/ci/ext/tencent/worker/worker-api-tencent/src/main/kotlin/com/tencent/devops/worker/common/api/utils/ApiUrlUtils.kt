@@ -27,24 +27,19 @@
 
 package com.tencent.devops.worker.common.api.utils
 
-import com.tencent.devops.artifactory.pojo.enums.BkRepoTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.worker.common.logger.LoggerService
-import java.io.File
-import java.nio.file.FileSystems
-import java.nio.file.Paths
 
 object ApiUrlUtils {
 
     fun generateStoreUploadFileUrl(
-        repoType: BkRepoTypeEnum,
+        repoName: String,
         projectId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
         destPath: String
     ): String {
-        return "/ms/artifactory/api/build/artifactories/store/file/repos/$repoType/projects/$projectId/types" +
+        return "/ms/artifactory/api/build/artifactories/store/file/repos/$repoName/projects/$projectId/types" +
             "/$storeType/codes/$storeCode/versions/$version/archive?destPath=$destPath"
     }
 }

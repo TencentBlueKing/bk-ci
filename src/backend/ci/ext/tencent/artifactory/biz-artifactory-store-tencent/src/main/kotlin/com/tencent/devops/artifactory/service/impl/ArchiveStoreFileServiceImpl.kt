@@ -28,7 +28,6 @@
 package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.config.BkRepoStoreConfig
-import com.tencent.devops.artifactory.pojo.enums.BkRepoTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveStoreFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -63,7 +62,7 @@ class ArchiveStoreFileServiceImpl : ArchiveStoreFileService {
 
     override fun archiveFile(
         userId: String,
-        repoType: BkRepoTypeEnum,
+        repoName: String,
         projectId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
@@ -72,7 +71,7 @@ class ArchiveStoreFileServiceImpl : ArchiveStoreFileService {
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<Boolean> {
-        logger.info("archiveFile params:[$userId|$repoType|$projectId|$storeType|$storeCode|$version|$destPath")
+        logger.info("archiveFile params:[$userId|$repoName|$projectId|$storeType|$storeCode|$version|$destPath")
         // 校验用户上传的文件是否合法
         val verifyResult = client.get(ServiceStoreResource::class).isStoreMember(
             storeCode = storeCode,
@@ -95,18 +94,6 @@ class ArchiveStoreFileServiceImpl : ArchiveStoreFileService {
         val file = Files.createTempFile(UUIDUtil.generate(), ".$fileSuffix").toFile()
         file.outputStream().use {
             inputStream.copyTo(it)
-        }
-        // 根据仓库类型获取仓库名称
-        val repoName = when (repoType) {
-            BkRepoTypeEnum.GENERIC -> {
-                bkRepoConfig.bkrepoPkgRepoName
-            }
-            BkRepoTypeEnum.DOCKER -> {
-                bkRepoConfig.bkrepoDockerRepoName
-            }
-            BkRepoTypeEnum.STATIC -> {
-                bkRepoConfig.bkrepoStaticRepoName
-            }
         }
         var projectName = bkRepoStoreConfig.bkrepoStoreProjectName
         var userName = bkRepoStoreConfig.bkrepoStoreUserName

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.artifactory.api
 
-import com.tencent.devops.artifactory.pojo.enums.BkRepoTypeEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -54,15 +53,15 @@ interface BuildArchiveStoreFileResource {
 
     @ApiOperation("归档扩展服务执行包")
     @POST
-    @Path("/repos/{repoType}/projects/{projectId}/types/{storeType}/codes/{storeCode}/versions/{version}/archive")
+    @Path("/repos/{repoName}/projects/{projectId}/types/{storeType}/codes/{storeCode}/versions/{version}/archive")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun archiveFile(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("仓库类型", required = true)
-        @PathParam("repoType")
-        repoType: BkRepoTypeEnum,
+        @ApiParam("仓库名称", required = true)
+        @PathParam("repoName")
+        repoName: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.artifactory.service
 
-import com.tencent.devops.artifactory.pojo.enums.BkRepoTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -40,7 +39,7 @@ interface ArchiveStoreFileService {
      */
     fun archiveFile(
         userId: String,
-        repoType: BkRepoTypeEnum,
+        repoName: String,
         projectId: String,
         storeType: StoreTypeEnum,
         storeCode: String,

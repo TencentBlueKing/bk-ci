@@ -29,7 +29,7 @@ package com.tencent.devops.worker.common.api.store
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
-import com.tencent.devops.artifactory.pojo.enums.BkRepoTypeEnum
+import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -154,36 +154,37 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             destPath.trim().removePrefix("/") + "/" + file.name
         }
         val userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
-        // 上传至jfrog
         LoggerService.addNormalLine("归档插件文件 >>> ${file.name}")
+        // 上传至jfrog(插件迁移需求发布到灰度阶段还需继续把插件文件上传到jfrog)
+        if (buildVariables.variables["releaseStage"] == "gray") {
+            val url = StringBuilder("/atom/result/$uploadFilePath")
+            with(buildVariables) {
+                url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
+                url.append(";$ARCHIVE_PROPS_PIPELINE_ID=${encodeProperty(pipelineId)}")
+                url.append(";$ARCHIVE_PROPS_BUILD_ID=${encodeProperty(buildId)}")
+                url.append(";$ARCHIVE_PROPS_USER_ID=${encodeProperty(userId)}")
+                url.append(";$ARCHIVE_PROPS_BUILD_NO=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
+                url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
+            }
 
-        val url = StringBuilder("/atom/result/$uploadFilePath")
-        with(buildVariables) {
-            url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
-            url.append(";$ARCHIVE_PROPS_PIPELINE_ID=${encodeProperty(pipelineId)}")
-            url.append(";$ARCHIVE_PROPS_BUILD_ID=${encodeProperty(buildId)}")
-            url.append(";$ARCHIVE_PROPS_USER_ID=${encodeProperty(userId)}")
-            url.append(";$ARCHIVE_PROPS_BUILD_NO=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
-            url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
-        }
-
-        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))
-        val responseContent = request(request, "归档插件文件失败")
-        try {
-            val obj = JsonParser().parse(responseContent).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") throw RuntimeException()
-        } catch (e: Exception) {
-            LoggerService.addNormalLine(e.message ?: "")
-            throw RuntimeException("AtomArchive fail: $responseContent")
+            val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))
+            val responseContent = request(request, "归档插件文件失败")
+            try {
+                val obj = JsonParser().parse(responseContent).asJsonObject
+                if (obj.has("code") && obj["code"].asString != "200") throw RuntimeException()
+            } catch (e: Exception) {
+                LoggerService.addNormalLine(e.message ?: "")
+                throw RuntimeException("AtomArchive fail: $responseContent")
+            }
         }
         // 上传至bkrepo
         val uploadFileUrl = ApiUrlUtils.generateStoreUploadFileUrl(
-            repoType = BkRepoTypeEnum.GENERIC,
+            repoName = BkRepoEnum.PLUGIN.repoName,
             projectId = buildVariables.projectId,
             storeType = StoreTypeEnum.ATOM,
             storeCode = atomCode,
             version = atomVersion,
-            destPath = "bk-store/bk-plugin-fe/$uploadFilePath"
+            destPath = uploadFilePath
         )
         val headers = mapOf(AUTH_HEADER_USER_ID to userId)
         val uploadResult = ApiFactory.create(ArchiveSDKApi::class).uploadFile(
@@ -215,33 +216,35 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         val fileName = file.name
         val uploadFilePath = if (purePath.endsWith(fileName)) purePath else "$purePath/$fileName"
         LoggerService.addNormalLine("upload file >>> $uploadFilePath")
-        // 上传至jfrog
-        val fileType = FileTypeEnum.BK_PLUGIN_FE
-        val url =
-            "/ms/artifactory/api/build/artifactories/file/archive?fileType=$fileType&customFilePath=$purePath"
-        val fileBody = RequestBody.create(MultipartFormData, file)
-        val requestBody = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart("file", fileName, fileBody)
-            .build()
+        // 上传至jfrog(插件迁移需求发布到灰度阶段还需继续把插件文件上传到jfrog)
+        if (buildVariables.variables["releaseStage"] == "gray") {
+            val fileType = FileTypeEnum.BK_PLUGIN_FE
+            val url =
+                "/ms/artifactory/api/build/artifactories/file/archive?fileType=$fileType&customFilePath=$purePath"
+            val fileBody = RequestBody.create(MultipartFormData, file)
+            val requestBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", fileName, fileBody)
+                .build()
 
-        val request = buildPost(url, requestBody)
-        val response = request(request, "upload file:$fileName fail")
-        try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("upload file:$fileName fail")
-        } catch (ignored: Exception) {
-            LoggerService.addNormalLine(ignored.message ?: "")
-            throw RemoteServiceException("archive fail: $response")
+            val request = buildPost(url, requestBody)
+            val response = request(request, "upload file:$fileName fail")
+            try {
+                val obj = JsonParser().parse(response).asJsonObject
+                if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("upload file:$fileName fail")
+            } catch (ignored: Exception) {
+                LoggerService.addNormalLine(ignored.message ?: "")
+                throw RemoteServiceException("archive fail: $response")
+            }
         }
         // 上传至bkrepo
         val uploadFileUrl = ApiUrlUtils.generateStoreUploadFileUrl(
-            repoType = BkRepoTypeEnum.STATIC,
+            repoName = BkRepoEnum.STATIC.repoName,
             projectId = buildVariables.projectId,
             storeType = StoreTypeEnum.ATOM,
             storeCode = atomCode,
             version = atomVersion,
-            destPath = "bk-plugin/$uploadFilePath"
+            destPath = "bk-store/bk-plugin-fe/$uploadFilePath"
         )
         val headers = mapOf(AUTH_HEADER_USER_ID to (buildVariables.variables[PIPELINE_START_USER_ID] ?: ""))
         val uploadResult = ApiFactory.create(ArchiveSDKApi::class).uploadFile(
