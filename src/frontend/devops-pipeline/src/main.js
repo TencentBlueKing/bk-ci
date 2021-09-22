@@ -67,6 +67,12 @@ Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
     bkMagic.bkMessage(config)
 }
+/* eslint-disable */
+// 扩展字符串，判断是否为蓝盾变量格式
+String.prototype.isBkVar = function () {
+    return /^\${{(\w+)}}$/g.test(this)
+}
+/* eslint-disable */
 
 Vue.mixin({
     methods: {
