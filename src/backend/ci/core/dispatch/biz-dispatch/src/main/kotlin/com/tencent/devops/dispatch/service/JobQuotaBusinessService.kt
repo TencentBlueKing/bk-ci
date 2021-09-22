@@ -234,7 +234,7 @@ class JobQuotaBusinessService @Autowired constructor(
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
                 )*/
-                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount running jobTime reach project timeLimits, now running jobTime: $runningJobTime, " +
+                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} running jobTime reach project timeLimits, now running jobTime: $runningJobTime, " +
                         "timeQuota: ${timeQuota * 60 * 60}")
             }
 
@@ -249,7 +249,7 @@ class JobQuotaBusinessService @Autowired constructor(
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
                 )*/
-                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount running jobTime reach project timeThreshold, now running jobTime: $runningJobTime, " +
+                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} running jobTime reach project timeThreshold, now running jobTime: $runningJobTime, " +
                         "timeQuota: ${timeQuota * 60 * 60}, timeThreshold: $timeThreshold")
             }
 
