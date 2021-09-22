@@ -235,9 +235,8 @@ class JobQuotaBusinessService @Autowired constructor(
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
                 )*/
-                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} running jobTime reach project timeLimits, " +
-                        "now running jobTime: $runningJobTime, " +
-                        "timeQuota: ${timeQuota * 60 * 60}")
+                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} running jobTime reach project " +
+                        "timeLimits, now running jobTime: $runningJobTime, timeQuota: ${timeQuota * 60 * 60}")
             }
 
             if ((runningJobTime * 100) / (timeQuota * 60 * 60) >= timeThreshold) {
@@ -251,8 +250,8 @@ class JobQuotaBusinessService @Autowired constructor(
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
                 )*/
-                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} running jobTime reach project timeThreshold, " +
-                        "now running jobTime: $runningJobTime, " +
+                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} running jobTime reach project " +
+                        "timeThreshold, now running jobTime: $runningJobTime, " +
                         "timeQuota: ${timeQuota * 60 * 60}, timeThreshold: $timeThreshold")
             }
 
@@ -527,8 +526,6 @@ class JobQuotaBusinessService @Autowired constructor(
     }
 
     fun statistics(limit: Int?, offset: Int?): Map<String, Any> {
-        statistics()
-
         val result = mutableMapOf<String, List<ProjectVmTypeTime>>()
         JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
             val records = jobQuotaProjectRunTimeDao.listByType(dslContext, type, limit ?: 100, offset ?: 0)
@@ -540,39 +537,6 @@ class JobQuotaBusinessService @Autowired constructor(
 
     private fun getRedisStringSerializerOperation(): RedisOperation {
         return SpringContextUtil.getBean(RedisOperation::class.java, "redisStringHashOperation")
-    }
-
-    @Scheduled(cron = "0 0 2 * * ?")
-    fun statistics() {
-        LOG.info("Count project run time into db.")
-        val projectSet = getRedisStringSerializerOperation().getSetMembers(QUOTA_PROJECT_ALL_KEY)
-        if (null != projectSet && projectSet.isNotEmpty()) {
-            val redisLock = RedisLock(getRedisStringSerializerOperation(), TIMER_COUNT_TIME_LOCK_KEY, 600L)
-            try {
-                val lockSuccess = redisLock.tryLock()
-                if (lockSuccess) {
-                    LOG.info("<<< Count project run time into db start >>>")
-                    JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
-                        projectSet.forEach { project ->
-                            jobQuotaProjectRunTimeDao.add(
-                                dslContext = dslContext,
-                                projectId = project,
-                                jobQuotaVmType = type,
-                                runTime = (getRedisStringSerializerOperation()
-                                    .get(getProjectVmTypeRunningTimeKey(project, type))
-                                    ?: "0").toLong()
-                            )
-                        }
-                    }
-                } else {
-                    LOG.info("<<< Count project run time into db Has Running, Do Not Start>>>")
-                }
-            } catch (e: Throwable) {
-                LOG.error("Count project run time into db exception:", e)
-            } finally {
-                redisLock.unlock()
-            }
-        }
     }
 
     companion object {
