@@ -37,12 +37,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.ci.v2.Credentials
-import com.tencent.devops.common.ci.v2.ExportPreScriptBuildYaml
-import com.tencent.devops.common.ci.v2.JobRunsOnType
-import com.tencent.devops.common.ci.v2.PreJob
-import com.tencent.devops.common.ci.v2.PreStage
-import com.tencent.devops.common.ci.v2.RunsOn
+import com.tencent.devops.common.ci.v2.*
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -1322,11 +1317,11 @@ class TXPipelineExportService @Autowired constructor(
                 else ifString
             }
             RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
-                "alwaysUnlessCancelled()"
+                IfType.ALWAYS_UNLESS_CANCELLED.name
             RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
-                "always()"
+                IfType.ALWAYS.name
             RunCondition.PRE_TASK_FAILED_ONLY ->
-                "failure()"
+                IfType.FAILURE.name
             else -> null
         }
     }
