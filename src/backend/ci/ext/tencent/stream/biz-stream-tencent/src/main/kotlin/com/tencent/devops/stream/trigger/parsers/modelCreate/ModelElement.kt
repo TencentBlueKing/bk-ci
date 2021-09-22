@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
+import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -50,6 +51,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+
 
 @Component
 class ModelElement @Autowired constructor(
@@ -83,11 +85,11 @@ class ModelElement @Autowired constructor(
                 customEnv = getElementEnv(step.env),
                 runCondition = when {
                     step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
-                    "alwaysUnlessCancelled()" == step.ifFiled ?: "" ->
+                    IfType.ALWAYS_UNLESS_CANCELLED.name == step.ifFiled ?: "" ->
                         RunCondition.PRE_TASK_FAILED_BUT_CANCEL
-                    "always()" == step.ifFiled ?: "" ->
+                    IfType.ALWAYS.name == step.ifFiled ?: "" ->
                         RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
-                    "failure()" == step.ifFiled ?: "" ->
+                    IfType.FAILURE.name == step.ifFiled ?: "" ->
                         RunCondition.PRE_TASK_FAILED_ONLY
                     else -> RunCondition.CUSTOM_CONDITION_MATCH
                 },
