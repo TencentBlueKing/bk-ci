@@ -543,7 +543,7 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
-    fun createGitCIProject(userId: String, gitProjectId: Long): ProjectVO {
+    fun createGitCIProject(userId: String, gitProjectId: Long, gitProjectName: String?): ProjectVO {
         val projectCode = "git_$gitProjectId"
         var gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
         if (gitCiProject != null) {
@@ -551,7 +551,7 @@ class ProjectLocalService @Autowired constructor(
         }
 
         val projectCreateInfo = ProjectCreateInfo(
-            projectName = projectCode,
+            projectName = gitProjectName ?: projectCode,
             englishName = projectCode,
             projectType = ProjectTypeEnum.SUPPORT_PRODUCT.index,
             description = "git ci project for git projectId: $gitProjectId",
