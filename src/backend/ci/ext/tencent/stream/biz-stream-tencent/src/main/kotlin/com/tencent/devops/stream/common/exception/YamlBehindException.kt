@@ -25,25 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.mq.streamTrigger
+package com.tencent.devops.stream.common.exception
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.stream.constant.MQ
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-
-@Event(MQ.EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_STREAM_TRIGGER_PIPELINE_EVENT)
-data class StreamTriggerEvent(
-    val gitToken: GitToken,
-    val forkGitToken: GitToken?,
-    val gitRequestEvent: GitRequestEvent,
-    val gitProjectPipeline: GitProjectPipeline,
-    val event: GitEvent,
-    val originYaml: String?,
-    val filePath: String,
-    val gitCIBasicSetting: GitCIBasicSetting,
-    val changeSet: Set<String>? = null
-)
+class YamlBehindException(val filePath: String) : RuntimeException()

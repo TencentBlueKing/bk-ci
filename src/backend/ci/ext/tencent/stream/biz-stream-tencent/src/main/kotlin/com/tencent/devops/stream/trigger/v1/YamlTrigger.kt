@@ -73,7 +73,8 @@ class YamlTrigger @Autowired constructor(
         gitProjectPipeline: GitProjectPipeline,
         event: GitEvent,
         originYaml: String?,
-        filePath: String
+        filePath: String,
+        changeSet: Set<String>?
     ): Boolean {
         val yamlObject = prepareCIBuildYaml(
             gitToken = gitToken,
@@ -83,7 +84,9 @@ class YamlTrigger @Autowired constructor(
             originYaml = originYaml,
             filePath = filePath,
             pipelineId = gitProjectPipeline.pipelineId,
-            pipelineName = gitProjectPipeline.displayName
+            pipelineName = gitProjectPipeline.displayName,
+            event = null,
+            changeSet = null
         ) ?: return false
 
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
@@ -162,7 +165,9 @@ class YamlTrigger @Autowired constructor(
         originYaml: String?,
         filePath: String,
         pipelineId: String?,
-        pipelineName: String?
+        pipelineName: String?,
+        event: GitEvent?,
+        changeSet: Set<String>?
     ): CIBuildYaml? {
 
         if (originYaml.isNullOrBlank()) {
