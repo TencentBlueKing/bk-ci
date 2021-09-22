@@ -27,8 +27,9 @@
 
 package com.tencent.devops.artifactory.pojo.enums
 
-enum class BkRepoTypeEnum {
-    GENERIC, // 二进制通用仓库
-    DOCKER, // 镜像仓库
-    STATIC // 静态资源仓库
+enum class BkRepoEnum(val repoName: String) {
+    GENERIC("generic-local"), // 二进制通用仓库
+    DOCKER("generic-docker"), // 镜像仓库
+    PLUGIN("bk-plugin"), // 插件仓库
+    STATIC("static"); // 静态资源仓库
 }
