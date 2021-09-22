@@ -228,7 +228,7 @@ class KtlintChecker constructor(path: File) {
             }
         } catch (e: Exception) {
             logger.warn("Fail to parse the ktlint command $args", e)
-            LoggerService.addRedLine("Fail to parse the ktlin command $args")
+            LoggerService.addErrorLine("Fail to parse the ktlin command $args")
             exitProcess(1)
         }
 
@@ -237,7 +237,7 @@ class KtlintChecker constructor(path: File) {
                 val flag = arg.substringBefore("=")
                 val alt = DEPRECATED_FLAGS[flag]
                 if (alt != null) {
-                    LoggerService.addYellowLine("$flag flag is deprecated and will be removed in 1.0.0 (use $alt instead)")
+                    LoggerService.addWarnLine("$flag flag is deprecated and will be removed in 1.0.0 (use $alt instead)")
                 }
             }
         }
@@ -422,7 +422,7 @@ class KtlintChecker constructor(path: File) {
         fun ReporterTemplate.toReporter(): Reporter {
             val reporterProvider = reporterProviderById[id]
             if (reporterProvider == null) {
-                LoggerService.addRedLine(
+                LoggerService.addErrorLine(
                     "Error: reporter \"$id\" wasn't found (available: ${
                         reporterProviderById.keys.sorted().joinToString(",")
                     })"
@@ -444,7 +444,7 @@ class KtlintChecker constructor(path: File) {
                                 reporter.afterAll()
                                 stream.close()
                                 if (tripped()) {
-                                    LoggerService.addRedLine("\"$id\" report written to ${File(output).absoluteFile.location()}")
+                                    LoggerService.addErrorLine("\"$id\" report written to ${File(output).absoluteFile.location()}")
                                 }
                             }
                         }
@@ -577,7 +577,7 @@ class KtlintChecker constructor(path: File) {
                 } catch (e: IllegalArgumentException) {
                     val file = File(expandTilde(artifact))
                     if (!file.exists()) {
-                        LoggerService.addRedLine("Error: $artifact does not exist")
+                        LoggerService.addErrorLine("Error: $artifact does not exist")
                         // exitProcess(1)
                         // return
                         throw e
@@ -587,7 +587,7 @@ class KtlintChecker constructor(path: File) {
                     if (debug) {
                         LoggerService.addNormalLine(ExceptionUtils.getStackTrace(e))
                     }
-                    LoggerService.addRedLine("Error: $artifact wasn't found")
+                    LoggerService.addErrorLine("Error: $artifact wasn't found")
                     // exitProcess(1)
                     throw e
                 }
@@ -596,7 +596,7 @@ class KtlintChecker constructor(path: File) {
                 }
                 if (!skipClasspathCheck) {
                     if (result.any { it.toString().substringAfterLast("/").startsWith("ktlint-core-") }) {
-                        LoggerService.addRedLine(
+                        LoggerService.addErrorLine(
                             "\"$artifact\" appears to have a runtime/api(dependency on \"ktlint-core\".\n" +
                                     "Please inform the author that \"com.github.shyiko:ktlint*\" should be marked " +
                                     "compileOnly (Gradle) / provided (Maven).\n" +
@@ -604,7 +604,7 @@ class KtlintChecker constructor(path: File) {
                         )
                     }
                     if (result.any { it.toString().substringAfterLast("/").startsWith("kotlin-stdlib-") }) {
-                        LoggerService.addRedLine(
+                        LoggerService.addErrorLine(
                             "\"$artifact\" appears to have a runtime/api(dependency on \"kotlin-stdlib\".\n" +
                                     "Please inform the author that \"org.jetbrains.kotlin:kotlin-stdlib*\" should be marked " +
                                     "compileOnly (Gradle) / provided (Maven).\n" +
