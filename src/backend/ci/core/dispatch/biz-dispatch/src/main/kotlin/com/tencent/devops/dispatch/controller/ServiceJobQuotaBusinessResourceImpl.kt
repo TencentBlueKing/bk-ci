@@ -30,7 +30,6 @@ package com.tencent.devops.dispatch.controller
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
-import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.service.JobQuotaBusinessService
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,7 +47,7 @@ class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
         containerId: String,
         containerHashId: String?
     ): Result<Boolean> {
-        jobQuotaBusinessService.checkAndAddRunningJob(
+        val result = jobQuotaBusinessService.checkAndAddRunningJob(
             projectId = projectId,
             vmType = vmType,
             buildId = buildId,
@@ -57,7 +56,7 @@ class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
             containerId = containerId,
             containerHashId = containerHashId
         )
-        return Result(true)
+        return Result(result)
     }
 
     override fun removeRunningJob(
