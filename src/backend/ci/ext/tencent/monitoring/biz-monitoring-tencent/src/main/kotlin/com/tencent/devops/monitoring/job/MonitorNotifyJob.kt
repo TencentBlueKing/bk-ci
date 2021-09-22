@@ -185,7 +185,7 @@ class MonitorNotifyJob @Autowired constructor(
     /**
      * 每天发送日报
      */
-    @Scheduled(cron = "0 0 10 * * ?")
+    @Scheduled(cron = "0 0 2 * * ?")
     fun notifyDaily() {
         if (profile.isProd() && !profile.isProdGray()) {
             logger.info("profile is prod , no start")
