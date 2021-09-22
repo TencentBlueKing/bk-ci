@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.trigger
 
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -45,6 +43,7 @@ import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
+import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.trigger.v2.YamlBuildV2
 import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
 import com.tencent.devops.stream.v2.service.OauthService
@@ -52,7 +51,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class ScheduleTriggerService @Autowired constructor(
@@ -64,6 +62,7 @@ class ScheduleTriggerService @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCIBasicSettingService: GitCIBasicSettingService,
     private val yamlBuildV2: YamlBuildV2,
+    private val streamTimerService: StreamTimerService,
     private val triggerExceptionService: TriggerExceptionService
 ) {
     companion object {
@@ -72,18 +71,22 @@ class ScheduleTriggerService @Autowired constructor(
 
     fun triggerBuild(streamTimerEvent: StreamTimerBuildEvent, buildBranch: String): Boolean {
 
-        //todo: 这里是否需要传入最新的定时触发id，还是复用之前的id，还是不管id
+        // todo: 这里需要传入最新的定时触发id
         val gitRequestEvent = GitRequestEventHandle.createScheduleTriggerEvent(streamTimerEvent, buildBranch)
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id
 
-        val existsPipeline =
-            gitPipelineResourceDao.getPipelineById(
-                dslContext,
-                streamTimerEvent.gitProjectId,
-                streamTimerEvent.pipelineId
-            ) ?: throw OperationException("stream pipeline: ${streamTimerEvent.pipelineId} is not exist")
-        // 如果该流水线已保存过，则继续使用
+        val existsPipeline = gitPipelineResourceDao.getPipelineById(
+            dslContext = dslContext,
+            gitProjectId = streamTimerEvent.gitProjectId,
+            pipelineId = streamTimerEvent.pipelineId
+        )
+        // 流水线不存在时删除定时触发任务
+        if (existsPipeline == null) {
+            streamTimerService.deleteTimer(streamTimerEvent.pipelineId, streamTimerEvent.userId)
+            return false
+        }
+
         val buildPipeline = GitProjectPipeline(
             gitProjectId = existsPipeline.gitProjectId,
             pipelineId = existsPipeline.pipelineId,
@@ -94,19 +97,15 @@ class ScheduleTriggerService @Autowired constructor(
             latestBuildInfo = null
         )
 
-        // todo:未启用则对应的定时触发删除还是不触发还是报错
-        // 流水线未启用在定时处直接报错
+        // 流水线未启用在定时什么都不管，不触发不提醒
         if (!buildPipeline.enabled) {
-            throw CustomException(
-                status = Response.Status.METHOD_NOT_ALLOWED,
-                message = "${TriggerReason.PIPELINE_DISABLE.name}(${TriggerReason.PIPELINE_DISABLE.detail})"
-            )
+            return false
         }
 
         handleTrigger(
             userId = streamTimerEvent.userId,
             gitRequestEvent = gitRequestEvent,
-            originYaml =  streamTimerEvent.originYaml,
+            originYaml = streamTimerEvent.originYaml,
             buildPipeline = buildPipeline
         )
         return true

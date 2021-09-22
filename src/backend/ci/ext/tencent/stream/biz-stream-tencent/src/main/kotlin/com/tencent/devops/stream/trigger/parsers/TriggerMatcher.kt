@@ -274,7 +274,7 @@ class TriggerMatcher @Autowired constructor(
         triggerOn: TriggerOn,
         eventBranch: String,
         gitRequestEvent: GitRequestEvent,
-        pipeline: GitProjectPipeline,
+        pipeline: GitProjectPipeline
     ): Boolean {
         if (triggerOn.schedules == null) {
             // 新流水线没有定时任务就没注册过定时任务

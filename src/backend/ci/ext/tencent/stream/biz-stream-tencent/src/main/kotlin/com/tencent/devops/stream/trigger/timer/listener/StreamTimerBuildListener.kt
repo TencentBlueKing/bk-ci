@@ -34,15 +34,13 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.process.api.service.ServiceTimerBuildResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.trigger.ScheduleTriggerService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimerBranch
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerBranchService
-import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
-import com.tencent.devops.stream.v2.common.CommonVariables
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -54,9 +52,9 @@ import org.springframework.stereotype.Component
 @Component
 class StreamTimerBuildListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
-    private val streamTimerService: StreamTimerService,
     private val streamTimerBranchService: StreamTimerBranchService,
-    private val client: Client
+    private val client: Client,
+    private val scheduleTriggerService: ScheduleTriggerService
 ) : BaseListener<StreamTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: StreamTimerBuildEvent) {
@@ -137,21 +135,7 @@ class StreamTimerBuildListener @Autowired constructor(
     }
 
     private fun StreamTimerBuildEvent.timerTrigger(branch: String): Boolean {
-        val buildResult = client.get(ServiceTimerBuildResource::class).timerTrigger(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            params = mapOf(CommonVariables.CI_BRANCH to branch),
-            channelCode = channelCode
-        )
-        // 如果是不存在的流水线，则直接删除定时任务，相当于给异常创建失败的定时流水线做清理
-        return if (buildResult.data.isNullOrBlank()) {
-            streamTimerService.deleteTimer(pipelineId, userId)
-            logger.warn("[$pipelineId]|pipeline not exist!${buildResult.message}")
-            false
-        } else {
-            logger.info("[$pipelineId]|TimerTrigger start| buildId=${buildResult.data}")
-            true
-        }
+        // 触发stream处的触发逻辑
+        return scheduleTriggerService.triggerBuild(this, branch)
     }
 }

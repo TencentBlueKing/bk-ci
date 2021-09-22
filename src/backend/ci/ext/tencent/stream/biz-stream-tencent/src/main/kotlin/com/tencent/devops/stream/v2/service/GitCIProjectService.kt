@@ -27,26 +27,20 @@
 
 package com.tencent.devops.stream.v2.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.GitCIProjectType
 import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import com.tencent.devops.common.api.pojo.Pagination
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitTagPushEvent
 import com.tencent.devops.stream.pojo.v2.project.CIInfo
 import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
-import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

@@ -43,7 +43,7 @@ class StreamTriggerMessageUtils @Autowired constructor(
                 }
                 "[${eventMap?.create_from}] Tag [${event.branch}] pushed by ${event.userId}"
             }
-            TGitObjectKind.SCHEDULE.value ->{
+            TGitObjectKind.SCHEDULE.value -> {
                 "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] schedule"
             }
             else -> {
