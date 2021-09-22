@@ -81,7 +81,7 @@ object Runner {
             } catch (ignore: Exception) {
                 failed = true
                 logger.error("Other unknown error has occurred:", ignore)
-                LoggerService.addRedLine("Other unknown error has occurred: " + ignore.message)
+                LoggerService.addErrorLine("Other unknown error has occurred: " + ignore.message)
             } finally {
                 LoggerService.stop()
                 LoggerService.archiveLogFiles()
@@ -250,7 +250,7 @@ object Runner {
             errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
         }
 
-        LoggerService.addRedLine(message)
+        LoggerService.addErrorLine(message)
 
         val buildResult = taskDaemon.getBuildResult(
             isSuccess = false,

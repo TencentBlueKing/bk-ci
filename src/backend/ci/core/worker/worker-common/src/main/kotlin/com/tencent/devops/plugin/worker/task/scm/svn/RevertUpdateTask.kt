@@ -87,13 +87,13 @@ class RevertUpdateTask constructor(
                 LoggerService.addNormalLine("Clean up the workspace(${workspace.path})")
                 SvnUtil.deleteWcLockAndCleanup(client, workspace)
             } catch (t: Throwable) {
-                LoggerService.addYellowLine("Fail to cleanup the workspace because of ${t.message}")
+                LoggerService.addWarnLine("Fail to cleanup the workspace because of ${t.message}")
             }
             try {
                 LoggerService.addNormalLine("Revert the workspace(${workspace.path})")
                 client.doRevert(arrayOf<File>(workspace.canonicalFile), SVNDepth.INFINITY, null)
             } catch (t: Throwable) {
-                LoggerService.addYellowLine("Fail to revert the workspace because of ${t.message}")
+                LoggerService.addWarnLine("Fail to revert the workspace because of ${t.message}")
             }
         }
     }
