@@ -165,7 +165,7 @@
                 const findItemId = (name) => {
                     let item = this.paramList.find(x => x.name === name)
                     if (!item) {
-                        if (name.isBkVar) item = name
+                        if (name.isBkVar()) item = name
                         else item = ''
                     } else {
                         item = item.id
