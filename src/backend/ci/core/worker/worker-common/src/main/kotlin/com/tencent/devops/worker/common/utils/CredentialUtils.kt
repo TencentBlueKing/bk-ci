@@ -88,7 +88,7 @@ object CredentialUtils {
         } catch (ignored: Exception) {
             logger.warn("Fail to get the credential($credentialId), $ignored")
             if (showErrorLog) {
-                LoggerService.addRedLine("获取凭证（$credentialId）失败， 原因：${ignored.message}")
+                LoggerService.addErrorLine("获取凭证（$credentialId）失败， 原因：${ignored.message}")
             }
             throw ignored
         }

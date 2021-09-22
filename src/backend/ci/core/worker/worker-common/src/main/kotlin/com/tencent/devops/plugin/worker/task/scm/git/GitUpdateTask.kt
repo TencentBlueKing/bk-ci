@@ -204,7 +204,7 @@ open class GitUpdateTask constructor(
             if (enableVirtualMergeBranch && isSameProject(gitType, url, targetUrl) && startType == StartType.WEB_HOOK &&
                 (hookType == CodeEventType.PULL_REQUEST || hookType == CodeEventType.MERGE_REQUEST)
             ) {
-                LoggerService.addYellowLine("The mode enable virtual merge branch")
+                LoggerService.addWarnLine("The mode enable virtual merge branch")
                 checkoutVirtualBranch(gitType, git, sourceUrl!!, sourceBranch!!, targetUrl!!, targetBranch!!, variables)
             } else {
                 LoggerService.addNormalLine("The mode type($modeType) and mode value($modeValue) - ${revision ?: ""}")
@@ -511,9 +511,9 @@ open class GitUpdateTask constructor(
         remoteRemoveCommand.call()
 
         if (pullResult.mergeResult.mergeStatus == MergeResult.MergeStatus.CONFLICTING) {
-            LoggerService.addRedLine("Merge branch $branchName conflict")
+            LoggerService.addErrorLine("Merge branch $branchName conflict")
             pullResult.mergeResult.conflicts.forEach { file ->
-                LoggerService.addRedLine("Conflict file $file")
+                LoggerService.addErrorLine("Conflict file $file")
             }
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -663,7 +663,7 @@ open class GitUpdateTask constructor(
                             try {
                                 val u = URL(url)
                                 val convert = "git@${u.host}:${u.path.removePrefix("/")}"
-                                LoggerService.addYellowLine("Convert the git submodule url from ($url) to ($convert)")
+                                LoggerService.addWarnLine("Convert the git submodule url from ($url) to ($convert)")
                                 result.add(
                                     Submodule(
                                         path,
@@ -672,7 +672,7 @@ open class GitUpdateTask constructor(
                                     )
                                 )
                             } catch (e: Exception) {
-                                LoggerService.addRedLine("外链($url)不是一个正确的URL地址")
+                                LoggerService.addErrorLine("外链($url)不是一个正确的URL地址")
                                 throw e
                             }
                         } else {
@@ -689,7 +689,7 @@ open class GitUpdateTask constructor(
                             try {
                                 val (domain, repoName) = GitUtils.getDomainAndRepoName(url)
                                 val convert = "http://$domain/$repoName.git"
-                                LoggerService.addYellowLine("Convert the git submodule url from ($url) to ($convert)")
+                                LoggerService.addWarnLine("Convert the git submodule url from ($url) to ($convert)")
                                 result.add(
                                     Submodule(
                                         path,
@@ -698,7 +698,7 @@ open class GitUpdateTask constructor(
                                     )
                                 )
                             } catch (e: Exception) {
-                                LoggerService.addRedLine("外链($url)不是一个正确的URL地址")
+                                LoggerService.addErrorLine("外链($url)不是一个正确的URL地址")
                                 throw e
                             }
                         } else {
@@ -762,7 +762,7 @@ open class GitUpdateTask constructor(
                 clone.setProgressMonitor(TextProgressMonitor(writer))
                 clone.call()
             } catch (e: Exception) {
-                LoggerService.addRedLine(
+                LoggerService.addErrorLine(
                     "Fail to checkout the submodule(${walk.modulesPath}) " +
                         "with url(${walk.modulesUrl}) to revision(${walk.objectId}) because of ${e.message}")
                 throw e
@@ -785,7 +785,7 @@ open class GitUpdateTask constructor(
 
         val remoteUrl = credentialSetter.getCredentialUrl(url)
         if (localUrl != remoteUrl && localDecodedUrl != remoteUrl) {
-            LoggerService.addYellowLine("Git repo url 从($localUrl)变为($url), 全量拉取代码仓库")
+            LoggerService.addWarnLine("Git repo url 从($localUrl)变为($url), 全量拉取代码仓库")
             cleanupWorkspace()
         }
     }

@@ -196,11 +196,14 @@ object LoggerService {
         }
     }
 
-    fun addYellowLine(message: String) =
-        addNormalLine(Ansi().fgYellow().a(message).reset().toString())
+    fun addWarnLine(message: String) =
+        addNormalLine("$LOG_WARN_FLAG$message")
 
-    fun addRedLine(message: String) =
-        addNormalLine(Ansi().fgRed().a(message).reset().toString())
+    fun addErrorLine(message: String) =
+        addNormalLine("$LOG_ERROR_FLAG$message")
+
+    fun addDebugLine(message: String) =
+        addNormalLine("$LOG_DEBUG_FLAG$message")
 
     fun addFoldStartLine(foldName: String) {
         val logMessage = LogMessage(

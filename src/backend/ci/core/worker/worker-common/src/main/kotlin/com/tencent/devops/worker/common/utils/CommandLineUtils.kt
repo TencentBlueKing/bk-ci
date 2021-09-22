@@ -76,34 +76,15 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendVariableToFile(executor.workingDirectory, resultLogFile, tmpLine)
-                    LoggerService.addNormalLine(tmpLine)
+                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
+                    LoggerService.addNormalLine("[$level]$tmpLine")
                 } else {
                     result.append(tmpLine).append("\n")
                 }
             }
         }
 
-        val errorStream = object : LogOutputStream() {
-            override fun processLine(line: String?, level: Int) {
-                if (line == null) {
-                    return
-                }
-
-                var tmpLine: String = prefix + line
-
-                lineParser.forEach {
-                    tmpLine = it.onParseLine(tmpLine)
-                }
-                if (print2Logger) {
-                    appendVariableToFile(executor.workingDirectory, resultLogFile, tmpLine)
-                    LoggerService.addRedLine(tmpLine)
-                } else {
-                    result.append(tmpLine).append("\n")
-                }
-            }
-        }
-        executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
+        executor.streamHandler = PumpStreamHandler(outputStream)
         try {
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
@@ -117,7 +98,7 @@ object CommandLineUtils {
             val errorMessage = executeErrorMessage ?: "Fail to execute the command($command)"
             logger.warn(errorMessage, ignored)
             if (print2Logger) {
-                LoggerService.addRedLine("$prefix $errorMessage")
+                LoggerService.addErrorLine("$prefix $errorMessage")
             }
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
