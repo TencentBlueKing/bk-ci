@@ -626,7 +626,6 @@ class GitRequestEventBuildDao {
         }
     }
 
-
     fun getPipelinesLastBuild(
         dslContext: DSLContext,
         gitProjectId: Long,
