@@ -73,7 +73,7 @@ interface ServiceJobQuotaBusinessResource {
         containerId: String,
         @ApiParam(value = "containerHashId", required = false)
         @QueryParam("containerHashId")
-        containerHashId: String?,
+        containerHashId: String?
     ): Result<Boolean>
 
     @ApiOperation("上报一个JOB结束")
