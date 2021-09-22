@@ -27,10 +27,8 @@
 
 package com.tencent.devops.stream.resources
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.ExternalStreamBadgeResource
-import com.tencent.devops.stream.pojo.v2.badge.StreamPipelineBadgeInfo
 import com.tencent.devops.stream.v2.service.StreamPipelineBadgeService
 
 @RestResource
@@ -42,11 +40,12 @@ class ExternalStreamBadgeResourceImpl(
         filePath: String,
         branch: String?,
         objectKind: String?
-    ): Result<StreamPipelineBadgeInfo> {
-        return Result(
-            streamPipelineBadgeService.get(
-                gitProjectId, filePath, branch, objectKind
-            )
+    ): String {
+        return streamPipelineBadgeService.get(
+            gitProjectId = gitProjectId,
+            filePath = filePath,
+            branch = branch,
+            objectKind = objectKind
         )
     }
 }

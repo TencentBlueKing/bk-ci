@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.api
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.pojo.v2.badge.StreamPipelineBadgeInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -62,5 +60,5 @@ interface ExternalStreamBadgeResource {
         @ApiParam("触发方式", required = false)
         @QueryParam("object_kind")
         objectKind: String?
-    ): Result<StreamPipelineBadgeInfo>
+    ): String
 }
