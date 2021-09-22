@@ -373,7 +373,6 @@ class GitCITriggerService @Autowired constructor(
 
         // 检查版本落后信息和真正要触发的文件，Merged事件不用检查版本
         val originYaml = if (mrEvent && !isMerged) {
-            // todo: 将超级token根据项目ID塞到Map里，每次取一下，没有了就重新拿
             val (result, orgYaml) =
                 checkYmlVersion(
                     mrEvent = event as GitMergeRequestEvent,
