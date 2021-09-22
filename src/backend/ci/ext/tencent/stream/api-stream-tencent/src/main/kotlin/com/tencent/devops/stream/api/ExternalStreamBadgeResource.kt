@@ -44,7 +44,8 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalStreamBadgeResource {
 
-    @ApiOperation("获取流水线徽章信息")
+    @ApiOperation("获取流水线徽章")
+    @Produces("image/svg+xml")
     @GET
     @Path("/projects/{gitProjectId}/pipelines/badge")
     fun getPipelineBadge(
