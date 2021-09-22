@@ -51,7 +51,7 @@ class GitCIV2PipelineService @Autowired constructor(
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val gitCIV2DetailService: GitCIV2DetailService,
     private val streamScmService: StreamScmService,
-    private val streamGitTokenService: StreamGitTokenService,
+    private val tokenService: StreamGitTokenService,
     private val redisOperation: RedisOperation,
     private val websocketService: GitCIV2WebsocketService
 ) {
@@ -202,7 +202,7 @@ class GitCIV2PipelineService @Autowired constructor(
         val filePath =
             pipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)?.filePath ?: return null
         val token = try {
-            streamGitTokenService.getToken(gitProjectId)
+            tokenService.getToken(gitProjectId)
         } catch (e: Exception) {
             logger.error("getYamlByPipeline $pipelineId $ref can't get token")
             return null

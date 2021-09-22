@@ -54,7 +54,7 @@ import org.springframework.stereotype.Service
 class GitCheckService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val streamGitTokenService: StreamGitTokenService
+    private val tokenService: StreamGitTokenService
 ) {
 
     companion object {
@@ -240,7 +240,7 @@ class GitCheckService @Autowired constructor(
             logger.info("Project($$projectId) add git commit($commitId) commit check.")
 
             val gitProjectId = gitCIBasicSetting.gitProjectId
-            val token = streamGitTokenService.getToken(gitProjectId)
+            val token = tokenService.getToken(gitProjectId)
             val request = CommitCheckRequest(
                 projectName = gitProjectId.toString(),
                 url = gitCIBasicSetting.gitHttpUrl,

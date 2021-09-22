@@ -35,24 +35,22 @@ import com.tencent.devops.stream.pojo.git.GitEvent
 interface YamlTriggerInterface<T> {
 
     fun triggerBuild(
-        gitToken: String,
-        forkGitToken: String?,
         gitRequestEvent: GitRequestEvent,
         gitProjectPipeline: GitProjectPipeline,
         event: GitEvent,
         originYaml: String?,
-        filePath: String
+        filePath: String,
+        forkGitProjectId: Long?
     ): Boolean
 
     fun prepareCIBuildYaml(
-        gitToken: String,
-        forkGitToken: String?,
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
         filePath: String,
         pipelineId: String?,
-        pipelineName: String?
+        pipelineName: String?,
+        forkGitProjectId: Long?
     ): T?
 
     fun checkYamlSchema(userId: String, yaml: String): Result<String>

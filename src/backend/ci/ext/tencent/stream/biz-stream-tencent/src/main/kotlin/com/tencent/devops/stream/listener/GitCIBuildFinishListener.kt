@@ -98,7 +98,7 @@ class GitCIBuildFinishListener @Autowired constructor(
     private val qualityService: QualityService,
     private val gitCheckService: GitCheckService,
     private val triggerMessageUtil: StreamTriggerMessageUtils,
-    private val streamGitTokenService: StreamGitTokenService
+    private val tokenService: StreamGitTokenService
 ) {
 
     @Value("\${rtx.corpid:#{null}}")
@@ -336,7 +336,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 }
 
                 // 销毁该项目当前的token缓存
-                streamGitTokenService.clearToken(gitProjectId)
+                tokenService.clearToken(gitProjectId)
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)

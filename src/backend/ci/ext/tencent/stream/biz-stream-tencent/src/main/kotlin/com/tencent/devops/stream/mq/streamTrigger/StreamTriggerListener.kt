@@ -60,13 +60,12 @@ class StreamTriggerListener @Autowired constructor(
                 pipeline = event.gitProjectPipeline,
                 action = {
                     yamlTriggerV2.triggerBuild(
-                        gitToken = event.gitToken.accessToken,
-                        forkGitToken = event.forkGitToken?.accessToken,
                         gitRequestEvent = event.gitRequestEvent,
                         gitProjectPipeline = event.gitProjectPipeline,
                         event = event.event,
                         originYaml = event.originYaml,
-                        filePath = event.filePath
+                        filePath = event.filePath,
+                        forkGitProjectId = event.forkGitProjectId
                     )
                 },
                 commitCheck = CommitCheck(

@@ -58,6 +58,7 @@ import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
 import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.YamlCheck
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -72,7 +73,8 @@ class YamlTriggerV2 @Autowired constructor(
     private val yamlTemplateService: YamlTemplateService,
     private val triggerMatcher: TriggerMatcher,
     private val yamlCheck: YamlCheck,
-    private val yamlBuildV2: YamlBuildV2
+    private val yamlBuildV2: YamlBuildV2,
+    private val tokenService: StreamGitTokenService
 ) : YamlTriggerInterface<YamlObjects> {
 
     companion object {
@@ -84,13 +86,12 @@ class YamlTriggerV2 @Autowired constructor(
     }
 
     override fun triggerBuild(
-        gitToken: String,
-        forkGitToken: String?,
         gitRequestEvent: GitRequestEvent,
         gitProjectPipeline: GitProjectPipeline,
         event: GitEvent,
         originYaml: String?,
-        filePath: String
+        filePath: String,
+        forkGitProjectId: Long?
     ): Boolean {
         if (originYaml.isNullOrBlank()) {
             return false
@@ -117,14 +118,13 @@ class YamlTriggerV2 @Autowired constructor(
         }
 
         val yamlObjects = prepareCIBuildYaml(
-            gitToken = gitToken,
-            forkGitToken = forkGitToken,
             gitRequestEvent = gitRequestEvent,
             isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
             filePath = filePath,
             pipelineId = gitProjectPipeline.pipelineId,
-            pipelineName = gitProjectPipeline.displayName
+            pipelineName = gitProjectPipeline.displayName,
+            forkGitProjectId = forkGitProjectId
         ) ?: return false
         val yamlObject = yamlObjects.normalYaml
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
@@ -194,14 +194,13 @@ class YamlTriggerV2 @Autowired constructor(
 
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
     override fun prepareCIBuildYaml(
-        gitToken: String,
-        forkGitToken: String?,
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
         filePath: String,
         pipelineId: String?,
-        pipelineName: String?
+        pipelineName: String?,
+        forkGitProjectId: Long?
     ): YamlObjects? {
         if (originYaml.isNullOrBlank()) {
             return null
@@ -218,8 +217,7 @@ class YamlTriggerV2 @Autowired constructor(
         return replaceYamlTemplate(
             isFork = isFork,
             isMr = isMr,
-            gitToken = gitToken,
-            forkGitToken = forkGitToken,
+            forkGitProjectId = forkGitProjectId,
             preTemplateYamlObject = preTemplateYamlObject,
             filePath = filePath.ifBlank { STREAM_TEMPLATE_ROOT_FILE },
             gitRequestEvent = gitRequestEvent,
@@ -242,12 +240,11 @@ class YamlTriggerV2 @Autowired constructor(
     private fun replaceYamlTemplate(
         isFork: Boolean,
         isMr: Boolean,
-        gitToken: String,
-        forkGitToken: String?,
         preTemplateYamlObject: PreTemplateScriptBuildYaml,
         filePath: String,
         gitRequestEvent: GitRequestEvent,
-        originYaml: String?
+        originYaml: String?,
+        forkGitProjectId: Long?
     ): YamlObjects {
         // 替换yaml文件中的模板引用
         try {
@@ -259,9 +256,9 @@ class YamlTriggerV2 @Autowired constructor(
                 sourceProjectId = gitRequestEvent.gitProjectId,
                 triggerRef = gitRequestEvent.branch,
                 triggerToken = if (isFork) {
-                    forkGitToken!!
+                    tokenService.getToken(forkGitProjectId!!)
                 } else {
-                    gitToken
+                    tokenService.getToken(gitRequestEvent.gitProjectId)
                 },
                 repo = null,
                 repoTemplateGraph = TemplateGraph(),

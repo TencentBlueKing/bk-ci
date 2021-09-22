@@ -66,23 +66,21 @@ class YamlTrigger @Autowired constructor(
 ) : YamlTriggerInterface<CIBuildYaml> {
 
     override fun triggerBuild(
-        gitToken: String,
-        forkGitToken: String?,
         gitRequestEvent: GitRequestEvent,
         gitProjectPipeline: GitProjectPipeline,
         event: GitEvent,
         originYaml: String?,
-        filePath: String
+        filePath: String,
+        forkGitProjectId: Long?
     ): Boolean {
         val yamlObject = prepareCIBuildYaml(
-            gitToken = gitToken,
-            forkGitToken = forkGitToken,
             gitRequestEvent = gitRequestEvent,
             isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
             filePath = filePath,
             pipelineId = gitProjectPipeline.pipelineId,
-            pipelineName = gitProjectPipeline.displayName
+            pipelineName = gitProjectPipeline.displayName,
+            forkGitProjectId = forkGitProjectId
         ) ?: return false
 
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
@@ -154,14 +152,13 @@ class YamlTrigger @Autowired constructor(
     }
 
     override fun prepareCIBuildYaml(
-        gitToken: String,
-        forkGitToken: String?,
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
         filePath: String,
         pipelineId: String?,
-        pipelineName: String?
+        pipelineName: String?,
+        forkGitProjectId: Long?
     ): CIBuildYaml? {
 
         if (originYaml.isNullOrBlank()) {

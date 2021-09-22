@@ -60,9 +60,9 @@ import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.stream.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.TriggerParameter
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
@@ -93,7 +93,7 @@ class GitCITriggerService @Autowired constructor(
     private val triggerParameter: TriggerParameter,
     private val mergeConflictCheck: MergeConflictCheck,
     private val triggerExceptionService: TriggerExceptionService,
-    private val streamGitTokenService: StreamGitTokenService
+    private val tokenService: StreamGitTokenService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
@@ -321,7 +321,8 @@ class GitCITriggerService @Autowired constructor(
                             displayName = displayName,
                             mrEvent = mrEvent,
                             isMerged = isMerged,
-                            gitProjectConf = gitProjectConf
+                            gitProjectConf = gitProjectConf,
+                            forkGitProjectId = null
                         )
                     },
                     commitCheck = CommitCheck(
@@ -353,7 +354,8 @@ class GitCITriggerService @Autowired constructor(
         displayName: String,
         mrEvent: Boolean,
         isMerged: Boolean,
-        gitProjectConf: GitCIBasicSetting
+        gitProjectConf: GitCIBasicSetting,
+        forkGitProjectId: Long?
     ) {
         val filePath = buildPipeline.filePath
         // 流水线未启用则跳过
@@ -436,25 +438,26 @@ class GitCITriggerService @Autowired constructor(
         if (ymlVersion?.version == "v2.0") {
             dispatchStreamTrigger(
                 StreamTriggerEvent(
-                    gitToken = GitToken(accessToken = gitToken),
-                    forkGitToken = GitToken(accessToken = forkGitToken ?: ""),
                     gitRequestEvent = gitRequestEvent,
                     gitProjectPipeline = buildPipeline,
                     event = event,
                     originYaml = originYaml,
                     filePath = filePath,
-                    gitCIBasicSetting = gitProjectConf
+                    gitCIBasicSetting = gitProjectConf,
+                    forkGitProjectId = forkGitProjectId,
+                    // TODO 为了保证消息生产消费兼容，下次发布再去掉event的token字段
+                    gitToken = GitToken(accessToken = gitToken),
+                    forkGitToken = GitToken(accessToken = forkGitToken ?: "")
                 )
             )
         } else {
             triggerInterface.triggerBuild(
-                gitToken = gitToken,
-                forkGitToken = forkGitToken,
                 gitRequestEvent = gitRequestEvent,
                 gitProjectPipeline = buildPipeline,
                 event = event,
                 originYaml = originYaml,
-                filePath = filePath
+                filePath = filePath,
+                forkGitProjectId = forkGitProjectId
             )
         }
     }
@@ -687,7 +690,7 @@ class GitCITriggerService @Autowired constructor(
     private fun handleGetToken(gitRequestEvent: GitRequestEvent, isMrEvent: Boolean = false): String? {
         return triggerExceptionService.handleErrorCode(
             request = gitRequestEvent,
-            action = { streamGitTokenService.getToken(getProjectId(isMrEvent, gitRequestEvent)) }
+            action = { tokenService.getToken(getProjectId(isMrEvent, gitRequestEvent)) }
         )
     }
 

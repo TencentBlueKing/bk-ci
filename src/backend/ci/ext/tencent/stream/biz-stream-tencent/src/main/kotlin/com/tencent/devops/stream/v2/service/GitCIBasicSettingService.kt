@@ -45,7 +45,7 @@ class GitCIBasicSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val gitCIBasicSettingDao: GitCIBasicSettingDao,
-    private val streamGitTokenService: StreamGitTokenService,
+    private val tokenService: StreamGitTokenService,
     private val streamScmService: StreamScmService
 ) {
     companion object {
@@ -228,7 +228,7 @@ class GitCIBasicSettingService @Autowired constructor(
 
     private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
         return try {
-            val accessToken = streamGitTokenService.getToken(gitProjectId)
+            val accessToken = tokenService.getToken(gitProjectId)
             streamScmService.getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true)
         } catch (e: Throwable) {
             logger.error("requestGitProjectInfo, msg: ${e.message}")

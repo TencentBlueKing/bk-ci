@@ -190,16 +190,14 @@ class ManualTriggerService @Autowired constructor(
         buildPipeline: GitProjectPipeline,
         triggerBuildReq: TriggerBuildReq
     ) {
-        val token = oauthService.getAndCheckOauthToken(userId)
         val objects = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
-            gitToken = token.accessToken,
-            forkGitToken = null,
             gitRequestEvent = gitRequestEvent,
             isMr = false,
             originYaml = originYaml,
             filePath = buildPipeline.filePath,
             pipelineId = buildPipeline.pipelineId,
-            pipelineName = buildPipeline.displayName
+            pipelineName = buildPipeline.displayName,
+            forkGitProjectId = null
         )!!
         val parsedYaml = YamlCommonUtils.toYamlNotNull(objects.preYaml)
         val gitBuildId = gitRequestEventBuildDao.save(
