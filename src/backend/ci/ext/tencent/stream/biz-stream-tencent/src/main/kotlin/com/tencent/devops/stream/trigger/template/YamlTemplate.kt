@@ -129,7 +129,7 @@ class YamlTemplate(
         const val YAML_FORMAT_ERROR = "[%s] Format error: %s"
         const val ATTR_MISSING_ERROR = "[%s]Required attributes [%s] are missing"
         const val TEMPLATE_KEYWORDS_ERROR = "[%s]Template YAML does not meet the specification. " +
-            "The %s template can only contain parameters, resources and %s keywords"
+                "The %s template can only contain parameters, resources and %s keywords"
         const val EXTENDS_TEMPLATE_EXTENDS_ERROR = "[%s]The extends keyword cannot be nested"
         const val EXTENDS_TEMPLATE_ON_ERROR = "[%s]Triggers are not supported in the template"
         const val VALUE_NOT_IN_ENUM = "[%s][%s=%s]Parameter error, the expected value is [%s]"
@@ -582,8 +582,22 @@ class YamlTemplate(
         if (check == null) {
             return null
         }
-        val checkObject = YamlObjects.getObjectFromYaml<PreTemplateStageCheck>(fromPath, YamlUtil.toYaml(check))
         val gateList = mutableListOf<Gate>()
+
+        if (check["gates"] != null) {
+            val gates = transValue<List<Map<String, Any>>>(fromPath, TemplateType.GATE.text, check["gates"])
+            var isTemplate = false
+            gates.forEach { gate ->
+                if (TEMPLATE_KEY in gate.keys) {
+                    isTemplate = true
+                }
+            }
+            if (!isTemplate) {
+                return YamlObjects.getObjectFromYaml<PreStageCheck>(fromPath, YamlUtil.toYaml(check))
+            }
+        }
+
+        val checkObject = YamlObjects.getObjectFromYaml<PreTemplateStageCheck>(fromPath, YamlUtil.toYaml(check))
 
         checkObject.gates?.forEach { gate ->
             val toPath = gate.template
@@ -630,7 +644,8 @@ class YamlTemplate(
                         repo = checkAndGetRepo(
                             fromPath,
                             toPath.split(FILE_REPO_SPLIT)[1]
-                        ))
+                        )
+                    )
                 } else {
                     replaceResTemplateFile(
                         templateType = templateType,
@@ -756,8 +771,12 @@ class YamlTemplate(
                     val newValue = parameters[param.name]
                     if (parameters.keys.contains(valueName)) {
                         if (!param.values.isNullOrEmpty() && !param.values!!.contains(newValue)) {
-                            error(VALUE_NOT_IN_ENUM.format(fromPath, valueName, newValue,
-                                param.values!!.joinToString(",")))
+                            error(
+                                VALUE_NOT_IN_ENUM.format(
+                                    fromPath, valueName, newValue,
+                                    param.values!!.joinToString(",")
+                                )
+                            )
                         } else {
                             newParameters[index] = param.copy(default = newValue)
                         }
