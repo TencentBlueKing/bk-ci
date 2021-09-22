@@ -35,5 +35,9 @@ data class IndexBannerVO(
     @ApiModelProperty("版本体验ID", required = true)
     val experienceHashId: String,
     @ApiModelProperty("BannerUrl", required = true)
-    val bannerUrl: String
+    val bannerUrl: String,
+    @ApiModelProperty("类型", required = true)
+    val type: Int,
+    @ApiModelProperty("外部链接", required = false)
+    val externalUrl: String
 )
