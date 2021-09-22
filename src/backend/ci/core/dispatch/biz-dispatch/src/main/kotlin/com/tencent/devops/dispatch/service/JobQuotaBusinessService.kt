@@ -164,7 +164,8 @@ class JobQuotaBusinessService @Autowired constructor(
             }
 
             // 所有已经结束的耗时
-            val finishRunJobTime = getRedisStringSerializerOperation().hget(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(projectId))
+            val finishRunJobTime = getRedisStringSerializerOperation().hget(getProjectMonthRunningTimeKey(),
+                getProjectRunningTimeKey(projectId))
             runningTotalTime += (finishRunJobTime ?: "0").toLong()
 
             return runningTotalTime
@@ -234,7 +235,8 @@ class JobQuotaBusinessService @Autowired constructor(
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
                 )*/
-                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} running jobTime reach project timeLimits, now running jobTime: $runningJobTime, " +
+                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} running jobTime reach project timeLimits, " +
+                        "now running jobTime: $runningJobTime, " +
                         "timeQuota: ${timeQuota * 60 * 60}")
             }
 
@@ -249,7 +251,8 @@ class JobQuotaBusinessService @Autowired constructor(
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
                 )*/
-                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} running jobTime reach project timeThreshold, now running jobTime: $runningJobTime, " +
+                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} running jobTime reach project timeThreshold, " +
+                        "now running jobTime: $runningJobTime, " +
                         "timeQuota: ${timeQuota * 60 * 60}, timeThreshold: $timeThreshold")
             }
 
@@ -276,9 +279,13 @@ class JobQuotaBusinessService @Autowired constructor(
                     val duration: Duration = Duration.between(runningJobsRecord!!.agentStartTime, LocalDateTime.now())
 
                     // 保存构建时间，单位秒
-                    incProjectJobRunningTime(projectId, JobQuotaVmType.parse(runningJobsRecord.vmType), duration.toMillis() / 1000)
-                    LOG.info("$projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(runningJobsRecord.vmType)} >> Finish time: " +
-                            "increase ${duration.toMillis() / 1000} seconds. >>>")
+                    incProjectJobRunningTime(
+                        projectId = projectId,
+                        vmType = JobQuotaVmType.parse(runningJobsRecord.vmType),
+                        time = duration.toMillis() / 1000
+                    )
+                    LOG.info("$projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(runningJobsRecord.vmType)} >> " +
+                            "Finish time: increase ${duration.toMillis() / 1000} seconds. >>>")
 
                     // 保存构建记录
                     jobQuotaInterface.saveJobQuotaHistory(
@@ -323,7 +330,11 @@ class JobQuotaBusinessService @Autowired constructor(
                 return
             } else {
                 if (runningJobCount >= runningJobMaxSystem) {
-                    getRedisStringSerializerOperation().set(WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY, WARN_TIME_LOCK_VALUE, 86400)
+                    getRedisStringSerializerOperation().set(
+                        key = WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY,
+                        value = WARN_TIME_LOCK_VALUE,
+                        expiredInSecond = 86400
+                    )
                     LOG.info("System running job count reach max, running jobs: $runningJobCount, " +
                             "quota: $runningJobMaxSystem")
                     return
@@ -338,7 +349,11 @@ class JobQuotaBusinessService @Autowired constructor(
                 return
             } else {
                 if (runningJobCount * 100 / runningJobMaxSystem >= systemRunningJobThreshold) {
-                    getRedisStringSerializerOperation().set(WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY, WARN_TIME_LOCK_VALUE, 86400)
+                    getRedisStringSerializerOperation().set(
+                        key = WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY,
+                        value = WARN_TIME_LOCK_VALUE,
+                        expiredInSecond = 86400
+                    )
                     LOG.info("System running job count reach threshold: $runningJobCount, " +
                             "quota: $runningJobMaxSystem, threshold: $systemRunningJobThreshold send alert.")
                     return
@@ -405,12 +420,20 @@ class JobQuotaBusinessService @Autowired constructor(
             getProjectMonthRunningTimeKey(),
             getProjectRunningTimeKey(project)) ?: "0"
         val reduiceTime = (totalTime.toLong() - time.toLong())
-        getRedisStringSerializerOperation().hset(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(project), if (reduiceTime < 0) {
-            "0"
-        } else {
-            reduiceTime.toString()
-        })
-        getRedisStringSerializerOperation().hset(getProjectMonthRunningTimeKey(), getProjectVmTypeRunningTimeKey(project, vmType), "0")
+        getRedisStringSerializerOperation().hset(
+            key = getProjectMonthRunningTimeKey(),
+            hashKey = getProjectRunningTimeKey(project),
+            values = if (reduiceTime < 0) {
+                "0"
+            } else {
+                reduiceTime.toString()
+            }
+        )
+        getRedisStringSerializerOperation().hset(
+            key = getProjectMonthRunningTimeKey(),
+            hashKey = getProjectVmTypeRunningTimeKey(project, vmType),
+            values = "0"
+        )
     }
 
     /**
@@ -462,7 +485,8 @@ class JobQuotaBusinessService @Autowired constructor(
                             vmSeqId = it.vmSeqId,
                             executeCount = it.executeCount
                         )
-                        LOG.info("${it.buildId}|${it.vmSeqId} Pipeline not running, but runningJob history not deleted.")
+                        LOG.info("${it.buildId}|${it.vmSeqId} Pipeline not running, " +
+                                "but runningJob history not deleted.")
                     }
                 }
             } catch (e: Throwable) {
@@ -476,9 +500,17 @@ class JobQuotaBusinessService @Autowired constructor(
             LOG.warn("incProjectJobRunningTime, vmType is null. projectId: $projectId")
             return
         }
-        //
-        getRedisStringSerializerOperation().hIncrBy(getProjectMonthRunningTimeKey(), getProjectVmTypeRunningTimeKey(projectId, vmType), time)
-        getRedisStringSerializerOperation().hIncrBy(getProjectMonthRunningTimeKey(), getProjectRunningTimeKey(projectId), time)
+
+        getRedisStringSerializerOperation().hIncrBy(
+            key = getProjectMonthRunningTimeKey(),
+            hashKey = getProjectVmTypeRunningTimeKey(projectId, vmType),
+            delta = time
+        )
+        getRedisStringSerializerOperation().hIncrBy(
+            key = getProjectMonthRunningTimeKey(),
+            hashKey = getProjectRunningTimeKey(projectId),
+            delta = time
+        )
     }
 
     private fun getProjectMonthRunningTimeKey(month: String? = null): String {
@@ -512,34 +544,35 @@ class JobQuotaBusinessService @Autowired constructor(
 
     @Scheduled(cron = "0 0 2 * * ?")
     fun statistics() {
-//        LOG.info("Count project run time into db.")
-//        val projectSet = getRedisStringSerializerOperation().getSetMembers(QUOTA_PROJECT_ALL_KEY)
-//        if (null != projectSet && projectSet.isNotEmpty()) {
-//            val redisLock = RedisLock(getRedisStringSerializerOperation(), TIMER_COUNT_TIME_LOCK_KEY, 600L)
-//            try {
-//                val lockSuccess = redisLock.tryLock()
-//                if (lockSuccess) {
-//                    LOG.info("<<< Count project run time into db start >>>")
-//                    JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
-//                        projectSet.forEach { project ->
-//                            jobQuotaProjectRunTimeDao.add(
-//                                dslContext = dslContext,
-//                                projectId = project,
-//                                jobQuotaVmType = type,
-//                                runTime = (getRedisStringSerializerOperation().get(getProjectVmTypeRunningTimeKey(project, type))
-//                                    ?: "0").toLong()
-//                            )
-//                        }
-//                    }
-//                } else {
-//                    LOG.info("<<< Count project run time into db Has Running, Do Not Start>>>")
-//                }
-//            } catch (e: Throwable) {
-//                LOG.error("Count project run time into db exception:", e)
-//            } finally {
-//                redisLock.unlock()
-//            }
-//        }
+        LOG.info("Count project run time into db.")
+        val projectSet = getRedisStringSerializerOperation().getSetMembers(QUOTA_PROJECT_ALL_KEY)
+        if (null != projectSet && projectSet.isNotEmpty()) {
+            val redisLock = RedisLock(getRedisStringSerializerOperation(), TIMER_COUNT_TIME_LOCK_KEY, 600L)
+            try {
+                val lockSuccess = redisLock.tryLock()
+                if (lockSuccess) {
+                    LOG.info("<<< Count project run time into db start >>>")
+                    JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
+                        projectSet.forEach { project ->
+                            jobQuotaProjectRunTimeDao.add(
+                                dslContext = dslContext,
+                                projectId = project,
+                                jobQuotaVmType = type,
+                                runTime = (getRedisStringSerializerOperation()
+                                    .get(getProjectVmTypeRunningTimeKey(project, type))
+                                    ?: "0").toLong()
+                            )
+                        }
+                    }
+                } else {
+                    LOG.info("<<< Count project run time into db Has Running, Do Not Start>>>")
+                }
+            } catch (e: Throwable) {
+                LOG.error("Count project run time into db exception:", e)
+            } finally {
+                redisLock.unlock()
+            }
+        }
     }
 
     companion object {
@@ -557,7 +590,6 @@ class JobQuotaBusinessService @Autowired constructor(
         private const val WARN_TIME_LOCK_VALUE = "job_quota_warning_lock_value" // VALUE值，标志位
         private const val TIMEOUT_DAYS = 7L
         private const val CHECK_RUNNING_DAYS = 1L
-        private const val QUOTA_PROJECT_ALL_KEY = "project_time_quota_all_key"
 
         private val LOG = LoggerFactory.getLogger(JobQuotaBusinessService::class.java)
         private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
