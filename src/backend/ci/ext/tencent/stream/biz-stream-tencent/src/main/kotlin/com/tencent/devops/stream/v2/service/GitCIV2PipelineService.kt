@@ -223,8 +223,8 @@ class GitCIV2PipelineService @Autowired constructor(
                 return@forEach
             }
             val notBuild = gitRequestEventNotBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId)
-            if (notBuild != null) {
-                result[pipelineId] = notBuild.branch
+            if (!notBuild?.branch.isNullOrBlank()) {
+                result[pipelineId] = notBuild?.branch.toString()
                 return@forEach
             }
             val branch = scmService.getProjectInfo(
