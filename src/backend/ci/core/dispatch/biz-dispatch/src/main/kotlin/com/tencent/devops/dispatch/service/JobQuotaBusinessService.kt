@@ -85,8 +85,11 @@ class JobQuotaBusinessService @Autowired constructor(
             vmType = vmType
         )
 
-        LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} >>> start add running job.")
-        runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId, executeCount)
+        // 如果配额没有超限，则记录一条running job
+        if (result) {
+            LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} >>> start add running job.")
+            runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId, executeCount)
+        }
 
         checkSystemWarn(vmType)
 
