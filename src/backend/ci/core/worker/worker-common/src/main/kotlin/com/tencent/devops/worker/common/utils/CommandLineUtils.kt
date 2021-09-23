@@ -76,7 +76,7 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
+                    appendVariableToFile(executor.workingDirectory, resultLogFile, tmpLine)
                     LoggerService.addNormalLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
