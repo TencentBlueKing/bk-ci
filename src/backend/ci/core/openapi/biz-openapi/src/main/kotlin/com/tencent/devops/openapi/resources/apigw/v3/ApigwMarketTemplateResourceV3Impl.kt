@@ -57,17 +57,19 @@ class ApigwMarketTemplateResourceV3Impl @Autowired constructor(
         userId: String,
         installTemplateReq: InstallTemplateReq
     ): Result<Map<String, String>> {
-        val install = client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq).data ?: false
+        val install = client.get(ServiceTemplateResource::class)
+            .installTemplate(userId, installTemplateReq).data ?: false
         return if (install) {
             val projectTemplateMap = mutableMapOf<String, String>()
-            val templateProjectMap = client.get(ServicePTemplateResourceImpl::class).getTemplateIdBySrcCode(installTemplateReq.templateCode).data
+            val templateProjectMap = client.get(ServicePTemplateResourceImpl::class)
+                .getTemplateIdBySrcCode(installTemplateReq.templateCode).data
             if (templateProjectMap.isNullOrEmpty()) {
                 return Result(emptyMap())
             }
             val projectSet = projectTemplateMap.keys
             installTemplateReq.projectCodeList.forEach {
                 if (projectSet.contains(it)) {
-                    projectTemplateMap[it] = templateProjectMap[it]
+                    projectTemplateMap[it] = templateProjectMap[it]!!
                 }
             }
             Result(projectTemplateMap)
