@@ -32,8 +32,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
@@ -45,6 +47,8 @@ class JobQuotaService constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(JobQuotaService::class.java)
+        private const val RETRY_TIME = 5
+        private const val RETRY_DELTA = 60 * 1000
     }
 
     @Value("\${dispatch.jobQuota.enable:false}")
@@ -67,7 +71,11 @@ class JobQuotaService constructor(
                 vmType = vmType
             )
 
-            if (checkResult != null && !checkResult) {
+            if (checkResult == null || checkResult) {
+                return
+            }
+
+            if (!checkResult && startupEvent.retryTime > RETRY_TIME) {
                 logger.error("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Job quota excess.")
                 throw BuildFailureException(
                     errorType = ErrorType.USER,
@@ -75,6 +83,22 @@ class JobQuotaService constructor(
                     formatErrorMessage = "JOB配额超限",
                     errorMessage = "JOB配额超限"
                 )
+            } else {
+                logger.info("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Job quota excess. delay: $RETRY_DELTA " +
+                        "and retry. retryTime: ${startupEvent.retryTime}")
+
+                buildLogPrinter.addYellowLine(
+                    buildId = buildId,
+                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，" +
+                            "将延迟 ${RETRY_DELTA / 1000}s 后重试，当前重试次数：${startupEvent.retryTime}",
+                    tag = VMUtils.genStartVMTaskId(containerId),
+                    jobId = containerHashId,
+                    executeCount = executeCount ?: 1
+                )
+
+                startupEvent.retryTime += 1
+                startupEvent.delayMills = RETRY_DELTA
+                SpringContextUtil.getBean(DispatchService::class.java).redispatch(startupEvent)
             }
 
             logger.info("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Check job quota success.")
