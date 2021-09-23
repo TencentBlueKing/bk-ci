@@ -344,6 +344,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
                 pipelineTaskService.executePause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)
                 LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom} cfg pause, shutdown agent")
+                pipelineEventDispatcher.dispatch(PipelineBuildStatusBroadCastEvent(
+                    source = "TaskPause-${task.containerId}-${task.buildId}",
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    userId = task.starter,
+                    buildId = task.buildId,
+                    taskId = task.taskId,
+                    stageId = task.stageId,
+                    actionType = ActionType.REFRESH
+                ))
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             else -> {

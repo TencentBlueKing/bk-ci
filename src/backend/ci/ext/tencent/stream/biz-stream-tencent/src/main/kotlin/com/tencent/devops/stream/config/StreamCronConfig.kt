@@ -25,41 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.api
+package com.tencent.devops.stream.config
 
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@Api(tags = ["EXTERNAL_STREAM"], description = "外部-STREAM资源获取")
-@Path("/external/stream")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalStreamBadgeResource {
+@Component
+class StreamCronConfig {
 
-    @ApiOperation("获取流水线徽章")
-    @Produces("image/svg+xml")
-    @GET
-    @Path("/projects/{gitProjectId}/pipelines/badge")
-    fun getPipelineBadge(
-        @ApiParam("Git仓库ID", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
-        @ApiParam("流水线文件名称", required = true)
-        @QueryParam("file_path")
-        filePath: String,
-        @ApiParam("分支名称", required = false)
-        @QueryParam("branch")
-        branch: String?,
-        @ApiParam("触发方式", required = false)
-        @QueryParam("object_kind")
-        objectKind: String?
-    ): String
+    @Value("\${cron.clear.maxThreadHandleProjectNum:5}")
+    val maxThreadHandleProjectNum: Int = 5
+
+    @Value("\${cron.clear.maxEveryProjectHandleNum:5}")
+    val maxEveryProjectHandleNum: Int = 5
+
+    @Value("\${cron.clear.maxKeepNum:10000}")
+    val maxKeepNum: Int = 10000
 }

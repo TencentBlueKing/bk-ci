@@ -25,41 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.api
+package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
-@Api(tags = ["EXTERNAL_STREAM"], description = "外部-STREAM资源获取")
-@Path("/external/stream")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalStreamBadgeResource {
-
-    @ApiOperation("获取流水线徽章")
-    @Produces("image/svg+xml")
-    @GET
-    @Path("/projects/{gitProjectId}/pipelines/badge")
-    fun getPipelineBadge(
-        @ApiParam("Git仓库ID", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
-        @ApiParam("流水线文件名称", required = true)
-        @QueryParam("file_path")
-        filePath: String,
-        @ApiParam("分支名称", required = false)
-        @QueryParam("branch")
-        branch: String?,
-        @ApiParam("触发方式", required = false)
-        @QueryParam("object_kind")
-        objectKind: String?
-    ): String
-}
+data class StreamContext(
+    val gitEvent: GitEvent,
+    val requestEvent: GitRequestEvent,
+    val streamSetting: GitCIBasicSetting
+)
