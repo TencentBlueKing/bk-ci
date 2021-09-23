@@ -85,8 +85,10 @@ interface BuildListener {
 
             // 校验流水线是否还在运行中
             dispatchService.checkRunning(event)
-            // 校验构建资源配额是否超限
-            jobQuotaService.checkAndAddRunningJob(event, getVmType())
+            // 校验构建资源配额是否超限，配额超限后会放进延迟队列
+            if (!jobQuotaService.checkAndAddRunningJob(event, getVmType())) {
+                return
+            }
 
             val dispatchMessage = dispatchService.buildDispatchMessage(event)
             onStartup(dispatchMessage)

@@ -54,10 +54,10 @@ class JobQuotaService constructor(
     @Value("\${dispatch.jobQuota.enable:false}")
     private val jobQuotaEnable: Boolean = false
 
-    fun checkAndAddRunningJob(startupEvent: PipelineAgentStartupEvent, vmType: JobQuotaVmType?) {
+    fun checkAndAddRunningJob(startupEvent: PipelineAgentStartupEvent, vmType: JobQuotaVmType?): Boolean {
         if (null == vmType || !jobQuotaEnable) {
             logger.info("JobQuota not enabled or VmType is null, job quota check will be skipped.")
-            return
+            return true
         }
 
         with(startupEvent) {
@@ -72,7 +72,8 @@ class JobQuotaService constructor(
             )
 
             if (checkResult == null || checkResult) {
-                return
+                logger.info("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Check job quota success.")
+                return true
             }
 
             if (!checkResult && startupEvent.retryTime > RETRY_TIME) {
@@ -99,9 +100,9 @@ class JobQuotaService constructor(
                 startupEvent.retryTime += 1
                 startupEvent.delayMills = RETRY_DELTA
                 SpringContextUtil.getBean(DispatchService::class.java).redispatch(startupEvent)
-            }
 
-            logger.info("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Check job quota success.")
+                return false
+            }
         }
     }
 
