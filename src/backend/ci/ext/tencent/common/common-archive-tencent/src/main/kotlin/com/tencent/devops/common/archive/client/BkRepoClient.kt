@@ -1172,7 +1172,7 @@ class BkRepoClient constructor(
     ) {
         logger.info("update , userId:$userId, projectId:$projectId , repo:$repoName , path:$path , expires:$expires")
         val request = Request.Builder()
-            .url("${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/update/${projectId}/${repoName}/${path}")
+            .url("${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/update/$projectId/$repoName/$path")
             .header(BK_REPO_UID, userId)
             .post(
                 RequestBody.create(
