@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -80,5 +81,5 @@ interface ApigwMarketTemplateResourceV3 {
         userId: String,
         @ApiParam("安装研发商店模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
-    ): Result<Map<String, String>>
+    ): Result<Map<String, PipelineTemplateInfo>>
 }

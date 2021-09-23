@@ -80,6 +80,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
@@ -2062,11 +2063,18 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
-    fun getTemplateIdByTemplateCode(templateCode: String): Map<String/* projectId */, String/* templateId */> {
-        val templateInfo = templateDao.listTemplateReference(dslContext, templateCode)
-        val templateProjectMap = mutableMapOf<String, String>()
-        templateInfo.forEach {
-            templateProjectMap[it.projectId] = it.id
+    fun getTemplateIdByTemplateCode(templateCode: String): Map<String/* projectId */, PipelineTemplateInfo> {
+        val templateInfos = templateDao.listTemplateReference(dslContext, templateCode)
+        val templateProjectMap = mutableMapOf<String, PipelineTemplateInfo>()
+        templateInfos.forEach {
+            val templateInfo = PipelineTemplateInfo(
+                projectId = it.projectId,
+                templateId = it.id,
+                templateName = it.templateName,
+                versionName = it.versionName,
+                srcTemplateId = it.srcTemplateId
+            )
+            templateProjectMap[it.projectId] = templateInfo
         }
         return templateProjectMap
     }

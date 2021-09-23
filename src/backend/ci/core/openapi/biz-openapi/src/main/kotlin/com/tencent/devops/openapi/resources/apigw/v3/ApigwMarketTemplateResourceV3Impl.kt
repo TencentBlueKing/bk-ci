@@ -31,6 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwMarketTemplateResourceV3
 import com.tencent.devops.process.api.template.ServicePTemplateResource
+import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import org.slf4j.LoggerFactory
@@ -56,11 +57,11 @@ class ApigwMarketTemplateResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         installTemplateReq: InstallTemplateReq
-    ): Result<Map<String, String>> {
+    ): Result<Map<String, PipelineTemplateInfo>> {
         val install = client.get(ServiceTemplateResource::class)
             .installTemplate(userId, installTemplateReq).data ?: false
         return if (install) {
-            val projectTemplateMap = mutableMapOf<String, String>()
+            val projectTemplateMap = mutableMapOf<String, PipelineTemplateInfo>()
             val templateProjectMap = client.get(ServicePTemplateResource::class)
                 .getTemplateIdBySrcCode(installTemplateReq.templateCode).data
             if (templateProjectMap.isNullOrEmpty()) {
