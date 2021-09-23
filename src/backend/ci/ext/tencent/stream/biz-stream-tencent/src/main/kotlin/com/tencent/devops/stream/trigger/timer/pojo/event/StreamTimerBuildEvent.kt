@@ -46,7 +46,7 @@ data class StreamTimerBuildEvent(
     override val userId: String,
     val channelCode: ChannelCode,
     val gitProjectId: Long,
-    val branchs: List<String>,
+    val branchs: List<String>?,
     val always: Boolean,
     val eventId: Long,
     val originYaml: String,

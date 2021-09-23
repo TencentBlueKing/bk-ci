@@ -41,6 +41,7 @@ import com.tencent.devops.stream.trigger.ScheduleTriggerService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimerBranch
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerBranchService
+import com.tencent.devops.stream.v2.service.ScmService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -54,7 +55,8 @@ class StreamTimerBuildListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val streamTimerBranchService: StreamTimerBranchService,
     private val client: Client,
-    private val scheduleTriggerService: ScheduleTriggerService
+    private val scheduleTriggerService: ScheduleTriggerService,
+    private val scmService: ScmService
 ) : BaseListener<StreamTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: StreamTimerBuildEvent) {
@@ -72,14 +74,27 @@ class StreamTimerBuildListener @Autowired constructor(
                     return
                 }
 
-                branchs.forEach { branch ->
+                val token = gitTokenResult.data!!
+
+                val realBranches = if (branchs.isNullOrEmpty()) {
+                    listOf(
+                        scmService.getProjectInfoRetry(
+                            token = token.accessToken,
+                            gitProjectId = event.gitProjectId.toString()
+                        ).defaultBranch!!
+                    )
+                } else {
+                    branchs
+                }
+
+                realBranches.forEach { branch ->
                     if (always) {
                         timerTrigger(branch = branch)
                     } else {
                         scmChangeTimerTrigger(
                             gitCIConf = gitCIConfResult.data!!,
                             branch = branch,
-                            token = gitTokenResult.data!!.accessToken
+                            token = token.accessToken
                         )
                     }
                 }

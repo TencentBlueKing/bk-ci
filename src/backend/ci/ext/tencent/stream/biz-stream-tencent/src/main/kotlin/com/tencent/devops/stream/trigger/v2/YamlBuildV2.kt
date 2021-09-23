@@ -140,7 +140,8 @@ class YamlBuildV2 @Autowired constructor(
                         userId = event.userId,
                         crontabExpressions = listOf(yaml.triggerOn?.schedules?.cron.toString()),
                         gitProjectId = event.gitProjectId,
-                        branchs = yaml.triggerOn?.schedules?.branches ?: listOf(event.branch),
+                        // 未填写则在每次触发拉默认分支
+                        branchs = yaml.triggerOn?.schedules?.branches,
                         always = yaml.triggerOn?.schedules?.always ?: false,
                         channelCode = channelCode,
                         eventId = event.id!!,

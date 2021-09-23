@@ -65,7 +65,11 @@ class StreamTimerDao {
                     userId,
                     JsonUtil.toJson(crontabExpressions),
                     gitProjectId,
-                    JsonUtil.toJson(branchs),
+                    if (branchs.isNullOrEmpty()) {
+                        null
+                    } else {
+                        JsonUtil.toJson(branchs)
+                    },
                     always,
                     channelCode.name,
                     eventId,
@@ -76,7 +80,14 @@ class StreamTimerDao {
                     .set(CREATOR, userId)
                     .set(CRONTAB, JsonUtil.toJson(crontabExpressions))
                     .set(GIT_PROJECT_ID, gitProjectId)
-                    .set(BRANCHS, JsonUtil.toJson(branchs))
+                    .set(
+                        BRANCHS,
+                        if (branchs.isNullOrEmpty()) {
+                            null
+                        } else {
+                            JsonUtil.toJson(branchs)
+                        }
+                    )
                     .set(ALWAYS, always)
                     .set(CHANNEL, channelCode.name)
                     .set(EVENT_ID, eventId)
