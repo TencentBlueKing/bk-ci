@@ -88,6 +88,7 @@ class QualityRuleBuildHisService constructor(
         }
     }
 
+    @Suppress("ReturnCount")
     private fun checkThresholdType(
         requestIndicator: RuleCreateRequestV3.CreateRequestIndicator,
         indicator: QualityIndicator
