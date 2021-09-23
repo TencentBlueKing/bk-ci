@@ -77,7 +77,7 @@ object CommandLineUtils {
                 }
                 if (print2Logger) {
                     appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
-                    LoggerService.addNormalLine("[$level]$tmpLine")
+                    LoggerService.addNormalLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
                 }

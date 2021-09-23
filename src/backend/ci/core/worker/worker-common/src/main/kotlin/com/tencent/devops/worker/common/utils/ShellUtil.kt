@@ -157,19 +157,11 @@ object ShellUtil {
             buildEnvs.forEach { buildEnv ->
                 val home = File(getEnvironmentPathPrefix(), "${buildEnv.name}/${buildEnv.version}/")
                 if (!home.exists()) {
-                    LoggerService.addNormalLine(
-                        Ansi().fgRed().a(
-                            "环境变量路径(${home.absolutePath})不存在"
-                        ).reset().toString()
-                    )
+                    LoggerService.addErrorLine("环境变量路径(${home.absolutePath})不存在")
                 }
                 val envFile = File(home, buildEnv.binPath)
                 if (!envFile.exists()) {
-                    LoggerService.addNormalLine(
-                        Ansi().fgRed().a(
-                            "环境变量路径(${envFile.absolutePath})不存在"
-                        ).reset().toString()
-                    )
+                    LoggerService.addErrorLine("环境变量路径(${envFile.absolutePath})不存在")
                     return@forEach
                 }
                 // command.append("export $name=$path")

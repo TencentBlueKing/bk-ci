@@ -79,7 +79,7 @@ class RevertUpdateTask constructor(
     override fun preUpdate() {
         if (workspace.exists()) {
             if (!File(workspace, ".svn").exists()) {
-                LoggerService.addNormalLine(Ansi().fgYellow().a(".svn file is not exist").reset().toString())
+                LoggerService.addWarnLine(".svn file is not exist")
                 return
             }
             val client = SvnUtils.getClientManager(svnUrl, username, privateKey, passPhrase).wcClient

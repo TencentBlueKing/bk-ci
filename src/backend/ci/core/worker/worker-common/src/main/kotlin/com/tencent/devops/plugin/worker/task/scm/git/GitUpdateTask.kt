@@ -221,13 +221,8 @@ open class GitUpdateTask constructor(
             return saveCommit(git, repo, pipelineId, buildId, repositoryConfig, gitType)
         } catch (t: Throwable) {
             logger.warn("Fail to perform git code($url)", t)
-            LoggerService.addNormalLine(
-                Ansi().fgRed().a(
-                    "Fail to pull git($url) code because of (${ExceptionUtils.getStackTrace(
-                        t
-                    )})"
-                ).reset().toString()
-            )
+            LoggerService.addErrorLine("Fail to pull git($url) code because of " +
+                "(${ExceptionUtils.getStackTrace(t)})")
             throw t
         }
     }
