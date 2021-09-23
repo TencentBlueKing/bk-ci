@@ -29,8 +29,6 @@ package com.tencent.devops.store.api.template
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
@@ -62,7 +60,6 @@ interface UserTemplateReleaseResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("模板代码", required = true)
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         @PathParam("templateCode")
         templateCode: String,
         @ApiParam("关联模板请求报文体", required = true)
