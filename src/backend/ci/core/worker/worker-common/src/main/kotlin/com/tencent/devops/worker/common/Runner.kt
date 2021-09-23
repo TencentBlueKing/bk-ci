@@ -326,9 +326,9 @@ object Runner {
                 }
             }
             if (v.valueType == BuildFormPropertyType.PASSWORD) {
-                LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a("******").toString())
+                LoggerService.addNormalLine("${v.key}: ******")
             } else {
-                LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a(v.value.toString()).toString())
+                LoggerService.addNormalLine("${v.key}: ${v.value}")
             }
             logger.info("${v.key}: ${v.value}")
         }
