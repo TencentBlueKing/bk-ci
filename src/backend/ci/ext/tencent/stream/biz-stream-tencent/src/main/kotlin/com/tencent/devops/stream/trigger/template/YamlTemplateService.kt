@@ -105,11 +105,10 @@ class YamlTemplateService @Autowired constructor(
         }
         if (personalAccessToken.isNullOrBlank()) {
             val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
-            val defaultBranch = getDefaultBranch(oAuthToken, targetRepo!!, true)
             return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
                 token = oAuthToken,
-                gitProjectId = targetRepo,
-                ref = ref ?: defaultBranch,
+                gitProjectId = targetRepo!!,
+                ref = ref ?: getDefaultBranch(oAuthToken, targetRepo, true),
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
             ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) })
@@ -127,11 +126,10 @@ class YamlTemplateService @Autowired constructor(
             } else {
                 key
             }
-            val defaultBranch = getDefaultBranch(personToken, targetRepo!!, false)
             return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
                 token = personToken,
-                gitProjectId = targetRepo,
-                ref = ref ?: defaultBranch,
+                gitProjectId = targetRepo!!,
+                ref = ref ?: getDefaultBranch(personToken, targetRepo, false),
                 fileName = templateDirectory + fileName,
                 useAccessToken = false
             ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) })
