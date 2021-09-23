@@ -56,7 +56,8 @@ class StreamTimerDao {
                     BRANCHS,
                     ALWAYS,
                     CHANNEL,
-                    EVENT_ID
+                    EVENT_ID,
+                    ORIGIN_YAML
                 ).values(
                     projectId,
                     pipelineId,
@@ -67,7 +68,8 @@ class StreamTimerDao {
                     JsonUtil.toJson(branchs),
                     always,
                     channelCode.name,
-                    eventId
+                    eventId,
+                    originYaml
                 )
                     .onDuplicateKeyUpdate()
                     .set(CREATE_TIME, LocalDateTime.now())
@@ -78,6 +80,7 @@ class StreamTimerDao {
                     .set(ALWAYS, always)
                     .set(CHANNEL, channelCode.name)
                     .set(EVENT_ID, eventId)
+                    .set(ORIGIN_YAML, originYaml)
                     .execute()
             }
         }
