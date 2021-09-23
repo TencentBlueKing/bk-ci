@@ -66,7 +66,7 @@ class ApigwMarketTemplateResourceV3Impl @Autowired constructor(
             if (templateProjectMap.isNullOrEmpty()) {
                 return Result(emptyMap())
             }
-            val projectSet = projectTemplateMap.keys
+            val projectSet = templateProjectMap.keys
             installTemplateReq.projectCodeList.forEach {
                 if (projectSet.contains(it)) {
                     projectTemplateMap[it] = templateProjectMap[it]!!
