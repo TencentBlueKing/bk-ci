@@ -81,5 +81,5 @@ interface ApigwMarketTemplateResourceV3 {
         userId: String,
         @ApiParam("安装研发商店模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
-    ): Result<Map<String, PipelineTemplateInfo>>
+    ): Result<List<PipelineTemplateInfo>>
 }

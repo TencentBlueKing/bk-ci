@@ -69,8 +69,11 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         return templateFacadeService.getSrcTemplateCodes(projectId)
     }
 
-    override fun getTemplateIdBySrcCode(srcTemplateId: String): Result<Map<String, PipelineTemplateInfo>> {
-        return Result(templateFacadeService.getTemplateIdByTemplateCode(srcTemplateId))
+    override fun getTemplateIdBySrcCode(
+        srcTemplateId: String,
+        projectIds: List<String>
+    ): Result<List<PipelineTemplateInfo>> {
+        return Result(templateFacadeService.getTemplateIdByTemplateCode(srcTemplateId, projectIds))
     }
 
     override fun listTemplate(

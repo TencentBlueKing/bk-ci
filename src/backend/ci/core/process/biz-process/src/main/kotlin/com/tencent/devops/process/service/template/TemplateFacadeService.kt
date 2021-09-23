@@ -2063,20 +2063,19 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
-    fun getTemplateIdByTemplateCode(templateCode: String): Map<String/* projectId */, PipelineTemplateInfo> {
-        val templateInfos = templateDao.listTemplateReference(dslContext, templateCode)
-        val templateProjectMap = mutableMapOf<String, PipelineTemplateInfo>()
+    fun getTemplateIdByTemplateCode(templateCode: String, projectIds: List<String>): List<PipelineTemplateInfo> {
+        val templateInfos = templateDao.listTemplateReferenceByProjects(dslContext, templateCode, projectIds)
+        val templateList = mutableListOf<PipelineTemplateInfo>()
         templateInfos.forEach {
-            val templateInfo = PipelineTemplateInfo(
+            templateList.add(PipelineTemplateInfo(
                 projectId = it.projectId,
                 templateId = it.id,
                 templateName = it.templateName,
                 versionName = it.versionName,
                 srcTemplateId = it.srcTemplateId
-            )
-            templateProjectMap[it.projectId] = templateInfo
+            ))
         }
-        return templateProjectMap
+        return templateList
     }
 
     companion object {
