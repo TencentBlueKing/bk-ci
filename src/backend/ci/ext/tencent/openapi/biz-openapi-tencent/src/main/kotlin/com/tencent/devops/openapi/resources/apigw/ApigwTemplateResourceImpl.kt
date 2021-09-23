@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwTemplateResource
-import com.tencent.devops.process.api.template.ServiceTemplateResource
+import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
@@ -50,7 +50,7 @@ class ApigwTemplateResourceImpl @Autowired constructor(private val client: Clien
         storeFlag: Boolean?
     ): Result<TemplateListModel> {
         logger.info("get project's pipeline all template, projectId($projectId) by user $userId")
-        return client.get(ServiceTemplateResource::class).listTemplate(
+        return client.get(ServicePTemplateResource::class).listTemplate(
             userId = userId,
             projectId = projectId,
             templateType = templateType,
@@ -67,7 +67,7 @@ class ApigwTemplateResourceImpl @Autowired constructor(private val client: Clien
         version: Long?
     ): Result<TemplateModelDetail> {
         logger.info("get project's pipeline template, projectId($projectId) templateId($templateId) version($version) by $userId")
-        return client.get(ServiceTemplateResource::class).getTemplate(
+        return client.get(ServicePTemplateResource::class).getTemplate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
@@ -82,7 +82,7 @@ class ApigwTemplateResourceImpl @Autowired constructor(private val client: Clien
         projectId: String
     ): Result<OptionalTemplateList> {
         logger.info("get project's pipeline all template, projectId($projectId) by user $userId")
-        return client.get(ServiceTemplateResource::class).listAllTemplate(
+        return client.get(ServicePTemplateResource::class).listAllTemplate(
             userId = userId,
             projectId = projectId,
             templateType = null
