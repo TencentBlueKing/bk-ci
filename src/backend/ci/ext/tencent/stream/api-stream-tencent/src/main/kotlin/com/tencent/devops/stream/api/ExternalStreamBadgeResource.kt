@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.api
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.pojo.v2.badge.StreamPipelineBadgeInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -46,7 +44,8 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalStreamBadgeResource {
 
-    @ApiOperation("获取流水线徽章信息")
+    @ApiOperation("获取流水线徽章")
+    @Produces("image/svg+xml")
     @GET
     @Path("/projects/{gitProjectId}/pipelines/badge")
     fun getPipelineBadge(
@@ -62,5 +61,5 @@ interface ExternalStreamBadgeResource {
         @ApiParam("触发方式", required = false)
         @QueryParam("object_kind")
         objectKind: String?
-    ): Result<StreamPipelineBadgeInfo>
+    ): String
 }
