@@ -70,7 +70,8 @@ class TencentApigwApiFilter(
         DEFAULT("/api/apigw/", true),
         USER("/api/apigw-user/", true),
         APP("/api/apigw-app/", true),
-        OP("/api/op/", false);
+        OP("/api/op/", false),
+        SWAGGER("/api/swagger.json", false);
 
         companion object {
             fun parseType(path: String): ApiType? {

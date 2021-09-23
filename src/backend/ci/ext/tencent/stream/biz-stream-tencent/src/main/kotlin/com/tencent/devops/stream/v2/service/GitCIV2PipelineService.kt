@@ -38,6 +38,8 @@ import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.stream.dao.GitRequestEventBuildDao
+import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,6 +50,8 @@ class GitCIV2PipelineService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineResourceDao: GitPipelineResourceDao,
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val scmService: ScmService,
     private val redisOperation: RedisOperation,
     private val websocketService: GitCIV2WebsocketService
@@ -82,6 +86,8 @@ class GitCIV2PipelineService @Autowired constructor(
             records = emptyList()
         )
         val count = pipelineResourceDao.getPipelineCount(dslContext, gitProjectId)
+        // 获取流水线最后一次构建分支
+        val pipelineBranchMap = getPipelineLastBuildBranch(gitProjectId, pipelines.map { it.pipelineId }.toSet())
         return Page(
             count = count.toLong(),
             page = pageNotNull,
@@ -95,7 +101,8 @@ class GitCIV2PipelineService @Autowired constructor(
                     displayName = it.displayName,
                     enabled = it.enabled,
                     creator = it.creator,
-                    latestBuildInfo = null
+                    latestBuildInfo = null,
+                    latestBuildBranch = pipelineBranchMap[it.pipelineId] ?: "master"
                 )
             }
         )
@@ -129,7 +136,8 @@ class GitCIV2PipelineService @Autowired constructor(
                 displayName = it.displayName,
                 enabled = it.enabled,
                 creator = it.creator,
-                latestBuildInfo = null
+                latestBuildInfo = null,
+                latestBuildBranch = null
             )
         }
     }
@@ -152,7 +160,8 @@ class GitCIV2PipelineService @Autowired constructor(
             displayName = pipeline.displayName,
             enabled = pipeline.enabled,
             creator = pipeline.creator,
-            latestBuildInfo = null
+            latestBuildInfo = null,
+            latestBuildBranch = null
         )
     }
 
@@ -210,6 +219,33 @@ class GitCIV2PipelineService @Autowired constructor(
             ref = ref,
             useAccessToken = true
         )
+    }
+
+    private fun getPipelineLastBuildBranch(
+        gitProjectId: Long,
+        pipelineIds: Set<String>
+    ): Map<String, String> {
+        val result = mutableMapOf<String, String>()
+        val pipelineBuild = gitRequestEventBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, pipelineIds)
+            ?.associate { it.pipelineId to it.branch }
+        pipelineIds.forEach { pipelineId ->
+            if (!pipelineBuild?.get(pipelineId).isNullOrBlank()) {
+                result[pipelineId] = pipelineBuild?.get(pipelineId).toString()
+                return@forEach
+            }
+            val notBuild = gitRequestEventNotBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId)
+            if (!notBuild?.branch.isNullOrBlank()) {
+                result[pipelineId] = notBuild?.branch.toString()
+                return@forEach
+            }
+            val branch = scmService.getProjectInfo(
+                token = scmService.getToken(gitProjectId.toString()).accessToken,
+                gitProjectId = gitProjectId.toString(),
+                useAccessToken = true
+            )?.defaultBranch ?: "master"
+            result[pipelineId] = branch
+        }
+        return result
     }
 
     private fun getLock(gitProjectId: Long, pipelineId: String): RedisLock {

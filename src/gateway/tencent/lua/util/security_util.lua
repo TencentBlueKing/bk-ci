@@ -32,6 +32,7 @@ function _M:isSafe()
         and string.find(path, "/process/api/external/scm/codetgit/commit") == nil -- TGit回调
         and string.find(path, "/external/api/external/github") == nil -- Github回调
         and string.find(path, "/process/api/external/pipelines/projects/.+/.+/badge") == nil -- 勋章
+        and string.find(path, "/stream/api/external/stream/projects/.+/.+/badge") == nil -- stream勋章
         then
             ngx.log(ngx.ERR, "it is unsafe , host : ", host, " , path : ", path)
             return false

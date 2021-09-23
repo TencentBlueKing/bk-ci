@@ -31,7 +31,11 @@ import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.model.stream.tables.TGitPipelineResource
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.pojo.PipelineSortType
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -279,6 +283,36 @@ class GitPipelineResourceDao {
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(FILE_PATH.eq(filePath))
                 .fetchAny()
+        }
+    }
+
+    fun getMinByGitProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long
+    ): Long {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.select(DSL.min(ID))
+                .from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun getPipelineIdListByProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        minId: Long,
+        limit: Long
+    ): Result<out Record>? {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(GIT_PROJECT_ID.eq(gitProjectId))
+            conditions.add(ID.ge(minId))
+            return dslContext.select(PIPELINE_ID).from(this)
+                .where(conditions)
+                .orderBy(ID.asc())
+                .limit(limit)
+                .fetch()
         }
     }
 }

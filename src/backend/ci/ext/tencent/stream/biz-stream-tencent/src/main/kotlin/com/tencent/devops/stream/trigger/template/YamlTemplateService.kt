@@ -28,13 +28,17 @@
 package com.tencent.devops.stream.trigger.template
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.common.exception.YamlBlankException
+import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.v2.service.OauthService
 import com.tencent.devops.stream.v2.service.ScmService
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -42,13 +46,12 @@ import org.springframework.stereotype.Service
 class YamlTemplateService @Autowired constructor(
     private val oauthService: OauthService,
     private val scmService: ScmService,
-    private val ticketService: TicketService
+    private val ticketService: TicketService,
+    private val yamlVersion: YamlVersion
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(YamlTemplateService::class.java)
         private const val templateDirectory = ".ci/templates/"
-        const val NOT_FIND_REPO = "[%s] Repository does not exist"
         const val UN_SUPPORT_TICKET_ERROR = "Unsupported ticket type: [%s]"
         const val ONLY_SUPPORT_ERROR = "Only supports using the settings context to access credentials"
     }
@@ -64,27 +67,49 @@ class YamlTemplateService @Autowired constructor(
     @Throws(YamlBlankException::class, YamlFormatException::class, JsonProcessingException::class)
     fun getTemplate(
         token: String?,
+        forkToken: String?,
         gitProjectId: Long,
         targetRepo: String?,
-        ref: String = "master",
+        ref: String?,
         personalAccessToken: String?,
-        fileName: String
+        fileName: String,
+        changeSet: Set<String>?,
+        event: GitEvent?
     ): String {
         if (token != null) {
-            return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
-                token = token,
-                gitProjectId = gitProjectId.toString(),
-                ref = ref,
-                fileName = templateDirectory + fileName,
-                useAccessToken = true
-            ).ifBlank { throw YamlBlankException(templateDirectory + fileName) })
+            // 获取触发库的模板需要对比版本问题
+            val content = if (event is GitMergeRequestEvent && event.object_attributes.action !=
+                TGitMergeActionKind.MERGE.value
+            ) {
+                val (result, orgYaml) = yamlVersion.checkYmlVersion(
+                    mrEvent = event,
+                    targetGitToken = token,
+                    sourceGitToken = forkToken,
+                    filePath = templateDirectory + fileName,
+                    changeSet = changeSet ?: emptySet()
+                )
+                if (!result) {
+                    throw YamlBehindException(templateDirectory + fileName)
+                }
+                orgYaml
+            } else {
+                scmService.getYamlFromGit(
+                    token = forkToken ?: token,
+                    gitProjectId = gitProjectId.toString(),
+                    ref = ref!!,
+                    fileName = templateDirectory + fileName,
+                    useAccessToken = true
+                ).ifBlank { throw YamlBlankException(templateDirectory + fileName) }
+            }
+            return ScriptYmlUtils.formatYaml(content)
         }
         if (personalAccessToken.isNullOrBlank()) {
             val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
+            val defaultBranch = getDefaultBranch(oAuthToken, targetRepo!!, true)
             return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
                 token = oAuthToken,
-                gitProjectId = targetRepo!!,
-                ref = ref,
+                gitProjectId = targetRepo,
+                ref = ref ?: defaultBranch,
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
             ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) })
@@ -102,14 +127,19 @@ class YamlTemplateService @Autowired constructor(
             } else {
                 key
             }
+            val defaultBranch = getDefaultBranch(personToken, targetRepo!!, false)
             return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
                 token = personToken,
-                gitProjectId = targetRepo!!,
-                ref = ref,
+                gitProjectId = targetRepo,
+                ref = ref ?: defaultBranch,
                 fileName = templateDirectory + fileName,
                 useAccessToken = false
             ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) })
         }
+    }
+
+    private fun getDefaultBranch(token: String, gitProjectId: String, useAccessToken: Boolean): String {
+        return scmService.getProjectInfoRetry(token, gitProjectId, useAccessToken).defaultBranch!!
     }
 
     private fun getKey(personalAccessToken: String): Pair<Boolean, String> {

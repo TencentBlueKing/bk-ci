@@ -32,8 +32,10 @@ import com.tencent.devops.stream.pojo.BranchBuilds
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -575,6 +577,70 @@ class GitRequestEventBuildDao {
             return dslContext.selectCount().from(this)
                 .where(BUILD_ID.eq(buildId))
                 .fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
+    fun getBuildCountByPipelineId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String
+    ): Long {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectCount().from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun getBuildIdAndEventIdByPipelineId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String,
+        handlePageSize: Int
+    ): Result<out Record>? {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(GIT_PROJECT_ID.eq(gitProjectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            val baseStep = dslContext.select(BUILD_ID, EVENT_ID)
+                .from(this)
+                .where(conditions)
+                .orderBy(ID.asc())
+            return baseStep.limit(handlePageSize).fetch()
+        }
+    }
+
+    fun deleteByBuildId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String,
+        buildId: String
+    ): Int {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.deleteFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun getPipelinesLastBuild(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineIds: Set<String>
+    ): List<TGitRequestEventBuildRecord>? {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(
+                    ID.`in`(
+                        dslContext.select(DSL.max(ID))
+                            .from(this)
+                            .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
+                    )
+                ).fetch()
         }
     }
 }

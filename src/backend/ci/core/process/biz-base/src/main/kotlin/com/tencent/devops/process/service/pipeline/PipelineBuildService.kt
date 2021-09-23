@@ -261,7 +261,13 @@ class PipelineBuildService(
                 .plus(BuildParameters(PIPELINE_START_TYPE, startType.name))
                 .plus(BuildParameters(PIPELINE_START_CHANNEL, channelCode.name))
                 .plus(BuildParameters(PIPELINE_START_MOBILE, isMobile))
-                .plus(BuildParameters(PIPELINE_NAME, readyToBuildPipelineInfo.pipelineName))
+                .plus(
+                    if (startValues?.containsKey(PIPELINE_NAME) == true) {
+                        BuildParameters(PIPELINE_NAME, startValues[PIPELINE_NAME].toString())
+                    } else {
+                        BuildParameters(PIPELINE_NAME, readyToBuildPipelineInfo.pipelineName)
+                    }
+                )
                 .plus(BuildParameters(PIPELINE_START_USER_NAME, userName ?: userId))
                 .plus(BuildParameters(PIPELINE_BUILD_MSG, buildMsg))
                 .plus(BuildParameters(PIPELINE_CREATE_USER, readyToBuildPipelineInfo.creator))

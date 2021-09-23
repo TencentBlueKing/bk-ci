@@ -25,48 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.resources
+package com.tencent.devops.artifactory.resources
 
+import com.tencent.devops.artifactory.api.service.ServiceLogFileResource
+import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.OpGitProjectResource
-import com.tencent.devops.stream.pojo.GitProjectConfWithPage
-import com.tencent.devops.stream.service.GitProjectConfService
-import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpGitProjectResourceImpl @Autowired constructor(
-    private val gitProjectConfService: GitProjectConfService
-) : OpGitProjectResource {
+class ServiceLogFileResourceImpl : ServiceLogFileResource {
 
-    override fun create(gitProjectId: Long, name: String, url: String, enable: Boolean): Result<Boolean> {
-        return Result(gitProjectConfService.create(gitProjectId, name, url, enable))
-    }
-
-    override fun delete(gitProjectId: Long): Result<Boolean> {
-        return Result(gitProjectConfService.delete(gitProjectId))
-    }
-
-    override fun list(
-        gitProjectId: Long?,
-        name: String?,
-        url: String?,
-        page: Int,
-        pageSize: Int
-    ): Result<GitProjectConfWithPage> {
-        return Result(
-            GitProjectConfWithPage(
-                gitProjectConfService.count(gitProjectId, name, url),
-                gitProjectConfService.list(gitProjectId, name, url, page, pageSize)
-            )
-        )
-    }
-
-    override fun fixPipelineInfo(): Result<Int> {
-        return Result(gitProjectConfService.fixPipelineVersion())
-    }
-
-    override fun update(gitProjectId: Long, name: String?, url: String?, enable: Boolean?): Result<Boolean> {
-        return Result(gitProjectConfService.update(gitProjectId, name, url, enable))
+    override fun getPluginLogUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: String
+    ): Result<Url> {
+        TODO("not implemented")
     }
 }
