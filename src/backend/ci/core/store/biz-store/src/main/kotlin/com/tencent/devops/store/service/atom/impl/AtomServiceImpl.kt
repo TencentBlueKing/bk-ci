@@ -307,19 +307,17 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         var memberDataMap: Map<String, MutableList<String>>? = null
         var installedAtomList: List<String>? = null
         var userDeptList: List<Int>? = null
-        if (!atomCodeSet.isNullOrEmpty()) {
+        if (queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
+            atomPipelineCntMap = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
+                atomCodes = atomCodeSet.joinToString(","),
+                projectCode = projectCode
+            ).data
             installedAtomList = storeProjectRelDao.getValidStoreCodesByProject(
                 dslContext = dslContext,
                 projectCode = projectCode,
                 storeCodes = atomCodeSet,
                 storeType = StoreTypeEnum.ATOM
             )?.map { it.value1() }
-        }
-        if (queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
-            atomPipelineCntMap = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
-                atomCodes = atomCodeSet.joinToString(","),
-                projectCode = projectCode
-            ).data
         } else if (!queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
             val atomCodeList = atomCodeSet.toList()
             atomVisibleDataMap = storeCommonService.generateStoreVisibleData(atomCodeList, StoreTypeEnum.ATOM)
@@ -393,7 +391,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 uninstallFlag = if (atomPipelineCnt == null) null else atomPipelineCnt < 1,
                 labelList = atomLabelInfoMap?.get(it[KEY_ID] as String),
                 installFlag = installFlag,
-                installed = installedAtomList?.contains(atomCode)
+                installed = if (queryProjectAtomFlag) true else installedAtomList?.contains(atomCode)
             )
             dataList.add(pipelineAtomRespItem)
         }
