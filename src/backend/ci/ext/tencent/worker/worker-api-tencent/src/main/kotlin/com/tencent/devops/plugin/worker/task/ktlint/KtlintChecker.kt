@@ -444,7 +444,8 @@ class KtlintChecker constructor(path: File) {
                                 reporter.afterAll()
                                 stream.close()
                                 if (tripped()) {
-                                    LoggerService.addErrorLine("\"$id\" report written to ${File(output).absoluteFile.location()}")
+                                    LoggerService.addErrorLine("\"$id\" report written to " +
+                                        File(output).absoluteFile.location())
                                 }
                             }
                         }
@@ -465,7 +466,8 @@ class KtlintChecker constructor(path: File) {
                 )
             is RuleExecutionException -> {
                 if (debug) {
-                    LoggerService.addNormalLine("[DEBUG] Internal Error (${e.ruleId}) - ${ExceptionUtils.getStackTrace(e)}")
+                    LoggerService.addNormalLine("[DEBUG] Internal Error (${e.ruleId}) - " +
+                        ExceptionUtils.getStackTrace(e))
                 }
                 LintError(
                     e.line, e.col, "", "Internal Error (${e.ruleId}). " +
@@ -480,7 +482,8 @@ class KtlintChecker constructor(path: File) {
     private fun printAST() {
         fun process(fileName: String, fileContent: String) {
             if (debug) {
-                LoggerService.addNormalLine("[DEBUG] Analyzing ${if (fileName != "<text>") File(fileName).location() else fileName}")
+                LoggerService.addNormalLine("[DEBUG] Analyzing " +
+                    if (fileName != "<text>") File(fileName).location() else fileName)
             }
             try {
                 lint(fileName, fileContent, listOf(RuleSet("debug", DumpAST(System.out, color))), emptyMap()) {}
