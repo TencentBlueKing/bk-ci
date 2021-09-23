@@ -113,15 +113,6 @@ class PipelineTaskPauseListener @Autowired constructor(
                 projectId = task.projectId,
                 actionType = ActionType.REFRESH,
                 containerType = ""
-            ),
-            PipelineBuildStatusBroadCastEvent(
-                source = "pauseContinue-${task.containerId}-${task.buildId}",
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                userId = task.starter,
-                buildId = task.buildId,
-                taskId = task.taskId,
-                actionType = ActionType.REFRESH
             )
         )
         buildLogPrinter.addYellowLine(
@@ -171,6 +162,16 @@ class PipelineTaskPauseListener @Autowired constructor(
                 containerId = task.containerId,
                 stageId = task.stageId,
                 containerType = containerRecord?.containerType ?: "vmBuild"
+            ),
+            PipelineBuildStatusBroadCastEvent(
+                source = "pauseCancel-${task.containerId}-${task.buildId}",
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                userId = task.starter,
+                buildId = task.buildId,
+                taskId = null,
+                stageId = null,
+                actionType = ActionType.END
             )
         )
     }
