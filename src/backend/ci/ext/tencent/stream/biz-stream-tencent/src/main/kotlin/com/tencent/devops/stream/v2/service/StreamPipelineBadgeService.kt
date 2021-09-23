@@ -79,7 +79,7 @@ class StreamPipelineBadgeService @Autowired constructor(
         if (pipeline?.pipelineId.isNullOrBlank()) {
             return Pair(realFilePath, StreamPipelineBadgeType.NOT_FOUND)
         }
-        val buildHistory = gitRequestEventBuildDao.getLastEventByPipelineId(
+        val buildHistory = gitRequestEventBuildDao.getLastBuildEventByPipelineId(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             pipelineId = pipeline!!.pipelineId,

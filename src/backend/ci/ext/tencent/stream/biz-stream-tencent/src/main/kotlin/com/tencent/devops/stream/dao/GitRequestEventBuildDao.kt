@@ -406,6 +406,30 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun getLastBuildEventByPipelineId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String,
+        branch: String? = null,
+        objectKind: String? = null
+    ): TGitRequestEventBuildRecord? {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_STATUS.eq(BuildStatus.FAILED.name).or(BUILD_STATUS.eq(BuildStatus.SUCCEED.name)))
+            if (!branch.isNullOrBlank()) {
+                dsl.and(BRANCH.eq(branch))
+            }
+            if (!objectKind.isNullOrBlank()) {
+                dsl.and(OBJECT_KIND.eq(objectKind))
+            }
+            return dsl.orderBy(ID.desc())
+                .limit(1)
+                .fetchAny()
+        }
+    }
+
     fun updateBuildStatusById(
         dslContext: DSLContext,
         id: Long,
