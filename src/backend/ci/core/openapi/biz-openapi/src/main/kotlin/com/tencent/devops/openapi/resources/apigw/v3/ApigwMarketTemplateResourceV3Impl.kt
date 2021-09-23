@@ -57,25 +57,18 @@ class ApigwMarketTemplateResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         installTemplateReq: InstallTemplateReq
-    ): Result<Map<String, PipelineTemplateInfo>> {
+    ): Result<List<PipelineTemplateInfo>> {
         val install = client.get(ServiceTemplateResource::class)
             .installTemplate(userId, installTemplateReq).data ?: false
         return if (install) {
-            val projectTemplateMap = mutableMapOf<String, PipelineTemplateInfo>()
-            val templateProjectMap = client.get(ServicePTemplateResource::class)
-                .getTemplateIdBySrcCode(installTemplateReq.templateCode).data
-            if (templateProjectMap.isNullOrEmpty()) {
-                return Result(emptyMap())
+            val templateProjectInfos = client.get(ServicePTemplateResource::class)
+                .getTemplateIdBySrcCode(installTemplateReq.templateCode, installTemplateReq.projectCodeList).data
+            if (templateProjectInfos.isNullOrEmpty()) {
+                return Result(emptyList())
             }
-            val projectSet = templateProjectMap.keys
-            installTemplateReq.projectCodeList.forEach {
-                if (projectSet.contains(it)) {
-                    projectTemplateMap[it] = templateProjectMap[it]!!
-                }
-            }
-            Result(projectTemplateMap)
+            Result(templateProjectInfos)
         } else {
-            Result(emptyMap())
+            Result(emptyList())
         }
     }
 

@@ -103,8 +103,11 @@ interface ServicePTemplateResource {
     fun getTemplateIdBySrcCode(
         @ApiParam("源模板Id", required = true)
         @PathParam("srcTemplateId")
-        srcTemplateId: String
-    ): Result<Map<String, PipelineTemplateInfo>>
+        srcTemplateId: String,
+        @ApiParam("项目列表", required = true)
+        @QueryParam("projectIds")
+        projectIds: List<String>
+    ): Result<List<PipelineTemplateInfo>>
 
     @ApiOperation("更新模版是否已关联市场标识")
     @PUT
