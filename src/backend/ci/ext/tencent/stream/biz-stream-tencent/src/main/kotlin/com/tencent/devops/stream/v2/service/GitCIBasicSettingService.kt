@@ -205,6 +205,36 @@ class GitCIBasicSettingService @Autowired constructor(
         )
     }
 
+    fun getMaxId(
+        gitProjectIdList: List<Long>? = null
+    ): Long {
+        return gitCIBasicSettingDao.getMaxId(dslContext, gitProjectIdList)
+    }
+
+    fun getBasicSettingList(
+        gitProjectIdList: List<Long>? = null,
+        minId: Long? = null,
+        maxId: Long? = null
+    ): List<Long>? {
+        val basicSettingRecords = gitCIBasicSettingDao.getBasicSettingList(
+            dslContext = dslContext,
+            gitProjectIdList = gitProjectIdList,
+            minId = minId,
+            maxId = maxId
+        )
+        return if (basicSettingRecords.isEmpty()) {
+            null
+        } else {
+            val idList = mutableListOf<Long>()
+            basicSettingRecords.forEach { record ->
+                idList.add(
+                    record.id
+                )
+            }
+            idList
+        }
+    }
+
     private fun refresh(it: TGitBasicSettingRecord) {
         try {
             val projectResult = requestGitProjectInfo(it.id)

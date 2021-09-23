@@ -202,6 +202,21 @@ class GitUserMessageDao {
         }
     }
 
+    fun deleteByMessageId(
+        dslContext: DSLContext,
+        projectId: String,
+        messageId: String,
+        messageType: UserMessageType
+    ): Int {
+        with(TGitUserMessage.T_GIT_USER_MESSAGE) {
+            return dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(MESSAGE_ID.eq(messageId))
+                .and(MESSAGE_TYPE.eq(messageType.name))
+                .execute()
+        }
+    }
+
     private fun selectMessage(
         dslContext: DSLContext,
         projectId: String,
