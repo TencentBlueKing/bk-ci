@@ -69,7 +69,7 @@ class OpTurboEngineConfigController @Autowired constructor(
         engineCode: String,
         paramEnum: ParamEnumModel
     ): Response<Boolean> {
-        turboEngineConfigService.addWorkerVersion(engineCode, "work_version", paramEnum)
+        turboEngineConfigService.addWorkerVersion(engineCode, "worker_version", paramEnum)
         return Response.success(true)
     }
 
@@ -77,7 +77,7 @@ class OpTurboEngineConfigController @Autowired constructor(
         engineCode: String,
         paramValue: String
     ): Response<Boolean> {
-        turboEngineConfigService.deleteWorkerVersion(engineCode, "work_version", paramValue)
+        turboEngineConfigService.deleteWorkerVersion(engineCode, "worker_version", paramValue)
         return Response.success(true)
     }
 
@@ -86,7 +86,7 @@ class OpTurboEngineConfigController @Autowired constructor(
         paramValue: String,
         paramEnum: ParamEnumSimpleModel
     ): Response<Boolean> {
-        turboEngineConfigService.updateWorkerVersion(engineCode, "work_version", paramValue, paramEnum)
+        turboEngineConfigService.updateWorkerVersion(engineCode, "worker_version", paramValue, paramEnum)
         return Response.success(true)
     }
 
