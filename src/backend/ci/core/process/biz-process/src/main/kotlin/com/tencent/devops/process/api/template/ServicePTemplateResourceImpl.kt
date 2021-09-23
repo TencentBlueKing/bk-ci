@@ -29,6 +29,7 @@ package com.tencent.devops.process.api.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
@@ -68,7 +69,7 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         return templateFacadeService.getSrcTemplateCodes(projectId)
     }
 
-    override fun getTemplateIdBySrcCode(srcTemplateId: String): Result<Map<String, String>> {
+    override fun getTemplateIdBySrcCode(srcTemplateId: String): Result<Map<String, PipelineTemplateInfo>> {
         return Result(templateFacadeService.getTemplateIdByTemplateCode(srcTemplateId))
     }
 

@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.template
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
@@ -103,7 +104,7 @@ interface ServicePTemplateResource {
         @ApiParam("源模板Id", required = true)
         @PathParam("srcTemplateId")
         srcTemplateId: String
-    ): Result<Map<String, String>>
+    ): Result<Map<String, PipelineTemplateInfo>>
 
     @ApiOperation("更新模版是否已关联市场标识")
     @PUT
