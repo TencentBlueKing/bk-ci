@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -112,6 +113,15 @@ class PipelineTaskPauseListener @Autowired constructor(
                 projectId = task.projectId,
                 actionType = ActionType.REFRESH,
                 containerType = ""
+            ),
+            PipelineBuildStatusBroadCastEvent(
+                source = "pauseContinue-${task.containerId}-${task.buildId}",
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                userId = task.starter,
+                buildId = task.buildId,
+                taskId = task.taskId,
+                actionType = ActionType.REFRESH
             )
         )
         buildLogPrinter.addYellowLine(
