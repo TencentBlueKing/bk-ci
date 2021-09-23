@@ -28,7 +28,6 @@
 package com.tencent.devops.plugin.worker.task.scm.svn
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
 import com.tencent.devops.plugin.worker.task.scm.util.SvnUtil
