@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/templates")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceTemplateResource {
+interface ServicePTemplateResource {
 
     @ApiOperation("添加模板市场模板")
     @POST
@@ -95,6 +95,15 @@ interface ServiceTemplateResource {
         @PathParam("projectId")
         projectId: String
     ): Result<List<String>>
+
+    @ApiOperation("查询源模板ID绑定的模板")
+    @GET
+    @Path("/store/srcTemplates/{srcTemplateId}")
+    fun getTemplateIdBySrcCode(
+        @ApiParam("源模板Id", required = true)
+        @PathParam("srcTemplateId")
+        srcTemplateId: String
+    ): Result<Map<String, String>>
 
     @ApiOperation("更新模版是否已关联市场标识")
     @PUT

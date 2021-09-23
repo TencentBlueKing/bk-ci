@@ -44,7 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServicePTemplateResourceImpl @Autowired constructor(
     private val pipelineTemplateService: PipelineTemplateService,
     private val templateFacadeService: TemplateFacadeService
-) : ServiceTemplateResource {
+) : ServicePTemplateResource {
 
     override fun addMarketTemplate(
         userId: String,
@@ -66,6 +66,10 @@ class ServicePTemplateResourceImpl @Autowired constructor(
 
     override fun getSrcTemplateCodes(projectId: String): Result<List<String>> {
         return templateFacadeService.getSrcTemplateCodes(projectId)
+    }
+
+    override fun getTemplateIdBySrcCode(srcTemplateId: String): Result<Map<String, String>> {
+        return Result(templateFacadeService.getTemplateIdByTemplateCode(srcTemplateId))
     }
 
     override fun listTemplate(

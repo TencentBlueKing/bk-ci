@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwMarketTemplateResourceV3
+import com.tencent.devops.process.api.template.ServicePTemplateResourceImpl
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import org.slf4j.LoggerFactory
@@ -48,6 +49,33 @@ class ApigwMarketTemplateResourceV3Impl @Autowired constructor(
     ): Result<Boolean> {
         // 可见与可安装鉴权在store服务marketTemplateService中已实现
         return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
+    }
+
+    override fun installTemplateFromStoreNew(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        installTemplateReq: InstallTemplateReq
+    ): Result<Map<String, String>> {
+        val install = client.get(ServiceTemplateResource::class)
+            .installTemplate(userId, installTemplateReq).data ?: false
+        return if (install) {
+            val projectTemplateMap = mutableMapOf<String, String>()
+            val templateProjectMap = client.get(ServicePTemplateResourceImpl::class)
+                .getTemplateIdBySrcCode(installTemplateReq.templateCode).data
+            if (templateProjectMap.isNullOrEmpty()) {
+                return Result(emptyMap())
+            }
+            val projectSet = projectTemplateMap.keys
+            installTemplateReq.projectCodeList.forEach {
+                if (projectSet.contains(it)) {
+                    projectTemplateMap[it] = templateProjectMap[it]!!
+                }
+            }
+            Result(projectTemplateMap)
+        } else {
+            Result(emptyMap())
+        }
     }
 
     companion object {

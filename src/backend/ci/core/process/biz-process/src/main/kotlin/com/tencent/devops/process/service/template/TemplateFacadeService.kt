@@ -2062,6 +2062,15 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
+    fun getTemplateIdByTemplateCode(templateCode: String): Map<String/* projectId */, String/* templateId */> {
+        val templateInfo = templateDao.listTemplateReference(dslContext, templateCode)
+        val templateProjectMap = mutableMapOf<String, String>()
+        templateInfo.forEach {
+            templateProjectMap[it.projectId] = it.id
+        }
+        return templateProjectMap
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TemplateFacadeService::class.java)
         private const val INIT_TEMPLATE_NAME = "init"
