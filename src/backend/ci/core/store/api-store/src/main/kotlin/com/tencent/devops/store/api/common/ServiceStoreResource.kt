@@ -115,14 +115,14 @@ interface ServiceStoreResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
-        @QueryParam("projectCode")
+        @PathParam("projectCode")
         @ApiParam("项目编码", required = true)
         projectCode: String,
         @ApiParam("标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
         @ApiParam("类型", required = true)
-        @QueryParam("storeType")
+        @PathParam("storeType")
         storeType: StoreTypeEnum
     ): Result<Boolean>
 }

@@ -86,7 +86,7 @@ class ServiceStoreResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         // 校验token是否合法
         val validateTokenFlag = clientTokenService.checkToken(null, token)
-        if (validateTokenFlag) {
+        if (!validateTokenFlag) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(token)
