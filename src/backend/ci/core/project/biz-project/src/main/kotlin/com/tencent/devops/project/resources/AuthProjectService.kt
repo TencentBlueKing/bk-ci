@@ -90,7 +90,7 @@ class AuthProjectService @Autowired constructor(
     fun getProjectInfo(
         idList: List<String>,
         token: String,
-        attribute: String
+        attribute: List<String>
     ): FetchInstanceInfoResponseDTO {
         logger.info("getProjectInfo ids[$idList], attribute[$attribute]")
         authTokenApi.checkToken(token)
