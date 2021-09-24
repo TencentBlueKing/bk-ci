@@ -134,6 +134,10 @@ class AuthGroupService @Autowired constructor(
         return groupDao.getGroupByName(dslContext, projectCode, groupName)
     }
 
+    fun getGroupByCode(projectCode: String, groupCode: String): TAuthGroupInfoRecord? {
+        return groupDao.getGroup(dslContext, projectCode, groupCode)
+    }
+
     fun bindRelationId(id: Int, relationId: String): Int {
         return groupDao.updateRelationId(dslContext, id, relationId)
     }

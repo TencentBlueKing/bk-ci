@@ -91,7 +91,7 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
             permissionProjectService.createProjectUser(
                 userId = userId,
                 projectCode = projectCode,
-                roleName = role
+                roleCode = role
             )
         )
     }
