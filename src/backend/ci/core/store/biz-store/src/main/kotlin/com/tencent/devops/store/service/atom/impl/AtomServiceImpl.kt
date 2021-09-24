@@ -316,17 +316,17 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 atomCodes = atomCodeSet.joinToString(","),
                 projectCode = projectCode
             ).data
+        } else if (!queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
+            val atomCodeList = atomCodeSet.toList()
+            atomVisibleDataMap = storeCommonService.generateStoreVisibleData(atomCodeList, StoreTypeEnum.ATOM)
+            memberDataMap = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
+            userDeptList = storeUserService.getUserDeptList(userId)
             installedAtomList = storeProjectRelDao.getValidStoreCodesByProject(
                 dslContext = dslContext,
                 projectCode = projectCode,
                 storeCodes = atomCodeSet,
                 storeType = StoreTypeEnum.ATOM
             )?.map { it.value1() }
-        } else if (!queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
-            val atomCodeList = atomCodeSet.toList()
-            atomVisibleDataMap = storeCommonService.generateStoreVisibleData(atomCodeList, StoreTypeEnum.ATOM)
-            memberDataMap = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
-            userDeptList = storeUserService.getUserDeptList(userId)
         }
         pipelineAtoms?.forEach {
             val name = it[NAME] as String
