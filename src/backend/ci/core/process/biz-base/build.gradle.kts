@@ -43,4 +43,5 @@ dependencies {
     api("mysql:mysql-connector-java")
     implementation("com.github.ben-manes.caffeine:caffeine")
     testImplementation(project(":core:common:common-test"))
+    api("com.hankcs:hanlp")
 }

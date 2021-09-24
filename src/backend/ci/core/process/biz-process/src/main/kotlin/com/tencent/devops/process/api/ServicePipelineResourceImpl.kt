@@ -50,9 +50,9 @@ import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
-import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -406,6 +406,11 @@ class ServicePipelineResourceImpl @Autowired constructor(
             return Result(pipelineInfos[0])
         }
         return null
+    }
+
+    override fun batchUpdatePipelineNamePinYin(userId: String): Result<Boolean> {
+        pipelineInfoFacadeService.batchUpdatePipelineNamePinYin(userId)
+        return Result(true)
     }
 
     private fun checkParams(userId: String, projectId: String) {
