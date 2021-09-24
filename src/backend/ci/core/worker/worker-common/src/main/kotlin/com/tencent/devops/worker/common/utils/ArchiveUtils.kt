@@ -116,7 +116,7 @@ object ArchiveUtils {
         }
         return fileList.filter {
             if (it.name.endsWith(".DS_STORE", ignoreCase = true)) {
-                LoggerService.addYellowLine("${it.canonicalPath} will not upload")
+                LoggerService.addWarnLine("${it.canonicalPath} will not upload")
                 false
             } else {
                 true

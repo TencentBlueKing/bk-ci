@@ -100,7 +100,7 @@ object WorkRunner {
             exitProcess(-1)
         } catch (ignore: Throwable) {
             logger.error("Encounter unknown exception", ignore)
-            LoggerService.addRedLine("Other unknown error has occurred: " + ignore.message)
+            LoggerService.addErrorLine("Other unknown error has occurred: " + ignore.message)
             exitProcess(-1)
         }
     }

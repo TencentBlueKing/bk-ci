@@ -96,10 +96,10 @@ open class ScriptTask : ITask() {
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
             if (!archiveFileIfExecFail.isNullOrBlank()) {
-                LoggerService.addRedLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
+                LoggerService.addErrorLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
                 val count = ArchiveUtils.archivePipelineFiles(archiveFileIfExecFail!!, workspace, buildVariables)
                 if (count == 0) {
-                    LoggerService.addRedLine("脚本执行失败之后没有匹配到任何待归档文件")
+                    LoggerService.addErrorLine("脚本执行失败之后没有匹配到任何待归档文件")
                 }
             }
             throw TaskExecuteException(
@@ -148,7 +148,7 @@ open class ScriptTask : ITask() {
             gatewayResourceApi.saveScriptHisMetadata(elementType, data)
             gatewayFile.delete()
         } catch (ignore: Exception) {
-            LoggerService.addRedLine("save gateway value fail: ${ignore.message}")
+            LoggerService.addErrorLine("save gateway value fail: ${ignore.message}")
             logger.error("setGatewayValue|${ignore.message}", ignore)
         }
     }

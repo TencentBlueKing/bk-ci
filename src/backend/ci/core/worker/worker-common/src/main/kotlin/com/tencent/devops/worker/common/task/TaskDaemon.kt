@@ -98,7 +98,7 @@ class TaskDaemon(
         if (allEnv.isNotEmpty()) {
             allEnv.forEach { (key, value) ->
                 if (value.length > PARAM_MAX_LENGTH) {
-                    LoggerService.addYellowLine("[${buildTask.taskId}]|ABANDON_DATA|len[$key]=${value.length}" +
+                    LoggerService.addWarnLine("[${buildTask.taskId}]|ABANDON_DATA|len[$key]=${value.length}" +
                         "(max=$PARAM_MAX_LENGTH)")
                     return@forEach
                 }

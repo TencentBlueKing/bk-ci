@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -78,7 +77,7 @@ object Runner {
             } catch (ignore: Exception) {
                 failed = true
                 logger.error("Other unknown error has occurred:", ignore)
-                LoggerService.addRedLine("Other unknown error has occurred: " + ignore.message)
+                LoggerService.addErrorLine("Other unknown error has occurred: " + ignore.message)
             } finally {
                 LoggerService.stop()
                 Heartbeat.stop()
@@ -231,7 +230,7 @@ object Runner {
             errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
         }
 
-        LoggerService.addRedLine(message)
+        LoggerService.addErrorLine(message)
 
         val buildResult = taskDaemon.getBuildResult(
             isSuccess = false,
@@ -300,9 +299,9 @@ object Runner {
         LoggerService.addFoldStartLine("[Build Environment Properties]")
         variables.forEach { v ->
             if (v.valueType == BuildFormPropertyType.PASSWORD) {
-                LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a("******").toString())
+                LoggerService.addNormalLine("${v.key}: ******")
             } else {
-                LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a(v.value.toString()).toString())
+                LoggerService.addNormalLine("${v.key}: ${v.value}")
             }
             logger.info("${v.key}: ${v.value}")
         }

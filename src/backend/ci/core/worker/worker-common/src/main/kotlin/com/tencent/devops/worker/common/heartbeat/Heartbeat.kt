@@ -75,7 +75,7 @@ object Heartbeat {
          */
         executor.scheduleWithFixedDelay({
             if (running) {
-                LoggerService.addRedLine("Job timout: ${TimeUnit.MILLISECONDS.toMinutes(jobTimeoutMills)}min")
+                LoggerService.addErrorLine("Job timout: ${TimeUnit.MILLISECONDS.toMinutes(jobTimeoutMills)}min")
                 EngineService.timeout()
                 exitProcess(99)
             }

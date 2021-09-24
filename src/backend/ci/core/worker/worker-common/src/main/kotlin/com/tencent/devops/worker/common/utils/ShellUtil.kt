@@ -30,7 +30,6 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
@@ -157,19 +156,11 @@ object ShellUtil {
             buildEnvs.forEach { buildEnv ->
                 val home = File(getEnvironmentPathPrefix(), "${buildEnv.name}/${buildEnv.version}/")
                 if (!home.exists()) {
-                    LoggerService.addNormalLine(
-                        Ansi().fgRed().a(
-                            "环境变量路径(${home.absolutePath})不存在"
-                        ).reset().toString()
-                    )
+                    LoggerService.addErrorLine("环境变量路径(${home.absolutePath})不存在")
                 }
                 val envFile = File(home, buildEnv.binPath)
                 if (!envFile.exists()) {
-                    LoggerService.addNormalLine(
-                        Ansi().fgRed().a(
-                            "环境变量路径(${envFile.absolutePath})不存在"
-                        ).reset().toString()
-                    )
+                    LoggerService.addErrorLine("环境变量路径(${envFile.absolutePath})不存在")
                     return@forEach
                 }
                 // command.append("export $name=$path")
