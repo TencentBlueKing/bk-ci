@@ -29,7 +29,10 @@ default_value_dict = {
     'bkHttpSchema': 'http',
     'bkCiHost': 'devops.example.com',
     'bkCiPublicUrl': 'devops.example.com',
-    'bkCiPublicHostIp': '127.0.0.1'
+    'bkCiPublicHostIp': '127.0.0.1',
+    'bkCiIamCallbackUser': 'bk_iam',
+    'bkCiAppCode': 'bk_ci'
+
 }
 
 if os.path.isfile('./values.json'):

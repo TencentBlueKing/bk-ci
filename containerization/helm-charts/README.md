@@ -188,7 +188,7 @@ $ helm uninstall bkci
 
 |参数|描述|默认值 |
 |---|---|---|
-| `bkCiAppCode`  | 应用Code | `""` |
+| `bkCiAppCode`  | 应用Code | `"bk_ci"` |
 | `bkCiAppToken`  | 应用Token | `""` |
 | `bkCiAuthProvider`  | 鉴权方式 | `sample` |
 | `bkCiBkrepoAuthorization`  | 制品库鉴权标识 | `""` |
@@ -215,7 +215,7 @@ $ helm uninstall bkci
 | `bkCiHost`  | CI域名 | `devops.example.com` |
 | `bkCiHttpsPort`  | CI使用https时的端口 | `80` |
 | `bkCiHttpPort`  | CI使用http时的端口 | `80` |
-| `bkCiIamCallbackUser`  | 供iam系统发起回调时使用的用户名 | `""` |
+| `bkCiIamCallbackUser`  | 供iam系统发起回调时使用的用户名 | `"bk_iam"` |
 | `bkCiIamWebUrl`  | IAM SaaS入口url | `""` |
 | `bkCiInfluxdbAddr`  | influxdb地址 | `""` |
 | `bkCiInfluxdbDb`  | influxdb数据库 | `""` |

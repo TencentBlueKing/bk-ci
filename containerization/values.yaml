@@ -946,7 +946,7 @@ angetless:
   priorityClassName: ""
 
 turbo:
-  enabled: true
+  enabled: false
   image:
     registry: mirrors.tencent.com
     repository: ruitaoyuan/turbo-backend
@@ -979,10 +979,10 @@ turbo:
   priorityClassName: ""
   config:
     tbs:
-      rootpath: __BK_TURBO_TBS_ROOTPATH__
-      urltemplate: __BK_CI_TURBO_URL_TEMPLATE__
+      rootpath: 
+      urltemplate: 
     devops:
-      rootpath: __BK_CI_PUBLIC_URL__
+      rootpath: 
 
 # gateway Deployment
 gateway:
