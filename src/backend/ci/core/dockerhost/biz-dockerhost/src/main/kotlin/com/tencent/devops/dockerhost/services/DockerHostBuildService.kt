@@ -73,6 +73,7 @@ import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
@@ -211,8 +212,16 @@ class DockerHostBuildService(
                 .withNetworkMode("bridge")
             
             if (dockerBuildInfo.projectId == "test-sawyer2") {
-                val upperDir = "${getWorkspace(dockerBuildInfo)}/upper"
-                val workDir = "${getWorkspace(dockerBuildInfo)}/work"
+                val upperDir = "${getWorkspace(dockerBuildInfo)}upper"
+                val workDir = "${getWorkspace(dockerBuildInfo)}work"
+                if (!File(upperDir).exists()) {
+                    File(upperDir).mkdirs()
+                }
+
+                if (!File(workDir).exists()) {
+                    File(workDir).mkdirs()
+                }
+
                 val mount = Mount().withType(MountType.VOLUME)
                     .withTarget("/data/landun/workspace")
                     .withVolumeOptions(VolumeOptions().withDriverConfig(Driver().withName("local")).withLabels(
